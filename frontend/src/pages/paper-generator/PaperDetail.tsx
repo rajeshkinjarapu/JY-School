@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { api } from '../../api/latex-api';
-import { PrintablePaper } from '../components/PrintablePaper';
-import { downloadTexFile } from '../utils/latexExporter';
+import { PrintablePaper } from '../../components/PrintablePaper';
+import { downloadTexFile } from '../../utils/latexExporter';
 import {
   ArrowLeft,
   Download,

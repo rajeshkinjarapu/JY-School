@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { api } from '../../api/latex-api';
-import { LaTeXPreview } from '../components/LaTeXPreview';
+import { LaTeXPreview } from '../../components/LaTeXPreview';
 import {
   ArrowLeft,
   Settings,
