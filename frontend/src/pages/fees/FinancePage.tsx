@@ -533,47 +533,44 @@ export const FinancePage: React.FC = () => {
                   )}
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {classes.map(cls => {
                     const classFees = structures.filter(s => s.classId === cls.id);
                     if (classFees.length === 0) return null;
                     const totalFee = classFees.reduce((acc, curr) => acc + curr.amount, 0);
 
                     return (
-                      <div key={cls.id} className="bg-white dark:bg-gray-900 border border-slate-100 dark:border-gray-800 rounded-[2rem] p-6 shadow-lg shadow-gray-200/40 dark:shadow-none hover:border-indigo-200 dark:hover:border-indigo-900/50 hover:shadow-xl transition-all duration-500 relative overflow-hidden group">
-                        <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 opacity-80 group-hover:opacity-100 transition-opacity"></div>
-                        <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-bl from-indigo-500/5 via-purple-500/5 to-transparent rounded-bl-full -z-10 group-hover:scale-125 transition-transform duration-700"></div>
-                        
-                        <div className="flex justify-between items-start mb-6">
+                      <div key={cls.id} className="bg-white dark:bg-gray-900 border border-slate-100 dark:border-gray-800 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow">
+                        <div className="flex justify-between items-center mb-4 border-b border-gray-100 dark:border-gray-800 pb-4">
                           <div>
-                            <h4 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">{cls.name}</h4>
-                            <span className="text-[10px] font-black px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 mt-1.5 inline-block uppercase tracking-widest border border-slate-200/60 dark:border-slate-700">Section: {cls.section}</span>
+                            <h4 className="text-xl font-bold text-gray-900 dark:text-white">{cls.name}</h4>
+                            <span className="text-xs text-gray-500 font-medium">Section: {cls.section}</span>
                           </div>
-                          <div className="text-right bg-gradient-to-br from-indigo-50 to-white dark:from-indigo-900/40 dark:to-gray-900 px-4 py-2.5 rounded-[1.25rem] border border-indigo-100/60 dark:border-indigo-800/50 shadow-sm group-hover:shadow-md transition-shadow">
-                            <span className="text-[9px] text-indigo-500 font-black uppercase tracking-widest block mb-0.5 opacity-90">Total Fees</span>
-                            <span className="text-xl font-black text-indigo-600 dark:text-indigo-400 leading-none">₹{totalFee.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                          <div className="text-right">
+                            <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Total Fees</span>
+                            <span className="text-lg font-black text-indigo-600 dark:text-indigo-400">₹{totalFee.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                           </div>
                         </div>
                         
-                        <div className="space-y-3 relative z-10 mt-4">
+                        <div className="space-y-2">
                           {classFees.map(fee => {
                             const storedMeta = localStorage.getItem('fin_structure_metadata');
                             const meta = storedMeta ? JSON.parse(storedMeta) : {};
                             const sMeta = meta[fee.id] || { group: 'Annual Fees' };
                             
                             return (
-                              <div key={fee.id} className="flex justify-between items-center p-4 bg-slate-50 dark:bg-gray-800/40 rounded-2xl border border-slate-200/60 dark:border-gray-800 hover:border-indigo-300 dark:hover:border-indigo-700 hover:bg-white dark:hover:bg-gray-800 transition-all shadow-sm hover:shadow-md">
-                                <div className="flex-1 min-w-0 pr-3">
-                                  <p className="text-sm font-extrabold text-slate-900 dark:text-white truncate">{fee.name}</p>
-                                  <div className="flex items-center gap-2 mt-1">
-                                    <span className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">{sMeta.group}</span>
-                                    {sMeta.fineType !== 'None' && (
-                                      <span className="text-[9px] font-black text-amber-500 uppercase tracking-widest bg-amber-50 dark:bg-amber-950/30 px-1.5 py-0.5 rounded border border-amber-100 dark:border-amber-900/50">• Has Fine</span>
+                              <div key={fee.id} className="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-800/50 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                                <div className="flex-1 min-w-0 pr-4">
+                                  <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">{fee.name}</p>
+                                  <div className="flex items-center gap-2 mt-0.5">
+                                    <span className="text-[10px] text-gray-500 font-medium">{sMeta.group}</span>
+                                    {sMeta.fineType && sMeta.fineType !== 'None' && (
+                                      <span className="text-[10px] text-amber-600 bg-amber-50 dark:bg-amber-900/30 px-1.5 py-0.5 rounded-md font-semibold">Fine App.</span>
                                     )}
                                   </div>
                                 </div>
-                                <div className="text-right flex items-center gap-3 shrink-0">
-                                  <span className="text-base font-black text-slate-800 dark:text-slate-200 tracking-tight">₹{fee.amount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                                <div className="flex items-center gap-3 shrink-0">
+                                  <span className="text-sm font-bold text-gray-800 dark:text-gray-200">₹{fee.amount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                                   {isAdmin && (
                                     <button
                                       onClick={async () => {
@@ -587,7 +584,7 @@ export const FinancePage: React.FC = () => {
                                           }
                                         }
                                       }}
-                                      className="p-1.5 rounded-lg text-red-400 hover:bg-red-50 hover:text-red-600 transition-colors cursor-pointer"
+                                      className="p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
                                       title="Delete"
                                     >
                                       <Trash2 className="w-4 h-4" />
