@@ -251,15 +251,15 @@ export const StudentListPage: React.FC = () => {
                       <td className="px-5 py-4 text-gray-400 font-bold text-xs">{idx + 1}</td>
 
                       {/* Photo */}
-                      <td className="px-5 py-4">
+                      <td className="px-5 py-3">
                         {photoUrl ? (
                           <img
                             src={photoUrl}
                             alt={name}
-                            className="w-10 h-10 rounded-full object-cover ring-2 ring-indigo-100 dark:ring-indigo-900"
+                            className="w-12 h-16 rounded-lg object-cover border-2 border-white dark:border-gray-800 shadow-md ring-1 ring-gray-200 dark:ring-gray-700"
                           />
                         ) : (
-                          <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${getColor(name)} flex items-center justify-center text-white font-black text-sm ring-2 ring-white dark:ring-gray-800 shadow-sm`}>
+                          <div className={`w-12 h-16 rounded-lg bg-gradient-to-br ${getColor(name)} flex items-center justify-center text-white font-black text-lg border-2 border-white dark:border-gray-800 shadow-md ring-1 ring-gray-200 dark:ring-gray-700`}>
                             {getInitials(name)}
                           </div>
                         )}
