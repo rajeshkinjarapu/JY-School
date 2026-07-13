@@ -86,9 +86,19 @@ export const login = async (req: AuthRequest, res: Response, next: NextFunction)
     });
     if (student) {
       user = student.user;
+    } else {
+      const teacher = await prisma.teacher.findUnique({
+        where: { employeeId: emailOrId },
+        include: { user: true },
+      });
+      if (teacher) {
+        user = teacher.user;
+      } else {
+        user = await prisma.user.findFirst({ where: { email: emailOrId } });
+      }
     }
   } else {
-    user = await prisma.user.findUnique({ where: { email: emailOrId } });
+    user = await prisma.user.findFirst({ where: { email: emailOrId } });
   }
 
   if (!user || !user.isActive) return next(createError('Invalid credentials', 401));
