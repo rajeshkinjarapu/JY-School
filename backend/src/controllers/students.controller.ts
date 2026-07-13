@@ -76,7 +76,8 @@ export const create = async (req: Request, res: Response, next: NextFunction): P
   // The login ID is exactly the Student ID
   const email = rollNo;
 
-  const hashedPassword = await bcrypt.hash(password || 'Student@123', 12);
+  const defaultPassword = phone || rollNo;
+  const hashedPassword = await bcrypt.hash(password || defaultPassword, 10);
 
   const user = await prisma.user.create({
     data: { name, email, password: hashedPassword, role: 'STUDENT', phone, photoUrl },
@@ -199,7 +200,6 @@ export const bulkImport = async (req: AuthRequest, res: Response, next: NextFunc
     for (const row of results) {
       try {
         const name = row.Name || row.name || row['Student Name'] || row['First Name'];
-        const password = row.Password || row.password || 'Student@123';
         const phone = row.Phone || row.phone || row['Mobile No'] || row['Mobile'];
         
         let classId = row.ClassId || row.classId || null;
@@ -223,7 +223,10 @@ export const bulkImport = async (req: AuthRequest, res: Response, next: NextFunc
         const penNumber = row.PenNumber || row.penNumber || row.Pen || row.pen || row['PEN Number'] || null;
 
         const rollNo = row.StudentId || row.studentId || row.RollNo || row.rollNo || row['Roll No'] || row['Student ID'] || generateRollNo(currentStudentCount + 1);
-        const email = row.Email || row.email || rollNo;
+        const email = rollNo; // UserID is always Student ID
+        
+        // Password is explicitly provided, or defaults to Phone number, or RollNo if no phone
+        const password = row.Password || row.password || phone || rollNo;
 
         if (!name) {
           failed.push({ row, reason: 'Name is required' });
@@ -236,7 +239,6 @@ export const bulkImport = async (req: AuthRequest, res: Response, next: NextFunc
           continue;
         }
 
-        // Use 10 rounds instead of 12 for much faster hashing on free tier servers
         const hashedPassword = await bcrypt.hash(String(password), 10);
 
         const user = await prisma.user.create({
