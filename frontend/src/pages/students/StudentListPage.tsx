@@ -227,7 +227,6 @@ export const StudentListPage: React.FC = () => {
                   <th className="px-5 py-4 text-[11px] font-extrabold uppercase tracking-wider text-gray-400">Section</th>
                   <th className="px-5 py-4 text-[11px] font-extrabold uppercase tracking-wider text-gray-400">Father Name</th>
                   <th className="px-5 py-4 text-[11px] font-extrabold uppercase tracking-wider text-gray-400">Mobile No</th>
-                  <th className="px-5 py-4 text-[11px] font-extrabold uppercase tracking-wider text-gray-400">Admission Date</th>
                   <th className="px-5 py-4 text-[11px] font-extrabold uppercase tracking-wider text-gray-400 text-right">Actions</th>
                 </tr>
               </thead>
@@ -267,7 +266,7 @@ export const StudentListPage: React.FC = () => {
                       </td>
 
                       {/* Student Name */}
-                      <td className="px-5 py-4">
+                      <td className="px-5 py-4 whitespace-nowrap">
                         <Link to={`/students/${student.id}`} className="font-bold text-gray-900 dark:text-white hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
                           {name}
                         </Link>
@@ -302,11 +301,6 @@ export const StudentListPage: React.FC = () => {
                       {/* Mobile No */}
                       <td className="px-5 py-4 text-gray-600 dark:text-gray-400 font-mono text-xs">
                         {mobile}
-                      </td>
-
-                      {/* Admission Date */}
-                      <td className="px-5 py-4 text-gray-500 dark:text-gray-400 text-xs font-semibold">
-                        {admissionDate}
                       </td>
 
                       {/* Actions */}
