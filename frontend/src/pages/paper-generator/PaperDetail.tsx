@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { api } from '../../api/latex-api';
 import { PrintablePaper } from '../../components/PrintablePaper';
-import { downloadTexFile } from '../../utils/latexExporter';
+// import { downloadTexFile } from '../../utils/latexExporter';
 import {
   ArrowLeft,
   Download,
@@ -132,10 +132,10 @@ export const PaperDetail: React.FC = () => {
     }
   };
 
-  // LaTeX Source Code Download (.tex)
   const handleLatexExport = () => {
     if (!paper) return;
-    downloadTexFile(paper);
+    alert('LaTeX export is not implemented yet.');
+    // downloadTexFile(paper);
   };
 
   if (loading && !paper) {
