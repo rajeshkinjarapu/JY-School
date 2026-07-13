@@ -1,0 +1,494 @@
+// Schema supports SQLite (local dev) and PostgreSQL (production)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+
+model User {
+  id           String   @id @default(uuid())
+  name         String
+  email        String   @unique
+  password     String
+  role         String   @default("STUDENT") // SUPER_ADMIN, ADMIN, TEACHER, STUDENT, PARENT
+  phone        String?
+  photoUrl     String?
+  isActive     Boolean  @default(true)
+  refreshToken String?
+  resetOtp     String?
+  resetOtpExp  DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  student      Student?
+  teacher      Teacher?
+  parent       Parent?
+  sentMessages     Message[] @relation("SentMessages")
+  receivedMessages Message[] @relation("ReceivedMessages")
+  announcements    Announcement[]
+  attendanceMarked Attendance[] @relation("MarkedBy")
+  auditLogs        AuditLog[]
+  customForms      CustomForm[]
+  formSubmissions  FormSubmission[]
+
+  // JEE Paper Generator Relations
+  latexQuestions   Question[]
+  latexPapers      Paper[]
+}
+
+model Student {
+  id             String    @id @default(uuid())
+  userId         String    @unique
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  rollNo         String    @unique
+  classId        String?
+  class          Class?    @relation(fields: [classId], references: [id])
+  dob            DateTime?
+  gender         String?   // MALE, FEMALE, OTHER
+  admissionDate  DateTime  @default(now())
+  address        String?
+  bloodGroup     String?
+  medicalInfo    String?
+  parentId       String?
+  parent         Parent?   @relation(fields: [parentId], references: [id])
+  fatherName     String?
+  motherName     String?
+  aadharNo       String?
+  penNumber      String?
+
+  attendance     Attendance[]
+  marks          Mark[]
+  feePayments    FeePayment[]
+  onlineExamSubmissions OnlineExamSubmission[]
+
+  @@index([classId])
+}
+
+model Teacher {
+  id                    String    @id @default(uuid())
+  userId                String    @unique
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  qualification         String?
+  specialization        String?
+  joiningDate           DateTime  @default(now())
+  employeeId            String    @unique
+
+  classSubjectTeachers  ClassSubjectTeacher[]
+  timetableSlots        Timetable[]
+  homeRoomClass         Class[]   @relation("ClassTeacher")
+  attendanceMarked      Attendance[] @relation("TeacherMarked")
+}
+
+model Parent {
+  id           String    @id @default(uuid())
+  userId       String    @unique
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  occupation   String?
+  relation     String?   // Father, Mother, Guardian
+
+  children     Student[]
+}
+
+model Class {
+  id               String    @id @default(uuid())
+  name             String    // e.g. "Grade 10"
+  section          String    // e.g. "A"
+  academicYear     String    // e.g. "2024-2025"
+  capacity         Int       @default(40)
+  classTeacherId   String?
+  classTeacher     Teacher?  @relation("ClassTeacher", fields: [classTeacherId], references: [id])
+  createdAt        DateTime  @default(now())
+
+  students         Student[]
+  subjects         Subject[]
+  classSubjectTeachers ClassSubjectTeacher[]
+  attendance       Attendance[]
+  exams            Exam[]
+  timetable        Timetable[]
+  feeStructures    FeeStructure[]
+  onlineExams      OnlineExam[]
+
+  @@unique([name, section, academicYear])
+}
+
+model Subject {
+  id      String  @id @default(uuid())
+  name    String
+  code    String
+  classId String
+  class   Class   @relation(fields: [classId], references: [id], onDelete: Cascade)
+
+  classSubjectTeachers ClassSubjectTeacher[]
+  timetableSlots       Timetable[]
+  marks                Mark[]
+  onlineExams          OnlineExam[]
+  examPlans            ExamPlan[]
+
+  @@unique([code, classId])
+  @@index([classId])
+}
+
+model ClassSubjectTeacher {
+  id        String  @id @default(uuid())
+  classId   String
+  subjectId String
+  teacherId String
+  class     Class   @relation(fields: [classId], references: [id])
+  subject   Subject @relation(fields: [subjectId], references: [id])
+  teacher   Teacher @relation(fields: [teacherId], references: [id])
+
+  @@unique([classId, subjectId])
+}
+
+model Attendance {
+  id         String           @id @default(uuid())
+  studentId  String
+  student    Student          @relation(fields: [studentId], references: [id])
+  classId    String
+  class      Class            @relation(fields: [classId], references: [id])
+  date       DateTime
+  status     String           @default("PRESENT") // PRESENT, ABSENT, LATE, EXCUSED
+  markedById String
+  markedBy   User             @relation("MarkedBy", fields: [markedById], references: [id])
+  teacherId  String?
+  teacher    Teacher?         @relation("TeacherMarked", fields: [teacherId], references: [id])
+  note       String?
+  createdAt  DateTime         @default(now())
+
+  @@unique([studentId, date])
+  @@index([classId, date])
+  @@index([studentId])
+}
+
+model Exam {
+  id           String     @id @default(uuid())
+  name         String
+  classId      String
+  class        Class      @relation(fields: [classId], references: [id])
+  term         String     // "Term 1", "Term 2", "Final"
+  examDate     DateTime
+  maxMarks     Float      @default(100)
+  passingMarks Float      @default(40)
+  createdAt    DateTime   @default(now())
+
+  marks        Mark[]
+  examPlans    ExamPlan[]
+
+  @@index([classId])
+}
+
+model Mark {
+  id            String   @id @default(uuid())
+  studentId     String
+  student       Student  @relation(fields: [studentId], references: [id])
+  examId        String
+  exam          Exam     @relation(fields: [examId], references: [id])
+  subjectId     String
+  subject       Subject  @relation(fields: [subjectId], references: [id])
+  marksObtained Float
+  maxMarks      Float    @default(100)
+  grade         String?
+  remarks       String?
+  createdAt     DateTime @default(now())
+
+  @@unique([studentId, examId, subjectId])
+  @@index([studentId])
+  @@index([examId])
+}
+
+model Timetable {
+  id           String   @id @default(uuid())
+  classId      String
+  class        Class    @relation(fields: [classId], references: [id])
+  subjectId    String
+  subject      Subject  @relation(fields: [subjectId], references: [id])
+  teacherId    String
+  teacher      Teacher  @relation(fields: [teacherId], references: [id])
+  day          String   // Monday, Tuesday, etc.
+  periodNumber Int      // 1, 2, 3...
+  startTime    String   // "09:00"
+  endTime      String   // "09:45"
+  room         String?
+  createdAt    DateTime @default(now())
+
+  @@unique([classId, day, periodNumber])
+  @@index([classId])
+  @@index([teacherId])
+}
+
+model TimetableConfig {
+  id           String   @id @default(uuid())
+  category     String   // "PRIMARY" or "HIGHER"
+  periodNumber Int
+  startTime    String   // "09:00"
+  endTime      String   // "09:45"
+  label        String   // "Period 1", "Lunch Break"
+  isBreak      Boolean  @default(false)
+  createdAt    DateTime @default(now())
+
+  @@unique([category, periodNumber])
+}
+
+model FeeStructure {
+  id        String   @id @default(uuid())
+  classId   String
+  class     Class    @relation(fields: [classId], references: [id])
+  term      String
+  name      String
+  amount    Float
+  dueDate   DateTime
+  createdAt DateTime @default(now())
+
+  payments  FeePayment[]
+
+  @@index([classId])
+}
+
+model FeePayment {
+  id               String        @id @default(uuid())
+  studentId        String
+  student          Student       @relation(fields: [studentId], references: [id])
+  feeStructureId   String
+  feeStructure     FeeStructure  @relation(fields: [feeStructureId], references: [id])
+  amountPaid       Float
+  paymentDate      DateTime      @default(now())
+  method           String        @default("CASH") // CASH, ONLINE, BANK_TRANSFER, CHEQUE, UPI
+  status           String        @default("PAID") // PAID, PENDING, OVERDUE, PARTIAL
+  receiptNo        String        @unique @default(uuid())
+  utrNumber        String?
+  receiptUrl       String?
+  remarks          String?
+  createdAt        DateTime      @default(now())
+
+  @@index([studentId])
+  @@index([feeStructureId])
+}
+
+model Announcement {
+  id          String   @id @default(uuid())
+  title       String
+  content     String
+  targetRoles String   // Stored as comma-separated string e.g. "STUDENT,TEACHER"
+  createdById String
+  createdBy   User     @relation(fields: [createdById], references: [id])
+  isActive    Boolean  @default(true)
+  expiresAt   DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Message {
+  id         String            @id @default(uuid())
+  senderId   String
+  sender     User              @relation("SentMessages", fields: [senderId], references: [id])
+  receiverId String
+  receiver   User              @relation("ReceivedMessages", fields: [receiverId], references: [id])
+  content    String
+  readStatus String            @default("UNREAD") // UNREAD, READ
+  sentAt     DateTime          @default(now())
+
+  @@index([senderId, receiverId])
+}
+
+model Event {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  startDate   DateTime
+  endDate     DateTime?
+  allDay      Boolean  @default(false)
+  targetRoles String   // Stored as comma-separated string e.g. "STUDENT,TEACHER"
+  createdAt   DateTime @default(now())
+}
+
+model SchoolSettings {
+  id          String   @id @default(uuid())
+  schoolName  String   @default("JY School")
+  address     String?
+  phone       String?
+  email       String?
+  website     String?
+  logoUrl     String?
+  currentYear String   @default("2024-2025")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  action    String
+  entity    String
+  entityId  String?
+  oldValues String?  // Stored as JSON stringified
+  newValues String?  // Stored as JSON stringified
+  ipAddress String?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([entity, entityId])
+}
+
+model ExamPlan {
+  id           String   @id @default(uuid())
+  examId       String
+  exam         Exam     @relation(fields: [examId], references: [id], onDelete: Cascade)
+  subjectId    String
+  subject      Subject  @relation(fields: [subjectId], references: [id])
+  examDate     DateTime
+  startTime    String   // e.g. "09:00"
+  endTime      String   // e.g. "12:00"
+  room         String?
+  maxMarks     Float    @default(100)
+  passingMarks Float    @default(40)
+  createdAt    DateTime @default(now())
+
+  @@unique([examId, subjectId])
+}
+
+model QuestionGroup {
+  id          String         @id @default(uuid())
+  name        String         @unique
+  description String?
+  questions   QuestionBank[]
+  createdAt   DateTime       @default(now())
+}
+
+model QuestionBank {
+  id            String               @id @default(uuid())
+  groupId       String
+  group         QuestionGroup        @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  questionText  String
+  questionType  String               // "MCQ" or "SUBJECTIVE"
+  options       String?              // JSON array of strings
+  correctAnswer String
+  marks         Float                @default(1)
+  createdAt     DateTime             @default(now())
+  onlineExams   OnlineExamQuestion[]
+}
+
+model OnlineExam {
+  id           String                 @id @default(uuid())
+  title        String
+  classId      String
+  class        Class                  @relation(fields: [classId], references: [id])
+  subjectId    String
+  subject      Subject                @relation(fields: [subjectId], references: [id])
+  duration     Int                    // duration in minutes
+  startTime    DateTime
+  endTime      DateTime
+  totalMarks   Float                  @default(100)
+  passMarks    Float                  @default(40)
+  isPublished  Boolean                @default(false)
+  createdAt    DateTime               @default(now())
+  questions    OnlineExamQuestion[]
+  submissions  OnlineExamSubmission[]
+}
+
+model OnlineExamQuestion {
+  id           String       @id @default(uuid())
+  onlineExamId String
+  onlineExam   OnlineExam   @relation(fields: [onlineExamId], references: [id], onDelete: Cascade)
+  questionId   String
+  question     QuestionBank @relation(fields: [questionId], references: [id], onDelete: Cascade)
+}
+
+model OnlineExamSubmission {
+  id           String     @id @default(uuid())
+  onlineExamId String
+  onlineExam   OnlineExam @relation(fields: [onlineExamId], references: [id], onDelete: Cascade)
+  studentId    String
+  student      Student    @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  answers      String     // JSON mapping question ID to selected answer/text
+  marksObtained Float
+  submittedAt  DateTime   @default(now())
+
+  @@unique([onlineExamId, studentId])
+}
+
+model CustomForm {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  fields      String   // JSON string representing fields
+  targetRoles String   // comma-separated roles, e.g. "STUDENT,TEACHER" or "ALL"
+  createdById String
+  createdBy   User     @relation(fields: [createdById], references: [id])
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  submissions FormSubmission[]
+}
+
+model FormSubmission {
+  id           String     @id @default(uuid())
+  formId       String
+  form         CustomForm @relation(fields: [formId], references: [id], onDelete: Cascade)
+  submittedById String
+  submittedBy  User       @relation(fields: [submittedById], references: [id])
+  answers      String     // JSON string mapping field names to user inputs
+  submittedAt  DateTime   @default(now())
+}
+
+// ----------------------------------------------------------------------
+// JEE Mains Paper Generator Models
+// ----------------------------------------------------------------------
+
+model Question {
+  id            Int      @id @default(autoincrement())
+  subject       String   // "Physics" | "Chemistry" | "Mathematics"
+  chapter       String
+  topic         String
+  type          String   // "MCQ_SINGLE" | "MCQ_MULTI" | "NUMERICAL"
+  difficulty    String   // "Easy" | "Medium" | "Hard"
+  questionText  String   // LaTeX math enabled
+  optionA       String?  // Nullable for Numerical types
+  optionB       String?
+  optionC       String?
+  optionD       String?
+  correctAnswer String   // MCQ option (e.g. "A" or "A,C") or float/integer for numericals
+  solution      String   // LaTeX explanation
+  marks         Int      @default(4)
+  negativeMarks Int      @default(-1)
+  imageUrl      String?
+  tags          String   // Comma-separated or JSON array string
+  createdById   String?
+  createdBy     User?    @relation(fields: [createdById], references: [id])
+  createdAt     DateTime @default(now())
+}
+
+model Paper {
+  id            Int      @id @default(autoincrement())
+  title         String
+  duration      Int      // in minutes
+  totalMarks    Int
+  instructions  String   // Text block
+  examDate      String?
+  watermark     String?  // Optional watermark text
+  paperCode     String?  // e.g. "SET A", "SET B"
+  sectionsJson  String   // JSON string storing section config and question order
+  className     String?
+  instituteName String?
+  subHeader1    String?
+  subHeader2    String?
+  logoUrl       String?
+  createdById   String
+  createdBy     User     @relation(fields: [createdById], references: [id])
+  createdAt     DateTime @default(now())
+}
+
+model Template {
+  id            Int      @id @default(autoincrement())
+  name          String
+  description   String?
+  structureJson String   // Auto-generation blueprint (number of questions, subject split, difficulty breakdown)
+  createdAt     DateTime @default(now())
+}

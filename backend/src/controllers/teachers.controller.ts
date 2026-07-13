@@ -1,0 +1,237 @@
+import { Response, NextFunction } from 'express';
+import { AuthRequest } from '../middlewares/auth';
+import { createError } from '../middlewares/errorHandler';
+import { prisma } from '../utils/prisma';
+import { successResponse, paginatedResponse } from '../utils/response';
+import { generateEmployeeId } from '../utils/helpers';
+import bcrypt from 'bcryptjs';
+import * as XLSX from 'xlsx';
+
+export const getAll = async (req: AuthRequest, res: Response): Promise<void> => {
+  const page = parseInt(req.query.page as string) || 1;
+  const limit = parseInt(req.query.limit as string) || 10;
+  const search = (req.query.search as string) || '';
+  const skip = (page - 1) * limit;
+
+  const where: any = {};
+  if (search) {
+    where.OR = [
+      { user: { name: { contains: search } } },
+      { user: { email: { contains: search } } },
+      { employeeId: { contains: search } },
+    ];
+  }
+
+  const [teachers, total] = await Promise.all([
+    prisma.teacher.findMany({
+      where,
+      skip,
+      take: limit,
+      orderBy: { employeeId: 'asc' },
+      include: {
+        user: { select: { id: true, name: true, email: true, phone: true, photoUrl: true, isActive: true } },
+        _count: { select: { classSubjectTeachers: true } },
+        homeRoomClass: { select: { id: true, name: true, section: true } },
+      },
+    }),
+    prisma.teacher.count({ where }),
+  ]);
+
+  paginatedResponse(res, teachers, total, page, limit, 'Teachers fetched');
+};
+
+export const getById = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  const id = req.params.id as string;
+  const teacher = await prisma.teacher.findUnique({
+    where: { id },
+    include: {
+      user: { select: { id: true, name: true, email: true, phone: true, photoUrl: true, isActive: true, createdAt: true } },
+      classSubjectTeachers: {
+        include: {
+          class: { select: { name: true, section: true } },
+          subject: { select: { name: true, code: true } },
+        },
+      },
+      homeRoomClass: { select: { id: true, name: true, section: true } },
+    },
+  });
+  if (!teacher) return next(createError('Teacher not found', 404));
+  successResponse(res, teacher, 'Teacher fetched');
+};
+
+export const create = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  const { name, email, password, phone, photoUrl, qualification, specialization } = req.body;
+
+  const existing = await prisma.user.findUnique({ where: { email } });
+  if (existing) return next(createError('Email already registered', 409));
+
+  const hashedPassword = await bcrypt.hash(password || 'Teacher@123', 12);
+  const count = await prisma.teacher.count();
+  const employeeId = generateEmployeeId(count + 1);
+
+  const user = await prisma.user.create({
+    data: { name, email, password: hashedPassword, role: 'TEACHER', phone, photoUrl },
+  });
+
+  const teacher = await prisma.teacher.create({
+    data: { userId: user.id, employeeId, qualification, specialization },
+    include: { user: { select: { id: true, name: true, email: true } } },
+  });
+
+  successResponse(res, teacher, 'Teacher created', 201);
+};
+
+export const update = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  const id = req.params.id as string;
+  const { name, phone, photoUrl, qualification, specialization } = req.body;
+
+  const teacher = await prisma.teacher.findUnique({ where: { id } });
+  if (!teacher) return next(createError('Teacher not found', 404));
+
+  await prisma.user.update({ where: { id: teacher.userId }, data: { name, phone, photoUrl } });
+  const updated = await prisma.teacher.update({
+    where: { id },
+    data: { qualification, specialization },
+    include: { user: { select: { id: true, name: true, email: true, phone: true, photoUrl: true } } },
+  });
+
+  successResponse(res, updated, 'Teacher updated');
+};
+
+export const deleteTeacher = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  const id = req.params.id as string;
+  const teacher = await prisma.teacher.findUnique({ where: { id } });
+  if (!teacher) return next(createError('Teacher not found', 404));
+  await prisma.teacher.delete({ where: { id } });
+  successResponse(res, null, 'Teacher deleted');
+};
+
+export const getMyProfile = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  const teacher = await prisma.teacher.findFirst({
+    where: { userId: req.user!.id },
+    include: {
+      user: { select: { id: true, name: true, email: true, phone: true, photoUrl: true } },
+      homeRoomClass: true,
+      classSubjectTeachers: {
+        include: {
+          class: { select: { name: true, section: true } },
+          subject: { select: { name: true, code: true } },
+        },
+      },
+    },
+  });
+  if (!teacher) return next(createError('Teacher profile not found', 404));
+  successResponse(res, teacher, 'Profile fetched');
+};
+
+export const getAssignedClasses = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  const id = req.params.id as string;
+  const teacher = await prisma.teacher.findUnique({ where: { id } });
+  if (!teacher) return next(createError('Teacher not found', 404));
+
+  const assignments = await prisma.classSubjectTeacher.findMany({
+    where: { teacherId: id },
+    include: {
+      class: { select: { id: true, name: true, section: true, academicYear: true } },
+      subject: { select: { id: true, name: true, code: true } },
+    },
+  });
+  successResponse(res, assignments, 'Assigned classes fetched');
+};
+
+export const bulkImport = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  if (!req.file) return next(createError('Excel or CSV file required', 400));
+
+  try {
+    const filePath = req.file.path;
+    const workbook = XLSX.readFile(filePath);
+    const sheetName = workbook.SheetNames[0];
+    const sheet = workbook.Sheets[sheetName];
+    const results = XLSX.utils.sheet_to_json<any>(sheet);
+
+    let success = 0;
+    const failed: any[] = [];
+
+    for (const row of results) {
+      try {
+        const email = row.Email || row.email;
+        const name = row.Name || row.name;
+        const password = row.Password || row.password || 'Teacher@123';
+        const phone = row.Phone || row.phone || null;
+        const qualification = row.Qualification || row.qualification || null;
+        const specialization = row.Specialization || row.specialization || null;
+
+        if (!email || !name) {
+          failed.push({ row, reason: 'Name and Email are required' });
+          continue;
+        }
+
+        const existing = await prisma.user.findUnique({ where: { email } });
+        if (existing) {
+          failed.push({ row, reason: 'Email already exists' });
+          continue;
+        }
+
+        const hashedPassword = await bcrypt.hash(String(password), 12);
+        const count = await prisma.teacher.count();
+        const employeeId = generateEmployeeId(count + 1);
+
+        const user = await prisma.user.create({
+          data: { name, email: String(email), password: hashedPassword, role: 'TEACHER', phone: phone ? String(phone) : null },
+        });
+
+        await prisma.teacher.create({
+          data: {
+            userId: user.id,
+            employeeId,
+            qualification: qualification ? String(qualification) : null,
+            specialization: specialization ? String(specialization) : null,
+          },
+        });
+        success++;
+      } catch (e: any) {
+        failed.push({ row, reason: e.message });
+      }
+    }
+
+    // Clean up uploaded file
+    try {
+      require('fs').unlinkSync(filePath);
+    } catch (e) {
+      console.error('File cleanup failed:', e);
+    }
+
+    successResponse(res, { success, failed, total: results.length }, 'Bulk import complete');
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const exportCsv = async (_req: AuthRequest, res: Response): Promise<void> => {
+  const teachers = await prisma.teacher.findMany({
+    include: {
+      user: { select: { name: true, email: true, phone: true } },
+    },
+    orderBy: { employeeId: 'asc' },
+  });
+
+  const rows = teachers.map((t) => ({
+    'Employee ID': t.employeeId,
+    'Name': t.user.name,
+    'Email': t.user.email,
+    'Phone': t.user.phone || '',
+    'Qualification': t.qualification || '',
+    'Specialization': t.specialization || '',
+    'Joining Date': t.joiningDate.toISOString().split('T')[0],
+  }));
+
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.json_to_sheet(rows);
+  XLSX.utils.book_append_sheet(wb, ws, 'Teachers');
+  const buffer = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
+
+  res.setHeader('Content-Disposition', 'attachment; filename=teachers.xlsx');
+  res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+  res.send(buffer);
+};
+

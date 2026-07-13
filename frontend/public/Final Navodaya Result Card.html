@@ -1,0 +1,1932 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Navodaya Result Card with Photo</title>
+
+    <!-- CDN Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js">
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js">
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js">
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js">
+    </script>
+
+    <style>
+        /* ---------- RESET & BASE ---------- */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Arial, sans-serif;
+            background: radial-gradient(circle at 10% 20%, rgb(240, 245, 255) 0%, rgb(228, 235, 248) 90%);
+            padding: 30px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .app-wrapper {
+            max-width: 1200px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 28px;
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            box-shadow: 0 25px 70px -15px rgba(26, 42, 74, 0.08), 0 0 50px -10px rgba(99, 102, 241, 0.04);
+            padding: 36px 40px;
+        }
+
+        h1.main-title {
+            font-size: 30px;
+            font-weight: 800;
+            color: #0b1a33;
+            letter-spacing: -0.5px;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        h1.main-title small {
+            font-size: 16px;
+            font-weight: 400;
+            color: #4a6f8f;
+            letter-spacing: 0.3px;
+            margin-left: 8px;
+        }
+        .sub-head {
+            color: #3a5a7a;
+            font-size: 14px;
+            border-bottom: 2px solid #eef2f7;
+            padding-bottom: 14px;
+            margin-bottom: 28px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        /* ---------- CONTROLS LAYOUT ---------- */
+        .controls-grid {
+            display: grid;
+            grid-template-columns: 1fr 1.6fr;
+            gap: 30px;
+            margin-bottom: 32px;
+        }
+        @media (max-width: 820px) {
+            .controls-grid {
+                grid-template-columns: 1fr;
+                gap: 24px;
+            }
+        }
+
+        .upload-section {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            border-radius: 20px;
+            padding: 24px 28px;
+            border: 1px solid #e2e8f0;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.01), 0 4px 12px rgba(0,0,0,0.02);
+        }
+        .upload-section h3 {
+            font-size: 16px;
+            font-weight: 800;
+            color: #0f172a;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            letter-spacing: -0.2px;
+        }
+        .upload-section h3 i {
+            color: #2a6a9a;
+        }
+
+        .file-row {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+        .file-row label {
+            font-weight: 600;
+            font-size: 13px;
+            color: #1a3a5a;
+            min-width: 100px;
+        }
+        .file-row input[type="file"] {
+            flex: 1;
+            font-size: 13px;
+            padding: 6px 0;
+        }
+        .file-row .preview-img {
+            width: 52px;
+            height: 52px;
+            border-radius: 8px;
+            object-fit: contain;
+            background: #fff;
+            border: 1.5px solid #dce4ed;
+            padding: 4px;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px 24px;
+            border-radius: 12px;
+            border: none;
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            white-space: nowrap;
+            font-family: inherit;
+            line-height: 1.4;
+            background: #e2e8f0;
+            color: #1e293b;
+        }
+        .btn:hover {
+            background: #cbd5e1;
+            transform: translateY(-2px);
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: #fff;
+            box-shadow: 0 4px 14px rgba(239, 68, 68, 0.25);
+        }
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
+        }
+        .btn-success {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: #fff;
+            box-shadow: 0 4px 14px rgba(16, 185, 129, 0.25);
+        }
+        .btn-success:hover {
+            background: linear-gradient(135deg, #059669 0%, #047857 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+        }
+        .btn-outline {
+            background: transparent;
+            border: 2px solid #ef4444;
+            color: #ef4444;
+        }
+        .btn-outline:hover {
+            background: rgba(239, 68, 68, 0.05);
+            transform: translateY(-2px);
+        }
+        .btn-sm {
+            padding: 6px 16px;
+            font-size: 13px;
+            border-radius: 8px;
+        }
+        .btn-danger {
+            background: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%);
+            color: #fff;
+        }
+        .btn-danger:hover {
+            background: linear-gradient(135deg, #e11d48 0%, #be123c 100%);
+        }
+        .btn-purple {
+            background: linear-gradient(135deg, #a855f7 0%, #89123e 100%);
+            color: #fff;
+            box-shadow: 0 4px 14px rgba(168, 85, 247, 0.25);
+        }
+        .btn-purple:hover {
+            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(168, 85, 247, 0.4);
+        }
+        .btn-gold {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: #fff;
+            box-shadow: 0 4px 14px rgba(245, 158, 11, 0.25);
+        }
+        .btn-gold:hover {
+            background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(245, 158, 11, 0.4);
+        }
+        .btn-info {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: #fff;
+            box-shadow: 0 4px 14px rgba(59, 130, 246, 0.25);
+        }
+        .btn-info:hover {
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+        }
+
+        .action-bar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 14px;
+            margin-top: 18px;
+            padding-top: 16px;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        /* ---------- STUDENT NAV ---------- */
+        .student-nav {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            flex-wrap: wrap;
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            padding: 12px 24px;
+            border-radius: 16px;
+            border: 1px solid #e2e8f0;
+            margin-bottom: 20px;
+        }
+        .student-nav span {
+            font-weight: 600;
+            color: #1e293b;
+        }
+        .student-nav .badge {
+            background: #0f172a;
+            color: #fff;
+            padding: 4px 16px;
+            border-radius: 30px;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        /* ---------- RESULT CARD ---------- */
+        .card-container {
+            display: flex;
+            justify-content: center;
+            background: #0f172a;
+            background-image: radial-gradient(rgba(51, 65, 85, 0.3) 1px, transparent 0), radial-gradient(rgba(51, 65, 85, 0.3) 1px, transparent 0);
+            background-size: 20px 20px;
+            background-position: 0 0, 10px 10px;
+            padding: 40px 30px;
+            border-radius: 24px;
+            margin: 12px 0 24px;
+            box-shadow: inset 0 4px 20px rgba(0,0,0,0.4);
+            overflow: auto;
+        }
+
+        #resultCard {
+            width: 794px;
+            min-height: 1123px;
+            background: #ffffff;
+            padding: 32px 38px 30px;
+            border-radius: 12px;
+            box-shadow: 0 12px 48px rgba(0,0,0,0.25);
+            font-family: 'Segoe UI', Roboto, Arial, sans-serif;
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        /* ---------- NAVODAYA CARD STYLES ---------- */
+        .navodaya-card {
+            background: #ffffff;
+            border-radius: 12px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Top decorative bar */
+        .navodaya-card .top-bar {
+            background: linear-gradient(135deg, #c0392b, #e74c3c, #f39c12);
+            height: 10px;
+            width: 100%;
+            border-radius: 12px 12px 0 0;
+        }
+
+        /* Header */
+        .navodaya-card .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 18px 10px 14px 10px;
+            border-bottom: 3px solid #f39c12;
+            position: relative;
+        }
+        .navodaya-card .card-header .logo-wrap {
+            width: 100px;
+            height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .navodaya-card .card-header .logo-wrap img {
+            max-width: 100%;
+            max-height: 100px;
+            object-fit: contain;
+        }
+        .navodaya-card .card-header .title-wrap {
+            text-align: center;
+            flex: 1;
+            padding: 0 10px;
+        }
+        .navodaya-card .card-header .title-wrap .school-name {
+            font-size: 26px;
+            font-weight: 900;
+            color: #1a1a2e;
+            letter-spacing: 1.5px;
+            margin-bottom: 2px;
+            font-family: 'Times New Roman', serif;
+            line-height: 1.2;
+            white-space: nowrap;
+        }
+        .navodaya-card .card-header .title-wrap .school-sub {
+            font-size: 16px;
+            font-weight: 600;
+            color: #2a4a6a;
+            letter-spacing: 0.5px;
+            margin: 2px 0;
+            white-space: nowrap;
+        }
+        .navodaya-card .card-header .title-wrap .school-address {
+            font-size: 13px;
+            font-weight: 400;
+            color: #5a6a7a;
+            letter-spacing: 0.3px;
+            margin-top: 2px;
+            white-space: nowrap;
+        }
+        .navodaya-card .card-header .title-wrap .exam-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: #c0392b;
+            letter-spacing: 2px;
+            margin: 6px 0 0;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+        .navodaya-card .card-header .title-wrap .result-card-label {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1a3a5a;
+            letter-spacing: 3px;
+            margin-top: 2px;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+        .navodaya-card .card-header .spacer {
+            width: 100px;
+            flex-shrink: 0;
+        }
+
+        /* Decorative line */
+        .navodaya-card .deco-line {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            padding: 4px 0 10px 0;
+            border-bottom: 2px dashed #f39c12;
+        }
+        .navodaya-card .deco-line span {
+            font-size: 20px;
+            color: #c0392b;
+        }
+        .navodaya-card .deco-line .line {
+            flex: 1;
+            max-width: 120px;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #f39c12, transparent);
+        }
+
+        /* Student info - with golden border and photo */
+        .navodaya-card .student-info {
+            margin: 14px 0 16px;
+            border: 2px solid #f39c12;
+            border-radius: 10px;
+            overflow: hidden;
+            background: #ffffff;
+            box-shadow: 0 2px 8px rgba(243, 156, 18, 0.15);
+            display: grid;
+            grid-template-columns: 1fr auto;
+        }
+        .navodaya-card .student-info .info-details {
+            display: flex;
+            flex-direction: column;
+        }
+        .navodaya-card .student-info .info-row {
+            display: grid;
+            grid-template-columns: 150px 1fr;
+            border-bottom: 1px solid #f5e6d3;
+        }
+        .navodaya-card .student-info .info-row:last-child {
+            border-bottom: none;
+        }
+        .navodaya-card .student-info .info-row .label {
+            background: #fdf8f0;
+            padding: 8px 16px;
+            font-weight: 600;
+            color: #7a3a1a;
+            font-size: 14px;
+            border-right: 1px solid #f5e6d3;
+            display: flex;
+            align-items: center;
+            white-space: nowrap;
+        }
+        .navodaya-card .student-info .info-row .value {
+            padding: 8px 16px;
+            font-weight: 500;
+            color: #1a1a2e;
+            font-size: 14px;
+            background: #ffffff;
+            display: flex;
+            align-items: center;
+            white-space: nowrap;
+        }
+        .navodaya-card .student-info .info-row:nth-child(even) .value {
+            background: #fefcf9;
+        }
+        /* Photo column - 5x6 rectangle, top aligned */
+        .navodaya-card .student-info .photo-col {
+            padding: 12px 16px 12px 8px;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            border-left: 2px solid #f5e6d3;
+            background: #fefcf9;
+            min-width: 120px;
+        }
+        .navodaya-card .student-info .photo-col img {
+            width: 90px;
+            height: 108px;
+            /* 5:6 ratio */
+            object-fit: cover;
+            border: 3px solid #f39c12;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 4px;
+            margin-top: 0;
+        }
+        .navodaya-card .student-info .photo-col .placeholder-photo {
+            width: 90px;
+            height: 108px;
+            /* 5:6 ratio */
+            background: #e8e0d8;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #8a7a6a;
+            font-size: 40px;
+            border: 3px dashed #c0b8b0;
+            border-radius: 4px;
+        }
+        @media (max-width: 840px) {
+            .navodaya-card .student-info {
+                grid-template-columns: 1fr;
+            }
+            .navodaya-card .student-info .photo-col {
+                border-left: none;
+                border-top: 2px solid #f5e6d3;
+                padding: 12px 0;
+            }
+            .navodaya-card .student-info .info-row {
+                grid-template-columns: 1fr;
+                border-bottom: 1px solid #f5e6d3;
+            }
+            .navodaya-card .student-info .info-row .label {
+                border-right: none;
+                border-bottom: 1px solid #f5e6d3;
+                background: #fdf8f0;
+                padding: 6px 14px;
+            }
+            .navodaya-card .student-info .info-row .value {
+                padding: 6px 14px;
+                background: #fff;
+                white-space: normal;
+            }
+            .navodaya-card .student-info .info-row:nth-child(even) .value {
+                background: #fefcf9;
+            }
+        }
+
+        /* Marks section */
+        .navodaya-card .marks-section {
+            margin: 12px 0 16px;
+            padding: 16px 20px;
+            background: linear-gradient(135deg, #fdf8f0, #fefcf9);
+            border-radius: 10px;
+            border: 2px solid #f5e6d3;
+            position: relative;
+        }
+        .navodaya-card .marks-section .marks-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #1a1a2e;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .navodaya-card .marks-section .marks-title .icon {
+            font-size: 22px;
+        }
+        .navodaya-card .marks-section .marks-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 12px;
+            align-items: center;
+        }
+        @media (max-width: 600px) {
+            .navodaya-card .marks-section .marks-grid {
+                grid-template-columns: 1fr;
+                gap: 8px;
+            }
+        }
+        .navodaya-card .marks-section .marks-grid .mark-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 8px 12px;
+            background: #fff;
+            border-radius: 8px;
+            border: 1px solid #e8e0d8;
+        }
+        .navodaya-card .marks-section .marks-grid .mark-item .label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #7a6a5a;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .navodaya-card .marks-section .marks-grid .mark-item .value {
+            font-size: 28px;
+            font-weight: 800;
+            color: #1a1a2e;
+            margin-top: 2px;
+        }
+        .navodaya-card .marks-section .marks-grid .mark-item .value .max {
+            font-size: 16px;
+            font-weight: 400;
+            color: #8a7a6a;
+        }
+        .navodaya-card .marks-section .marks-grid .mark-item.highlight {
+            background: linear-gradient(135deg, #fdf0e8, #fce8d8);
+            border-color: #f39c12;
+            box-shadow: 0 2px 12px rgba(243, 156, 18, 0.15);
+        }
+        .navodaya-card .marks-section .marks-grid .mark-item.highlight .value {
+            color: #c0392b;
+        }
+
+        /* Score bar */
+        .navodaya-card .score-bar-wrap {
+            margin: 8px 0 4px;
+            padding: 6px 0;
+        }
+        .navodaya-card .score-bar-wrap .score-bar {
+            height: 10px;
+            background: #e8e0d8;
+            border-radius: 30px;
+            overflow: hidden;
+            position: relative;
+        }
+        .navodaya-card .score-bar-wrap .score-bar .fill {
+            height: 100%;
+            border-radius: 30px;
+            background: linear-gradient(90deg, #f39c12, #e74c3c);
+            transition: width 0.8s ease;
+            width: 0%;
+        }
+        .navodaya-card .score-bar-wrap .score-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            color: #8a7a6a;
+            margin-top: 4px;
+        }
+
+        /* Result footer */
+        .navodaya-card .result-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-top: 18px;
+            padding-top: 14px;
+            border-top: 3px solid #f39c12;
+        }
+        .navodaya-card .result-footer .left {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .navodaya-card .result-footer .left .total-label {
+            font-size: 16px;
+            font-weight: 700;
+            color: #1a1a2e;
+        }
+        .navodaya-card .result-footer .left .percentage {
+            font-size: 22px;
+            font-weight: 800;
+            color: #1a7a4a;
+        }
+        .navodaya-card .result-footer .left .result-badge {
+            display: inline-block;
+            padding: 4px 28px;
+            border-radius: 30px;
+            font-weight: 700;
+            font-size: 18px;
+            letter-spacing: 1px;
+            margin-top: 4px;
+        }
+        .navodaya-card .result-footer .left .result-badge.pass {
+            background: #d4edda;
+            color: #155724;
+        }
+        .navodaya-card .result-footer .left .result-badge.fail {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .navodaya-card .result-footer .signatures {
+            display: flex;
+            gap: 40px;
+            align-items: flex-end;
+        }
+        .navodaya-card .result-footer .signatures .sig-block {
+            text-align: center;
+            min-width: 100px;
+        }
+        .navodaya-card .result-footer .signatures .sig-block img {
+            max-width: 130px;
+            max-height: 55px;
+            object-fit: contain;
+            display: block;
+            margin: 0 auto 4px;
+        }
+        .navodaya-card .result-footer .signatures .sig-block .sig-label {
+            font-size: 13px;
+            color: #4a6a8a;
+            font-weight: 500;
+            border-top: 1px solid #d0c8c0;
+            padding-top: 4px;
+        }
+
+        /* Footer note */
+        .navodaya-card .card-footer-note {
+            text-align: center;
+            font-size: 11px;
+            color: #9a8a7a;
+            margin-top: 14px;
+            padding-top: 8px;
+            border-top: 1px solid #eee8e0;
+            letter-spacing: 0.3px;
+        }
+
+        /* ---------- PROGRESS OVERLAY ---------- */
+        .progress-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.55);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .progress-overlay.active {
+            display: flex;
+        }
+        .progress-box {
+            background: #fff;
+            padding: 32px 40px;
+            border-radius: 16px;
+            min-width: 340px;
+            max-width: 500px;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+        }
+        .progress-box h3 {
+            font-size: 18px;
+            color: #1a2a3a;
+            margin-bottom: 12px;
+        }
+        .progress-box p {
+            color: #4a6a8a;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        .progress-track {
+            width: 100%;
+            height: 8px;
+            background: #e8edf3;
+            border-radius: 30px;
+            overflow: hidden;
+            margin: 8px 0 12px;
+        }
+        .progress-track .progress-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #c0392b, #f39c12);
+            border-radius: 30px;
+            transition: width 0.25s ease;
+        }
+        .progress-box .progress-text {
+            font-weight: 600;
+            color: #0a2a4a;
+            font-size: 15px;
+        }
+
+        /* ---------- RESPONSIVE ---------- */
+        @media (max-width: 840px) {
+            #resultCard {
+                width: 100%;
+                min-height: auto;
+                padding: 20px 16px;
+            }
+            .navodaya-card .card-header .title-wrap .school-name {
+                font-size: 20px;
+            }
+            .navodaya-card .card-header .title-wrap .school-sub {
+                font-size: 14px;
+            }
+            .navodaya-card .card-header .title-wrap .school-address {
+                font-size: 12px;
+            }
+            .navodaya-card .card-header .title-wrap .exam-title {
+                font-size: 17px;
+            }
+            .navodaya-card .card-header .title-wrap .result-card-label {
+                font-size: 15px;
+            }
+            .navodaya-card .card-header .logo-wrap {
+                width: 70px;
+                height: 70px;
+            }
+            .navodaya-card .card-header .logo-wrap img {
+                max-height: 70px;
+            }
+            .navodaya-card .card-header .spacer {
+                width: 70px;
+            }
+            .navodaya-card .result-footer {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 16px;
+            }
+            .navodaya-card .result-footer .signatures {
+                justify-content: center;
+                flex-wrap: wrap;
+                gap: 24px;
+            }
+            .controls-grid {
+                grid-template-columns: 1fr;
+            }
+            .app-wrapper {
+                padding: 16px;
+            }
+            .navodaya-card .marks-section .marks-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+            .navodaya-card .student-info .photo-col img {
+                width: 70px;
+                height: 84px;
+            }
+            .navodaya-card .student-info .photo-col .placeholder-photo {
+                width: 70px;
+                height: 84px;
+            }
+        }
+        @media print {
+            body {
+                background: #fff;
+                padding: 0;
+            }
+            .app-wrapper {
+                box-shadow: none;
+                padding: 0;
+            }
+            .controls-grid,
+            .student-nav,
+            .action-bar,
+            .sub-head .btn {
+                display: none !important;
+            }
+            .card-container {
+                background: #fff;
+                padding: 0;
+                border-radius: 0;
+            }
+            #resultCard {
+                box-shadow: none;
+                border: 1px solid #ccc;
+                border-radius: 0;
+                page-break-after: always;
+            }
+        }
+
+        /* misc */
+        .hidden {
+            display: none !important;
+        }
+        .mt-8 {
+            margin-top: 8px;
+        }
+        .flex-wrap {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 10px;
+        }
+        .text-muted {
+            color: #6a8aaa;
+            font-size: 13px;
+        }
+        .gap-6 {
+            gap: 6px;
+        }
+        .w-full {
+            width: 100%;
+        }
+        .file-input-wrapper {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 10px;
+        }
+        .file-input-wrapper input[type="file"] {
+            flex: 1;
+            min-width: 140px;
+        }
+        .badge-count {
+            background: #c0392b;
+            color: #fff;
+            padding: 0 12px;
+            border-radius: 30px;
+            font-size: 13px;
+            font-weight: 600;
+            line-height: 26px;
+        }
+        .btn-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .navodaya-badge {
+            display: inline-block;
+            background: #f39c12;
+            color: #fff;
+            padding: 2px 14px;
+            border-radius: 30px;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+        .zip-status {
+            font-size: 13px;
+            color: #2a6a9a;
+            margin-top: 4px;
+        }
+        .zip-status .success {
+            color: #1a7a4a;
+        }
+        .zip-status .error {
+            color: #b13a3a;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-wrapper">
+
+        <!-- HEADER -->
+        <div class="sub-head">
+            <div>
+                <h1 class="main-title">
+                    🏫 Result Card Generator
+                    <small>Navodaya Model Exam</small>
+                </h1>
+            </div>
+            <div class="flex-wrap">
+                <span class="badge-count" id="studentCountBadge">0 students</span>
+            </div>
+        </div>
+
+        <!-- CONTROLS -->
+        <div class="controls-grid">
+
+            <!-- LEFT: Uploads -->
+            <div class="upload-section">
+                <h3>🖼️ Upload Assets</h3>
+
+                <div class="file-row">
+                    <label>Logo</label>
+                    <div class="file-input-wrapper">
+                        <input type="file" id="logoUpload" accept="image/*" />
+                        <img id="logoPreview" class="preview-img" src="" alt="Logo" style="display:none;" />
+                    </div>
+                </div>
+
+                <div class="file-row">
+                    <label>Teacher Signature</label>
+                    <div class="file-input-wrapper">
+                        <input type="file" id="teacherSigUpload" accept="image/*" />
+                        <img id="teacherSigPreview" class="preview-img" src="" alt="Teacher Sig" style="display:none;" />
+                    </div>
+                </div>
+
+                <div class="file-row">
+                    <label>Principal Signature</label>
+                    <div class="file-input-wrapper">
+                        <input type="file" id="principalSigUpload" accept="image/*" />
+                        <img id="principalSigPreview" class="preview-img" src="" alt="Principal Sig" style="display:none;" />
+                    </div>
+                </div>
+
+                <!-- NEW: Student Photos ZIP Upload -->
+                <div style="margin-top:12px; border-top:1px solid #e2eaf2; padding-top:12px;">
+                    <div class="file-row">
+                        <label>📸 Student Photos (ZIP)</label>
+                        <div class="file-input-wrapper">
+                            <input type="file" id="photoZipUpload" accept=".zip" />
+                            <button class="btn btn-sm btn-info" id="clearPhotosBtn" style="display:none;">Clear Photos</button>
+                        </div>
+                    </div>
+                    <div id="zipStatus" class="zip-status">No ZIP uploaded. File names must match Student ID.</div>
+                </div>
+
+                <!-- DB Fetch -->
+                <div style="margin-top:16px; border-top:1px solid #e2eaf2; padding-top:16px; margin-bottom:18px;">
+                    <h3 style="margin-bottom:12px;">🔌 Fetch from Database <span class="badge-soft" style="background:#10b981; color:#fff; font-size:11px; padding:2px 8px; border-radius:30px; font-weight:600; margin-left:8px;">LIVE</span></h3>
+                    <div class="file-row" style="margin-bottom:10px;">
+                        <label style="min-width:70px; font-weight:600; font-size:13px; color:#1a3a5a;">Class</label>
+                        <select id="dbClassSelect" style="padding:8px 12px; border-radius:10px; border:1.5px solid #dce4ed; flex:1; font-size:13px; font-weight:500; outline:none; background:#fff; cursor:pointer;"></select>
+                    </div>
+                    <div class="file-row" style="margin-bottom:12px;">
+                        <label style="min-width:70px; font-weight:600; font-size:13px; color:#1a3a5a;">Exam</label>
+                        <select id="dbExamSelect" style="padding:8px 12px; border-radius:10px; border:1.5px solid #dce4ed; flex:1; font-size:13px; font-weight:500; outline:none; background:#fff; cursor:pointer;"></select>
+                    </div>
+                    <button class="btn btn-sm btn-primary" id="fetchDbBtn" style="width:100%; border-radius:10px;">📥 Load Marks</button>
+                    <div id="dbStatus" class="text-muted mt-8" style="font-size:12px; color:#64748b; font-weight:500; text-align:center;">Select options and load data.</div>
+                </div>
+
+                <div style="margin-top:16px; border-top:1px solid #e2eaf2; padding-top:16px;">
+                    <h3 style="margin-bottom:10px;">📊 Student Data (Excel)</h3>
+                    <div class="file-row">
+                        <label style="min-width:70px;">Upload</label>
+                        <div class="file-input-wrapper">
+                            <input type="file" id="excelUpload" accept=".xlsx,.xls" />
+                            <button class="btn btn-outline btn-sm" id="sampleExcelBtn">📥 Sample Excel</button>
+                        </div>
+                    </div>
+                    <div id="excelStatus" class="text-muted mt-8" style="font-size:13px;">No file uploaded</div>
+                    <div style="margin-top:8px; font-size:12px; color:#8a7a6a;">
+                        <span class="navodaya-badge">📌 Subject: Entrance Test</span>
+                        <span style="margin-left:8px;">Max Marks: 20</span>
+                        <span style="margin-left:8px;">🆔 Column "Student ID"</span>
+                        <span style="margin-left:8px; display:block; margin-top:4px;">📅 Academic Year &amp; 📍 Location are fixed (not taken from sheet)</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT: Actions -->
+            <div class="upload-section" style="display:flex; flex-direction:column; justify-content:space-between;">
+                <div>
+                    <h3>⚙️ Actions</h3>
+                    <div style="display:flex; flex-wrap:wrap; gap:10px; margin-top:10px;">
+                        <button class="btn btn-primary" id="generateBtn">🔄 Generate Cards</button>
+                        <div class="btn-group">
+                            <button class="btn btn-success" id="downloadPdfBtn">📄 PDF (All)</button>
+                            <button class="btn btn-success" id="downloadIndividualBtn" style="background:#2a6a9a;">📄 PDF (This)</button>
+                            <button class="btn btn-gold" id="downloadAllIndividualBtn">📦 All PDFs (ZIP)</button>
+                        </div>
+                        <button class="btn btn-outline" id="resetBtn">⟲ Reset</button>
+                    </div>
+                    <div class="text-muted mt-8" style="font-size:13px;">
+                        Pass threshold: <strong>40%</strong> (8/20) &bull; Individual PDFs named by student
+                    </div>
+                </div>
+                <div style="margin-top:14px; padding-top:14px; border-top:1px solid #e2eaf2; display:flex; flex-wrap:wrap; gap:10px; align-items:center;">
+                    <span style="font-weight:500; color:#1a2a3a;">Preview:</span>
+                    <button class="btn btn-sm btn-outline" id="prevStudentBtn">◀ Prev</button>
+                    <span id="studentNavIndex" style="font-weight:600; min-width:60px; text-align:center;">0 / 0</span>
+                    <button class="btn btn-sm btn-outline" id="nextStudentBtn">Next ▶</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- STUDENT NAV -->
+        <div class="student-nav" id="studentNav" style="display:none;">
+            <span>👤 <span id="currentStudentName">—</span></span>
+            <span style="color:#4a6a8a;">|</span>
+            <span>🆔 <span id="currentStudentID">—</span></span>
+            <span style="color:#4a6a8a;">|</span>
+            <span class="badge" id="currentStudentClass">—</span>
+            <span style="color:#4a6a8a;">|</span>
+            <span>📞 <span id="currentStudentMobile">—</span></span>
+            <span style="color:#4a6a8a;">|</span>
+            <span>📍 <span id="currentStudentLocation">Narasannapeta</span></span>
+            <span style="margin-left:auto; font-size:14px; color:#4a6a8a;" id="navProgress">1 of 1</span>
+        </div>
+
+        <!-- CARD PREVIEW -->
+        <div class="card-container" id="cardContainer">
+            <div id="resultCard">
+                <div style="display:flex; align-items:center; justify-content:center; height:100%; color:#8a9aaa; font-size:16px;">
+                    ⬆️ Upload Excel &amp; click "Generate Cards"
+                </div>
+            </div>
+        </div>
+
+        <!-- PROGRESS OVERLAY -->
+        <div class="progress-overlay" id="progressOverlay">
+            <div class="progress-box">
+                <h3>📦 Generating Individual PDFs</h3>
+                <p id="progressStatus">Preparing...</p>
+                <div class="progress-track">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <div class="progress-text" id="progressText">0%</div>
+            </div>
+        </div>
+
+        <!-- FOOTER -->
+        <div style="margin-top:10px; text-align:center; font-size:13px; color:#8a9aaa; border-top:1px solid #e2eaf2; padding-top:16px;">
+            Navodaya Result Card Generator &bull; Model Examination &bull; A4 Ready
+        </div>
+    </div>
+
+    <script>
+        // ============================================================
+        //  STATE
+        // ============================================================
+        const state = {
+            students: [],
+            currentIndex: 0,
+            logoDataURL: null,
+            teacherSigDataURL: null,
+            principalSigDataURL: null,
+            imageMap: {}, // key: Student ID (uppercase), value: dataURL
+        };
+
+        let MAX_MARKS = 20;
+        const PASS_THRESHOLD = 40; // percentage
+        const FIXED_ACADEMIC_YEAR = '2026 - 2027';
+        const FIXED_LOCATION = 'Narasannapeta';
+
+        // DOM refs
+        const $ = id => document.getElementById(id);
+        const cardEl = $('resultCard');
+        const logoUpload = $('logoUpload');
+        const teacherSigUpload = $('teacherSigUpload');
+        const principalSigUpload = $('principalSigUpload');
+        const logoPreview = $('logoPreview');
+        const teacherSigPreview = $('teacherSigPreview');
+        const principalSigPreview = $('principalSigPreview');
+        const excelUpload = $('excelUpload');
+        const excelStatus = $('excelStatus');
+        const photoZipUpload = $('photoZipUpload');
+        const zipStatus = $('zipStatus');
+        const clearPhotosBtn = $('clearPhotosBtn');
+        const generateBtn = $('generateBtn');
+        const downloadPdfBtn = $('downloadPdfBtn');
+        const downloadIndividualBtn = $('downloadIndividualBtn');
+        const downloadAllIndividualBtn = $('downloadAllIndividualBtn');
+        const resetBtn = $('resetBtn');
+        const prevStudentBtn = $('prevStudentBtn');
+        const nextStudentBtn = $('nextStudentBtn');
+        const studentNav = $('studentNav');
+        const currentStudentName = $('currentStudentName');
+        const currentStudentID = $('currentStudentID');
+        const currentStudentClass = $('currentStudentClass');
+        const currentStudentMobile = $('currentStudentMobile');
+        const currentStudentLocation = $('currentStudentLocation');
+        const studentNavIndex = $('studentNavIndex');
+        const navProgress = $('navProgress');
+        const studentCountBadge = $('studentCountBadge');
+        const sampleExcelBtn = $('sampleExcelBtn');
+        const progressOverlay = $('progressOverlay');
+        const progressFill = $('progressFill');
+        const progressText = $('progressText');
+        const progressStatus = $('progressStatus');
+
+        // ============================================================
+        //  SAMPLE EXCEL (with Photo column, Student ID, no Academic Year/Location)
+        // ============================================================
+        function generateSampleExcel() {
+            const data = [
+                ['Student ID', 'Student Name', 'Class', 'Section', 'Mobile Number', 'EntranceTest'],
+                ['S1001', 'T. SHAMYUU', 'VIII', 'A', '145698', 18],
+                ['S1002', 'A. RAHUL', 'IX', 'B', '987654', 15],
+                ['S1003', 'S. PRIYA', 'X', 'A', '456123', 19],
+                ['S1004', 'M. KIRAN', 'VIII', 'C', '321654', 7],
+                ['S1005', 'R. ANJALI', 'IX', 'A', '789456', 12],
+            ];
+            const ws = XLSX.utils.aoa_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Students');
+            XLSX.writeFile(wb, 'Navodaya_Students_Sample.xlsx');
+        }
+        sampleExcelBtn.addEventListener('click', generateSampleExcel);
+
+        // ============================================================
+        //  IMAGE UPLOADS
+        // ============================================================
+        function handleImageUpload(input, previewEl, setDataURL) {
+            input.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = function(ev) {
+                    const dataUrl = ev.target.result;
+                    previewEl.src = dataUrl;
+                    previewEl.style.display = 'block';
+                    setDataURL(dataUrl);
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        handleImageUpload(logoUpload, logoPreview, (url) => { state.logoDataURL = url; });
+        handleImageUpload(teacherSigUpload, teacherSigPreview, (url) => { state.teacherSigDataURL = url; });
+        handleImageUpload(principalSigUpload, principalSigPreview, (url) => { state.principalSigDataURL = url; });
+
+        // ============================================================
+        //  BULK PHOTO UPLOAD (ZIP)
+        // ============================================================
+        photoZipUpload.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) {
+                zipStatus.textContent = 'No ZIP uploaded.';
+                zipStatus.className = 'zip-status';
+                clearPhotosBtn.style.display = 'none';
+                return;
+            }
+
+            zipStatus.textContent = '⏳ Reading ZIP file...';
+            zipStatus.className = 'zip-status';
+
+            const zip = new JSZip();
+            zip.loadAsync(file)
+                .then(function(zipData) {
+                    const imageMap = {};
+                    const promises = [];
+                    let imageCount = 0;
+
+                    zipData.forEach(function(relativePath, zipEntry) {
+                        if (!zipEntry.dir) {
+                            const fileName = zipEntry.name;
+                            // Extract extension and base name
+                            const ext = fileName.split('.').pop().toLowerCase();
+                            if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'].includes(ext)) {
+                                const baseName = fileName.substring(0, fileName.lastIndexOf('.')).trim()
+                                    .toUpperCase();
+                                const promise = zipEntry.async('base64').then(function(data) {
+                                    const mimeType = 'image/' + (ext === 'jpg' ? 'jpeg' : ext);
+                                    imageMap[baseName] = `data:${mimeType};base64,${data}`;
+                                    imageCount++;
+                                });
+                                promises.push(promise);
+                            }
+                        }
+                    });
+
+                    return Promise.all(promises).then(function() {
+                        state.imageMap = imageMap;
+                        const count = Object.keys(imageMap).length;
+                        zipStatus.textContent = `✅ Loaded ${count} images from ZIP.`;
+                        zipStatus.className = 'zip-status success';
+                        clearPhotosBtn.style.display = 'inline-flex';
+
+                        // Re-render current card if student data is loaded
+                        if (state.students.length > 0) {
+                            renderCard();
+                        }
+                    });
+                })
+                .catch(function(err) {
+                    console.error('Error reading ZIP file:', err);
+                    zipStatus.textContent = '❌ Failed to read ZIP file. Please ensure it is a valid ZIP archive.';
+                    zipStatus.className = 'zip-status error';
+                    state.imageMap = {};
+                    clearPhotosBtn.style.display = 'none';
+                });
+        });
+
+        // Clear photos button
+        clearPhotosBtn.addEventListener('click', function() {
+            state.imageMap = {};
+            photoZipUpload.value = '';
+            zipStatus.textContent = 'No ZIP uploaded. File names must match Student ID.';
+            zipStatus.className = 'zip-status';
+            clearPhotosBtn.style.display = 'none';
+            if (state.students.length > 0) {
+                renderCard();
+            }
+        });
+
+        // ============================================================
+        //  EXCEL UPLOAD
+        // ============================================================
+        let excelData = null;
+
+        excelUpload.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) { excelStatus.textContent = 'No file selected'; return; }
+            const reader = new FileReader();
+            reader.onload = function(ev) {
+                try {
+                    const data = new Uint8Array(ev.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const json = XLSX.utils.sheet_to_json(firstSheet);
+                    if (!json || json.length === 0) {
+                        excelStatus.textContent = '⚠️ Excel is empty or invalid.';
+                        return;
+                    }
+                    excelData = json;
+                    excelStatus.textContent = `✅ Loaded ${json.length} student(s) from "${file.name}"`;
+                    parseStudentsFromExcel(json);
+                } catch (err) {
+                    excelStatus.textContent = '❌ Error reading Excel: ' + err.message;
+                    console.error(err);
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        });
+
+        // ============================================================
+        //  PARSE STUDENTS (Navodaya: single subject + student ID)
+        // ============================================================
+        function parseStudentsFromExcel(json) {
+            const students = [];
+            const cols = Object.keys(json[0] || {});
+            const mapKey = (key) => {
+                const k = String(key).trim().toLowerCase();
+                if (k.includes('student id') || k.includes('id') || k.includes('roll') || k.includes('registration'))
+                    return 'studentId';
+                if (k.includes('name')) return 'name';
+                if (k.includes('class')) return 'class';
+                if (k.includes('section')) return 'section';
+                if (k.includes('mobile') || k.includes('phone')) return 'mobile';
+                if (k.includes('entrance') || k.includes('test') || k.includes('navodaya') || k.includes('exam') || k
+                    .includes('score')) return 'marks';
+                return null;
+            };
+
+            const colMap = {};
+            cols.forEach(c => {
+                const mapped = mapKey(c);
+                if (mapped) colMap[mapped] = c;
+            });
+
+            if (!colMap.name || !colMap.marks) {
+                excelStatus.textContent =
+                    '⚠️ Required columns: "Student Name" and "EntranceTest" (or "Marks"). Found: ' + cols.join(', ');
+                return;
+            }
+
+            json.forEach(row => {
+                const name = String(row[colMap.name] || '').trim();
+                if (!name) return;
+
+                let studentId = '';
+                if (colMap.studentId) {
+                    studentId = String(row[colMap.studentId] || '').trim();
+                }
+
+                let marks = parseFloat(row[colMap.marks]);
+                if (isNaN(marks)) marks = 0;
+                marks = Math.min(Math.max(marks, 0), MAX_MARKS);
+
+                const total = marks;
+                const maxMarks = MAX_MARKS;
+                const percentage = maxMarks > 0 ? (total / maxMarks) * 100 : 0;
+                const pass = percentage >= PASS_THRESHOLD;
+
+                students.push({
+                    studentId: studentId || '—',
+                    name: name,
+                    class: String(row[colMap.class] || '').trim() || '—',
+                    section: String(row[colMap.section] || '').trim() || '—',
+                    mobile: String(row[colMap.mobile] || '').trim() || '—',
+                    academicYear: FIXED_ACADEMIC_YEAR,
+                    location: FIXED_LOCATION,
+                    marks: marks,
+                    total: total,
+                    maxMarks: maxMarks,
+                    percentage: percentage,
+                    pass: pass,
+                });
+            });
+
+            if (students.length === 0) {
+                excelStatus.textContent = '⚠️ No valid student records found.';
+                return;
+            }
+
+            state.students = students;
+            state.currentIndex = 0;
+            updateUI();
+            renderCard();
+            excelStatus.textContent = `✅ Loaded ${students.length} student(s). Click "Generate Cards" to refresh.`;
+        }
+
+        // ============================================================
+        //  UI UPDATE
+        // ============================================================
+        function updateUI() {
+            const count = state.students.length;
+            studentCountBadge.textContent = count + ' student' + (count !== 1 ? 's' : '');
+            if (count === 0) {
+                studentNav.style.display = 'none';
+                return;
+            }
+            studentNav.style.display = 'flex';
+            const idx = state.currentIndex;
+            const s = state.students[idx];
+            if (s) {
+                currentStudentName.textContent = s.name;
+                currentStudentID.textContent = s.studentId;
+                currentStudentClass.textContent = s.class + (s.section ? ' - ' + s.section : '');
+                currentStudentMobile.textContent = s.mobile;
+                currentStudentLocation.textContent = FIXED_LOCATION;
+                studentNavIndex.textContent = (idx + 1) + ' / ' + count;
+                navProgress.textContent = (idx + 1) + ' of ' + count;
+            }
+        }
+
+        // ============================================================
+        //  RENDER CARD (NAVODAYA STYLE with PHOTO, fixed year/location, student ID)
+        // ============================================================
+        function renderCard() {
+            const students = state.students;
+            if (!students || students.length === 0) {
+                cardEl.innerHTML = `
+                    <div style="display:flex; align-items:center; justify-content:center; height:100%; color:#8a9aaa; font-size:16px;">
+                        ⬆️ Upload Excel &amp; click "Generate Cards"
+                    </div>
+                `;
+                return;
+            }
+
+            const idx = Math.min(state.currentIndex, students.length - 1);
+            const s = students[idx];
+            if (!s) return;
+
+            const logoHtml = state.logoDataURL ?
+                `<img src="${state.logoDataURL}" alt="Logo" style="max-width:100px; max-height:100px; object-fit:contain;" />` :
+                '';
+
+            const teacherSigHtml = state.teacherSigDataURL ?
+                `<img src="${state.teacherSigDataURL}" alt="Teacher Signature" style="max-width:130px; max-height:55px; object-fit:contain;" />` :
+                '<div style="height:40px; border-bottom:1.5px dashed #d0c8c0; width:120px; margin:0 auto;"></div>';
+
+            const principalSigHtml = state.principalSigDataURL ?
+                `<img src="${state.principalSigDataURL}" alt="Principal Signature" style="max-width:130px; max-height:55px; object-fit:contain;" />` :
+                '<div style="height:40px; border-bottom:1.5px dashed #d0c8c0; width:120px; margin:0 auto;"></div>';
+
+            const resultClass = s.pass ? 'pass' : 'fail';
+            const resultText = s.pass ? '✅ PASS' : '❌ FAIL';
+            const pct = Math.round(s.percentage);
+            const barWidth = Math.min(s.percentage, 100);
+
+            // Determine which photo to use
+            let photoHtml = '';
+            const imageKey = s.studentId.trim().toUpperCase();
+            let imageData = (state.imageMap && state.imageMap[imageKey]) || s.photoUrl;
+
+            if (imageData) {
+                let backendUrl = 'http://localhost:5000';
+                if (window.location.hostname !== 'localhost') {
+                    backendUrl = window.location.protocol + '//' + window.location.hostname + ':5000';
+                }
+                const finalSrc = (imageData.startsWith('http') || imageData.startsWith('data:')) 
+                    ? imageData 
+                    : (backendUrl + (imageData.startsWith('/') ? '' : '/') + imageData);
+                photoHtml = `<img src="${finalSrc}" alt="Student Photo" />`;
+            } else {
+                photoHtml = `<div class="placeholder-photo">📷</div>`;
+            }
+
+            cardEl.innerHTML = `
+                <div class="navodaya-card">
+                    <div class="top-bar"></div>
+
+                    <div class="card-header">
+                        <div class="logo-wrap">${logoHtml}</div>
+                        <div class="title-wrap">
+                            <div class="school-name">SRI VENKATESWARA JY SCHOOL</div>
+                            <div class="school-sub">(IIT-JEE/NEET Foundation - Olympiads)</div>
+                            <div class="school-address">Opp. Hero Showroom, SVL Paradise Campus, Narasannapeta</div>
+                            <div class="exam-title">NAVODAYA MODEL EXAMINATION</div>
+                            <div class="result-card-label">✦ RESULT CARD ✦</div>
+                        </div>
+                        <div class="spacer"></div>
+                    </div>
+
+                    <div class="deco-line">
+                        <span>✦</span>
+                        <div class="line"></div>
+                        <span style="color:#f39c12;">★</span>
+                        <div class="line"></div>
+                        <span>✦</span>
+                    </div>
+
+                    <div class="student-info">
+                        <div class="info-details">
+                            <div class="info-row">
+                                <div class="label">👤 Student Name</div>
+                                <div class="value">${s.name}</div>
+                            </div>
+                            <div class="info-row">
+                                <div class="label">🆔 Student ID</div>
+                                <div class="value">${s.studentId}</div>
+                            </div>
+                            <div class="info-row">
+                                <div class="label">📚 Class</div>
+                                <div class="value">${s.class}</div>
+                            </div>
+                            <div class="info-row">
+                                <div class="label">📖 Section</div>
+                                <div class="value">${s.section}</div>
+                            </div>
+                            <div class="info-row">
+                                <div class="label">📞 Mobile Number</div>
+                                <div class="value">${s.mobile}</div>
+                            </div>
+                            <div class="info-row">
+                                <div class="label">📅 Academic Year</div>
+                                <div class="value">${s.academicYear}</div>
+                            </div>
+                            <div class="info-row">
+                                <div class="label">📍 Location</div>
+                                <div class="value">${s.location}</div>
+                            </div>
+                        </div>
+                        <div class="photo-col">
+                            ${photoHtml}
+                        </div>
+                    </div>
+
+                    <div class="marks-section">
+                        <div class="marks-title">
+                            <span class="icon">📝</span>
+                            <span>Entrance Test Performance</span>
+                            <span style="margin-left:auto; font-size:13px; font-weight:400; color:#8a7a6a;">Max Marks: ${MAX_MARKS}</span>
+                        </div>
+                        <div class="marks-grid">
+                            <div class="mark-item highlight">
+                                <span class="label">🏅 Marks Obtained</span>
+                                <span class="value">${s.marks} <span class="max">/ ${MAX_MARKS}</span></span>
+                            </div>
+                            <div class="mark-item">
+                                <span class="label">📊 Percentage</span>
+                                <span class="value">${pct}%</span>
+                            </div>
+                            <div class="mark-item ${s.pass ? 'highlight' : ''}" style="${s.pass ? 'border-color:#1a7a4a;' : 'border-color:#b13a3a;'}">
+                                <span class="label">🎯 Result</span>
+                                <span class="value" style="${s.pass ? 'color:#1a7a4a;' : 'color:#b13a3a;'} font-size:22px;">${resultText}</span>
+                            </div>
+                        </div>
+                        <div class="score-bar-wrap">
+                            <div class="score-bar">
+                                <div class="fill" style="width:${barWidth}%;"></div>
+                            </div>
+                            <div class="score-labels">
+                                <span>0</span>
+                                <span>${s.pass ? '✅ Pass (' + PASS_THRESHOLD + '%)' : '❌ Below ' + PASS_THRESHOLD + '%'}</span>
+                                <span>${MAX_MARKS}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="result-footer">
+                        <div class="left">
+                            <div class="total-label">📋 Total Marks: ${s.total} / ${s.maxMarks}</div>
+                            <div class="percentage">${s.percentage.toFixed(1)}%</div>
+                            <div class="result-badge ${resultClass}">${resultText}</div>
+                        </div>
+                        <div class="signatures">
+                            <div class="sig-block">
+                                ${teacherSigHtml}
+                                <div class="sig-label">✍ Teacher Signature</div>
+                            </div>
+                            <div class="sig-block">
+                                ${principalSigHtml}
+                                <div class="sig-label">✍ Principal Signature</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card-footer-note">
+                        ★ This is a system-generated result card for Navodaya Model Examination ★
+                    </div>
+                </div>
+            `;
+        }
+
+        // ============================================================
+        //  NAVIGATION
+        // ============================================================
+        function goToStudent(index) {
+            if (!state.students.length) return;
+            state.currentIndex = Math.max(0, Math.min(index, state.students.length - 1));
+            updateUI();
+            renderCard();
+        }
+
+        prevStudentBtn.addEventListener('click', () => goToStudent(state.currentIndex - 1));
+        nextStudentBtn.addEventListener('click', () => goToStudent(state.currentIndex + 1));
+
+        // ============================================================
+        //  GENERATE
+        // ============================================================
+        generateBtn.addEventListener('click', function() {
+            if (!state.students.length) {
+                if (excelData && excelData.length) {
+                    parseStudentsFromExcel(excelData);
+                } else {
+                    alert('Please upload an Excel file with student data first.');
+                }
+                return;
+            }
+            renderCard();
+            updateUI();
+        });
+
+        // ============================================================
+        //  CAPTURE CARD HELPER
+        // ============================================================
+        async function captureCardAsImage() {
+            await new Promise(resolve => setTimeout(resolve, 200));
+            const canvas = await html2canvas(cardEl, {
+                scale: 2.5,
+                useCORS: true,
+                allowTaint: false,
+                backgroundColor: '#ffffff',
+                logging: false,
+                width: 794,
+                height: 1123,
+            });
+            return canvas.toDataURL('image/jpeg', 0.95);
+        }
+
+        function imageToPDF(imgData) {
+            const { jsPDF } = window.jspdf;
+            const pdf = new jsPDF('p', 'mm', 'a4');
+            const imgWidth = 210;
+            const imgHeight = (1123 / 794) * imgWidth;
+            pdf.addImage(imgData, 'JPEG', 0, 0, imgWidth, imgHeight);
+            return pdf.output('arraybuffer');
+        }
+
+        function sanitizeFileName(name) {
+            return name.replace(/[^a-zA-Z0-9]/g, '_').substring(0, 60);
+        }
+
+        // ============================================================
+        //  DOWNLOAD PDF (ALL CARDS - SINGLE PDF)
+        // ============================================================
+        downloadPdfBtn.addEventListener('click', async function() {
+            if (!state.students.length) {
+                alert('No student data. Please upload an Excel file and generate cards.');
+                return;
+            }
+            const btn = this;
+            const origText = btn.textContent;
+            btn.textContent = '⏳ Generating...';
+            btn.disabled = true;
+
+            try {
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF('p', 'mm', 'a4');
+                const pageWidth = 210;
+
+                for (let i = 0; i < state.students.length; i++) {
+                    state.currentIndex = i;
+                    renderCard();
+                    updateUI();
+                    await new Promise(r => setTimeout(r, 250));
+                    const imgData = await captureCardAsImage();
+                    const imgHeight = (1123 / 794) * pageWidth;
+                    if (i > 0) pdf.addPage();
+                    pdf.addImage(imgData, 'JPEG', 0, 0, pageWidth, imgHeight);
+                }
+
+                state.currentIndex = 0;
+                renderCard();
+                updateUI();
+                pdf.save('Navodaya_Result_Cards_All.pdf');
+                btn.textContent = '✅ Downloaded!';
+                setTimeout(() => { btn.textContent = origText;
+                    btn.disabled = false; }, 2000);
+            } catch (err) {
+                console.error(err);
+                alert('Error: ' + err.message);
+                btn.textContent = origText;
+                btn.disabled = false;
+            }
+        });
+
+        // ============================================================
+        //  DOWNLOAD INDIVIDUAL PDF (CURRENT STUDENT)
+        // ============================================================
+        downloadIndividualBtn.addEventListener('click', async function() {
+            if (!state.students.length) {
+                alert('No student data. Please upload an Excel file and generate cards.');
+                return;
+            }
+            const btn = this;
+            const origText = btn.textContent;
+            btn.textContent = '⏳...';
+            btn.disabled = true;
+
+            try {
+                const idx = state.currentIndex;
+                const student = state.students[idx];
+                renderCard();
+                await new Promise(r => setTimeout(r, 250));
+                const imgData = await captureCardAsImage();
+                const pdfBuffer = imageToPDF(imgData);
+                const safeName = sanitizeFileName(student.name);
+                const blob = new Blob([pdfBuffer], { type: 'application/pdf' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = `${safeName}_Navodaya_Result.pdf`;
+                link.click();
+                URL.revokeObjectURL(link.href);
+                btn.textContent = '✅ Done!';
+                setTimeout(() => { btn.textContent = origText;
+                    btn.disabled = false; }, 1800);
+            } catch (err) {
+                console.error(err);
+                alert('Error: ' + err.message);
+                btn.textContent = origText;
+                btn.disabled = false;
+            }
+        });
+
+        // ============================================================
+        //  DOWNLOAD ALL INDIVIDUAL PDFs AS ZIP
+        // ============================================================
+        downloadAllIndividualBtn.addEventListener('click', async function() {
+            if (!state.students.length) {
+                alert('No student data. Please upload an Excel file and generate cards.');
+                return;
+            }
+
+            const btn = this;
+            const origText = btn.textContent;
+            btn.textContent = '⏳ Preparing...';
+            btn.disabled = true;
+
+            progressOverlay.classList.add('active');
+            progressFill.style.width = '0%';
+            progressText.textContent = '0%';
+            progressStatus.textContent = 'Starting...';
+
+            try {
+                const zip = new JSZip();
+                const total = state.students.length;
+
+                for (let i = 0; i < total; i++) {
+                    state.currentIndex = i;
+                    renderCard();
+                    updateUI();
+
+                    progressStatus.textContent = `Processing ${i+1} of ${total}: ${state.students[i].name}`;
+                    const pct = Math.round(((i) / total) * 100);
+                    progressFill.style.width = pct + '%';
+                    progressText.textContent = pct + '%';
+
+                    await new Promise(r => setTimeout(r, 200));
+
+                    const imgData = await captureCardAsImage();
+                    const pdfBuffer = imageToPDF(imgData);
+
+                    const safeName = sanitizeFileName(state.students[i].name);
+                    zip.file(`${safeName}_Navodaya_Result.pdf`, pdfBuffer);
+                }
+
+                progressStatus.textContent = 'Creating ZIP file...';
+                progressFill.style.width = '95%';
+                progressText.textContent = '95%';
+
+                const zipBlob = await zip.generateAsync({ type: 'blob' });
+
+                progressFill.style.width = '100%';
+                progressText.textContent = '100%';
+                progressStatus.textContent = '✅ Done! Downloading...';
+
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(zipBlob);
+                link.download = 'All_Navodaya_Result_Cards.zip';
+                link.click();
+                URL.revokeObjectURL(link.href);
+
+                state.currentIndex = 0;
+                renderCard();
+                updateUI();
+
+                btn.textContent = '✅ Downloaded!';
+                setTimeout(() => {
+                    btn.textContent = origText;
+                    btn.disabled = false;
+                }, 2000);
+
+                setTimeout(() => {
+                    progressOverlay.classList.remove('active');
+                }, 800);
+
+            } catch (err) {
+                console.error(err);
+                alert('Error generating ZIP: ' + err.message);
+                progressOverlay.classList.remove('active');
+                btn.textContent = origText;
+                btn.disabled = false;
+            }
+        });
+
+        // ============================================================
+        //  RESET
+        // ============================================================
+        resetBtn.addEventListener('click', function() {
+            state.students = [];
+            state.currentIndex = 0;
+            state.logoDataURL = null;
+            state.teacherSigDataURL = null;
+            state.principalSigDataURL = null;
+            state.imageMap = {};
+            excelData = null;
+
+            logoUpload.value = '';
+            teacherSigUpload.value = '';
+            principalSigUpload.value = '';
+            excelUpload.value = '';
+            photoZipUpload.value = '';
+            logoPreview.style.display = 'none';
+            teacherSigPreview.style.display = 'none';
+            principalSigPreview.style.display = 'none';
+            logoPreview.src = '';
+            teacherSigPreview.src = '';
+            principalSigPreview.src = '';
+            excelStatus.textContent = 'No file uploaded';
+            zipStatus.textContent = 'No ZIP uploaded. File names must match Student ID.';
+            zipStatus.className = 'zip-status';
+            clearPhotosBtn.style.display = 'none';
+
+            cardEl.innerHTML = `
+                <div style="display:flex; align-items:center; justify-content:center; height:100%; color:#8a9aaa; font-size:16px;">
+                    ⬆️ Upload Excel &amp; click "Generate Cards"
+                </div>
+            `;
+            studentNav.style.display = 'none';
+            studentCountBadge.textContent = '0 students';
+            progressOverlay.classList.remove('active');
+        });
+
+        // ============================================================
+        //  DATABASE INTEGRATION
+        // ============================================================
+        async function initDb() {
+            const token = localStorage.getItem('accessToken');
+            if (!token) {
+                console.warn('Authorization token not found in localStorage.');
+                return;
+            }
+            try {
+                const classRes = await fetch('/api/classes', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const classJson = await classRes.json();
+                const classes = classJson.data || classJson || [];
+
+                const examRes = await fetch('/api/exams', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const examJson = await examRes.json();
+                const exams = examJson.data || examJson || [];
+
+                const dbClassSelect = $('dbClassSelect');
+                const dbExamSelect = $('dbExamSelect');
+
+                if (dbClassSelect) {
+                    dbClassSelect.innerHTML = classes.map(c => `<option value="${c.id}">${c.name}-${c.section}</option>`).join('');
+                }
+                if (dbExamSelect) {
+                    dbExamSelect.innerHTML = exams.map(e => `<option value="${e.id}">${e.name}</option>`).join('');
+                }
+            } catch (err) {
+                console.error('Failed to load DB filters:', err);
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', initDb);
+
+        $('fetchDbBtn').addEventListener('click', async function() {
+            const classId = $('dbClassSelect').value;
+            const examId = $('dbExamSelect').value;
+            if (!classId || !examId) {
+                alert('Please select both Class and Exam.');
+                return;
+            }
+
+            const btn = this;
+            const origText = btn.textContent;
+            btn.textContent = '⏳ Loading...';
+            btn.disabled = true;
+
+            const dbStatus = $('dbStatus');
+            dbStatus.textContent = 'Syncing...';
+
+            try {
+                const token = localStorage.getItem('accessToken');
+                if (!token) throw new Error('Authorization token not found.');
+
+                const studentsRes = await fetch(`/api/students?classId=${classId}&limit=1000`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const studentsJson = await studentsRes.json();
+                const dbStudents = studentsJson.data || studentsJson || [];
+
+                const marksRes = await fetch(`/api/marks/exam/${examId}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const marksJson = await marksRes.json();
+                const dbMarks = marksJson.data || marksJson || [];
+
+                const processed = [];
+                let fetchedMaxMarks = 20;
+                dbStudents.forEach(student => {
+                    const studentMarks = dbMarks.filter(m => m.studentId === student.id);
+
+                    const score = studentMarks.reduce((sum, m) => sum + m.marksObtained, 0);
+                    const maxMarks = studentMarks.reduce((sum, m) => sum + m.maxMarks, 0) || 20;
+                    fetchedMaxMarks = maxMarks;
+
+                    const percentage = (score / maxMarks) * 100;
+                    const pass = percentage >= 40;
+
+                    processed.push({
+                        studentId: student.rollNo,
+                        name: student.user.name,
+                        class: student.class ? student.class.name : '—',
+                        section: student.class ? student.class.section : '—',
+                        mobile: student.user.phone || '—',
+                        academicYear: student.class ? student.class.academicYear : '2026 - 2027',
+                        location: student.address || 'Narasannapeta',
+                        marks: score,
+                        total: score,
+                        maxMarks: maxMarks,
+                        percentage: percentage,
+                        pass: pass,
+                        photoUrl: student.user.photoUrl
+                    });
+                });
+
+                MAX_MARKS = fetchedMaxMarks;
+                state.students = processed;
+                state.currentIndex = 0;
+                renderCard();
+                updateUI();
+
+                dbStatus.textContent = `✅ Successfully loaded ${processed.length} students' marks!`;
+                btn.textContent = '✅ Loaded!';
+                setTimeout(() => {
+                    btn.textContent = origText;
+                    btn.disabled = false;
+                }, 2000);
+            } catch (err) {
+                console.error(err);
+                dbStatus.textContent = '❌ Failed to load marks.';
+                btn.textContent = origText;
+                btn.disabled = false;
+                alert('Failed: ' + err.message);
+            }
+        });
+
+        // ============================================================
+        //  KEYBOARD SHORTCUTS
+        // ============================================================
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') prevStudentBtn.click();
+            if (e.key === 'ArrowRight') nextStudentBtn.click();
+        });
+
+        console.log('🏫 Navodaya Result Card Generator with Bulk Photo Upload ready.');
+        console.log('📸 Upload a ZIP file with images named by Student ID (e.g., S1001.jpg)');
+        console.log('🆔 Include a "Student ID" column in your Excel file.');
+        console.log('📌 Fixed Academic Year: 2026 - 2027, Location: Narasannapeta');
+        console.log('📌 Single subject: Entrance Test (Max: 20 marks)');
+    </script>
+
+</body>
+</html>

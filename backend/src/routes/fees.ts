@@ -1,0 +1,27 @@
+import { Router } from 'express';
+import { authenticate, authorize } from '../middlewares/auth';
+import {
+  getStructures, createStructure, updateStructure, deleteStructure,
+  getPayments, createPayment, getStudentFeeStatus, getOverdue, downloadInvoice,
+} from '../controllers/fees.controller';
+
+const router = Router();
+
+router.use(authenticate);
+
+// Fee Structures
+router.get('/structures', getStructures);
+router.post('/structures', authorize('SUPER_ADMIN', 'ADMIN'), createStructure);
+router.put('/structures/:id', authorize('SUPER_ADMIN', 'ADMIN'), updateStructure);
+router.delete('/structures/:id', authorize('SUPER_ADMIN', 'ADMIN'), deleteStructure);
+
+// Payments
+router.get('/payments', authorize('SUPER_ADMIN', 'ADMIN', 'ACCOUNTANT'), getPayments);
+router.post('/payments', authorize('SUPER_ADMIN', 'ADMIN', 'ACCOUNTANT'), createPayment);
+router.get('/payments/:paymentId/invoice', downloadInvoice);
+
+// Student fee status
+router.get('/student/:studentId', getStudentFeeStatus);
+router.get('/overdue', authorize('SUPER_ADMIN', 'ADMIN', 'ACCOUNTANT'), getOverdue);
+
+export default router;
