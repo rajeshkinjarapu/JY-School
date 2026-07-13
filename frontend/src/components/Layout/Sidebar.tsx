@@ -142,12 +142,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
       {/* Logo */}
       <div className="px-5 pt-6 pb-5 border-b border-white/8">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0"
-            style={{ background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #06b6d4 100%)', boxShadow: '0 4px 16px rgba(99,102,241,.5)' }}>
-            <School className="w-5 h-5 text-white" strokeWidth={2.5} />
+          <div className="w-12 h-12 rounded-full flex items-center justify-center shrink-0 bg-white overflow-hidden shadow-sm"
+            style={{ boxShadow: '0 4px 16px rgba(99,102,241,.5)' }}>
+            <img src="/logo.png" alt="School Logo" className="w-full h-full object-contain p-0.5" onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.parentElement!.innerHTML = '<span class="text-indigo-600 font-bold text-xs">JY</span>'; }} />
           </div>
-          <div className="min-w-0">
-            <h1 className="text-sm font-extrabold text-white leading-tight truncate">{schoolName}</h1>
+          <div className="min-w-0 flex flex-col justify-center">
+            <h1 className="text-[15px] font-extrabold text-white leading-tight break-words">{schoolName}</h1>
           </div>
         </div>
       </div>
