@@ -184,7 +184,7 @@ export const bulkImport = async (req: AuthRequest, res: Response, next: NextFunc
     const workbook = XLSX.readFile(filePath);
     const sheetName = workbook.SheetNames[0];
     const sheet = workbook.Sheets[sheetName];
-    const results = XLSX.utils.sheet_to_json<any>(sheet).filter(r => r.Name || r.name);
+    const results = XLSX.utils.sheet_to_json<any>(sheet).filter(r => r.Name || r.name || r['Student Name'] || r['First Name']);
 
     if (results.length > 500) {
       return next(createError('Please upload maximum 500 students at a time', 400));
@@ -195,13 +195,13 @@ export const bulkImport = async (req: AuthRequest, res: Response, next: NextFunc
 
     for (const row of results) {
       try {
-        const name = row.Name || row.name;
+        const name = row.Name || row.name || row['Student Name'] || row['First Name'];
         const password = row.Password || row.password || 'Student@123';
-        const phone = row.Phone || row.phone || null;
+        const phone = row.Phone || row.phone || row['Mobile No'] || row['Mobile'];
         
         let classId = row.ClassId || row.classId || null;
-        const className = row.ClassName || row.className || row.Class || row.class;
-        const section = row.Section || row.section;
+        const className = row.ClassName || row.className || row.Class || row.class || row['Class Name'];
+        const section = row.Section || row.section || row['Section Name'];
 
         if (!classId && className) {
           const cls = await prisma.class.findFirst({
@@ -210,17 +210,17 @@ export const bulkImport = async (req: AuthRequest, res: Response, next: NextFunc
           if (cls) classId = cls.id;
         }
 
-        const gender = row.Gender || row.gender || null;
-        const address = row.Address || row.address || null;
-        const bloodGroup = row.BloodGroup || row.bloodGroup || null;
+        const gender = row.Gender || row.gender || row['Gender'] || null;
+        const address = row.Address || row.address || row['Address'] || null;
+        const bloodGroup = row.BloodGroup || row.bloodGroup || row['Blood Group'] || null;
         const photoUrl = row.PhotoUrl || row.photourl || row.Photo || row.photo || null;
-        const fatherName = row.FatherName || row.fatherName || null;
-        const motherName = row.MotherName || row.motherName || null;
-        const aadharNo = row.AadharNo || row.aadharNo || row.Aadhar || row.aadhar || null;
-        const penNumber = row.PenNumber || row.penNumber || row.Pen || row.pen || null;
+        const fatherName = row.FatherName || row.fatherName || row['Father Name'] || null;
+        const motherName = row.MotherName || row.motherName || row['Mother Name'] || null;
+        const aadharNo = row.AadharNo || row.aadharNo || row.Aadhar || row.aadhar || row['Aadhar No'] || row['Aadhar Number'] || null;
+        const penNumber = row.PenNumber || row.penNumber || row.Pen || row.pen || row['PEN Number'] || null;
 
         const count = await prisma.student.count();
-        const rollNo = row.StudentId || row.studentId || row.RollNo || row.rollNo || generateRollNo(count + 1);
+        const rollNo = row.StudentId || row.studentId || row.RollNo || row.rollNo || row['Roll No'] || row['Student ID'] || generateRollNo(count + 1);
         const email = row.Email || row.email || rollNo;
 
         if (!name) {
