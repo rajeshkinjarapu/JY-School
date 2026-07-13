@@ -33,7 +33,6 @@ export const FinancePage: React.FC = () => {
   const [structGroup, setStructGroup] = useState('Tuition fee');
   const [structName, setStructName] = useState('');
   const [structAmount, setStructAmount] = useState('');
-  const [structDueDate, setStructDueDate] = useState('');
   const [structStatus, setStructStatus] = useState('Active');
   // CRUD States for Payments (Admin only)
   const [showPaymentModal, setShowPaymentModal] = useState(false);
@@ -159,7 +158,7 @@ export const FinancePage: React.FC = () => {
         term: 'General',
         name: finalName,
         amount: Number(structAmount),
-        dueDate: new Date(structDueDate).toISOString(),
+        dueDate: new Date(new Date().getFullYear() + 1, 11, 31).toISOString(),
       });
       
       const newStructure = res.data || res;
@@ -179,7 +178,6 @@ export const FinancePage: React.FC = () => {
       fetchData();
       setStructName('');
       setStructAmount('');
-      setStructDueDate('');
       setStructGroup('Tuition fee');
       setStructStatus('Active');
     } catch (err: any) {
@@ -685,10 +683,6 @@ export const FinancePage: React.FC = () => {
                           <input type="number" className="input" value={structAmount} onChange={e => setStructAmount(e.target.value)} placeholder="1000.00" required />
                         </div>
                         <div className="space-y-1">
-                          <label className="label">Due Date</label>
-                          <input type="date" className="input" value={structDueDate} onChange={e => setStructDueDate(e.target.value)} required />
-                        </div>
-                        <div className="space-y-1">
                           <label className="label">Status</label>
                           <select className="input" value={structStatus} onChange={e => setStructStatus(e.target.value)} required>
                             <option value="Active">Active</option>
@@ -850,7 +844,7 @@ export const FinancePage: React.FC = () => {
                           )}
                         </div>
                         <div className="space-y-1">
-                          <label className="label">Amount Paid (₹)</label>
+                          <label className="label">Amount to Pay Now (₹)</label>
                           <input type="number" className="input" value={payAmount} onChange={e => setPayAmount(e.target.value)} required />
                         </div>
                         <div className="space-y-1">
@@ -1023,17 +1017,6 @@ export const FinancePage: React.FC = () => {
                       ₹{payments.filter(p => p.method === 'CASH').reduce((acc, curr) => acc + curr.amountPaid, 0).toLocaleString()}
                     </h4>
                     <p className="text-[10px] text-gray-400">Collected via counter cash payments</p>
-                  </div>
-                </div>
-
-                {/* Warnings or insights */}
-                <div className="p-4 bg-amber-50/50 dark:bg-amber-950/15 border border-amber-200 dark:border-amber-900 rounded-2xl flex items-start gap-3">
-                  <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
-                  <div className="space-y-1">
-                    <span className="font-extrabold text-xs text-amber-800 dark:text-amber-300">Overdue Reminders</span>
-                    <p className="text-xs text-amber-600 dark:text-amber-400">
-                      A total of {structures.filter(s => new Date(s.dueDate) < new Date()).length} fee schedules have crossed their due date limit. Setup automated SMS alerts for students in settings.
-                    </p>
                   </div>
                 </div>
               </div>

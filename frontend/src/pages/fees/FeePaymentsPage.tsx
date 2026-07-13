@@ -300,7 +300,7 @@ export const FeePaymentsPage: React.FC = () => {
               </div>
 
               <div>
-                <label className="label">Amount Collected (INR)</label>
+                <label className="label">Amount to Pay Now (₹)</label>
                 <input
                   type="number"
                   required
