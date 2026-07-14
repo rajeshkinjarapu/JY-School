@@ -20,8 +20,7 @@ export const FeePaymentsPage: React.FC = () => {
 
   // Form states
   const [studentId, setStudentId] = useState('');
-  const [feeStructureId, setFeeStructureId] = useState('');
-  const [amountPaid, setAmountPaid] = useState('');
+  const [selectedFees, setSelectedFees] = useState<{ feeStructureId: string; amountPaid: number }[]>([]);
   const [method, setMethod] = useState('CASH');
   const [remarks, setRemarks] = useState('');
   const [utrNumber, setUtrNumber] = useState('');
@@ -74,6 +73,10 @@ export const FeePaymentsPage: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isSubmitting) return;
+    if (selectedFees.length === 0) {
+      toast.error('Please select at least one fee component to pay.');
+      return;
+    }
     if (method === 'UPI' && !utrNumber) {
       toast.error('UTR Reference Number is required for UPI payments.');
       return;
@@ -86,8 +89,7 @@ export const FeePaymentsPage: React.FC = () => {
     try {
       await api.post('/api/fees/payments', {
         studentId,
-        feeStructureId,
-        amountPaid: Number(amountPaid),
+        payments: selectedFees,
         method,
         remarks,
         utrNumber: method === 'UPI' ? utrNumber : null,
@@ -96,8 +98,7 @@ export const FeePaymentsPage: React.FC = () => {
       toast.success('Payment transaction recorded!');
       setShowModal(false);
       setStudentId('');
-      setFeeStructureId('');
-      setAmountPaid('');
+      setSelectedFees([]);
       setRemarks('');
       setUtrNumber('');
       setReceiptUrl('');
@@ -265,10 +266,10 @@ export const FeePaymentsPage: React.FC = () => {
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-950/40 backdrop-blur-xs">
           <div className="fixed inset-0" onClick={() => setShowModal(false)} />
-          <div className="relative card w-full max-w-md p-6 space-y-5 animate-scale-in z-10 bg-white dark:bg-gray-900">
+          <div className="relative card w-full max-w-md p-6 space-y-5 animate-scale-in z-10 bg-white dark:bg-gray-900 max-h-[90vh] overflow-y-auto">
             <div>
               <h3 className="text-lg font-bold text-gray-900 dark:text-white">Record Tuition Payment</h3>
-              <p className="text-xs text-gray-450 mt-1">Manual collection log entry for fees ledger.</p>
+              <p className="text-xs text-gray-450 mt-1">Select multiple fees to collect them at once.</p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -278,11 +279,7 @@ export const FeePaymentsPage: React.FC = () => {
                   value={studentId}
                   onChange={(e) => {
                     setStudentId(e.target.value);
-                    const selectedStructure = structures.find(s => s.id === feeStructureId);
-                    if (selectedStructure && feeStructureId) {
-                      const paidSoFar = payments.filter(p => p.studentId === e.target.value && p.feeStructureId === feeStructureId).reduce((sum, p) => sum + p.amountPaid, 0);
-                      setAmountPaid(Math.max(0, selectedStructure.amount - paidSoFar).toString());
-                    }
+                    setSelectedFees([]);
                   }}
                   className="input text-xs"
                 >
@@ -295,46 +292,70 @@ export const FeePaymentsPage: React.FC = () => {
                 </select>
               </div>
 
-              <div>
-                <label className="label">Select Fee Component</label>
-                <select
-                  value={feeStructureId}
-                  onChange={(e) => {
-                    setFeeStructureId(e.target.value);
-                    const selected = structures.find(s => s.id === e.target.value);
-                    if (selected && studentId) {
-                      const paidSoFar = payments.filter(p => p.studentId === studentId && p.feeStructureId === e.target.value).reduce((sum, p) => sum + p.amountPaid, 0);
-                      setAmountPaid(Math.max(0, selected.amount - paidSoFar).toString());
-                    }
-                  }}
-                  className="input text-xs"
-                >
-                  <option value="">Select Structure</option>
-                  {structures
-                    .filter((s) => !studentId || s.studentId === studentId || s.classId === students.find((st) => st.id === studentId)?.classId)
-                    .map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.name} - ₹{s.amount.toLocaleString()} ({s.studentId ? 'Personal Fee' : s.class?.name || 'All'})
-                    </option>
-                  ))}
-                </select>
-                {feeStructureId && studentId && (
-                  <p className="text-xs text-red-500 font-bold mt-1.5">
-                    Pending Amount: ₹{Math.max(0, (structures.find(s => s.id === feeStructureId)?.amount || 0) - payments.filter(p => p.studentId === studentId && p.feeStructureId === feeStructureId).reduce((sum, p) => sum + p.amountPaid, 0)).toLocaleString()}
-                  </p>
-                )}
-              </div>
+              {studentId && (
+                <div>
+                  <label className="label mb-2">Select Fee Components & Amount</label>
+                  <div className="space-y-2 border border-gray-200 dark:border-gray-800 rounded-xl p-3 bg-gray-50 dark:bg-gray-800/20 max-h-48 overflow-y-auto">
+                    {structures
+                      .filter((s) => s.studentId === studentId || s.classId === students.find((st) => st.id === studentId)?.classId)
+                      .map((s) => {
+                        const paidSoFar = payments.filter(p => p.studentId === studentId && p.feeStructureId === s.id).reduce((sum, p) => sum + p.amountPaid, 0);
+                        const pendingAmount = Math.max(0, s.amount - paidSoFar);
+                        if (pendingAmount <= 0) return null;
 
-              <div>
-                <label className="label">Amount to Pay Now (₹)</label>
-                <input
-                  type="number"
-                  required
-                  value={amountPaid}
-                  onChange={(e) => setAmountPaid(e.target.value)}
-                  className="input text-xs"
-                />
-              </div>
+                        const isSelected = selectedFees.find(f => f.feeStructureId === s.id);
+
+                        return (
+                          <div key={s.id} className="flex items-center justify-between p-2 bg-white dark:bg-gray-800 border border-gray-150 dark:border-gray-700 rounded-lg">
+                            <div className="flex items-center gap-3">
+                              <input
+                                type="checkbox"
+                                className="w-4 h-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500"
+                                checked={!!isSelected}
+                                onChange={(e) => {
+                                  if (e.target.checked) {
+                                    setSelectedFees([...selectedFees, { feeStructureId: s.id, amountPaid: pendingAmount }]);
+                                  } else {
+                                    setSelectedFees(selectedFees.filter(f => f.feeStructureId !== s.id));
+                                  }
+                                }}
+                              />
+                              <div>
+                                <p className="text-xs font-bold text-gray-800 dark:text-gray-200">{s.name}</p>
+                                <p className="text-[10px] text-gray-500">Pending: ₹{pendingAmount}</p>
+                              </div>
+                            </div>
+                            {isSelected && (
+                              <div className="flex items-center gap-1">
+                                <span className="text-xs text-gray-500">₹</span>
+                                <input
+                                  type="number"
+                                  className="w-20 px-2 py-1 text-xs border border-gray-200 rounded focus:ring-1 focus:ring-indigo-500 outline-none"
+                                  value={isSelected.amountPaid}
+                                  onChange={(e) => {
+                                    setSelectedFees(selectedFees.map(f => f.feeStructureId === s.id ? { ...f, amountPaid: Number(e.target.value) } : f));
+                                  }}
+                                  max={pendingAmount}
+                                />
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                      
+                      {structures.filter((s) => s.studentId === studentId || s.classId === students.find((st) => st.id === studentId)?.classId).every(s => Math.max(0, s.amount - payments.filter(p => p.studentId === studentId && p.feeStructureId === s.id).reduce((sum, p) => sum + p.amountPaid, 0)) <= 0) && (
+                        <p className="text-xs text-emerald-600 font-bold text-center py-2">No pending fees found for this student!</p>
+                      )}
+                  </div>
+                  
+                  {selectedFees.length > 0 && (
+                    <div className="mt-3 flex justify-between items-center p-3 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg border border-indigo-100 dark:border-indigo-800/30">
+                      <span className="text-xs font-bold text-indigo-900 dark:text-indigo-300">Total Amount to Pay</span>
+                      <span className="text-lg font-black text-indigo-600 dark:text-indigo-400">₹{selectedFees.reduce((sum, f) => sum + f.amountPaid, 0).toLocaleString()}</span>
+                    </div>
+                  )}
+                </div>
+              )}
 
               <div>
                 <label className="label">Payment Method</label>

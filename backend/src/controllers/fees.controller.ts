@@ -135,42 +135,59 @@ export const getPayments = async (req: AuthRequest, res: Response): Promise<void
 };
 
 export const createPayment = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
-  const { studentId, feeStructureId, amountPaid, method, remarks, utrNumber, receiptUrl } = req.body;
+  const { studentId, feeStructureId, amountPaid, method, remarks, utrNumber, receiptUrl, payments } = req.body;
 
   const student = await prisma.student.findUnique({ where: { id: studentId } });
   if (!student) return next(createError('Student not found', 404));
 
-  const structure = await prisma.feeStructure.findUnique({ where: { id: feeStructureId } });
-  if (!structure) return next(createError('Fee structure not found', 404));
+  const baseReceiptNo = 'JY' + Math.floor(10000000 + Math.random() * 90000000).toString();
 
-  // Calculate total paid so far
-  const previousPayments = await prisma.feePayment.aggregate({
-    where: { studentId, feeStructureId },
-    _sum: { amountPaid: true },
-  });
-  const totalPaid = (previousPayments._sum.amountPaid || 0) + amountPaid;
-  const status = totalPaid >= structure.amount ? 'PAID' : 'PARTIAL';
-  
-  const receiptNo = 'JY' + Math.floor(10000000 + Math.random() * 90000000).toString();
+  const paymentList = payments && Array.isArray(payments) && payments.length > 0 
+    ? payments 
+    : [{ feeStructureId, amountPaid }];
 
-  const payment = await prisma.feePayment.create({
-    data: { 
-      studentId, 
-      feeStructureId, 
-      amountPaid, 
-      method: method || 'CASH', 
-      status: status as any, 
-      remarks,
-      utrNumber: utrNumber || null,
-      receiptUrl: receiptUrl || null,
-      receiptNo
-    },
-    include: {
-      student: { include: { user: { select: { name: true } } } },
-      feeStructure: { select: { name: true, term: true } },
-    },
+  if (paymentList.length === 0 || !paymentList[0].feeStructureId) {
+    return next(createError('No fee structures selected', 400));
+  }
+
+  const createdPayments = await prisma.$transaction(async (tx) => {
+    const results = [];
+    let idx = 1;
+    for (const p of paymentList) {
+      const structure = await tx.feeStructure.findUnique({ where: { id: p.feeStructureId } });
+      if (!structure) continue;
+      
+      const previousPayments = await tx.feePayment.aggregate({
+        where: { studentId, feeStructureId: p.feeStructureId },
+        _sum: { amountPaid: true },
+      });
+      const totalPaid = (previousPayments._sum.amountPaid || 0) + Number(p.amountPaid);
+      const status = totalPaid >= structure.amount ? 'PAID' : 'PARTIAL';
+      
+      const payment = await tx.feePayment.create({
+        data: { 
+          studentId, 
+          feeStructureId: p.feeStructureId, 
+          amountPaid: Number(p.amountPaid), 
+          method: method || 'CASH', 
+          status: status as any, 
+          remarks,
+          utrNumber: utrNumber || null,
+          receiptUrl: receiptUrl || null,
+          receiptNo: paymentList.length > 1 ? `${baseReceiptNo}-${idx}` : baseReceiptNo
+        },
+        include: {
+          student: { include: { user: { select: { name: true } } } },
+          feeStructure: { select: { name: true, term: true } },
+        },
+      });
+      results.push(payment);
+      idx++;
+    }
+    return results;
   });
-  successResponse(res, payment, 'Payment recorded', 201);
+
+  successResponse(res, createdPayments.length === 1 ? createdPayments[0] : createdPayments, 'Payment(s) recorded', 201);
 };
 
 export const deleteFeePayment = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
