@@ -10,7 +10,7 @@ import toast from 'react-hot-toast';
 import { 
   ArrowLeft, Mail, Phone, Printer, User2, Calendar, 
   Droplet, ClipboardCheck, Users, Fingerprint, 
-  Hash, MapPin, Sparkles, GraduationCap, Camera, CreditCard, FileDown, Trash2
+  Hash, MapPin, Sparkles, GraduationCap, Camera, CreditCard, FileDown, Trash2, Edit2
 } from 'lucide-react';
 import { FeeReceiptPrint } from '../../components/fees/FeeReceiptPrint';
 
@@ -24,7 +24,11 @@ export const StudentProfilePage: React.FC = () => {
   const [printPayment, setPrintPayment] = useState<any>(null);
   
   // Payment Modal States
-  const [showModal, setShowModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showDiscountModal, setShowDiscountModal] = useState(false);
+  const [editingPayment, setEditingPayment] = useState<any>(null);
+  const [discountFee, setDiscountFee] = useState<any>(null);
+  const [discountAmount, setDiscountAmount] = useState<number>(0);
   const [selectedFees, setSelectedFees] = useState<{ feeStructureId: string; amountPaid: number }[]>([]);
   const [method, setMethod] = useState('CASH');
   const [remarks, setRemarks] = useState('');
@@ -126,6 +130,27 @@ export const StudentProfilePage: React.FC = () => {
     }
   };
 
+  const handleEditPaymentSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingPayment) return;
+    setIsSubmitting(true);
+    try {
+      await api.put(`/api/fees/payments/${editingPayment.id}`, {
+        amountPaid: editingPayment.amountPaid,
+        method: editingPayment.method,
+        remarks: editingPayment.remarks
+      });
+      toast.success('Payment updated successfully!');
+      setShowEditModal(false);
+      setEditingPayment(null);
+      fetchStudentProfile();
+    } catch (error: any) {
+      toast.error(error.message || 'Error updating payment');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const handleDeletePayment = async (paymentId: string) => {
     if (!window.confirm('Are you sure you want to delete this payment record? This action cannot be undone.')) return;
     const t = toast.loading('Deleting payment...');
@@ -135,6 +160,28 @@ export const StudentProfilePage: React.FC = () => {
       fetchStudentProfile();
     } catch {
       toast.error('Failed to delete payment', { id: t });
+    }
+  };
+
+  const handleApplyDiscount = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!discountFee) return;
+    setIsSubmitting(true);
+    try {
+      await api.post(`/api/fees/discounts`, {
+        studentId: student.id,
+        feeStructureId: discountFee.id,
+        discountAmount: discountAmount
+      });
+      toast.success('Fee discounted successfully!');
+      setShowDiscountModal(false);
+      setDiscountFee(null);
+      setDiscountAmount(0);
+      fetchStudentProfile();
+    } catch (error: any) {
+      toast.error(error.message || 'Error applying discount');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -396,13 +443,36 @@ export const StudentProfilePage: React.FC = () => {
               {feeStructures
                 .filter((s) => s.studentId === student.id || s.classId === student.classId)
                 .map((s) => {
+                  const discountRecord = student.feeDiscounts?.find((d: any) => d.feeStructureId === s.id);
+                  const discount = discountRecord ? discountRecord.amount : 0;
+                  const effectiveAmount = s.amount - discount;
                   const paidSoFar = student.feePayments?.filter((p: any) => p.feeStructureId === s.id).reduce((sum: number, p: any) => sum + p.amountPaid, 0) || 0;
-                  const pending = Math.max(0, s.amount - paidSoFar);
+                  const pending = Math.max(0, effectiveAmount - paidSoFar);
                   return (
                     <div key={s.id} className="p-4 bg-gray-50 dark:bg-gray-800/40 rounded-xl border border-gray-150 dark:border-gray-700">
                       <div className="flex justify-between items-start mb-2">
-                        <span className="font-bold text-gray-900 dark:text-white">{s.name}</span>
-                        <span className="text-xs font-bold text-indigo-600">₹{s.amount}</span>
+                        <span className="font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                          {s.name}
+                          {(user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN') && (
+                            <button
+                              onClick={() => { setDiscountFee(s); setDiscountAmount(discount); setShowDiscountModal(true); }}
+                              className="text-gray-400 hover:text-blue-600 transition-colors cursor-pointer"
+                              title="Edit Fee (Apply Discount)"
+                            >
+                              <Edit2 className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                        </span>
+                        <div className="text-right">
+                          {discount > 0 ? (
+                            <>
+                              <span className="text-[10px] line-through text-gray-400 mr-1.5 block">₹{s.amount}</span>
+                              <span className="text-xs font-bold text-indigo-600">₹{effectiveAmount}</span>
+                            </>
+                          ) : (
+                            <span className="text-xs font-bold text-indigo-600">₹{s.amount}</span>
+                          )}
+                        </div>
                       </div>
                       <div className="flex justify-between text-xs mt-3 border-t border-gray-200 dark:border-gray-700 pt-2">
                         <span className="text-gray-500">Paid: <span className="font-bold text-emerald-600">₹{paidSoFar}</span></span>
@@ -448,13 +518,22 @@ export const StudentProfilePage: React.FC = () => {
                             <FileDown className="w-4 h-4" />
                           </button>
                           {(user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN' || user?.role === 'ACCOUNTANT') && (
-                            <button
-                              onClick={() => handleDeletePayment(p.id)}
-                              className="p-1.5 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 cursor-pointer"
-                              title="Delete Payment"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
+                            <>
+                              <button
+                                onClick={() => { setEditingPayment(p); setShowEditModal(true); }}
+                                className="p-1.5 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/20 cursor-pointer"
+                                title="Edit Payment"
+                              >
+                                <Edit2 className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => handleDeletePayment(p.id)}
+                                className="p-1.5 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 cursor-pointer"
+                                title="Delete Payment"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </>
                           )}
                         </td>
                       </tr>
@@ -762,6 +841,105 @@ export const StudentProfilePage: React.FC = () => {
               <div className="flex gap-3 justify-end pt-2">
                 <button type="button" onClick={() => setShowModal(false)} className="btn-secondary text-sm">Cancel</button>
                 <button type="submit" disabled={isSubmitting} className="btn-primary text-sm">Record Payment</button>
+              </div>
+            </form>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* Edit Payment Modal */}
+      {showEditModal && editingPayment && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-gray-950/40 backdrop-blur-xs print:hidden">
+          <div className="fixed inset-0" onClick={() => setShowEditModal(false)} />
+          <div className="relative card w-full max-w-md p-6 space-y-5 animate-scale-in z-10 bg-white dark:bg-gray-900 max-h-[90vh] overflow-y-auto">
+            <div>
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white">Edit Payment</h3>
+              <p className="text-xs text-gray-450 mt-1">Editing receipt: {editingPayment.receiptNo || 'N/A'}</p>
+            </div>
+
+            <form onSubmit={handleEditPaymentSubmit} className="space-y-4">
+              <div>
+                <label className="label">Amount Paid</label>
+                <input
+                  type="number"
+                  required
+                  value={editingPayment.amountPaid}
+                  onChange={(e) => setEditingPayment({ ...editingPayment, amountPaid: Number(e.target.value) })}
+                  className="input text-xs"
+                />
+              </div>
+
+              <div>
+                <label className="label">Payment Method</label>
+                <select 
+                  value={editingPayment.method} 
+                  onChange={(e) => setEditingPayment({ ...editingPayment, method: e.target.value })} 
+                  className="input text-xs"
+                >
+                  <option value="CASH">Cash</option>
+                  <option value="ONLINE">Online Transfer</option>
+                  <option value="BANK_TRANSFER">Bank Deposit</option>
+                  <option value="CHEQUE">Cheque</option>
+                  <option value="UPI">UPI / QR Code</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="label">Remarks</label>
+                <input
+                  type="text"
+                  value={editingPayment.remarks || ''}
+                  onChange={(e) => setEditingPayment({ ...editingPayment, remarks: e.target.value })}
+                  className="input text-xs"
+                />
+              </div>
+
+              <div className="flex gap-3 justify-end pt-2">
+                <button type="button" onClick={() => setShowEditModal(false)} className="btn-secondary text-sm">Cancel</button>
+                <button type="submit" disabled={isSubmitting} className="btn-primary text-sm">Update Payment</button>
+              </div>
+            </form>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* Discount Fee Modal */}
+      {showDiscountModal && discountFee && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-gray-950/40 backdrop-blur-xs print:hidden">
+          <div className="fixed inset-0" onClick={() => setShowDiscountModal(false)} />
+          <div className="relative card w-full max-w-sm p-6 space-y-5 animate-scale-in z-10 bg-white dark:bg-gray-900 max-h-[90vh] overflow-y-auto">
+            <div>
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white">Edit Fee Amount</h3>
+              <p className="text-xs text-gray-450 mt-1">Applying discount for {discountFee.name}</p>
+            </div>
+
+            <form onSubmit={handleApplyDiscount} className="space-y-4">
+              <div className="flex justify-between p-3 bg-indigo-50/50 dark:bg-indigo-900/20 rounded-lg text-sm mb-4">
+                <span className="text-gray-500">Original Fee:</span>
+                <span className="font-bold text-gray-900 dark:text-white">₹{discountFee.amount}</span>
+              </div>
+
+              <div>
+                <label className="label">Concession / Discount Amount (₹)</label>
+                <input
+                  type="number"
+                  min="0"
+                  max={discountFee.amount}
+                  required
+                  value={discountAmount}
+                  onChange={(e) => setDiscountAmount(Number(e.target.value))}
+                  className="input text-xs"
+                />
+                <p className="text-[10px] text-gray-400 mt-1.5 ml-1">
+                  Net Fee to pay: <strong className="text-indigo-600 dark:text-indigo-400">₹{Math.max(0, discountFee.amount - discountAmount)}</strong>
+                </p>
+              </div>
+
+              <div className="flex gap-3 justify-end pt-2">
+                <button type="button" onClick={() => setShowDiscountModal(false)} className="btn-secondary text-sm">Cancel</button>
+                <button type="submit" disabled={isSubmitting} className="btn-primary text-sm">Save Fee</button>
               </div>
             </form>
           </div>

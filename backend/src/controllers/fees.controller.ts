@@ -202,6 +202,30 @@ export const deleteFeePayment = async (req: AuthRequest, res: Response, next: Ne
   successResponse(res, null, 'Fee payment deleted successfully');
 };
 
+export const updateFeePayment = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const id = req.params.id as string;
+    const { amountPaid, method, remarks } = req.body;
+    
+    const payment = await prisma.feePayment.findUnique({ where: { id } });
+    if (!payment) return next(createError('Fee payment not found', 404));
+
+    const updatedPayment = await prisma.feePayment.update({
+      where: { id },
+      data: {
+        amountPaid: amountPaid ? Number(amountPaid) : payment.amountPaid,
+        method: method || payment.method,
+        remarks: remarks !== undefined ? remarks : payment.remarks
+      }
+    });
+
+    clearDashboardCache();
+    successResponse(res, updatedPayment, 'Fee payment updated successfully');
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const getStudentFeeStatus = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   const studentId = req.params.studentId as string;
   const student = await prisma.student.findUnique({ where: { id: studentId } });
@@ -223,16 +247,26 @@ export const getStudentFeeStatus = async (req: AuthRequest, res: Response, next:
         where: { studentId, feeStructureId: structure.id },
         orderBy: { paymentDate: 'desc' },
       });
+      
+      const discountRecord = await prisma.feeDiscount.findUnique({
+        where: { studentId_feeStructureId: { studentId, feeStructureId: structure.id } }
+      });
+      const discount = discountRecord ? discountRecord.amount : 0;
+      
       const amountPaid = payments.reduce((s, p) => s + p.amountPaid, 0);
-      const amountDue = structure.amount - amountPaid;
+      const effectiveAmount = structure.amount - discount;
+      const amountDue = effectiveAmount - amountPaid;
       const latestPayment = payments[0];
       let status = 'PENDING';
-      if (amountPaid >= structure.amount) status = 'PAID';
+      if (amountPaid >= effectiveAmount) status = 'PAID';
       else if (amountPaid > 0) status = 'PARTIAL';
       else if (structure.dueDate < new Date()) status = 'OVERDUE';
 
       return {
         feeStructure: structure,
+        originalAmount: structure.amount,
+        discount,
+        effectiveAmount,
         amountDue: Math.max(0, amountDue),
         amountPaid,
         status,
@@ -242,6 +276,37 @@ export const getStudentFeeStatus = async (req: AuthRequest, res: Response, next:
   );
 
   successResponse(res, result, 'Fee status fetched');
+};
+
+export const applyFeeDiscount = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const { studentId, feeStructureId, discountAmount, remarks } = req.body;
+    
+    if (discountAmount === undefined || discountAmount === null) {
+      return next(createError('Discount amount is required', 400));
+    }
+
+    const discount = await prisma.feeDiscount.upsert({
+      where: {
+        studentId_feeStructureId: { studentId, feeStructureId }
+      },
+      update: {
+        amount: Number(discountAmount),
+        remarks
+      },
+      create: {
+        studentId,
+        feeStructureId,
+        amount: Number(discountAmount),
+        remarks
+      }
+    });
+
+    clearDashboardCache();
+    successResponse(res, discount, 'Fee discount applied successfully');
+  } catch (error) {
+    next(error);
+  }
 };
 
 export const getOverdue = async (_req: AuthRequest, res: Response): Promise<void> => {

@@ -58,6 +58,8 @@ export const getById = async (req: AuthRequest, res: Response, next: NextFunctio
       parent: { include: { user: { select: { name: true, phone: true, email: true } } } },
       marks: { include: { exam: true, subject: true }, orderBy: { createdAt: 'desc' } },
       feePayments: { include: { feeStructure: true }, orderBy: { createdAt: 'desc' } },
+      feeDiscounts: true,
+      documents: true,
     },
   });
   if (!student) return next(createError('Student not found', 404));

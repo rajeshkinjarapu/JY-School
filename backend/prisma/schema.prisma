@@ -66,6 +66,7 @@ model Student {
   marks                 Mark[]
   feePayments           FeePayment[]
   feeStructures         FeeStructure[]
+  feeDiscounts          FeeDiscount[]
   onlineExamSubmissions OnlineExamSubmission[]
 
   @@index([classId])
@@ -248,7 +249,8 @@ model FeeStructure {
   dueDate   DateTime
   createdAt DateTime @default(now())
 
-  payments  FeePayment[]
+  payments     FeePayment[]
+  feeDiscounts FeeDiscount[]
 
   @@index([classId])
   @@index([studentId])
@@ -270,6 +272,22 @@ model FeePayment {
   remarks          String?
   createdAt        DateTime      @default(now())
 
+  @@index([studentId])
+  @@index([feeStructureId])
+}
+
+model FeeDiscount {
+  id             String       @id @default(uuid())
+  studentId      String
+  feeStructureId String
+  amount         Float
+  remarks        String?
+  createdAt      DateTime     @default(now())
+
+  student        Student      @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  feeStructure   FeeStructure @relation(fields: [feeStructureId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, feeStructureId])
   @@index([studentId])
   @@index([feeStructureId])
 }
