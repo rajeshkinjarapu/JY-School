@@ -457,3 +457,17 @@ export const bulkUploadPhotos = async (req: AuthRequest, res: Response, next: Ne
     next(error);
   }
 };
+
+export const getTemplate = async (_req: AuthRequest, res: Response): Promise<void> => {
+  const headers = ['Student ID', 'Student Name', 'Mobile No', 'Class Name', 'Section Name', 'Gender', 'Blood Group', 'Father Name', 'Mother Name', 'Aadhar No', 'PEN Number', 'Address', 'Admission fee', 'Tution fee', 'Books fee'];
+  const sampleRow = ['JY26-0004', 'John Doe', '9876543210', 'Grade 10', 'A', 'MALE', 'O+', 'Richard Doe', 'Jane Doe', '123456789012', 'PEN123', '123 Main St', '5000', '25000', '2000'];
+  
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet([headers, sampleRow]);
+  XLSX.utils.book_append_sheet(wb, ws, 'Template');
+  const buffer = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
+
+  res.setHeader('Content-Disposition', 'attachment; filename=Student_Import_Template.xlsx');
+  res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+  res.send(buffer);
+};
