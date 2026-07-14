@@ -10,8 +10,9 @@ import toast from 'react-hot-toast';
 import { 
   ArrowLeft, Mail, Phone, Printer, User2, Calendar, 
   Droplet, ClipboardCheck, Users, Fingerprint, 
-  Hash, MapPin, Sparkles, GraduationCap, Camera, CreditCard 
+  Hash, MapPin, Sparkles, GraduationCap, Camera, CreditCard, FileDown, Trash2
 } from 'lucide-react';
+import { FeeReceiptPrint } from '../../components/fees/FeeReceiptPrint';
 
 export const StudentProfilePage: React.FC = () => {
   const { id } = useParams();
@@ -20,6 +21,7 @@ export const StudentProfilePage: React.FC = () => {
   const [feeStructures, setFeeStructures] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
+  const [printPayment, setPrintPayment] = useState<any>(null);
   
   // Payment Modal States
   const [showModal, setShowModal] = useState(false);
@@ -137,8 +139,15 @@ export const StudentProfilePage: React.FC = () => {
   };
 
   const handlePrintReceipt = (payment: any) => {
-    // Basic print trick for now - ideally we should use FeeReceiptPrint
-    window.print();
+    // Populate the correct student object structure for FeeReceiptPrint if needed
+    const paymentForPrint = {
+      ...payment,
+      student: student
+    };
+    setPrintPayment(paymentForPrint);
+    setTimeout(() => {
+      window.print();
+    }, 500);
   };
 
   useEffect(() => {
@@ -413,11 +422,13 @@ export const StudentProfilePage: React.FC = () => {
                     <th className="px-4 py-3">Amount</th>
                     <th className="px-4 py-3">Date</th>
                     <th className="px-4 py-3">Method</th>
+                    <th className="px-4 py-3">Receipt No</th>
+                    <th className="px-4 py-3 text-right">Invoice</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
                   {student.feePayments?.length === 0 ? (
-                    <tr><td colSpan={4} className="px-4 py-6 text-center text-gray-400">No payments found.</td></tr>
+                    <tr><td colSpan={6} className="px-4 py-6 text-center text-gray-400">No payments found.</td></tr>
                   ) : (
                     student.feePayments?.map((p: any) => (
                       <tr key={p.id}>
@@ -426,6 +437,25 @@ export const StudentProfilePage: React.FC = () => {
                         <td className="px-4 py-3 text-gray-500">{new Date(p.createdAt).toLocaleDateString()}</td>
                         <td className="px-4 py-3">
                           <Badge variant={p.method === 'UPI' ? 'danger' : 'info'}>{p.method}</Badge>
+                        </td>
+                        <td className="px-4 py-3 font-mono text-xs text-gray-400 opacity-70 truncate max-w-[120px]">{p.receiptNo || 'N/A'}</td>
+                        <td className="px-4 py-3 text-right flex items-center justify-end gap-2">
+                          <button
+                            onClick={() => handlePrintReceipt(p)}
+                            className="p-1.5 rounded-lg text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950/20 cursor-pointer"
+                            title="Print Dual Receipt"
+                          >
+                            <FileDown className="w-4 h-4" />
+                          </button>
+                          {(user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN' || user?.role === 'ACCOUNTANT') && (
+                            <button
+                              onClick={() => handleDeletePayment(p.id)}
+                              className="p-1.5 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 cursor-pointer"
+                              title="Delete Payment"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          )}
                         </td>
                       </tr>
                     ))
@@ -738,6 +768,9 @@ export const StudentProfilePage: React.FC = () => {
         </div>,
         document.body
       )}
+
+      {/* Hidden Print Component */}
+      <FeeReceiptPrint payment={printPayment} />
     </>
   );
 };
