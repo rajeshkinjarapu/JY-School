@@ -16,6 +16,7 @@ export const ExamListPage: React.FC = () => {
   const { user } = useAuth();
   const isAdminOrTeacher = user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN' || user?.role === 'TEACHER';
   const isAdmin = user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN';
+  const isTeacher = user?.role === 'TEACHER';
   const isStudent = user?.role === 'STUDENT';
 
   // Search parameters for linking tabs from sidebar
@@ -41,6 +42,11 @@ export const ExamListPage: React.FC = () => {
   // Filter selections
   const [selectedExamId, setSelectedExamId] = useState('');
   const [selectedClassId, setSelectedClassId] = useState('');
+
+  // Results Tab
+  const [results, setResults] = useState<any[]>([]);
+  const [resultsExamId, setResultsExamId] = useState('');
+  const [resultsLoading, setResultsLoading] = useState(false);
 
   // -------------------------------------------------------------
   // EXAMINATION Tab States & Logic
@@ -190,6 +196,19 @@ export const ExamListPage: React.FC = () => {
       fetchExamPlans();
     } catch {
       toast.error('Error deleting exam plan');
+    }
+  };
+
+  const fetchResults = async (examId: string) => {
+    if (!examId) return;
+    setResultsLoading(true);
+    try {
+      const res: any = await api.get(`/api/marks?examId=${examId}`);
+      setResults(Array.isArray(res.data) ? res.data : res.data?.data || []);
+    } catch {
+      toast.error('Failed to load results');
+    } finally {
+      setResultsLoading(false);
     }
   };
 
@@ -764,7 +783,7 @@ export const ExamListPage: React.FC = () => {
                 <span className="text-xs font-black uppercase tracking-widest text-center">Question Group</span>
               </button>
               
-              <button onClick={() => setActiveTab('question-bank')} className="relative overflow-hidden group flex flex-col items-center justify-center p-6 rounded-2xl border-0 transition-all gap-3 bg-gradient-to-br from-slate-600 to-gray-800 text-white shadow-lg hover:shadow-slate-500/30 hover:-translate-y-1">
+              <button onClick={() => setActiveTab('question-papers')} className="relative overflow-hidden group flex flex-col items-center justify-center p-6 rounded-2xl border-0 transition-all gap-3 bg-gradient-to-br from-slate-600 to-gray-800 text-white shadow-lg hover:shadow-slate-500/30 hover:-translate-y-1">
                 <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
                 <Layers className="w-8 h-8" />
                 <span className="text-xs font-black uppercase tracking-widest text-center">Question Papers</span>
@@ -834,6 +853,45 @@ export const ExamListPage: React.FC = () => {
                 <button type="submit" className="btn-primary text-sm">Create Exam</button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* ══ TAB 1: EXAMINATION ══ */}
+      {activeTab === 'examination' && (
+        <div className="space-y-6">
+          <div className="flex justify-between items-center bg-white dark:bg-gray-900 p-4 rounded-xl border border-gray-150 dark:border-gray-800">
+            <span className="text-xs font-extrabold uppercase text-gray-400">All Exam Batches</span>
+            {isAdmin && (
+              <button onClick={() => setShowExamModal(true)} className="btn-primary flex items-center gap-2 text-xs font-bold">
+                <Plus className="w-4 h-4" /> Create New Exam
+              </button>
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {exams.map(exam => (
+              <div key={exam.id} className="card p-6 space-y-4 hover:shadow-md border-t-4 border-indigo-500">
+                <div>
+                  <h4 className="font-bold text-base text-gray-900 dark:text-white">{exam.name}</h4>
+                  <p className="text-[11px] text-gray-400 mt-1">{exam.class?.name}-{exam.class?.section}</p>
+                  <div className="flex items-center gap-2 mt-2">
+                    <Badge variant="info">{exam.term}</Badge>
+                    <span className="text-[10px] text-gray-400">{new Date(exam.examDate).toLocaleDateString()}</span>
+                  </div>
+                </div>
+                <div className="flex gap-2 pt-2 border-t border-gray-100 dark:border-gray-800">
+                  <Link to={`/exams/${exam.id}/entry`} className="btn-primary flex-1 text-center text-xs py-2.5">
+                    Enter / View Marks
+                  </Link>
+                </div>
+              </div>
+            ))}
+            {exams.length === 0 && (
+              <div className="col-span-full py-12 text-center text-gray-400">
+                No exam batches created yet. Click "Create New Exam" to get started.
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -1012,54 +1070,6 @@ export const ExamListPage: React.FC = () => {
               </div>
             </div>
           )}
-        </div>
-      )}
-
-      {/* ══ TAB 4: ADMIT CARD ══ */}
-      {activeTab === 'admit-card' && (
-        <div className="card p-2 h-[80vh] overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800">
-          <div className="flex justify-between items-center p-4 bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-800 mb-2">
-            <div>
-              <h3 className="font-bold text-gray-900 dark:text-white">Admit Card Generator</h3>
-              <p className="text-xs text-gray-500">Standalone tool using Admit Cards.html</p>
-            </div>
-            <a href="/Admit Cards.html" target="_blank" className="btn-primary text-xs flex items-center gap-2">
-              <ExternalLink className="w-4 h-4" /> Open Full Screen
-            </a>
-          </div>
-          <iframe src="/Admit Cards.html" className="w-full h-full border-0 rounded-b-lg"></iframe>
-        </div>
-      )}
-
-      {/* ══ TAB 5: PROGRESS CARD ══ */}
-      {activeTab === 'progress-card' && (
-        <div className="card p-2 h-[80vh] overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800">
-          <div className="flex justify-between items-center p-4 bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-800 mb-2">
-            <div>
-              <h3 className="font-bold text-gray-900 dark:text-white">Progress Card Generator</h3>
-              <p className="text-xs text-gray-500">Standalone tool using JEE Mains Result card with Reports.html</p>
-            </div>
-            <a href="/JEE Mains Result card with Reports.html" target="_blank" className="btn-primary text-xs flex items-center gap-2">
-              <ExternalLink className="w-4 h-4" /> Open Full Screen
-            </a>
-          </div>
-          <iframe src="/JEE Mains Result card with Reports.html" className="w-full h-full border-0 rounded-b-lg"></iframe>
-        </div>
-      )}
-
-      {/* ══ TAB 6: SLIP TESTS ══ */}
-      {activeTab === 'online-exams' && (
-        <div className="card p-2 h-[80vh] overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800">
-          <div className="flex justify-between items-center p-4 bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-800 mb-2">
-            <div>
-              <h3 className="font-bold text-gray-900 dark:text-white">Slip Test Result Card</h3>
-              <p className="text-xs text-gray-500">Standalone tool using Slip Test Result Card.html</p>
-            </div>
-            <a href="/Slip Test Result Card.html" target="_blank" className="btn-primary text-xs flex items-center gap-2">
-              <ExternalLink className="w-4 h-4" /> Open Full Screen
-            </a>
-          </div>
-          <iframe src="/Slip Test Result Card.html" className="w-full h-full border-0 rounded-b-lg"></iframe>
         </div>
       )}
 
@@ -1470,45 +1480,6 @@ export const ExamListPage: React.FC = () => {
         </div>
       )}
 
-      {/* ══ TAB 7: WRITTEN EXAM ══ */}
-      {activeTab === 'written-exam' && (
-        <div className="space-y-6">
-          <div className="flex justify-between items-center bg-white dark:bg-gray-900 p-4 rounded-xl border border-gray-150 dark:border-gray-800">
-            <span className="text-xs font-extrabold uppercase text-gray-400">Conventional Offline Written Tests Log</span>
-          </div>
-
-          <div className="card p-6 overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse text-sm">
-                <thead>
-                  <tr className="border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/40">
-                    <th className="p-3.5 font-extrabold text-gray-400 text-xs uppercase tracking-wider">Exam Title</th>
-                    <th className="p-3.5 font-extrabold text-gray-400 text-xs uppercase tracking-wider">Target Class</th>
-                    <th className="p-3.5 font-extrabold text-gray-400 text-xs uppercase tracking-wider">Term</th>
-                    <th className="p-3.5 font-extrabold text-gray-400 text-xs uppercase tracking-wider">Date</th>
-                    <th className="p-3.5 font-extrabold text-gray-400 text-xs uppercase tracking-wider text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-150 dark:divide-gray-800">
-                  {exams.map(e => (
-                    <tr key={e.id} className="hover:bg-gray-50/50 dark:hover:bg-gray-800/10">
-                      <td className="p-3.5 font-bold text-gray-900 dark:text-white">{e.name}</td>
-                      <td className="p-3.5 text-xs font-semibold text-gray-600">{e.class?.name}-{e.class?.section}</td>
-                      <td className="p-3.5 text-xs text-gray-450 font-bold">{e.term}</td>
-                      <td className="p-3.5 text-xs text-gray-500 font-semibold">{new Date(e.examDate).toLocaleDateString()}</td>
-                      <td className="p-3.5 text-right">
-                        <Link to={`/exams/${e.id}/entry`} className="btn-secondary text-[11px] font-bold px-3 py-1.5">
-                          Enter Grades
-                        </Link>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* ══ TAB 8: SETTINGS ══ */}
       {activeTab === 'settings' && (
@@ -1560,10 +1531,71 @@ export const ExamListPage: React.FC = () => {
       )}
       
       {activeTab === 'results' && (
-        <div className="bg-white dark:bg-gray-900 p-12 text-center rounded-xl border border-gray-150 dark:border-gray-800 space-y-4">
-          <Award className="w-12 h-12 text-gray-300 mx-auto" />
-          <h3 className="text-lg font-bold text-gray-900 dark:text-white">Results Publishing</h3>
-          <p className="text-sm text-gray-500">Publish verified results and rank lists (Coming Soon).</p>
+        <div className="space-y-6">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white dark:bg-gray-900 p-4 rounded-xl border border-gray-150 dark:border-gray-800">
+            <span className="text-xs font-extrabold uppercase text-gray-400">Exam Results</span>
+            <div className="flex items-center gap-3">
+              <span className="text-xs text-gray-400 font-semibold">Select Exam:</span>
+              <select
+                value={resultsExamId}
+                onChange={e => { setResultsExamId(e.target.value); fetchResults(e.target.value); }}
+                className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm font-bold"
+              >
+                <option value="">-- Select Exam --</option>
+                {exams.map(e => <option key={e.id} value={e.id}>{e.name} ({e.class?.name})</option>)}
+              </select>
+            </div>
+          </div>
+
+          {resultsLoading ? (
+            <LoadingSpinner size="md" className="h-40" />
+          ) : results.length > 0 ? (
+            <div className="card p-6 overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse text-sm">
+                  <thead>
+                    <tr className="border-b border-gray-200 dark:border-gray-800">
+                      <th className="pb-3.5 font-extrabold text-gray-400 text-xs uppercase tracking-wider">Student Name</th>
+                      <th className="pb-3.5 font-extrabold text-gray-400 text-xs uppercase tracking-wider">Roll No</th>
+                      <th className="pb-3.5 font-extrabold text-gray-400 text-xs uppercase tracking-wider">Subject</th>
+                      <th className="pb-3.5 font-extrabold text-gray-400 text-xs uppercase tracking-wider">Marks</th>
+                      <th className="pb-3.5 font-extrabold text-gray-400 text-xs uppercase tracking-wider text-right">Result</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-150 dark:divide-gray-800">
+                    {results.map((r: any) => {
+                      const pct = r.exam?.maxMarks ? Math.round((r.marksObtained / r.exam.maxMarks) * 100) : 0;
+                      const pass = pct >= 40;
+                      return (
+                        <tr key={r.id} className="hover:bg-gray-50/50 dark:hover:bg-gray-800/10">
+                          <td className="py-4 font-bold text-gray-900 dark:text-white">{r.student?.user?.name}</td>
+                          <td className="py-4 text-xs text-gray-400">{r.student?.rollNo}</td>
+                          <td className="py-4 text-xs font-semibold text-gray-600">{r.subject?.name}</td>
+                          <td className="py-4 font-bold">{r.marksObtained} / {r.exam?.maxMarks}</td>
+                          <td className="py-4 text-right">
+                            <span className={`inline-flex px-2.5 py-0.5 rounded-full text-[10px] font-extrabold tracking-wide uppercase ${
+                              pass ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/20' : 'bg-red-50 text-red-700 dark:bg-red-950/20'
+                            }`}>
+                              {pct}% · {pass ? 'Pass' : 'Fail'}
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          ) : resultsExamId ? (
+            <div className="card p-12 text-center text-gray-400">
+              No marks recorded for this exam yet.
+            </div>
+          ) : (
+            <div className="card p-12 text-center text-gray-400">
+              <Award className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+              Select an exam above to view student results.
+            </div>
+          )}
         </div>
       )}
 
