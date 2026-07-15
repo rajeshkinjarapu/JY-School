@@ -41,6 +41,7 @@ export const FinancePage: React.FC = () => {
   const [payAmount, setPayAmount] = useState('');
   const [payMethod, setPayMethod] = useState('CASH');
   const [payRemarks, setPayRemarks] = useState('');
+  const [isSubmittingPayment, setIsSubmittingPayment] = useState(false);
 
   // Local storage states for Finance configuration (Mock Persistence)
   const [paymentMethods, setPaymentMethods] = useState<any[]>([]);
@@ -72,7 +73,13 @@ export const FinancePage: React.FC = () => {
         isStudent ? Promise.resolve({ data: [] }) : api.get('/api/classes'),
       ]);
 
-      setPayments(payRes.data || payRes || []);
+      const paymentData = Array.isArray(payRes.data)
+        ? payRes.data
+        : Array.isArray(payRes)
+          ? payRes
+          : [];
+      const uniquePayments = [...new Map(paymentData.map((p: any) => [p.id, p])).values()];
+      setPayments(uniquePayments);
       setStudents(studRes.data.data || studRes.data || []);
       setStructures(structRes.data || structRes || []);
       setClasses(classRes.data || classRes || []);
@@ -209,6 +216,12 @@ export const FinancePage: React.FC = () => {
 
   const handleAddPayment = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmittingPayment) return;
+    if (!payStudentId || !payStructureId || !payAmount || Number(payAmount) <= 0) {
+      toast.error('Please select a student, fee component and enter a valid amount.');
+      return;
+    }
+    setIsSubmittingPayment(true);
     try {
       await api.post('/api/fees/payments', {
         studentId: payStudentId,
@@ -226,6 +239,8 @@ export const FinancePage: React.FC = () => {
       setPayRemarks('');
     } catch (err: any) {
       toast.error(err.message || 'Failed to record payment');
+    } finally {
+      setIsSubmittingPayment(false);
     }
   };
 
@@ -862,7 +877,13 @@ export const FinancePage: React.FC = () => {
                         </div>
                         <div className="flex justify-end gap-2 pt-2">
                           <button type="button" onClick={() => setShowPaymentModal(false)} className="btn-secondary">Cancel</button>
-                          <button type="submit" className="btn-primary">Submit Transaction</button>
+                          <button
+                            type="submit"
+                            disabled={isSubmittingPayment}
+                            className={`btn-primary ${isSubmittingPayment ? 'opacity-50 cursor-not-allowed' : ''}`}
+                          >
+                            {isSubmittingPayment ? 'Recording...' : 'Submit Transaction'}
+                          </button>
                         </div>
                       </form>
                     </div>
