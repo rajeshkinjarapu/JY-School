@@ -876,7 +876,7 @@ export const ExamListPage: React.FC = () => {
                   <h4 className="font-bold text-base text-gray-900 dark:text-white">{exam.name}</h4>
                   <p className="text-[11px] text-gray-400 mt-1">{exam.class?.name}-{exam.class?.section}</p>
                   <div className="flex items-center gap-2 mt-2">
-                    <Badge variant="info">{exam.term}</Badge>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-indigo-50 text-indigo-600">{exam.term}</span>
                     <span className="text-[10px] text-gray-400">{new Date(exam.examDate).toLocaleDateString()}</span>
                   </div>
                 </div>
@@ -1573,9 +1573,7 @@ export const ExamListPage: React.FC = () => {
                           <td className="py-4 text-xs font-semibold text-gray-600">{r.subject?.name}</td>
                           <td className="py-4 font-bold">{r.marksObtained} / {r.exam?.maxMarks}</td>
                           <td className="py-4 text-right">
-                            <span className={`inline-flex px-2.5 py-0.5 rounded-full text-[10px] font-extrabold tracking-wide uppercase ${
-                              pass ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/20' : 'bg-red-50 text-red-700 dark:bg-red-950/20'
-                            }`}>
+                            <span className={pass ? 'inline-flex px-2.5 py-0.5 rounded-full text-[10px] font-extrabold tracking-wide uppercase bg-emerald-50 text-emerald-700' : 'inline-flex px-2.5 py-0.5 rounded-full text-[10px] font-extrabold tracking-wide uppercase bg-red-50 text-red-700'}>
                               {pct}% - {pass ? 'Pass' : 'Fail'}
                             </span>
                           </td>
