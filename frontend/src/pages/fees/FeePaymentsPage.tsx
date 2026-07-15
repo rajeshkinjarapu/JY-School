@@ -13,6 +13,7 @@ export const FeePaymentsPage: React.FC = () => {
   const [payments, setPayments] = useState<any[]>([]);
   const [students, setStudents] = useState<any[]>([]);
   const [structures, setStructures] = useState<any[]>([]);
+  const [classes, setClasses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [printPayment, setPrintPayment] = useState<any>(null);
@@ -34,30 +35,25 @@ export const FeePaymentsPage: React.FC = () => {
   const [selectedStudent, setSelectedStudent] = useState<any>(null);
   const [showStudentDropdown, setShowStudentDropdown] = useState(false);
 
-  // Derived unique classes and sections from loaded students
+  // Derived unique classes and sections from loaded class configuration
   const uniqueClasses = useMemo(() => {
-    const classMap = new Map<string, { id: string; label: string; name: string; section: string }>();
-    students.forEach(s => {
-      if (s.class) {
-        const key = `${s.class.name}-${s.class.section}`;
-        classMap.set(key, {
-          id: s.class.id,
-          name: s.class.name,
-          section: s.class.section,
-          label: `${s.class.name}-${s.class.section}`,
-        });
-      }
-    });
-    return Array.from(classMap.values()).sort((a, b) => a.label.localeCompare(b.label));
-  }, [students]);
+    return classes
+      .map(c => ({
+        id: c.id,
+        name: c.name,
+        section: c.section,
+        label: `${c.name}-${c.section}`,
+      }))
+      .sort((a, b) => a.label.localeCompare(b.label));
+  }, [classes]);
 
   const uniqueSections = useMemo(() => {
     const sections = new Set<string>();
-    students
-      .filter(s => !filterClass || `${s.class?.name}-${s.class?.section}` === filterClass)
-      .forEach(s => { if (s.class?.section) sections.add(s.class.section); });
+    classes
+      .filter(c => !filterClass || `${c.name}-${c.section}` === filterClass)
+      .forEach(c => { if (c.section) sections.add(c.section); });
     return Array.from(sections).sort();
-  }, [students, filterClass]);
+  }, [classes, filterClass]);
 
   const filteredStudents = useMemo(() => {
     return students.filter(s => {
@@ -73,14 +69,16 @@ export const FeePaymentsPage: React.FC = () => {
   const fetchData = async () => {
     try {
       const isStudent = user?.role === 'STUDENT';
-      const [payRes, studRes, structRes]: any = await Promise.all([
+      const [payRes, studRes, structRes, classRes]: any = await Promise.all([
         isStudent ? api.get(`/api/fees/payments?studentId=${user.id}`) : api.get('/api/fees/payments'),
         isStudent ? Promise.resolve({ data: [] }) : api.get('/api/students'),
         isStudent ? Promise.resolve({ data: [] }) : api.get('/api/fees/structures'),
+        isStudent ? Promise.resolve({ data: [] }) : api.get('/api/classes'),
       ]);
       setPayments(payRes.data || payRes || []);
       setStudents(studRes.data.data || studRes.data || []);
       setStructures(structRes.data || structRes || []);
+      setClasses(classRes.data || classRes || []);
     } catch (e) {
       toast.error('Failed to load transaction records');
     } finally {
