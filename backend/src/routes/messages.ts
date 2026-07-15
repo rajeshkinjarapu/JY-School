@@ -8,6 +8,7 @@ router.use(authenticate);
 
 router.get('/conversations', getConversations);
 router.get('/unread-count', getUnreadCount);
+router.get('/conversation/:userId', getConversation);
 router.get('/:userId', getConversation);
 router.post('/', sendMessage);
 

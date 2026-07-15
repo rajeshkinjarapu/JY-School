@@ -7,6 +7,9 @@ export interface User {
   photoUrl?: string;
   isActive: boolean;
   createdAt: string;
+  student?: Student;
+  teacher?: Teacher;
+  parent?: Parent;
 }
 
 export type Role = 'SUPER_ADMIN' | 'ADMIN' | 'TEACHER' | 'STUDENT' | 'PARENT' | 'ACCOUNTANT';

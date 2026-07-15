@@ -10,7 +10,7 @@ export const getAllQuestionPapers = async (req: Request, res: Response) => {
         class: true,
         subject: true
       },
-      orderBy: { createdAt: 'desc' }
+      orderBy: { uploadedAt: 'desc' }
     });
     res.json(papers);
   } catch (error) {
@@ -26,9 +26,10 @@ export const createQuestionPaper = async (req: Request, res: Response) => {
     const paper = await prisma.questionPaper.create({
       data: {
         title,
-        classId,
-        subjectId,
-        fileUrl
+        fileUrl,
+        uploadedBy: req.body.uploadedBy || 'system',
+        class: { connect: { id: classId } },
+        subject: { connect: { id: subjectId } },
       },
       include: {
         class: true,

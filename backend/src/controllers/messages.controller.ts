@@ -31,6 +31,7 @@ export const getConversations = async (req: AuthRequest, res: Response): Promise
       partnerMap.set(partner.id, {
         partner,
         latestMessage: msg,
+        lastMessage: msg,
         unreadCount,
       });
     }

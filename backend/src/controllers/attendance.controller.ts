@@ -3,6 +3,7 @@ import { AuthRequest } from '../middlewares/auth';
 import { createError } from '../middlewares/errorHandler';
 import { prisma } from '../utils/prisma';
 import { successResponse } from '../utils/response';
+import { Role } from '../types/enums';
 
 export const getByClass = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   const { classId, date } = req.query as { classId: string; date: string };
@@ -39,6 +40,19 @@ export const getByClass = async (req: AuthRequest, res: Response, next: NextFunc
 export const getByStudent = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   const { studentId, startDate, endDate } = req.query as { studentId: string; startDate?: string; endDate?: string };
   if (!studentId) return next(createError('studentId is required', 400));
+
+  if (req.user?.role === Role.STUDENT) {
+    const student = await prisma.student.findUnique({ where: { userId: req.user.id } });
+    if (!student || student.id !== studentId) return next(createError('You do not have permission to view this attendance', 403));
+  } else if (req.user?.role === Role.PARENT) {
+    const parent = await prisma.parent.findUnique({
+      where: { userId: req.user.id },
+      include: { children: true },
+    });
+    if (!parent || !parent.children.some((child) => child.id === studentId)) {
+      return next(createError('You do not have permission to view this attendance', 403));
+    }
+  }
 
   const where: any = { studentId };
   if (startDate || endDate) {

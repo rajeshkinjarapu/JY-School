@@ -16,7 +16,8 @@ export const getAdminDashboard = async (req: AuthRequest, res: Response, next: N
     const cacheKey = 'admin_dashboard';
     const nowMs = Date.now();
     if (cache[cacheKey] && cache[cacheKey].expiry > nowMs) {
-      return successResponse(res, cache[cacheKey].data, 'Admin dashboard data fetched from cache');
+      successResponse(res, cache[cacheKey].data, 'Admin dashboard data fetched from cache');
+      return;
     }
 
     const today = new Date();

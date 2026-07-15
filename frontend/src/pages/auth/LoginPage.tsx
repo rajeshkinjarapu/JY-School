@@ -9,7 +9,7 @@ import toast from 'react-hot-toast';
 import { Eye, EyeOff, Lock, Mail, ShieldAlert } from 'lucide-react';
 
 const loginSchema = z.object({
-  email: z.string().min(3, 'Please enter a valid email address or Student ID'),
+  email: z.string().min(3, 'Please enter your email, Student ID or registered mobile number'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
 });
 
@@ -96,12 +96,12 @@ export const LoginPage: React.FC = () => {
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
             <div>
-              <label className="label">Email Address or Student ID</label>
+              <label className="label">Email, Student ID or Mobile Number</label>
               <div className="relative">
                 <Mail className="absolute left-3.5 top-3.5 w-5 h-5 text-gray-400" />
                 <input
                   type="text"
-                  placeholder="name@school.com or JY26-XXXX"
+                  placeholder="name@school.com, JY26-0001 or 9876543210"
                   className={`input pl-11 ${errors.email ? 'border-red-500 focus:ring-red-500' : ''}`}
                   {...register('email')}
                 />

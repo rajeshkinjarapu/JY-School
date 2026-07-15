@@ -77,29 +77,29 @@ export const login = async (req: AuthRequest, res: Response, next: NextFunction)
   const password = req.body.password?.trim();
   console.log('Login attempt:', { emailOrId, passwordLength: password ? password.length : 0 });
 
-  let user: any = null;
+  if (!emailOrId || !password) return next(createError('Email / mobile / Student ID and password are required', 400));
 
-  if (emailOrId && !emailOrId.includes('@')) {
-    const student = await prisma.student.findUnique({
-      where: { rollNo: emailOrId },
-      include: { user: true },
-    });
-    if (student) {
-      user = student.user;
-    } else {
-      const teacher = await prisma.teacher.findUnique({
-        where: { employeeId: emailOrId },
-        include: { user: true },
-      });
-      if (teacher) {
-        user = teacher.user;
-      } else {
-        user = await prisma.user.findFirst({ where: { email: emailOrId } });
-      }
-    }
-  } else {
-    user = await prisma.user.findFirst({ where: { email: emailOrId } });
-  }
+  const searchTerm = emailOrId;
+  const user = await prisma.user.findFirst({
+    where: {
+      OR: [
+        { email: searchTerm },
+        { phone: searchTerm },
+        { student: { rollNo: searchTerm } },
+        { teacher: { employeeId: searchTerm } },
+      ],
+    },
+    include: {
+      student: {
+        include: {
+          class: true,
+          parent: { include: { user: { select: { name: true, phone: true } } } },
+        },
+      },
+      teacher: { include: { homeRoomClass: true } },
+      parent: { include: { children: { include: { user: { select: { name: true, phone: true } }, class: true } } } },
+    },
+  });
 
   if (!user || !user.isActive) return next(createError('Invalid credentials', 401));
 

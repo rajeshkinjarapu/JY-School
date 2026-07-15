@@ -6,6 +6,7 @@ import { successResponse, paginatedResponse } from '../utils/response';
 import PDFDocument from 'pdfkit';
 import * as XLSX from 'xlsx';
 import { clearDashboardCache } from './dashboard.controller';
+import { Role } from '../types/enums';
 
 export const bulkImportFees = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   if (!req.file) return next(createError('No file uploaded', 400));
@@ -109,7 +110,26 @@ export const getPayments = async (req: AuthRequest, res: Response): Promise<void
   const skip = (page - 1) * limit;
 
   const where: any = {};
-  if (studentId) where.studentId = studentId;
+  if (studentId) {
+    where.studentId = studentId;
+  } else if (req.user?.role === Role.STUDENT) {
+    const student = await prisma.student.findUnique({ where: { userId: req.user.id } });
+    if (!student) {
+      paginatedResponse(res, [], 0, page, limit, 'Payments fetched');
+      return;
+    }
+    where.studentId = student.id;
+  } else if (req.user?.role === Role.PARENT) {
+    const parent = await prisma.parent.findUnique({
+      where: { userId: req.user.id },
+      include: { children: true },
+    });
+    if (!parent?.children?.length) {
+      paginatedResponse(res, [], 0, page, limit, 'Payments fetched');
+      return;
+    }
+    where.studentId = { in: parent.children.map((child) => child.id) };
+  }
   if (status) where.status = status;
   if (classId) where.feeStructure = { classId };
   if (startDate || endDate) {
