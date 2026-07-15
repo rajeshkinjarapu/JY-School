@@ -107,17 +107,22 @@ export const StudentProfilePage: React.FC = () => {
     e.preventDefault();
     if (selectedFees.length === 0) return toast.error('Please select at least one fee structure to pay.');
     if (method === 'UPI' && !utrNumber) return toast.error('Please enter UTR number');
-    
+
     setIsSubmitting(true);
     try {
-      await api.post('/api/fees/payments', {
+      const payload: any = {
         studentId: student.id,
         payments: selectedFees,
         method,
         remarks,
-        utrNumber: method === 'UPI' ? utrNumber : null,
-        receiptUrl: method === 'UPI' ? receiptUrl : null,
-      });
+      };
+
+      if (method === 'UPI') {
+        payload.utrNumber = utrNumber;
+        payload.receiptUrl = receiptUrl;
+      }
+
+      await api.post('/api/fees/payments', payload);
       
       toast.success('Payment recorded successfully!');
       setShowModal(false);
@@ -127,7 +132,7 @@ export const StudentProfilePage: React.FC = () => {
       setReceiptUrl('');
       fetchStudentProfile();
     } catch (error: any) {
-      toast.error(error.message || 'Error recording payment');
+      toast.error(error.response?.data?.message || error.message || 'Error recording payment');
     } finally {
       setIsSubmitting(false);
     }
