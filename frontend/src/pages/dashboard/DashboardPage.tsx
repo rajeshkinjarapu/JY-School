@@ -205,7 +205,7 @@ const AdminView: React.FC<{ data: any }> = ({ data }) => {
     { label: 'Total Students', value: data.totalStudents, icon: Users, gradient: 'linear-gradient(90deg,#6366f1,#818cf8)', glow: 'rgba(99,102,241,0.08)', link: '/students', sub: 'Enrolled this year' },
     { label: 'Total Teachers', value: data.totalTeachers, icon: GraduationCap, gradient: 'linear-gradient(90deg,#10b981,#34d399)', glow: 'rgba(16,185,129,0.08)', link: '/teachers', sub: 'On staff' },
     { label: 'Total Classes', value: data.totalClasses, icon: School, gradient: 'linear-gradient(90deg,#f59e0b,#fbbf24)', glow: 'rgba(245,158,11,0.08)', link: '/classes', sub: 'Active sections' },
-    { label: 'Total Revenue', value: `₹${(data.totalRevenue || 0).toLocaleString('en-IN')}`, icon: Wallet, gradient: 'linear-gradient(90deg,#f43f5e,#fb7185)', glow: 'rgba(244,63,94,0.08)', link: '/finance', sub: 'Fees collected' },
+    { label: 'Total Revenue', value: `₹${(data.totalRevenue || 0).toLocaleString('en-IN')}`, icon: Wallet, gradient: 'linear-gradient(90deg,#f43f5e,#fb7185)', glow: 'rgba(244,63,94,0.08)', link: '/finance?tab=transaction', sub: 'Fees collected' },
   ];
 
   const pieData = [
