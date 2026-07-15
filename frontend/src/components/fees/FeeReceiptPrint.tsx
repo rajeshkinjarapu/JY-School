@@ -142,9 +142,7 @@ export const FeeReceiptPrint: React.FC<FeeReceiptPrintProps> = ({ payment, schoo
             <p className="text-[10px] font-black tracking-widest uppercase text-slate-800">Cashier / Accountant</p>
           </div>
           <div className="text-right">
-             <div className="w-20 h-20 rounded-full border-[3px] border-double border-slate-300 flex items-center justify-center mx-auto mb-2 relative z-0">
-               <span className="text-slate-400 font-black uppercase tracking-[0.1em] text-[8px] rotate-[-20deg] text-center leading-tight">School<br/>Seal</span>
-            </div>
+             <div className="w-20 h-20 rounded-full border-[3px] border-double border-slate-300 flex items-center justify-center mx-auto mb-2 relative z-0" />
             <p className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">System Generated Receipt</p>
             <p className="text-[8px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">Valid without signature if paid online</p>
           </div>

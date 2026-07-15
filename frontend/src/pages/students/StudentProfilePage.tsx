@@ -650,9 +650,7 @@ export const StudentProfilePage: React.FC = () => {
               </span>
             </div>
             
-            <div className="w-32 h-32 rounded-full border-[3px] border-double border-gray-300 flex items-center justify-center bg-gray-50 -my-4 relative z-0">
-               <span className="text-gray-400 font-bold uppercase tracking-[0.1em] text-[9px] rotate-[-20deg] text-center leading-tight">School<br/>Seal</span>
-            </div>
+            <div className="w-32 h-32 rounded-full border-[3px] border-double border-gray-300 flex items-center justify-center bg-gray-50 -my-4 relative z-0" />
 
             <div className="text-center w-56">
               <div className="h-0 border-b-2 border-gray-800 w-full mb-3"></div>
