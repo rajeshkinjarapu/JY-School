@@ -1576,7 +1576,7 @@ export const ExamListPage: React.FC = () => {
                             <span className={`inline-flex px-2.5 py-0.5 rounded-full text-[10px] font-extrabold tracking-wide uppercase ${
                               pass ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/20' : 'bg-red-50 text-red-700 dark:bg-red-950/20'
                             }`}>
-                              {pct}% · {pass ? 'Pass' : 'Fail'}
+                              {pct}% - {pass ? 'Pass' : 'Fail'}
                             </span>
                           </td>
                         </tr>
