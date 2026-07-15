@@ -10,7 +10,7 @@ import toast from 'react-hot-toast';
 import { 
   ArrowLeft, Mail, Phone, Printer, User2, Calendar, 
   Droplet, ClipboardCheck, Users, Fingerprint, 
-  Hash, MapPin, Sparkles, GraduationCap, Camera, CreditCard, FileDown, Trash2, Edit2, Wallet
+  Hash, MapPin, Sparkles, GraduationCap, Camera, CreditCard, FileDown, Trash2, Edit2
 } from 'lucide-react';
 import { FeeReceiptPrint } from '../../components/fees/FeeReceiptPrint';
 
@@ -234,7 +234,7 @@ export const StudentProfilePage: React.FC = () => {
                 onClick={() => setShowModal(true)}
                 className="flex-1 sm:flex-none bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white flex items-center justify-center gap-2 px-6 py-3 rounded-2xl text-sm font-bold shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 hover:-translate-y-0.5 transition-all"
               >
-                <Wallet className="w-4 h-4" />
+                <CreditCard className="w-4 h-4" />
                 <span>Pay Fee</span>
               </button>
               <button
