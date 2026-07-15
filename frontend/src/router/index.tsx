@@ -24,6 +24,8 @@ const StudentProfilePage = lazy(() => import('../pages/students/StudentProfilePa
 const TeacherListPage = lazy(() => import('../pages/teachers/TeacherListPage'));
 const TeacherFormPage = lazy(() => import('../pages/teachers/TeacherFormPage'));
 const TeacherProfilePage = lazy(() => import('../pages/teachers/TeacherProfilePage'));
+const TeacherStudentsPage = lazy(() => import('../pages/teachers/TeacherStudentsPage'));
+const TeacherClassesPage = lazy(() => import('../pages/teachers/TeacherClassesPage'));
 const ClassManagementPage = lazy(() => import('../pages/classes/ClassManagementPage'));
 const ClassDetailPage = lazy(() => import('../pages/classes/ClassDetailPage'));
 const SubjectPage = lazy(() => import('../pages/subjects/SubjectPage'));
@@ -136,6 +138,22 @@ export const router = createBrowserRouter([
         element: withSuspense(
           <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN']}>
             <TeacherFormPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'teachers/students',
+        element: withSuspense(
+          <ProtectedRoute allowedRoles={['TEACHER', 'SUPER_ADMIN', 'ADMIN']}>
+            <TeacherStudentsPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'teachers/classes',
+        element: withSuspense(
+          <ProtectedRoute allowedRoles={['TEACHER', 'SUPER_ADMIN', 'ADMIN']}>
+            <TeacherClassesPage />
           </ProtectedRoute>
         ),
       },
