@@ -28,123 +28,82 @@ export const FeeReceiptPrint: React.FC<FeeReceiptPrintProps> = ({ payment, schoo
     : 0;
 
   const ReceiptHalf = ({ type }: { type: 'STUDENT COPY' | 'OFFICE COPY' }) => (
-    <div className="flex-1 w-[210mm] p-10 flex flex-col justify-between bg-white text-black relative box-border mx-auto overflow-hidden">
-      
-      {/* Background Watermark */}
-      <div className="absolute inset-0 flex items-center justify-center opacity-[0.03] pointer-events-none">
-        <div className="w-[120mm] h-[120mm] rounded-full border-[10px] border-slate-900 flex items-center justify-center">
-           <span className="text-8xl font-black tracking-tighter text-slate-900">JY</span>
+    <div className="w-full h-full flex flex-col bg-white text-slate-900 box-border overflow-hidden">
+      <div className="flex items-center justify-between gap-4 p-5 border-b border-slate-200">
+        <div className="flex items-center gap-4">
+          <div className="w-16 h-16 rounded-full border border-slate-300 bg-white flex items-center justify-center overflow-hidden">
+            <img src="/logo.png" alt="School Logo" className="w-12 h-12 object-contain" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+          </div>
+          <div>
+            <h1 className="text-2xl font-extrabold uppercase tracking-[0.2em] text-slate-900">{schoolName}</h1>
+            <p className="text-[10px] uppercase tracking-[0.24em] font-semibold text-slate-600 mt-1">Opp. Hero Showroom, SVL Paradise Campus, Narasannapeta</p>
+          </div>
+        </div>
+        <div className="text-right">
+          <div className="inline-flex items-center justify-center px-4 py-2 bg-slate-900 text-white text-[10px] font-black uppercase tracking-[0.2em] rounded-sm">{type}</div>
+          <div className="mt-3 text-[10px] text-slate-500 uppercase tracking-[0.2em] font-semibold space-y-1">
+            <div>Date: <span className="text-slate-900 font-black">{format(new Date(payment.createdAt || new Date()), 'dd MMM yyyy')}</span></div>
+            <div>Receipt No: <span className="text-slate-900 font-black">{receiptNumber}</span></div>
+          </div>
         </div>
       </div>
 
-      <div className="relative z-10 flex flex-col h-full border-[3px] border-double border-slate-800 p-6">
-        {/* Header */}
-        <div className="flex items-center justify-between border-b-[3px] border-slate-800 pb-5 mb-5 relative">
-          <div className="flex items-center gap-5">
-            <div className="w-20 h-20 rounded-full flex items-center justify-center shrink-0 bg-white shadow-sm border border-slate-200">
-              <img src="/logo.png" alt="School Logo" className="w-full h-full object-contain p-1" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
-            </div>
-            <div>
-              <h1 className="text-3xl font-black uppercase tracking-[0.15em] text-slate-900" style={{ fontFamily: 'Georgia, serif' }}>{schoolName}</h1>
-              <p className="text-[11px] text-slate-600 font-bold mt-1.5 uppercase tracking-widest">Opp. Hero Showroom, SVL Paradise Campus, Narasannapeta</p>
-            </div>
-          </div>
-          <div className="text-right">
-            <div className="inline-block px-5 py-2 bg-slate-900 border border-slate-900 rounded-sm font-black text-xs tracking-[0.2em] text-white">
-              {type}
-            </div>
-            <div className="mt-3 text-right space-y-1">
-              <p className="text-xs font-bold uppercase tracking-widest text-slate-500">Date: <span className="text-slate-900">{format(new Date(payment.createdAt || new Date()), 'dd MMM yyyy')}</span></p>
-              <p className="text-xs font-bold uppercase tracking-widest text-slate-500">Receipt No: <span className="text-slate-900">{receiptNumber}</span></p>
-            </div>
-          </div>
-        </div>
-
-        {/* Details Section */}
+      <div className="p-6 flex-1 flex flex-col justify-between">
         <div className="grid grid-cols-2 gap-4 mb-5">
-          <div className="space-y-3">
-            <div className="bg-slate-50 p-4 border border-slate-300 h-full">
-              <p className="text-[10px] text-slate-500 uppercase tracking-widest font-black mb-3 border-b border-slate-300 pb-1 inline-block">Student Details</p>
-              <h2 className="text-lg font-black text-slate-900 uppercase tracking-wide">{payment.student?.user?.name || 'N/A'}</h2>
-              <div className="grid grid-cols-2 gap-y-2 mt-3 text-sm">
-                <div><span className="text-slate-500 text-xs font-bold uppercase">ID:</span> <span className="font-extrabold text-slate-800">{payment.student?.rollNo || 'N/A'}</span></div>
-                <div><span className="text-slate-500 text-xs font-bold uppercase">Class:</span> <span className="font-extrabold text-slate-800">{payment.student?.class?.name}</span></div>
-                <div><span className="text-slate-500 text-xs font-bold uppercase">Section:</span> <span className="font-extrabold text-slate-800">{payment.student?.class?.section || '-'}</span></div>
-                <div><span className="text-slate-500 text-xs font-bold uppercase">Father:</span> <span className="font-extrabold text-slate-800">{payment.student?.fatherName || 'N/A'}</span></div>
-              </div>
+          <div className="p-4 border border-slate-200 rounded-[10px] bg-slate-50">
+            <div className="text-[10px] uppercase tracking-[0.26em] text-slate-500 font-black mb-3">Student Details</div>
+            <div className="text-sm font-black uppercase tracking-[0.12em] text-slate-900">{payment.student?.user?.name || 'N/A'}</div>
+            <div className="mt-3 text-[10.5px] text-slate-700 grid gap-2">
+              <div><span className="font-black text-slate-900">ID:</span> {payment.student?.rollNo || 'N/A'}</div>
+              <div><span className="font-black text-slate-900">Class:</span> {payment.student?.class?.name || '-'}</div>
+              <div><span className="font-black text-slate-900">Section:</span> {payment.student?.class?.section || '-'}</div>
+              <div><span className="font-black text-slate-900">Father:</span> {payment.student?.fatherName || 'N/A'}</div>
             </div>
           </div>
-          <div className="space-y-3">
-            <div className="bg-slate-50 p-4 border border-slate-300 h-full">
-              <p className="text-[10px] text-slate-500 uppercase tracking-widest font-black mb-3 border-b border-slate-300 pb-1 inline-block">Payment Details</p>
-              <div className="grid grid-cols-[100px_1fr] gap-y-3 text-sm">
-                <div className="text-slate-500 font-bold uppercase text-xs">Amount Paid:</div>
-                <div className="font-black text-slate-900 text-base">₹{payment.amountPaid}</div>
-                
-                <div className="text-slate-500 font-bold uppercase text-xs">Method:</div>
-                <div className="font-extrabold text-slate-800">{payment.method}</div>
-                
-                {payment.utrNumber && (
-                  <>
-                    <div className="text-slate-500 font-bold uppercase text-xs">UTR / Ref:</div>
-                    <div className="font-extrabold text-slate-800 break-all">{payment.utrNumber}</div>
-                  </>
-                )}
-              </div>
+          <div className="p-4 border border-slate-200 rounded-[10px] bg-slate-50">
+            <div className="text-[10px] uppercase tracking-[0.26em] text-slate-500 font-black mb-3">Payment Details</div>
+            <div className="text-[10.5px] text-slate-700 grid gap-2">
+              <div className="flex justify-between"><span className="font-black text-slate-900">Amount Paid</span><span className="font-extrabold text-slate-900">₹{payment.amountPaid}</span></div>
+              <div className="flex justify-between"><span className="font-black text-slate-900">Method</span><span className="font-semibold text-slate-900">{payment.method}</span></div>
+              {payment.utrNumber && (
+                <div className="flex justify-between items-start"><span className="font-black text-slate-900">UTR / Ref</span><span className="font-semibold text-slate-900 text-right break-all">{payment.utrNumber}</span></div>
+              )}
             </div>
           </div>
         </div>
 
-        {/* Table */}
-        <div className="flex-1 mb-4">
-          <table className="w-full text-left border-collapse border-2 border-slate-800">
-            <thead>
-              <tr className="bg-slate-100 text-slate-900 border-b-2 border-slate-800">
-                <th className="p-3 text-[11px] tracking-widest font-black uppercase border-r-2 border-slate-800">Description</th>
-                <th className="p-3 text-[11px] tracking-widest font-black uppercase text-right w-48">Amount</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td className="p-4 text-sm font-black text-slate-800 border-b border-r-2 border-slate-800 bg-white">
-                  {payment.feeStructure?.name || 'Tuition Fee'}
-                  <div className="text-xs text-slate-500 font-bold mt-1 uppercase">{payment.remarks || 'Fee Payment'}</div>
-                </td>
-                <td className="p-4 text-base font-black text-slate-800 text-right border-b border-slate-800 bg-white">
-                  ₹{payment.amountPaid}
-                </td>
-              </tr>
-              {/* Empty padding rows for professional look */}
-              <tr>
-                <td className="p-4 border-r-2 border-slate-800 bg-white h-12"></td>
-                <td className="p-4 bg-white"></td>
-              </tr>
-              <tr className="bg-slate-50 border-t-2 border-slate-800">
-                <td className="p-3 text-xs font-black text-slate-900 text-right uppercase tracking-[0.2em] border-r-2 border-slate-800">Total Paid</td>
-                <td className="p-3 text-lg font-black text-slate-900 text-right">
-                  ₹{payment.amountPaid}
-                </td>
-              </tr>
-              <tr className="bg-white border-t border-slate-300">
-                <td className="p-3 text-[10px] font-black text-slate-500 text-right uppercase tracking-[0.2em] border-r-2 border-slate-800">Pending Balance</td>
-                <td className="p-3 text-sm font-black text-slate-600 text-right">
-                  ₹{pendingBalance > 0 ? pendingBalance : 0}
-                </td>
-              </tr>
-            </tbody>
-          </table>
+        <div className="border border-slate-200 rounded-[10px] overflow-hidden mb-5">
+          <div className="bg-slate-100 px-4 py-3 text-[10px] uppercase tracking-[0.26em] font-black text-slate-900">Payment Breakdown</div>
+          <div className="bg-white grid grid-cols-[1fr_140px] gap-4 px-4 py-4 text-sm font-black text-slate-900 border-b border-slate-200">
+            <span>{payment.feeStructure?.name || 'Tuition Fee'}</span>
+            <span className="text-right">₹{payment.amountPaid}</span>
+          </div>
+          <div className="bg-slate-50 px-4 py-4 text-[10.5px] tracking-[0.16em] text-slate-700 grid grid-cols-[1fr_140px] gap-4 border-b border-slate-200">
+            <span>Remarks</span>
+            <span className="text-right">{payment.remarks || 'Fee Payment'}</span>
+          </div>
+          <div className="bg-white px-4 py-4 text-sm font-black text-slate-900 grid grid-cols-[1fr_140px] gap-4 border-b border-slate-200">
+            <span>Total Paid</span>
+            <span className="text-right">₹{payment.amountPaid}</span>
+          </div>
+          <div className="bg-slate-50 px-4 py-4 text-[10.5px] text-slate-700 font-semibold grid grid-cols-[1fr_140px] gap-4">
+            <span>Pending Balance</span>
+            <span className="text-right">₹{pendingBalance > 0 ? pendingBalance : 0}</span>
+          </div>
         </div>
 
-        {/* Signatures */}
-        <div className="mt-auto pt-6 flex justify-between items-end">
-          <div className="text-center w-48">
-            <div className="h-0 border-b-2 border-slate-900 w-full mb-2"></div>
-            <p className="text-[10px] font-black tracking-widest uppercase text-slate-800">Cashier / Accountant</p>
+        <div className="grid grid-cols-3 gap-4">
+          <div className="text-center">
+            <div className="h-[1px] bg-slate-300 mb-2"></div>
+            <div className="text-[10px] uppercase tracking-[0.24em] font-black text-slate-700">Collected By</div>
           </div>
-          <div className="text-right">
-             <div className="w-20 h-20 rounded-full border-[3px] border-double border-slate-300 flex items-center justify-center mx-auto mb-2 relative z-0" />
-            <p className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">System Generated Receipt</p>
-            <p className="text-[8px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">Valid without signature if paid online</p>
+          <div className="text-center">
+            <div className="h-[1px] bg-slate-300 mb-2"></div>
+            <div className="text-[10px] uppercase tracking-[0.24em] font-black text-slate-700">Received By</div>
+          </div>
+          <div className="text-center">
+            <div className="h-[1px] bg-slate-300 mb-2"></div>
+            <div className="text-[10px] uppercase tracking-[0.24em] font-black text-slate-700">Date</div>
           </div>
         </div>
       </div>
@@ -152,24 +111,17 @@ export const FeeReceiptPrint: React.FC<FeeReceiptPrintProps> = ({ payment, schoo
   );
 
   return (
-    <div className="hidden print:flex flex-col items-center bg-white z-[9999] print:!m-0 print:!p-0 print:w-[210mm] print:h-[297mm] text-black font-sans overflow-hidden">
-      {/* Top Half - Student Copy */}
-      <div className="h-[148.5mm] w-full relative box-border overflow-hidden">
-        <ReceiptHalf type="STUDENT COPY" />
-
-        {/* Cutting Line */}
-        <div className="absolute bottom-0 left-6 right-6 border-b-2 border-dashed border-slate-400 flex items-center justify-center translate-y-1/2 z-50">
-          <div className="bg-white px-3 flex items-center gap-2 text-slate-400">
-            <Scissors className="w-4 h-4" />
-            <span className="text-[10px] font-bold uppercase tracking-widest">Cut Here</span>
-            <Scissors className="w-4 h-4 rotate-180" />
+    <div className="hidden print:block">
+      <div className="w-[210mm] h-[297mm] bg-white text-slate-900 print:overflow-hidden">
+        <div className="h-[148.5mm] border-b border-dashed border-slate-300 relative overflow-hidden">
+          <ReceiptHalf type="STUDENT COPY" />
+          <div className="absolute left-[16mm] right-[16mm] bottom-0 flex items-center justify-center py-2 bg-white text-slate-500 text-[10px] uppercase tracking-[0.24em]">
+            <Scissors className="w-4 h-4 mr-2" />Cut Here<Scissors className="w-4 h-4 ml-2 rotate-180" />
           </div>
         </div>
-      </div>
-
-      {/* Bottom Half - Office Copy */}
-      <div className="h-[148.5mm] w-full relative box-border overflow-hidden">
-        <ReceiptHalf type="OFFICE COPY" />
+        <div className="h-[148.5mm] overflow-hidden">
+          <ReceiptHalf type="OFFICE COPY" />
+        </div>
       </div>
     </div>
   );
