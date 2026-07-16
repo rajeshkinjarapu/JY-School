@@ -36,6 +36,12 @@ const GatePassPage: React.FC = () => {
   const [schoolName, setSchoolName] = useState('JY SCHOOL');
   const [form, setForm] = useState({ reason: '', destination: '', exitTime: '', returnTime: '', notes: '', studentId: '', requestType: user?.role === 'TEACHER' ? 'TEACHER' : 'STUDENT' });
   const [selected, setSelected] = useState<GatePassItem | null>(null);
+  
+  // Added missing states for print preview & pdf
+  const previewRef = useRef<HTMLDivElement>(null);
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [pdfLoading, setPdfLoading] = useState(false);
+  const downloadPdf = (id: string) => { toast.error('PDF download not implemented yet'); };
 
   const canApprove = user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN';
 
@@ -103,7 +109,7 @@ const GatePassPage: React.FC = () => {
   };
 
   const printPreview = (id: string) => {
-    const item = passes.find(p => p.id === id);
+    const item = items.find(p => p.id === id);
     if (item) printSlip(item);
   };
 

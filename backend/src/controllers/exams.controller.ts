@@ -43,21 +43,36 @@ export const getById = async (req: AuthRequest, res: Response, next: NextFunctio
 };
 
 export const create = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
-  const { name, classId, term, examDate, maxMarks, passingMarks, subjects } = req.body;
+  const { name, classIds, term, examDate, maxMarks, passingMarks, subjects } = req.body;
 
-  const cls = await prisma.class.findUnique({ where: { id: classId } });
-  if (!cls) return next(createError('Class not found', 404));
+  if (!classIds || !Array.isArray(classIds) || classIds.length === 0) {
+    return next(createError('Please provide at least one class', 400));
+  }
 
-  const exam = await prisma.exam.create({
-    data: {
-      name, classId, term,
-      examDate: new Date(examDate),
-      maxMarks: maxMarks || 100,
-      passingMarks: passingMarks || 40,
-      subjects: subjects || [],
-    },
-  });
-  successResponse(res, exam, 'Exam created', 201);
+  // Verify all classes exist
+  const classes = await prisma.class.findMany({ where: { id: { in: classIds } } });
+  if (classes.length !== classIds.length) {
+    return next(createError('One or more classes not found', 404));
+  }
+
+  // Create an exam for each selected class
+  const createdExams = [];
+  for (const classId of classIds) {
+    const exam = await prisma.exam.create({
+      data: {
+        name,
+        classId,
+        term: term || '',
+        examDate: new Date(examDate),
+        maxMarks: maxMarks || 100,
+        passingMarks: passingMarks || 40,
+        subjects: subjects || [],
+      },
+    });
+    createdExams.push(exam);
+  }
+
+  successResponse(res, createdExams, 'Exams created', 201);
 };
 
 export const update = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {

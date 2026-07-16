@@ -177,7 +177,7 @@ export const StudentListPage: React.FC = () => {
             className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2.5 text-sm font-semibold outline-none cursor-pointer"
           >
             <option value="">All Classes</option>
-            {classes.map((c) => (
+            {classes.map((c: any) => (
               <option key={c.id} value={c.id}>{c.name}-{c.section}</option>
             ))}
           </select>
@@ -224,7 +224,7 @@ export const StudentListPage: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50 dark:divide-gray-800/50">
-                {students.map((student, idx) => {
+                {students.map((student: any, idx: number) => {
                   const name = student.user?.name || 'Student';
                   const photoUrl = student.user?.photoUrl;
                   const className = student.class?.name || '—';

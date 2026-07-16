@@ -26,9 +26,9 @@ export const MarksEntryPage: React.FC = () => {
       const studentsRes: any = await api.get(`/api/classes/${examObj.classId}/students`);
       setStudents(studentsRes.data || []);
 
-      // 3. Get subjects in class
-      const subjectsRes: any = await api.get(`/api/classes/${examObj.classId}/subjects`);
-      setSubjects(subjectsRes.data || []);
+      // 3. Get subjects from exam JSON (fallback to empty array)
+      const examSubjects = Array.isArray(examObj.subjects) ? examObj.subjects : [];
+      setSubjects(examSubjects);
 
       // 4. Get existing marks
       const marksRes: any = await api.get(`/api/exams/${id}/results`);
@@ -103,7 +103,7 @@ export const MarksEntryPage: React.FC = () => {
         </Link>
         <div>
           <h2 className="text-xl font-bold">{exam?.name}</h2>
-          <span className="text-xs text-gray-400">Class: {exam?.class?.name}-{exam?.class?.section} • Term: {exam?.term}</span>
+          <span className="text-xs text-gray-400">Class: {exam?.class?.name}-{exam?.class?.section} • Total Marks: {exam?.maxMarks}</span>
         </div>
       </div>
 
@@ -132,10 +132,10 @@ export const MarksEntryPage: React.FC = () => {
                           <input
                             type="number"
                             min={0}
-                            max={exam.maxMarks}
+                            max={sub.maxMarks || 100}
                             value={marksData[key] !== undefined ? marksData[key] : ''}
                             onChange={(e) => handleMarkChange(student.id, sub.id, e.target.value)}
-                            placeholder={`Max: ${exam.maxMarks}`}
+                            placeholder={`Max: ${sub.maxMarks || 100}`}
                             className="input !py-1.5 !px-2.5 max-w-[100px]"
                           />
                           <input

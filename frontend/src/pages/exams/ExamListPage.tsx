@@ -49,31 +49,34 @@ export const ExamListPage: React.FC = () => {
   const [showExamModal, setShowExamModal] = useState(false);
   const [editExamId, setEditExamId] = useState<string | null>(null);
   const [examName, setExamName] = useState('');
-  const [examClassId, setExamClassId] = useState('');
-  const [examTerm, setExamTerm] = useState('Term 1');
+  const [examClassIds, setExamClassIds] = useState<string[]>([]);
   const [examDate, setExamDate] = useState(new Date().toISOString().split('T')[0]);
-  const [examMaxMarks, setExamMaxMarks] = useState(100);
   const [examSubjects, setExamSubjects] = useState<any[]>([]);
-  const [selectedExamSubjects, setSelectedExamSubjects] = useState<string[]>([]);
+  const [selectedExamSubjects, setSelectedExamSubjects] = useState<{id: string, name: string, maxMarks: number}[]>([]);
   
-  // Fetch subjects when class changes
+  // Auto calculate total marks
+  const totalMarks = selectedExamSubjects.reduce((sum, sub) => sum + (Number(sub.maxMarks) || 0), 0);
+
+  // Fetch subjects when the first selected class changes
   useEffect(() => {
-    if (examClassId) {
-      api.get(`/api/classes/${examClassId}/subjects`)
+    if (examClassIds.length > 0) {
+      api.get(`/api/classes/${examClassIds[0]}/subjects`)
         .then((res: any) => {
           setExamSubjects(res.data || []);
           if (!editExamId) setSelectedExamSubjects([]); // reset if not editing
         })
         .catch(() => {});
+    } else {
+      setExamSubjects([]);
+      if (!editExamId) setSelectedExamSubjects([]);
     }
-  }, [examClassId, editExamId]);
+  }, [examClassIds, editExamId]);
 
   const openCreateModal = () => {
     setEditExamId(null);
     setExamName('');
-    setExamTerm('Term 1');
+    setExamClassIds([]);
     setExamDate(new Date().toISOString().split('T')[0]);
-    setExamMaxMarks(100);
     setSelectedExamSubjects([]);
     setShowExamModal(true);
   };
@@ -81,10 +84,8 @@ export const ExamListPage: React.FC = () => {
   const openEditModal = (exam: any) => {
     setEditExamId(exam.id);
     setExamName(exam.name);
-    setExamClassId(exam.classId);
-    setExamTerm(exam.term);
+    setExamClassIds([exam.classId]);
     setExamDate(new Date(exam.examDate).toISOString().split('T')[0]);
-    setExamMaxMarks(exam.maxMarks);
     setSelectedExamSubjects(exam.subjects || []);
     setShowExamModal(true);
   };
@@ -109,6 +110,10 @@ export const ExamListPage: React.FC = () => {
 
   const handleCreateExam = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (examClassIds.length === 0) {
+      toast.error('Please select at least one class');
+      return;
+    }
     if (selectedExamSubjects.length === 0) {
       toast.error('Please select at least one subject');
       return;
@@ -117,19 +122,17 @@ export const ExamListPage: React.FC = () => {
       if (editExamId) {
         await api.put(`/api/exams/${editExamId}`, {
           name: examName,
-          term: examTerm,
           examDate: new Date(examDate),
-          maxMarks: Number(examMaxMarks),
+          maxMarks: totalMarks,
           subjects: selectedExamSubjects
         });
         toast.success('Exam updated successfully!');
       } else {
         await api.post('/api/exams', {
           name: examName,
-          classId: examClassId,
-          term: examTerm,
+          classIds: examClassIds,
           examDate: new Date(examDate),
-          maxMarks: Number(examMaxMarks),
+          maxMarks: totalMarks,
           subjects: selectedExamSubjects
         });
         toast.success('Exam created successfully!');
@@ -498,7 +501,6 @@ export const ExamListPage: React.FC = () => {
       setTeachers(teacherList);
 
       if (classList.length > 0) {
-        setExamClassId(classList[0].id);
         setOnlineClassId(classList[0].id);
         setSelectedClassId(classList[0].id);
       }
@@ -866,52 +868,83 @@ export const ExamListPage: React.FC = () => {
                 <input type="text" required placeholder="e.g. Mid-Term 1" value={examName} onChange={e => setExamName(e.target.value)} className="input" />
               </div>
               <div>
-                <label className="label">Class</label>
-                <select required value={examClassId} onChange={e => setExamClassId(e.target.value)} className="input">
-                  {classes.map(c => <option key={c.id} value={c.id}>{c.name}-{c.section}</option>)}
-                </select>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="label">Term</label>
-                  <select value={examTerm} onChange={e => setExamTerm(e.target.value)} className="input">
-                    <option value="Term 1">Term 1</option>
-                    <option value="Term 2">Term 2</option>
-                    <option value="Final">Final</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="label">Max Marks</label>
-                  <input type="number" value={examMaxMarks} onChange={e => setExamMaxMarks(Number(e.target.value))} className="input" />
-                </div>
-              </div>
-              <div>
-                <label className="label">Exam Date</label>
-                <input type="date" value={examDate} onChange={e => setExamDate(e.target.value)} className="input" />
-              </div>
-              <div>
-                <label className="label">Subjects</label>
-                <div className="grid grid-cols-2 gap-2 mt-2 max-h-40 overflow-y-auto p-2 border border-gray-200 dark:border-gray-700 rounded-lg">
-                  {examSubjects.map(sub => {
-                    const isSelected = selectedExamSubjects.includes(sub.id);
+                <label className="label">Select Classes</label>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-2 max-h-40 overflow-y-auto p-2 border border-gray-200 dark:border-gray-700 rounded-lg">
+                  {classes.map(c => {
+                    const isSelected = examClassIds.includes(c.id);
                     return (
-                      <label key={sub.id} className="flex items-center gap-2 text-sm cursor-pointer select-none">
+                      <label key={c.id} className="flex items-center gap-2 text-sm cursor-pointer select-none">
                         <input 
                           type="checkbox" 
                           checked={isSelected}
                           onChange={(e) => {
                             if (e.target.checked) {
-                              setSelectedExamSubjects([...selectedExamSubjects, sub.id]);
+                              setExamClassIds([...examClassIds, c.id]);
                             } else {
-                              setSelectedExamSubjects(selectedExamSubjects.filter(id => id !== sub.id));
+                              setExamClassIds(examClassIds.filter(id => id !== c.id));
                             }
                           }}
                         />
-                        {sub.name}
+                        {c.name}-{c.section}
                       </label>
                     );
                   })}
-                  {examSubjects.length === 0 && <span className="text-xs text-gray-400 col-span-2">Select a class first</span>}
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="label">Exam Date</label>
+                  <input type="date" value={examDate} onChange={e => setExamDate(e.target.value)} className="input" />
+                </div>
+                <div>
+                  <label className="label">Total Marks (Auto)</label>
+                  <input type="number" readOnly value={totalMarks} className="input bg-gray-50 dark:bg-gray-800" />
+                </div>
+              </div>
+
+              <div>
+                <label className="label">Subjects & Max Marks</label>
+                <div className="flex flex-col gap-2 mt-2 max-h-60 overflow-y-auto p-2 border border-gray-200 dark:border-gray-700 rounded-lg">
+                  {examSubjects.map(sub => {
+                    const selectedSubject = selectedExamSubjects.find(s => s.id === sub.id);
+                    const isSelected = !!selectedSubject;
+                    return (
+                      <div key={sub.id} className="flex items-center justify-between gap-4 p-2 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                        <label className="flex items-center gap-2 text-sm cursor-pointer select-none font-bold">
+                          <input 
+                            type="checkbox" 
+                            checked={isSelected}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedExamSubjects([...selectedExamSubjects, { id: sub.id, name: sub.name, maxMarks: 100 }]);
+                              } else {
+                                setSelectedExamSubjects(selectedExamSubjects.filter(s => s.id !== sub.id));
+                              }
+                            }}
+                          />
+                          {sub.name}
+                        </label>
+                        {isSelected && (
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-gray-500">Max:</span>
+                            <input
+                              type="number"
+                              min={1}
+                              value={selectedSubject.maxMarks}
+                              onChange={(e) => {
+                                const newMax = Number(e.target.value);
+                                setSelectedExamSubjects(selectedExamSubjects.map(s => 
+                                  s.id === sub.id ? { ...s, maxMarks: newMax } : s
+                                ));
+                              }}
+                              className="input !py-1 !px-2 w-20 text-xs"
+                            />
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                  {examSubjects.length === 0 && <span className="text-xs text-gray-400">Select a class first</span>}
                 </div>
               </div>
               <div className="flex gap-3 justify-end pt-2">
