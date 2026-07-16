@@ -68,7 +68,7 @@ export default function AttendanceDailyReportPage() {
         
         {/* School Header (Styled for Professional A4 Print) */}
         <div className="text-center pb-6 border-b-2 border-gray-200 mb-6">
-          <h1 className="text-3xl font-black uppercase text-gray-900 tracking-wider">JY School ERP</h1>
+          <h1 className="text-3xl font-black uppercase text-gray-900 tracking-wider">SRI VENKATESWARA JY SCHOOL</h1>
           <p className="text-sm font-semibold text-gray-500 uppercase tracking-widest mt-1">Daily Attendance Summary</p>
           <div className="mt-4 inline-block bg-gray-50 border border-gray-200 px-6 py-2 rounded-full font-bold text-gray-700">
             Date: {new Date(date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
