@@ -27,7 +27,7 @@ const NAV_COLORS: Record<string, { text: string; bg: string; glow: string }> = {
   Attendance:    { text: '#fde68a', bg: 'rgba(245,158,11,0.18)',  glow: '0 0 12px rgba(245,158,11,.5)'  },
   'Daily Report':{ text: '#fde68a', bg: 'rgba(245,158,11,0.18)',  glow: '0 0 12px rgba(245,158,11,.5)'  },
   Exams:         { text: '#fca5a5', bg: 'rgba(239,68,68,0.18)',   glow: '0 0 12px rgba(239,68,68,.5)'   },
-  'Grades Entry':{ text: '#fca5a5', bg: 'rgba(239,68,68,0.18)',   glow: '0 0 12px rgba(239,68,68,.5)'   },
+  'Examination': { text: '#fca5a5', bg: 'rgba(239,68,68,0.18)',   glow: '0 0 12px rgba(239,68,68,.5)'   },
   'My Grades':   { text: '#fca5a5', bg: 'rgba(239,68,68,0.18)',   glow: '0 0 12px rgba(239,68,68,.5)'   },
   Timetable:     { text: '#67e8f9', bg: 'rgba(6,182,212,0.18)',   glow: '0 0 12px rgba(6,182,212,.5)'   },
   Leave:         { text: '#fdba74', bg: 'rgba(249,115,22,0.18)',  glow: '0 0 12px rgba(249,115,22,.5)'  },
@@ -80,15 +80,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
       { to: '/settings',      label: 'Settings',      icon: Settings      },
     ];
     if (role === 'TEACHER') return [...base,
-      { to: '/teachers/students', label: 'My Students', labelLower: 'My Students', icon: Users },
-      { to: '/teachers/classes', label: 'Assigned Classes', icon: School },
-      { to: '/attendance',    label: 'Attendance',    icon: CalendarCheck },
-      { to: '/exams',         label: 'Grades Entry',  icon: PenTool       },
-      { to: '/timetable',     label: 'Timetable',     icon: Calendar      },
-      { to: '/leave/request-log', label: 'Leave',     icon: UserCheck     },
-      { to: '/gate-pass',     label: 'Gate Pass',     icon: FileText },
-      { to: '/announcements', label: 'Announcements', icon: Megaphone     },
-      { to: '/messages',      label: 'Messages',      icon: MessageSquare },
+      // Teachers: only expose Examination module (marks entry, results, progress cards, question papers)
+      { to: '/exams', label: 'Examination', icon: PenTool },
     ];
     if (role === 'STUDENT') return [...base,
       { to: '/exams',     label: 'My Grades',     icon: ClipboardList },
