@@ -47,12 +47,48 @@ export const ExamListPage: React.FC = () => {
   // EXAMINATION Tab States & Logic
   // -------------------------------------------------------------
   const [showExamModal, setShowExamModal] = useState(false);
+  const [editExamId, setEditExamId] = useState<string | null>(null);
   const [examName, setExamName] = useState('');
   const [examClassId, setExamClassId] = useState('');
   const [examTerm, setExamTerm] = useState('Term 1');
   const [examDate, setExamDate] = useState(new Date().toISOString().split('T')[0]);
   const [examMaxMarks, setExamMaxMarks] = useState(100);
+  const [examSubjects, setExamSubjects] = useState<any[]>([]);
+  const [selectedExamSubjects, setSelectedExamSubjects] = useState<string[]>([]);
   
+  // Fetch subjects when class changes
+  useEffect(() => {
+    if (examClassId) {
+      api.get(`/api/classes/${examClassId}/subjects`)
+        .then((res: any) => {
+          setExamSubjects(res.data || []);
+          if (!editExamId) setSelectedExamSubjects([]); // reset if not editing
+        })
+        .catch(() => {});
+    }
+  }, [examClassId, editExamId]);
+
+  const openCreateModal = () => {
+    setEditExamId(null);
+    setExamName('');
+    setExamTerm('Term 1');
+    setExamDate(new Date().toISOString().split('T')[0]);
+    setExamMaxMarks(100);
+    setSelectedExamSubjects([]);
+    setShowExamModal(true);
+  };
+
+  const openEditModal = (exam: any) => {
+    setEditExamId(exam.id);
+    setExamName(exam.name);
+    setExamClassId(exam.classId);
+    setExamTerm(exam.term);
+    setExamDate(new Date(exam.examDate).toISOString().split('T')[0]);
+    setExamMaxMarks(exam.maxMarks);
+    setSelectedExamSubjects(exam.subjects || []);
+    setShowExamModal(true);
+  };
+
   // Excel Upload States
   const [showExcelModal, setShowExcelModal] = useState(false);
   const [excelFile, setExcelFile] = useState<File | null>(null);
@@ -73,20 +109,35 @@ export const ExamListPage: React.FC = () => {
 
   const handleCreateExam = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (selectedExamSubjects.length === 0) {
+      toast.error('Please select at least one subject');
+      return;
+    }
     try {
-      await api.post('/api/exams', {
-        name: examName,
-        classId: examClassId,
-        term: examTerm,
-        examDate: new Date(examDate),
-        maxMarks: Number(examMaxMarks),
-      });
-      toast.success('Exam created successfully!');
+      if (editExamId) {
+        await api.put(`/api/exams/${editExamId}`, {
+          name: examName,
+          term: examTerm,
+          examDate: new Date(examDate),
+          maxMarks: Number(examMaxMarks),
+          subjects: selectedExamSubjects
+        });
+        toast.success('Exam updated successfully!');
+      } else {
+        await api.post('/api/exams', {
+          name: examName,
+          classId: examClassId,
+          term: examTerm,
+          examDate: new Date(examDate),
+          maxMarks: Number(examMaxMarks),
+          subjects: selectedExamSubjects
+        });
+        toast.success('Exam created successfully!');
+      }
       setShowExamModal(false);
-      setExamName('');
       fetchExams();
     } catch (err: any) {
-      toast.error(err.message || 'Error creating exam');
+      toast.error(err.message || 'Error saving exam');
     }
   };
 
@@ -724,15 +775,15 @@ export const ExamListPage: React.FC = () => {
         </div>
         {!activeTab && (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-5">
-            {/* For admins: show all modules */}
+            {/* Examinations List - Visible to all, but Create Exam is only for Admin */}
+            <button onClick={() => setActiveTab('examination')} className="relative overflow-hidden group flex flex-col items-center justify-center p-6 rounded-2xl border-0 transition-all gap-3 bg-gradient-to-br from-indigo-500 to-blue-600 text-white shadow-lg hover:shadow-indigo-500/30 hover:-translate-y-1">
+              <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+              <ClipboardList className="w-8 h-8" />
+              <span className="text-xs font-black uppercase tracking-widest text-center">Examinations List</span>
+            </button>
+
             {isAdmin && (
               <>
-                <button onClick={() => setActiveTab('examination')} className="relative overflow-hidden group flex flex-col items-center justify-center p-6 rounded-2xl border-0 transition-all gap-3 bg-gradient-to-br from-indigo-500 to-blue-600 text-white shadow-lg hover:shadow-indigo-500/30 hover:-translate-y-1">
-                  <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                  <Plus className="w-8 h-8" />
-                  <span className="text-xs font-black uppercase tracking-widest text-center">Create Exam</span>
-                </button>
-
                 <button onClick={() => setActiveTab('exam-plan')} className="relative overflow-hidden group flex flex-col items-center justify-center p-6 rounded-2xl border-0 transition-all gap-3 bg-gradient-to-br from-purple-500 to-pink-600 text-white shadow-lg hover:shadow-purple-500/30 hover:-translate-y-1">
                   <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
                   <Calendar className="w-8 h-8" />
@@ -838,9 +889,34 @@ export const ExamListPage: React.FC = () => {
                 <label className="label">Exam Date</label>
                 <input type="date" value={examDate} onChange={e => setExamDate(e.target.value)} className="input" />
               </div>
+              <div>
+                <label className="label">Subjects</label>
+                <div className="grid grid-cols-2 gap-2 mt-2 max-h-40 overflow-y-auto p-2 border border-gray-200 dark:border-gray-700 rounded-lg">
+                  {examSubjects.map(sub => {
+                    const isSelected = selectedExamSubjects.includes(sub.id);
+                    return (
+                      <label key={sub.id} className="flex items-center gap-2 text-sm cursor-pointer select-none">
+                        <input 
+                          type="checkbox" 
+                          checked={isSelected}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedExamSubjects([...selectedExamSubjects, sub.id]);
+                            } else {
+                              setSelectedExamSubjects(selectedExamSubjects.filter(id => id !== sub.id));
+                            }
+                          }}
+                        />
+                        {sub.name}
+                      </label>
+                    );
+                  })}
+                  {examSubjects.length === 0 && <span className="text-xs text-gray-400 col-span-2">Select a class first</span>}
+                </div>
+              </div>
               <div className="flex gap-3 justify-end pt-2">
                 <button type="button" onClick={() => setShowExamModal(false)} className="btn-secondary text-sm">Cancel</button>
-                <button type="submit" className="btn-primary text-sm">Create Exam</button>
+                <button type="submit" className="btn-primary text-sm">{editExamId ? 'Update Exam' : 'Create Exam'}</button>
               </div>
             </form>
           </div>
@@ -1479,11 +1555,16 @@ export const ExamListPage: React.FC = () => {
         </div>
       )}
 
-      {/* ══ TAB 7: WRITTEN EXAM ══ */}
-      {activeTab === 'written-exam' && (
+      {/* ══ TAB 7: EXAMINATIONS LIST ══ */}
+      {activeTab === 'examination' && (
         <div className="space-y-6">
           <div className="flex justify-between items-center bg-white dark:bg-gray-900 p-4 rounded-xl border border-gray-150 dark:border-gray-800">
-            <span className="text-xs font-extrabold uppercase text-gray-400">Conventional Offline Written Tests Log</span>
+            <span className="text-xs font-extrabold uppercase text-gray-400">Examinations List</span>
+            {isAdmin && (
+              <button onClick={openCreateModal} className="btn-primary flex items-center gap-2 text-xs font-bold">
+                <Plus className="w-4 h-4" /> Create Exam
+              </button>
+            )}
           </div>
 
           <div className="card p-6 overflow-hidden">
@@ -1505,8 +1586,13 @@ export const ExamListPage: React.FC = () => {
                       <td className="p-3.5 text-xs font-semibold text-gray-600">{e.class?.name}-{e.class?.section}</td>
                       <td className="p-3.5 text-xs text-gray-450 font-bold">{e.term}</td>
                       <td className="p-3.5 text-xs text-gray-500 font-semibold">{new Date(e.examDate).toLocaleDateString()}</td>
-                      <td className="p-3.5 text-right">
-                        <Link to={`/exams/${e.id}/entry`} className="btn-secondary text-[11px] font-bold px-3 py-1.5">
+                      <td className="p-3.5 text-right flex justify-end gap-2">
+                        {isAdmin && (
+                          <button onClick={() => openEditModal(e)} className="btn-secondary text-[11px] font-bold px-3 py-1.5 flex items-center gap-1">
+                            <Edit3 className="w-3 h-3" /> Edit
+                          </button>
+                        )}
+                        <Link to={`/exams/${e.id}/entry`} className="btn-secondary text-[11px] font-bold px-3 py-1.5 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border-indigo-200 dark:bg-indigo-900/30 dark:border-indigo-800 dark:hover:bg-indigo-900/50 dark:text-indigo-400">
                           Enter Grades
                         </Link>
                       </td>

@@ -180,6 +180,7 @@ model Exam {
   examDate     DateTime
   maxMarks     Float      @default(100)
   passingMarks Float      @default(40)
+  subjects     Json?
   createdAt    DateTime   @default(now())
 
   marks        Mark[]

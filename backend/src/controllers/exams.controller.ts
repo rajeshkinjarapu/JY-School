@@ -43,7 +43,7 @@ export const getById = async (req: AuthRequest, res: Response, next: NextFunctio
 };
 
 export const create = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
-  const { name, classId, term, examDate, maxMarks, passingMarks } = req.body;
+  const { name, classId, term, examDate, maxMarks, passingMarks, subjects } = req.body;
 
   const cls = await prisma.class.findUnique({ where: { id: classId } });
   if (!cls) return next(createError('Class not found', 404));
@@ -54,6 +54,7 @@ export const create = async (req: AuthRequest, res: Response, next: NextFunction
       examDate: new Date(examDate),
       maxMarks: maxMarks || 100,
       passingMarks: passingMarks || 40,
+      subjects: subjects || [],
     },
   });
   successResponse(res, exam, 'Exam created', 201);
@@ -61,7 +62,7 @@ export const create = async (req: AuthRequest, res: Response, next: NextFunction
 
 export const update = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   const id = req.params.id as string;
-  const { name, term, examDate, maxMarks, passingMarks } = req.body;
+  const { name, term, examDate, maxMarks, passingMarks, subjects } = req.body;
 
   const existing = await prisma.exam.findUnique({ where: { id } });
   if (!existing) return next(createError('Exam not found', 404));
@@ -72,6 +73,7 @@ export const update = async (req: AuthRequest, res: Response, next: NextFunction
       name, term,
       examDate: examDate ? new Date(examDate) : undefined,
       maxMarks, passingMarks,
+      subjects: subjects !== undefined ? subjects : existing.subjects,
     },
   });
   successResponse(res, exam, 'Exam updated');

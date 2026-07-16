@@ -9,8 +9,8 @@ router.use(authenticate);
 router.get('/', getAll);
 router.get('/:id', getById);
 router.get('/:id/results', getResults);
-router.post('/', authorize('SUPER_ADMIN', 'ADMIN', 'TEACHER'), create);
-router.put('/:id', authorize('SUPER_ADMIN', 'ADMIN', 'TEACHER'), update);
+router.post('/', authorize('SUPER_ADMIN', 'ADMIN'), create);
+router.put('/:id', authorize('SUPER_ADMIN', 'ADMIN'), update);
 router.delete('/:id', authorize('SUPER_ADMIN', 'ADMIN'), deleteExam);
 
 export default router;
