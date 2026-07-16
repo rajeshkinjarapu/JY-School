@@ -155,6 +155,49 @@ const GatePassPage: React.FC = () => {
     }
   };
 
+  const printModal = () => {
+    try {
+      const content = previewRef.current;
+      if (!content) {
+        toast.error('Preview not available');
+        return;
+      }
+
+      const iframe = document.createElement('iframe');
+      iframe.style.position = 'fixed';
+      iframe.style.right = '0';
+      iframe.style.bottom = '0';
+      iframe.style.width = '0';
+      iframe.style.height = '0';
+      iframe.style.border = '0';
+      document.body.appendChild(iframe);
+
+      const doc = iframe.contentWindow?.document;
+      if (!doc) {
+        toast.error('Unable to create print frame');
+        document.body.removeChild(iframe);
+        return;
+      }
+
+      doc.open();
+      doc.write(`<!doctype html><html><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>Gate Pass</title><style>body{font-family:Arial,Helvetica,sans-serif;color:#222;padding:16px} .photo{width:120px;height:140px;object-fit:cover;border:1px solid #ddd}</style></head><body>${content.innerHTML}</body></html>`);
+      doc.close();
+      iframe.contentWindow?.focus();
+      setTimeout(() => {
+        try {
+          iframe.contentWindow?.print();
+        } catch (e) {
+          console.error('iframe print failed', e);
+          toast.error('Print failed');
+        }
+        setTimeout(() => document.body.removeChild(iframe), 500);
+      }, 300);
+    } catch (e) {
+      console.error('printModal error', e);
+      toast.error('Print failed');
+    }
+  };
+
   const roleLabel = useMemo(() => {
     if (user?.role === 'STUDENT') return 'Student';
     if (user?.role === 'TEACHER') return 'Teacher';
