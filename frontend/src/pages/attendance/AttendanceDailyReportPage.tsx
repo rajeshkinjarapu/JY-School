@@ -33,8 +33,6 @@ export default function AttendanceDailyReportPage() {
   const totalStudents = data.reduce((acc, c) => acc + c.total, 0);
   const totalPresent = data.reduce((acc, c) => acc + c.present, 0);
   const totalAbsent = data.reduce((acc, c) => acc + c.absent, 0);
-  const totalLate = data.reduce((acc, c) => acc + c.late, 0);
-  const totalExcused = data.reduce((acc, c) => acc + c.excused, 0);
 
   return (
     <div className="space-y-6">
@@ -107,8 +105,6 @@ export default function AttendanceDailyReportPage() {
                   <th className="p-3 border border-gray-200 font-bold text-gray-700 uppercase text-center">Total Strength</th>
                   <th className="p-3 border border-gray-200 font-bold text-gray-700 uppercase text-center">Present</th>
                   <th className="p-3 border border-gray-200 font-bold text-gray-700 uppercase text-center">Absent</th>
-                  <th className="p-3 border border-gray-200 font-bold text-gray-700 uppercase text-center">Late</th>
-                  <th className="p-3 border border-gray-200 font-bold text-gray-700 uppercase text-center">Excused</th>
                 </tr>
               </thead>
               <tbody>
@@ -118,8 +114,6 @@ export default function AttendanceDailyReportPage() {
                     <td className="p-3 border border-gray-200 text-center font-semibold text-gray-700">{row.total}</td>
                     <td className="p-3 border border-gray-200 text-center font-semibold text-emerald-600">{row.present}</td>
                     <td className="p-3 border border-gray-200 text-center font-semibold text-red-600">{row.absent}</td>
-                    <td className="p-3 border border-gray-200 text-center font-semibold text-amber-600">{row.late}</td>
-                    <td className="p-3 border border-gray-200 text-center font-semibold text-indigo-600">{row.excused}</td>
                   </tr>
                 ))}
               </tbody>

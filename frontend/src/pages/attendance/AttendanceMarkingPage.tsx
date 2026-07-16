@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../../api/axios';
 import { LoadingSpinner } from '../../components/UI/LoadingSpinner';
-import { ShieldAlert, Search, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ShieldAlert, Search } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export const AttendanceMarkingPage: React.FC = () => {
@@ -18,10 +18,6 @@ export const AttendanceMarkingPage: React.FC = () => {
   const [students, setStudents] = useState<any[]>([]);
   const [records, setRecords] = useState<{ [studentId: string]: string }>({});
   const [loading, setLoading] = useState(false);
-
-  // Datatable states
-  const [pageSize, setPageSize] = useState(10);
-  const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
 
   const fetchClasses = async () => {
@@ -67,7 +63,6 @@ export const AttendanceMarkingPage: React.FC = () => {
     const classId = matchedClass.id;
     setActiveClassId(classId);
     setLoading(true);
-    setCurrentPage(1); // Reset page on query load
 
     try {
       // 1. Get class attendance for date
@@ -82,11 +77,11 @@ export const AttendanceMarkingPage: React.FC = () => {
 
       setStudents(studentList);
 
-      // Map existing records
+      // Map existing records to present/absent only
       const initialRecords: { [studentId: string]: string } = {};
       studentList.forEach((s: any) => {
         const record = attendanceList.find((a: any) => a.studentId === s.id);
-        initialRecords[s.id] = record?.status || 'PRESENT';
+        initialRecords[s.id] = record?.status === 'ABSENT' ? 'ABSENT' : 'PRESENT';
       });
       setRecords(initialRecords);
     } catch (e) {
@@ -132,23 +127,16 @@ export const AttendanceMarkingPage: React.FC = () => {
   const uniqueClassNames = Array.from(new Set(classes.map(c => c.name)));
   const availableSections = classes.filter(c => c.name === selectedClassName).map(c => c.section);
 
-  // Datatable filtering and pagination
+  // Datatable filtering
   const filteredStudents = students.filter(student =>
     student.user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     (student.rollNo && student.rollNo.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
-  const totalPages = Math.ceil(filteredStudents.length / pageSize);
-  const startIndex = (currentPage - 1) * pageSize;
-  const paginatedStudents = filteredStudents.slice(startIndex, startIndex + pageSize);
-
   // Custom radio colors matching the screenshot
   const statusConfig = [
     { key: 'PRESENT', label: 'Present', bg: 'bg-[#2ecc71] border-[#2ecc71] text-white', text: 'text-[#2ecc71] border-[#2ecc71] hover:bg-[#2ecc71]/10' },
-    { key: 'LATE', label: 'Late', bg: 'bg-[#f1c40f] border-[#f1c40f] text-white', text: 'text-[#f1c40f] border-[#f1c40f] hover:bg-[#f1c40f]/10' },
     { key: 'ABSENT', label: 'Absent', bg: 'bg-[#e74c3c] border-[#e74c3c] text-white', text: 'text-[#e74c3c] border-[#e74c3c] hover:bg-[#e74c3c]/10' },
-    { key: 'SICK', label: 'Sick', bg: 'bg-[#ff7675] border-[#ff7675] text-white', text: 'text-[#ff7675] border-[#ff7675] hover:bg-[#ff7675]/10' },
-    { key: 'PERMIT', label: 'Permit', bg: 'bg-[#95a5a6] border-[#95a5a6] text-white', text: 'text-[#95a5a6] border-[#95a5a6] hover:bg-[#95a5a6]/10' },
   ];
 
   return (
@@ -229,19 +217,9 @@ export const AttendanceMarkingPage: React.FC = () => {
             
             {/* Datatable controls */}
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-              <div className="flex items-center gap-1.5 text-xs text-gray-500">
-                <span>Show</span>
-                <select
-                  value={pageSize}
-                  onChange={(e) => { setPageSize(Number(e.target.value)); setCurrentPage(1); }}
-                  className="bg-gray-50 dark:bg-gray-800 border border-gray-250 dark:border-gray-700 rounded-lg px-2 py-1 font-bold outline-none"
-                >
-                  <option value={10}>10</option>
-                  <option value={25}>25</option>
-                  <option value={50}>50</option>
-                  <option value={100}>100</option>
-                </select>
-                <span>entries</span>
+              <div className="flex items-center gap-2 text-xs text-gray-500 font-semibold">
+                <span>Total Strength:</span>
+                <span>{filteredStudents.length}</span>
               </div>
 
               <div className="flex items-center gap-3 w-full sm:w-auto">
@@ -257,7 +235,7 @@ export const AttendanceMarkingPage: React.FC = () => {
                     type="text"
                     placeholder="Search students..."
                     value={searchQuery}
-                    onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
+                    onChange={(e) => { setSearchQuery(e.target.value); }}
                     className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl pl-9 pr-4 py-2 text-xs font-semibold outline-none focus:ring-2 focus:ring-indigo-500/20"
                   />
                 </div>
@@ -276,11 +254,11 @@ export const AttendanceMarkingPage: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-                  {paginatedStudents.map((student, index) => {
+                  {filteredStudents.map((student, index) => {
                     const currentStatus = records[student.id] || 'PRESENT';
                     return (
                       <tr key={student.id} className="hover:bg-gray-50/30 dark:hover:bg-gray-850/10">
-                        <td className="p-4 text-gray-500 font-semibold">{startIndex + index + 1}</td>
+                        <td className="p-4 text-gray-500 font-semibold">{index + 1}</td>
                         <td className="p-4 text-gray-500 font-semibold">{student.rollNo || student.id.substring(0,8)}</td>
                         <td className="p-4 font-bold text-gray-900 dark:text-white">
                           {student.user.name}
@@ -311,7 +289,7 @@ export const AttendanceMarkingPage: React.FC = () => {
                       </tr>
                     );
                   })}
-                  {paginatedStudents.length === 0 && (
+                  {filteredStudents.length === 0 && (
                     <tr>
                       <td colSpan={2} className="p-12 text-center text-gray-400">
                         No students found matching selection criteria.
@@ -322,44 +300,6 @@ export const AttendanceMarkingPage: React.FC = () => {
               </table>
             </div>
 
-            {/* Pagination Controls */}
-            {filteredStudents.length > 0 && (
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-gray-100 dark:border-gray-800 pt-4">
-                <span className="text-xs text-gray-400 font-semibold">
-                  Showing {startIndex + 1} to {Math.min(startIndex + pageSize, filteredStudents.length)} of {filteredStudents.length} entries
-                </span>
-                
-                <div className="flex items-center gap-1">
-                  <button
-                    disabled={currentPage === 1}
-                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                    className="p-2 border rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
-                  >
-                    <ChevronLeft className="w-4 h-4" />
-                  </button>
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                    <button
-                      key={page}
-                      onClick={() => setCurrentPage(page)}
-                      className={`px-3 py-1.5 rounded-lg border text-xs font-bold cursor-pointer ${
-                        currentPage === page
-                          ? 'bg-indigo-650 border-indigo-650 text-white shadow'
-                          : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50'
-                      }`}
-                    >
-                      {page}
-                    </button>
-                  ))}
-                  <button
-                    disabled={currentPage === totalPages}
-                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                    className="p-2 border rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
-                  >
-                    <ChevronRight className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-            )}
 
             {/* Bottom Update Button */}
             {students.length > 0 && (
