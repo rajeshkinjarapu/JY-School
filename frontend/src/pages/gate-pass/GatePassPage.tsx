@@ -158,6 +158,7 @@ const GatePassPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      <div className="print:hidden space-y-6">
       <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
         <div className="flex items-center gap-3">
           <div className="rounded-xl bg-indigo-100 p-2 text-indigo-600"><FileText className="h-5 w-5" /></div>
@@ -296,6 +297,7 @@ const GatePassPage: React.FC = () => {
           </div>
         </div>
       )}
+      </div>
       {/* Hidden Print Component */}
       <GatePassPrint gatePass={printGatePass} />
     </div>
