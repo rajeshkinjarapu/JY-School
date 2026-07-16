@@ -93,8 +93,8 @@ const GatePassPage: React.FC = () => {
   };
 
   const printSlip = (item: GatePassItem) => {
-    setSelected(item);
-    setTimeout(() => window.print(), 200);
+    // Open the backend printable page in a new tab (it will auto-print)
+    window.open(`/api/gate-pass/${item.id}/print`, '_blank');
   };
 
   const roleLabel = useMemo(() => {

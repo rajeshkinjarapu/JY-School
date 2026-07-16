@@ -57,6 +57,20 @@ async function main() {
   });
   console.log('✅ Super Admin created:', adminUser.email);
 
+  // 2b. Admin (full rights)
+  const admin2Password = await bcrypt.hash('Admin@123', 12);
+  const admin2User = await prisma.user.create({
+    data: {
+      name: 'Admin User',
+      email: 'admin2@rajacademy.com',
+      password: admin2Password,
+      role: 'ADMIN',
+      phone: '+91-9000000008',
+      isActive: true,
+    },
+  });
+  console.log('✅ Admin created:', admin2User.email);
+
   // 3. Teacher User + Teacher Record
   const teacherPassword = await bcrypt.hash('Teacher@123', 12);
   const teacherUser = await prisma.user.create({
