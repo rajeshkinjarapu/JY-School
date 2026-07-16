@@ -41,6 +41,7 @@ import gatePassRoutes from './routes/gatePass';
 import homeworkRoutes from './routes/homework';
 import teacherAttendanceRoutes from './routes/teacherAttendance';
 import salaryRoutes from './routes/salary';
+import leaveRoutes from './routes/leave';
 
 const app = express();
 const httpServer = createServer(app);
@@ -93,6 +94,7 @@ app.use('/api/gate-pass', gatePassRoutes);
 app.use('/api/homework', homeworkRoutes);
 app.use('/api/teacher-attendance', teacherAttendanceRoutes);
 app.use('/api/salary', salaryRoutes);
+app.use('/api/leave', leaveRoutes);
 
 // Health check
 app.get('/api/health', (_req, res) => {

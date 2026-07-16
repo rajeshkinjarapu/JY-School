@@ -99,6 +99,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
       { to: '/gate-pass',         label: 'Gate Pass',      icon: FileText      },
       { to: '/leave/request-log', label: 'Leave',          icon: UserCheck     },
       { to: '/salary',            label: 'My Salary',      icon: CreditCard    },
+      { to: '/fee-payment',       label: 'Fee Payment',    icon: CreditCard    },
       { to: '/announcements',     label: 'Announcements',  icon: Megaphone     },
       { to: '/messages',          label: 'Messages',       icon: MessageSquare },
     ];

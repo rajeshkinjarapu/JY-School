@@ -20,15 +20,15 @@ import { bulkImportFees } from '../controllers/fees.controller';
 router.post('/structures/bulk-import', authorize('SUPER_ADMIN', 'ADMIN'), upload.single('file'), bulkImportFees);
 
 // Payments
-router.get('/payments', authorize('SUPER_ADMIN', 'ADMIN', 'ACCOUNTANT', 'STUDENT'), getPayments);
-router.post('/payments', authorize('SUPER_ADMIN', 'ADMIN', 'ACCOUNTANT'), createPayment);
-router.put('/payments/:id', authorize('SUPER_ADMIN', 'ADMIN', 'ACCOUNTANT'), updateFeePayment);
-router.delete('/payments/:id', authorize('SUPER_ADMIN', 'ADMIN', 'ACCOUNTANT'), deleteFeePayment);
-router.post('/discounts', authorize('SUPER_ADMIN', 'ADMIN', 'ACCOUNTANT'), applyFeeDiscount);
+router.get('/payments', authorize('SUPER_ADMIN', 'ADMIN', 'ACCOUNTANT', 'TEACHER', 'STUDENT'), getPayments);
+router.post('/payments', authorize('SUPER_ADMIN', 'ADMIN', 'ACCOUNTANT', 'TEACHER'), createPayment);
+router.put('/payments/:id', authorize('SUPER_ADMIN', 'ADMIN', 'ACCOUNTANT', 'TEACHER'), updateFeePayment);
+router.delete('/payments/:id', authorize('SUPER_ADMIN', 'ADMIN', 'ACCOUNTANT', 'TEACHER'), deleteFeePayment);
+router.post('/discounts', authorize('SUPER_ADMIN', 'ADMIN', 'ACCOUNTANT', 'TEACHER'), applyFeeDiscount);
 router.get('/payments/:paymentId/invoice', downloadInvoice);
 
 // Student fee status
 router.get('/student/:studentId', getStudentFeeStatus);
-router.get('/overdue', authorize('SUPER_ADMIN', 'ADMIN', 'ACCOUNTANT'), getOverdue);
+router.get('/overdue', authorize('SUPER_ADMIN', 'ADMIN', 'ACCOUNTANT', 'TEACHER'), getOverdue);
 
 export default router;

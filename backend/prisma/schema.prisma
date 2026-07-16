@@ -42,6 +42,8 @@ model User {
 
   gatePassRequests GatePass[] @relation("GatePassRequests")
   approvedGatePasses GatePass[] @relation("ApprovedGatePasses")
+  leaveRequests    LeaveRequest[] @relation("LeaveRequests")
+  approvedLeaves   LeaveRequest[] @relation("ApprovedLeaves")
 }
 
 model Student {
@@ -638,4 +640,22 @@ model Salary {
 
   @@unique([teacherId, month, year])
   @@index([teacherId])
+}
+
+model LeaveRequest {
+  id           String    @id @default(uuid())
+  userId       String
+  requester    User      @relation("LeaveRequests", fields: [userId], references: [id])
+  type         String    // LEAVE, PERMISSION
+  startDate    DateTime
+  endDate      DateTime?
+  reason       String
+  status       String    @default("PENDING") // PENDING, APPROVED, REJECTED
+  approvedById String?
+  approvedBy   User?     @relation("ApprovedLeaves", fields: [approvedById], references: [id])
+  rejectionReason String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([userId])
 }

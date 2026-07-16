@@ -4,7 +4,7 @@ import api from '../../api/axios';
 import { LoadingSpinner } from '../../components/UI/LoadingSpinner';
 import {
   CalendarCheck, CheckCircle2, XCircle, Clock, AlertCircle,
-  ChevronLeft, ChevronRight, User, Save, BarChart3,
+  ChevronLeft, ChevronRight, User, Save, BarChart3, FileText, UserCheck,
 } from 'lucide-react';
 
 interface Teacher {
@@ -52,6 +52,8 @@ const TeacherAttendancePage: React.FC = () => {
     } catch {}
   };
 
+  const [historyLogs, setHistoryLogs] = useState<any[]>([]);
+
   // Fetch attendance records for selected date (Admin) or month (Teacher)
   const fetchRecords = async () => {
     setLoading(true);
@@ -75,13 +77,21 @@ const TeacherAttendancePage: React.FC = () => {
         setAttendanceMap(map);
         setNoteMap(notes);
       } else {
-        const res: any = await api.get('/api/teacher-attendance', {
-          params: { month: selectedMonth + 1, year: selectedYear }
-        });
-        setMyRecords(res.data?.data || []);
+        const [attRes, leaveRes, gpRes]: any = await Promise.all([
+          api.get('/api/teacher-attendance', { params: { month: selectedMonth + 1, year: selectedYear } }),
+          api.get('/api/leave/my'),
+          api.get('/api/gate-pass', { params: { limit: 100 } })
+        ]);
+        setMyRecords(attRes.data?.data || []);
+        
+        // Combine history
+        const leaves = (leaveRes.data?.data || []).map((l: any) => ({ ...l, logType: l.type }));
+        const passes = (gpRes.data?.data || []).map((gp: any) => ({ ...gp, logType: 'GATEPASS' }));
+        const combined = [...leaves, ...passes].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        setHistoryLogs(combined);
 
         // Summary
-        const arr = res.data?.data || [];
+        const arr = attRes.data?.data || [];
         const present = arr.filter((r: AttRecord) => r.status === 'PRESENT' || r.status === 'LATE').length;
         const absent = arr.filter((r: AttRecord) => r.status === 'ABSENT').length;
         const halfDay = arr.filter((r: AttRecord) => r.status === 'HALF_DAY').length;
@@ -323,11 +333,55 @@ const TeacherAttendancePage: React.FC = () => {
             </div>
           </div>
 
-          {myRecords.length === 0 && (
-            <div className="text-center py-10 text-slate-400 text-sm font-medium">
-              No attendance records for this month yet.
+          {/* History Logs */}
+          <div className="bg-white rounded-[1.5rem] border border-slate-100 overflow-hidden mt-6" style={{ boxShadow: '0 4px 24px rgba(0,0,0,0.04)' }}>
+            <div className="p-5 border-b border-slate-50 flex items-center justify-between">
+              <h3 className="font-black text-slate-800">My Requests History</h3>
             </div>
-          )}
+            <div className="divide-y divide-slate-50 max-h-[400px] overflow-y-auto">
+              {historyLogs.map((log: any, idx) => (
+                <div key={idx} className="p-4 hover:bg-slate-50/50 transition-colors flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-white ${
+                      log.logType === 'GATEPASS' ? 'bg-orange-500' : 
+                      log.logType === 'LEAVE' ? 'bg-blue-500' : 'bg-teal-500'
+                    }`}>
+                      {log.logType === 'GATEPASS' ? <FileText className="w-5 h-5" /> : <UserCheck className="w-5 h-5" />}
+                    </div>
+                    <div>
+                      <p className="font-bold text-slate-800 text-sm">
+                        {log.logType === 'GATEPASS' ? `Gatepass to ${log.destination}` : `${log.logType} Request`}
+                      </p>
+                      <p className="text-xs text-slate-500 font-medium truncate max-w-[200px] sm:max-w-md">
+                        {log.reason}
+                      </p>
+                      <p className="text-[10px] text-slate-400 mt-1">
+                        {new Date(log.createdAt).toLocaleString()}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex flex-col items-end gap-1">
+                    <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wide ${
+                      log.status === 'APPROVED' ? 'bg-green-100 text-green-700' :
+                      log.status === 'REJECTED' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'
+                    }`}>
+                      {log.status}
+                    </span>
+                    {log.logType !== 'GATEPASS' && (
+                      <span className="text-[10px] text-slate-400 font-bold">
+                        {new Date(log.startDate).toLocaleDateString()} {log.endDate && `- ${new Date(log.endDate).toLocaleDateString()}`}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              ))}
+              {historyLogs.length === 0 && (
+                <div className="p-8 text-center text-slate-400 text-sm font-medium">
+                  No request history found.
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       )}
     </div>

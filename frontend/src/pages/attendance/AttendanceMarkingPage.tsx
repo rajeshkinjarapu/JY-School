@@ -269,15 +269,19 @@ export const AttendanceMarkingPage: React.FC = () => {
               <table className="w-full border-collapse text-left text-sm">
                 <thead>
                   <tr className="bg-gray-50 dark:bg-gray-800/40 border-b border-gray-150 dark:border-gray-800 font-extrabold text-[10px] text-gray-400 tracking-wider">
-                    <th className="p-4">Student</th>
-                    <th className="p-4 text-right">Status</th>
+                    <th className="p-4 w-16">S.No</th>
+                    <th className="p-4 w-32">Student ID</th>
+                    <th className="p-4">Student Name</th>
+                    <th className="p-4 text-right"></th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-                  {paginatedStudents.map((student) => {
+                  {paginatedStudents.map((student, index) => {
                     const currentStatus = records[student.id] || 'PRESENT';
                     return (
                       <tr key={student.id} className="hover:bg-gray-50/30 dark:hover:bg-gray-850/10">
+                        <td className="p-4 text-gray-500 font-semibold">{startIndex + index + 1}</td>
+                        <td className="p-4 text-gray-500 font-semibold">{student.rollNo || student.id.substring(0,8)}</td>
                         <td className="p-4 font-bold text-gray-900 dark:text-white">
                           {student.user.name}
                         </td>
