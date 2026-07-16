@@ -52,6 +52,9 @@ const ProfilePage = lazy(() => import('../pages/profile/ProfilePage'));
 const LeaveTypePage = lazy(() => import('../pages/leave/LeaveTypePage'));
 const LeaveRequestLogPage = lazy(() => import('../pages/leave/LeaveRequestLogPage'));
 const GatePassPage = lazy(() => import('../pages/gate-pass/GatePassPage'));
+const HomeworkPage = lazy(() => import('../pages/homework/HomeworkPage'));
+const TeacherAttendancePage = lazy(() => import('../pages/teacher-attendance/TeacherAttendancePage'));
+const SalaryPage = lazy(() => import('../pages/hr/SalaryPage'));
 
 const AttendanceWrapper = () => {
   const { user } = useAuth();
@@ -303,6 +306,38 @@ export const router = createBrowserRouter([
         element: withSuspense(
           <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN', 'TEACHER', 'STUDENT']}>
             <GatePassPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'homework',
+        element: withSuspense(
+          <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN', 'TEACHER', 'STUDENT']}>
+            <HomeworkPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'teacher-attendance',
+        element: withSuspense(
+          <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN', 'TEACHER']}>
+            <TeacherAttendancePage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'hr/salary',
+        element: withSuspense(
+          <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN']}>
+            <SalaryPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'salary',
+        element: withSuspense(
+          <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN', 'TEACHER']}>
+            <SalaryPage />
           </ProtectedRoute>
         ),
       },

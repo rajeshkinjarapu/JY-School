@@ -159,7 +159,10 @@ export const getAdminDashboard = async (req: AuthRequest, res: Response, next: N
 export const getTeacherDashboard = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
     const teacher = await prisma.teacher.findUnique({
-      where: { userId: req.user!.id }
+      where: { userId: req.user!.id },
+      include: {
+        user: { select: { id: true, name: true, email: true, phone: true, photoUrl: true } }
+      }
     });
     if (!teacher) {
       res.status(404).json({ success: false, message: 'Teacher profile not found' });
@@ -191,12 +194,56 @@ export const getTeacherDashboard = async (req: AuthRequest, res: Response, next:
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
 
-    const todayAttendance = await prisma.attendance.findMany({
-      where: {
-        classId: { in: classIds },
-        date: { gte: today, lt: tomorrow }
-      }
-    });
+    // Current month for teacher's own attendance
+    const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+
+    const [todayAttendance, recentHomework, myAttendanceThisMonth, pendingSalary, timetableToday, announcements] = await Promise.all([
+      prisma.attendance.findMany({
+        where: {
+          classId: { in: classIds },
+          date: { gte: today, lt: tomorrow }
+        }
+      }),
+      (prisma as any).homework.findMany({
+        where: { teacherId: teacher.id },
+        take: 5,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          class: { select: { name: true, section: true } },
+          subject: { select: { name: true } },
+        },
+      }).catch(() => []),
+      (prisma as any).teacherAttendance.findMany({
+        where: { teacherId: teacher.id, date: { gte: monthStart } }
+      }).catch(() => []),
+      (prisma as any).salary.findFirst({
+        where: {
+          teacherId: teacher.id,
+          month: today.getMonth() + 1,
+          year: today.getFullYear(),
+          status: 'PENDING'
+        }
+      }).catch(() => null),
+      prisma.timetable.findMany({
+        where: {
+          teacherId: teacher.id,
+          day: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][new Date().getDay()]
+        },
+        include: {
+          class: true,
+          subject: true
+        },
+        orderBy: { startTime: 'asc' }
+      }),
+      prisma.announcement.findMany({
+        take: 5,
+        where: {
+          isActive: true,
+          targetRoles: { contains: Role.TEACHER }
+        },
+        orderBy: { createdAt: 'desc' }
+      })
+    ]);
 
     const totalMarked = todayAttendance.length;
     const presentMarked = todayAttendance.filter(a => a.status === AttendanceStatus.PRESENT || a.status === AttendanceStatus.LATE).length;
@@ -207,33 +254,23 @@ export const getTeacherDashboard = async (req: AuthRequest, res: Response, next:
       rate: totalMarked > 0 ? Math.round((presentMarked / totalMarked) * 100) : 0
     };
 
-    // Today's timetable slots
-    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    const currentDay = days[new Date().getDay()];
 
-    const timetableToday = await prisma.timetable.findMany({
-      where: {
-        teacherId: teacher.id,
-        day: currentDay
-      },
-      include: {
-        class: true,
-        subject: true
-      },
-      orderBy: { startTime: 'asc' }
-    });
-
-    // Recent announcements targeted to Teachers
-    const announcements = await prisma.announcement.findMany({
-      take: 5,
-      where: {
-        isActive: true,
-        targetRoles: { contains: Role.TEACHER }
-      },
-      orderBy: { createdAt: 'desc' }
-    });
+    // My attendance stats this month
+    const myPresent = myAttendanceThisMonth.filter((a: any) => a.status === 'PRESENT' || a.status === 'LATE').length;
+    const myTotal = myAttendanceThisMonth.length;
+    const myAttendanceRate = myTotal > 0 ? Math.round((myPresent / myTotal) * 100) : 0;
 
     successResponse(res, {
+      teacherProfile: {
+        id: teacher.id,
+        name: (teacher as any).user.name,
+        email: (teacher as any).user.email,
+        phone: (teacher as any).user.phone,
+        photoUrl: (teacher as any).user.photoUrl,
+        employeeId: teacher.employeeId,
+        qualification: teacher.qualification,
+        specialization: teacher.specialization,
+      },
       assignedClasses: assignedClasses.map(ac => ({
         classId: ac.classId,
         className: `${ac.class.name}-${ac.class.section}`,
@@ -244,12 +281,26 @@ export const getTeacherDashboard = async (req: AuthRequest, res: Response, next:
       totalStudents,
       todayAttendanceSummary,
       timetableToday,
-      announcements
+      announcements,
+      recentHomework,
+      myAttendance: {
+        present: myPresent,
+        total: myTotal,
+        rate: myAttendanceRate,
+        records: myAttendanceThisMonth,
+      },
+      pendingSalary: pendingSalary ? {
+        month: (pendingSalary as any).month,
+        year: (pendingSalary as any).year,
+        netSalary: (pendingSalary as any).netSalary,
+        status: (pendingSalary as any).status,
+      } : null,
     }, 'Teacher dashboard data fetched successfully');
   } catch (error) {
     next(error);
   }
 };
+
 
 export const getStudentDashboard = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {

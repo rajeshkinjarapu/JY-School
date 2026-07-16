@@ -38,6 +38,9 @@ import examsExtendedRoutes from './routes/examsExtended';
 import formRoutes from './routes/forms';
 import latexRoutes from './routes/latex';
 import gatePassRoutes from './routes/gatePass';
+import homeworkRoutes from './routes/homework';
+import teacherAttendanceRoutes from './routes/teacherAttendance';
+import salaryRoutes from './routes/salary';
 
 const app = express();
 const httpServer = createServer(app);
@@ -87,6 +90,9 @@ app.use('/api/exams-extended', examsExtendedRoutes);
 app.use('/api/forms', formRoutes);
 app.use('/api/latex', latexRoutes);
 app.use('/api/gate-pass', gatePassRoutes);
+app.use('/api/homework', homeworkRoutes);
+app.use('/api/teacher-attendance', teacherAttendanceRoutes);
+app.use('/api/salary', salaryRoutes);
 
 // Health check
 app.get('/api/health', (_req, res) => {

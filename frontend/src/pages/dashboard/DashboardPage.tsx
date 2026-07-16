@@ -412,53 +412,60 @@ const AdminView: React.FC<{ data: any }> = ({ data }) => {
 /* ── Teacher View ───────────────────────────────────────── */
 const TeacherView: React.FC<{ data: any }> = ({ data }) => {
   const { rate = 0, present = 0, absent = 0, total = 0 } = data.todayAttendanceSummary || {};
+  const { teacherProfile, myAttendance, pendingSalary, recentHomework } = data;
   const classBarData = (data.assignedClasses || []).map((c: any) => ({ name: c.className, students: c.studentCount }));
 
   return (
     <div className="space-y-7">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-        {[
-          { label: 'My Students', value: data.totalStudents || 0, icon: Users, gradient: 'linear-gradient(90deg,#6366f1,#818cf8)', glow: 'rgba(99,102,241,0.08)', sub: 'Across all classes' },
-          { label: 'Assigned Classes', value: data.assignedClasses?.length || 0, icon: School, gradient: 'linear-gradient(90deg,#10b981,#34d399)', glow: 'rgba(16,185,129,0.08)', sub: 'Active assignments' },
-          { label: "Today's Rate", value: `${rate}%`, icon: Clock, gradient: 'linear-gradient(90deg,#f59e0b,#fbbf24)', glow: 'rgba(245,158,11,0.08)', sub: `${present} present · ${absent} absent` },
-        ].map((s, i) => <StatCard key={i} {...(s as StatCardProps)} />)}
-      </div>
-
-      {total > 0 && (
-        <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid #f1f5f9', boxShadow: '0 2px 12px rgba(0,0,0,0.05)' }}>
-          <div className="flex h-2">
-            <div className="bg-emerald-500 transition-all duration-700" style={{ width: `${rate}%` }} />
-            <div className="bg-red-400 flex-1" />
-          </div>
-          <div className="px-5 py-4 bg-white flex items-center justify-between flex-wrap gap-2">
-            <div className="flex gap-5">
-              <span className="text-xs font-bold text-emerald-600">✓ Present: {present}</span>
-              <span className="text-xs font-bold text-red-500">✗ Absent: {absent}</span>
-              <span className="text-xs font-bold text-slate-400">Total: {total}</span>
+      {/* Teacher Profile / Quick Stats */}
+      <div className="flex flex-col lg:flex-row gap-5">
+        <div className="lg:w-1/3 rounded-[2rem] p-6 relative overflow-hidden text-white"
+          style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', boxShadow: '0 15px 40px -10px rgba(16,185,129,0.4)' }}>
+          <div className="absolute top-0 right-0 w-40 h-40 bg-white opacity-10 rounded-full blur-2xl transform translate-x-1/3 -translate-y-1/3" />
+          <div className="relative z-10 flex items-center gap-5 mb-6 pb-6 border-b border-white/20">
+            {teacherProfile?.photoUrl ? (
+              <img src={teacherProfile.photoUrl} alt="Profile" className="w-16 h-16 rounded-2xl object-cover border-2 border-white/40 shadow-lg" />
+            ) : (
+              <div className="w-16 h-16 rounded-2xl bg-white/20 flex items-center justify-center text-3xl font-black shadow-lg">
+                {teacherProfile?.name?.charAt(0) || 'T'}
+              </div>
+            )}
+            <div>
+              <h2 className="text-xl font-black leading-tight tracking-tight">{teacherProfile?.name || 'Teacher'}</h2>
+              <p className="text-emerald-100 text-sm font-semibold mt-1">{teacherProfile?.employeeId || 'ID Not Set'}</p>
             </div>
-            <span className="text-xs font-black text-slate-700">{rate}% attendance today</span>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <p className="text-emerald-200 text-xs font-black uppercase tracking-wider mb-1">My Attendance</p>
+              <p className="text-2xl font-black">{myAttendance?.rate || 0}%</p>
+            </div>
+            {pendingSalary ? (
+              <div>
+                <p className="text-emerald-200 text-xs font-black uppercase tracking-wider mb-1">Pending Salary</p>
+                <p className="text-2xl font-black">₹{pendingSalary.netSalary.toLocaleString('en-IN')}</p>
+              </div>
+            ) : (
+              <div>
+                <p className="text-emerald-200 text-xs font-black uppercase tracking-wider mb-1">Status</p>
+                <p className="text-xl font-bold flex items-center gap-1.5"><CheckCircle2 className="w-5 h-5"/> All Paid</p>
+              </div>
+            )}
           </div>
         </div>
-      )}
+
+        <div className="lg:w-2/3 grid grid-cols-1 sm:grid-cols-3 gap-5">
+          {[
+            { label: 'My Students', value: data.totalStudents || 0, icon: Users, gradient: 'linear-gradient(90deg,#6366f1,#818cf8)', glow: 'rgba(99,102,241,0.08)', sub: 'Across all classes' },
+            { label: 'Assigned Classes', value: data.assignedClasses?.length || 0, icon: School, gradient: 'linear-gradient(90deg,#f59e0b,#fbbf24)', glow: 'rgba(245,158,11,0.08)', sub: 'Active assignments' },
+            { label: "Today's Class Att.", value: `${rate}%`, icon: Clock, gradient: 'linear-gradient(90deg,#0ea5e9,#38bdf8)', glow: 'rgba(14,165,233,0.08)', sub: `${present} present · ${absent} absent` },
+          ].map((s, i) => <StatCard key={i} {...(s as StatCardProps)} />)}
+        </div>
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-        <ChartCard className="lg:col-span-2">
-          <SectionHeader title="Class Demographics" subtitle="Students per assigned class" icon={BarChart3} iconColor="#6366f1" />
-          <div className="h-[240px]">
-            {classBarData.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={classBarData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#94a3b8', fontWeight: 600 }} dy={8} />
-                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#94a3b8', fontWeight: 600 }} />
-                  <RechartsTooltip contentStyle={TT} cursor={{ fill: '#f8fafc' }} />
-                  <Bar dataKey="students" fill="#6366f1" radius={[6, 6, 0, 0]} barSize={36} />
-                </BarChart>
-              </ResponsiveContainer>
-            ) : <div className="flex items-center justify-center h-full text-slate-400 text-sm">No classes assigned yet.</div>}
-          </div>
-        </ChartCard>
-
+        {/* Timetable */}
         <ChartCard>
           <SectionHeader title="Today's Schedule" subtitle={new Date().toLocaleDateString('en-IN', { weekday: 'long' })} icon={CalendarDays} iconColor="#06b6d4" />
           <div className="space-y-3 max-h-[240px] overflow-y-auto pr-1">
@@ -479,12 +486,35 @@ const TeacherView: React.FC<{ data: any }> = ({ data }) => {
             )) : <p className="text-sm text-slate-400 text-center py-8">No classes scheduled today.</p>}
           </div>
         </ChartCard>
+
+        {/* Recent Homework */}
+        <ChartCard className="lg:col-span-2">
+          <SectionHeader title="Recent Homework" subtitle="Latest assignments given" icon={BookOpen} iconColor="#8b5cf6"
+            action={<Link to="/homework" className="flex items-center gap-1 text-xs font-bold text-purple-600 hover:text-purple-700">View All <ChevronRight className="w-3.5 h-3.5" /></Link>} />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {recentHomework?.length > 0 ? recentHomework.slice(0, 4).map((hw: any) => (
+              <div key={hw.id} className="p-4 rounded-[1.2rem] border border-slate-100 bg-slate-50/50 hover:bg-white transition-colors hover:shadow-lg">
+                <div className="flex justify-between items-start mb-2">
+                  <span className="text-[10px] font-black px-2.5 py-1 rounded-full bg-indigo-100 text-indigo-700">{hw.class.name}-{hw.class.section}</span>
+                  <span className={`text-[10px] font-black px-2.5 py-1 rounded-full ${hw.status === 'ACTIVE' ? 'bg-green-100 text-green-700' : 'bg-slate-200 text-slate-600'}`}>{hw.status}</span>
+                </div>
+                <h4 className="text-sm font-bold text-slate-800 line-clamp-1">{hw.title}</h4>
+                <div className="flex justify-between items-center mt-3">
+                  <span className="text-xs font-semibold text-slate-500">{hw.subject.name}</span>
+                  <span className="text-[10px] font-bold text-slate-400 flex items-center gap-1">
+                    <CalendarDays className="w-3 h-3"/> Due: {new Date(hw.dueDate).toLocaleDateString('en-IN', { day:'numeric', month:'short' })}
+                  </span>
+                </div>
+              </div>
+            )) : <div className="col-span-2 text-center py-10 text-slate-400 text-sm">No homework assigned recently.</div>}
+          </div>
+        </ChartCard>
       </div>
 
       {data.announcements?.length > 0 && (
         <ChartCard>
-          <SectionHeader title="Announcements" subtitle="For teachers" icon={Megaphone} iconColor="#8b5cf6"
-            action={<Link to="/announcements" className="text-xs font-bold text-purple-600 hover:text-purple-700 flex items-center gap-1">View All <ChevronRight className="w-3.5 h-3.5" /></Link>} />
+          <SectionHeader title="Announcements" subtitle="For teachers" icon={Megaphone} iconColor="#f59e0b"
+            action={<Link to="/announcements" className="text-xs font-bold text-amber-600 hover:text-amber-700 flex items-center gap-1">View All <ChevronRight className="w-3.5 h-3.5" /></Link>} />
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
             {data.announcements.slice(0, 3).map((a: any, i: number) => {
               const c = COLORS[i % COLORS.length];
@@ -507,6 +537,7 @@ const TeacherView: React.FC<{ data: any }> = ({ data }) => {
     </div>
   );
 };
+
 
 /* ── Student View ───────────────────────────────────────── */
 const StudentView: React.FC<{ data: any }> = ({ data }) => {

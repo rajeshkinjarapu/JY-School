@@ -40,6 +40,12 @@ const NAV_COLORS: Record<string, { text: string; bg: string; glow: string }> = {
   Reports:       { text: '#fda4af', bg: 'rgba(244,63,94,0.18)',  glow: '0 0 12px rgba(244,63,94,.5)'   },
   Settings:      { text: '#94a3b8', bg: 'rgba(100,116,139,0.18)',glow: '0 0 12px rgba(100,116,139,.5)' },
   Roles:         { text: '#a5b4fc', bg: 'rgba(99,102,241,0.15)', glow: '0 0 12px rgba(99,102,241,.4)'  },
+  'My Students': { text: '#67e8f9', bg: 'rgba(6,182,212,0.18)',   glow: '0 0 12px rgba(6,182,212,.5)'   },
+  'My Attendance':{ text: '#fde68a', bg: 'rgba(245,158,11,0.18)', glow: '0 0 12px rgba(245,158,11,.5)'  },
+  'My Salary':   { text: '#c4b5fd', bg: 'rgba(139,92,246,0.18)', glow: '0 0 12px rgba(139,92,246,.5)'  },
+  Homework:      { text: '#86efac', bg: 'rgba(34,197,94,0.18)',   glow: '0 0 12px rgba(34,197,94,.5)'   },
+  'HR Salary':   { text: '#c4b5fd', bg: 'rgba(139,92,246,0.18)', glow: '0 0 12px rgba(139,92,246,.5)'  },
+  'Staff Attendance': { text: '#fde68a', bg: 'rgba(245,158,11,0.18)', glow: '0 0 12px rgba(245,158,11,.5)' },
 };
 
 export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
@@ -77,16 +83,30 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
       { to: '/announcements', label: 'Announcements', icon: Megaphone     },
       { to: '/messages',      label: 'Messages',      icon: MessageSquare },
       { to: '/reports',       label: 'Reports',       icon: BarChart3     },
+      // HR Section
+      { to: '/hr/salary',        label: 'HR Salary',         icon: Shield    },
+      { to: '/teacher-attendance', label: 'Staff Attendance', icon: UserCheck },
+      { to: '/homework',         label: 'Homework',          icon: BookOpen  },
       { to: '/settings',      label: 'Settings',      icon: Settings      },
     ];
     if (role === 'TEACHER') return [...base,
-      // Teachers: only expose Examination module (marks entry, results, progress cards, question papers)
-      { to: '/exams', label: 'Examination', icon: PenTool },
+      { to: '/teachers/students', label: 'My Students',    icon: Users         },
+      { to: '/attendance',        label: 'Attendance',     icon: CalendarCheck },
+      { to: '/teacher-attendance',label: 'My Attendance',  icon: UserCheck     },
+      { to: '/homework',          label: 'Homework',       icon: BookOpen      },
+      { to: '/exams',             label: 'Examination',    icon: PenTool       },
+      { to: '/timetable',         label: 'Timetable',      icon: Calendar      },
+      { to: '/gate-pass',         label: 'Gate Pass',      icon: FileText      },
+      { to: '/leave/request-log', label: 'Leave',          icon: UserCheck     },
+      { to: '/salary',            label: 'My Salary',      icon: CreditCard    },
+      { to: '/announcements',     label: 'Announcements',  icon: Megaphone     },
+      { to: '/messages',          label: 'Messages',       icon: MessageSquare },
     ];
     if (role === 'STUDENT') return [...base,
       { to: '/exams',     label: 'My Grades',     icon: ClipboardList },
       { to: '/attendance',label: 'Attendance',    icon: CalendarCheck },
       { to: '/timetable', label: 'Timetable',     icon: Calendar      },
+      { to: '/homework',  label: 'Homework',      icon: BookOpen      },
       { to: '/finance',   label: 'My Fees',       icon: CreditCard    },
       { to: '/gate-pass', label: 'Gate Pass', icon: FileText },
       { to: '/announcements', label: 'Announcements', icon: Megaphone },
@@ -157,10 +177,16 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
       <div className="px-3 pb-4 pt-3 border-t border-white/8">
         <div className="flex items-center gap-3 px-3 py-3 rounded-2xl"
           style={{ background: 'rgba(255,255,255,0.05)' }}>
-          <div className="w-9 h-9 rounded-xl shrink-0 flex items-center justify-center text-white font-black text-sm"
-            style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', boxShadow: '0 2px 8px rgba(99,102,241,.4)' }}>
-            {user.name?.charAt(0).toUpperCase()}
-          </div>
+          {user.photoUrl ? (
+            <div className="w-9 h-9 rounded-xl shrink-0 overflow-hidden border border-white/20">
+              <img src={user.photoUrl} alt={user.name} className="w-full h-full object-cover" />
+            </div>
+          ) : (
+            <div className="w-9 h-9 rounded-xl shrink-0 flex items-center justify-center text-white font-black text-sm"
+              style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', boxShadow: '0 2px 8px rgba(99,102,241,.4)' }}>
+              {user.name?.charAt(0).toUpperCase()}
+            </div>
+          )}
           <div className="flex-1 min-w-0">
             <p className="text-sm font-bold text-white truncate leading-tight">{user.name}</p>
             <p className="text-[10px] font-semibold" style={{ color: '#818cf8' }}>{roleLabels[user.role]}</p>

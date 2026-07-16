@@ -87,6 +87,9 @@ model Teacher {
   timetableSlots        Timetable[]
   homeRoomClass         Class[]   @relation("ClassTeacher")
   attendanceMarked      Attendance[] @relation("TeacherMarked")
+  homeworks             Homework[]
+  teacherAttendances    TeacherAttendance[]
+  salaries              Salary[]
 }
 
 model Class {
@@ -109,6 +112,7 @@ model Class {
   onlineExams      OnlineExam[]
   questionPapers   QuestionPaper[]
   slipTests        SlipTest[]
+  homeworks        Homework[]
 
   @@unique([name, section, academicYear])
 }
@@ -127,6 +131,7 @@ model Subject {
   examPlans            ExamPlan[]
   questionPapers       QuestionPaper[]
   slipTests            SlipTest[]
+  homeworks            Homework[]
 
   @@unique([code, classId])
   @@index([classId])
@@ -572,4 +577,65 @@ model Template {
   description   String?
   structureJson String   // Auto-generation blueprint (number of questions, subject split, difficulty breakdown)
   createdAt     DateTime @default(now())
+}
+
+// ----------------------------------------------------------------------
+// Teacher Portal & HR Module Models
+// ----------------------------------------------------------------------
+
+model Homework {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  dueDate     DateTime
+  classId     String
+  subjectId   String
+  teacherId   String
+  attachments String?  // JSON array of attachment URLs
+  status      String   @default("ACTIVE") // ACTIVE, CLOSED
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  class   Class   @relation(fields: [classId], references: [id], onDelete: Cascade)
+  subject Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  teacher Teacher @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+
+  @@index([classId])
+  @@index([teacherId])
+}
+
+model TeacherAttendance {
+  id        String   @id @default(uuid())
+  teacherId String
+  date      DateTime
+  status    String   @default("PRESENT") // PRESENT, ABSENT, LATE, HALF_DAY
+  note      String?
+  markedById String?
+  createdAt DateTime @default(now())
+
+  teacher Teacher @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+
+  @@unique([teacherId, date])
+  @@index([teacherId])
+}
+
+model Salary {
+  id          String    @id @default(uuid())
+  teacherId   String
+  month       Int       // 1-12
+  year        Int
+  basicSalary Float
+  allowances  Float     @default(0)
+  deductions  Float     @default(0)
+  netSalary   Float
+  status      String    @default("PENDING") // PENDING, PAID
+  paidOn      DateTime?
+  remarks     String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  teacher Teacher @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+
+  @@unique([teacherId, month, year])
+  @@index([teacherId])
 }
