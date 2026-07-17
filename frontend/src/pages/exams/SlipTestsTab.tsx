@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../api/axios';
-import { Plus, Trash2, Edit3, Save, X } from 'lucide-react';
+import { Plus, Trash2, Edit3, Save, X, Award, Printer, User } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../hooks/useAuth';
 
@@ -20,8 +20,9 @@ export const SlipTestsTab: React.FC = () => {
   const [testClassId, setTestClassId] = useState('');
   const [testSubjectId, setTestSubjectId] = useState('');
 
-  // Marks Entry
+  // Marks Entry & Print
   const [activeTest, setActiveTest] = useState<any>(null);
+  const [activeTestPrint, setActiveTestPrint] = useState<any>(null);
   const [students, setStudents] = useState<any[]>([]);
   const [marksData, setMarksData] = useState<{ [studentId: string]: number }>({});
 
@@ -126,7 +127,7 @@ export const SlipTestsTab: React.FC = () => {
         </div>
 
         <div className="card p-6">
-          <table className="w-full text-left border-collapse text-sm">
+          <div className="overflow-x-auto w-full max-w-full block"><table className="w-full text-left border-collapse text-sm">
             <thead>
               <tr className="border-b border-gray-200 dark:border-gray-800">
                 <th className="pb-3 font-extrabold text-gray-400 text-xs uppercase">Roll No</th>
@@ -152,7 +153,7 @@ export const SlipTestsTab: React.FC = () => {
                 </tr>
               ))}
             </tbody>
-          </table>
+          </table></div>
         </div>
       </div>
     );
@@ -185,6 +186,9 @@ export const SlipTestsTab: React.FC = () => {
             <div className="flex gap-2 pt-2">
               <button onClick={() => handleOpenMarks(test)} className="btn-secondary flex-1 text-xs font-bold flex items-center justify-center gap-2">
                 <Edit3 className="w-4 h-4" /> Enter Marks
+              </button>
+              <button onClick={() => { setActiveTestPrint(test); setTimeout(() => window.print(), 500); }} className="btn-primary flex-1 text-xs font-bold flex items-center justify-center gap-2 bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-600 hover:to-emerald-600 border-none shadow-lg shadow-teal-500/30">
+                <Award className="w-4 h-4" /> Result Card
               </button>
               {isAdminOrTeacher && (
                 <button onClick={() => handleDeleteTest(test.id)} className="p-2 border border-red-200 dark:border-red-900/40 text-red-500 hover:bg-red-50 rounded-xl">
@@ -245,6 +249,93 @@ export const SlipTestsTab: React.FC = () => {
               </div>
             </form>
           </div>
+        </div>
+      )}
+
+      {/* Print View for Slip Test */}
+      {activeTestPrint && (
+        <div className="print-area hidden print:block space-y-8 absolute top-0 left-0 w-full bg-white z-50">
+          <style dangerouslySetInnerHTML={{__html: `
+            @media print {
+              body * { visibility: hidden; }
+              .print-area, .print-area * { visibility: visible; }
+              .print-area { position: absolute; left: 0; top: 0; width: 100%; background: white !important; }
+              .slip-card { page-break-inside: avoid; page-break-after: always; box-shadow: none !important; border: 1px solid #ddd !important; margin-bottom: 20px; }
+              .slip-card:last-child { page-break-after: auto; }
+            }
+          `}} />
+          
+          {(activeTestPrint.marks || []).map((m: any) => {
+            const percentage = ((m.marksObtained / activeTestPrint.maxMarks) * 100).toFixed(1);
+            return (
+              <div key={m.studentId} className="slip-card w-full max-w-[148mm] mx-auto bg-white border border-gray-200 rounded-xl overflow-hidden relative">
+                <div className="bg-cyan-600 p-4 flex items-center justify-between text-white">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center font-bold text-cyan-600 text-lg">JY</div>
+                    <div>
+                      <h2 className="text-xl font-bold tracking-wider uppercase">JY School</h2>
+                      <p className="text-cyan-100 text-xs">Slip Test Result</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-sm font-bold bg-white/20 px-2 py-0.5 rounded-lg">{activeTestPrint.name}</div>
+                  </div>
+                </div>
+
+                <div className="p-5 flex gap-6">
+                  <div className="w-20 h-24 bg-gray-100 rounded-lg flex items-center justify-center text-gray-400">
+                    <User className="w-8 h-8" />
+                  </div>
+                  <div className="flex-1 grid grid-cols-2 gap-y-3">
+                    <div>
+                      <p className="text-[9px] uppercase font-bold text-gray-400">Student Name</p>
+                      <p className="text-base font-bold text-gray-900">{m.student?.user?.name || '-'}</p>
+                    </div>
+                    <div>
+                      <p className="text-[9px] uppercase font-bold text-gray-400">Roll Number</p>
+                      <p className="text-base font-bold text-gray-900">{m.student?.rollNo || '-'}</p>
+                    </div>
+                    <div>
+                      <p className="text-[9px] uppercase font-bold text-gray-400">Class</p>
+                      <p className="text-sm font-semibold text-gray-700">{activeTestPrint.class?.name} - {activeTestPrint.class?.section}</p>
+                    </div>
+                    <div>
+                      <p className="text-[9px] uppercase font-bold text-gray-400">Date</p>
+                      <p className="text-sm font-semibold text-gray-700">{new Date(activeTestPrint.date).toLocaleDateString()}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="px-5 pb-5">
+                  <div className="border border-gray-200 rounded-lg overflow-hidden flex text-center">
+                    <div className="flex-1 p-3 bg-gray-50 border-r border-gray-200">
+                      <p className="text-[10px] uppercase font-bold text-gray-500 mb-1">Subject</p>
+                      <p className="font-bold text-gray-900">{activeTestPrint.subject?.name}</p>
+                    </div>
+                    <div className="flex-1 p-3 bg-gray-50 border-r border-gray-200">
+                      <p className="text-[10px] uppercase font-bold text-gray-500 mb-1">Marks Obtained</p>
+                      <p className="text-lg font-black text-cyan-600">{m.marksObtained} <span className="text-xs text-gray-400 font-semibold">/ {activeTestPrint.maxMarks}</span></p>
+                    </div>
+                    <div className="flex-1 p-3 bg-gray-50">
+                      <p className="text-[10px] uppercase font-bold text-gray-500 mb-1">Percentage</p>
+                      <p className="text-lg font-black text-gray-800">{percentage}%</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="px-5 pb-5 pt-2 flex justify-between items-end">
+                  <div className="text-center">
+                    <div className="w-24 border-b border-gray-300 mb-1"></div>
+                    <p className="text-[8px] uppercase font-bold text-gray-400">Teacher</p>
+                  </div>
+                  <div className="text-center">
+                    <div className="w-24 border-b border-gray-300 mb-1"></div>
+                    <p className="text-[8px] uppercase font-bold text-gray-400">Parent</p>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
         </div>
       )}
     </div>

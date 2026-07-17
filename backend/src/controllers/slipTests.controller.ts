@@ -5,7 +5,9 @@ const prisma = new PrismaClient();
 
 export const getAllSlipTests = async (req: Request, res: Response) => {
   try {
+    const { classId } = req.query;
     const slipTests = await prisma.slipTest.findMany({
+      where: classId ? { classId: String(classId) } : undefined,
       include: {
         class: true,
         subject: true,

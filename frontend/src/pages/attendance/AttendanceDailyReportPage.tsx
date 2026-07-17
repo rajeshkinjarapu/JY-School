@@ -98,7 +98,7 @@ export default function AttendanceDailyReportPage() {
             </div>
 
             {/* Class-wise Table */}
-            <table className="w-full text-sm text-left border-collapse border border-gray-200">
+            <div className="overflow-x-auto w-full max-w-full block"><table className="w-full text-sm text-left border-collapse border border-gray-200">
               <thead>
                 <tr className="bg-gray-100">
                   <th className="p-3 border border-gray-200 font-bold text-gray-700 uppercase">Class</th>
@@ -117,7 +117,7 @@ export default function AttendanceDailyReportPage() {
                   </tr>
                 ))}
               </tbody>
-            </table>
+            </table></div>
 
             {/* Footer Signature Area */}
             <div className="mt-16 pt-8 border-t border-gray-200 flex justify-between px-10">

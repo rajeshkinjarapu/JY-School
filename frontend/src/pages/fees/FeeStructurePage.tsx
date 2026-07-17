@@ -115,7 +115,7 @@ export const FeeStructurePage: React.FC = () => {
         <LoadingSpinner size="lg" className="py-12" />
       ) : (
         <div className="card overflow-hidden">
-          <table className="w-full text-sm text-left">
+          <div className="overflow-x-auto w-full max-w-full block"><table className="w-full text-sm text-left">
             <thead className="bg-gray-50 dark:bg-gray-800/40 text-gray-500 font-semibold border-b">
               <tr>
                 <th className="px-6 py-4">Fee Name</th>
@@ -149,7 +149,7 @@ export const FeeStructurePage: React.FC = () => {
                 </tr>
               )}
             </tbody>
-          </table>
+          </table></div>
         </div>
       )}
 

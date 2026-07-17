@@ -10,13 +10,17 @@ export const getAll = async (req: AuthRequest, res: Response): Promise<void> => 
   const term = (req.query.term as string) || '';
 
   const where: any = {};
-  if (classId) where.classId = classId;
+  if (classId) {
+    where.classes = {
+      some: { id: classId }
+    };
+  }
   if (term) where.term = term;
 
   const exams = await prisma.exam.findMany({
     where,
     include: {
-      class: { select: { name: true, section: true } },
+      classes: { select: { id: true, name: true, section: true } },
       _count: { select: { marks: true } },
     },
     orderBy: { examDate: 'desc' },
@@ -29,7 +33,7 @@ export const getById = async (req: AuthRequest, res: Response, next: NextFunctio
   const exam = await prisma.exam.findUnique({
     where: { id },
     include: {
-      class: { select: { name: true, section: true } },
+      classes: { select: { id: true, name: true, section: true } },
       marks: {
         include: {
           student: { include: { user: { select: { name: true } } } },
@@ -50,33 +54,32 @@ export const create = async (req: AuthRequest, res: Response, next: NextFunction
       return next(createError('Please provide at least one class', 400));
     }
 
-    // Deduplicate classIds just in case frontend sent duplicates
     const uniqueClassIds = [...new Set(classIds)];
 
-    // Verify all classes exist
     const classes = await prisma.class.findMany({ where: { id: { in: uniqueClassIds } } });
     if (classes.length !== uniqueClassIds.length) {
       return next(createError('One or more classes not found', 404));
     }
 
-    // Create an exam for each selected class
-    const createdExams = [];
-    for (const classId of uniqueClassIds) {
-      const exam = await prisma.exam.create({
-        data: {
-          name,
-          classId,
-          term: term || '',
-          examDate: new Date(examDate),
-          maxMarks: maxMarks || 100,
-          passingMarks: passingMarks || 40,
-          subjects: subjects || [],
-        },
-      });
-      createdExams.push(exam);
-    }
+    // Create a single exam and link it to all selected classes
+    const exam = await prisma.exam.create({
+      data: {
+        name,
+        term: term || '',
+        examDate: new Date(examDate),
+        maxMarks: maxMarks || 100,
+        passingMarks: passingMarks || 40,
+        subjects: subjects || [],
+        classes: {
+          connect: uniqueClassIds.map(id => ({ id }))
+        }
+      },
+      include: {
+        classes: true
+      }
+    });
 
-    successResponse(res, createdExams, 'Exams created', 201);
+    successResponse(res, [exam], 'Exam created', 201); // Sending as array to keep frontend compatible if it expects array
   } catch (error: any) {
     console.error("EXAM CREATE ERROR:", error);
     next(error);
@@ -85,19 +88,28 @@ export const create = async (req: AuthRequest, res: Response, next: NextFunction
 
 export const update = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   const id = req.params.id as string;
-  const { name, term, examDate, maxMarks, passingMarks, subjects } = req.body;
+  const { name, term, examDate, maxMarks, passingMarks, subjects, classIds } = req.body;
 
   const existing = await prisma.exam.findUnique({ where: { id } });
   if (!existing) return next(createError('Exam not found', 404));
 
+  const data: any = {
+    name, term,
+    examDate: examDate ? new Date(examDate) : undefined,
+    maxMarks, passingMarks,
+    subjects: subjects !== undefined ? subjects : existing.subjects,
+  };
+
+  if (classIds && Array.isArray(classIds)) {
+    data.classes = {
+      set: classIds.map((cid: string) => ({ id: cid }))
+    };
+  }
+
   const exam = await prisma.exam.update({
     where: { id },
-    data: {
-      name, term,
-      examDate: examDate ? new Date(examDate) : undefined,
-      maxMarks, passingMarks,
-      subjects: subjects !== undefined ? subjects : existing.subjects,
-    },
+    data,
+    include: { classes: true }
   });
   successResponse(res, exam, 'Exam updated');
 };
@@ -112,12 +124,15 @@ export const deleteExam = async (req: AuthRequest, res: Response, next: NextFunc
 
 export const getResults = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   const id = req.params.id as string;
+  const classId = req.query.classId as string;
+
   const exam = await prisma.exam.findUnique({
     where: { id },
     include: {
       marks: {
+        where: classId ? { student: { classId } } : undefined,
         include: {
-          student: { include: { user: { select: { name: true } } } },
+          student: { include: { user: { select: { name: true } }, class: { select: { name: true, section: true } } } },
           subject: { select: { name: true, code: true } },
         },
       },
@@ -126,7 +141,7 @@ export const getResults = async (req: AuthRequest, res: Response, next: NextFunc
   if (!exam) return next(createError('Exam not found', 404));
 
   // Group marks by student
-  const studentMap = new Map<string, { studentId: string; name: string; rollNo: string; marks: any[]; total: number; percentage: number; grade: string }>();
+  const studentMap = new Map<string, { studentId: string; name: string; rollNo: string; className: string; marks: any[]; total: number; percentage: number; grade: string }>();
   for (const mark of exam.marks) {
     const key = mark.studentId;
     if (!studentMap.has(key)) {
@@ -134,6 +149,7 @@ export const getResults = async (req: AuthRequest, res: Response, next: NextFunc
         studentId: key,
         name: mark.student.user.name,
         rollNo: mark.student.rollNo,
+        className: mark.student.class ? `${mark.student.class.name} - ${mark.student.class.section}` : '',
         marks: [],
         total: 0,
         percentage: 0,

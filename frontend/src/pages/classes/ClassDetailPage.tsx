@@ -77,7 +77,7 @@ export const ClassDetailPage: React.FC = () => {
 
       {activeTab === 'students' ? (
         <div className="card overflow-hidden">
-          <table className="w-full text-sm text-left">
+          <div className="overflow-x-auto w-full max-w-full block"><table className="w-full text-sm text-left">
             <thead className="bg-gray-50 dark:bg-gray-800/40 text-gray-500 font-semibold border-b">
               <tr>
                 <th className="px-6 py-4">Student</th>
@@ -115,11 +115,11 @@ export const ClassDetailPage: React.FC = () => {
                 </tr>
               )}
             </tbody>
-          </table>
+          </table></div>
         </div>
       ) : (
         <div className="card overflow-hidden">
-          <table className="w-full text-sm text-left">
+          <div className="overflow-x-auto w-full max-w-full block"><table className="w-full text-sm text-left">
             <thead className="bg-gray-50 dark:bg-gray-800/40 text-gray-500 font-semibold border-b">
               <tr>
                 <th className="px-6 py-4">Subject Name</th>
@@ -159,7 +159,7 @@ export const ClassDetailPage: React.FC = () => {
                 </tr>
               )}
             </tbody>
-          </table>
+          </table></div>
         </div>
       )}
     </div>

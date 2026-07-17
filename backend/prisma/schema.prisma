@@ -174,8 +174,6 @@ model Attendance {
 model Exam {
   id           String     @id @default(uuid())
   name         String
-  classId      String
-  class        Class      @relation(fields: [classId], references: [id])
   term         String     // "Term 1", "Term 2", "Final"
   examDate     DateTime
   maxMarks     Float      @default(100)
@@ -185,9 +183,9 @@ model Exam {
 
   marks        Mark[]
   examPlans    ExamPlan[]
-
-  @@index([classId])
+  classes      Class[]
 }
+
 
 model Mark {
   id            String   @id @default(uuid())

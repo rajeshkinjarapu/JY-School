@@ -203,7 +203,7 @@ export const ReportCardPage: React.FC = () => {
               <span className="text-xs font-semibold text-gray-500">Max Marks: {report.totalMax}</span>
             </div>
 
-            <table className="perf-table">
+            <div className="overflow-x-auto w-full max-w-full block"><table className="perf-table">
               <thead>
                 <tr>
                   <th style={{textAlign: 'left', paddingLeft: '20px'}}>Subject</th>
@@ -231,7 +231,7 @@ export const ReportCardPage: React.FC = () => {
                   <td>{report.percentage}%</td>
                 </tr>
               </tbody>
-            </table>
+            </table></div>
           </div>
 
           <div className="result-footer">

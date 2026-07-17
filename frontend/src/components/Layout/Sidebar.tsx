@@ -6,8 +6,9 @@ import {
   LayoutDashboard, Users, GraduationCap, School, BookOpen,
   CalendarCheck, ClipboardList, PenTool, Calendar, CreditCard,
   Megaphone, MessageSquare, BarChart3, Settings, LogOut,
-  Shield, FileText, UserCheck, X, ChevronDown,
+  Shield, FileText, UserCheck, X, ChevronDown, Smartphone,
 } from 'lucide-react';
+import { usePWA } from '../../hooks/usePWA';
 
 interface SidebarProps { isOpen: boolean; setIsOpen: (v: boolean) => void; }
 
@@ -52,6 +53,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
   const { user, logout } = useAuth();
   const location = useLocation();
   const [schoolName, setSchoolName] = useState('JY SCHOOL');
+  const { isInstallable, installApp } = usePWA();
 
   useEffect(() => {
     api.get('/api/settings').then((r: any) => {
@@ -176,6 +178,18 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
 
       {/* User */}
       <div className="px-3 pb-4 pt-3 border-t border-white/8">
+        {/* PWA Install */}
+        {isInstallable && (
+          <div className="px-4 mb-4">
+            <button
+              onClick={installApp}
+              className="w-full flex items-center gap-2 justify-center py-2 px-3 bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white rounded-lg shadow-md transition-all font-bold text-sm cursor-pointer shadow-indigo-500/20"
+            >
+              <Smartphone className="w-4 h-4" /> Install App
+            </button>
+          </div>
+        )}
+
         <div className="flex items-center gap-3 px-3 py-3 rounded-2xl"
           style={{ background: 'rgba(255,255,255,0.05)' }}>
           {user.photoUrl ? (

@@ -287,7 +287,7 @@ export const PrintablePaper: React.FC<PrintablePaperProps> = ({
           </h2>
 
           <div className="max-w-md mx-auto">
-            <table className="w-full border-collapse border border-black text-center text-sm">
+            <div className="overflow-x-auto w-full max-w-full block"><table className="w-full border-collapse border border-black text-center text-sm">
               <thead>
                 <tr className="bg-slate-100">
                   <th className="border border-black p-2 font-bold">Question Number</th>
@@ -314,7 +314,7 @@ export const PrintablePaper: React.FC<PrintablePaperProps> = ({
                   );
                 })()}
               </tbody>
-            </table>
+            </table></div>
           </div>
         </div>
       )}

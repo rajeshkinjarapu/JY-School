@@ -90,7 +90,7 @@ export const FeeReceiptPrint: React.FC<FeeReceiptPrintProps> = ({ payment, schoo
 
               {/* Payment Details Table */}
               <div className="border-2 border-slate-900 rounded-lg overflow-hidden">
-                 <table className="w-full text-sm">
+                 <div className="overflow-x-auto w-full max-w-full block"><table className="w-full text-sm">
                    <thead className="bg-slate-100 border-b-2 border-slate-900 text-[10px] font-black text-slate-600 uppercase tracking-widest text-left">
                      <tr>
                        <th className="py-2 px-4 border-r-2 border-slate-900">Description</th>
@@ -114,7 +114,7 @@ export const FeeReceiptPrint: React.FC<FeeReceiptPrintProps> = ({ payment, schoo
                        <td className="py-3 px-4 text-right">₹{payment.amountPaid}</td>
                      </tr>
                    </tbody>
-                 </table>
+                 </table></div>
               </div>
               
               <div className="flex justify-between items-center text-sm font-bold bg-slate-100 p-3 rounded-lg border-2 border-slate-300">

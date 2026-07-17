@@ -5,12 +5,15 @@ import { Badge } from '../../components/UI/Badge';
 import { useAuth } from '../../hooks/useAuth';
 import {
   Plus, Edit3, Trash2, ClipboardList, BookOpen, Layers, CheckSquare,
-  Clock, Award, FileText, Settings, Play, ShieldAlert, HelpCircle, Save, X, Calendar, ExternalLink
+  Clock, Award, FileText, Settings, Play, ShieldAlert, HelpCircle, Save, X, Calendar, ExternalLink,
+  MapPin, FileSpreadsheet, Download, Printer, CheckCircle
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { Link, useSearchParams } from 'react-router-dom';
 import * as XLSX from 'xlsx';
 import { SlipTestsTab } from './SlipTestsTab';
+import { AdmitCardTab } from './AdmitCardTab';
+import { ProgressCardTab } from './ProgressCardTab';
 
 export const ExamListPage: React.FC = () => {
   const { user } = useAuth();
@@ -1082,19 +1085,35 @@ export const ExamListPage: React.FC = () => {
           
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {exams.map(exam => (
-              <div key={exam.id} className="border border-gray-200 dark:border-gray-800 rounded-xl p-5 space-y-4 hover:border-indigo-500 transition-colors bg-gray-50/50 dark:bg-gray-800/30">
+              <div key={exam.id} className="border border-gray-200 dark:border-gray-800 rounded-xl p-5 space-y-4 hover:border-indigo-500 transition-colors bg-gray-50/50 dark:bg-gray-800/30 flex flex-col">
                 <div>
                   <h4 className="font-bold text-gray-900 dark:text-white text-lg">{exam.name}</h4>
-                  <p className="text-xs text-gray-400 font-semibold uppercase tracking-wider mt-1">{exam.class?.name} - {exam.class?.section}</p>
+                  <p className="text-xs text-gray-500 mt-1">Select a class to enter marks:</p>
                 </div>
-                <div className="flex gap-3">
-                  <Link to={`/exams/${exam.id}/entry`} className="btn-primary flex-1 text-center text-xs py-2.5">
-                    Manual Entry
-                  </Link>
-                  <button onClick={() => { setExcelExamId(exam.id); setShowExcelModal(true); }} className="btn-secondary flex-1 text-xs py-2.5 bg-green-50 text-green-600 hover:bg-green-100 border-green-200 dark:bg-green-900/20 dark:border-green-800 dark:hover:bg-green-900/40">
-                    Excel Upload
-                  </button>
+                
+                <div className="flex flex-col gap-2 flex-1">
+                  {(exam.classes || []).map((c: any) => (
+                    <div key={c.id} className="flex gap-2 items-center">
+                      <div className="flex-1 text-xs font-bold text-gray-600 bg-white dark:bg-gray-800 px-3 py-2.5 rounded-lg border border-gray-200 dark:border-gray-700">
+                        {c.name}-{c.section}
+                      </div>
+                      <Link to={`/exams/${exam.id}/entry?classId=${c.id}`} className="btn-primary flex-1 text-center text-xs py-2.5 max-w-[120px]">
+                        Enter Marks
+                      </Link>
+                    </div>
+                  ))}
+                  {(!exam.classes || exam.classes.length === 0) && (
+                    <p className="text-xs text-gray-400 italic">No classes assigned</p>
+                  )}
                 </div>
+
+                {isAdmin && (
+                  <div className="pt-3 border-t border-gray-200 dark:border-gray-700">
+                    <button onClick={() => { setExcelExamId(exam.id); setShowExcelModal(true); }} className="w-full btn-secondary text-xs py-2.5 bg-green-50 text-green-600 hover:bg-green-100 border-green-200 dark:bg-green-900/20 dark:border-green-800 dark:hover:bg-green-900/40 font-bold">
+                      Excel Bulk Upload
+                    </button>
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -1608,7 +1627,7 @@ export const ExamListPage: React.FC = () => {
                 <thead>
                   <tr className="border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/40">
                     <th className="p-3.5 font-extrabold text-gray-400 text-xs uppercase tracking-wider">Exam Title</th>
-                    <th className="p-3.5 font-extrabold text-gray-400 text-xs uppercase tracking-wider">Target Class</th>
+                    <th className="p-3.5 font-extrabold text-gray-400 text-xs uppercase tracking-wider">Target Classes</th>
                     <th className="p-3.5 font-extrabold text-gray-400 text-xs uppercase tracking-wider">Term</th>
                     <th className="p-3.5 font-extrabold text-gray-400 text-xs uppercase tracking-wider">Date</th>
                     <th className="p-3.5 font-extrabold text-gray-400 text-xs uppercase tracking-wider text-right">Actions</th>
@@ -1618,7 +1637,15 @@ export const ExamListPage: React.FC = () => {
                   {exams.map(e => (
                     <tr key={e.id} className="hover:bg-gray-50/50 dark:hover:bg-gray-800/10">
                       <td className="p-3.5 font-bold text-gray-900 dark:text-white">{e.name}</td>
-                      <td className="p-3.5 text-xs font-semibold text-gray-600">{e.class?.name}-{e.class?.section}</td>
+                      <td className="p-3.5 text-xs font-semibold text-gray-600">
+                        <div className="flex flex-wrap gap-1">
+                          {(e.classes || []).map((c: any) => (
+                            <span key={c.id} className="bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded-md border border-gray-200 dark:border-gray-700">
+                              {c.name}-{c.section}
+                            </span>
+                          ))}
+                        </div>
+                      </td>
                       <td className="p-3.5 text-xs text-gray-450 font-bold">{e.term}</td>
                       <td className="p-3.5 text-xs text-gray-500 font-semibold">{new Date(e.examDate).toLocaleDateString()}</td>
                       <td className="p-3.5 text-right flex justify-end gap-2">
@@ -1627,9 +1654,9 @@ export const ExamListPage: React.FC = () => {
                             <Edit3 className="w-3 h-3" /> Edit
                           </button>
                         )}
-                        <Link to={`/exams/${e.id}/entry`} className="btn-secondary text-[11px] font-bold px-3 py-1.5 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border-indigo-200 dark:bg-indigo-900/30 dark:border-indigo-800 dark:hover:bg-indigo-900/50 dark:text-indigo-400">
+                        <button onClick={() => setActiveTab('written-exam')} className="btn-secondary text-[11px] font-bold px-3 py-1.5 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border-indigo-200 dark:bg-indigo-900/30 dark:border-indigo-800 dark:hover:bg-indigo-900/50 dark:text-indigo-400">
                           Enter Grades
-                        </Link>
+                        </button>
                       </td>
                     </tr>
                   ))}
@@ -1676,17 +1703,9 @@ export const ExamListPage: React.FC = () => {
         </div>
       )}
 
-      {/* ══ NEW TABS (PLACEHOLDERS) ══ */}
+      {/* ══ NEW TABS ══ */}
       {activeTab === 'admit-card' && (
-        <div className="bg-white dark:bg-gray-900 rounded-xl overflow-hidden border border-gray-150 dark:border-gray-800" style={{ height: 'calc(100vh - 180px)', minHeight: '600px' }}>
-          <div className="bg-indigo-50 dark:bg-indigo-900/20 p-3 border-b border-indigo-100 dark:border-indigo-800/50 flex justify-between items-center">
-            <span className="text-xs font-bold text-indigo-700 dark:text-indigo-400">Admit Card Generator Tool</span>
-            <a href="/Admit%20Cards.html" target="_blank" rel="noreferrer" className="text-xs font-bold bg-indigo-600 text-white px-3 py-1.5 rounded-lg hover:bg-indigo-700 transition-colors">
-              Open in Full Screen <ExternalLink className="w-3 h-3 inline ml-1" />
-            </a>
-          </div>
-          <iframe src="/Admit%20Cards.html" className="w-full h-full border-0" title="Admit Cards Generator" />
-        </div>
+        <AdmitCardTab exams={exams} />
       )}
       
       {activeTab === 'results' && (
@@ -1698,15 +1717,7 @@ export const ExamListPage: React.FC = () => {
       )}
 
       {activeTab === 'progress-card' && (
-        <div className="bg-white dark:bg-gray-900 rounded-xl overflow-hidden border border-gray-150 dark:border-gray-800" style={{ height: 'calc(100vh - 180px)', minHeight: '600px' }}>
-          <div className="bg-blue-50 dark:bg-blue-900/20 p-3 border-b border-blue-100 dark:border-blue-800/50 flex justify-between items-center">
-            <span className="text-xs font-bold text-blue-700 dark:text-blue-400">Progress Cards & Reports Generator</span>
-            <a href="/JEE%20Mains%20Result%20card%20with%20Reports.html" target="_blank" rel="noreferrer" className="text-xs font-bold bg-blue-600 text-white px-3 py-1.5 rounded-lg hover:bg-blue-700 transition-colors">
-              Open in Full Screen <ExternalLink className="w-3 h-3 inline ml-1" />
-            </a>
-          </div>
-          <iframe src="/JEE%20Mains%20Result%20card%20with%20Reports.html" className="w-full h-full border-0" title="Progress Cards Generator" />
-        </div>
+        <ProgressCardTab exams={exams} />
       )}
     </div>
   );
