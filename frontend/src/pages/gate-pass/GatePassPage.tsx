@@ -47,6 +47,7 @@ const GatePassPage: React.FC = () => {
   // Added missing states for print preview & pdf
   const previewRef = useRef<HTMLDivElement>(null);
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [selected, setSelected] = useState<GatePassItem | null>(null);
   const [pdfLoading, setPdfLoading] = useState(false);
   const downloadPdf = async (id: string) => {
     try {
