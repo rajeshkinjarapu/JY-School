@@ -6,11 +6,7 @@ import {
   LayoutDashboard, Users, GraduationCap, School, BookOpen,
   CalendarCheck, ClipboardList, PenTool, Calendar, CreditCard,
   Megaphone, MessageSquare, BarChart3, Settings, LogOut,
-<<<<<<< HEAD
-  Shield, FileText, UserCheck, X, ChevronDown, Smartphone,
-=======
-  Shield, FileText, UserCheck, X, ChevronDown, MapPin,
->>>>>>> 3e5ae40 (Add colorful Gate Pass dashboard and route)
+  Shield, FileText, UserCheck, X, ChevronDown, Smartphone, MapPin,
 } from 'lucide-react';
 import { usePWA } from '../../hooks/usePWA';
 
