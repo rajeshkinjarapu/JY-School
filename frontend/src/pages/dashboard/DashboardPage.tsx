@@ -10,7 +10,7 @@ import {
   FileText, Award, ArrowUpRight, Clock, Activity,
   PieChart as PieChartIcon, TrendingUp, BarChart3,
   BookOpen, CheckCircle2, XCircle, Megaphone, Star,
-  ChevronRight, Zap, Target, BookMarked, UserCheck,
+  ChevronRight, Zap, Target, BookMarked, UserCheck, PenTool, CreditCard,
 } from 'lucide-react';
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid,
