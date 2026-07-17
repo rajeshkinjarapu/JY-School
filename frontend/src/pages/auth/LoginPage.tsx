@@ -6,11 +6,11 @@ import { useAuth } from '../../hooks/useAuth';
 import { login as loginApi } from '../../api/auth';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { Eye, EyeOff, Lock, Mail, ShieldAlert } from 'lucide-react';
+import { Eye, EyeOff, Twitter, Linkedin, Facebook, Chrome } from 'lucide-react';
 
 const loginSchema = z.object({
-  email: z.string().min(3, 'Please enter your email, Student ID or registered mobile number'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
+  email: z.string().min(1, 'Username is required'),
+  password: z.string().min(1, 'Password is required'),
 });
 
 type LoginFormValues = z.infer<typeof loginSchema>;
@@ -27,16 +27,10 @@ export const LoginPage: React.FC = () => {
   const {
     register,
     handleSubmit,
-    setValue,
     formState: { errors },
   } = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
   });
-
-  const handleQuickLogin = (email: string, password: string) => {
-    setValue('email', email);
-    setValue('password', password);
-  };
 
   const onSubmit = async (values: LoginFormValues) => {
     setIsSubmitting(true);
@@ -55,108 +49,99 @@ export const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="flex min-h-screen bg-gray-50 dark:bg-gray-950">
-      {/* Left panel (illustrations & text) */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-primary-600 via-primary-700 to-teal-600 items-center justify-center p-12 text-white relative overflow-hidden">
-        {/* Decorative blobs */}
-        <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] rounded-full bg-white/10 blur-3xl" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[400px] h-[400px] rounded-full bg-teal-500/20 blur-3xl" />
-
-        <div className="max-w-md space-y-6 relative z-10">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-white/10 backdrop-blur-md text-white font-bold text-2xl border border-white/20">
-            R
-          </div>
-          <div className="space-y-2">
-            <h2 className="text-4xl font-extrabold tracking-tight">JY SCHOOL</h2>
-            <p className="text-lg text-white/80">
-              Welcome to the Springfield Campus Student Management System. Track grades, attendance, payments and announcements in real-time.
-            </p>
-          </div>
-          <div className="grid grid-cols-2 gap-4 pt-6">
-            <div className="p-4 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-sm">
-              <h3 className="font-bold text-lg">Real-time</h3>
-              <p className="text-sm text-white/70 mt-1">Instant chat & push notifications for parents and staff.</p>
+    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
+      <div className="w-full max-w-md bg-white rounded-[40px] shadow-2xl overflow-hidden relative">
+        {/* Top Wave Background */}
+        <div className="absolute top-0 left-0 w-full h-[250px] bg-gradient-to-br from-blue-400 via-blue-500 to-purple-600 rounded-b-[40%] scale-x-125 translate-x-[-10%] origin-top"></div>
+        
+        <div className="relative z-10 flex flex-col items-center pt-16 px-8 pb-8">
+          {/* Logo */}
+          <div className="flex flex-col items-center mb-10">
+            <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center mb-2 transform rotate-45">
+              <div className="w-8 h-8 bg-white rounded-lg -rotate-45 flex items-center justify-center">
+                <span className="text-blue-600 font-bold text-xl">V</span>
+              </div>
             </div>
-            <div className="p-4 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-sm">
-              <h3 className="font-bold text-lg">Analytical</h3>
-              <p className="text-sm text-white/70 mt-1">Performant grade trends and enrollment insights charts.</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Right panel (form) */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-12">
-        <div className="w-full max-w-md space-y-8">
-          <div className="text-center lg:text-left">
-            <h2 className="text-3xl font-extrabold text-gray-900 dark:text-white">Sign In</h2>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
-              Enter your credentials to access your academic portal.
-            </p>
+            <h1 className="text-white text-xl font-bold tracking-wider">MOFINOW</h1>
           </div>
 
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+          <h2 className="text-3xl font-bold text-gray-800 mb-8 text-center">
+            Welcome <span className="font-normal text-gray-600">back !</span>
+          </h2>
+
+          <form onSubmit={handleSubmit(onSubmit)} className="w-full space-y-5">
             <div>
-              <label className="label">Email, Student ID or Mobile Number</label>
-              <div className="relative">
-                <Mail className="absolute left-3.5 top-3.5 w-5 h-5 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="name@school.com, JY26-0001 or 9876543210"
-                  className={`input pl-11 ${errors.email ? 'border-red-500 focus:ring-red-500' : ''}`}
-                  {...register('email')}
-                />
-              </div>
-              {errors.email && (
-                <p className="text-xs text-red-500 mt-1.5 flex items-center gap-1">
-                  <ShieldAlert className="w-3.5 h-3.5" />
-                  {errors.email.message}
-                </p>
-              )}
+              <input
+                type="text"
+                placeholder="Username"
+                className={`w-full px-6 py-4 bg-gray-50 border-none rounded-full text-gray-800 placeholder-gray-400 focus:ring-2 focus:ring-blue-500 outline-none ${errors.email ? 'ring-2 ring-red-500' : ''}`}
+                {...register('email')}
+              />
             </div>
 
-            <div>
-              <div className="flex justify-between items-center mb-1.5">
-                <label className="label mb-0">Password</label>
-                <Link
-                  to="/forgot-password"
-                  className="text-xs font-semibold text-primary-600 dark:text-primary-400 hover:underline"
-                >
-                  Forgot Password?
-                </Link>
-              </div>
-              <div className="relative">
-                <Lock className="absolute left-3.5 top-3.5 w-5 h-5 text-gray-400" />
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  placeholder="••••••••"
-                  className={`input pl-11 pr-11 ${errors.password ? 'border-red-500 focus:ring-red-500' : ''}`}
-                  {...register('password')}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3.5 top-3.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-                >
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                </button>
-              </div>
-              {errors.password && (
-                <p className="text-xs text-red-500 mt-1.5 flex items-center gap-1">
-                  <ShieldAlert className="w-3.5 h-3.5" />
-                  {errors.password.message}
-                </p>
-              )}
+            <div className="relative">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                placeholder="Password"
+                className={`w-full px-6 py-4 bg-gray-50 border-none rounded-full text-gray-800 placeholder-gray-400 focus:ring-2 focus:ring-blue-500 outline-none pr-12 ${errors.password ? 'ring-2 ring-red-500' : ''}`}
+                {...register('password')}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              >
+                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+              </button>
+            </div>
+
+            <div className="flex items-center justify-between text-sm px-2">
+              <label className="flex items-center text-gray-500 cursor-pointer">
+                <input type="checkbox" className="mr-2 rounded-full border-gray-300 text-blue-500 focus:ring-blue-500 w-4 h-4" />
+                Remember me
+              </label>
+              <Link to="/forgot-password" className="text-gray-500 hover:text-gray-700">
+                Forget password?
+              </Link>
             </div>
 
             <button
               type="submit"
               disabled={isSubmitting}
-              className="btn-primary w-full py-3 mt-2 flex items-center justify-center gap-2"
+              className="w-full py-4 mt-4 bg-white text-blue-600 font-semibold rounded-full border border-blue-500 hover:bg-blue-50 transition-colors"
             >
-              {isSubmitting ? 'Signing in...' : 'Sign In'}
+              {isSubmitting ? 'Logging in...' : 'Login'}
             </button>
           </form>
+
+          <p className="mt-6 text-sm text-gray-500">
+            New user? <Link to="/register" className="text-blue-600 font-semibold hover:underline">Sign Up</Link>
+          </p>
+
+          <div className="w-full flex items-center gap-4 my-6">
+            <div className="h-px bg-gray-300 flex-1"></div>
+            <span className="text-blue-600 font-bold text-sm">OR</span>
+            <div className="h-px bg-gray-300 flex-1"></div>
+          </div>
+
+          <div className="flex items-center justify-center gap-4 mb-6">
+            <button className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white hover:bg-blue-600 transition-colors">
+              <Twitter className="w-5 h-5" />
+            </button>
+            <button className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white hover:bg-blue-700 transition-colors">
+              <Linkedin className="w-5 h-5" />
+            </button>
+            <button className="w-10 h-10 rounded-full bg-blue-700 flex items-center justify-center text-white hover:bg-blue-800 transition-colors">
+              <Facebook className="w-5 h-5" />
+            </button>
+            <button className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white hover:bg-blue-600 transition-colors">
+              <Chrome className="w-5 h-5" />
+            </button>
+          </div>
+
+          <p className="text-xs text-gray-400">
+            Sign in with another account
+          </p>
         </div>
       </div>
     </div>
