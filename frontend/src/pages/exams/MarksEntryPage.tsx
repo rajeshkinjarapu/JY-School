@@ -321,7 +321,7 @@ export const MarksEntryPage: React.FC = () => {
 
       {/* Mobile Sticky Save Button */}
       {students.length > 0 && (
-        <div className="fixed bottom-0 left-0 right-0 p-4 bg-white/90 backdrop-blur-xl border-t border-indigo-100 z-50 md:hidden" style={{ paddingBottom: 'env(safe-area-inset-bottom, 1rem)' }}>
+        <div className="sticky bottom-0 -mx-4 px-4 p-4 bg-white/90 backdrop-blur-xl border-t border-indigo-100 z-50 md:hidden mt-8" style={{ paddingBottom: 'env(safe-area-inset-bottom, 1rem)' }}>
           <button onClick={handleSave} className="w-full py-4 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 active:scale-[0.98] text-white rounded-2xl font-black text-sm shadow-xl shadow-indigo-600/30 transition-all flex items-center justify-center gap-2 cursor-pointer">
             <CheckCircle2 className="w-5 h-5" />
             SAVE ALL MARKS
