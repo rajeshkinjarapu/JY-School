@@ -201,9 +201,14 @@ const SectionHeader: React.FC<{
 );
 
 const ChartCard: React.FC<{ children: React.ReactNode; className?: string }> = ({ children, className = '' }) => (
-  <div className={`rounded-[2rem] p-6 relative overflow-hidden bg-white dark:bg-gray-900 border border-slate-200/60 dark:border-gray-800 transition-all duration-300 hover:shadow-xl ${className}`}
-    style={{ boxShadow: '0 10px 40px -15px rgba(0,0,0,0.05)' }}>
-    <div className="absolute inset-0 opacity-[0.03] dark:opacity-[0.02] pointer-events-none" style={{ backgroundImage: 'radial-gradient(currentColor 1px, transparent 1px)', backgroundSize: '24px 24px', color: '#94a3b8' }} />
+  <div className={`rounded-[2rem] p-6 relative overflow-hidden bg-white/70 backdrop-blur-xl border border-white/60 transition-all duration-300 hover:shadow-2xl hover:bg-white/90 group ${className}`}
+    style={{ 
+      boxShadow: '0 15px 35px -5px rgba(99, 102, 241, 0.1)',
+    }}>
+    {/* Decorative colorful ambient glow */}
+    <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-indigo-400/20 to-purple-400/20 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-700" />
+    <div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-pink-400/20 to-rose-400/20 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-700" />
+    <div className="absolute inset-0 opacity-[0.02]" style={{ backgroundImage: 'radial-gradient(#6366f1 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
     <div className="relative z-10">
       {children}
     </div>
