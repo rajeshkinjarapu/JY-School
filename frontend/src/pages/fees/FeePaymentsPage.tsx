@@ -4,7 +4,7 @@ import { LoadingSpinner } from '../../components/UI/LoadingSpinner';
 import { Badge } from '../../components/UI/Badge';
 import { Plus, FileDown, Trash2, Search, X, ChevronDown } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { FeeReceiptPrint } from '../../components/fees/FeeReceiptPrint';
 
@@ -15,7 +15,8 @@ export const FeePaymentsPage: React.FC = () => {
   const [structures, setStructures] = useState<any[]>([]);
   const [classes, setClasses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showModal, setShowModal] = useState(false);
+  const [searchParams] = useSearchParams();
+  const [showModal, setShowModal] = useState(searchParams.get('action') === 'collect');
   const [printPayment, setPrintPayment] = useState<any>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -301,15 +302,21 @@ export const FeePaymentsPage: React.FC = () => {
 
       {/* Record Payment Modal */}
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/40 backdrop-blur-sm">
-          <div className="fixed inset-0" onClick={() => setShowModal(false)} />
-          <div className="relative bg-white/95 backdrop-blur-xl border border-white/50 w-full max-w-md p-5 sm:p-6 space-y-5 animate-scale-in z-10 rounded-[2rem] shadow-2xl max-h-[90vh] overflow-y-auto">
-            <div>
-              <h3 className="text-lg font-bold text-gray-900 dark:text-white">Record Tuition Payment</h3>
-              <p className="text-xs text-gray-450 mt-1">Select multiple fees to collect them at once.</p>
+        <div className="fixed inset-0 z-[100] flex flex-col sm:items-center sm:justify-center bg-slate-900/60 backdrop-blur-md">
+          <div className="fixed inset-0 hidden sm:block" onClick={() => setShowModal(false)} />
+          <div className="relative bg-white sm:bg-white/95 sm:backdrop-blur-xl sm:border border-white/50 w-full h-full sm:h-auto sm:max-h-[90vh] sm:max-w-lg p-0 sm:p-0 sm:rounded-[2rem] shadow-2xl overflow-hidden flex flex-col z-10 animate-scale-in">
+            <div className="bg-gradient-to-r from-orange-500 via-amber-500 to-yellow-500 p-5 sm:px-6 flex justify-between items-center text-white shrink-0 shadow-sm">
+              <div>
+                <h3 className="text-xl font-extrabold tracking-tight">Collect Payment</h3>
+                <p className="text-xs text-orange-100 mt-1 font-medium">Select multiple fees to collect them at once.</p>
+              </div>
+              <button onClick={() => setShowModal(false)} className="p-2 bg-white/20 hover:bg-white/30 rounded-full transition-colors backdrop-blur-md">
+                <X className="w-5 h-5 text-white" />
+              </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="p-4 sm:p-6 flex-1 overflow-y-auto space-y-5 bg-gradient-to-b from-orange-50/50 to-white">
+              <form onSubmit={handleSubmit} className="space-y-5">
               {/* ── Smart Student Selector ── */}
               <div className="space-y-3">
                 <label className="label font-bold">Select Student</label>
@@ -558,15 +565,16 @@ export const FeePaymentsPage: React.FC = () => {
                 </button>
                 <button
                   type="submit"
-                  disabled={isUploading}
-                  className="btn-primary text-sm"
+                  disabled={isSubmitting}
+                  className="w-full btn-primary py-3.5 sm:py-3 text-sm font-bold bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white shadow-xl shadow-orange-500/20 transform transition-all hover:-translate-y-1 rounded-xl"
                 >
-                  Record Payment
+                  {isSubmitting ? 'Recording Payment...' : 'Confirm & Record Payment'}
                 </button>
               </div>
             </form>
           </div>
         </div>
+      </div>
       )}
       </div>
 
