@@ -74,7 +74,7 @@ export const AttendanceReportPage: React.FC = () => {
           <select
             value={classId}
             onChange={(e) => setClassId(e.target.value)}
-            className="bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-xl px-4 py-2.5 text-sm"
+            className="bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white font-semibold rounded-xl px-4 py-2.5 text-sm outline-none cursor-pointer focus:ring-2 focus:ring-indigo-500/50"
           >
             <option value="">Select Class</option>
             {classes.map((c) => (
