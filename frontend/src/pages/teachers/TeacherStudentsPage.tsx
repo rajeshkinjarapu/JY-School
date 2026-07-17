@@ -49,18 +49,18 @@ export const TeacherStudentsPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-3">
-          <div className="p-2.5 rounded-2xl bg-indigo-50 dark:bg-indigo-950/20">
-            <Users className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
+    <div className="space-y-4 sm:space-y-6 md:space-y-8 p-3 sm:p-4 md:p-8 bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 min-h-screen animate-fade-in-up pb-10 rounded-2xl">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 p-5 sm:p-6 md:p-8 rounded-3xl shadow-xl text-white transform transition-all hover:scale-[1.01]">
+        <div className="flex items-center gap-4">
+          <div className="p-3 rounded-2xl bg-white/20 shadow-inner backdrop-blur-md border border-white/30">
+            <Users className="w-6 h-6 md:w-8 md:h-8 text-white drop-shadow-md" />
           </div>
           <div>
-            <h2 className="text-xl font-black text-gray-900 dark:text-white">Total Students</h2>
-            <p className="text-xs text-indigo-500 font-semibold">View all students across the school</p>
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight whitespace-nowrap overflow-hidden text-ellipsis">Total Students</h2>
+            <p className="text-indigo-100 mt-1 sm:mt-2 font-medium text-sm sm:text-lg opacity-90 leading-snug">View all students across the school</p>
           </div>
         </div>
-        <Link to="/dashboard" className="inline-flex items-center gap-2 text-sm font-bold text-indigo-700 hover:text-indigo-900">
+        <Link to="/dashboard" className="inline-flex items-center gap-2 text-sm font-bold bg-white/20 hover:bg-white/30 backdrop-blur-md px-4 py-2 rounded-xl transition-colors border border-white/30">
           <ArrowLeft className="w-4 h-4" /> Back to Dashboard
         </Link>
       </div>
@@ -90,7 +90,7 @@ export const TeacherStudentsPage: React.FC = () => {
       {loading ? (
         <LoadingSpinner size="lg" className="py-24" />
       ) : (
-        <div className="bg-white dark:bg-gray-900 border border-gray-150 dark:border-gray-800 rounded-3xl shadow-sm overflow-hidden">
+        <div className="bg-white/80 backdrop-blur-lg border border-white/50 dark:bg-gray-900 dark:border-gray-800 rounded-3xl shadow-2xl overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-sm text-left">
               <thead>
