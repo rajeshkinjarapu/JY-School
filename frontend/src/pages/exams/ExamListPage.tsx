@@ -757,10 +757,10 @@ export const ExamListPage: React.FC = () => {
   }
 
   return (
-    <div className="space-y-4 sm:space-y-6 md:space-y-8 p-3 sm:p-4 md:p-8 bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 min-h-screen">
+    <div className="space-y-4 sm:space-y-6 md:space-y-8 p-0 sm:p-4 md:p-8 bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 min-h-screen overflow-x-hidden">
       <div className="space-y-4 sm:space-y-6 md:space-y-8">
         {/* ══ TOP NAVIGATION HEADER ══ */}
-        <div className="rounded-3xl bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 p-5 sm:p-6 md:p-8 shadow-xl text-white transform transition-all hover:scale-[1.01]">
+        <div className="rounded-none sm:rounded-3xl bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 p-5 sm:p-6 md:p-8 shadow-xl text-white transform transition-all sm:hover:scale-[1.01]">
           <div className="flex items-center gap-4">
             <div className="hidden sm:block rounded-2xl bg-white/20 p-3 backdrop-blur-md">
               <ClipboardList className="h-8 w-8 text-white" />
@@ -775,6 +775,7 @@ export const ExamListPage: React.FC = () => {
           </div>
         </div>
 
+        <div className="px-3 sm:px-0 space-y-4 sm:space-y-6 md:space-y-8">
         {!activeTab && (
           <div className="rounded-[2rem] border border-white/50 bg-white/80 backdrop-blur-xl p-5 sm:p-8 md:p-10 shadow-2xl">
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
@@ -1743,6 +1744,8 @@ export const ExamListPage: React.FC = () => {
       {activeTab === 'progress-card' && (
         <ProgressCardTab exams={exams} />
       )}
+      </div>
+    </div>
     </div>
     </div>
   );

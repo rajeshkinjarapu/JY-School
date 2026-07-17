@@ -123,10 +123,10 @@ export const MarksEntryPage: React.FC = () => {
     : subjects.filter(s => s.id === selectedSubjectId);
 
   return (
-    <div className="space-y-4 sm:space-y-6 md:space-y-8 bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 min-h-screen p-3 sm:p-4 md:p-8 pb-28 font-sans">
+    <div className="space-y-4 sm:space-y-6 md:space-y-8 bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 min-h-screen p-0 sm:p-4 md:p-8 pb-28 font-sans overflow-x-hidden">
       
       {/* Header Section */}
-      <div className="rounded-3xl bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 p-5 sm:p-6 md:p-8 shadow-xl text-white transform transition-all hover:scale-[1.01] flex flex-col md:flex-row md:items-center justify-between gap-6">
+      <div className="rounded-none sm:rounded-3xl bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 p-5 sm:p-6 md:p-8 shadow-xl text-white transform transition-all sm:hover:scale-[1.01] flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="flex items-center gap-4">
           <Link to="/exams?tab=written-exam" className="p-3 bg-white/20 hover:bg-white/30 backdrop-blur-md rounded-2xl transition-all cursor-pointer">
             <ArrowLeft className="w-6 h-6 text-white" />
@@ -156,6 +156,7 @@ export const MarksEntryPage: React.FC = () => {
       </div>
 
       {/* Main Content Area */}
+      <div className="px-3 sm:px-0">
       <div className="rounded-3xl border border-white/50 bg-white/80 backdrop-blur-lg p-4 md:p-8 shadow-2xl">
         
         {/* Toolbar */}
@@ -317,6 +318,7 @@ export const MarksEntryPage: React.FC = () => {
             <p className="text-sm font-medium text-slate-500 mt-2">There are no students enrolled in this class to enter marks.</p>
           </div>
         )}
+      </div>
       </div>
 
       {/* Mobile Sticky Save Button */}

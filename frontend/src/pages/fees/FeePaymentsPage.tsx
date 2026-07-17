@@ -205,9 +205,9 @@ export const FeePaymentsPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-4 sm:space-y-6 md:space-y-8 p-3 sm:p-4 md:p-8 bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 min-h-screen animate-fade-in-up pb-24 rounded-2xl">
+    <div className="space-y-4 sm:space-y-6 md:space-y-8 p-0 sm:p-4 md:p-8 bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 min-h-screen animate-fade-in-up pb-24 overflow-x-hidden">
       <div className="print:hidden space-y-4 sm:space-y-6 md:space-y-8">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 p-5 sm:p-6 md:p-8 rounded-3xl shadow-xl text-white transform transition-all hover:scale-[1.01]">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 p-5 sm:p-6 md:p-8 rounded-none sm:rounded-3xl shadow-xl text-white transform transition-all sm:hover:scale-[1.01]">
         <div>
           <h3 className="text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight whitespace-nowrap overflow-hidden text-ellipsis">Fee Transaction Ledger</h3>
           <p className="text-indigo-100 mt-1 sm:mt-2 font-medium text-sm sm:text-lg opacity-90 leading-snug">Track paid, pending and overdue tuition invoices.</p>
@@ -243,6 +243,7 @@ export const FeePaymentsPage: React.FC = () => {
         </div>
       </div>
 
+      <div className="px-3 sm:px-0">
       {loading ? (
         <LoadingSpinner size="lg" className="py-12" />
       ) : (
@@ -296,6 +297,7 @@ export const FeePaymentsPage: React.FC = () => {
           </table></div>
         </div>
       )}
+      </div>
 
       {/* Record Payment Modal */}
       {showModal && (

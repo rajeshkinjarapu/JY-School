@@ -137,9 +137,9 @@ const TeacherAttendancePage: React.FC = () => {
   if (loading) return <LoadingSpinner size="lg" className="h-[70vh]" />;
 
   return (
-    <div className="space-y-4 sm:space-y-6 md:space-y-8 p-3 sm:p-4 md:p-8 bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 min-h-screen animate-fade-in-up pb-10 rounded-2xl">
+    <div className="space-y-4 sm:space-y-6 md:space-y-8 p-0 sm:p-4 md:p-8 bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 min-h-screen animate-fade-in-up pb-10 overflow-x-hidden">
       {/* Header */}
-      <div className="relative overflow-hidden rounded-[2rem]" style={{
+      <div className="relative overflow-hidden rounded-none sm:rounded-[2rem]" style={{
         background: 'linear-gradient(120deg, #0f172a 0%, #1e1b4b 50%, #7c3aed 100%)',
         boxShadow: '0 25px 50px -12px rgba(124,58,237,0.3)',
       }}>
@@ -181,7 +181,7 @@ const TeacherAttendancePage: React.FC = () => {
 
       {/* ADMIN VIEW */}
       {isAdmin && (
-        <div className="space-y-5">
+        <div className="space-y-5 px-3 sm:px-0">
           {/* Date Selector */}
           <div className="flex items-center gap-4 bg-white rounded-[1.5rem] p-4 border border-slate-100"
             style={{ boxShadow: '0 4px 24px rgba(0,0,0,0.04)' }}>
@@ -260,7 +260,7 @@ const TeacherAttendancePage: React.FC = () => {
 
       {/* TEACHER VIEW — Calendar */}
       {isTeacher && (
-        <div className="space-y-5">
+        <div className="space-y-5 px-3 sm:px-0">
           {/* Summary Cards */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             {[
