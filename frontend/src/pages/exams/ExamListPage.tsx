@@ -1747,7 +1747,6 @@ export const ExamListPage: React.FC = () => {
       </div>
     </div>
     </div>
-    </div>
   );
 };
 
