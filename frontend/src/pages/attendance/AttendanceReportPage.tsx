@@ -95,7 +95,7 @@ export const AttendanceReportPage: React.FC = () => {
         </div>
       </div>
 
-      <div className="space-y-6">
+      <div className="px-3 sm:px-0 space-y-6">
       {classId ? (
         loading ? (
           <LoadingSpinner size="lg" className="py-12" />
