@@ -122,7 +122,7 @@ export const TeacherStudentsPage: React.FC = () => {
                         <td className="px-5 py-4 text-gray-400 font-bold text-xs">{idx + 1}</td>
                         <td className="px-5 py-3">
                           {photoUrl ? (
-                            <img src={photoUrl.startsWith('http') ? photoUrl : `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${photoUrl.startsWith('/') ? photoUrl : \`/\${photoUrl}\`}`} alt={name} className="w-12 h-16 rounded-lg object-cover border-2 border-white dark:border-gray-800 shadow-md ring-1 ring-gray-200 dark:ring-gray-700" />
+                            <img src={photoUrl.startsWith('http') ? photoUrl : `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${photoUrl.startsWith('/') ? photoUrl : '/' + photoUrl}`} alt={name} className="w-12 h-16 rounded-lg object-cover border-2 border-white dark:border-gray-800 shadow-md ring-1 ring-gray-200 dark:ring-gray-700" />
                           ) : (
                             <div className={`w-12 h-16 rounded-lg bg-gradient-to-br ${getColor(name)} flex items-center justify-center text-white font-black text-lg border-2 border-white dark:border-gray-800 shadow-md ring-1 ring-gray-200 dark:ring-gray-700`}>
                               {getInitials(name)}
