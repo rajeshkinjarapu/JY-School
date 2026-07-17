@@ -440,7 +440,7 @@ const TeacherView: React.FC<{ data: any }> = ({ data }) => {
           { label: 'My Students', value: data.totalStudents || 0, icon: Users, gradient: 'linear-gradient(135deg,#8b5cf6 0%,#6d28d9 100%)', glow: 'rgba(255,255,255,0.2)', sub: 'Across all classes' },
           { label: 'Assigned Classes', value: data.assignedClasses?.length || 0, icon: School, gradient: 'linear-gradient(135deg,#f59e0b 0%,#d97706 100%)', glow: 'rgba(255,255,255,0.2)', sub: 'Active assignments' },
           { label: "Today's Att.", value: `${rate}%`, icon: Clock, gradient: 'linear-gradient(135deg,#10b981 0%,#059669 100%)', glow: 'rgba(255,255,255,0.2)', sub: `${present}P · ${absent}A`, link: '/teacher-attendance' },
-          { label: 'Marks Entry', value: 'Enter', icon: PenTool, gradient: 'linear-gradient(135deg,#ec4899 0%,#e11d48 100%)', glow: 'rgba(255,255,255,0.2)', sub: 'Update grades', link: '/exams' },
+          { label: 'Marks Entry', value: 'Enter', icon: PenTool, gradient: 'linear-gradient(135deg,#ec4899 0%,#e11d48 100%)', glow: 'rgba(255,255,255,0.2)', sub: 'Update grades', link: '/exams?tab=written-exam' },
           { label: 'Fee Pay', value: 'Pay', icon: CreditCard, gradient: 'linear-gradient(135deg,#f97316 0%,#d97706 100%)', glow: 'rgba(255,255,255,0.2)', sub: 'Clear dues', link: '/fee-payment' },
           { label: 'Leave Apply', value: 'Apply', icon: FileText, gradient: 'linear-gradient(135deg,#06b6d4 0%,#2563eb 100%)', glow: 'rgba(255,255,255,0.2)', sub: 'Request leave', link: '/leave/request-log' },
         ].map((stat, i) => <StatCard key={i} {...(stat as StatCardProps)} />)}
