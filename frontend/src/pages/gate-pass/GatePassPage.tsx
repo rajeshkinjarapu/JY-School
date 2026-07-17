@@ -48,7 +48,25 @@ const GatePassPage: React.FC = () => {
   const previewRef = useRef<HTMLDivElement>(null);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [pdfLoading, setPdfLoading] = useState(false);
-  const downloadPdf = (id: string) => { toast.error('PDF download not implemented yet'); };
+  const downloadPdf = async (id: string) => {
+    try {
+      setPdfLoading(true);
+      const res = await api.get(`/api/gate-pass/${id}/print/pdf`, { responseType: 'blob' });
+      // The interceptor might unwrap `res.data` or it might be raw blob depending on config.
+      const blob = res.data instanceof Blob ? res.data : new Blob([res.data]);
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `gatepass-${id}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (err: any) {
+      toast.error('Failed to download PDF');
+    } finally {
+      setPdfLoading(false);
+    }
+  };
   
   const [printGatePass, setPrintGatePass] = useState<any>(null);
 
