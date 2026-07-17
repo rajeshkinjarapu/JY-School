@@ -53,9 +53,11 @@ export const DashboardPage: React.FC = () => {
   return (
     <div className="space-y-4 sm:space-y-6 md:space-y-8 p-0 sm:p-4 md:p-8 bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 min-h-screen animate-fade-in-up pb-10">
       <WelcomeBanner name={user?.name || ''} role={user?.role || ''} photoUrl={data?.teacherProfile?.photoUrl || data?.studentProfile?.photoUrl || user?.photoUrl} />
-      {(user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN') && <AdminView data={data} />}
-      {user?.role === 'TEACHER' && <TeacherView data={data} />}
-      {user?.role === 'STUDENT' && <StudentView data={data} />}
+      <div className="px-3 sm:px-0">
+        {(user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN') && <AdminView data={data} />}
+        {user?.role === 'TEACHER' && <TeacherView data={data} />}
+        {user?.role === 'STUDENT' && <StudentView data={data} />}
+      </div>
     </div>
   );
 };
@@ -144,23 +146,23 @@ const StatCard: React.FC<StatCardProps> = ({ label, value, icon: Icon, gradient,
     : gradient.includes('#06b6d4') ? '#0891b2' : '#8b5cf6';
     
   const inner = (
-    <div className="group relative overflow-hidden rounded-[2rem] p-5 md:p-6 transition-all duration-500 hover:-translate-y-2 cursor-pointer shadow-xl border border-white/20"
-      style={{ background: gradient, boxShadow: '0 10px 40px -10px rgba(0,0,0,0.15)' }}>
+    <div className="group relative overflow-hidden rounded-[1.5rem] p-4 transition-all duration-500 hover:-translate-y-1 cursor-pointer shadow-lg border border-white/20"
+      style={{ background: gradient, boxShadow: '0 10px 30px -10px rgba(0,0,0,0.15)' }}>
       {/* Background ambient glow */}
-      <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl opacity-10 group-hover:opacity-20 transition-opacity duration-500 rounded-bl-full"
+      <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl opacity-10 group-hover:opacity-20 transition-opacity duration-500 rounded-bl-full"
         style={{ backgroundImage: `linear-gradient(to bottom left, ${iconColor}, transparent)` }} />
         
       {/* Top gradient border */}
       <div className="absolute top-0 left-0 right-0 h-1.5 opacity-80 group-hover:opacity-100 transition-opacity bg-white/30" />
       
       <div className="relative z-10">
-        <div className="flex items-start justify-between mb-4 md:mb-6">
-          <div className="p-3 md:p-4 rounded-2xl shadow-sm transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3" 
-               style={{ background: `linear-gradient(135deg, ${glow}, transparent)` }}>
-            <Icon className="w-6 h-6 md:w-7 md:h-7" style={{ color: iconColor }} />
+        <div className="flex items-start justify-between mb-3 md:mb-5">
+          <div className="p-2.5 md:p-3 rounded-[1rem] bg-white/20 shadow-inner backdrop-blur-md border border-white/30"
+            style={{ boxShadow: `0 8px 16px ${glow}` }}>
+            <Icon className="w-5 h-5 md:w-6 md:h-6 text-white drop-shadow-md" />
           </div>
           {badge && (
-            <span className="text-[10px] font-black px-3 py-1 rounded-full border shadow-sm"
+            <span className="text-[9px] font-black px-2 py-0.5 rounded-full border shadow-sm"
               style={{ background: badgeColor ? badgeColor + '15' : '#ecfdf5', color: badgeColor || '#065f46', borderColor: badgeColor ? badgeColor + '30' : '#a7f3d0' }}>
               {badge}
             </span>
@@ -171,9 +173,9 @@ const StatCard: React.FC<StatCardProps> = ({ label, value, icon: Icon, gradient,
             </div>
           )}
         </div>
-        <p className="text-[10px] md:text-[11px] font-black text-white/80 uppercase tracking-widest mb-1.5">{label}</p>
-        <p className="text-3xl md:text-4xl font-black text-white tracking-tight leading-none drop-shadow-md">{value}</p>
-        {sub && <p className="text-[11px] md:text-xs text-white/90 mt-2.5 font-bold flex items-center gap-1.5 opacity-90"><span className="w-1.5 h-1.5 rounded-full bg-white/80"/>{sub}</p>}
+        <p className="text-[10px] md:text-[11px] font-black text-white/80 uppercase tracking-widest mb-1">{label}</p>
+        <p className="text-2xl md:text-3xl font-black text-white tracking-tight leading-none drop-shadow-md">{value}</p>
+        {sub && <p className="text-[10px] md:text-[11px] text-white/90 mt-2 font-bold flex items-center gap-1.5 opacity-90"><span className="w-1.5 h-1.5 rounded-full bg-white/80"/>{sub}</p>}
       </div>
     </div>
   );
