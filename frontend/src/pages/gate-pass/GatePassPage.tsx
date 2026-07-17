@@ -173,23 +173,26 @@ const GatePassPage: React.FC = () => {
   );
 
   return (
-    <div className="space-y-8 p-4 bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 min-h-screen">
-      <div className="print:hidden space-y-8">
-        <div className="rounded-3xl bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 p-8 shadow-xl text-white transform transition-all hover:scale-[1.01]">
+    <div className="space-y-4 sm:space-y-6 md:space-y-8 p-3 sm:p-4 md:p-8 bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 min-h-screen">
+      <div className="print:hidden space-y-4 sm:space-y-6 md:space-y-8">
+        <div className="rounded-3xl bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 p-5 sm:p-6 md:p-8 shadow-xl text-white transform transition-all hover:scale-[1.01]">
           <div className="flex items-center gap-4">
-            <div className="rounded-2xl bg-white/20 p-3 backdrop-blur-md">
+            <div className="hidden sm:block rounded-2xl bg-white/20 p-3 backdrop-blur-md">
               <FileText className="h-8 w-8 text-white" />
             </div>
-            <div>
-              <h2 className="text-3xl font-extrabold tracking-tight">Gate Pass {roleLabel}</h2>
-              <p className="text-indigo-100 mt-1 font-medium text-lg opacity-90">Request a short leave or exit pass and manage requests dynamically.</p>
+            <div className="min-w-0">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight whitespace-nowrap overflow-hidden text-ellipsis flex items-center gap-2">
+                <FileText className="h-6 w-6 sm:hidden shrink-0" />
+                Gate Pass {roleLabel}
+              </h2>
+              <p className="text-indigo-100 mt-1 sm:mt-2 font-medium text-sm sm:text-lg opacity-90 leading-snug">Request a short leave or exit pass and manage requests dynamically.</p>
             </div>
           </div>
         </div>
 
-        <div className="rounded-3xl border border-white/50 bg-white/80 backdrop-blur-lg p-8 shadow-2xl space-y-6">
-          <div className="flex items-center gap-3 text-indigo-700 font-bold text-xl border-b border-indigo-100 pb-4">
-            <PlusCircle className="h-6 w-6" /> {canApprove ? 'Issue New Gate Pass' : 'New Request'}
+        <div className="rounded-3xl border border-white/50 bg-white/80 backdrop-blur-lg p-5 sm:p-6 md:p-8 shadow-2xl space-y-5 sm:space-y-6">
+          <div className="flex items-center gap-3 text-indigo-700 font-extrabold text-lg sm:text-xl border-b border-indigo-100 pb-4">
+            <PlusCircle className="h-5 w-5 sm:h-6 sm:w-6" /> {canApprove ? 'Issue New Gate Pass' : 'New Request'}
           </div>
           
           <form onSubmit={submit} className="space-y-6">
