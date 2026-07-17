@@ -201,9 +201,9 @@ const SectionHeader: React.FC<{
 );
 
 const ChartCard: React.FC<{ children: React.ReactNode; className?: string }> = ({ children, className = '' }) => (
-  <div className={`rounded-[2rem] p-6 relative overflow-hidden bg-white/70 backdrop-blur-xl border border-white/60 transition-all duration-300 hover:shadow-2xl hover:bg-white/90 group ${className}`}
+  <div className={`rounded-[2rem] p-6 relative overflow-hidden bg-white/70 backdrop-blur-xl border-[3px] border-indigo-200/50 ring-4 ring-white/60 transition-all duration-300 hover:shadow-2xl hover:bg-white/90 group ${className}`}
     style={{ 
-      boxShadow: '0 15px 35px -5px rgba(99, 102, 241, 0.1)',
+      boxShadow: '0 20px 40px -5px rgba(99, 102, 241, 0.15)',
     }}>
     {/* Decorative colorful ambient glow */}
     <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-indigo-400/20 to-purple-400/20 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-700" />
@@ -439,13 +439,16 @@ const TeacherView: React.FC<{ data: any }> = ({ data }) => {
           { label: 'Salary Status', value: pendingSalary ? `₹${pendingSalary.netSalary}` : 'All Paid', icon: Wallet, gradient: 'linear-gradient(135deg,#f43f5e 0%,#e11d48 100%)', glow: 'rgba(255,255,255,0.2)', sub: pendingSalary ? 'Pending' : 'No dues' },
           { label: 'My Students', value: data.totalStudents || 0, icon: Users, gradient: 'linear-gradient(135deg,#8b5cf6 0%,#6d28d9 100%)', glow: 'rgba(255,255,255,0.2)', sub: 'Across all classes' },
           { label: 'Assigned Classes', value: data.assignedClasses?.length || 0, icon: School, gradient: 'linear-gradient(135deg,#f59e0b 0%,#d97706 100%)', glow: 'rgba(255,255,255,0.2)', sub: 'Active assignments' },
-          { label: "Today's Att.", value: `${rate}%`, icon: Clock, gradient: 'linear-gradient(135deg,#10b981 0%,#059669 100%)', glow: 'rgba(255,255,255,0.2)', sub: `${present}P · ${absent}A` },
-        ].map((s, i) => <StatCard key={i} {...(s as StatCardProps)} />)}
+          { label: "Today's Att.", value: `${rate}%`, icon: Clock, gradient: 'linear-gradient(135deg,#10b981 0%,#059669 100%)', glow: 'rgba(255,255,255,0.2)', sub: `${present}P · ${absent}A`, link: '/teacher-attendance' },
+          { label: 'Marks Entry', value: 'Enter', icon: PenTool, gradient: 'linear-gradient(135deg,#ec4899 0%,#e11d48 100%)', glow: 'rgba(255,255,255,0.2)', sub: 'Update grades', link: '/exams' },
+          { label: 'Fee Pay', value: 'Pay', icon: CreditCard, gradient: 'linear-gradient(135deg,#f97316 0%,#d97706 100%)', glow: 'rgba(255,255,255,0.2)', sub: 'Clear dues', link: '/fee-payment' },
+          { label: 'Leave Apply', value: 'Apply', icon: FileText, gradient: 'linear-gradient(135deg,#06b6d4 0%,#2563eb 100%)', glow: 'rgba(255,255,255,0.2)', sub: 'Request leave', link: '/leave/request-log' },
+        ].map((stat, i) => <StatCard key={i} {...(stat as StatCardProps)} />)}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         {/* Timetable */}
-        <ChartCard>
+        <ChartCard className="border border-slate-100">
           <SectionHeader title="Today's Schedule" subtitle={new Date().toLocaleDateString('en-IN', { weekday: 'long' })} icon={CalendarDays} iconColor="#06b6d4" />
           <div className="space-y-3 max-h-[240px] overflow-y-auto pr-1">
             {data.timetableToday?.length > 0 ? data.timetableToday.map((slot: any, idx: number) => (
