@@ -21,6 +21,7 @@ const DashboardPage = lazy(() => import('../pages/dashboard/DashboardPage'));
 const StudentListPage = lazy(() => import('../pages/students/StudentListPage'));
 const StudentFormPage = lazy(() => import('../pages/students/StudentFormPage'));
 const StudentProfilePage = lazy(() => import('../pages/students/StudentProfilePage'));
+const StudentAdmitCardViewPage = lazy(() => import('../pages/students/StudentAdmitCardViewPage').then((mod) => ({ default: mod.StudentAdmitCardViewPage })));
 const TeacherListPage = lazy(() => import('../pages/teachers/TeacherListPage'));
 const TeacherFormPage = lazy(() => import('../pages/teachers/TeacherFormPage'));
 const TeacherProfilePage = lazy(() => import('../pages/teachers/TeacherProfilePage'));
@@ -208,6 +209,10 @@ export const router = createBrowserRouter([
       {
         path: 'exams/:examId/report-card/:studentId',
         element: withSuspense(<ReportCardPage />),
+      },
+      {
+        path: 'admit-card-view/:id',
+        element: withSuspense(<StudentAdmitCardViewPage />),
       },
       {
         path: 'exams/paper-generator',

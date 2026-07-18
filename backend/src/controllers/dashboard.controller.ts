@@ -399,6 +399,17 @@ export const getStudentDashboard = async (req: AuthRequest, res: Response, next:
       orderBy: { createdAt: 'desc' }
     });
 
+    // Published Admit Cards
+    const admitCards = student.classId ? await prisma.exam.findMany({
+      where: {
+        classes: { some: { id: student.classId } },
+        admitCardPublished: true
+      },
+      include: {
+        examPlans: { include: { subject: true }, orderBy: { examDate: 'asc' } }
+      }
+    }) : [];
+
     const { medicalInfo, ...studentWithoutMedical } = student;
 
     successResponse(res, {
@@ -415,7 +426,8 @@ export const getStudentDashboard = async (req: AuthRequest, res: Response, next:
       upcomingExams,
       feeStatus,
       timetableToday,
-      announcements
+      announcements,
+      admitCards
     }, 'Student dashboard data fetched successfully');
   } catch (error) {
     next(error);

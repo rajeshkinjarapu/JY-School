@@ -172,18 +172,20 @@ model Attendance {
 }
 
 model Exam {
-  id           String     @id @default(uuid())
-  name         String
-  term         String     // "Term 1", "Term 2", "Final"
-  examDate     DateTime
-  maxMarks     Float      @default(100)
-  passingMarks Float      @default(40)
-  subjects     Json?
-  createdAt    DateTime   @default(now())
+  id                 String     @id @default(uuid())
+  name               String
+  term               String     // "Term 1", "Term 2", "Final"
+  examDate           DateTime
+  maxMarks           Float      @default(100)
+  passingMarks       Float      @default(40)
+  subjects           Json?
+  admitCardPublished Boolean    @default(false)
+  admitCardSettings  Json?
+  createdAt          DateTime   @default(now())
 
-  marks        Mark[]
-  examPlans    ExamPlan[]
-  classes      Class[]
+  marks              Mark[]
+  examPlans          ExamPlan[]
+  classes            Class[]
 }
 
 

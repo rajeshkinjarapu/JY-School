@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { authenticate, authorize } from '../middlewares/auth';
-import { getAll, getById, create, update, deleteExam, getResults } from '../controllers/exams.controller';
+import { getAll, getById, create, update, deleteExam, getResults, updateAdmitCardSettings } from '../controllers/exams.controller';
 
 const router = Router();
 
@@ -11,6 +11,7 @@ router.get('/:id', getById);
 router.get('/:id/results', getResults);
 router.post('/', authorize('SUPER_ADMIN', 'ADMIN'), create);
 router.put('/:id', authorize('SUPER_ADMIN', 'ADMIN'), update);
+router.post('/:id/admit-card-settings', authorize('SUPER_ADMIN', 'ADMIN'), updateAdmitCardSettings);
 router.delete('/:id', authorize('SUPER_ADMIN', 'ADMIN'), deleteExam);
 
 export default router;

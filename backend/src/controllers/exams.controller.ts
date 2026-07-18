@@ -173,3 +173,27 @@ export const getResults = async (req: AuthRequest, res: Response, next: NextFunc
 
   successResponse(res, ranked, 'Exam results fetched');
 };
+
+export const updateAdmitCardSettings = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const { admitCardPublished, admitCardSettings } = req.body;
+
+    const exam = await prisma.exam.findUnique({ where: { id } });
+    if (!exam) {
+      return next(createError('Exam not found', 404));
+    }
+
+    const updatedExam = await prisma.exam.update({
+      where: { id },
+      data: {
+        admitCardPublished: admitCardPublished !== undefined ? admitCardPublished : exam.admitCardPublished,
+        admitCardSettings: admitCardSettings !== undefined ? admitCardSettings : exam.admitCardSettings,
+      },
+    });
+
+    successResponse(res, updatedExam, 'Admit card settings updated successfully');
+  } catch (error) {
+    next(error);
+  }
+};

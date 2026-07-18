@@ -613,6 +613,24 @@ const StudentView: React.FC<{ data: any }> = ({ data }) => {
         </ChartCard>
       </div>
 
+      {data.admitCards?.length > 0 && (
+        <ChartCard>
+          <SectionHeader title="My Admit Cards" subtitle="Available to download" icon={BookMarked} iconColor="#ec4899" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+            {data.admitCards.map((exam: any) => (
+              <div key={exam.id} className="p-4 rounded-xl border border-pink-100 bg-pink-50 hover:bg-pink-100 transition-colors cursor-pointer group" onClick={() => window.open(`/admit-card-view/${exam.id}`, '_blank')}>
+                <div className="flex justify-between items-start mb-2">
+                  <span className="text-xs font-black uppercase tracking-wider text-pink-600">Admit Card</span>
+                  <BookMarked className="w-4 h-4 text-pink-500" />
+                </div>
+                <h4 className="text-sm font-bold text-slate-800 group-hover:text-pink-700 transition-colors">{exam.name}</h4>
+                <p className="text-xs font-semibold text-slate-500 mt-1">Tap to View & Download</p>
+              </div>
+            ))}
+          </div>
+        </ChartCard>
+      )}
+
       {data.upcomingExams?.length > 0 && (
         <ChartCard>
           <SectionHeader title="Upcoming Exams" subtitle="Scheduled examinations" icon={BookMarked} iconColor="#f43f5e" />
