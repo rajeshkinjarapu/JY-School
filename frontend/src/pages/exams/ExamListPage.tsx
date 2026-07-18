@@ -892,7 +892,7 @@ export const ExamListPage: React.FC = () => {
                           }}
                           className="w-4 h-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500"
                         />
-                        {c.name}-{c.section}
+                        {c.name}-{c.section} <span className="text-xs font-normal text-gray-500 ml-1">({c._count?.students || 0} students)</span>
                       </label>
                     );
                   })}

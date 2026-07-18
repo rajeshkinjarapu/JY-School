@@ -1,0 +1,1 @@
+const { PrismaClient } = require('@prisma/client'); const prisma = new PrismaClient(); async function main() { const classes = await prisma.class.findMany({ include: { _count: { select: { students: true } } } }); classes.forEach(c => console.log(c.name+'-'+c.section+': '+c._count.students+' students, id: '+c.id)); } main().finally(() => prisma.());
