@@ -774,7 +774,7 @@ export const ExamListPage: React.FC = () => {
                 <span className="text-[11px] sm:text-xs font-black uppercase tracking-wider text-white text-center leading-tight">Examinations List</span>
               </button>
 
-              {isAdmin && (
+              {isAdminOrTeacher && (
                 <>
                   <button onClick={() => setActiveTab('admit-card')} className="group flex flex-col items-center justify-center p-6 rounded-[1.5rem] bg-gradient-to-br from-amber-500 to-orange-500 text-white transition-all gap-3 sm:gap-4 hover:shadow-xl hover:shadow-amber-500/30 hover:-translate-y-1 shadow-md">
                     <div className="w-14 h-14 rounded-2xl bg-white/20 flex items-center justify-center group-hover:scale-110 transition-transform">
@@ -782,8 +782,6 @@ export const ExamListPage: React.FC = () => {
                     </div>
                     <span className="text-[11px] sm:text-xs font-black uppercase tracking-wider text-white text-center leading-tight">Admit Card</span>
                   </button>
-
-                  {/* Add Online Exam button removed */}
                 </>
               )}
 
