@@ -19,15 +19,15 @@ export const StudentAdmitCardViewPage: React.FC = () => {
         const [studentRes, examRes, plansRes] = await Promise.all([
           studentId ? api.get(`/api/students/${studentId}`) : api.get('/api/dashboard/student'),
           api.get(`/api/exams/${id}`),
-          api.get(`/api/exams/${id}/plans`)
+          api.get(`/api/exams-extended/plans?examId=${id}`)
         ]);
 
-        const studentData = studentId ? studentRes.data : studentRes.data.student;
+        const studentData = studentId ? studentRes.data : studentRes.data?.student;
 
         setData({
           student: studentData,
           exam: examRes.data,
-          examPlans: plansRes.data
+          examPlans: plansRes.data?.data || plansRes.data || []
         });
       } catch (err) {
         toast.error('Failed to load admit card');
