@@ -126,7 +126,6 @@ export const MarksEntryPage: React.FC = () => {
     : subjects.filter(s => s.id === selectedSubjectId);
 
   return (
-  return (
     <div className="bg-slate-50 dark:bg-slate-900 min-h-screen font-sans overflow-x-hidden flex flex-col">
       
       {/* Header Section */}
