@@ -182,7 +182,19 @@ export const bulkImport = async (req: AuthRequest, res: Response, next: NextFunc
     const workbook = XLSX.readFile(filePath);
     const sheetName = workbook.SheetNames[0];
     const sheet = workbook.Sheets[sheetName];
-    const results = XLSX.utils.sheet_to_json<any>(sheet).filter(r => r.Name || r.name || r['Student Name'] || r['First Name']);
+    const rawResults = XLSX.utils.sheet_to_json<any>(sheet);
+    
+    // Normalize keys to support case-insensitive headers like "STUDENT NAME"
+    const results = rawResults.map(r => {
+      const normalizedRow: any = {};
+      for (const key in r) {
+        // Keep original key, but also add a lowercase version with spaces removed for easier access
+        normalizedRow[key] = r[key];
+        const simpleKey = key.toLowerCase().replace(/\s+/g, '');
+        normalizedRow[simpleKey] = r[key];
+      }
+      return normalizedRow;
+    }).filter(r => r.name || r.studentname || r.firstname);
 
     if (results.length > 500) {
       return next(createError('Please upload maximum 500 students at a time', 400));
@@ -196,12 +208,12 @@ export const bulkImport = async (req: AuthRequest, res: Response, next: NextFunc
 
     for (const row of results) {
       try {
-        const name = row.Name || row.name || row['Student Name'] || row['First Name'];
-        const phone = row.Phone || row.phone || row['Mobile No'] || row['Mobile'];
+        const name = row.name || row.studentname || row.firstname;
+        const phone = row.phone || row.mobileno || row.mobile;
         
-        let classId = row.ClassId || row.classId || null;
-        const className = row.ClassName || row.className || row.Class || row.class || row['Class Name'];
-        const section = row.Section || row.section || row['Section Name'];
+        let classId = row.classid || null;
+        const className = row.classname || row.class || null;
+        const section = row.section || row.sectionname;
 
         if (!classId && className) {
           const clsName = String(className).trim();
@@ -226,20 +238,20 @@ export const bulkImport = async (req: AuthRequest, res: Response, next: NextFunc
           classId = cls.id;
         }
 
-        const gender = row.Gender || row.gender || row['Gender'] || null;
-        const address = row.Address || row.address || row['Address'] || null;
-        const bloodGroup = row.BloodGroup || row.bloodGroup || row['Blood Group'] || null;
-        const photoUrl = row.PhotoUrl || row.photourl || row.Photo || row.photo || null;
-        const fatherName = row.FatherName || row.fatherName || row['Father Name'] || null;
-        const motherName = row.MotherName || row.motherName || row['Mother Name'] || null;
-        const aadharNo = row.AadharNo || row.aadharNo || row.Aadhar || row.aadhar || row['Aadhar No'] || row['Aadhar Number'] || null;
-        const penNumber = row.PenNumber || row.penNumber || row.Pen || row.pen || row['PEN Number'] || null;
+        const gender = row.gender || null;
+        const address = row.address || null;
+        const bloodGroup = row.bloodgroup || null;
+        const photoUrl = row.photourl || row.photo || null;
+        const fatherName = row.fathername || null;
+        const motherName = row.mothername || null;
+        const aadharNo = row.aadharno || row.aadhar || row.aadharnumber || null;
+        const penNumber = row.pennumber || row.pen || null;
 
-        const rollNo = row.StudentId || row.studentId || row.RollNo || row.rollNo || row['Roll No'] || row['Student ID'] || generateRollNo(currentStudentCount + 1);
+        const rollNo = row.studentid || row.rollno || generateRollNo(currentStudentCount + 1);
         const email = rollNo; // UserID is always Student ID
         
         // Password is explicitly provided, or defaults to Phone number, or RollNo if no phone
-        const password = row.Password || row.password || phone || rollNo;
+        const password = row.password || phone || rollNo;
 
         if (!name) {
           failed.push({ row, reason: 'Name is required' });
@@ -420,8 +432,9 @@ export const bulkUploadPhotos = async (req: AuthRequest, res: Response, next: Ne
         continue;
       }
       
-      // Extract Roll No assuming format like JY26-0001.jpg
-      const rollNo = path.basename(fileName, ext);
+      // Extract Roll No using regex (e.g. JY26-0047) to allow names like "JY26-0047 Charan.jpg"
+      const rollMatch = fileName.match(/(JY\d{2}-\d+)/i);
+      const rollNo = rollMatch ? rollMatch[1].toUpperCase() : path.basename(fileName, ext).trim();
       
       const student = await prisma.student.findUnique({
         where: { rollNo },

@@ -37,17 +37,19 @@ const fileFilter = (
   cb: multer.FileFilterCallback
 ): void => {
   const ext = path.extname(file.originalname).toLowerCase();
-  const allowedExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.pdf', '.doc', '.docx', '.xls', '.xlsx', '.csv'];
+  const allowedExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.pdf', '.doc', '.docx', '.xls', '.xlsx', '.csv', '.zip'];
   
   if (
     imageTypes.includes(file.mimetype) ||
     docTypes.includes(file.mimetype) ||
     sheetTypes.includes(file.mimetype) ||
+    file.mimetype === 'application/zip' ||
+    file.mimetype === 'application/x-zip-compressed' ||
     allowedExtensions.includes(ext)
   ) {
     cb(null, true);
   } else {
-    cb(new Error('Only images (jpeg, png, gif, webp), documents (pdf, doc, docx), and spreadsheets (xlsx, csv) are allowed'));
+    cb(new Error('Only images, documents, spreadsheets, and zip files are allowed'));
   }
 };
 

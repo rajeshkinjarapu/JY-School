@@ -45,6 +45,7 @@ export const StudentListPage: React.FC = () => {
       const data = res.data;
       toast.success(`Import complete! Successfully added ${data.success} students.`, { id: importToast, duration: 4000 });
       queryClient.invalidateQueries({ queryKey: ['students'] });
+      queryClient.invalidateQueries({ queryKey: ['classes'] });
     } catch (err: any) {
       toast.error(err.message || 'Bulk import failed. Please verify format rules.', { id: importToast });
     } finally {
