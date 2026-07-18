@@ -838,19 +838,7 @@ export const ExamListPage: React.FC = () => {
                 </>
               )}
 
-              <button onClick={() => setActiveTab('results')} className="group flex flex-col items-center justify-center p-6 rounded-[1.5rem] bg-gradient-to-br from-blue-500 to-cyan-600 text-white transition-all gap-3 sm:gap-4 hover:shadow-xl hover:shadow-blue-500/30 hover:-translate-y-1 shadow-md">
-                <div className="w-14 h-14 rounded-2xl bg-white/20 flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <Award className="w-7 h-7" />
-                </div>
-                <span className="text-[11px] sm:text-xs font-black uppercase tracking-wider text-white text-center leading-tight">Results</span>
-              </button>
 
-              <button onClick={() => setActiveTab('progress-card')} className="group flex flex-col items-center justify-center p-6 rounded-[1.5rem] bg-gradient-to-br from-rose-500 to-red-600 text-white transition-all gap-3 sm:gap-4 hover:shadow-xl hover:shadow-rose-500/30 hover:-translate-y-1 shadow-md">
-                <div className="w-14 h-14 rounded-2xl bg-white/20 flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <Award className="w-7 h-7" />
-                </div>
-                <span className="text-[11px] sm:text-xs font-black uppercase tracking-wider text-white text-center leading-tight">Progress Card</span>
-              </button>
             </div>
           </div>
         )}
