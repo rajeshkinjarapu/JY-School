@@ -17,7 +17,7 @@ export const TeacherAdmitCardsPage: React.FC = () => {
     const fetchExams = async () => {
       try {
         const res = await api.get('/api/exams');
-        setExams(res.data);
+        setExams(res.data?.data || res.data || []);
       } catch (err) {
         console.error('Failed to fetch exams', err);
       } finally {
@@ -36,7 +36,7 @@ export const TeacherAdmitCardsPage: React.FC = () => {
       setLoading(true);
       try {
         const res = await api.get(`/api/classes/${selectedClassId}/students`);
-        setStudents(res.data || []);
+        setStudents(res.data?.data || res.data || []);
       } catch (e) {
         console.error('Error fetching students', e);
       } finally {

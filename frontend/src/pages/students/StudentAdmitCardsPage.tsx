@@ -12,7 +12,8 @@ export const StudentAdmitCardsPage: React.FC = () => {
       try {
         const res = await api.get('/api/exams');
         // Filter exams that are published
-        const publishedExams = (res.data || []).filter((e: any) => e.admitCardPublished);
+        const examsList = res.data?.data || res.data || [];
+        const publishedExams = examsList.filter((e: any) => e.admitCardPublished);
         setExams(publishedExams);
       } catch (err) {
         console.error('Failed to fetch exams', err);

@@ -45,8 +45,8 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
           api.get(`/api/classes/${selectedClassId}/students`),
           api.get(`/api/exams/${selectedExamId}/plans`)
         ]);
-        setStudents(studentsRes.data || []);
-        setExamPlans(plansRes.data || []);
+        setStudents(studentsRes.data?.data || studentsRes.data || []);
+        setExamPlans(plansRes.data?.data || plansRes.data || []);
       } catch (e) {
         console.error('Error fetching admit card data', e);
       } finally {
