@@ -5,8 +5,12 @@ import { Search, UserPlus, FileDown, Trash2, Eye, Upload, Users } from 'lucide-r
 import toast from 'react-hot-toast';
 import { Link } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useAuth } from '../../hooks/useAuth';
 
 export const StudentListPage: React.FC = () => {
+  const { user } = useAuth();
+  const isSuperAdmin = user?.role === 'SUPER_ADMIN';
+
   const [search, setSearch] = useState('');
   const [classId, setClassId] = useState('');
   const queryClient = useQueryClient();
@@ -144,7 +148,7 @@ export const StudentListPage: React.FC = () => {
       {/* No Duplicate Page Header */}
 
       {/* Search & Action Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white dark:bg-gray-900 p-4 rounded-2xl border border-gray-150 dark:border-gray-800 shadow-sm">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white dark:bg-slate-900/80 p-4 rounded-2xl border border-gray-150 dark:border-indigo-900/50 shadow-sm backdrop-blur-sm">
         <div className="flex-1 relative flex items-center gap-3">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-3 w-4 h-4 text-indigo-500" />
@@ -171,23 +175,29 @@ export const StudentListPage: React.FC = () => {
               <option key={c.id} value={c.id}>{c.name}-{c.section}</option>
             ))}
           </select>
-          <button onClick={exportStudents} className="flex items-center gap-1.5 px-3.5 py-2.5 text-sm font-bold text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-gray-100 transition-all cursor-pointer">
-            <FileDown className="w-4 h-4" /> Export
-          </button>
           
-          <input type="file" ref={photoInputRef} onChange={handlePhotoImport} className="hidden" accept=".zip" />
-          <button onClick={() => photoInputRef.current?.click()} className="flex items-center gap-1.5 px-3.5 py-2.5 text-sm font-bold text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-gray-100 transition-all cursor-pointer">
-            <Upload className="w-4 h-4" /> Bulk Photos (ZIP)
-          </button>
+          {isSuperAdmin && (
+            <>
+              <button onClick={exportStudents} className="flex items-center gap-1.5 px-3.5 py-2.5 text-sm font-bold text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl hover:bg-gray-100 transition-all cursor-pointer">
+                <FileDown className="w-4 h-4" /> Export
+              </button>
+              
+              <input type="file" ref={photoInputRef} onChange={handlePhotoImport} className="hidden" accept=".zip" />
+              <button onClick={() => photoInputRef.current?.click()} className="flex items-center gap-1.5 px-3.5 py-2.5 text-sm font-bold text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl hover:bg-gray-100 transition-all cursor-pointer">
+                <Upload className="w-4 h-4" /> Bulk Photos (ZIP)
+              </button>
 
-          <input type="file" ref={fileInputRef} onChange={handleImport} className="hidden" accept=".xlsx,.csv" />
-          <button onClick={downloadTemplate} className="flex items-center gap-1.5 px-3.5 py-2.5 text-sm font-bold text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-gray-100 transition-all cursor-pointer">
-            <FileDown className="w-4 h-4" /> Get Template
-          </button>
-          <button onClick={() => fileInputRef.current?.click()} className="flex items-center gap-1.5 px-3.5 py-2.5 text-sm font-bold text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-gray-100 transition-all cursor-pointer">
-            <Upload className="w-4 h-4" /> Import Sheet
-          </button>
-          <Link to="/students/new" className="flex items-center gap-1.5 px-4 py-2.5 text-sm font-extrabold text-white bg-[#243e8b] hover:bg-[#1a2d66] rounded-xl shadow-md shadow-[#243e8b]/20 transition-all cursor-pointer">
+              <input type="file" ref={fileInputRef} onChange={handleImport} className="hidden" accept=".xlsx,.csv" />
+              <button onClick={downloadTemplate} className="flex items-center gap-1.5 px-3.5 py-2.5 text-sm font-bold text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl hover:bg-gray-100 transition-all cursor-pointer">
+                <FileDown className="w-4 h-4" /> Get Template
+              </button>
+              <button onClick={() => fileInputRef.current?.click()} className="flex items-center gap-1.5 px-3.5 py-2.5 text-sm font-bold text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl hover:bg-gray-100 transition-all cursor-pointer">
+                <Upload className="w-4 h-4" /> Import Sheet
+              </button>
+            </>
+          )}
+
+          <Link to="/students/new" className="flex items-center gap-1.5 px-4 py-2.5 text-sm font-extrabold text-white bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 rounded-xl shadow-md shadow-indigo-500/25 transition-all cursor-pointer">
             <UserPlus className="w-4 h-4" /> Add Student
           </Link>
         </div>
@@ -197,26 +207,26 @@ export const StudentListPage: React.FC = () => {
       {loading ? (
         <LoadingSpinner size="lg" className="py-12" />
       ) : (
-        <div className="bg-white dark:bg-gray-900 border border-gray-150 dark:border-gray-800 rounded-3xl shadow-sm overflow-hidden">
+        <div className="bg-white dark:bg-slate-900/80 border border-gray-150 dark:border-indigo-900/50 rounded-3xl shadow-sm overflow-hidden backdrop-blur-sm">
           
           {/* Mobile View */}
-          <div className="md:hidden flex flex-col gap-3 p-3 sm:p-4 bg-gray-50/50 dark:bg-gray-900/50">
+          <div className="md:hidden flex flex-col gap-3 p-3 sm:p-4 bg-gray-50/50 dark:bg-slate-900/50">
             {students.map((student: any, idx: number) => {
               const name = student.user?.name || 'Student';
               const photoUrl = student.user?.photoUrl;
               const className = student.class?.name || '—';
               const section = student.class?.section || '—';
               return (
-                <div key={student.id} className="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-sm border border-gray-150 dark:border-gray-700 flex items-center gap-3 relative overflow-visible mt-2">
-                  <div className="absolute -top-2.5 -left-2.5 w-7 h-7 bg-indigo-500 rounded-full flex items-center justify-center text-white font-black text-[10px] shadow-lg border-2 border-white dark:border-gray-800 z-10">
+                <div key={student.id} className="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-gray-150 dark:border-indigo-900/50 flex items-center gap-3 relative overflow-visible mt-2">
+                  <div className="absolute -top-2.5 -left-2.5 w-7 h-7 bg-indigo-500 rounded-full flex items-center justify-center text-white font-black text-[10px] shadow-lg border-2 border-white dark:border-slate-800 z-10">
                     {idx + 1}
                   </div>
                   
                   <div className="shrink-0 pl-2">
                     {photoUrl ? (
-                      <img src={photoUrl.startsWith('http') ? photoUrl : `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${photoUrl.startsWith('/') ? photoUrl : `/${photoUrl}`}`} alt={name} className="w-14 h-14 rounded-2xl object-cover shadow-md border-2 border-white dark:border-gray-700" />
+                      <img src={photoUrl.startsWith('http') ? photoUrl : `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${photoUrl.startsWith('/') ? photoUrl : `/${photoUrl}`}`} alt={name} className="w-14 h-14 rounded-2xl object-cover shadow-md border-2 border-white dark:border-slate-700" />
                     ) : (
-                      <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${getColor(name)} flex items-center justify-center text-white font-black text-xl shadow-md border-2 border-white dark:border-gray-700`}>
+                      <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${getColor(name)} flex items-center justify-center text-white font-black text-xl shadow-md border-2 border-white dark:border-slate-700`}>
                         {getInitials(name)}
                       </div>
                     )}
@@ -233,7 +243,7 @@ export const StudentListPage: React.FC = () => {
                   </div>
                   
                   <div className="shrink-0">
-                    <Link to={`/students/${student.id}`} className="flex items-center justify-center w-10 h-10 bg-gray-50 dark:bg-gray-700/50 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 text-gray-400 hover:text-indigo-600 rounded-xl transition-all shadow-sm border border-gray-200 dark:border-gray-600 cursor-pointer">
+                    <Link to={`/students/${student.id}`} className="flex items-center justify-center w-10 h-10 bg-gray-50 dark:bg-slate-700/50 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 text-gray-400 hover:text-indigo-600 rounded-xl transition-all shadow-sm border border-gray-200 dark:border-slate-600 cursor-pointer">
                       <Eye className="w-4 h-4" />
                     </Link>
                   </div>
@@ -246,7 +256,7 @@ export const StudentListPage: React.FC = () => {
           <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-sm text-left">
               <thead>
-                <tr className="bg-gray-50/80 dark:bg-gray-800/40 border-b border-gray-100 dark:border-gray-800">
+                <tr className="bg-slate-50/80 dark:bg-slate-800/60 border-b border-gray-100 dark:border-indigo-900/40">
                   <th className="px-5 py-4 text-[11px] font-extrabold uppercase tracking-wider text-gray-400">#</th>
                   <th className="px-5 py-4 text-[11px] font-extrabold uppercase tracking-wider text-gray-400">Photo</th>
                   <th className="px-5 py-4 text-[11px] font-extrabold uppercase tracking-wider text-gray-400">Student Name</th>
@@ -370,7 +380,7 @@ export const StudentListPage: React.FC = () => {
 
           {/* Table Footer */}
           {students.length > 0 && (
-            <div className="px-5 py-3 border-t border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/20 flex items-center justify-between">
+            <div className="px-5 py-3 border-t border-gray-100 dark:border-indigo-900/50 bg-slate-50/50 dark:bg-slate-800/40 flex items-center justify-between">
               <span className="text-xs text-gray-400 font-semibold">
                 Showing <span className="text-gray-700 dark:text-gray-200 font-bold">{students.length}</span> student{students.length !== 1 ? 's' : ''}
               </span>
