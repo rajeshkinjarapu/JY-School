@@ -217,7 +217,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
   );
 
   const sidebarStyle = {
-    background: 'linear-gradient(180deg, #0f1729 0%, #111827 60%, #0d1117 100%)',
+    background: 'linear-gradient(180deg, #312e81 0%, #2e1065 60%, #1e1b4b 100%)',
     borderRight: '1px solid rgba(255,255,255,0.06)',
   };
 

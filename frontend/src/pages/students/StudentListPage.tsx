@@ -148,7 +148,7 @@ export const StudentListPage: React.FC = () => {
       {/* No Duplicate Page Header */}
 
       {/* Search & Action Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white dark:bg-slate-900/80 p-4 rounded-2xl border border-gray-150 dark:border-indigo-900/50 shadow-sm backdrop-blur-sm">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white/80 dark:bg-white/5 p-4 rounded-2xl border border-gray-150 dark:border-white/10 shadow-sm backdrop-blur-xl">
         <div className="flex-1 relative flex items-center gap-3">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-3 w-4 h-4 text-indigo-500" />
@@ -157,7 +157,7 @@ export const StudentListPage: React.FC = () => {
               placeholder="Search by name or Student ID..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-9 pr-4 py-2.5 text-sm bg-indigo-50/30 dark:bg-gray-800/50 border border-indigo-100 dark:border-gray-700 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500/50 font-medium transition-all"
+              className="w-full pl-9 pr-4 py-2.5 text-sm bg-indigo-50/30 dark:bg-white/5 border border-indigo-100 dark:border-white/10 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500/50 font-medium transition-all text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-300"
             />
           </div>
           <span className="hidden sm:inline-flex items-center justify-center px-3 py-2 text-xs font-black text-indigo-600 bg-indigo-100 rounded-lg whitespace-nowrap">
@@ -168,7 +168,7 @@ export const StudentListPage: React.FC = () => {
           <select
             value={classId}
             onChange={(e) => setClassId(e.target.value)}
-            className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2.5 text-sm font-semibold outline-none cursor-pointer"
+            className="bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl px-3 py-2.5 text-sm font-semibold outline-none cursor-pointer text-gray-900 dark:text-white"
           >
             <option value="">All Classes</option>
             {classes.map((c: any) => (
@@ -178,20 +178,20 @@ export const StudentListPage: React.FC = () => {
           
           {isSuperAdmin && (
             <>
-              <button onClick={exportStudents} className="flex items-center gap-1.5 px-3.5 py-2.5 text-sm font-bold text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl hover:bg-gray-100 transition-all cursor-pointer">
+              <button onClick={exportStudents} className="flex items-center gap-1.5 px-3.5 py-2.5 text-sm font-bold text-gray-600 dark:text-white bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl hover:bg-gray-100 dark:hover:bg-white/10 transition-all cursor-pointer">
                 <FileDown className="w-4 h-4" /> Export
               </button>
               
               <input type="file" ref={photoInputRef} onChange={handlePhotoImport} className="hidden" accept=".zip" />
-              <button onClick={() => photoInputRef.current?.click()} className="flex items-center gap-1.5 px-3.5 py-2.5 text-sm font-bold text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl hover:bg-gray-100 transition-all cursor-pointer">
+              <button onClick={() => photoInputRef.current?.click()} className="flex items-center gap-1.5 px-3.5 py-2.5 text-sm font-bold text-gray-600 dark:text-white bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl hover:bg-gray-100 dark:hover:bg-white/10 transition-all cursor-pointer">
                 <Upload className="w-4 h-4" /> Bulk Photos (ZIP)
               </button>
 
               <input type="file" ref={fileInputRef} onChange={handleImport} className="hidden" accept=".xlsx,.csv" />
-              <button onClick={downloadTemplate} className="flex items-center gap-1.5 px-3.5 py-2.5 text-sm font-bold text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl hover:bg-gray-100 transition-all cursor-pointer">
+              <button onClick={downloadTemplate} className="flex items-center gap-1.5 px-3.5 py-2.5 text-sm font-bold text-gray-600 dark:text-white bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl hover:bg-gray-100 dark:hover:bg-white/10 transition-all cursor-pointer">
                 <FileDown className="w-4 h-4" /> Get Template
               </button>
-              <button onClick={() => fileInputRef.current?.click()} className="flex items-center gap-1.5 px-3.5 py-2.5 text-sm font-bold text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl hover:bg-gray-100 transition-all cursor-pointer">
+              <button onClick={() => fileInputRef.current?.click()} className="flex items-center gap-1.5 px-3.5 py-2.5 text-sm font-bold text-gray-600 dark:text-white bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl hover:bg-gray-100 dark:hover:bg-white/10 transition-all cursor-pointer">
                 <Upload className="w-4 h-4" /> Import Sheet
               </button>
             </>
@@ -207,26 +207,26 @@ export const StudentListPage: React.FC = () => {
       {loading ? (
         <LoadingSpinner size="lg" className="py-12" />
       ) : (
-        <div className="bg-white dark:bg-slate-900/80 border border-gray-150 dark:border-indigo-900/50 rounded-3xl shadow-sm overflow-hidden backdrop-blur-sm">
+        <div className="bg-white/80 dark:bg-white/5 border border-gray-150 dark:border-white/10 rounded-3xl shadow-sm overflow-hidden backdrop-blur-xl">
           
           {/* Mobile View */}
-          <div className="md:hidden flex flex-col gap-3 p-3 sm:p-4 bg-gray-50/50 dark:bg-slate-900/50">
+          <div className="md:hidden flex flex-col gap-3 p-3 sm:p-4 bg-gray-50/50 dark:bg-transparent">
             {students.map((student: any, idx: number) => {
               const name = student.user?.name || 'Student';
               const photoUrl = student.user?.photoUrl;
               const className = student.class?.name || '—';
               const section = student.class?.section || '—';
               return (
-                <div key={student.id} className="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-gray-150 dark:border-indigo-900/50 flex items-center gap-3 relative overflow-visible mt-2">
-                  <div className="absolute -top-2.5 -left-2.5 w-7 h-7 bg-indigo-500 rounded-full flex items-center justify-center text-white font-black text-[10px] shadow-lg border-2 border-white dark:border-slate-800 z-10">
+                <div key={student.id} className="bg-white dark:bg-white/5 p-4 rounded-2xl shadow-sm border border-gray-150 dark:border-white/10 flex items-center gap-3 relative overflow-visible mt-2 backdrop-blur-md">
+                  <div className="absolute -top-2.5 -left-2.5 w-7 h-7 bg-indigo-500 rounded-full flex items-center justify-center text-white font-black text-[10px] shadow-lg border-2 border-white dark:border-indigo-500 z-10">
                     {idx + 1}
                   </div>
                   
                   <div className="shrink-0 pl-2">
                     {photoUrl ? (
-                      <img src={photoUrl.startsWith('http') ? photoUrl : `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${photoUrl.startsWith('/') ? photoUrl : `/${photoUrl}`}`} alt={name} className="w-14 h-14 rounded-2xl object-cover shadow-md border-2 border-white dark:border-slate-700" />
+                      <img src={photoUrl.startsWith('http') ? photoUrl : `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${photoUrl.startsWith('/') ? photoUrl : `/${photoUrl}`}`} alt={name} className="w-14 h-14 rounded-2xl object-cover shadow-md border-2 border-white dark:border-white/10" />
                     ) : (
-                      <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${getColor(name)} flex items-center justify-center text-white font-black text-xl shadow-md border-2 border-white dark:border-slate-700`}>
+                      <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${getColor(name)} flex items-center justify-center text-white font-black text-xl shadow-md border-2 border-white dark:border-white/10`}>
                         {getInitials(name)}
                       </div>
                     )}
@@ -237,13 +237,13 @@ export const StudentListPage: React.FC = () => {
                       {name}
                     </Link>
                     <div className="flex flex-wrap gap-1.5">
-                      <span className="font-mono text-[10px] font-bold text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-900/30 px-2 py-0.5 rounded-md border border-indigo-100 dark:border-indigo-800">{student.rollNo || '—'}</span>
-                      <span className="text-[10px] font-bold text-teal-700 dark:text-teal-300 bg-teal-50 dark:bg-teal-900/30 px-2 py-0.5 rounded-md border border-teal-100 dark:border-teal-800">{className}-{section}</span>
+                      <span className="font-mono text-[10px] font-bold text-indigo-700 dark:text-indigo-200 bg-indigo-50 dark:bg-indigo-500/20 px-2 py-0.5 rounded-md border border-indigo-100 dark:border-indigo-500/30">{student.rollNo || '—'}</span>
+                      <span className="text-[10px] font-bold text-teal-700 dark:text-teal-200 bg-teal-50 dark:bg-teal-500/20 px-2 py-0.5 rounded-md border border-teal-100 dark:border-teal-500/30">{className}-{section}</span>
                     </div>
                   </div>
                   
                   <div className="shrink-0">
-                    <Link to={`/students/${student.id}`} className="flex items-center justify-center w-10 h-10 bg-gray-50 dark:bg-slate-700/50 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 text-gray-400 hover:text-indigo-600 rounded-xl transition-all shadow-sm border border-gray-200 dark:border-slate-600 cursor-pointer">
+                    <Link to={`/students/${student.id}`} className="flex items-center justify-center w-10 h-10 bg-gray-50 dark:bg-white/5 hover:bg-indigo-50 dark:hover:bg-white/10 text-gray-400 hover:text-indigo-600 dark:hover:text-white rounded-xl transition-all shadow-sm border border-gray-200 dark:border-white/10 cursor-pointer">
                       <Eye className="w-4 h-4" />
                     </Link>
                   </div>
@@ -256,8 +256,8 @@ export const StudentListPage: React.FC = () => {
           <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-sm text-left">
               <thead>
-                <tr className="bg-slate-50/80 dark:bg-slate-800/60 border-b border-gray-100 dark:border-indigo-900/40">
-                  <th className="px-5 py-4 text-[11px] font-extrabold uppercase tracking-wider text-gray-400">#</th>
+                <tr className="bg-slate-50/80 dark:bg-white/5 border-b border-gray-100 dark:border-white/10">
+                  <th className="px-5 py-4 text-[11px] font-extrabold uppercase tracking-wider text-gray-400 dark:text-gray-300">#</th>
                   <th className="px-5 py-4 text-[11px] font-extrabold uppercase tracking-wider text-gray-400">Photo</th>
                   <th className="px-5 py-4 text-[11px] font-extrabold uppercase tracking-wider text-gray-400">Student Name</th>
                   <th className="hidden md:table-cell px-5 py-4 text-[11px] font-extrabold uppercase tracking-wider text-gray-400">Student ID</th>
@@ -283,7 +283,7 @@ export const StudentListPage: React.FC = () => {
                   return (
                     <tr
                       key={student.id}
-                      className="hover:bg-indigo-50/50 dark:hover:bg-indigo-900/20 transition-all duration-300 group border-l-4 border-transparent hover:border-indigo-500"
+                      className="hover:bg-indigo-50/50 dark:hover:bg-white/10 transition-all duration-300 group border-l-4 border-transparent hover:border-indigo-500"
                     >
                       {/* Sr No */}
                       <td className="px-5 py-4 text-indigo-400 font-black text-xs">{idx + 1}</td>
@@ -337,7 +337,7 @@ export const StudentListPage: React.FC = () => {
                       </td>
 
                       {/* Mobile No */}
-                      <td className="hidden lg:table-cell px-5 py-4 text-gray-600 dark:text-gray-400 font-mono text-xs">
+                      <td className="hidden lg:table-cell px-5 py-4 text-gray-600 dark:text-gray-300 font-mono text-xs">
                         {mobile}
                       </td>
 
@@ -346,14 +346,14 @@ export const StudentListPage: React.FC = () => {
                         <div className="flex justify-end items-center gap-1.5">
                           <Link
                             to={`/students/${student.id}`}
-                            className="inline-flex items-center gap-1 px-3 py-1.5 text-[11px] font-extrabold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/20 dark:hover:bg-indigo-950/40 rounded-lg transition-all"
+                            className="inline-flex items-center gap-1 px-3 py-1.5 text-[11px] font-extrabold text-indigo-600 dark:text-white bg-indigo-50 hover:bg-indigo-100 dark:bg-white/10 dark:hover:bg-white/20 rounded-lg transition-all"
                             title="View Profile"
                           >
                             <Eye className="w-3.5 h-3.5" /> View
                           </Link>
                           <button
                             onClick={() => handleDelete(student.id)}
-                            className="p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 transition-all cursor-pointer"
+                            className="p-1.5 rounded-lg text-gray-400 dark:text-gray-300 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/20 transition-all cursor-pointer"
                             title="Delete"
                           >
                             <Trash2 className="w-4 h-4" />
@@ -380,7 +380,7 @@ export const StudentListPage: React.FC = () => {
 
           {/* Table Footer */}
           {students.length > 0 && (
-            <div className="px-5 py-3 border-t border-gray-100 dark:border-indigo-900/50 bg-slate-50/50 dark:bg-slate-800/40 flex items-center justify-between">
+            <div className="px-5 py-3 border-t border-gray-100 dark:border-white/10 bg-slate-50/50 dark:bg-white/5 flex items-center justify-between">
               <span className="text-xs text-gray-400 font-semibold">
                 Showing <span className="text-gray-700 dark:text-gray-200 font-bold">{students.length}</span> student{students.length !== 1 ? 's' : ''}
               </span>

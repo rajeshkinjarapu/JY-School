@@ -33,7 +33,7 @@ export const Header: React.FC<HeaderProps> = ({ onMenuClick, title }) => {
   const meta = pageMeta[title] || { emoji: '📋', desc: 'School Management' };
 
   return (
-    <header className="print:hidden sticky top-0 z-30 flex items-center justify-between gap-4 px-5 py-3.5 bg-white/90 dark:bg-slate-900/60 backdrop-blur-xl border-b border-slate-100 dark:border-indigo-900/30 shadow-[0_1px_0_rgba(0,0,0,0.04)] dark:shadow-none">
+    <header className="print:hidden sticky top-0 z-30 flex items-center justify-between gap-4 px-5 py-3.5 bg-white/70 dark:bg-[#1e1b4b]/60 backdrop-blur-xl border-b border-white/20 dark:border-indigo-500/20 shadow-[0_1px_0_rgba(0,0,0,0.04)] dark:shadow-none">
 
       {/* Left: Hamburger + Page Info */}
       <div className="flex items-center gap-3 min-w-0">
