@@ -88,18 +88,20 @@ export const MarksEntryPage: React.FC = () => {
 
   const handleSave = async (isFreeze = false) => {
     const payload = {
-      marks: Object.keys(marksData).map(key => {
-        const [studentId, subjectId] = key.split('_');
-        const subjectInfo = subjects.find(s => s.id === subjectId);
-        return {
-          studentId,
-          examId: id,
-          subjectId,
-          marksObtained: Number(marksData[key]),
-          maxMarks: subjectInfo?.maxMarks || 100,
-          remarks: remarksData[key] || '',
-        };
-      }),
+      marks: Object.keys(marksData)
+        .filter(key => marksData[key] !== '' && marksData[key] !== undefined && !isNaN(Number(marksData[key])))
+        .map(key => {
+          const [studentId, subjectId] = key.split('_');
+          const subjectInfo = subjects.find(s => s.id === subjectId);
+          return {
+            studentId,
+            examId: id,
+            subjectId,
+            marksObtained: Number(marksData[key]),
+            maxMarks: Number(subjectInfo?.maxMarks) || 100,
+            remarks: remarksData[key] || '',
+          };
+        }),
     };
 
     if (payload.marks.length === 0) {
