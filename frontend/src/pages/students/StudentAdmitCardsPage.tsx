@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import api from '../../api/axios';
 import { ExternalLink, BookOpen, AlertCircle } from 'lucide-react';
 import { LoadingSpinner } from '../../components/UI/LoadingSpinner';
 
 export const StudentAdmitCardsPage: React.FC = () => {
+  const navigate = useNavigate();
   const [exams, setExams] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -55,7 +57,7 @@ export const StudentAdmitCardsPage: React.FC = () => {
               
               <div className="mt-auto pt-6 border-t border-gray-100 dark:border-gray-800">
                 <button 
-                  onClick={() => window.open(`/admit-card-view/${exam.id}`, '_blank')}
+                  onClick={() => navigate(`/admit-card-view/${exam.id}`)}
                   className="w-full btn-primary py-3 flex items-center justify-center gap-2 font-bold shadow-md shadow-indigo-200"
                 >
                   <ExternalLink className="w-4 h-4" /> Download / View Admit Card

@@ -17,13 +17,7 @@ export const AdmitCardTemplate: React.FC<AdmitCardTemplateProps> = ({ student, e
     <div className="admit-card-wrapper bg-white rounded-none sm:rounded-xl">
       <div className="w-full h-full border-[6px] border-double border-indigo-900 rounded-3xl relative flex flex-col bg-white overflow-hidden">
         
-        {/* Watermark */}
-        <div className="absolute inset-0 z-0 flex items-center justify-center opacity-[0.03] pointer-events-none">
-          <div className="w-96 h-96 bg-indigo-900 rounded-full blur-[100px]"></div>
-        </div>
-        <div className="absolute inset-0 z-0 flex items-center justify-center opacity-10 pointer-events-none">
-          <span className="text-[150px] font-black text-indigo-900 -rotate-45 tracking-widest uppercase">JY School</span>
-        </div>
+        {/* Watermark removed as requested */}
 
         {/* Header */}
         <div className="relative z-10 bg-gradient-to-r from-indigo-900 via-blue-800 to-indigo-900 text-white p-6 sm:p-8 flex items-center gap-6 border-b-4 border-amber-400">
@@ -31,15 +25,14 @@ export const AdmitCardTemplate: React.FC<AdmitCardTemplateProps> = ({ student, e
             {logoUrl ? (
               <img src={logoUrl} alt="Logo" className="w-full h-full object-contain p-1" />
             ) : (
-              <span className="text-4xl font-black text-indigo-900">JY</span>
+              <span className="text-4xl font-black text-indigo-900">SV JY</span>
             )}
           </div>
           <div className="flex-1 text-center">
-            <h1 className="text-4xl font-black uppercase tracking-wider text-amber-300 drop-shadow-md mb-2">JY School</h1>
-            <p className="text-sm font-semibold tracking-widest uppercase text-blue-100 mb-2">Excellence in Education</p>
+            <h1 className="text-3xl font-black uppercase tracking-wider text-amber-300 drop-shadow-md mb-2">SRI VENKATESWARA JY SCHOOL</h1>
+            <p className="text-sm font-semibold tracking-widest uppercase text-blue-100 mb-2">(IIT-JEE/NEET Foundation – Olympiads)</p>
             <div className="flex items-center justify-center gap-4 text-xs font-medium text-indigo-100">
-              <span className="flex items-center gap-1"><MapPin className="w-3 h-3"/> 123 Education City, NY</span>
-              <span className="flex items-center gap-1"><Phone className="w-3 h-3"/> +1 234 567 890</span>
+              <span className="flex items-center gap-1"><MapPin className="w-3 h-3"/> Opp. Hero Showroom, SVL Paradise Campus, Narasannapeta</span>
             </div>
           </div>
         </div>
@@ -47,8 +40,8 @@ export const AdmitCardTemplate: React.FC<AdmitCardTemplateProps> = ({ student, e
         {/* Title */}
         <div className="relative z-10 text-center py-5 bg-indigo-50 border-b border-indigo-100">
           <h2 className="text-2xl font-black uppercase tracking-[0.2em] text-indigo-900">Admit Card</h2>
-          <div className="inline-block mt-2 px-6 py-1.5 bg-amber-400 text-indigo-900 font-bold text-sm rounded-full shadow-sm">
-            {exam?.name} (2026-2027)
+          <div className="inline-block mt-2 px-6 py-1.5 bg-amber-400 text-indigo-900 font-bold text-sm rounded-full shadow-sm uppercase tracking-wide">
+            {settings.examTitleOverride || `${exam?.name} (2026-2027)`}
           </div>
         </div>
 
@@ -75,7 +68,7 @@ export const AdmitCardTemplate: React.FC<AdmitCardTemplateProps> = ({ student, e
               </div>
               <div className="col-span-2 bg-indigo-50/50 p-4 rounded-xl border border-indigo-100">
                 <p className="text-[10px] uppercase font-bold text-indigo-400 tracking-wider mb-1">Examination Center</p>
-                <p className="text-base font-bold text-indigo-900">JY School Main Campus, Hall A</p>
+                <p className="text-base font-bold text-indigo-900">{settings.examCenterOverride || 'JY School Main Campus, Hall A'}</p>
               </div>
             </div>
 
@@ -111,16 +104,16 @@ export const AdmitCardTemplate: React.FC<AdmitCardTemplateProps> = ({ student, e
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-indigo-100 bg-white">
-                  {examPlans?.map((plan: any) => (
-                    <tr key={plan.id}>
-                      <td className="py-3 px-4 font-bold text-indigo-950">{new Date(plan.examDate).toLocaleDateString('en-GB')}</td>
-                      <td className="py-3 px-4 text-indigo-800 font-semibold text-xs">{plan.startTime} - {plan.endTime}</td>
-                      <td className="py-3 px-4 font-black text-indigo-900">{plan.subject?.name}</td>
+                  {(settings.schedule?.length > 0 ? settings.schedule : examPlans)?.map((plan: any, i: number) => (
+                    <tr key={plan.id || i}>
+                      <td className="py-3 px-4 font-bold text-indigo-950">{plan.date || plan.examDate ? new Date(plan.date || plan.examDate).toLocaleDateString('en-GB') : '-'}</td>
+                      <td className="py-3 px-4 text-indigo-800 font-semibold text-xs">{plan.timing || `${plan.startTime} - ${plan.endTime}`}</td>
+                      <td className="py-3 px-4 font-black text-indigo-900">{plan.subject?.name || plan.subject}</td>
                       <td className="py-3 px-4 text-indigo-800 font-semibold">{plan.room || '-'}</td>
                       <td className="py-3 px-4 border-l border-indigo-100"></td>
                     </tr>
                   ))}
-                  {(!examPlans || examPlans.length === 0) && (
+                  {(!settings.schedule?.length && (!examPlans || examPlans.length === 0)) && (
                     <tr>
                       <td colSpan={5} className="py-8 text-center text-indigo-400 font-medium">No schedule mapped for this class.</td>
                     </tr>

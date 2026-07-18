@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import api from '../../api/axios';
 import { ExternalLink } from 'lucide-react';
 import { LoadingSpinner } from '../../components/UI/LoadingSpinner';
 
 export const TeacherAdmitCardsPage: React.FC = () => {
+  const navigate = useNavigate();
   const [exams, setExams] = useState<any[]>([]);
   const [selectedExamId, setSelectedExamId] = useState('');
   const [selectedClassId, setSelectedClassId] = useState('');
@@ -111,7 +113,7 @@ export const TeacherAdmitCardsPage: React.FC = () => {
                   </td>
                   <td className="py-4 px-6 text-gray-600 font-medium">{student.rollNo || '-'}</td>
                   <td className="py-4 px-6 text-right">
-                    <button onClick={() => window.open(`/admit-card-view/${selectedExamId}?studentId=${student.id}`, '_blank')} className="btn-secondary text-sm flex items-center gap-2 ml-auto hover:text-indigo-700 hover:bg-indigo-50">
+                    <button onClick={() => navigate(`/admit-card-view/${selectedExamId}?studentId=${student.id}`)} className="btn-secondary text-sm flex items-center gap-2 ml-auto hover:text-indigo-700 hover:bg-indigo-50">
                       <ExternalLink className="w-4 h-4" /> View Admit Card
                     </button>
                   </td>

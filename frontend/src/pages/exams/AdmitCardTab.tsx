@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import api from '../../api/axios';
 import { Printer, User, Calendar, MapPin, Phone, Mail, Globe, Settings, Upload, CheckCircle, Save, ExternalLink } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -6,6 +7,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { AdmitCardTemplate } from '../../components/Exams/AdmitCardTemplate';
 
 export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const isAdmin = user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN';
   const [selectedExamId, setSelectedExamId] = useState('');
@@ -21,6 +23,9 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
   const [instructions, setInstructions] = useState('Candidate must carry this Admit Card to the examination hall.\nElectronic devices including calculators and mobile phones are strictly prohibited.\nCandidate should report to the examination center 30 minutes before commencement.');
   const [signatureUrl, setSignatureUrl] = useState('');
   const [logoUrl, setLogoUrl] = useState('');
+  const [examTitleOverride, setExamTitleOverride] = useState('');
+  const [examCenterOverride, setExamCenterOverride] = useState('');
+  const [schedule, setSchedule] = useState<any[]>([]);
 
   useEffect(() => {
     if (selectedExam) {
@@ -29,6 +34,9 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
       setInstructions(settings.instructions || 'Candidate must carry this Admit Card to the examination hall.\nElectronic devices including calculators and mobile phones are strictly prohibited.\nCandidate should report to the examination center 30 minutes before commencement.');
       setSignatureUrl(settings.signatureUrl || '');
       setLogoUrl(settings.logoUrl || '');
+      setExamTitleOverride(settings.examTitleOverride || '');
+      setExamCenterOverride(settings.examCenterOverride || '');
+      setSchedule(settings.schedule || []);
     }
   }, [selectedExam]);
 
@@ -68,14 +76,17 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
         admitCardSettings: {
           instructions,
           signatureUrl,
-          logoUrl
+          logoUrl,
+          examTitleOverride,
+          examCenterOverride,
+          schedule
         }
       });
       toast.success('Admit Card settings saved successfully!');
       // Update local object to avoid fetching again
       if (selectedExam) {
         selectedExam.admitCardPublished = published;
-        selectedExam.admitCardSettings = { instructions, signatureUrl, logoUrl };
+        selectedExam.admitCardSettings = { instructions, signatureUrl, logoUrl, examTitleOverride, examCenterOverride, schedule };
       }
     } catch (e: any) {
       toast.error('Failed to save settings: ' + e.message);
@@ -160,6 +171,24 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
                 value={instructions} 
                 onChange={e => setInstructions(e.target.value)} 
               />
+              
+              <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mt-4">Exam Title Override</label>
+              <input 
+                type="text" 
+                className="input" 
+                placeholder="e.g. JEE EXAM - 5 (2026 - 2027)" 
+                value={examTitleOverride} 
+                onChange={e => setExamTitleOverride(e.target.value)} 
+              />
+
+              <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mt-4">Examination Center</label>
+              <input 
+                type="text" 
+                className="input" 
+                placeholder="e.g. JY School Main Campus, Hall A" 
+                value={examCenterOverride} 
+                onChange={e => setExamCenterOverride(e.target.value)} 
+              />
             </div>
             
             <div className="space-y-4">
@@ -191,7 +220,63 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
             </div>
           </div>
           
-          <div className="flex justify-end pt-2">
+          {/* Schedule Editor */}
+          <div className="mt-4 border-t border-gray-100 dark:border-gray-800 pt-6">
+            <div className="flex justify-between items-center mb-4">
+              <h4 className="font-bold text-gray-700 dark:text-gray-300">Examination Schedule</h4>
+              <button 
+                onClick={() => setSchedule([...schedule, { date: '', timing: '', subject: '', room: '' }])}
+                className="btn-secondary text-xs"
+              >
+                + Add Row
+              </button>
+            </div>
+            
+            {schedule.length > 0 && (
+              <div className="grid grid-cols-5 gap-2 mb-2 font-semibold text-xs text-gray-500">
+                <div>Date</div>
+                <div>Timing</div>
+                <div>Subject</div>
+                <div>Room</div>
+                <div>Action</div>
+              </div>
+            )}
+            
+            <div className="space-y-2">
+              {schedule.map((row, idx) => (
+                <div key={idx} className="grid grid-cols-5 gap-2">
+                  <input type="date" className="input !py-1 text-sm" value={row.date} onChange={e => {
+                    const newSch = [...schedule];
+                    newSch[idx].date = e.target.value;
+                    setSchedule(newSch);
+                  }} />
+                  <input type="text" className="input !py-1 text-sm" placeholder="10:00 AM - 01:00 PM" value={row.timing} onChange={e => {
+                    const newSch = [...schedule];
+                    newSch[idx].timing = e.target.value;
+                    setSchedule(newSch);
+                  }} />
+                  <input type="text" className="input !py-1 text-sm" placeholder="Subject" value={row.subject} onChange={e => {
+                    const newSch = [...schedule];
+                    newSch[idx].subject = e.target.value;
+                    setSchedule(newSch);
+                  }} />
+                  <input type="text" className="input !py-1 text-sm" placeholder="Room" value={row.room} onChange={e => {
+                    const newSch = [...schedule];
+                    newSch[idx].room = e.target.value;
+                    setSchedule(newSch);
+                  }} />
+                  <button onClick={() => {
+                    setSchedule(schedule.filter((_, i) => i !== idx));
+                  }} className="btn-secondary !text-red-500 !bg-red-50 !py-1 text-sm">Remove</button>
+                </div>
+              ))}
+              {schedule.length === 0 && (
+                <div className="text-sm text-gray-400 italic">No schedule added. Will fallback to default exam plans if available.</div>
+              )}
+            </div>
+          </div>
+
+          <div className="flex justify-end pt-4">
             <button onClick={handleSaveSettings} className="btn-primary flex items-center gap-2">
               <Save className="w-4 h-4" /> Save Configuration
             </button>
@@ -225,7 +310,7 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
                     </td>
                     <td className="py-3 px-4 text-gray-600 font-medium">{student.rollNo || '-'}</td>
                     <td className="py-3 px-4 text-right">
-                      <button onClick={() => window.open(`/admit-card-view/${selectedExamId}?studentId=${student.id}`, '_blank')} className="btn-secondary text-xs flex items-center gap-1 ml-auto">
+                      <button onClick={() => navigate(`/admit-card-view/${selectedExamId}?studentId=${student.id}`)} className="btn-secondary text-xs flex items-center gap-1 ml-auto">
                         <ExternalLink className="w-3.5 h-3.5" /> View Admit Card
                       </button>
                     </td>
