@@ -1087,8 +1087,8 @@ export const ExamListPage: React.FC = () => {
                 <span className="text-xl">📝</span>
               </div>
               <div>
-                <h2 className="text-lg font-black uppercase text-slate-900 dark:text-white tracking-wider drop-shadow-sm">Marks Upload & Entry</h2>
-                <p className="text-xs font-bold text-slate-500 dark:text-indigo-200">Select an examination and class to enter student marks</p>
+                <h2 className="text-lg font-black uppercase text-slate-900 tracking-wider drop-shadow-sm">Marks Upload & Entry</h2>
+                <p className="text-xs font-bold text-slate-600">Select an examination and class to enter student marks</p>
               </div>
             </div>
           </div>
@@ -1099,14 +1099,14 @@ export const ExamListPage: React.FC = () => {
                 <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-indigo-400/20 to-purple-400/20 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-700" />
                 
                 <div className="relative z-10">
-                  <h4 className="font-extrabold text-slate-900 dark:text-white text-xl drop-shadow-sm truncate whitespace-nowrap overflow-hidden" title={exam.name}>{exam.name}</h4>
-                  <p className="text-xs font-bold text-slate-500 dark:text-indigo-200 mt-1.5">Select a class to enter marks:</p>
+                  <h4 className="font-extrabold text-slate-900 text-xl drop-shadow-sm truncate whitespace-nowrap overflow-hidden" title={exam.name}>{exam.name}</h4>
+                  <p className="text-xs font-bold text-slate-600 mt-1.5">Select a class to enter marks:</p>
                 </div>
                 
                 <div className="flex flex-col gap-3 flex-1 mt-5 relative z-10">
                   {(exam.classes || []).map((c: any) => (
-                    <div key={c.id} className="flex gap-2 items-center bg-white/50 dark:bg-black/20 p-2 rounded-2xl border border-white/40 dark:border-white/10 hover:bg-white/80 dark:hover:bg-black/40 transition-colors shadow-sm">
-                      <div className="flex-1 text-sm font-black text-slate-700 dark:text-white px-3 truncate">
+                    <div key={c.id} className="flex gap-2 items-center bg-white/50 dark:bg-black/10 p-2 rounded-2xl border border-white/40 dark:border-white/10 hover:bg-white/80 dark:hover:bg-black/20 transition-colors shadow-sm">
+                      <div className="flex-1 text-sm font-black text-slate-800 px-3 truncate">
                         {c.name}-{c.section}
                       </div>
                       <Link to={`/exams/${exam.id}/entry?classId=${c.id}`} className="px-5 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-bold rounded-xl text-xs shadow-lg shadow-indigo-500/30 transition-all transform hover:-translate-y-0.5 text-center shrink-0">
@@ -1116,7 +1116,7 @@ export const ExamListPage: React.FC = () => {
                   ))}
                   {(!exam.classes || exam.classes.length === 0) && (
                     <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-center">
-                      <p className="text-xs text-amber-600 dark:text-amber-400 font-bold">No classes assigned to this exam</p>
+                      <p className="text-xs text-amber-700 font-bold">No classes assigned to this exam</p>
                     </div>
                   )}
                 </div>
