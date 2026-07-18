@@ -851,13 +851,6 @@ export const ExamListPage: React.FC = () => {
                 </div>
                 <span className="text-[11px] sm:text-xs font-black uppercase tracking-wider text-white text-center leading-tight">Progress Card</span>
               </button>
-
-              <button onClick={() => setActiveTab('jee-progress-card')} className="group flex flex-col items-center justify-center p-6 rounded-[1.5rem] bg-gradient-to-br from-amber-500 to-orange-500 text-white transition-all gap-3 sm:gap-4 hover:shadow-xl hover:shadow-amber-500/30 hover:-translate-y-1 shadow-md">
-                <div className="w-14 h-14 rounded-2xl bg-white/20 flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <Award className="w-7 h-7" />
-                </div>
-                <span className="text-[11px] sm:text-xs font-black uppercase tracking-wider text-white text-center leading-tight">JEE Progress Card</span>
-              </button>
             </div>
           </div>
         )}
@@ -1183,38 +1176,11 @@ export const ExamListPage: React.FC = () => {
 
       {/* ══ TAB 4: ADMIT CARD ══ */}
       {activeTab === 'admit-card' && (
-        <div className="card p-2 h-[80vh] overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800">
-          <div className="flex justify-between items-center p-4 bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-800 mb-2">
-            <div>
-              <h3 className="font-bold text-gray-900 dark:text-white">Admit Card Generator</h3>
-              <p className="text-xs text-gray-500">Standalone tool using Admit Cards.html</p>
-            </div>
-            <a href="/Admit Cards.html" target="_blank" className="btn-primary text-xs flex items-center gap-2">
-              <ExternalLink className="w-4 h-4" /> Open Full Screen
-            </a>
-          </div>
-          <iframe src="/Admit Cards.html" className="w-full h-full border-0 rounded-b-lg"></iframe>
-        </div>
+        <AdmitCardTab exams={exams} />
       )}
 
       {/* ══ TAB 5: PROGRESS CARD ══ */}
       {activeTab === 'progress-card' && user?.role !== 'TEACHER' && (
-        <div className="card p-2 h-[80vh] overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800 mb-6">
-          <div className="flex justify-between items-center p-4 bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-800 mb-2">
-            <div>
-              <h3 className="font-bold text-gray-900 dark:text-white">Progress Card Generator</h3>
-              <p className="text-xs text-gray-500">Standalone tool using JEE Mains Result card with Reports.html</p>
-            </div>
-            <a href="/JEE Mains Result card with Reports.html" target="_blank" className="btn-primary text-xs flex items-center gap-2">
-              <ExternalLink className="w-4 h-4" /> Open Full Screen
-            </a>
-          </div>
-          <iframe src="/JEE Mains Result card with Reports.html" className="w-full h-full border-0 rounded-b-lg"></iframe>
-        </div>
-      )}
-
-      {/* ══ TAB: JEE PROGRESS CARD ══ */}
-      {activeTab === 'jee-progress-card' && (
         <JEEProgressCardTab exams={exams} />
       )}
 
