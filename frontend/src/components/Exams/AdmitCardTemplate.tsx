@@ -10,8 +10,17 @@ interface AdmitCardTemplateProps {
 export const AdmitCardTemplate: React.FC<AdmitCardTemplateProps> = ({ student, exam, examPlans }) => {
   const settings = exam?.admitCardSettings || {};
   const instructions = settings.instructions || 'Candidate must carry this Admit Card to the examination hall.\nElectronic devices including calculators and mobile phones are strictly prohibited.\nCandidate should report to the examination center 30 minutes before commencement.';
-  const signatureUrl = settings.signatureUrl || '';
-  const logoUrl = settings.logoUrl || '';
+  
+  // Resolve relative /uploads/ paths to the backend URL so images load correctly on Vercel
+  const API_BASE = import.meta.env.VITE_API_URL || '';
+  const resolveUrl = (url: string) => {
+    if (!url) return '';
+    if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) return url;
+    return `${API_BASE}${url}`;
+  };
+  
+  const signatureUrl = resolveUrl(settings.signatureUrl || '');
+  const logoUrl = resolveUrl(settings.logoUrl || '');
 
   return (
     <div className="admit-card-wrapper bg-white rounded-none sm:rounded-xl">
