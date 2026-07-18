@@ -137,8 +137,8 @@ export const ExamListPage: React.FC = () => {
   // -------------------------------------------------------------
   const downloadSampleExcel = () => {
     const ws = XLSX.utils.json_to_sheet([
-      { "Student ID": "STU123", "Subject Code": "MATH101", "Marks Obtained": 85, "Remarks": "Good" },
-      { "Student ID": "STU124", "Subject Code": "MATH101", "Marks Obtained": 90, "Remarks": "Excellent" }
+      { "Student ID": "STU123", "Subject": "MATH101", "Marks": 85 },
+      { "Student ID": "STU124", "Subject": "MATH101", "Marks": 90 }
     ]);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Marks");
@@ -162,8 +162,8 @@ export const ExamListPage: React.FC = () => {
         // Map excel columns to backend payload
         const mappedMarks = sheet.map((row: any) => ({
           studentId: row['Student ID'] || row['studentId'] || row['Student Id'],
-          subjectId: row['Subject Code'] || row['subjectId'] || row['Subject Id'], // assuming the backend can resolve by code or id? Wait, backend needs subjectId. The user can enter Subject ID.
-          marksObtained: Number(row['Marks Obtained'] || row['marksObtained'] || row['Marks']),
+          subjectId: row['Subject'] || row['Subject Code'] || row['subjectId'] || row['Subject Id'],
+          marksObtained: Number(row['Marks'] || row['Marks Obtained'] || row['marksObtained']),
           remarks: row['Remarks'] || row['remarks'] || ''
         }));
 
@@ -1182,7 +1182,7 @@ export const ExamListPage: React.FC = () => {
                   <p className="text-xs text-blue-600 dark:text-blue-400 font-semibold mb-2">Instructions:</p>
                   <ul className="text-xs text-blue-600/80 dark:text-blue-400/80 list-disc pl-4 space-y-1">
                     <li>Download the sample Excel file.</li>
-                    <li>Fill in the 'Student ID', 'Subject ID', 'Marks Obtained' columns.</li>
+                    <li>Fill in the 'Student ID', 'Subject', 'Marks' columns.</li>
                     <li>Upload the filled file back here.</li>
                   </ul>
                   <button onClick={downloadSampleExcel} className="mt-3 text-xs font-bold bg-white dark:bg-gray-800 px-3 py-1.5 rounded-md shadow-sm border border-blue-100 dark:border-blue-800 text-blue-600 hover:bg-blue-50 w-full text-center">
