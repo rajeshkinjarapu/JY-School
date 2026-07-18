@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../api/axios';
-import { Printer, Award, User, Star, TrendingUp } from 'lucide-react';
+import { Printer, Award, User, Star, TrendingUp, Layers, BookOpen, Calendar } from 'lucide-react';
 
 
 export const JEEProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {

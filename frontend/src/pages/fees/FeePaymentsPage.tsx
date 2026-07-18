@@ -215,7 +215,7 @@ export const FeePaymentsPage: React.FC = () => {
             <p className="text-indigo-100 mt-1 sm:mt-2 font-medium text-sm sm:text-lg opacity-90 leading-snug">Track paid, pending and overdue tuition invoices.</p>
           </div>
           <div className="flex flex-wrap gap-3">
-            {(user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN' || user?.role === 'ACCOUNTANT' || user?.role === 'TEACHER') && (
+            {(user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN' || user?.role === 'ACCOUNTANT') && (
               <>
                 <button
                   onClick={exportPaymentsExcel}
