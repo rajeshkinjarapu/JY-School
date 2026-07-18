@@ -1,5 +1,5 @@
 import React from 'react';
-import { User, Calendar, MapPin, Phone } from 'lucide-react';
+import { User, Calendar, MapPin } from 'lucide-react';
 
 interface AdmitCardTemplateProps {
   student: any;

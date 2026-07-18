@@ -1,6 +1,6 @@
 import React from 'react';
 import { useAuth } from '../../hooks/useAuth';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import api from '../../api/axios';
 import { LoadingSpinner } from '../../components/UI/LoadingSpinner';
 import { AccountantDashboard } from './AccountantDashboard';
@@ -21,6 +21,7 @@ import {
 /* ─────────────────────────────────────────────────────────── */
 export const DashboardPage: React.FC = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   const roleMap: Record<string, string> = {
     super_admin: 'admin',
