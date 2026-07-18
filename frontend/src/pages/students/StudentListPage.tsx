@@ -197,7 +197,52 @@ export const StudentListPage: React.FC = () => {
         <LoadingSpinner size="lg" className="py-12" />
       ) : (
         <div className="bg-white dark:bg-gray-900 border border-gray-150 dark:border-gray-800 rounded-3xl shadow-sm overflow-hidden">
-          <div className="overflow-x-auto">
+          
+          {/* Mobile View */}
+          <div className="md:hidden flex flex-col gap-3 p-3 sm:p-4 bg-gray-50/50 dark:bg-gray-900/50">
+            {students.map((student: any, idx: number) => {
+              const name = student.user?.name || 'Student';
+              const photoUrl = student.user?.photoUrl;
+              const className = student.class?.name || '—';
+              const section = student.class?.section || '—';
+              return (
+                <div key={student.id} className="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-sm border border-gray-150 dark:border-gray-700 flex items-center gap-3 relative overflow-visible mt-2">
+                  <div className="absolute -top-2.5 -left-2.5 w-7 h-7 bg-indigo-500 rounded-full flex items-center justify-center text-white font-black text-[10px] shadow-lg border-2 border-white dark:border-gray-800 z-10">
+                    {idx + 1}
+                  </div>
+                  
+                  <div className="shrink-0 pl-2">
+                    {photoUrl ? (
+                      <img src={photoUrl.startsWith('http') ? photoUrl : `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${photoUrl.startsWith('/') ? photoUrl : `/${photoUrl}`}`} alt={name} className="w-14 h-14 rounded-2xl object-cover shadow-md border-2 border-white dark:border-gray-700" />
+                    ) : (
+                      <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${getColor(name)} flex items-center justify-center text-white font-black text-xl shadow-md border-2 border-white dark:border-gray-700`}>
+                        {getInitials(name)}
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="flex-1 min-w-0">
+                    <Link to={`/students/${student.id}`} className="font-extrabold text-[15px] text-gray-900 dark:text-white truncate block hover:text-indigo-600 transition-colors mb-1.5">
+                      {name}
+                    </Link>
+                    <div className="flex flex-wrap gap-1.5">
+                      <span className="font-mono text-[10px] font-bold text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-900/30 px-2 py-0.5 rounded-md border border-indigo-100 dark:border-indigo-800">{student.rollNo || '—'}</span>
+                      <span className="text-[10px] font-bold text-teal-700 dark:text-teal-300 bg-teal-50 dark:bg-teal-900/30 px-2 py-0.5 rounded-md border border-teal-100 dark:border-teal-800">{className}-{section}</span>
+                    </div>
+                  </div>
+                  
+                  <div className="shrink-0">
+                    <Link to={`/students/${student.id}`} className="flex items-center justify-center w-10 h-10 bg-gray-50 dark:bg-gray-700/50 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 text-gray-400 hover:text-indigo-600 rounded-xl transition-all shadow-sm border border-gray-200 dark:border-gray-600 cursor-pointer">
+                      <Eye className="w-4 h-4" />
+                    </Link>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Desktop Table View */}
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-sm text-left">
               <thead>
                 <tr className="bg-gray-50/80 dark:bg-gray-800/40 border-b border-gray-100 dark:border-gray-800">
