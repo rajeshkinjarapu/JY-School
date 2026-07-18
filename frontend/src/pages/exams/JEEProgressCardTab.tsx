@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../api/axios';
 import { Printer, Award, User, Star, TrendingUp } from 'lucide-react';
-import jyLogo from '../../assets/jy-logo.png'; // Assuming a logo exists, otherwise we will use a fallback or keep it simple. We can use a div for logo.
+
 
 export const JEEProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
   const [selectedExamId, setSelectedExamId] = useState('');
