@@ -4,7 +4,7 @@ import { Award, Medal, Printer, Download, Star, TrendingUp, Trophy } from 'lucid
 import toast from 'react-hot-toast';
 import { LoadingSpinner } from '../../components/UI/LoadingSpinner';
 import { jsPDF } from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 
 export const ResultsTab: React.FC<{ exams: any[] }> = ({ exams }) => {
   const [selectedExamId, setSelectedExamId] = useState('');
@@ -52,19 +52,13 @@ export const ResultsTab: React.FC<{ exams: any[] }> = ({ exams }) => {
           ${styles}
           <style>
             @media print {
-              @page { margin: 15mm; }
-              body { -webkit-print-color-adjust: exact; print-color-adjust: exact; background: white; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
+              @page { margin: 10mm; size: auto; }
+              body { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; background: white; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
               table { width: 100% !important; border-collapse: collapse !important; table-layout: auto; margin-top: 20px; }
-              th, td { padding: 10px 8px !important; font-size: 10pt !important; border: 1px solid #d1d5db !important; text-align: center; }
+              th, td { padding: 10px 8px !important; font-size: 10pt !important; border: 1px solid #e5e7eb !important; text-align: center; }
               th:nth-child(2), td:nth-child(2) { text-align: left; }
-              /* Clean up headers and borders */
-              .rounded-3xl, .rounded-xl, .rounded-lg, .rounded-full { border-radius: 0 !important; box-shadow: none !important; }
-              .bg-gradient-to-r { background: #f8fafc !important; color: black !important; border: 1px solid #000; padding: 20px !important; }
-              .text-white { color: black !important; }
-              .text-white\\/90, .text-white\\/80 { color: #374151 !important; }
-              .bg-white\\/20 { background: #f1f5f9 !important; border: 1px solid #cbd5e1 !important; }
-              .text-yellow-300 { color: #000 !important; }
-              svg { stroke: #000 !important; }
+              /* Keep rounded corners and gradients in print */
+              svg { stroke: currentColor !important; }
               .no-print { display: none !important; }
             }
           </style>
@@ -87,7 +81,7 @@ export const ResultsTab: React.FC<{ exams: any[] }> = ({ exams }) => {
     try {
       const doc = new jsPDF('p', 'mm', 'a4');
       const title = `Examination Results - ${selectedExam?.name}`;
-      const subtitle = `Class: ${results[0]?.className} | Total Students: ${results.length}`;
+      const subtitle = `Class: ${results[0]?.className}`;
       
       doc.setFontSize(18);
       doc.text(title, 14, 20);
@@ -115,15 +109,15 @@ export const ResultsTab: React.FC<{ exams: any[] }> = ({ exams }) => {
         student.grade || '-'
       ]);
 
-      (doc as any).autoTable({
+      autoTable(doc, {
         startY: 35,
         head: head,
         body: body,
         theme: 'grid',
-        headStyles: { fillColor: [79, 70, 229], textColor: 255, fontStyle: 'bold', halign: 'center' },
+        headStyles: { fillColor: [139, 92, 246], textColor: 255, fontStyle: 'bold', halign: 'center' }, // Purple color to match UI
         bodyStyles: { halign: 'center', textColor: 50 },
         columnStyles: {
-          1: { halign: 'left', fontStyle: 'bold' } // Name column left aligned
+          1: { halign: 'left', fontStyle: 'bold' }
         },
         styles: { fontSize: 9, cellPadding: 4 }
       });
@@ -209,10 +203,6 @@ export const ResultsTab: React.FC<{ exams: any[] }> = ({ exams }) => {
                   <span className="bg-white/20 px-3 py-1 rounded-lg backdrop-blur-sm border border-white/10">{results[0]?.className}</span>
                 </div>
               </div>
-              <div className="hidden sm:block text-right">
-                <p className="text-sm font-bold text-white/80 uppercase tracking-widest mb-1">Total Students</p>
-                <p className="text-4xl font-black">{results.length}</p>
-              </div>
             </div>
           </div>
 
@@ -256,7 +246,6 @@ export const ResultsTab: React.FC<{ exams: any[] }> = ({ exams }) => {
                       </td>
                       <td className="p-4 text-center">
                         <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-green-50 text-green-700 font-bold border border-green-100">
-                          <TrendingUp className="w-3.5 h-3.5" />
                           {student.percentage}%
                         </div>
                       </td>
