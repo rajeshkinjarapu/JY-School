@@ -33,37 +33,38 @@ export const AdmitCardTemplate: React.FC<AdmitCardTemplateProps> = ({ student, e
 
         {/* Header - Colorful & Vibrant */}
         <div className="p-6 sm:p-8 flex items-center justify-between bg-gradient-to-r from-indigo-900 via-indigo-800 to-indigo-900 border-b-4 border-amber-400">
-          <div className="flex-1">
-            <h1 className="text-xl sm:text-2xl lg:text-3xl font-black uppercase tracking-wide text-white mb-1 drop-shadow-md">
-              SRI VENKATESWARA JY SCHOOL
-            </h1>
-            <p className="text-sm font-bold uppercase text-amber-300 mb-2 tracking-wide drop-shadow-sm">
-              (IIT-JEE/NEET Foundation – Olympiads)
-            </p>
-            <div className="flex items-center gap-1.5 text-xs font-medium text-indigo-100">
-              <MapPin className="w-3.5 h-3.5 text-amber-400" />
-              Opp. Hero Showroom, SVL Paradise Campus, Narasannapeta
-            </div>
-          </div>
-          <div className="w-24 h-24 sm:w-28 sm:h-28 bg-white rounded-xl flex items-center justify-center shrink-0 border-2 border-amber-400 shadow-md p-2 ml-4">
+          <div className="w-24 h-24 sm:w-28 sm:h-28 bg-white rounded-xl flex items-center justify-center shrink-0 border-2 border-amber-400 shadow-md p-2 mr-4">
             {logoUrl ? (
               <img src={logoUrl} alt="Logo" crossOrigin="anonymous" className="w-full h-full object-contain" />
             ) : (
               <span className="text-xl font-black text-indigo-900">LOGO</span>
             )}
           </div>
+          <div className="flex-1 text-center">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black uppercase tracking-wide text-white mb-1 drop-shadow-md whitespace-nowrap">
+              SRI VENKATESWARA JY SCHOOL
+            </h1>
+            <p className="text-sm sm:text-base font-bold uppercase text-amber-300 mb-2 tracking-wide drop-shadow-sm">
+              (IIT-JEE/NEET Foundation – Olympiads)
+            </p>
+            <div className="flex items-center justify-center gap-1.5 text-xs sm:text-sm font-medium text-indigo-100">
+              <MapPin className="w-4 h-4 text-amber-400" />
+              Opp. Hero Showroom, SVL Paradise Campus, Narasannapeta
+            </div>
+          </div>
+          <div className="w-24 sm:w-28 shrink-0 hidden md:block"></div> {/* Spacer for centering */}
         </div>
 
         {/* Title Badge */}
-        <div className="flex justify-center -mt-5 relative z-10">
-          <div className="bg-white border-2 border-amber-400 shadow-md rounded-full px-8 py-2 flex flex-col items-center">
-            <h2 className="text-xl font-black uppercase tracking-widest text-indigo-800">
+        <div className="flex flex-col justify-center items-center -mt-6 relative z-10">
+          <div className="bg-white border-2 border-amber-400 shadow-md rounded-full px-12 py-2 mb-3">
+            <h2 className="text-2xl font-black uppercase tracking-[0.2em] text-indigo-800">
               Admit Card
             </h2>
-            <span className="text-[10px] font-bold text-indigo-500 uppercase tracking-wider mt-0.5">
-              {settings.examTitleOverride || `${exam?.name} (2026-2027)`}
-            </span>
           </div>
+          <h3 className="text-xl sm:text-2xl font-black text-indigo-950 uppercase tracking-widest text-center px-6 py-2 bg-indigo-50/80 rounded-xl border border-indigo-200 shadow-sm">
+            {settings.examTitleOverride || `${exam?.name}`}
+          </h3>
         </div>
 
         {/* Main Body */}
