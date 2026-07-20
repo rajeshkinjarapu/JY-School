@@ -1,5 +1,5 @@
 import React from 'react';
-import { Award, User, Calendar, Phone, BookOpen, Layers } from 'lucide-react';
+import { Award, User, Calendar, Phone, BookOpen, Layers, MapPin } from 'lucide-react';
 
 interface ProgressCardTemplateProps {
   data: any;
@@ -53,9 +53,13 @@ export const ProgressCardTemplate: React.FC<ProgressCardTemplateProps> = ({ data
             <h1 className="text-[20px] sm:text-[28px] md:text-[32px] font-black tracking-wide text-white mb-1 drop-shadow-md leading-tight" style={{ fontFamily: '"Times New Roman", Times, serif' }}>
               SRI VENKATESWARA JY SCHOOL
             </h1>
-            <p className="text-[11px] sm:text-[13px] font-bold tracking-[0.05em] sm:tracking-[0.1em] text-amber-300 mb-3 uppercase drop-shadow-sm">
+            <p className="text-[11px] sm:text-[13px] font-bold tracking-[0.05em] sm:tracking-[0.1em] text-amber-300 mb-2 uppercase drop-shadow-sm">
               (IIT-JEE / NEET Foundation • Olympiads)
             </p>
+            <div className="flex items-center justify-center gap-1.5 text-[10px] sm:text-xs font-medium text-indigo-100 mb-3">
+              <MapPin className="w-3.5 h-3.5 text-amber-400" />
+              Opp. Hero Showroom, SVL Paradise Campus, Narasannapeta
+            </div>
             <div className="inline-block border border-indigo-300 bg-indigo-50/20 text-white px-6 py-1.5 font-bold text-[14px] tracking-wider uppercase rounded-full shadow-sm">
               {exam?.name || 'EXAMINATION RESULT CARD'}
             </div>
@@ -93,10 +97,7 @@ export const ProgressCardTemplate: React.FC<ProgressCardTemplateProps> = ({ data
                     <td className="border border-gray-400 bg-gray-100 font-bold py-1.5 sm:py-2 px-2 sm:px-3 uppercase text-gray-700">Exam Name</td>
                     <td className="border border-gray-400 font-bold py-1.5 sm:py-2 px-2 sm:px-3 uppercase text-gray-900">{exam?.name}</td>
                   </tr>
-                  <tr>
-                    <td className="border border-gray-400 bg-gray-100 font-bold py-1.5 sm:py-2 px-2 sm:px-3 uppercase text-gray-700">Contact Number</td>
-                    <td className="border border-gray-400 font-bold py-1.5 sm:py-2 px-2 sm:px-3 uppercase text-gray-900">{data.mobile || '-'}</td>
-                  </tr>
+
                   <tr>
                     <td className="border border-gray-400 bg-gray-100 font-bold py-1.5 sm:py-2 px-2 sm:px-3 uppercase text-gray-700">Class Rank</td>
                     <td className="border border-gray-400 font-black py-1.5 sm:py-2 px-2 sm:px-3 uppercase text-[#1e2a5c]">#{data.rank || '-'}</td>
@@ -123,11 +124,12 @@ export const ProgressCardTemplate: React.FC<ProgressCardTemplateProps> = ({ data
             
             <table className="w-full text-[11px] sm:text-[13px] border-collapse">
               <thead>
-                <tr className="bg-[#1e2a5c] text-white">
-                  <th className="border border-gray-400 py-1.5 sm:py-2 px-1 sm:px-2 uppercase text-center w-12">S.No</th>
-                  <th className="border border-gray-400 py-1.5 sm:py-2 px-2 sm:px-4 uppercase text-left">Subject</th>
-                  <th className="border border-gray-400 py-1.5 sm:py-2 px-2 sm:px-4 uppercase text-center">Max Marks</th>
-                  <th className="border border-gray-400 py-1.5 sm:py-2 px-2 sm:px-4 uppercase text-center">Obtained</th>
+                <tr className="bg-[#1e2a5c]">
+                  <th className="border border-gray-400 py-1.5 sm:py-2 px-1 sm:px-2 uppercase text-center w-12 text-white">S.No</th>
+                  <th className="border border-gray-400 py-1.5 sm:py-2 px-2 sm:px-4 uppercase text-left text-white">Subject</th>
+                  <th className="border border-gray-400 py-1.5 sm:py-2 px-2 sm:px-4 uppercase text-center text-white">Max Marks</th>
+                  <th className="border border-gray-400 py-1.5 sm:py-2 px-2 sm:px-4 uppercase text-center text-white">Obtained</th>
+                  <th className="border border-gray-400 py-1.5 sm:py-2 px-2 sm:px-4 uppercase text-center text-white">Percentage</th>
                 </tr>
               </thead>
               <tbody className="bg-white">
@@ -138,6 +140,7 @@ export const ProgressCardTemplate: React.FC<ProgressCardTemplateProps> = ({ data
                       <td className="border border-gray-400 py-1 sm:py-2 px-2 sm:px-4 font-bold text-gray-900 uppercase">{m.subject}</td>
                       <td className="border border-gray-400 py-1 sm:py-2 px-2 sm:px-4 text-center font-bold text-gray-600">{m.maxMarks || 100}</td>
                       <td className="border border-gray-400 py-1 sm:py-2 px-2 sm:px-4 text-center font-black text-[#1e2a5c] text-[13px] sm:text-[15px]">{m.obtained}</td>
+                      <td className="border border-gray-400 py-1 sm:py-2 px-2 sm:px-4 text-center font-bold text-gray-800 text-[12px] sm:text-[13px]">{((m.obtained / (m.maxMarks || 100)) * 100).toFixed(1)}%</td>
                     </tr>
                   );
                 })}
@@ -147,6 +150,7 @@ export const ProgressCardTemplate: React.FC<ProgressCardTemplateProps> = ({ data
                   <td colSpan={2} className="border border-gray-400 py-1.5 sm:py-2 px-2 sm:px-4 text-right font-black uppercase text-gray-900">Grand Total</td>
                   <td className="border border-gray-400 py-1.5 sm:py-2 px-2 sm:px-4 text-center font-black text-gray-900">{totalMaxMarks}</td>
                   <td className="border border-gray-400 py-1.5 sm:py-2 px-2 sm:px-4 text-center font-black text-indigo-700 text-[14px] sm:text-[16px]">{totalObtained}</td>
+                  <td className="border border-gray-400 py-1.5 sm:py-2 px-2 sm:px-4 text-center font-black text-[#1fb981] text-[14px] sm:text-[16px]">{percentage}%</td>
                 </tr>
               </tbody>
             </table>
@@ -167,11 +171,14 @@ export const ProgressCardTemplate: React.FC<ProgressCardTemplateProps> = ({ data
                 <span>Score Graph</span>
                 <span>{totalMaxMarks}</span>
               </div>
-              <div className="h-4 w-full border border-gray-300 bg-gray-100 flex p-0.5">
+              <div className="h-5 w-full bg-gray-200 rounded-full shadow-inner overflow-hidden border border-gray-300 relative">
                 <div 
-                  className="h-full bg-[#1e2a5c]" 
+                  className="h-full bg-gradient-to-r from-[#1e2a5c] to-indigo-500" 
                   style={{ width: `${percentNumber}%` }}
                 ></div>
+                <div className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-white drop-shadow-md">
+                  {percentage}%
+                </div>
               </div>
             </div>
           </div>
@@ -184,9 +191,9 @@ export const ProgressCardTemplate: React.FC<ProgressCardTemplateProps> = ({ data
           <div className="flex gap-4 sm:gap-16 w-full sm:w-auto justify-between sm:justify-start">
             {/* Teacher Sign */}
             <div className="text-center w-32 sm:w-48">
-              <div className="h-16 flex items-end justify-center mb-2 relative">
+              <div className="h-24 flex items-end justify-center mb-2 relative">
                 {teacherSignatureUrl ? (
-                  <img src={teacherSignatureUrl} alt="Teacher Signature" className="max-h-14 object-contain mix-blend-multiply" />
+                  <img src={teacherSignatureUrl} alt="Teacher Signature" className="max-h-20 object-contain mix-blend-multiply" />
                 ) : (
                   <div className="text-blue-800/60 font-signature text-[22px] transform -rotate-12" style={{ fontFamily: '"Brush Script MT", cursive' }}>Signature</div>
                 )}
@@ -205,9 +212,9 @@ export const ProgressCardTemplate: React.FC<ProgressCardTemplateProps> = ({ data
             </div>
             
             <div className="text-center w-48">
-              <div className="h-16 flex items-end justify-center mb-2 relative">
+              <div className="h-24 flex items-end justify-center mb-2 relative">
                 {principalSignatureUrl ? (
-                  <img src={principalSignatureUrl} alt="Principal Signature" className="max-h-14 object-contain mix-blend-multiply" />
+                  <img src={principalSignatureUrl} alt="Principal Signature" className="max-h-20 object-contain mix-blend-multiply" />
                 ) : (
                   <div className="text-green-800/60 font-signature text-[22px] transform -rotate-12" style={{ fontFamily: '"Brush Script MT", cursive' }}>Signature</div>
                 )}

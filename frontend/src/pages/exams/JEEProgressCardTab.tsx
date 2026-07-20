@@ -26,6 +26,13 @@ export const JEEProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
   const [teacherSignatureUrl, setTeacherSignatureUrl] = useState('');
   const [published, setPublished] = useState(false);
 
+  const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+  const resolveUrl = (url: string) => {
+    if (!url) return '';
+    if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) return url;
+    return `${API_BASE}${url}`;
+  };
+
   const selectedExam = exams.find(e => e.id === selectedExamId);
 
   useEffect(() => {
@@ -136,7 +143,7 @@ export const JEEProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
     // Allow DOM to process
     await new Promise(resolve => setTimeout(resolve, 100));
     
-    const imgData = await toJpeg(el, { cacheBust: true, pixelRatio: 2, quality: 0.95, backgroundColor: '#ffffff' });
+    const imgData = await toJpeg(el, { cacheBust: true, useCORS: true, pixelRatio: 2, quality: 0.95, backgroundColor: '#ffffff' });
     const pdf = new jsPDF('p', 'mm', 'a4');
     const pdfWidth = pdf.internal.pageSize.getWidth();
     const pdfHeight = (el.offsetHeight * pdfWidth) / el.offsetWidth;
@@ -194,7 +201,7 @@ export const JEEProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
         // Update toast progress every 5 cards
         if (i % 5 === 0) toast.loading(`Generated ${i} of ${templates.length}...`, { id: loadingToastId });
         
-        const imgData = await toJpeg(el, { cacheBust: true, pixelRatio: 1.5, quality: 0.8, backgroundColor: '#ffffff' });
+        const imgData = await toJpeg(el, { cacheBust: true, useCORS: true, pixelRatio: 1.5, quality: 0.8, backgroundColor: '#ffffff' });
         
         const pdf = new jsPDF('p', 'mm', 'a4');
         const pdfWidth = pdf.internal.pageSize.getWidth();
@@ -335,7 +342,7 @@ export const JEEProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
               <label className="block text-sm font-bold text-gray-700 dark:text-gray-300">School Logo Image</label>
               <div className="flex items-center gap-4">
                 {logoUrl ? (
-                  <img src={logoUrl} alt="Logo" className="h-16 object-contain border border-gray-200 rounded p-1" />
+                  <img src={resolveUrl(logoUrl)} alt="Logo" className="h-16 object-contain border border-gray-200 rounded p-1" />
                 ) : (
                   <div className="h-16 w-16 border-2 border-dashed border-gray-300 rounded flex items-center justify-center text-xs text-gray-400 bg-gray-50">No Logo</div>
                 )}
@@ -350,7 +357,7 @@ export const JEEProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
               <label className="block text-sm font-bold text-gray-700 dark:text-gray-300">Principal Signature Image</label>
               <div className="flex items-center gap-4">
                 {signatureUrl ? (
-                  <img src={signatureUrl} alt="Signature" className="h-16 object-contain border border-gray-200 rounded p-1" />
+                  <img src={resolveUrl(signatureUrl)} alt="Signature" className="h-16 object-contain border border-gray-200 rounded p-1" />
                 ) : (
                   <div className="h-16 w-32 border-2 border-dashed border-gray-300 rounded flex items-center justify-center text-xs text-gray-400 bg-gray-50">No Signature</div>
                 )}
@@ -363,7 +370,7 @@ export const JEEProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
               <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mt-4">Teacher Signature Image</label>
               <div className="flex items-center gap-4">
                 {teacherSignatureUrl ? (
-                  <img src={teacherSignatureUrl} alt="Teacher Signature" className="h-16 object-contain border border-gray-200 rounded p-1" />
+                  <img src={resolveUrl(teacherSignatureUrl)} alt="Teacher Signature" className="h-16 object-contain border border-gray-200 rounded p-1" />
                 ) : (
                   <div className="h-16 w-32 border-2 border-dashed border-gray-300 rounded flex items-center justify-center text-xs text-gray-400 bg-gray-50">No Signature</div>
                 )}

@@ -197,8 +197,8 @@ export const AdmitCardTemplate: React.FC<AdmitCardTemplateProps> = ({ student, e
             </ul>
           </div>
           <div className="text-center w-56 shrink-0 flex flex-col items-center justify-end">
-            <div className="w-full h-20 flex items-end justify-center mb-2 border-b-2 border-indigo-200 border-dashed pb-1">
-              {signatureUrl && <img src={signatureUrl} alt="Signature" className="h-16 object-contain" />}
+            <div className="w-full h-24 flex items-end justify-center mb-2 border-b-2 border-indigo-200 border-dashed pb-1">
+              {signatureUrl && <img src={signatureUrl} alt="Signature" className="h-20 object-contain" />}
             </div>
             <p className="text-[11px] uppercase font-black tracking-widest text-indigo-900">Principal Signature</p>
           </div>
