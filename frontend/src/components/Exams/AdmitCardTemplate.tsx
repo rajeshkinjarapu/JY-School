@@ -25,108 +25,129 @@ export const AdmitCardTemplate: React.FC<AdmitCardTemplateProps> = ({ student, e
   const logoUrl = resolveUrl(settings.logoUrl || '');
 
   return (
-    <div className="admit-card-wrapper bg-white rounded-none sm:rounded-xl p-4 sm:p-6">
-      <div className="w-full h-full border-[6px] border-double border-indigo-900 rounded-3xl relative flex flex-col bg-white overflow-hidden">
+    <div className="admit-card-wrapper bg-white p-4 sm:p-6" style={{ fontFamily: 'Arial, sans-serif', color: 'black' }}>
+      <div className="w-full h-full border-2 border-black relative flex flex-col bg-white overflow-hidden p-6 gap-6">
         
-        {/* Watermark removed as requested */}
-
         {/* Header */}
-        <div className="relative z-10 bg-gradient-to-r from-indigo-900 via-blue-800 to-indigo-900 text-white p-6 sm:p-8 flex items-center gap-6 border-b-4 border-amber-400">
-          <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center shadow-lg border-4 border-amber-400 shrink-0 overflow-hidden">
+        <div className="flex items-center justify-between border-b-2 border-black pb-4">
+          <div className="w-24 h-24 flex items-center justify-center shrink-0">
             {logoUrl ? (
-              <img src={logoUrl} alt="Logo" crossOrigin="anonymous" className="w-full h-full object-contain p-1" />
+              <img src={logoUrl} alt="Logo" crossOrigin="anonymous" className="w-full h-full object-contain" />
             ) : (
-              <span className="text-4xl font-black text-indigo-900">SV JY</span>
+              <div className="w-20 h-20 border border-gray-400 rounded-full flex items-center justify-center">
+                <span className="text-xl font-black text-black">LOGO</span>
+              </div>
             )}
           </div>
-          <div className="flex-1 text-center">
-            <h1 className="text-3xl font-black uppercase tracking-wider text-amber-300 drop-shadow-md mb-2">SRI VENKATESWARA JY SCHOOL</h1>
-            <p className="text-sm font-semibold tracking-widest uppercase text-blue-100 mb-2">(IIT-JEE/NEET Foundation – Olympiads)</p>
-            <div className="flex items-center justify-center gap-4 text-xs font-medium text-indigo-100">
-              <span className="flex items-center gap-1"><MapPin className="w-3 h-3"/> Opp. Hero Showroom, SVL Paradise Campus, Narasannapeta</span>
-            </div>
+          <div className="flex-1 text-center px-4">
+            <h1 className="text-2xl sm:text-3xl font-black uppercase tracking-wide text-black mb-1">
+              SRI VENKATESWARA JY SCHOOL
+            </h1>
+            <p className="text-xs sm:text-sm font-bold uppercase text-gray-800 mb-1">
+              (IIT-JEE/NEET Foundation – Olympiads)
+            </p>
+            <p className="text-xs font-medium text-gray-700">
+              Opp. Hero Showroom, SVL Paradise Campus, Narasannapeta
+            </p>
           </div>
+          <div className="w-24 shrink-0"></div> {/* Spacer for centering */}
         </div>
 
         {/* Title */}
-        <div className="relative z-10 text-center py-5 bg-indigo-50 border-b border-indigo-100">
-          <h2 className="text-2xl font-black uppercase tracking-[0.2em] text-indigo-900">Admit Card</h2>
-          <div className="inline-block mt-2 px-6 py-1.5 bg-amber-400 text-indigo-900 font-bold text-sm rounded-full shadow-sm uppercase tracking-wide">
+        <div className="text-center pb-2">
+          <h2 className="text-xl font-bold uppercase tracking-widest text-black underline underline-offset-4">
+            Admit Card
+          </h2>
+          <div className="mt-2 text-sm font-bold text-gray-800 uppercase">
             {settings.examTitleOverride || `${exam?.name} (2026-2027)`}
           </div>
         </div>
 
         {/* Main Body */}
-        <div className="relative z-10 p-8 sm:p-10 flex-1 flex flex-col gap-10">
-          <div className="flex gap-10 items-start">
-            {/* Student Info */}
-            <div className="flex-1 grid grid-cols-2 gap-x-8 gap-y-6">
-              <div className="bg-indigo-50/50 p-4 rounded-xl border border-indigo-100">
-                <p className="text-[10px] uppercase font-bold text-indigo-400 tracking-wider mb-1">Candidate Name</p>
-                <p className="text-xl font-black text-indigo-950 uppercase whitespace-nowrap overflow-hidden text-ellipsis">{student?.user?.name || student?.name}</p>
-              </div>
-              <div className="bg-indigo-50/50 p-4 rounded-xl border border-indigo-100">
-                <p className="text-[10px] uppercase font-bold text-indigo-400 tracking-wider mb-1">Roll Number</p>
-                <p className="text-xl font-black text-indigo-950">{student?.rollNo || 'N/A'}</p>
-              </div>
-              <div className="bg-indigo-50/50 p-4 rounded-xl border border-indigo-100">
-                <p className="text-[10px] uppercase font-bold text-indigo-400 tracking-wider mb-1">Class & Section</p>
-                <p className="text-lg font-bold text-indigo-900">{className || student?.class?.name || student?.className || '-'} {section || student?.class?.section || student?.section ? `- ${section || student?.class?.section || student?.section}` : ''}</p>
-              </div>
-              <div className="bg-indigo-50/50 p-4 rounded-xl border border-indigo-100">
-                <p className="text-[10px] uppercase font-bold text-indigo-400 tracking-wider mb-1">Date of Birth</p>
-                <p className="text-lg font-bold text-indigo-900">12/05/2010</p>
-              </div>
-              <div className="col-span-2 bg-indigo-50/50 p-4 rounded-xl border border-indigo-100">
-                <p className="text-[10px] uppercase font-bold text-indigo-400 tracking-wider mb-1">Examination Center</p>
-                <p className="text-base font-bold text-indigo-900">{settings.examCenterOverride || 'JY School Main Campus, Hall A'}</p>
-              </div>
+        <div className="flex-1 flex flex-col gap-6">
+          <div className="flex gap-6 items-start">
+            {/* Student Info Table */}
+            <div className="flex-1 border border-black rounded-sm overflow-hidden">
+              <table className="w-full text-sm text-left border-collapse">
+                <tbody>
+                  <tr className="border-b border-gray-300">
+                    <td className="p-3 font-bold bg-gray-100 border-r border-gray-300 w-1/3">Candidate Name</td>
+                    <td className="p-3 font-bold text-black uppercase" colSpan={3}>
+                      {student?.user?.name || student?.name}
+                    </td>
+                  </tr>
+                  <tr className="border-b border-gray-300">
+                    <td className="p-3 font-bold bg-gray-100 border-r border-gray-300">Roll Number</td>
+                    <td className="p-3 font-bold text-black border-r border-gray-300 w-1/4">
+                      {student?.rollNo || 'N/A'}
+                    </td>
+                    <td className="p-3 font-bold bg-gray-100 border-r border-gray-300">Class & Section</td>
+                    <td className="p-3 font-bold text-black">
+                      {className || student?.class?.name || student?.className || '-'} {section || student?.class?.section || student?.section ? `- ${section || student?.class?.section || student?.section}` : ''}
+                    </td>
+                  </tr>
+                  <tr className="border-b border-gray-300">
+                    <td className="p-3 font-bold bg-gray-100 border-r border-gray-300">Date of Birth</td>
+                    <td className="p-3 font-bold text-black border-r border-gray-300">
+                      12/05/2010
+                    </td>
+                    <td className="p-3 font-bold bg-gray-100 border-r border-gray-300">Gender</td>
+                    <td className="p-3 font-bold text-black">
+                      {student?.gender || 'Male'}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="p-3 font-bold bg-gray-100 border-r border-gray-300">Exam Center</td>
+                    <td className="p-3 font-bold text-black" colSpan={3}>
+                      {settings.examCenterOverride || 'JY School Main Campus, Hall A'}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
 
             {/* Photo Area */}
-            <div className="w-[120px] h-[150px] border-2 border-indigo-300 bg-indigo-50/50 rounded-xl flex flex-col items-center justify-center text-indigo-300 shrink-0 p-2 relative shadow-inner">
-              <div className="w-full h-full border border-dashed border-indigo-300 rounded-lg flex flex-col items-center justify-center bg-white overflow-hidden">
-                {student?.user?.photoUrl ? (
-                  <img src={student.user.photoUrl} alt="Student" crossOrigin="anonymous" className="w-full h-full object-cover" />
-                ) : (
-                  <>
-                    <User className="w-10 h-10 mb-2 opacity-50 text-indigo-300" />
-                    <span className="text-[9px] uppercase font-bold text-center leading-tight">Affix<br/>Passport<br/>Size Photo</span>
-                  </>
-                )}
-              </div>
+            <div className="w-[120px] h-[150px] border border-black flex flex-col items-center justify-center text-gray-400 shrink-0 relative p-1 bg-gray-50">
+              {student?.user?.photoUrl ? (
+                <img src={student.user.photoUrl} alt="Student" crossOrigin="anonymous" className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full border border-dashed border-gray-400 flex flex-col items-center justify-center text-center p-2">
+                  <User className="w-8 h-8 mb-2 opacity-50" />
+                  <span className="text-[10px] uppercase font-bold leading-tight text-gray-500">Affix<br/>Passport<br/>Size Photo</span>
+                </div>
+              )}
             </div>
           </div>
 
           {/* Exam Schedule */}
-          <div className="flex-1">
-            <h4 className="text-sm font-black text-indigo-900 uppercase tracking-widest mb-4 flex items-center gap-2 bg-indigo-50 py-2 px-4 rounded-lg border-l-4 border-indigo-600">
-              <Calendar className="w-5 h-5 text-indigo-600" /> Examination Schedule
+          <div>
+            <h4 className="text-sm font-bold text-black uppercase tracking-wider mb-2 flex items-center gap-2">
+              <Calendar className="w-4 h-4" /> Examination Schedule
             </h4>
-            <div className="rounded-xl overflow-hidden border border-indigo-200 shadow-sm">
-              <table className="w-full text-sm text-left">
-                <thead className="bg-indigo-600 text-white">
+            <div className="border border-black overflow-hidden">
+              <table className="w-full text-sm text-left border-collapse">
+                <thead className="bg-gray-100 border-b border-black">
                   <tr>
-                    <th className="py-3 px-4 font-bold uppercase text-[11px] tracking-wider w-16 text-center">S.No</th>
-                    <th className="py-3 px-4 font-bold uppercase text-[11px] tracking-wider">Date</th>
-                    <th className="py-3 px-4 font-bold uppercase text-[11px] tracking-wider">Subject</th>
-                    <th className="py-3 px-4 font-bold uppercase text-[11px] tracking-wider">Time</th>
-                    <th className="py-3 px-4 font-bold uppercase text-[11px] tracking-wider border-l border-indigo-500/50">Invigilator Sign</th>
+                    <th className="py-2 px-3 font-bold uppercase text-xs tracking-wider border-r border-gray-300 text-center w-12">S.No</th>
+                    <th className="py-2 px-3 font-bold uppercase text-xs tracking-wider border-r border-gray-300">Date</th>
+                    <th className="py-2 px-3 font-bold uppercase text-xs tracking-wider border-r border-gray-300">Subject</th>
+                    <th className="py-2 px-3 font-bold uppercase text-xs tracking-wider border-r border-gray-300">Time</th>
+                    <th className="py-2 px-3 font-bold uppercase text-xs tracking-wider">Invigilator Sign</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-indigo-100 bg-white">
+                <tbody className="divide-y divide-gray-300">
                   {(settings.schedule?.length > 0 ? settings.schedule : examPlans)?.map((plan: any, i: number) => (
                     <tr key={plan.id || i}>
-                      <td className="py-3 px-4 font-bold text-indigo-950 text-center">{i + 1}</td>
-                      <td className="py-3 px-4 font-bold text-indigo-950">{plan.date || plan.examDate ? new Date(plan.date || plan.examDate).toLocaleDateString('en-GB') : '-'}</td>
-                      <td className="py-3 px-4 font-black text-indigo-900">{plan.subject?.name || plan.subject}</td>
-                      <td className="py-3 px-4 text-indigo-800 font-semibold text-xs">{plan.timing || `${plan.startTime || ''} ${plan.startTime && plan.endTime ? '-' : ''} ${plan.endTime || ''}`}</td>
-                      <td className="py-3 px-4 border-l border-indigo-100"></td>
+                      <td className="py-2 px-3 font-bold text-center border-r border-gray-300">{i + 1}</td>
+                      <td className="py-2 px-3 font-bold border-r border-gray-300">{plan.date || plan.examDate ? new Date(plan.date || plan.examDate).toLocaleDateString('en-GB') : '-'}</td>
+                      <td className="py-2 px-3 font-bold border-r border-gray-300">{plan.subject?.name || plan.subject}</td>
+                      <td className="py-2 px-3 font-bold border-r border-gray-300">{plan.timing || `${plan.startTime || ''} ${plan.startTime && plan.endTime ? '-' : ''} ${plan.endTime || ''}`}</td>
+                      <td className="py-2 px-3"></td>
                     </tr>
                   ))}
                   {(!settings.schedule?.length && (!examPlans || examPlans.length === 0)) && (
                     <tr>
-                      <td colSpan={5} className="py-8 text-center text-indigo-400 font-medium">No schedule mapped for this class.</td>
+                      <td colSpan={5} className="py-6 text-center text-gray-500 font-medium">No schedule mapped for this class.</td>
                     </tr>
                   )}
                 </tbody>
@@ -136,22 +157,20 @@ export const AdmitCardTemplate: React.FC<AdmitCardTemplateProps> = ({ student, e
         </div>
 
         {/* Footer Notes & Signatures */}
-        <div className="relative z-10 bg-indigo-50/50 mt-auto p-8 border-t border-indigo-100">
-          <div className="grid grid-cols-3 gap-8 items-end">
-            <div className="col-span-2">
-              <h5 className="text-[10px] font-black uppercase tracking-wider text-indigo-900 mb-2">Important Instructions:</h5>
-              <ul className="text-[9px] text-indigo-800 font-medium space-y-1.5 list-disc pl-4">
-                {instructions.split('\n').filter(Boolean).map((line: string, idx: number) => (
-                  <li key={idx}>{line}</li>
-                ))}
-              </ul>
+        <div className="mt-auto pt-6 border-t-2 border-black flex flex-col sm:flex-row justify-between gap-8">
+          <div className="flex-1">
+            <h5 className="text-[11px] font-bold uppercase tracking-wider text-black mb-2 underline underline-offset-2">Important Instructions:</h5>
+            <ul className="text-[10px] text-black font-medium space-y-1 list-decimal pl-4 pr-4 text-justify leading-relaxed">
+              {instructions.split('\n').filter(Boolean).map((line: string, idx: number) => (
+                <li key={idx} className="pl-1">{line}</li>
+              ))}
+            </ul>
+          </div>
+          <div className="text-center w-48 shrink-0 flex flex-col items-center justify-end">
+            <div className="w-full h-16 flex items-end justify-center mb-1 border-b border-black border-dashed">
+              {signatureUrl && <img src={signatureUrl} alt="Signature" crossOrigin="anonymous" className="h-14 object-contain" />}
             </div>
-            <div className="text-center">
-              <div className="w-48 mx-auto border-b-2 border-indigo-800 mb-2 h-16 flex items-end justify-center">
-                {signatureUrl && <img src={signatureUrl} alt="Signature" crossOrigin="anonymous" className="h-14 object-contain" />}
-              </div>
-              <p className="text-[10px] uppercase font-black tracking-widest text-indigo-900 mt-1">Principal Signature</p>
-            </div>
+            <p className="text-[10px] uppercase font-bold tracking-widest text-black">Principal Signature</p>
           </div>
         </div>
       </div>
