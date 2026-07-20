@@ -94,7 +94,7 @@ export const ResultsTab: React.FC<{ exams: any[] }> = ({ exams }) => {
     <div className="space-y-6">
       <style dangerouslySetInnerHTML={{__html: `
         @media print {
-          @page { size: A4 landscape; margin: 10mm; }
+          @page { margin: 10mm; }
           body { -webkit-print-color-adjust: exact; print-color-adjust: exact; background: white; }
           body * { visibility: hidden; }
           #results-print-area, #results-print-area * { visibility: visible; }
@@ -102,7 +102,8 @@ export const ResultsTab: React.FC<{ exams: any[] }> = ({ exams }) => {
           .no-print { display: none !important; }
           .overflow-x-auto { overflow: visible !important; }
           table { width: 100% !important; border-collapse: collapse !important; table-layout: fixed; }
-          th, td { padding: 8px 4px !important; font-size: 9pt !important; word-wrap: break-word; }
+          th, td { padding: 6px 2px !important; font-size: 7.5pt !important; word-wrap: break-word; text-align: center; }
+          th:nth-child(2), td:nth-child(2) { text-align: left; }
           .bg-gradient-to-r { background: #8b5cf6 !important; color: white !important; }
           .rounded-3xl { border-radius: 0 !important; box-shadow: none !important; }
         }
