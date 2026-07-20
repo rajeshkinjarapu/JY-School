@@ -130,12 +130,13 @@ export const ResultsTab: React.FC<{ exams: any[] }> = ({ exams }) => {
         head: head,
         body: body,
         theme: 'grid',
-        headStyles: { fillColor: [139, 92, 246], textColor: 255, fontStyle: 'bold', halign: 'center', minCellHeight: 8 }, 
-        bodyStyles: { halign: 'center', textColor: 50 },
+        headStyles: { fillColor: [139, 92, 246], textColor: 255, fontStyle: 'bold', halign: 'center', minCellHeight: 10, fontSize: 11 }, 
+        bodyStyles: { halign: 'center', textColor: 40, minCellHeight: 9 },
         columnStyles: {
-          1: { halign: 'left', fontStyle: 'bold', cellWidth: 45 } // Give name enough width
+          1: { halign: 'left', fontStyle: 'bold', cellWidth: 50 } // Give name enough width
         },
-        styles: { fontSize: 7, cellPadding: 1.5, overflow: 'hidden' } // Tiny font and hidden overflow to force fit in portrait
+        styles: { fontSize: 9, cellPadding: 3, overflow: 'hidden' }, // Larger font and padding
+        margin: { bottom: 15 }
       });
       
       doc.save(`Results_${selectedExam?.name || 'Exam'}_Class_${selectedClassId}.pdf`);
