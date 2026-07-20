@@ -4,7 +4,7 @@ import { Award, Medal, Printer, Download, Star, TrendingUp, Trophy } from 'lucid
 import toast from 'react-hot-toast';
 import { LoadingSpinner } from '../../components/UI/LoadingSpinner';
 import { jsPDF } from 'jspdf';
-import { toPng } from 'html-to-image';
+import 'jspdf-autotable';
 
 export const ResultsTab: React.FC<{ exams: any[] }> = ({ exams }) => {
   const [selectedExamId, setSelectedExamId] = useState('');
@@ -36,42 +36,99 @@ export const ResultsTab: React.FC<{ exams: any[] }> = ({ exams }) => {
   }, [selectedExamId, selectedClassId]);
 
   const handlePrint = () => {
-    window.print();
+    const printContent = document.getElementById('results-print-area');
+    if (!printContent) return;
+    
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+
+    const styles = Array.from(document.querySelectorAll('style, link[rel="stylesheet"]')).map(el => el.outerHTML).join('\\n');
+    
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Results - ${selectedExam?.name}</title>
+          ${styles}
+          <style>
+            @media print {
+              @page { margin: 15mm; }
+              body { -webkit-print-color-adjust: exact; print-color-adjust: exact; background: white; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
+              table { width: 100% !important; border-collapse: collapse !important; table-layout: auto; margin-top: 20px; }
+              th, td { padding: 10px 8px !important; font-size: 10pt !important; border: 1px solid #d1d5db !important; text-align: center; }
+              th:nth-child(2), td:nth-child(2) { text-align: left; }
+              /* Clean up headers and borders */
+              .rounded-3xl, .rounded-xl, .rounded-lg, .rounded-full { border-radius: 0 !important; box-shadow: none !important; }
+              .bg-gradient-to-r { background: #f8fafc !important; color: black !important; border: 1px solid #000; padding: 20px !important; }
+              .text-white { color: black !important; }
+              .text-white\\/90, .text-white\\/80 { color: #374151 !important; }
+              .bg-white\\/20 { background: #f1f5f9 !important; border: 1px solid #cbd5e1 !important; }
+              .text-yellow-300 { color: #000 !important; }
+              svg { stroke: #000 !important; }
+              .no-print { display: none !important; }
+            }
+          </style>
+        </head>
+        <body class="bg-white p-4">
+          ${printContent.outerHTML}
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+    printWindow.focus();
+    setTimeout(() => {
+      printWindow.print();
+    }, 1000);
   };
 
   const handleDownloadPDF = async () => {
     setIsDownloading(true);
-    const toastId = toast.loading('Generating PDF...');
+    const toastId = toast.loading('Generating Professional PDF...');
     try {
-      const element = document.getElementById('results-print-area');
-      if (!element) return;
+      const doc = new jsPDF('p', 'mm', 'a4');
+      const title = `Examination Results - ${selectedExam?.name}`;
+      const subtitle = `Class: ${results[0]?.className} | Total Students: ${results.length}`;
       
-      const scroller = element.querySelector('.overflow-x-auto');
-      if (scroller) scroller.classList.remove('overflow-x-auto');
+      doc.setFontSize(18);
+      doc.text(title, 14, 20);
+      doc.setFontSize(12);
+      doc.setTextColor(100);
+      doc.text(subtitle, 14, 28);
       
-      const imgData = await toPng(element, { cacheBust: true, pixelRatio: 2 });
+      const head = [[
+        'Rank', 
+        'Student Name', 
+        'Roll No', 
+        ...results[0]?.marks.map((m: any) => m.subject) || [], 
+        'Total', 
+        'Percentage', 
+        'Grade'
+      ]];
       
-      if (scroller) scroller.classList.add('overflow-x-auto');
+      const body = results.map(student => [
+        student.rank,
+        student.name,
+        student.rollNo || '-',
+        ...student.marks.map((m: any) => m.obtained),
+        student.total,
+        `${student.percentage}%`,
+        student.grade || '-'
+      ]);
+
+      (doc as any).autoTable({
+        startY: 35,
+        head: head,
+        body: body,
+        theme: 'grid',
+        headStyles: { fillColor: [79, 70, 229], textColor: 255, fontStyle: 'bold', halign: 'center' },
+        bodyStyles: { halign: 'center', textColor: 50 },
+        columnStyles: {
+          1: { halign: 'left', fontStyle: 'bold' } // Name column left aligned
+        },
+        styles: { fontSize: 9, cellPadding: 4 }
+      });
       
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (element.offsetHeight * pdfWidth) / element.offsetWidth;
-      const pageHeight = pdf.internal.pageSize.getHeight();
-      
-      let heightLeft = pdfHeight;
-      let position = 0;
-      
-      pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, pdfHeight);
-      heightLeft -= pageHeight;
-      
-      while (heightLeft > 0) {
-        position = heightLeft - pdfHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, pdfHeight);
-        heightLeft -= pageHeight;
-      }
-      
-      pdf.save(`Results_${selectedExam?.name || 'Exam'}_Class_${selectedClassId}.pdf`);
+      doc.save(`Results_${selectedExam?.name || 'Exam'}_Class_${selectedClassId}.pdf`);
       toast.success('PDF downloaded successfully!', { id: toastId });
     } catch (e: any) {
       console.error(e);
@@ -90,22 +147,7 @@ export const ResultsTab: React.FC<{ exams: any[] }> = ({ exams }) => {
 
   return (
     <div className="space-y-6">
-      <style dangerouslySetInnerHTML={{__html: `
-        @media print {
-          @page { margin: 10mm; }
-          body { -webkit-print-color-adjust: exact; print-color-adjust: exact; background: white; }
-          body * { visibility: hidden; }
-          #results-print-area, #results-print-area * { visibility: visible; }
-          #results-print-area { position: absolute; left: 0; top: 0; width: 100%; margin: 0; padding: 0; }
-          .no-print { display: none !important; }
-          .overflow-x-auto { overflow: visible !important; }
-          table { width: 100% !important; border-collapse: collapse !important; table-layout: fixed; }
-          th, td { padding: 6px 2px !important; font-size: 7.5pt !important; word-wrap: break-word; text-align: center; }
-          th:nth-child(2), td:nth-child(2) { text-align: left; }
-          .bg-gradient-to-r { background: #8b5cf6 !important; color: white !important; }
-          .rounded-3xl { border-radius: 0 !important; box-shadow: none !important; }
-        }
-      `}} />
+      {/* We use window.open for printing, so no global @media print needed here anymore */}
 
       {/* Header Selection */}
       <div className="bg-white dark:bg-gray-900 p-4 rounded-xl border border-gray-150 dark:border-gray-800 shadow-sm flex flex-col md:flex-row items-center gap-4 no-print">
@@ -180,13 +222,14 @@ export const ResultsTab: React.FC<{ exams: any[] }> = ({ exams }) => {
                 <thead>
                   <tr className="bg-indigo-50/50">
                     <th className="p-4 font-black text-indigo-900 text-xs uppercase tracking-wider rounded-tl-xl w-16 text-center">Rank</th>
-                    <th className="p-4 font-black text-indigo-900 text-xs uppercase tracking-wider">Student Details</th>
+                    <th className="p-4 font-black text-indigo-900 text-xs uppercase tracking-wider whitespace-nowrap">Student Name</th>
+                    <th className="p-4 font-black text-indigo-900 text-xs uppercase tracking-wider w-28">Roll No</th>
                     {results[0]?.marks.map((m: any, i: number) => (
                       <th key={i} className="p-4 font-black text-indigo-900 text-xs uppercase tracking-wider text-center">{m.subject}</th>
                     ))}
-                    <th className="p-4 font-black text-indigo-900 text-xs uppercase tracking-wider text-center">Total</th>
-                    <th className="p-4 font-black text-indigo-900 text-xs uppercase tracking-wider text-center">Percentage</th>
-                    <th className="p-4 font-black text-indigo-900 text-xs uppercase tracking-wider text-center rounded-tr-xl">Grade</th>
+                    <th className="p-4 font-black text-indigo-900 text-xs uppercase tracking-wider text-center w-20">Total</th>
+                    <th className="p-4 font-black text-indigo-900 text-xs uppercase tracking-wider text-center w-24">Percentage</th>
+                    <th className="p-4 font-black text-indigo-900 text-xs uppercase tracking-wider text-center rounded-tr-xl w-20">Grade</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
@@ -198,8 +241,10 @@ export const ResultsTab: React.FC<{ exams: any[] }> = ({ exams }) => {
                         </div>
                       </td>
                       <td className="p-4">
-                        <p className="font-bold text-gray-900 dark:text-white">{student.name}</p>
-                        <p className="text-xs text-gray-500 font-semibold">{student.rollNo || 'No Roll No'}</p>
+                        <p className="font-bold text-gray-900 dark:text-white whitespace-nowrap overflow-hidden text-ellipsis max-w-[200px]">{student.name}</p>
+                      </td>
+                      <td className="p-4">
+                        <p className="text-xs text-gray-500 font-semibold">{student.rollNo || '-'}</p>
                       </td>
                       {student.marks.map((m: any, i: number) => (
                         <td key={i} className="p-4 text-center">
