@@ -3,18 +3,47 @@ import { useAuth } from '../../hooks/useAuth';
 import { changePassword } from '../../api/auth';
 import { Avatar } from '../../components/UI/Avatar';
 import { Badge } from '../../components/UI/Badge';
-import { Save, Lock, User, Key } from 'lucide-react';
+import { Save, Lock, User as UserIcon, Key, Camera } from 'lucide-react';
 import toast from 'react-hot-toast';
+import api from '../../api/axios';
 
 export const ProfilePage: React.FC = () => {
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
   const [activeTab, setActiveTab] = useState<'profile' | 'password'>('profile');
+  const [uploading, setUploading] = useState(false);
 
   // Password form states
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const formData = new FormData();
+    formData.append('file', file);
+    setUploading(true);
+    const loadingToast = toast.loading('Uploading photo...');
+    try {
+      const uploadRes: any = await api.post('/api/uploads/image', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      const uploadedUrl = uploadRes.data.url || uploadRes.data.data?.url;
+      if (!uploadedUrl) throw new Error('Upload returned no URL');
+      
+      await api.put(`/api/users/${user?.id}`, {
+        photoUrl: uploadedUrl,
+      });
+
+      updateUser({ ...user, photoUrl: uploadedUrl } as any);
+      toast.success('Photo updated successfully!', { id: loadingToast });
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || err.message || 'Failed to upload photo', { id: loadingToast });
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const handlePasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,7 +71,13 @@ export const ProfilePage: React.FC = () => {
     <div className="max-w-2xl mx-auto space-y-6">
       {/* Profile Header */}
       <div className="card p-6 flex flex-col sm:flex-row items-center gap-6">
-        <Avatar name={user.name} src={user.photoUrl} size="lg" />
+        <div className="relative">
+          <Avatar name={user.name} src={user.photoUrl} size="lg" className="w-24 h-24 sm:w-28 sm:h-28 text-3xl" />
+          <label className="cursor-pointer absolute bottom-0 right-0 inline-flex items-center gap-1.5 text-xs font-bold text-white bg-primary-600 hover:bg-primary-700 px-2.5 py-1.5 rounded-full transition-colors shadow-sm hover:scale-105 active:scale-95 select-none z-10" title="Upload Photo">
+            <Camera className="w-4 h-4" />
+            <input type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} disabled={uploading} />
+          </label>
+        </div>
         <div className="flex-1 text-center sm:text-left space-y-1">
           <h2 className="text-2xl font-bold">{user.name}</h2>
           {user.role !== 'STUDENT' && <span className="text-xs text-gray-400 block">{user.email}</span>}
@@ -76,7 +111,7 @@ export const ProfilePage: React.FC = () => {
       {activeTab === 'profile' ? (
         <div className="card p-6 space-y-6">
           <h3 className="font-bold text-lg border-b pb-2 flex items-center gap-2">
-            <User className="w-5 h-5 text-gray-400" />
+            <UserIcon className="w-5 h-5 text-gray-400" />
             <span>Profile Overview</span>
           </h3>
           <div className="grid grid-cols-2 gap-6 text-sm">
