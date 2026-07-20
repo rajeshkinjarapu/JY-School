@@ -7,7 +7,7 @@ import * as XLSX from 'xlsx';
 
 export const getAll = async (req: AuthRequest, res: Response): Promise<void> => {
   const page = parseInt(req.query.page as string) || 1;
-  const limit = parseInt(req.query.limit as string) || 20;
+  const limit = parseInt(req.query.limit as string) || 500;
   const search = (req.query.search as string) || '';
   const academicYear = (req.query.academicYear as string) || '';
   const skip = (page - 1) * limit;
