@@ -97,8 +97,7 @@ export const TeacherAdmitCardsPage: React.FC = () => {
               <tr>
                 <th className="py-4 px-6">S.No</th>
                 <th className="py-4 px-6">Student Name</th>
-                <th className="py-4 px-6">Roll Number</th>
-                <th className="py-4 px-6 text-right">Action</th>
+                <th className="py-4 px-6 text-right">Download</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -111,10 +110,9 @@ export const TeacherAdmitCardsPage: React.FC = () => {
                     </div>
                     {student.user?.name || student.name}
                   </td>
-                  <td className="py-4 px-6 text-gray-600 font-medium">{student.rollNo || '-'}</td>
                   <td className="py-4 px-6 text-right">
-                    <button onClick={() => navigate(`/admit-card-view/${selectedExamId}?studentId=${student.id}`)} className="btn-secondary text-sm flex items-center gap-2 ml-auto hover:text-indigo-700 hover:bg-indigo-50">
-                      <ExternalLink className="w-4 h-4" /> View Admit Card
+                    <button onClick={() => window.open(`/admit-card-view/${selectedExamId}?studentId=${student.id}`, '_blank')} className="btn-secondary text-sm flex items-center gap-2 ml-auto hover:text-indigo-700 hover:bg-indigo-50">
+                      <ExternalLink className="w-4 h-4" /> Download
                     </button>
                   </td>
                 </tr>

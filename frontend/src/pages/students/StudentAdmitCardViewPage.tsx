@@ -38,11 +38,19 @@ export const StudentAdmitCardViewPage: React.FC = () => {
     fetchAdmitCard();
   }, [id, studentId]);
 
+  useEffect(() => {
+    if (data?.student) {
+      document.title = data.student.user?.name || data.student.name || 'Admit_Card';
+    } else {
+      document.title = 'Admit_Card';
+    }
+  }, [data]);
+
   if (loading) return <LoadingSpinner size="lg" className="h-[70vh]" />;
   if (!data) return <div className="p-12 text-center text-gray-500">Not found</div>;
 
   return (
-    <div className="bg-gray-100 min-h-screen p-4 sm:p-8 flex flex-col items-center">
+    <div className="bg-gradient-to-br from-indigo-50 via-purple-50 to-blue-50 min-h-screen p-4 sm:p-8 flex flex-col items-center">
       <div className="w-full max-w-4xl flex justify-between items-center mb-6 print:hidden">
         <h1 className="text-2xl font-black text-slate-800">My Admit Card</h1>
         <button onClick={() => window.print()} className="btn-primary flex items-center gap-2">

@@ -57,7 +57,7 @@ export const StudentAdmitCardsPage: React.FC = () => {
               
               <div className="mt-auto pt-6 border-t border-gray-100 dark:border-gray-800">
                 <button 
-                  onClick={() => navigate(`/admit-card-view/${exam.id}`)}
+                  onClick={() => window.open(`/admit-card-view/${exam.id}`, '_blank')}
                   className="w-full btn-primary py-3 flex items-center justify-center gap-2 font-bold shadow-md shadow-indigo-200"
                 >
                   <ExternalLink className="w-4 h-4" /> Download / View Admit Card

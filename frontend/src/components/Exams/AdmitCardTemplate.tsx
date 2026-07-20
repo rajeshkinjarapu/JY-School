@@ -12,7 +12,7 @@ export const AdmitCardTemplate: React.FC<AdmitCardTemplateProps> = ({ student, e
   const instructions = settings.instructions || 'Candidate must carry this Admit Card to the examination hall.\nElectronic devices including calculators and mobile phones are strictly prohibited.\nCandidate should report to the examination center 30 minutes before commencement.';
   
   // Resolve relative /uploads/ paths to the backend URL so images load correctly on Vercel
-  const API_BASE = import.meta.env.VITE_API_URL || '';
+  const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
   const resolveUrl = (url: string) => {
     if (!url) return '';
     if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) return url;
@@ -105,20 +105,20 @@ export const AdmitCardTemplate: React.FC<AdmitCardTemplateProps> = ({ student, e
               <table className="w-full text-sm text-left">
                 <thead className="bg-indigo-600 text-white">
                   <tr>
+                    <th className="py-3 px-4 font-bold uppercase text-[11px] tracking-wider w-16 text-center">S.No</th>
                     <th className="py-3 px-4 font-bold uppercase text-[11px] tracking-wider">Date</th>
-                    <th className="py-3 px-4 font-bold uppercase text-[11px] tracking-wider">Timing</th>
                     <th className="py-3 px-4 font-bold uppercase text-[11px] tracking-wider">Subject</th>
-                    <th className="py-3 px-4 font-bold uppercase text-[11px] tracking-wider">Room</th>
+                    <th className="py-3 px-4 font-bold uppercase text-[11px] tracking-wider">Time</th>
                     <th className="py-3 px-4 font-bold uppercase text-[11px] tracking-wider border-l border-indigo-500/50">Invigilator Sign</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-indigo-100 bg-white">
                   {(settings.schedule?.length > 0 ? settings.schedule : examPlans)?.map((plan: any, i: number) => (
                     <tr key={plan.id || i}>
+                      <td className="py-3 px-4 font-bold text-indigo-950 text-center">{i + 1}</td>
                       <td className="py-3 px-4 font-bold text-indigo-950">{plan.date || plan.examDate ? new Date(plan.date || plan.examDate).toLocaleDateString('en-GB') : '-'}</td>
-                      <td className="py-3 px-4 text-indigo-800 font-semibold text-xs">{plan.timing || `${plan.startTime} - ${plan.endTime}`}</td>
                       <td className="py-3 px-4 font-black text-indigo-900">{plan.subject?.name || plan.subject}</td>
-                      <td className="py-3 px-4 text-indigo-800 font-semibold">{plan.room || '-'}</td>
+                      <td className="py-3 px-4 text-indigo-800 font-semibold text-xs">{plan.timing || `${plan.startTime || ''} ${plan.startTime && plan.endTime ? '-' : ''} ${plan.endTime || ''}`}</td>
                       <td className="py-3 px-4 border-l border-indigo-100"></td>
                     </tr>
                   ))}

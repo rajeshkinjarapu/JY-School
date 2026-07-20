@@ -292,25 +292,25 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
             <table className="w-full text-sm text-left">
               <thead className="bg-gray-50 text-gray-600 font-bold uppercase text-xs">
                 <tr>
-                  <th className="py-3 px-4">S.No</th>
+                  <th className="py-3 px-4 hidden sm:table-cell">S.No</th>
                   <th className="py-3 px-4">Student Name</th>
-                  <th className="py-3 px-4">Roll Number</th>
-                  <th className="py-3 px-4 text-right">Action</th>
+                  <th className="py-3 px-4 hidden sm:table-cell">Roll Number</th>
+                  <th className="py-3 px-4 text-right hidden sm:table-cell">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {students.map((student, idx) => (
                   <tr key={student.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="py-3 px-4 font-bold text-gray-500">{idx + 1}</td>
+                    <td className="py-3 px-4 font-bold text-gray-500 hidden sm:table-cell">{idx + 1}</td>
                     <td className="py-3 px-4 font-bold text-gray-900 flex items-center gap-2">
                       <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold">
                         {student.user?.name?.[0] || 'S'}
                       </div>
                       {student.user?.name || student.name}
                     </td>
-                    <td className="py-3 px-4 text-gray-600 font-medium">{student.rollNo || '-'}</td>
+                    <td className="py-3 px-4 text-gray-600 font-medium hidden sm:table-cell">{student.rollNo || '-'}</td>
                     <td className="py-3 px-4 text-right">
-                      <button onClick={() => navigate(`/admit-card-view/${selectedExamId}?studentId=${student.id}`)} className="btn-secondary text-xs flex items-center gap-1 ml-auto">
+                      <button onClick={() => window.open(`/admit-card-view/${selectedExamId}?studentId=${student.id}`, '_blank')} className="btn-secondary text-xs flex items-center gap-1 ml-auto">
                         <ExternalLink className="w-3.5 h-3.5" /> View Admit Card
                       </button>
                     </td>
