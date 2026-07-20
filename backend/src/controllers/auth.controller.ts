@@ -195,3 +195,17 @@ export const changePassword = async (req: AuthRequest, res: Response, next: Next
 
   successResponse(res, null, 'Password changed successfully');
 };
+
+export const updateProfile = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  const { photoUrl } = req.body;
+
+  if (!photoUrl) return next(createError('Nothing to update', 400));
+
+  const user = await prisma.user.update({
+    where: { id: req.user!.id },
+    data: { photoUrl },
+  });
+
+  const { password: _p, refreshToken: _rt, resetOtp: _o, resetOtpExp: _e, ...safeUser } = user as any;
+  successResponse(res, safeUser, 'Profile updated successfully');
+};

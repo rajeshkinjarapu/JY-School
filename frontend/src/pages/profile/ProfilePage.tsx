@@ -32,7 +32,7 @@ export const ProfilePage: React.FC = () => {
       const uploadedUrl = uploadRes.data.url || uploadRes.data.data?.url;
       if (!uploadedUrl) throw new Error('Upload returned no URL');
       
-      await api.put(`/api/users/${user?.id}`, {
+      await api.put('/api/auth/profile', {
         photoUrl: uploadedUrl,
       });
 
