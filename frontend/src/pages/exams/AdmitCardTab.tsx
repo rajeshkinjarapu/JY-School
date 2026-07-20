@@ -1,7 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../api/axios';
-import { Printer, User, Calendar, MapPin, Phone, Mail, Globe, Settings, Upload, CheckCircle, Save, ExternalLink } from 'lucide-react';
+import { Printer, User, Calendar, MapPin, Phone, Mail, Globe, Settings, Upload, CheckCircle, Save, ExternalLink, Download } from 'lucide-react';
+import { jsPDF } from 'jspdf';
+import html2canvas from 'html2canvas';
+import JSZip from 'jszip';
+import { saveAs } from 'file-saver';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../hooks/useAuth';
 import { AdmitCardTemplate } from '../../components/Exams/AdmitCardTemplate';
@@ -16,6 +20,7 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
   const [examPlans, setExamPlans] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
   
   const selectedExam = exams.find(e => e.id === selectedExamId);
 
@@ -66,6 +71,66 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
 
   const handlePrint = () => {
     window.print();
+  };
+
+  const handleDownloadAll = async () => {
+    if (students.length === 0) return;
+    setIsDownloading(true);
+    
+    const loadingToastId = toast.loading(`Generating ${students.length} admit cards, please wait...`);
+    
+    try {
+      const zip = new JSZip();
+      const printArea = document.getElementById('admit-cards-print-container');
+      
+      if (printArea) {
+        printArea.classList.remove('hidden');
+        printArea.classList.add('flex');
+        printArea.style.position = 'absolute';
+        printArea.style.left = '-9999px';
+        printArea.style.top = '0';
+        printArea.style.width = '210mm';
+      }
+
+      // Allow DOM to update
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      const templates = document.querySelectorAll('.admit-card-wrapper');
+      
+      for (let i = 0; i < templates.length; i++) {
+        const el = templates[i] as HTMLElement;
+        const student = students[i];
+        
+        const canvas = await html2canvas(el, { scale: 2, useCORS: true });
+        const imgData = canvas.toDataURL('image/png');
+        
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+        
+        pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+        const fileName = `${student.user?.name || student.name || `Student_${i+1}`}.pdf`;
+        zip.file(fileName, pdf.output('blob'));
+      }
+
+      if (printArea) {
+        printArea.classList.add('hidden');
+        printArea.classList.remove('flex');
+        printArea.style.position = '';
+        printArea.style.left = '';
+        printArea.style.top = '';
+        printArea.style.width = '';
+      }
+
+      const content = await zip.generateAsync({ type: 'blob' });
+      saveAs(content, `AdmitCards_${selectedClassId}.zip`);
+      toast.success('Downloaded successfully!', { id: loadingToastId });
+    } catch (e: any) {
+      console.error(e);
+      toast.error('Failed to generate zip file.', { id: loadingToastId });
+    } finally {
+      setIsDownloading(false);
+    }
   };
 
   const handleSaveSettings = async () => {
@@ -171,9 +236,15 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
             </>
           )}
           {students.length > 0 && (
-            <button onClick={handlePrint} className="btn-primary flex items-center gap-2">
-              <Printer className="w-4 h-4" /> Print All
-            </button>
+            <div className="flex items-center gap-2">
+              <button onClick={handleDownloadAll} disabled={isDownloading} className="btn-secondary flex items-center gap-2 font-bold bg-white text-indigo-700">
+                {isDownloading ? <span className="animate-pulse">Processing...</span> : <Download className="w-4 h-4" />} 
+                {!isDownloading && 'Download All'}
+              </button>
+              <button onClick={handlePrint} className="btn-primary flex items-center gap-2">
+                <Printer className="w-4 h-4" /> Print All
+              </button>
+            </div>
           )}
         </div>
       </div>
@@ -341,7 +412,7 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
             </table>
           </div>
 
-          <div className="hidden print:block print-area space-y-12 bg-gray-50 dark:bg-gray-900 p-4 print:p-0 rounded-xl flex flex-col items-center">
+          <div id="admit-cards-print-container" className="hidden print:block print-area space-y-12 bg-gray-50 dark:bg-gray-900 p-4 print:p-0 rounded-xl flex flex-col items-center">
             <style dangerouslySetInnerHTML={{__html: `
             @media print {
               @page { size: A4; margin: 0; }
