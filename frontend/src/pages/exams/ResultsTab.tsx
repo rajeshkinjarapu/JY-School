@@ -110,9 +110,17 @@ export const ResultsTab: React.FC<{ exams: any[] }> = ({ exams }) => {
         'Rank', 
         'Student Name', 
         'Roll No', 
-        ...results[0]?.marks.map((m: any) => m.subject) || [], 
+        ...results[0]?.marks.map((m: any) => {
+          const sub = String(m.subject).toUpperCase();
+          if (sub.includes('MATH')) return 'MAT';
+          if (sub.includes('PHYS')) return 'PHY';
+          if (sub.includes('CHEM')) return 'CHE';
+          if (sub.includes('BIOL')) return 'BIO';
+          if (sub.includes('ENG')) return 'ENG';
+          return sub.length > 4 ? sub.substring(0, 3) : sub;
+        }) || [], 
         'Total', 
-        'Percentage', 
+        '%', 
         'Grade'
       ]];
       
@@ -131,13 +139,14 @@ export const ResultsTab: React.FC<{ exams: any[] }> = ({ exams }) => {
         head: head,
         body: body,
         theme: 'grid',
-        headStyles: { fillColor: [139, 92, 246], textColor: 255, fontStyle: 'bold', halign: 'center', minCellHeight: 10, fontSize: 11 }, 
+        headStyles: { fillColor: [139, 92, 246], textColor: 255, fontStyle: 'bold', halign: 'center', minCellHeight: 10, fontSize: 10 }, 
         bodyStyles: { halign: 'center', textColor: 40, minCellHeight: 9 },
         columnStyles: {
-          1: { halign: 'left', fontStyle: 'bold', cellWidth: 50 } // Give name enough width
+          1: { halign: 'left', fontStyle: 'bold', cellWidth: 55 }, // Give name more width so it doesn't wrap
+          2: { cellWidth: 20 } // Ensure Roll No has enough width
         },
-        styles: { fontSize: 9, cellPadding: 3, overflow: 'hidden' }, // Larger font and padding
-        margin: { bottom: 15 }
+        styles: { fontSize: 8.5, cellPadding: 2.5, overflow: 'visible' }, // Use visible to prevent cutting off text
+        margin: { left: 10, right: 10, bottom: 15 } // Reduce side margins slightly to give more space
       });
       
       doc.save(`Results_${selectedExam?.name || 'Exam'}_Class_${selectedClassId}.pdf`);
