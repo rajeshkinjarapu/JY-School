@@ -32,7 +32,7 @@ export const AdmitCardTemplate: React.FC<AdmitCardTemplateProps> = ({ student, e
         <div className="relative z-10 bg-gradient-to-r from-indigo-900 via-blue-800 to-indigo-900 text-white p-6 sm:p-8 flex items-center gap-6 border-b-4 border-amber-400">
           <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center shadow-lg border-4 border-amber-400 shrink-0 overflow-hidden">
             {logoUrl ? (
-              <img src={logoUrl} alt="Logo" className="w-full h-full object-contain p-1" />
+              <img src={logoUrl} alt="Logo" crossOrigin="anonymous" className="w-full h-full object-contain p-1" />
             ) : (
               <span className="text-4xl font-black text-indigo-900">SV JY</span>
             )}
@@ -85,7 +85,7 @@ export const AdmitCardTemplate: React.FC<AdmitCardTemplateProps> = ({ student, e
             <div className="w-[120px] h-[150px] border-2 border-indigo-300 bg-indigo-50/50 rounded-xl flex flex-col items-center justify-center text-indigo-300 shrink-0 p-2 relative shadow-inner">
               <div className="w-full h-full border border-dashed border-indigo-300 rounded-lg flex flex-col items-center justify-center bg-white overflow-hidden">
                 {student?.user?.photoUrl ? (
-                  <img src={student.user.photoUrl} alt="Student" className="w-full h-full object-cover" />
+                  <img src={student.user.photoUrl} alt="Student" crossOrigin="anonymous" className="w-full h-full object-cover" />
                 ) : (
                   <>
                     <User className="w-10 h-10 mb-2 opacity-50 text-indigo-300" />
@@ -146,7 +146,7 @@ export const AdmitCardTemplate: React.FC<AdmitCardTemplateProps> = ({ student, e
             </div>
             <div className="text-center">
               <div className="w-40 mx-auto border-b-2 border-indigo-800 mb-2 h-12 flex items-end justify-center">
-                {signatureUrl && <img src={signatureUrl} alt="Signature" className="h-10 object-contain" />}
+                {signatureUrl && <img src={signatureUrl} alt="Signature" crossOrigin="anonymous" className="h-10 object-contain" />}
               </div>
               <p className="text-[10px] uppercase font-black tracking-widest text-indigo-900 mt-1">Principal Signature</p>
             </div>

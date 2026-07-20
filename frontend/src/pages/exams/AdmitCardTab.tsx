@@ -126,8 +126,8 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
       saveAs(content, `AdmitCards_${selectedClassId}.zip`);
       toast.success('Downloaded successfully!', { id: loadingToastId });
     } catch (e: any) {
-      console.error(e);
-      toast.error('Failed to generate zip file.', { id: loadingToastId });
+      console.error('Zip generation error:', e);
+      toast.error(`Failed to generate zip file: ${e.message || 'Unknown error'}`, { id: loadingToastId });
     } finally {
       setIsDownloading(false);
     }
@@ -226,9 +226,30 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
                   <CheckCircle className="w-4 h-4" /> Send to Teachers, Students & Admins
                 </button>
               ) : (
-                <span className="bg-green-100 text-green-700 px-3 py-1.5 rounded-lg text-sm font-bold flex items-center gap-2">
-                  <CheckCircle className="w-4 h-4" /> Admit Cards Sent
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="bg-green-100 text-green-700 px-3 py-1.5 rounded-lg text-sm font-bold flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4" /> Admit Cards Sent
+                  </span>
+                  <button 
+                    onClick={async () => {
+                      setPublished(false);
+                      try {
+                        await api.post(`/api/exams/${selectedExamId}/admit-card-settings`, {
+                          admitCardPublished: false,
+                          admitCardSettings: selectedExam.admitCardSettings || {}
+                        });
+                        toast.success('Admit Cards unpublished!');
+                        if (selectedExam) selectedExam.admitCardPublished = false;
+                      } catch (e: any) {
+                        toast.error('Failed to unpublish');
+                        setPublished(true);
+                      }
+                    }}
+                    className="bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1.5 rounded-lg text-sm font-bold flex items-center gap-2"
+                  >
+                    Unpublish
+                  </button>
+                </div>
               )}
               <button onClick={() => setShowSettings(!showSettings)} className="btn-secondary flex items-center gap-2">
                 <Settings className="w-4 h-4" /> Settings
