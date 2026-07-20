@@ -35,7 +35,7 @@ export const AdmitCardTemplate: React.FC<AdmitCardTemplateProps> = ({ student, e
         <div className="p-6 sm:p-8 flex items-center justify-between bg-gradient-to-r from-indigo-900 via-indigo-800 to-indigo-900 border-b-4 border-amber-400">
           <div className="w-24 h-24 sm:w-28 sm:h-28 bg-white rounded-xl flex items-center justify-center shrink-0 border-2 border-amber-400 shadow-md p-2 mr-4">
             {logoUrl ? (
-              <img src={logoUrl} alt="Logo" crossOrigin="anonymous" className="w-full h-full object-contain" />
+              <img src={logoUrl} alt="Logo" className="w-full h-full object-contain" />
             ) : (
               <span className="text-xl font-black text-indigo-900">LOGO</span>
             )}
@@ -131,7 +131,7 @@ export const AdmitCardTemplate: React.FC<AdmitCardTemplateProps> = ({ student, e
             <div className="w-[140px] shrink-0 flex flex-col gap-3">
               <div className="w-full aspect-[3/4] border-2 border-indigo-200 rounded-xl flex flex-col items-center justify-center text-indigo-400 relative p-1.5 bg-indigo-50/50 shadow-inner overflow-hidden">
                 {student?.user?.photoUrl ? (
-                  <img src={student.user.photoUrl} alt="Student" crossOrigin="anonymous" className="w-full h-full object-cover rounded-lg" />
+                  <img src={student.user.photoUrl} alt="Student" className="w-full h-full object-cover rounded-lg" />
                 ) : (
                   <div className="w-full h-full border border-dashed border-indigo-300 rounded-lg flex flex-col items-center justify-center text-center p-2 bg-white">
                     <User className="w-10 h-10 mb-2 opacity-40 text-indigo-400" />
@@ -198,7 +198,7 @@ export const AdmitCardTemplate: React.FC<AdmitCardTemplateProps> = ({ student, e
           </div>
           <div className="text-center w-56 shrink-0 flex flex-col items-center justify-end">
             <div className="w-full h-20 flex items-end justify-center mb-2 border-b-2 border-indigo-200 border-dashed pb-1">
-              {signatureUrl && <img src={signatureUrl} alt="Signature" crossOrigin="anonymous" className="h-16 object-contain" />}
+              {signatureUrl && <img src={signatureUrl} alt="Signature" className="h-16 object-contain" />}
             </div>
             <p className="text-[11px] uppercase font-black tracking-widest text-indigo-900">Principal Signature</p>
           </div>
