@@ -3,7 +3,7 @@ import api from '../../api/axios';
 import { LoadingSpinner } from '../../components/UI/LoadingSpinner';
 import { Printer, Calendar, Download } from 'lucide-react';
 import toast from 'react-hot-toast';
-import html2canvas from 'html2canvas';
+import { toJpeg } from 'html-to-image';
 
 export default function AttendanceDailyReportPage() {
   const [date, setDate] = useState<string>(new Date().toISOString().split('T')[0]);
@@ -38,14 +38,24 @@ export default function AttendanceDailyReportPage() {
   const handleDownloadImage = async () => {
     const reportElement = document.getElementById('reportArea');
     if (!reportElement) return;
+    const toastId = toast.loading('Generating 9:16 Image...');
     try {
-      const canvas = await html2canvas(reportElement, { scale: 2, useCORS: true });
+      // Temporarily remove transform to get full quality
+      const originalTransform = reportElement.style.transform;
+      reportElement.style.transform = 'none';
+      
+      const imgData = await toJpeg(reportElement, { cacheBust: true, pixelRatio: 1.5, quality: 0.9, backgroundColor: '#ffffff' });
+      
+      reportElement.style.transform = originalTransform;
+      
       const link = document.createElement('a');
       link.download = `Attendance_Report_${date}.png`;
-      link.href = canvas.toDataURL('image/png');
+      link.href = imgData;
       link.click();
+      toast.success('Downloaded successfully!', { id: toastId });
     } catch (e) {
-      toast.error('Failed to download image');
+      console.error(e);
+      toast.error('Failed to download image', { id: toastId });
     }
   };
 
@@ -80,83 +90,110 @@ export default function AttendanceDailyReportPage() {
         </div>
       </div>
 
-      {/* ── PRINTABLE AREA ── */}
-      <div className="flex justify-center w-full">
-        <div id="reportArea" className="bg-white rounded-2xl border border-gray-150 shadow-sm print:shadow-none print:border-none print:m-0 w-full max-w-4xl mx-auto overflow-hidden
-          sm:aspect-auto aspect-[9/16] relative flex flex-col">
+      {/* ── PRINTABLE AREA (Fixed 1080x1920 for 9:16) ── */}
+      <div className="flex justify-center w-full overflow-hidden bg-slate-50 py-8 rounded-2xl print:bg-white print:py-0">
+        {/* Scaling Wrapper for Preview */}
+        <div className="origin-top flex justify-center" style={{ transform: 'scale(var(--scale, 1))' }} 
+             ref={(el) => {
+               if (el) {
+                 const updateScale = () => {
+                   const parent = el.parentElement;
+                   if (parent && !window.matchMedia('print').matches) {
+                     const scale = Math.min(1, (parent.clientWidth - 32) / 1080);
+                     el.style.setProperty('--scale', scale.toString());
+                     el.parentElement.style.height = `${1920 * scale + 64}px`;
+                   } else {
+                     el.style.setProperty('--scale', '1');
+                     if (parent) parent.style.height = 'auto';
+                   }
+                 };
+                 updateScale();
+                 window.addEventListener('resize', updateScale);
+                 return () => window.removeEventListener('resize', updateScale);
+               }
+             }}>
           
-          {/* Header Gradient */}
-          <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 p-6 md:p-8 text-center relative overflow-hidden shrink-0">
-            <div className="absolute inset-0 opacity-20 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCI+PGNpcmNsZSBjeD0iMiIgY3k9IjIiIHI9IjIiIGZpbGw9IiNmZmYiLz48L3N2Zz4=')] bg-repeat" />
-            <h1 className="text-2xl md:text-3xl lg:text-4xl font-black uppercase text-white tracking-wider drop-shadow-md relative z-10">SRI VENKATESWARA JY SCHOOL</h1>
-            <p className="text-sm md:text-base font-semibold text-indigo-100 uppercase tracking-widest mt-2 relative z-10">Daily Attendance Summary</p>
-            <div className="mt-4 inline-block bg-white/20 backdrop-blur-md border border-white/30 px-6 py-2 rounded-full font-bold text-white relative z-10 shadow-lg">
-              Date: {new Date(date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-            </div>
-          </div>
+          <div id="reportArea" className="bg-white border border-gray-150 shadow-2xl print:shadow-none print:border-none print:m-0 overflow-hidden relative flex flex-col"
+            style={{ width: '1080px', height: '1920px' }}>
+            
+            {/* Background Pattern */}
+            <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'radial-gradient(#6366f1 2px, transparent 2px)', backgroundSize: '32px 32px' }} />
 
-          <div className="p-4 md:p-8 flex-1 flex flex-col">
-            {loading ? (
-              <LoadingSpinner size="lg" className="py-12 m-auto" />
-            ) : (
-          <>
-            {/* Overall Summary Widgets */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-6 md:mb-8 shrink-0">
-              <div className="p-3 md:p-4 rounded-xl border-l-4 border-l-indigo-500 bg-indigo-50/50 text-center shadow-sm">
-                <p className="text-[10px] md:text-xs font-bold text-indigo-500 uppercase tracking-wider mb-1">Total Classes</p>
-                <p className="text-xl md:text-2xl font-black text-indigo-900">{totalClasses}</p>
-              </div>
-              <div className="p-3 md:p-4 rounded-xl border-l-4 border-l-blue-500 bg-blue-50/50 text-center shadow-sm">
-                <p className="text-[10px] md:text-xs font-bold text-blue-500 uppercase tracking-wider mb-1">Total Strength</p>
-                <p className="text-xl md:text-2xl font-black text-blue-900">{totalStudents}</p>
-              </div>
-              <div className="p-3 md:p-4 rounded-xl border-l-4 border-l-emerald-500 bg-emerald-50/50 text-center shadow-sm">
-                <p className="text-[10px] md:text-xs font-bold text-emerald-500 uppercase tracking-wider mb-1">Total Present</p>
-                <p className="text-xl md:text-2xl font-black text-emerald-900">{totalPresent}</p>
-              </div>
-              <div className="p-3 md:p-4 rounded-xl border-l-4 border-l-red-500 bg-red-50/50 text-center shadow-sm">
-                <p className="text-[10px] md:text-xs font-bold text-red-500 uppercase tracking-wider mb-1">Total Absent</p>
-                <p className="text-xl md:text-2xl font-black text-red-900">{totalAbsent}</p>
+            {/* Header Gradient */}
+            <div className="bg-gradient-to-br from-indigo-900 via-purple-900 to-indigo-900 p-12 text-center relative overflow-hidden shrink-0 border-b-8 border-pink-500">
+              <div className="absolute inset-0 opacity-20 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCI+PGNpcmNsZSBjeD0iMiIgY3k9IjIiIHI9IjIiIGZpbGw9IiNmZmYiLz48L3N2Zz4=')] bg-repeat" />
+              <div className="absolute top-0 right-0 w-64 h-64 bg-pink-500 rounded-full blur-[100px] opacity-30"></div>
+              <div className="absolute bottom-0 left-0 w-64 h-64 bg-indigo-500 rounded-full blur-[100px] opacity-30"></div>
+              
+              <h1 className="text-6xl font-black uppercase text-white tracking-widest drop-shadow-2xl relative z-10 mb-4">SRI VENKATESWARA JY SCHOOL</h1>
+              <p className="text-2xl font-bold text-indigo-200 uppercase tracking-[0.3em] relative z-10 mb-8">Daily Attendance Report</p>
+              
+              <div className="inline-flex items-center justify-center gap-3 bg-white/10 backdrop-blur-md border border-white/20 px-10 py-4 rounded-full font-black text-2xl text-white relative z-10 shadow-2xl">
+                <Calendar className="w-8 h-8 text-pink-400" />
+                {new Date(date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
               </div>
             </div>
 
-            {/* Class-wise Table */}
-            <div className="overflow-x-auto w-full flex-1">
-              <table className="w-full text-xs md:text-sm text-left border-collapse rounded-xl overflow-hidden shadow-sm">
-                <thead>
-                  <tr className="bg-gradient-to-r from-gray-100 to-gray-50 border-b-2 border-gray-200">
-                    <th className="p-2 md:p-3 font-black text-gray-800 uppercase tracking-wider">Class</th>
-                    <th className="p-2 md:p-3 font-black text-gray-800 uppercase tracking-wider text-center">Total</th>
-                    <th className="p-2 md:p-3 font-black text-emerald-700 uppercase tracking-wider text-center bg-emerald-50/50">Present</th>
-                    <th className="p-2 md:p-3 font-black text-red-700 uppercase tracking-wider text-center bg-red-50/50">Absent</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100 bg-white">
+            <div className="p-12 flex-1 flex flex-col relative z-10">
+              {loading ? (
+                <LoadingSpinner size="lg" className="py-24 m-auto" />
+              ) : (
+            <>
+              {/* Overall Summary Widgets */}
+              <div className="grid grid-cols-4 gap-8 mb-12 shrink-0">
+                {[
+                  { label: 'Total Classes', val: totalClasses, c1: 'from-indigo-500 to-indigo-700', c2: 'text-indigo-600', bg: 'bg-indigo-50' },
+                  { label: 'Total Strength', val: totalStudents, c1: 'from-blue-500 to-blue-700', c2: 'text-blue-600', bg: 'bg-blue-50' },
+                  { label: 'Total Present', val: totalPresent, c1: 'from-emerald-500 to-emerald-700', c2: 'text-emerald-600', bg: 'bg-emerald-50' },
+                  { label: 'Total Absent', val: totalAbsent, c1: 'from-rose-500 to-rose-700', c2: 'text-rose-600', bg: 'bg-rose-50' }
+                ].map((s, i) => (
+                  <div key={i} className={`${s.bg} rounded-3xl p-8 flex flex-col items-center justify-center relative overflow-hidden border border-white shadow-xl shadow-${s.c2.split('-')[1]}-900/5`}>
+                    <div className={`absolute top-0 left-0 w-full h-2 bg-gradient-to-r ${s.c1}`} />
+                    <p className={`text-lg font-black ${s.c2} uppercase tracking-widest mb-2 opacity-80`}>{s.label}</p>
+                    <p className="text-6xl font-black text-slate-900 drop-shadow-sm">{s.val}</p>
+                  </div>
+                ))}
+              </div>
+
+              {/* Class-wise Grid to fit on one page */}
+              <div className="flex-1 min-h-0">
+                <div className="grid grid-cols-3 gap-6 auto-rows-max">
                   {data.map((row) => (
-                    <tr key={row.classId} className="hover:bg-indigo-50/30 transition-colors">
-                      <td className="p-2 md:p-3 font-bold text-gray-900 border-l-[3px] border-l-transparent hover:border-l-indigo-500">{row.className}</td>
-                      <td className="p-2 md:p-3 text-center font-semibold text-gray-700">{row.total}</td>
-                      <td className="p-2 md:p-3 text-center font-bold text-emerald-600 bg-emerald-50/30">{row.present}</td>
-                      <td className="p-2 md:p-3 text-center font-bold text-red-600 bg-red-50/30">{row.absent}</td>
-                    </tr>
+                    <div key={row.classId} className="bg-white border-2 border-slate-100 rounded-2xl overflow-hidden shadow-sm flex flex-col">
+                      <div className="bg-slate-800 text-white px-4 py-3 flex justify-between items-center">
+                        <span className="text-xl font-black tracking-wider truncate">{row.className}</span>
+                        <span className="text-sm font-bold bg-white/20 px-3 py-1 rounded-full">{row.total} Total</span>
+                      </div>
+                      <div className="grid grid-cols-2 divide-x divide-slate-100">
+                        <div className="p-4 flex flex-col items-center justify-center bg-emerald-50/30">
+                          <span className="text-sm font-bold text-emerald-600 uppercase tracking-widest mb-1">Present</span>
+                          <span className="text-3xl font-black text-emerald-600">{row.present}</span>
+                        </div>
+                        <div className="p-4 flex flex-col items-center justify-center bg-rose-50/30">
+                          <span className="text-sm font-bold text-rose-600 uppercase tracking-widest mb-1">Absent</span>
+                          <span className="text-3xl font-black text-rose-600">{row.absent}</span>
+                        </div>
+                      </div>
+                    </div>
                   ))}
-                </tbody>
-              </table>
-            </div>
+                </div>
+              </div>
 
-            {/* Footer Signature Area */}
-            <div className="mt-8 md:mt-12 pt-6 border-t border-gray-200 flex justify-between px-4 md:px-10 shrink-0">
-              <div className="text-center">
-                <div className="w-24 md:w-40 border-b-2 border-gray-400 mb-2"></div>
-                <p className="text-[9px] md:text-xs font-black text-gray-500 uppercase tracking-widest">Teacher</p>
+              {/* Footer Signature Area */}
+              <div className="mt-12 pt-8 flex justify-between px-16 shrink-0 relative">
+                <div className="absolute top-0 left-16 right-16 h-0.5 bg-gradient-to-r from-transparent via-slate-300 to-transparent" />
+                <div className="text-center">
+                  <div className="w-64 border-b-2 border-slate-400 mb-4 border-dashed"></div>
+                  <p className="text-lg font-black text-slate-500 uppercase tracking-[0.2em]">Class Teacher</p>
+                </div>
+                <div className="text-center">
+                  <div className="w-64 border-b-2 border-slate-400 mb-4 border-dashed"></div>
+                  <p className="text-lg font-black text-slate-500 uppercase tracking-[0.2em]">Principal Signature</p>
+                </div>
               </div>
-              <div className="text-center">
-                <div className="w-24 md:w-40 border-b-2 border-gray-400 mb-2"></div>
-                <p className="text-[9px] md:text-xs font-black text-gray-500 uppercase tracking-widest">Principal</p>
-              </div>
+            </>
+          )}
             </div>
-          </>
-        )}
           </div>
         </div>
       </div>
