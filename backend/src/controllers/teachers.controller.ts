@@ -171,7 +171,7 @@ export const bulkImport = async (req: AuthRequest, res: Response, next: NextFunc
           where: { 
             OR: [
               { email: generatedEmail },
-              { phone: String(phone) }
+              { phone: String(phone), role: { not: 'STUDENT' } }
             ]
           } 
         });

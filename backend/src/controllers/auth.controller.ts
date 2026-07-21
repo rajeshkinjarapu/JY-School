@@ -71,24 +71,41 @@ export const login = async (req: AuthRequest, res: Response, next: NextFunction)
   if (!emailOrId || !password) return next(createError('Email / mobile / Student ID and password are required', 400));
 
   const searchTerm = emailOrId;
-  const user = await prisma.user.findFirst({
+  let user = await prisma.user.findFirst({
     where: {
       OR: [
         { email: searchTerm },
-        { phone: searchTerm },
         { student: { rollNo: searchTerm } },
         { teacher: { employeeId: searchTerm } },
       ],
     },
     include: {
-      student: {
-        include: {
-          class: true,
-        },
-      },
+      student: { include: { class: true } },
       teacher: { include: { homeRoomClass: true } },
     },
   });
+
+  // If not found by email or ID, try phone, prioritizing TEACHER/ADMIN over STUDENT
+  if (!user) {
+    user = await prisma.user.findFirst({
+      where: { phone: searchTerm, role: { not: 'STUDENT' } },
+      include: {
+        student: { include: { class: true } },
+        teacher: { include: { homeRoomClass: true } },
+      },
+    });
+  }
+
+  // Fallback to any user with that phone
+  if (!user) {
+    user = await prisma.user.findFirst({
+      where: { phone: searchTerm },
+      include: {
+        student: { include: { class: true } },
+        teacher: { include: { homeRoomClass: true } },
+      },
+    });
+  }
 
   if (!user || !user.isActive) return next(createError('Invalid credentials', 401));
 
