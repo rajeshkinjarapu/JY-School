@@ -19,10 +19,70 @@ export const OMRScannerPage: React.FC = () => {
   const [results, setResults] = useState<OMRResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showKeyModal, setShowKeyModal] = useState(false);
+  const [keyTab, setKeyTab] = useState<'manual' | 'excel'>('manual');
   
   // Quick Answer Key configuration state
   const [answerKeyInput, setAnswerKeyInput] = useState<string>('');
+  const [manualGridKey, setManualGridKey] = useState<Record<string, string>>({});
   const [parsedAnswerKey, setParsedAnswerKey] = useState<Record<string, string> | null>(null);
+
+  const handleGridSelect = (qNum: string, option: string) => {
+    setManualGridKey((prev) => {
+      const updated = { ...prev };
+      if (updated[qNum] === option) {
+        delete updated[qNum];
+      } else {
+        updated[qNum] = option;
+      }
+      setParsedAnswerKey(Object.keys(updated).length > 0 ? updated : null);
+      return updated;
+    });
+  };
+
+  const handleExcelUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+    const file = e.target.files[0];
+    const reader = new FileReader();
+
+    reader.onload = (evt) => {
+      try {
+        const text = evt.target?.result as string;
+        const keyObj: Record<string, string> = {};
+        
+        // Parse CSV or Text lines
+        const lines = text.split(/\r?\n/);
+        let qCount = 1;
+        
+        lines.forEach((line) => {
+          const parts = line.split(/[,;\t\s]+/).filter(Boolean);
+          parts.forEach((part) => {
+            const clean = part.toUpperCase().trim();
+            if (clean.includes(':')) {
+              const [q, a] = clean.split(':');
+              if (q && ['A','B','C','D'].includes(a)) {
+                keyObj[q] = a;
+              }
+            } else if (['A','B','C','D'].includes(clean)) {
+              keyObj[qCount.toString()] = clean;
+              qCount++;
+            }
+          });
+        });
+
+        if (Object.keys(keyObj).length > 0) {
+          setParsedAnswerKey(keyObj);
+          alert(`Successfully loaded Answer Key with ${Object.keys(keyObj).length} questions from file!`);
+          setShowKeyModal(false);
+        } else {
+          alert('Could not find valid answers (A, B, C, D) in the file.');
+        }
+      } catch (err) {
+        alert('Failed to parse file. Please ensure it is a valid CSV/Text file.');
+      }
+    };
+
+    reader.readAsText(file);
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
@@ -201,24 +261,51 @@ export const OMRScannerPage: React.FC = () => {
 
               {/* SCORE CARD DISPLAY */}
               {results.score !== null && results.score !== undefined && (
-                <div className="p-4 bg-indigo-950 text-white rounded-xl flex items-center justify-between shadow-sm">
-                  <div>
-                    <p className="text-xs text-indigo-200 font-semibold uppercase tracking-wider">Total Score (No Negative Marking)</p>
-                    <div className="flex items-baseline gap-2 mt-1">
-                      <span className="text-3xl font-extrabold text-white">{results.score}</span>
-                      <span className="text-sm text-indigo-300">/ {results.max_score} Marks</span>
+                <div className="space-y-3">
+                  <div className="p-4 bg-indigo-950 text-white rounded-xl flex items-center justify-between shadow-sm">
+                    <div>
+                      <p className="text-xs text-indigo-200 font-semibold uppercase tracking-wider">Total Score (No Negative Marking)</p>
+                      <div className="flex items-baseline gap-2 mt-1">
+                        <span className="text-3xl font-extrabold text-white">{results.score}</span>
+                        <span className="text-sm text-indigo-300">/ {results.max_score} Marks</span>
+                      </div>
+                    </div>
+                    <div className="flex gap-4 text-center">
+                      <div className="bg-emerald-900/50 border border-emerald-500/30 px-3 py-1.5 rounded-lg">
+                        <p className="text-xs text-emerald-300">Correct (+4)</p>
+                        <p className="text-lg font-bold text-emerald-400">{results.correct_count}</p>
+                      </div>
+                      <div className="bg-rose-900/50 border border-rose-500/30 px-3 py-1.5 rounded-lg">
+                        <p className="text-xs text-rose-300">Wrong (0)</p>
+                        <p className="text-lg font-bold text-rose-400">{results.wrong_count}</p>
+                      </div>
                     </div>
                   </div>
-                  <div className="flex gap-4 text-center">
-                    <div className="bg-emerald-900/50 border border-emerald-500/30 px-3 py-1.5 rounded-lg">
-                      <p className="text-xs text-emerald-300">Correct (+4)</p>
-                      <p className="text-lg font-bold text-emerald-400">{results.correct_count}</p>
+
+                  {/* SUBJECT BREAKDOWN CARDS */}
+                  {parsedAnswerKey && (
+                    <div className="grid grid-cols-3 gap-3 text-center">
+                      {[
+                        { title: '📘 Maths', start: 1, end: 25, color: 'bg-blue-50 border-blue-200 text-blue-900' },
+                        { title: '🟣 Physics', start: 26, end: 50, color: 'bg-purple-50 border-purple-200 text-purple-900' },
+                        { title: '🟡 Chemistry', start: 51, end: 75, color: 'bg-amber-50 border-amber-200 text-amber-900' },
+                      ].map((sub, idx) => {
+                        let subCorrect = 0;
+                        for (let q = sub.start; q <= sub.end; q++) {
+                          const qKey = q.toString();
+                          if (parsedAnswerKey[qKey] && results.answers[qKey] === parsedAnswerKey[qKey]) {
+                            subCorrect++;
+                          }
+                        }
+                        return (
+                          <div key={idx} className={`p-3 rounded-xl border ${sub.color}`}>
+                            <p className="text-xs font-bold">{sub.title}</p>
+                            <p className="text-lg font-extrabold mt-1">{subCorrect * 4} <span className="text-xs font-normal opacity-70">/ 100</span></p>
+                          </div>
+                        );
+                      })}
                     </div>
-                    <div className="bg-rose-900/50 border border-rose-500/30 px-3 py-1.5 rounded-lg">
-                      <p className="text-xs text-rose-300">Wrong (0)</p>
-                      <p className="text-lg font-bold text-rose-400">{results.wrong_count}</p>
-                    </div>
-                  </div>
+                  )}
                 </div>
               )}
 
@@ -254,31 +341,120 @@ export const OMRScannerPage: React.FC = () => {
       {/* ANSWER KEY MODAL */}
       {showKeyModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl space-y-4">
-            <h3 className="text-lg font-bold text-gray-900">Set Answer Key</h3>
-            <p className="text-xs text-gray-500">
-              Enter answers separated by spaces or commas (e.g. <code className="bg-slate-100 px-1 py-0.5 rounded">C B C D B D A...</code>)
-            </p>
-            <textarea
-              rows={5}
-              value={answerKeyInput}
-              onChange={(e) => setAnswerKeyInput(e.target.value)}
-              placeholder="C, B, C, D, B, D, A, C, D, A..."
-              className="w-full p-3 border border-gray-200 rounded-xl text-sm font-mono focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-            />
-            <div className="flex justify-end gap-3 pt-2">
+          <div className="bg-white rounded-2xl p-6 max-w-lg w-full shadow-2xl space-y-4">
+            <div className="flex justify-between items-center border-b pb-3">
+              <h3 className="text-lg font-bold text-gray-900">Set Answer Key</h3>
+              <button onClick={() => setShowKeyModal(false)} className="text-gray-400 hover:text-gray-600 font-bold">✕</button>
+            </div>
+
+            {/* TAB SELECTOR */}
+            <div className="flex bg-slate-100 p-1 rounded-xl">
+              <button
+                onClick={() => setKeyTab('manual')}
+                className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${keyTab === 'manual' ? 'bg-white shadow text-indigo-600' : 'text-slate-500'}`}
+              >
+                📝 Manual Text / Key Entry
+              </button>
+              <button
+                onClick={() => setKeyTab('excel')}
+                className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${keyTab === 'excel' ? 'bg-white shadow text-indigo-600' : 'text-slate-500'}`}
+              >
+                📊 Excel / CSV Upload
+              </button>
+            </div>
+
+            {keyTab === 'manual' ? (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between bg-indigo-50/70 p-3 rounded-xl border border-indigo-100">
+                  <span className="text-xs font-bold text-indigo-900">
+                    Quick Key Selection (75 Questions)
+                  </span>
+                  <div className="flex gap-2">
+                    <button 
+                      onClick={() => setAnswerKeyInput('')} 
+                      className="text-[11px] text-red-500 font-semibold hover:underline"
+                    >
+                      Clear All
+                    </button>
+                  </div>
+                </div>
+
+                {/* TABULAR GRID FOR 75 QUESTIONS (3 SUBJECTS x 25 Qs) */}
+                <div className="max-h-[380px] overflow-y-auto pr-1 space-y-4">
+                  {[
+                    { title: '📘 Maths (Q01 - Q25)', start: 1, count: 25, color: 'border-blue-200 bg-blue-50/30' },
+                    { title: '🟣 Physics (Q26 - Q50)', start: 26, count: 25, color: 'border-purple-200 bg-purple-50/30' },
+                    { title: '🟡 Chemistry (Q51 - Q75)', start: 51, count: 25, color: 'border-amber-200 bg-amber-50/30' },
+                  ].map((section, sIdx) => (
+                    <div key={sIdx} className={`rounded-xl border p-3 ${section.color}`}>
+                      <h4 className="text-xs font-bold text-slate-800 mb-2.5 uppercase tracking-wider">{section.title}</h4>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                        {Array.from({ length: section.count }).map((_, i) => {
+                          const qNum = (section.start + i).toString();
+                          const currentVal = (parsedAnswerKey || {})[qNum] || (manualGridKey[qNum] || '');
+
+                          return (
+                            <div key={qNum} className="flex items-center justify-between p-1.5 bg-white rounded-lg border border-slate-200 shadow-2xs">
+                              <span className="text-xs font-bold text-slate-700 w-8">
+                                Q{qNum.padStart(2, '0')}
+                              </span>
+                              <div className="flex gap-1">
+                                {['A', 'B', 'C', 'D'].map((opt) => (
+                                  <button
+                                    key={opt}
+                                    type="button"
+                                    onClick={() => handleGridSelect(qNum, opt)}
+                                    className={`w-6 h-6 rounded text-xs font-bold transition-all ${
+                                      currentVal === opt
+                                        ? 'bg-indigo-600 text-white shadow-xs scale-105'
+                                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                                    }`}
+                                  >
+                                    {opt}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-4 text-center border-2 border-dashed border-slate-200 p-6 rounded-xl bg-slate-50">
+                <FileType className="w-10 h-10 text-emerald-600 mx-auto" />
+                <div>
+                  <p className="text-sm font-bold text-slate-800">Upload Answer Key Excel / CSV File</p>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Columns should contain: <span className="font-semibold text-slate-700">QNo</span> and <span className="font-semibold text-slate-700">Answer</span> (A, B, C, or D)
+                  </p>
+                </div>
+                <input
+                  type="file"
+                  accept=".csv,.txt"
+                  onChange={handleExcelUpload}
+                  className="block w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 cursor-pointer"
+                />
+              </div>
+            )}
+
+            <div className="flex justify-end gap-3 pt-3 border-t">
               <button 
                 onClick={() => setShowKeyModal(false)}
-                className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-xl"
+                className="px-4 py-2 text-xs font-semibold text-gray-600 hover:bg-gray-100 rounded-xl"
               >
                 Cancel
               </button>
-              <button 
-                onClick={handleSaveAnswerKey}
-                className="px-4 py-2 text-sm bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl"
-              >
-                Save Answer Key
-              </button>
+              {keyTab === 'manual' && (
+                <button 
+                  onClick={handleSaveAnswerKey}
+                  className="px-4 py-2 text-xs bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-sm"
+                >
+                  Save Answer Key
+                </button>
+              )}
             </div>
           </div>
         </div>
