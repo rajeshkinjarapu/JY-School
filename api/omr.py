@@ -99,7 +99,26 @@ class handler(BaseHTTPRequestHandler):
                 img_data = img_data.split(',')[1]
             image_bytes = base64.b64decode(img_data)
 
+            # Optional answer key passed from frontend: {"1": "A", "2": "B", ...}
+            answer_key = data.get('answer_key', None)
+
             student_id, answers, filled_count = process_omr(image_bytes)
+
+            score = 0
+            correct_count = 0
+            wrong_count = 0
+
+            if answer_key and isinstance(answer_key, dict):
+                for q_num, correct_opt in answer_key.items():
+                    student_ans = answers.get(str(q_num))
+                    if student_ans is not None:
+                        if student_ans == correct_opt:
+                            correct_count += 1
+                        else:
+                            wrong_count += 1
+
+                # No negative marking: 4 marks per correct answer
+                score = correct_count * 4
 
             self.send_response(200)
             self.send_header('Content-Type', 'application/json')
@@ -111,7 +130,11 @@ class handler(BaseHTTPRequestHandler):
                 'answers': answers,
                 'total_questions': 75,
                 'filled_count': filled_count,
-                'blank_count': 75 - filled_count
+                'blank_count': 75 - filled_count,
+                'score': score if answer_key else None,
+                'correct_count': correct_count if answer_key else None,
+                'wrong_count': wrong_count if answer_key else None,
+                'max_score': len(answer_key) * 4 if answer_key else 300
             }
             self.wfile.write(json.dumps(response_payload).encode())
 
