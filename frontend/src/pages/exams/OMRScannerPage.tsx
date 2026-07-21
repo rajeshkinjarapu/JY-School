@@ -115,7 +115,7 @@ export const OMRScannerPage: React.FC = () => {
       reader.onload = async (e) => {
         const base64Img = e.target?.result as string;
         try {
-          const response = await fetch('/api/omr.py', {
+          const response = await fetch('/api/omr', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
