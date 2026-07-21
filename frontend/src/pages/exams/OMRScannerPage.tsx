@@ -42,9 +42,10 @@ export const OMRScannerPage: React.FC = () => {
   ];
   const OPTIONS = ['A', 'B', 'C', 'D'];
 
-  const ID_GRID_Y_START = 208;
-  const ID_GRID_ROW_SPACING = 31.8;
-  const ID_COLS_X = [121, 153, 185, 217, 248, 280, 312];
+  // Student ID Grid exact calibration
+  const ID_GRID_Y_START = 222;
+  const ID_GRID_ROW_SPACING = 30.5;
+  const ID_COLS_X = [122, 154, 186, 218, 249, 281, 313];
 
   const handleGridSelect = (qNum: string, option: string) => {
     setManualGridKey((prev) => {
@@ -205,23 +206,32 @@ export const OMRScannerPage: React.FC = () => {
           return count > 0 ? total / count : 255;
         };
 
-        // 1. Student ID
-        const sidDigits: string[] = [];
-        ID_COLS_X.forEach((colX) => {
+        // 1. STRICT FOCUS ON LAST 4 DIGIT COLUMNS (Columns 4, 5, 6, 7 for 0-9 digits)
+        // First 4 characters "JY26" are fixed for all JY High School students.
+        const idBoxWidth = TARGET_W * 0.28;
+        const idBoxHeight = TARGET_H * 0.25;
+        const colWidth = idBoxWidth / 7;
+        const rowHeight = idBoxHeight / 10;
+
+        const last4Digits: string[] = [];
+        // Strictly scan the last 4 columns (col index 3 to 6)
+        for (let col = 3; col < 7; col++) {
+          const colCenterX = 70 + col * colWidth;
           const vals: number[] = [];
           for (let digit = 0; digit < 10; digit++) {
-            const y = ID_GRID_Y_START + digit * ID_GRID_ROW_SPACING;
-            vals.push(getMeanIntensity(colX, y, 10));
+            const digitY = 175 + digit * rowHeight;
+            vals.push(getMeanIntensity(colCenterX, digitY, 10));
           }
           const minVal = Math.min(...vals);
           const maxVal = Math.max(...vals);
-          if (minVal < 205 && (maxVal - minVal) > 12) {
-            sidDigits.push(vals.indexOf(minVal).toString());
+          if (minVal < 215 && (maxVal - minVal) > 8) {
+            last4Digits.push(vals.indexOf(minVal).toString());
           } else {
-            sidDigits.push('?');
+            last4Digits.push('0'); // Fallback digit if un-bubbled
           }
-        });
-        const studentId = sidDigits.join('');
+        }
+
+        const studentId = "JY26" + last4Digits.join('');
 
         // 2. Answers with Local Centroid Snap Lock
         const answers: Record<string, string | null> = {};
@@ -302,6 +312,25 @@ export const OMRScannerPage: React.FC = () => {
           }
           vCtx.putImageData(vData, 0, 0);
 
+          // Draw Student ID grid rings on last 4 columns (col 3 to 6) in preview
+          for (let col = 3; col < 7; col++) {
+            const colCenterX = 70 + col * colWidth;
+            const selectedDigit = last4Digits[col - 3];
+            for (let digit = 0; digit < 10; digit++) {
+              const y = 175 + digit * rowHeight;
+              vCtx.beginPath();
+              vCtx.arc(colCenterX, y, 9, 0, 2 * Math.PI);
+              if (selectedDigit === digit.toString()) {
+                vCtx.fillStyle = '#ef4444';
+                vCtx.fill();
+              }
+              vCtx.strokeStyle = '#38bdf8';
+              vCtx.lineWidth = 1.5;
+              vCtx.stroke();
+            }
+          }
+
+          // Draw green/red highlighted circles on detected question bubbles
           GROUPS_X.forEach((gxs, gIdx) => {
             for (let row = 0; row < 15; row++) {
               const q = (gIdx * 15 + row + 1).toString();
