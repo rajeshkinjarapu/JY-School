@@ -1,7 +1,5 @@
 import React, { useState } from 'react';
 import { Upload, FileType, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
-import { SectionHeader } from '../../components/UI/SectionHeader';
-import { Card } from '../../components/UI/Card';
 
 export const OMRScannerPage: React.FC = () => {
   const [files, setFiles] = useState<File[]>([]);
@@ -26,14 +24,14 @@ export const OMRScannerPage: React.FC = () => {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
-      <SectionHeader 
-        title="OMR Scanner" 
-        subtitle="Upload scanned OMR sheets (PDF or Images) for automatic evaluation" 
-      />
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-gray-900">OMR Scanner</h1>
+        <p className="text-gray-500">Upload scanned OMR sheets (PDF or Images) for automatic evaluation</p>
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
-          <Card className="p-8 border-dashed border-2 border-indigo-200 bg-indigo-50/50 hover:bg-indigo-50 transition-colors text-center relative group">
+          <div className="bg-white rounded-xl shadow-sm p-8 border-dashed border-2 border-indigo-200 bg-indigo-50/50 hover:bg-indigo-50 transition-colors text-center relative group">
             <input 
               type="file" 
               multiple 
@@ -50,10 +48,10 @@ export const OMRScannerPage: React.FC = () => {
                 <p className="text-sm text-slate-500 mt-1">Upload scanned PDFs or Images of OMR sheets.</p>
               </div>
             </div>
-          </Card>
+          </div>
 
           {files.length > 0 && (
-            <Card className="p-6">
+            <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
               <h3 className="text-sm font-bold text-slate-800 mb-4 border-b pb-2 flex justify-between">
                 Selected Files ({files.length})
                 <button onClick={() => setFiles([])} className="text-xs text-red-500 hover:underline">Clear All</button>
@@ -77,12 +75,12 @@ export const OMRScannerPage: React.FC = () => {
               >
                 {isUploading ? 'Processing OMR Sheets...' : 'Start OMR Scan'}
               </button>
-            </Card>
+            </div>
           )}
         </div>
 
         <div className="space-y-6">
-          <Card className="p-6 bg-amber-50 border-amber-100">
+          <div className="bg-white rounded-xl shadow-sm p-6 bg-amber-50 border border-amber-100">
             <h3 className="text-sm font-bold text-amber-800 flex items-center gap-2 mb-3">
               <AlertCircle className="w-4 h-4" />
               Important Instructions
@@ -93,7 +91,7 @@ export const OMRScannerPage: React.FC = () => {
               <li>Wait for the processing engine to match the answers with the Exam Key.</li>
               <li>Any manual review warnings will appear after processing.</li>
             </ul>
-          </Card>
+          </div>
         </div>
       </div>
     </div>
