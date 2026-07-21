@@ -145,8 +145,7 @@ export const OMRScannerPage: React.FC = () => {
         const ctx = canvas.getContext('2d');
         if (!ctx) return reject('Canvas context error');
 
-        // 0. AUTOMATIC OUTER BLACK RECTANGLE BORDER DETECTION & CROP
-        // Automatically crop CamScanner margins by detecting inner solid black border
+        // Automatic Outer Frame Line Detection & Fit
         const tempCanvas = document.createElement('canvas');
         tempCanvas.width = img.width;
         tempCanvas.height = img.height;
@@ -165,7 +164,6 @@ export const OMRScannerPage: React.FC = () => {
             for (let x = 0; x < img.width; x += step) {
               const i = (y * img.width + x) * 4;
               const brightness = 0.299 * raw[i] + 0.587 * raw[i + 1] + 0.114 * raw[i + 2];
-              // Detect dark border frame line
               if (brightness < 80) {
                 if (x < minX) minX = x;
                 if (x > maxX) maxX = x;
@@ -175,7 +173,6 @@ export const OMRScannerPage: React.FC = () => {
             }
           }
 
-          // If valid frame detected with margin padding, crop to inner rectangle
           if (maxX - minX > img.width * 0.5 && maxY - minY > img.height * 0.5) {
             cropX = Math.max(0, minX - 5);
             cropY = Math.max(0, minY - 5);
@@ -184,13 +181,11 @@ export const OMRScannerPage: React.FC = () => {
           }
         }
 
-        // Draw cropped inner sheet perfectly stretched to TARGET_W & TARGET_H
         ctx.drawImage(img, cropX, cropY, cropW, cropH, 0, 0, TARGET_W, TARGET_H);
 
         const imgData = ctx.getImageData(0, 0, TARGET_W, TARGET_H);
         const data = imgData.data;
 
-        // Grayscale mean pixel function
         const getMeanIntensity = (cx: number, cy: number, r: number = 12): number => {
           let total = 0;
           let count = 0;
@@ -202,7 +197,6 @@ export const OMRScannerPage: React.FC = () => {
           for (let y = startY; y < endY; y++) {
             for (let x = startX; x < endX; x++) {
               const idx = (y * TARGET_W + x) * 4;
-              // Grayscale: 0.299R + 0.587G + 0.114B
               const gray = 0.299 * data[idx] + 0.587 * data[idx + 1] + 0.114 * data[idx + 2];
               total += gray;
               count++;
@@ -211,7 +205,7 @@ export const OMRScannerPage: React.FC = () => {
           return count > 0 ? total / count : 255;
         };
 
-        // 1. Detect Student ID
+        // 1. Student ID
         const sidDigits: string[] = [];
         ID_COLS_X.forEach((colX) => {
           const vals: number[] = [];
@@ -229,7 +223,7 @@ export const OMRScannerPage: React.FC = () => {
         });
         const studentId = sidDigits.join('');
 
-        // 2. Detect Question Answers with Local Centroid Snap Lock (100% 75/75 Accuracy)
+        // 2. Answers with Local Centroid Snap Lock
         const answers: Record<string, string | null> = {};
         let filledCount = 0;
 
@@ -238,7 +232,6 @@ export const OMRScannerPage: React.FC = () => {
             const q = gIdx * 15 + row + 1;
             const approxY = GRID_Y_START + row * GRID_ROW_SPACING;
 
-            // Search local minimum Y center around approxY (-20px to +20px) across all 4 options
             let bestY = Math.round(approxY);
             let globalMinValInRow = 255;
 
@@ -251,13 +244,10 @@ export const OMRScannerPage: React.FC = () => {
               }
             }
 
-            // Extract intensities at the exact snap-locked bestY
             const vals = gxs.map((x) => getMeanIntensity(x, bestY, 12));
             const minVal = Math.min(...vals);
             const avgVal = vals.reduce((a, b) => a + b, 0) / vals.length;
 
-            // Absolute fill detection:
-            // Either absolute dark (< 220) OR darker than average of unfilled bubbles in the same row by 10 units
             if (minVal < 220 && (avgVal - minVal) >= 8) {
               const optIdx = vals.indexOf(minVal);
               answers[q.toString()] = OPTIONS[optIdx];
@@ -268,7 +258,7 @@ export const OMRScannerPage: React.FC = () => {
           }
         });
 
-        // 3. Score
+        // 3. Score calculation
         let score: number | null = null;
         let correctCount: number | null = null;
         let wrongCount: number | null = null;
@@ -289,17 +279,18 @@ export const OMRScannerPage: React.FC = () => {
           score = correctCount * 4;
         }
 
-        // Render High-Contrast Black Negative Computer Vision Preview Image
+        // Render High-Contrast Negative Vision Mode Preview
         const visionCanvas = document.createElement('canvas');
         visionCanvas.width = TARGET_W;
         visionCanvas.height = TARGET_H;
         const vCtx = visionCanvas.getContext('2d');
+        var processedVisionImg = '';
+
         if (vCtx) {
           vCtx.fillStyle = 'black';
           vCtx.fillRect(0, 0, TARGET_W, TARGET_H);
           vCtx.drawImage(canvas, 0, 0);
 
-          // Invert contrast & enhance bubble borders (Negative Vision Mode)
           const vData = vCtx.getImageData(0, 0, TARGET_W, TARGET_H);
           const d = vData.data;
           for (let i = 0; i < d.length; i += 4) {
@@ -311,7 +302,6 @@ export const OMRScannerPage: React.FC = () => {
           }
           vCtx.putImageData(vData, 0, 0);
 
-          // Draw green/red highlighted circles on detected bubbles
           GROUPS_X.forEach((gxs, gIdx) => {
             for (let row = 0; row < 15; row++) {
               const q = (gIdx * 15 + row + 1).toString();
@@ -323,17 +313,17 @@ export const OMRScannerPage: React.FC = () => {
                 vCtx.beginPath();
                 vCtx.arc(x, y, 12, 0, 2 * Math.PI);
                 if (detAns === opt) {
-                  vCtx.fillStyle = '#ef4444'; // Red solid for filled answer
+                  vCtx.fillStyle = '#ef4444';
                   vCtx.fill();
                 }
-                vCtx.strokeStyle = '#22c55e'; // Green ring for bubble position
+                vCtx.strokeStyle = '#22c55e';
                 vCtx.lineWidth = 2;
                 vCtx.stroke();
               });
             }
           });
 
-          var processedVisionImg = visionCanvas.toDataURL('image/jpeg');
+          processedVisionImg = visionCanvas.toDataURL('image/jpeg');
         }
 
         resolve({
@@ -492,7 +482,34 @@ export const OMRScannerPage: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* COMPUTER VISION HIGH CONTRAST PREVIEW IMAGE */}
+                  {/* SUBJECT BREAKDOWN CARDS */}
+                  {parsedAnswerKey && (
+                    <div className="grid grid-cols-3 gap-3 text-center">
+                      {[
+                        { title: '📘 Maths', start: 1, end: 25, color: 'bg-blue-50 border-blue-200 text-blue-900' },
+                        { title: '🟣 Physics', start: 26, end: 50, color: 'bg-purple-50 border-purple-200 text-purple-900' },
+                        { title: '🟡 Chemistry', start: 51, end: 75, color: 'bg-amber-50 border-amber-200 text-amber-900' },
+                      ].map((sub, idx) => {
+                        let subCorrect = 0;
+                        for (let q = sub.start; q <= sub.end; q++) {
+                          const qKey = q.toString();
+                          if (parsedAnswerKey[qKey] && results.answers[qKey] === parsedAnswerKey[qKey]) {
+                            subCorrect++;
+                          }
+                        }
+                        return (
+                          <div key={idx} className={`p-3 rounded-xl border ${sub.color}`}>
+                            <p className="text-xs font-bold">{sub.title}</p>
+                            <p className="text-lg font-extrabold mt-1">{subCorrect * 4} <span className="text-xs font-normal opacity-70">/ 100</span></p>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* COMPUTER VISION HIGH CONTRAST PREVIEW IMAGE */}
               {results.vision_preview && (
                 <div className="p-4 bg-slate-900 rounded-xl space-y-2 text-white">
                   <div className="flex items-center justify-between">
