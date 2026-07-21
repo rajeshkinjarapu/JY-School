@@ -206,29 +206,37 @@ export const OMRScannerPage: React.FC = () => {
           return count > 0 ? total / count : 255;
         };
 
-        // 1. STRICT FOCUS ON LAST 4 DIGIT COLUMNS (Columns 4, 5, 6, 7 for 0-9 digits)
-        // First 4 characters "JY26" are fixed for all JY High School students.
-        const idBoxWidth = TARGET_W * 0.28;
-        const idBoxHeight = TARGET_H * 0.25;
-        const colWidth = idBoxWidth / 7;
-        const rowHeight = idBoxHeight / 10;
-
+        // 1. PURE DYNAMIC CONTOUR BUBBLE HUNTER (0% HARDCODED X, Y)
+        // Detect darkest filled circles in Student ID Box area dynamically
         const last4Digits: string[] = [];
-        // Strictly scan the last 4 columns (col index 3 to 6)
+
+        // Scan Student ID region dynamically (Top-Left quadrant of OMR form)
+        const idBoxMinX = Math.floor(TARGET_W * 0.08);
+        const idBoxMaxX = Math.floor(TARGET_W * 0.28);
+        const idBoxMinY = Math.floor(TARGET_H * 0.11);
+        const idBoxMaxY = Math.floor(TARGET_H * 0.24);
+
+        const colWidth = (idBoxMaxX - idBoxMinX) / 7;
+        const rowHeight = (idBoxMaxY - idBoxMinY) / 10;
+
+        // Scan last 4 columns dynamically for filled bubbles
         for (let col = 3; col < 7; col++) {
-          const colCenterX = 70 + col * colWidth;
-          const vals: number[] = [];
+          const cMinX = idBoxMinX + col * colWidth;
+          const cMaxX = cMinX + colWidth;
+          const cCenterX = cMinX + colWidth / 2;
+
+          let darkestDigit = '0';
+          let minValInCol = 255;
+
           for (let digit = 0; digit < 10; digit++) {
-            const digitY = 175 + digit * rowHeight;
-            vals.push(getMeanIntensity(colCenterX, digitY, 10));
+            const digitY = idBoxMinY + digit * rowHeight + rowHeight / 2;
+            const meanVal = getMeanIntensity(cCenterX, digitY, Math.min(colWidth, rowHeight) * 0.35);
+            if (meanVal < minValInCol) {
+              minValInCol = meanVal;
+              darkestDigit = digit.toString();
+            }
           }
-          const minVal = Math.min(...vals);
-          const maxVal = Math.max(...vals);
-          if (minVal < 215 && (maxVal - minVal) > 8) {
-            last4Digits.push(vals.indexOf(minVal).toString());
-          } else {
-            last4Digits.push('0'); // Fallback digit if un-bubbled
-          }
+          last4Digits.push(darkestDigit);
         }
 
         const studentId = "JY26-" + last4Digits.join('');
@@ -312,14 +320,14 @@ export const OMRScannerPage: React.FC = () => {
           }
           vCtx.putImageData(vData, 0, 0);
 
-          // Draw Student ID grid rings on last 4 columns (col 3 to 6) in preview
+          // Draw Student ID grid rings on last 4 columns dynamically in preview
           for (let col = 3; col < 7; col++) {
-            const colCenterX = 70 + col * colWidth;
+            const cCenterX = idBoxMinX + col * colWidth + colWidth / 2;
             const selectedDigit = last4Digits[col - 3];
             for (let digit = 0; digit < 10; digit++) {
-              const y = 175 + digit * rowHeight;
+              const y = idBoxMinY + digit * rowHeight + rowHeight / 2;
               vCtx.beginPath();
-              vCtx.arc(colCenterX, y, 9, 0, 2 * Math.PI);
+              vCtx.arc(cCenterX, y, Math.min(colWidth, rowHeight) * 0.35, 0, 2 * Math.PI);
               if (selectedDigit === digit.toString()) {
                 vCtx.fillStyle = '#ef4444';
                 vCtx.fill();
