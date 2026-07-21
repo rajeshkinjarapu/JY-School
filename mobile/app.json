@@ -1,16 +1,18 @@
 {
   "expo": {
-    "name": "mobile",
+    "name": "JY School",
     "slug": "mobile",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "mobile",
+    "scheme": "jyschool",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "icon": "./assets/expo.icon"
+      "icon": "./assets/expo.icon",
+      "bundleIdentifier": "com.jyschool.app"
     },
     "android": {
+      "package": "com.jyschool.app",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -37,6 +39,13 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "0c1d0ff3-0f99-4fdb-a74e-be9d19cc867e"
+      }
+    },
+    "owner": "rajeshkinjarapu"
   }
 }
