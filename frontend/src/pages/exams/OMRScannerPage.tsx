@@ -144,52 +144,47 @@ export const OMRScannerPage: React.FC = () => {
         const ctx = canvas.getContext('2d');
         if (!ctx) return reject('Canvas context error');
 
-        // 0. 4-CORNER BLACK ANCHOR BLOCK DETECTION ALGORITHM
-        // Automatically find the 4 solid black squares at sheet corners
-        const findCornerBlock = (startX: number, startY: number, endX: number, endY: number) => {
-          let bestX = startX + (endX - startX) / 2;
-          let bestY = startY + (endY - startY) / 2;
-          let minBrightness = 255;
+        // 0. AUTOMATIC OUTER BLACK RECTANGLE BORDER DETECTION & CROP
+        // Automatically crop CamScanner margins by detecting inner solid black border
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = img.width;
+        tempCanvas.height = img.height;
+        const tempCtx = tempCanvas.getContext('2d');
+        
+        let cropX = 0, cropY = 0, cropW = img.width, cropH = img.height;
 
-          const tempCanvas = document.createElement('canvas');
-          tempCanvas.width = img.width;
-          tempCanvas.height = img.height;
-          const tCtx = tempCanvas.getContext('2d');
-          if (!tCtx) return { x: bestX, y: bestY };
+        if (tempCtx) {
+          tempCtx.drawImage(img, 0, 0);
+          const raw = tempCtx.getImageData(0, 0, img.width, img.height).data;
+          
+          let minX = img.width, minY = img.height, maxX = 0, maxY = 0;
+          const step = 4;
 
-          tCtx.drawImage(img, 0, 0);
-          const rawData = tCtx.getImageData(0, 0, img.width, img.height).data;
-
-          const step = 2;
-          for (let y = Math.max(0, Math.floor(startY)); y < Math.min(img.height, Math.ceil(endY)); y += step) {
-            for (let x = Math.max(0, Math.floor(startX)); x < Math.min(img.width, Math.ceil(endX)); x += step) {
-              const idx = (y * img.width + x) * 4;
-              const b = 0.299 * rawData[idx] + 0.587 * rawData[idx + 1] + 0.114 * rawData[idx + 2];
-              if (b < minBrightness) {
-                minBrightness = b;
-                bestX = x;
-                bestY = y;
+          for (let y = 0; y < img.height; y += step) {
+            for (let x = 0; x < img.width; x += step) {
+              const i = (y * img.width + x) * 4;
+              const brightness = 0.299 * raw[i] + 0.587 * raw[i + 1] + 0.114 * raw[i + 2];
+              // Detect dark border frame line
+              if (brightness < 80) {
+                if (x < minX) minX = x;
+                if (x > maxX) maxX = x;
+                if (y < minY) minY = y;
+                if (y > maxY) maxY = y;
               }
             }
           }
-          return { x: bestX, y: bestY };
-        };
 
-        // Search 4 corner regions for black squares
-        const w = img.width;
-        const h = img.height;
-        const cornerW = w * 0.15;
-        const cornerH = h * 0.15;
+          // If valid frame detected with margin padding, crop to inner rectangle
+          if (maxX - minX > img.width * 0.5 && maxY - minY > img.height * 0.5) {
+            cropX = Math.max(0, minX - 5);
+            cropY = Math.max(0, minY - 5);
+            cropW = Math.min(img.width - cropX, (maxX - minX) + 10);
+            cropH = Math.min(img.height - cropY, (maxY - minY) + 10);
+          }
+        }
 
-        const anchorTL = findCornerBlock(0, 0, cornerW, cornerH);
-        const anchorTR = findCornerBlock(w - cornerW, 0, w, cornerH);
-        const anchorBL = findCornerBlock(0, h - cornerH, cornerW, h);
-        const anchorBR = findCornerBlock(w - cornerW, h - cornerH, w, h);
-
-        // Always stretch & fit between anchor bounds
-        ctx.save();
-        ctx.drawImage(img, 0, 0, TARGET_W, TARGET_H);
-        ctx.restore();
+        // Draw cropped inner sheet perfectly stretched to TARGET_W & TARGET_H
+        ctx.drawImage(img, cropX, cropY, cropW, cropH, 0, 0, TARGET_W, TARGET_H);
 
         const imgData = ctx.getImageData(0, 0, TARGET_W, TARGET_H);
         const data = imgData.data;
@@ -221,12 +216,11 @@ export const OMRScannerPage: React.FC = () => {
           const vals: number[] = [];
           for (let digit = 0; digit < 10; digit++) {
             const y = ID_GRID_Y_START + digit * ID_GRID_ROW_SPACING;
-            vals.push(getMeanIntensity(colX, y, 9));
+            vals.push(getMeanIntensity(colX, y, 10));
           }
           const minVal = Math.min(...vals);
           const maxVal = Math.max(...vals);
-          // Dynamic contrast check (darkest bubble must be significantly darker than un-bubbled average)
-          if (minVal < 185 && (maxVal - minVal) > 25) {
+          if (minVal < 205 && (maxVal - minVal) > 12) {
             sidDigits.push(vals.indexOf(minVal).toString());
           } else {
             sidDigits.push('?');
@@ -243,13 +237,12 @@ export const OMRScannerPage: React.FC = () => {
             const q = gIdx * 15 + row + 1;
             const baseY = GRID_Y_START + row * GRID_ROW_SPACING;
 
-            // Search best Y offset within [-15px to +15px] window to handle scan Y-shifts
             let bestY = baseY;
             let lowestMeanInRow = 255;
 
-            for (let offsetY = -15; offsetY <= 15; offsetY += 5) {
+            for (let offsetY = -30; offsetY <= 30; offsetY += 5) {
               const currentY = baseY + offsetY;
-              const rowMeans = gxs.map((x) => getMeanIntensity(x, currentY, 10));
+              const rowMeans = gxs.map((x) => getMeanIntensity(x, currentY, 11));
               const currentMin = Math.min(...rowMeans);
               if (currentMin < lowestMeanInRow) {
                 lowestMeanInRow = currentMin;
@@ -258,15 +251,13 @@ export const OMRScannerPage: React.FC = () => {
             }
 
             // Read options at the best aligned Y offset
-            const vals = gxs.map((x) => getMeanIntensity(x, bestY, 11));
+            const vals = gxs.map((x) => getMeanIntensity(x, bestY, 13));
             const minVal = Math.min(...vals);
-            const maxVal = Math.max(...vals);
             const avgVal = vals.reduce((a, b) => a + b, 0) / vals.length;
 
-            // A bubble is filled if:
-            // a) It is darker than absolute threshold (185)
-            // b) It is significantly darker than the average of other 3 options in the row (diff >= 18)
-            if (minVal < 185 && (avgVal - minVal) > 18) {
+            // Robust bubble fill detection:
+            // Darker than 205 OR at least 12 units darker than row average
+            if (minVal < 205 && (avgVal - minVal) > 12) {
               const optIdx = vals.indexOf(minVal);
               answers[q.toString()] = OPTIONS[optIdx];
               filledCount++;
