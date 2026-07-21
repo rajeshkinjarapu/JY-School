@@ -26,23 +26,23 @@ export const OMRScannerPage: React.FC = () => {
   const [manualGridKey, setManualGridKey] = useState<Record<string, string>>({});
   const [parsedAnswerKey, setParsedAnswerKey] = useState<Record<string, string> | null>(null);
 
-  // ── EXACT AUTO-CALIBRATED COORDINATES FROM ORIGINAL TEMPLATE ──
+  // ── MASTER TEMPLATE CALIBRATED COORDINATES ──────────────────────
   const TARGET_W = 1200;
   const TARGET_H = 1600;
   const GRID_Y_START = 735;
-  const GRID_ROW_SPACING = 42;
+  const GRID_ROW_SPACING = 42.1;
 
   const GROUPS_X = [
-    [132, 169, 208, 248],    // Group 1  (Q01–Q15)
-    [350, 389, 426, 464],    // Group 2  (Q16–Q30)
-    [567, 603, 641, 679],    // Group 3  (Q31–Q45)
-    [780, 816, 855, 889],    // Group 4  (Q46–Q60)
-    [993, 1031, 1069, 1107], // Group 5  (Q61–Q75)
+    [130, 168, 206, 244],    // Group 1  (Q01–Q15)
+    [348, 386, 424, 462],    // Group 2  (Q16–Q30)
+    [566, 604, 642, 680],    // Group 3  (Q31–Q45)
+    [784, 822, 860, 898],    // Group 4  (Q46–Q60)
+    [1002, 1040, 1078, 1116], // Group 5 (Q61–Q75)
   ];
   const OPTIONS = ['A', 'B', 'C', 'D'];
 
-  const ID_GRID_Y_START = 210;
-  const ID_GRID_ROW_SPACING = 31.5;
+  const ID_GRID_Y_START = 208;
+  const ID_GRID_ROW_SPACING = 31.8;
   const ID_COLS_X = [121, 153, 185, 217, 248, 280, 312];
 
   const handleGridSelect = (qNum: string, option: string) => {
