@@ -78,6 +78,17 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
   };
 
   const generatePDFForElement = async (el: HTMLElement, fileName: string) => {
+    const parentContainer = document.getElementById('admit-cards-print-container');
+    const originalParentDisplay = parentContainer?.style.display;
+    const originalParentPosition = parentContainer?.style.position;
+    
+    if (parentContainer) {
+      parentContainer.classList.remove('hidden');
+      parentContainer.style.display = 'flex';
+      parentContainer.style.position = 'absolute';
+      parentContainer.style.left = '-9999px';
+    }
+
     const originalDisplay = el.style.display;
     el.style.display = 'flex';
     await new Promise(resolve => setTimeout(resolve, 100));
@@ -86,7 +97,14 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
     const pdfWidth = pdf.internal.pageSize.getWidth();
     const pdfHeight = (el.offsetHeight * pdfWidth) / el.offsetWidth;
     pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight, undefined, 'FAST');
+    
     el.style.display = originalDisplay;
+    if (parentContainer) {
+      parentContainer.classList.add('hidden');
+      parentContainer.style.display = originalParentDisplay || '';
+      parentContainer.style.position = originalParentPosition || '';
+      parentContainer.style.left = '';
+    }
     return pdf;
   };
 

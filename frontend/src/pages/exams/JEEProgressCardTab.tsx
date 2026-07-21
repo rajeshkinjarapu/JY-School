@@ -134,6 +134,17 @@ export const JEEProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
   };
 
   const generatePDFForElement = async (el: HTMLElement, fileName: string) => {
+    const parentContainer = document.getElementById('progress-cards-print-container');
+    const originalParentDisplay = parentContainer?.style.display;
+    const originalParentPosition = parentContainer?.style.position;
+    
+    if (parentContainer) {
+      parentContainer.classList.remove('hidden');
+      parentContainer.style.display = 'flex';
+      parentContainer.style.position = 'absolute';
+      parentContainer.style.left = '-9999px';
+    }
+
     // Force element to be visible for capture if it's hidden
     const originalDisplay = el.style.display;
     const originalPosition = el.style.position;
@@ -153,6 +164,13 @@ export const JEEProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
     
     // Restore
     el.style.display = originalDisplay;
+    
+    if (parentContainer) {
+      parentContainer.classList.add('hidden');
+      parentContainer.style.display = originalParentDisplay || '';
+      parentContainer.style.position = originalParentPosition || '';
+      parentContainer.style.left = '';
+    }
     
     return pdf;
   };
