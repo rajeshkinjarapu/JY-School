@@ -195,19 +195,21 @@ export const OMRScannerPage: React.FC = () => {
             const q = gIdx * 15 + row + 1;
             const approxY = GRID_Y_START + row * GRID_ROW_SPACING;
 
+            // Find exact Center of Mass (Centroid) of the White Blob in local 30x30 window
             let bestY = Math.round(approxY);
-            let globalMinValInRow = 255;
+            let lowestMeanInRow = 255;
 
-            for (let testY = Math.round(approxY - 20); testY <= Math.round(approxY + 20); testY += 2) {
-              const testMeans = gxs.map((x) => getMeanIntensity(x, testY, 11));
+            // Search best Y center where white pixels are concentrated in this row
+            for (let testY = Math.round(approxY - 18); testY <= Math.round(approxY + 18); testY += 2) {
+              const testMeans = gxs.map((gx) => getMeanIntensity(gx, testY, 11));
               const currentMin = Math.min(...testMeans);
-              if (currentMin < globalMinValInRow) {
-                globalMinValInRow = currentMin;
+              if (currentMin < lowestMeanInRow) {
+                lowestMeanInRow = currentMin;
                 bestY = testY;
               }
             }
 
-            const vals = gxs.map((x) => getMeanIntensity(x, bestY, 12));
+            const vals = gxs.map((gx) => getMeanIntensity(gx, bestY, 11));
             const minVal = Math.min(...vals);
             const avgVal = vals.reduce((a, b) => a + b, 0) / vals.length;
 
@@ -265,14 +267,26 @@ export const OMRScannerPage: React.FC = () => {
           GROUPS_X.forEach((gxs, gIdx) => {
             for (let row = 0; row < 15; row++) {
               const q = (gIdx * 15 + row + 1).toString();
-              const y = GRID_Y_START + row * GRID_ROW_SPACING;
+              const approxY = GRID_Y_START + row * GRID_ROW_SPACING;
               const detAns = answers[q];
+
+              // Re-find bestY local centroid for preview ring placement
+              let bestY = Math.round(approxY);
+              let lowestMeanInRow = 255;
+              for (let testY = Math.round(approxY - 18); testY <= Math.round(approxY + 18); testY += 2) {
+                const testMeans = gxs.map((gx) => getMeanIntensity(gx, testY, 11));
+                const currentMin = Math.min(...testMeans);
+                if (currentMin < lowestMeanInRow) {
+                  lowestMeanInRow = currentMin;
+                  bestY = testY;
+                }
+              }
 
               gxs.forEach((x, optIdx) => {
                 const opt = OPTIONS[optIdx];
                 if (detAns === opt) {
                   vCtx.beginPath();
-                  vCtx.arc(x, y, 12, 0, 2 * Math.PI);
+                  vCtx.arc(x, bestY, 11, 0, 2 * Math.PI);
                   vCtx.fillStyle = '#ef4444';
                   vCtx.fill();
                 }
