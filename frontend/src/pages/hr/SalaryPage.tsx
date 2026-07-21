@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import api from '../../api/axios';
 import { LoadingSpinner } from '../../components/UI/LoadingSpinner';
+import { getPhotoUrl } from '../../utils/photo';
 import {
   CreditCard, Shield, Plus, DollarSign, Calendar,
   Download, Eye, Edit3, Trash2, CheckCircle2, AlertCircle, X
@@ -210,7 +211,7 @@ const SalaryPage: React.FC = () => {
                 {isAdmin && (
                   <div className="flex items-center gap-2 mb-4">
                     {sal.teacher.user.photoUrl ? (
-                      <img src={sal.teacher.user.photoUrl} alt="" className="w-6 h-6 rounded-full object-cover" />
+                      <img src={getPhotoUrl(sal.teacher.user.photoUrl)} alt="" className="w-6 h-6 rounded-full object-cover" />
                     ) : (
                       <div className="w-6 h-6 rounded-full bg-violet-100 text-violet-600 flex items-center justify-center text-[10px] font-black">
                         {sal.teacher.user.name.charAt(0)}

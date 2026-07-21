@@ -6,6 +6,7 @@ import { Avatar } from '../../components/UI/Avatar';
 import { Badge } from '../../components/UI/Badge';
 import { ArrowLeft, BookOpen, GraduationCap, School, Camera, Printer } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { getPhotoUrl } from '../../utils/photo';
 
 export const TeacherProfilePage: React.FC = () => {
   const { id } = useParams();
@@ -80,7 +81,7 @@ export const TeacherProfilePage: React.FC = () => {
 
       <div className="card p-6 flex flex-col md:flex-row items-center gap-6">
         <div className="relative">
-          <Avatar name={teacher.user.name} src={teacher.user.photoUrl} size="lg" variant="rectangular" className="w-28 h-36 rounded-2xl ring-4 ring-primary-500/10 shadow-lg object-cover" />
+          <Avatar name={teacher.user.name} src={getPhotoUrl(teacher.user.photoUrl)} size="lg" variant="rectangular" className="w-28 h-36 rounded-2xl ring-4 ring-primary-500/10 shadow-lg object-cover" />
           {/* Upload Button */}
           <label className="cursor-pointer absolute bottom-0 right-0 inline-flex items-center gap-1.5 text-xs font-bold text-primary-600 hover:text-primary-700 bg-primary-50 hover:bg-primary-100 dark:bg-gray-800 dark:text-gray-200 px-3 py-1.5 rounded-xl transition-colors border border-primary-200 dark:border-gray-700 shadow-sm hover:scale-102 active:scale-98 select-none">
             <Camera className="w-3.5 h-3.5" />
@@ -161,7 +162,7 @@ export const TeacherProfilePage: React.FC = () => {
           ))}
         </div>
         <div className="w-32 flex-shrink-0">
-          <img src={teacher.user.photoUrl?.startsWith('/') ? `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${teacher.user.photoUrl}` : teacher.user.photoUrl} alt="Teacher Photo" className="w-32 h-40 object-cover" />
+          <img src={getPhotoUrl(teacher.user.photoUrl)} alt="Teacher Photo" className="w-32 h-40 object-cover" />
         </div>
       </div>
     </div>

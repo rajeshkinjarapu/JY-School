@@ -5,6 +5,7 @@ import api from '../../api/axios';
 import toast from 'react-hot-toast';
 import { ArrowLeft, Save, Camera } from 'lucide-react';
 import { Avatar } from '../../components/UI/Avatar';
+import { getPhotoUrl } from '../../utils/photo';
 
 export const TeacherFormPage: React.FC = () => {
   const { id } = useParams();
@@ -99,7 +100,7 @@ export const TeacherFormPage: React.FC = () => {
 
         <div className="flex items-center gap-6">
           <div className="relative">
-            <Avatar name="Teacher" src={photoUrl} size="lg" variant="rectangular" className="w-24 h-24 rounded-2xl ring-4 ring-primary-500/10 object-cover" />
+            <Avatar name="Teacher" src={getPhotoUrl(photoUrl)} size="lg" variant="rectangular" className="w-24 h-24 rounded-2xl ring-4 ring-primary-500/10 object-cover" />
             <label className="cursor-pointer absolute -bottom-2 -right-2 inline-flex items-center justify-center w-8 h-8 bg-primary-600 text-white rounded-full shadow-lg hover:bg-primary-700 transition-colors">
               <Camera className="w-4 h-4" />
               <input type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} disabled={uploading} />

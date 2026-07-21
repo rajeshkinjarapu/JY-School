@@ -6,6 +6,7 @@ import toast from 'react-hot-toast';
 import { Link } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../../hooks/useAuth';
+import { getPhotoUrl } from '../../utils/photo';
 
 export const StudentListPage: React.FC = () => {
   const { user } = useAuth();
@@ -227,7 +228,7 @@ export const StudentListPage: React.FC = () => {
                   
                   <div className="shrink-0 pl-2">
                     {photoUrl ? (
-                      <img src={photoUrl.startsWith('http') ? photoUrl : `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${photoUrl.startsWith('/') ? photoUrl : `/${photoUrl}`}`} alt={name} className="w-14 h-14 rounded-2xl object-cover shadow-md border-2 border-white dark:border-white/10" />
+                      <img src={getPhotoUrl(photoUrl)} alt={name} className="w-14 h-14 rounded-2xl object-cover shadow-md border-2 border-white dark:border-white/10" />
                     ) : (
                       <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${getColor(name)} flex items-center justify-center text-white font-black text-xl shadow-md border-2 border-white dark:border-white/10`}>
                         {getInitials(name)}
@@ -295,7 +296,7 @@ export const StudentListPage: React.FC = () => {
                       <td className="px-5 py-3">
                         {photoUrl ? (
                           <img
-                            src={photoUrl.startsWith('http') ? photoUrl : `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${photoUrl.startsWith('/') ? photoUrl : `/${photoUrl}`}`}
+                            src={getPhotoUrl(photoUrl)}
                             alt={name}
                             className="w-12 h-16 rounded-xl object-cover border-2 border-white dark:border-gray-800 shadow-lg ring-2 ring-indigo-100 dark:ring-indigo-900/30 transform group-hover:scale-105 transition-transform"
                           />

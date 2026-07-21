@@ -3,6 +3,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { useTheme } from '../../hooks/useTheme';
 import { Menu, Sun, Moon, Bell, ChevronDown, User, Key, LogOut, Search, ArrowLeft } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { getPhotoUrl } from '../../utils/photo';
 
 interface HeaderProps {
   onMenuClick: () => void;
@@ -60,7 +61,7 @@ export const Header: React.FC<HeaderProps> = ({ onMenuClick, title }) => {
           {user?.role === 'TEACHER' && (
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-black text-sm shadow-sm sm:hidden overflow-hidden shrink-0 border-2 border-indigo-100">
               {user.photoUrl ? (
-                <img src={user.photoUrl.startsWith('http') ? user.photoUrl : `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${user.photoUrl.startsWith('/') ? user.photoUrl : `/${user.photoUrl}`}`} alt={user.name} className="w-full h-full object-cover" />
+                <img src={getPhotoUrl(user.photoUrl)} alt={user.name} className="w-full h-full object-cover" />
               ) : (
                 user?.name?.charAt(0).toUpperCase() || 'U'
               )}

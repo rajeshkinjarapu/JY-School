@@ -1,5 +1,7 @@
 import React from 'react';
 import { User, Calendar, MapPin } from 'lucide-react';
+import { format } from 'date-fns';
+import { getPhotoUrl } from '../../utils/photo';
 
 interface AdmitCardTemplateProps {
   student: any;
@@ -131,7 +133,7 @@ export const AdmitCardTemplate: React.FC<AdmitCardTemplateProps> = ({ student, e
             <div className="w-[120px] sm:w-[140px] mx-auto sm:mx-0 shrink-0 flex flex-col gap-3">
               <div className="w-full aspect-[3/4] border-2 border-indigo-200 rounded-xl flex flex-col items-center justify-center text-indigo-400 relative p-1.5 bg-indigo-50/50 shadow-inner overflow-hidden">
                 {student?.user?.photoUrl ? (
-                  <img src={student.user.photoUrl} alt="Student" className="w-full h-full object-cover rounded-lg" />
+                  <img src={getPhotoUrl(student.user.photoUrl)} alt="Student" className="w-full h-full object-cover rounded-lg" />
                 ) : (
                   <div className="w-full h-full border border-dashed border-indigo-300 rounded-lg flex flex-col items-center justify-center text-center p-2 bg-white">
                     <User className="w-10 h-10 mb-2 opacity-40 text-indigo-400" />

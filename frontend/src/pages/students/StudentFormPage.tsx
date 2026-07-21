@@ -4,6 +4,7 @@ import { useNavigate, useParams, Link } from 'react-router-dom';
 import api from '../../api/axios';
 import toast from 'react-hot-toast';
 import { ArrowLeft, Save } from 'lucide-react';
+import { getPhotoUrl } from '../../utils/photo';
 
 export const StudentFormPage: React.FC = () => {
   const { id } = useParams();
@@ -119,7 +120,7 @@ export const StudentFormPage: React.FC = () => {
             <div className="col-span-full flex items-center gap-6 p-4 bg-gray-50 dark:bg-gray-800/40 rounded-2xl border border-dashed border-gray-200 dark:border-gray-700">
               {photoUrl ? (
                 <img
-                  src={photoUrl.startsWith('/') ? `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${photoUrl}` : photoUrl}
+                  src={getPhotoUrl(photoUrl)}
                   alt="Student Preview"
                   className="w-20 h-28 rounded-2xl object-cover border border-gray-250 dark:border-gray-700 shadow-sm"
                 />

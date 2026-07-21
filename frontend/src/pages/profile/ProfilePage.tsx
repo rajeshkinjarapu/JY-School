@@ -6,6 +6,7 @@ import { Badge } from '../../components/UI/Badge';
 import { Save, Lock, User as UserIcon, Key, Camera } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../../api/axios';
+import { getPhotoUrl } from '../../utils/photo';
 
 export const ProfilePage: React.FC = () => {
   const { user, updateUser } = useAuth();
@@ -72,7 +73,7 @@ export const ProfilePage: React.FC = () => {
       {/* Profile Header */}
       <div className="card p-6 flex flex-col sm:flex-row items-center gap-6">
         <div className="relative">
-          <Avatar name={user.name} src={user.photoUrl} size="lg" className="w-24 h-24 sm:w-28 sm:h-28 text-3xl" />
+          <Avatar name={user.name} src={getPhotoUrl(user.photoUrl)} size="lg" className="w-24 h-24 sm:w-28 sm:h-28 text-3xl" />
           <label className="cursor-pointer absolute bottom-0 right-0 inline-flex items-center gap-1.5 text-xs font-bold text-white bg-primary-600 hover:bg-primary-700 px-2.5 py-1.5 rounded-full transition-colors shadow-sm hover:scale-105 active:scale-95 select-none z-10" title="Upload Photo">
             <Camera className="w-4 h-4" />
             <input type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} disabled={uploading} />

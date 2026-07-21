@@ -9,6 +9,7 @@ import {
   Shield, FileText, UserCheck, X, ChevronDown, Smartphone, MapPin,
 } from 'lucide-react';
 import { usePWA } from '../../hooks/usePWA';
+import { getPhotoUrl } from '../../utils/photo';
 
 interface SidebarProps { isOpen: boolean; setIsOpen: (v: boolean) => void; }
 
@@ -195,7 +196,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
           style={{ background: 'rgba(255,255,255,0.05)' }}>
           {user.photoUrl ? (
             <div className="w-9 h-9 rounded-xl shrink-0 overflow-hidden border border-white/20">
-              <img src={user.photoUrl} alt={user.name} className="w-full h-full object-cover" />
+              <img src={getPhotoUrl(user.photoUrl)} alt={user.name} className="w-full h-full object-cover" />
             </div>
           ) : (
             <div className="w-9 h-9 rounded-xl shrink-0 flex items-center justify-center text-white font-black text-sm"

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import api from '../../api/axios';
 import { LoadingSpinner } from '../../components/UI/LoadingSpinner';
+import { getPhotoUrl } from '../../utils/photo';
 import {
   CalendarCheck, CheckCircle2, XCircle, Clock, AlertCircle,
   ChevronLeft, ChevronRight, User, Save, BarChart3, FileText, UserCheck,
@@ -222,7 +223,7 @@ const TeacherAttendancePage: React.FC = () => {
                 return (
                   <div key={t.id} className="flex items-center gap-4 p-4 hover:bg-slate-50/50 transition-colors">
                     {t.user.photoUrl ? (
-                      <img src={t.user.photoUrl} className="w-10 h-10 rounded-xl object-cover border border-slate-200" alt="" />
+                      <img src={getPhotoUrl(t.user.photoUrl)} className="w-10 h-10 rounded-xl object-cover border border-slate-200" alt="" />
                     ) : (
                       <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-black text-sm shrink-0"
                         style={{ background: 'linear-gradient(135deg, #7c3aed, #6d28d9)' }}>

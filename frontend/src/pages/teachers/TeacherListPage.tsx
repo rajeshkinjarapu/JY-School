@@ -7,6 +7,7 @@ import { Search, UserPlus, Trash2, Edit, Upload, FileDown } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
+import { getPhotoUrl } from '../../utils/photo';
 
 export const TeacherListPage: React.FC = () => {
   const { user } = useAuth();
@@ -186,9 +187,7 @@ export const TeacherListPage: React.FC = () => {
                   <tr key={teacher.id} className="hover:bg-indigo-50/30 dark:hover:bg-white/5 transition-colors group">
                     <td className="px-6 py-4 flex items-center gap-3">
                       <div className="relative">
-                        {teacher.user?.photoUrl ? (
-                           <img src={teacher.user.photoUrl} alt={name} className="w-12 h-12 rounded-2xl object-cover shadow-sm border border-gray-100 dark:border-white/10" />
-                        ) : (
+                           <img src={getPhotoUrl(teacher.user.photoUrl)} alt={name} className="w-12 h-12 rounded-2xl object-cover shadow-sm border border-gray-100 dark:border-white/10" />
                           <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${colorClass} flex items-center justify-center text-white font-black text-lg shadow-sm border-2 border-white dark:border-white/10`}>
                             {getInitials(name)}
                           </div>
@@ -282,9 +281,7 @@ export const TeacherListPage: React.FC = () => {
                      {idx + 1}
                    </div>
                    <div className="shrink-0 pl-2">
-                        {teacher.user?.photoUrl ? (
-                           <img src={teacher.user.photoUrl} alt={name} className="w-14 h-14 rounded-2xl object-cover shadow-md border-2 border-white dark:border-white/10" />
-                        ) : (
+                           <img src={getPhotoUrl(teacher.user.photoUrl)} alt={name} className="w-14 h-14 rounded-2xl object-cover shadow-md border-2 border-white dark:border-white/10" />
                           <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${colorClass} flex items-center justify-center text-white font-black text-xl shadow-md border-2 border-white dark:border-white/10`}>
                             {getInitials(name)}
                           </div>

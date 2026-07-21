@@ -1,5 +1,6 @@
 import React from 'react';
 import { format } from 'date-fns';
+import { getPhotoUrl } from '../../utils/photo';
 
 interface GatePassPrintProps {
   gatePass: any;
@@ -53,7 +54,7 @@ export const GatePassPrint: React.FC<GatePassPrintProps> = ({ gatePass, schoolNa
               <div className="w-[120px] shrink-0 flex flex-col gap-2">
                 <div className="w-[120px] h-[150px] border-2 border-slate-300 bg-slate-50 flex items-center justify-center overflow-hidden rounded">
                   {photo ? (
-                    <img src={photo} alt="Photo" className="w-full h-full object-cover" />
+                    <img src={getPhotoUrl(photo)} alt="Photo" className="w-full h-full object-cover" />
                   ) : (
                     <span className="text-xs font-bold text-slate-400">NO PHOTO</span>
                   )}

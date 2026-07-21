@@ -5,6 +5,7 @@ import { Avatar } from '../../components/UI/Avatar';
 import { io, Socket } from 'socket.io-client';
 import { Send, MessageSquare, Plus, Search } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { getPhotoUrl } from '../../utils/photo';
 
 export const MessagesPage: React.FC = () => {
   const { user } = useAuth();
@@ -164,7 +165,10 @@ export const MessagesPage: React.FC = () => {
                     : 'hover:bg-gray-50/50 dark:hover:bg-gray-800/20'
                 }`}
               >
-                <Avatar name={partner.name} src={partner.photoUrl} size="sm" />
+                <div className="relative shrink-0">
+                  <Avatar name={partner.name} src={getPhotoUrl(partner.photoUrl)} size="sm" />
+                  <span className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white ${partner.isOnline ? 'bg-green-500' : 'bg-gray-400'}`}></span>
+                </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex justify-between items-baseline mb-0.5">
                     <h4 className="font-bold text-sm text-gray-900 dark:text-white truncate">
@@ -193,7 +197,10 @@ export const MessagesPage: React.FC = () => {
           <>
             {/* Active partner bar */}
             <div className="px-6 py-4 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 flex items-center gap-3">
-              <Avatar name={activePartner.name} src={activePartner.photoUrl} size="sm" />
+              <div className="relative shrink-0">
+                <Avatar name={activePartner.name} src={getPhotoUrl(activePartner.photoUrl)} size="sm" />
+                <span className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white ${activePartner.isOnline ? 'bg-green-500' : 'bg-gray-400'}`}></span>
+              </div>
               <div>
                 <h4 className="font-bold text-sm text-gray-900 dark:text-white leading-tight">
                   {activePartner.name}
@@ -287,7 +294,10 @@ export const MessagesPage: React.FC = () => {
                   onClick={() => handleStartChat(u)}
                   className="w-full flex items-center gap-3 p-3.5 rounded-xl border border-gray-100 hover:bg-gray-50/50 text-left transition-colors cursor-pointer"
                 >
-                  <Avatar name={u.name} src={u.photoUrl} size="sm" />
+                  <div className="relative shrink-0">
+                    <Avatar name={u.name} src={getPhotoUrl(u.photoUrl)} size="sm" />
+                    <span className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white ${u.isOnline ? 'bg-green-500' : 'bg-gray-400'}`}></span>
+                  </div>
                   <div>
                     <h4 className="font-bold text-sm text-gray-900 leading-none">{u.name}</h4>
                     <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block mt-1">

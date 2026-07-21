@@ -6,6 +6,7 @@ import { Plus, Edit, Trash2, School, Upload, FileDown } from 'lucide-react';
 import { Avatar } from '../../components/UI/Avatar';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../hooks/useAuth';
+import { getPhotoUrl } from '../../utils/photo';
 
 export const SubjectPage: React.FC = () => {
   const { user } = useAuth();
@@ -226,9 +227,9 @@ export const SubjectPage: React.FC = () => {
                       <div className="flex items-center gap-2.5">
                         <Avatar
                           name={sub.classSubjectTeachers[0].teacher.user.name}
-                          src={sub.classSubjectTeachers[0].teacher.user.photoUrl}
+                          src={getPhotoUrl(sub.classSubjectTeachers[0].teacher.user.photoUrl)}
                           size="sm"
-                          variant="rectangular"
+                          className="w-6 h-6 border-2 border-white ring-1 ring-slate-100"
                         />
                         <span className="font-semibold text-gray-900 dark:text-white">
                           {sub.classSubjectTeachers[0].teacher.user.name}

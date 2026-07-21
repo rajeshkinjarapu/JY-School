@@ -15,8 +15,8 @@ import {
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid,
   Tooltip as RechartsTooltip, ResponsiveContainer,
-  LineChart, Line, PieChart, Pie, Cell, BarChart, Bar, Legend,
-} from 'recharts';
+import { LineChart, Line, PieChart, Pie, Cell, BarChart, Bar, Legend } from 'recharts';
+import { getPhotoUrl } from '../../utils/photo';
 
 /* ─────────────────────────────────────────────────────────── */
 export const DashboardPage: React.FC = () => {
@@ -114,7 +114,7 @@ const WelcomeBanner: React.FC<{ name: string; role: string; photoUrl?: string }>
           <div className="w-[80px] h-[90px] sm:w-[110px] sm:h-[120px] md:w-[140px] md:h-[150px] rounded-[1rem] md:rounded-[1.5rem] flex items-center justify-center text-3xl md:text-5xl shadow-2xl relative overflow-hidden border-2 md:border-[3px] border-indigo-400/40"
             style={{ background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(16px)' }}>
             {photoUrl ? (
-              <img src={photoUrl.startsWith('http') ? photoUrl : `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${photoUrl.startsWith('/') ? photoUrl : `/${photoUrl}`}`} alt="Profile" className="w-full h-full object-cover" />
+              <img src={getPhotoUrl(photoUrl)} alt="Profile" className="w-full h-full object-cover" />
             ) : (
               <span className="relative z-10 drop-shadow-lg">{emoji}</span>
             )}

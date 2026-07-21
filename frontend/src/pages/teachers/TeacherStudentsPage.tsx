@@ -4,6 +4,7 @@ import api from '../../api/axios';
 import { LoadingSpinner } from '../../components/UI/LoadingSpinner';
 import { Search, Users, Eye, ArrowLeft, Phone, IdCard, UserCircle } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
+import { getPhotoUrl } from '../../utils/photo';
 
 export const TeacherStudentsPage: React.FC = () => {
   const [search, setSearch] = useState('');
@@ -155,7 +156,7 @@ export const TeacherStudentsPage: React.FC = () => {
                       <div className="shrink-0">
                         {photoUrl ? (
                           <img 
-                            src={photoUrl.startsWith('http') ? photoUrl : `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${photoUrl.startsWith('/') ? photoUrl : '/' + photoUrl}`} 
+                            src={getPhotoUrl(photoUrl)} 
                             alt={name} 
                             className="w-16 h-20 sm:w-20 sm:h-24 rounded-2xl object-cover shadow-md border-2 border-white ring-1 ring-slate-100 group-hover:scale-105 transition-transform" 
                           />

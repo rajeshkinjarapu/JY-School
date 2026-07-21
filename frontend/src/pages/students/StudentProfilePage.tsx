@@ -13,6 +13,7 @@ import {
   Hash, MapPin, Sparkles, GraduationCap, Camera, CreditCard, FileDown, Trash2, Edit2
 } from 'lucide-react';
 import { FeeReceiptPrint } from '../../components/fees/FeeReceiptPrint';
+import { getPhotoUrl } from '../../utils/photo';
 
 export const StudentProfilePage: React.FC = () => {
   const { id } = useParams();
@@ -261,8 +262,8 @@ export const StudentProfilePage: React.FC = () => {
                 <div className="absolute inset-0 bg-gradient-to-tr from-indigo-500 to-fuchsia-500 rounded-3xl blur-xl opacity-40 group-hover:opacity-60 transition-opacity duration-500" />
                 <div className="relative p-1.5 bg-white dark:bg-gray-800 rounded-3xl shadow-2xl">
                   <Avatar 
+                    src={getPhotoUrl(student.user.photoUrl)} 
                     name={student.user.name} 
-                    src={student.user.photoUrl} 
                     size="lg" 
                     variant="rectangular" 
                     className="w-32 h-32 md:w-40 md:h-40 rounded-2xl object-cover" 
@@ -572,8 +573,8 @@ export const StudentProfilePage: React.FC = () => {
             
             <div className="w-36 h-44 border-4 border-white rounded-lg overflow-hidden flex-shrink-0 bg-white flex items-center justify-center shadow-md">
               <Avatar 
+                src={getPhotoUrl(student.user.photoUrl)} 
                 name={student.user.name} 
-                src={student.user.photoUrl} 
                 size="lg" 
                 variant="rectangular" 
                 className="w-full h-full object-cover" 
