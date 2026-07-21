@@ -15,7 +15,8 @@ import {
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid,
   Tooltip as RechartsTooltip, ResponsiveContainer,
-import { LineChart, Line, PieChart, Pie, Cell, BarChart, Bar, Legend } from 'recharts';
+  LineChart, Line, PieChart, Pie, Cell, BarChart, Bar, Legend
+} from 'recharts';
 import { getPhotoUrl } from '../../utils/photo';
 
 /* ─────────────────────────────────────────────────────────── */

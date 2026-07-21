@@ -41,7 +41,7 @@ export const JEEProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
       setLogoUrl(selectedExam.admitCardSettings?.logoUrl || '');
       setSignatureUrl(selectedExam.admitCardSettings?.signatureUrl || '');
       setTeacherSignatureUrl(selectedExam.admitCardSettings?.teacherSignatureUrl || '');
-      setPublished(selectedExam.progressCardPublished || false);
+      setPublished(selectedExam.admitCardSettings?.progressCardPublished || false);
     }
   }, [selectedExam]);
 
@@ -110,18 +110,16 @@ export const JEEProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
     if (!selectedExamId) return;
     try {
       const currentSettings = selectedExam?.admitCardSettings || {};
-      const newSettings = { ...currentSettings, logoUrl, signatureUrl, teacherSignatureUrl };
+      const newSettings = { ...currentSettings, logoUrl, signatureUrl, teacherSignatureUrl, progressCardPublished: published };
       
       await api.post(`/api/exams/${selectedExamId}/admit-card-settings`, {
         admitCardPublished: selectedExam?.admitCardPublished || false,
         admitCardSettings: newSettings,
-        progressCardPublished: published
       });
       
       toast.success('Settings saved successfully!');
       if (selectedExam) {
         selectedExam.admitCardSettings = newSettings;
-        selectedExam.progressCardPublished = published;
       }
       setShowSettings(false);
     } catch (e: any) {
@@ -290,11 +288,13 @@ export const JEEProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
                     try {
                       await api.post(`/api/exams/${selectedExamId}/admit-card-settings`, {
                         admitCardPublished: selectedExam.admitCardPublished || false,
-                        admitCardSettings: selectedExam.admitCardSettings || {},
-                        progressCardPublished: true
+                        admitCardSettings: { ...(selectedExam.admitCardSettings || {}), progressCardPublished: true },
                       });
                       toast.success('Progress Cards published to Teachers & Students!');
-                      if (selectedExam) selectedExam.progressCardPublished = true;
+                      if (selectedExam) {
+                        if (!selectedExam.admitCardSettings) selectedExam.admitCardSettings = {};
+                        selectedExam.admitCardSettings.progressCardPublished = true;
+                      }
                     } catch (e: any) {
                       toast.error('Failed to publish');
                       setPublished(false);
@@ -315,11 +315,13 @@ export const JEEProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
                       try {
                         await api.post(`/api/exams/${selectedExamId}/admit-card-settings`, {
                           admitCardPublished: selectedExam.admitCardPublished || false,
-                          admitCardSettings: selectedExam.admitCardSettings || {},
-                          progressCardPublished: false
+                          admitCardSettings: { ...(selectedExam.admitCardSettings || {}), progressCardPublished: false },
                         });
                         toast.success('Progress Cards unpublished!');
-                        if (selectedExam) selectedExam.progressCardPublished = false;
+                        if (selectedExam) {
+                          if (!selectedExam.admitCardSettings) selectedExam.admitCardSettings = {};
+                          selectedExam.admitCardSettings.progressCardPublished = false;
+                        }
                       } catch (e: any) {
                         toast.error('Failed to unpublish');
                         setPublished(true);
@@ -413,6 +415,13 @@ export const JEEProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
       {loading && <div className="p-12 flex justify-center"><LoadingSpinner size="lg" /></div>}
 
       {!loading && studentsData.length > 0 && (
+        !isSuperAdmin && !published ? (
+          <div className="card p-12 flex flex-col items-center justify-center text-center bg-gray-50 dark:bg-gray-800/50">
+            <CheckCircle className="w-12 h-12 text-gray-300 mb-3" />
+            <h3 className="text-lg font-bold text-gray-700 dark:text-gray-200">Not Published Yet</h3>
+            <p className="text-sm text-gray-500 mt-2">The progress cards for this exam have not been published by the administration.</p>
+          </div>
+        ) : (
         <>
           {/* Table View of Students for Progress Cards */}
           <div className="card print:hidden overflow-hidden w-full">
@@ -478,6 +487,7 @@ export const JEEProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
             ))}
           </div>
         </>
+        )
       )}
 
       {!loading && selectedExamId && selectedClassId && studentsData.length === 0 && (

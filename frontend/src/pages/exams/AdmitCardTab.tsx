@@ -465,6 +465,13 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
       {loading && <div className="p-12 text-center text-gray-500 font-semibold animate-pulse">Generating Admit Cards...</div>}
 
       {!loading && students.length > 0 && (
+        !isSuperAdmin && !published ? (
+          <div className="card p-12 flex flex-col items-center justify-center text-center bg-gray-50 dark:bg-gray-800/50">
+            <CheckCircle className="w-12 h-12 text-gray-300 mb-3" />
+            <h3 className="text-lg font-bold text-gray-700 dark:text-gray-200">Not Published Yet</h3>
+            <p className="text-sm text-gray-500 mt-2">The admit cards for this exam have not been published by the administration.</p>
+          </div>
+        ) : (
         <>
           <div className="card print:hidden overflow-hidden w-full">
             <div className="overflow-x-auto w-full">
@@ -531,6 +538,7 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
             ))}
           </div>
         </>
+        )
       )}
 
       {!loading && selectedExamId && selectedClassId && students.length === 0 && (
