@@ -1,6 +1,7 @@
 import React from 'react';
-import { useAuth } from '../../hooks/useAuth';
+import { useAuth } from '../../contexts/AuthContext';
 import { Link, useNavigate } from 'react-router-dom';
+import { Avatar } from '../../components/UI/Avatar';
 import api from '../../api/axios';
 import { LoadingSpinner } from '../../components/UI/LoadingSpinner';
 import { AccountantDashboard } from './AccountantDashboard';
@@ -98,7 +99,7 @@ const WelcomeBanner: React.FC<{ name: string; role: string; photoUrl?: string }>
             {greeting}
           </p>
           <h1 className="text-[26px] sm:text-4xl md:text-5xl font-black text-white mb-1.5 md:mb-2 tracking-tight whitespace-nowrap truncate max-w-full">
-            {name.split(' ')[0]}
+            {name}
           </h1>
           <p className="text-indigo-100/90 text-[10px] sm:text-sm md:text-base font-semibold mb-3 md:mb-4">{roleLabel[role] || role} <span className="mx-1.5 md:mx-2 opacity-50">•</span> JY School</p>
           
@@ -125,7 +126,9 @@ const WelcomeBanner: React.FC<{ name: string; role: string; photoUrl?: string }>
                 }}
               />
             ) : null}
-            <span className={`relative z-10 drop-shadow-lg ${getPhotoUrl(photoUrl) ? 'hidden' : ''}`}>{emoji}</span>
+            <div className={`w-full h-full flex items-center justify-center bg-gradient-to-br from-indigo-500 to-purple-600 text-white font-black text-4xl shadow-sm ${getPhotoUrl(photoUrl) ? 'hidden' : ''}`}>
+              {name ? name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase() : emoji}
+            </div>
           </div>
         </div>
       </div>
