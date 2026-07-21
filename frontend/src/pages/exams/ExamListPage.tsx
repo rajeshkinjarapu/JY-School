@@ -79,6 +79,9 @@ export const ExamListPage: React.FC = () => {
     setShowExamModal(true);
   };
 
+  // Written Exam State
+  const [selectedWrittenExamId, setSelectedWrittenExamId] = useState('');
+
   // Excel Upload States
   const [showExcelModal, setShowExcelModal] = useState(false);
   const [excelFile, setExcelFile] = useState<File | null>(null);
@@ -1110,44 +1113,60 @@ export const ExamListPage: React.FC = () => {
             </div>
           </div>
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {exams.map(exam => (
-              <div key={exam.id} className="relative rounded-[2rem] p-6 overflow-hidden bg-white/40 dark:bg-white/10 backdrop-blur-2xl shadow-xl border-2 border-white/50 dark:border-white/20 hover:border-indigo-400 dark:hover:border-indigo-400 transition-all duration-300 flex flex-col group">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-indigo-400/20 to-purple-400/20 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-700" />
-                
-                <div className="relative z-10">
-                  <h4 className="font-extrabold text-slate-900 text-xl drop-shadow-sm truncate whitespace-nowrap overflow-hidden" title={exam.name}>{exam.name}</h4>
-                  <p className="text-xs font-bold text-slate-600 mt-1.5">Select a class to enter marks:</p>
-                </div>
-                
-                <div className="flex flex-col gap-3 flex-1 mt-5 relative z-10">
-                  {(exam.classes || []).map((c: any) => (
-                    <div key={c.id} className="flex gap-2 items-center bg-white/50 dark:bg-black/10 p-2 rounded-2xl border border-white/40 dark:border-white/10 hover:bg-white/80 dark:hover:bg-black/20 transition-colors shadow-sm">
-                      <div className="flex-1 text-sm font-black text-slate-800 px-3 truncate">
-                        {c.name}-{c.section}
+          <div className="bg-white/40 dark:bg-white/10 backdrop-blur-xl p-6 rounded-3xl shadow-xl border border-white/50 dark:border-white/20 flex flex-col gap-3">
+             <label className="text-sm font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider">Select Examination</label>
+             <select 
+               className="input py-3 w-full max-w-md font-bold text-slate-800"
+               value={selectedWrittenExamId}
+               onChange={(e) => setSelectedWrittenExamId(e.target.value)}
+             >
+               <option value="">-- Select Examination --</option>
+               {exams.map(e => (
+                 <option key={e.id} value={e.id}>{e.name}</option>
+               ))}
+             </select>
+          </div>
+
+          {selectedWrittenExamId && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {exams.filter(e => e.id === selectedWrittenExamId).map(exam => (
+                <div key={exam.id} className="relative rounded-[2rem] p-6 overflow-hidden bg-white/40 dark:bg-white/10 backdrop-blur-2xl shadow-xl border-2 border-white/50 dark:border-white/20 hover:border-indigo-400 dark:hover:border-indigo-400 transition-all duration-300 flex flex-col group">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-indigo-400/20 to-purple-400/20 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-700" />
+                  
+                  <div className="relative z-10">
+                    <h4 className="font-extrabold text-slate-900 text-xl drop-shadow-sm truncate whitespace-nowrap overflow-hidden" title={exam.name}>{exam.name}</h4>
+                    <p className="text-xs font-bold text-slate-600 mt-1.5">Select a class to enter marks:</p>
+                  </div>
+                  
+                  <div className="flex flex-col gap-3 flex-1 mt-5 relative z-10">
+                    {(exam.classes || []).map((c: any) => (
+                      <div key={c.id} className="flex gap-2 items-center bg-white/50 dark:bg-black/10 p-2 rounded-2xl border border-white/40 dark:border-white/10 hover:bg-white/80 dark:hover:bg-black/20 transition-colors shadow-sm">
+                        <div className="flex-1 text-sm font-black text-slate-800 px-3 truncate">
+                          {c.name}-{c.section}
+                        </div>
+                        <Link to={`/exams/${exam.id}/entry?classId=${c.id}`} className="px-5 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-bold rounded-xl text-xs shadow-lg shadow-indigo-500/30 transition-all transform hover:-translate-y-0.5 text-center shrink-0">
+                          Enter Marks
+                        </Link>
                       </div>
-                      <Link to={`/exams/${exam.id}/entry?classId=${c.id}`} className="px-5 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-bold rounded-xl text-xs shadow-lg shadow-indigo-500/30 transition-all transform hover:-translate-y-0.5 text-center shrink-0">
-                        Enter Marks
-                      </Link>
-                    </div>
-                  ))}
-                  {(!exam.classes || exam.classes.length === 0) && (
-                    <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-center">
-                      <p className="text-xs text-amber-700 font-bold">No classes assigned to this exam</p>
+                    ))}
+                    {(!exam.classes || exam.classes.length === 0) && (
+                      <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-center">
+                        <p className="text-xs text-amber-700 font-bold">No classes assigned to this exam</p>
+                      </div>
+                    )}
+                  </div>
+
+                  {isAdmin && (
+                    <div className="pt-4 mt-4 border-t border-white/20 dark:border-white/10 relative z-10">
+                      <button onClick={() => { setExcelExamId(exam.id); setShowExcelModal(true); }} className="w-full px-4 py-3 bg-gradient-to-r from-emerald-400 to-green-500 hover:from-emerald-500 hover:to-green-600 text-white font-bold rounded-xl text-xs shadow-lg shadow-emerald-500/30 transition-all transform hover:-translate-y-0.5">
+                        Excel Bulk Upload
+                      </button>
                     </div>
                   )}
                 </div>
-
-                {isAdmin && (
-                  <div className="pt-4 mt-4 border-t border-white/20 dark:border-white/10 relative z-10">
-                    <button onClick={() => { setExcelExamId(exam.id); setShowExcelModal(true); }} className="w-full px-4 py-3 bg-gradient-to-r from-emerald-400 to-green-500 hover:from-emerald-500 hover:to-green-600 text-white font-bold rounded-xl text-xs shadow-lg shadow-emerald-500/30 transition-all transform hover:-translate-y-0.5">
-                      Excel Bulk Upload
-                    </button>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
 
           {showExcelModal && (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/50 backdrop-blur-sm p-4">
