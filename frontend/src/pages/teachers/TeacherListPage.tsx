@@ -50,7 +50,7 @@ export const TeacherListPage: React.FC = () => {
     setLoading(true);
     try {
       const response: any = await api.get('/api/teachers', {
-        params: { search },
+        params: { search, limit: 5000 },
       });
       setTeachers(response.data.data || response.data || []);
     } catch (error) {
