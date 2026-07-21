@@ -7,6 +7,8 @@ import { useQuery } from '@tanstack/react-query';
 
 export const TeacherStudentsPage: React.FC = () => {
   const [search, setSearch] = useState('');
+  const [selectedClass, setSelectedClass] = useState('');
+  const [selectedSection, setSelectedSection] = useState('');
 
   const { data: students = [], isLoading: loading } = useQuery({
     queryKey: ['all-students'],
@@ -17,16 +19,42 @@ export const TeacherStudentsPage: React.FC = () => {
     staleTime: 1000 * 60 * 5,
   });
 
-  const filteredStudents = useMemo(() => {
-    const query = search.trim().toLowerCase();
-    if (!query) return students;
-    return students.filter((student: any) => {
-      const studentName = student.user?.name?.toLowerCase() || '';
-      const rollNo = student.rollNo?.toLowerCase() || '';
-      const className = `${student.class?.name || ''}-${student.class?.section || ''}`.toLowerCase();
-      return studentName.includes(query) || rollNo.includes(query) || className.includes(query);
+  const uniqueClasses = useMemo(() => {
+    const classes = new Set<string>();
+    students.forEach((s: any) => {
+      if (s.class?.name) classes.add(s.class.name);
     });
-  }, [students, search]);
+    return Array.from(classes).sort();
+  }, [students]);
+
+  const uniqueSections = useMemo(() => {
+    const sections = new Set<string>();
+    students.forEach((s: any) => {
+      if (selectedClass && s.class?.name !== selectedClass) return;
+      if (s.class?.section) sections.add(s.class.section);
+    });
+    return Array.from(sections).sort();
+  }, [students, selectedClass]);
+
+  const filteredStudents = useMemo(() => {
+    let result = students;
+    if (selectedClass) {
+      result = result.filter((s: any) => s.class?.name === selectedClass);
+    }
+    if (selectedSection) {
+      result = result.filter((s: any) => s.class?.section === selectedSection);
+    }
+    const query = search.trim().toLowerCase();
+    if (query) {
+      result = result.filter((student: any) => {
+        const studentName = student.user?.name?.toLowerCase() || '';
+        const rollNo = student.rollNo?.toLowerCase() || '';
+        const className = `${student.class?.name || ''}-${student.class?.section || ''}`.toLowerCase();
+        return studentName.includes(query) || rollNo.includes(query) || className.includes(query);
+      });
+    }
+    return result;
+  }, [students, search, selectedClass, selectedSection]);
 
   const getInitials = (name: string) => {
     if (!name) return '?';
@@ -61,14 +89,36 @@ export const TeacherStudentsPage: React.FC = () => {
           </div>
         </div>
         
-        <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto mt-2 sm:mt-0">
-          <div className="w-full sm:w-72 relative">
+        <div className="flex flex-col lg:flex-row items-center gap-3 w-full lg:w-auto mt-4 sm:mt-0">
+          <div className="flex items-center gap-2 w-full lg:w-auto">
+            <select
+              value={selectedClass}
+              onChange={(e) => { setSelectedClass(e.target.value); setSelectedSection(''); }}
+              className="w-full lg:w-auto px-4 py-2.5 bg-white border-2 border-transparent rounded-2xl text-sm font-semibold outline-none focus:border-indigo-400 text-slate-700 shadow-inner"
+            >
+              <option value="">All Classes</option>
+              {uniqueClasses.map((c) => (
+                <option key={c} value={c}>Class {c}</option>
+              ))}
+            </select>
+            <select
+              value={selectedSection}
+              onChange={(e) => setSelectedSection(e.target.value)}
+              className="w-full lg:w-auto px-4 py-2.5 bg-white border-2 border-transparent rounded-2xl text-sm font-semibold outline-none focus:border-indigo-400 text-slate-700 shadow-inner"
+            >
+              <option value="">All Sections</option>
+              {uniqueSections.map((s) => (
+                <option key={s} value={s}>Sec {s}</option>
+              ))}
+            </select>
+          </div>
+          <div className="w-full lg:w-64 relative">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-indigo-400 w-5 h-5" />
             <input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search by name, roll no or class..."
+              placeholder="Search by name, roll no..."
               className="w-full pl-12 pr-4 py-2.5 bg-white border-2 border-transparent rounded-2xl text-sm font-semibold outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-300/50 transition-all placeholder:text-slate-400 text-slate-700 shadow-inner"
             />
           </div>
