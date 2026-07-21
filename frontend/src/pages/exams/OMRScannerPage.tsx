@@ -115,7 +115,7 @@ export const OMRScannerPage: React.FC = () => {
       reader.onload = async (e) => {
         const base64Img = e.target?.result as string;
         try {
-          const response = await fetch('/api/omr', {
+          const response = await fetch('/api/omr.py', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -130,8 +130,8 @@ export const OMRScannerPage: React.FC = () => {
             return;
           }
           resolve(data as OMRResult);
-        } catch (err) {
-          reject('Network Error: Could not reach Python OMR Engine');
+        } catch (err: any) {
+          reject(`API Connection Failed: ${err.message || err.toString()}`);
         }
       };
       reader.onerror = () => reject('Failed to read image file');
