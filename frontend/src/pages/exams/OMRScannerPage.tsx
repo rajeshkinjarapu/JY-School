@@ -109,254 +109,33 @@ export const OMRScannerPage: React.FC = () => {
     }
   };
 
-  // 100% PURE COMPUTER VISION BUBBLE DETECTOR (ZERO HARDCODED X, Y)
-  const processOmrPureVision = (file: File): Promise<OMRResult> => {
+  const processOmrAPI = (file: File): Promise<OMRResult> => {
     return new Promise((resolve, reject) => {
-      const img = new Image();
-      img.src = URL.createObjectURL(file);
-      img.onload = () => {
-        const TARGET_W = 1200;
-        const TARGET_H = 1600;
-
-        const canvas = document.createElement('canvas');
-        canvas.width = TARGET_W;
-        canvas.height = TARGET_H;
-        const ctx = canvas.getContext('2d');
-        if (!ctx) return reject('Canvas context error');
-
-        ctx.drawImage(img, 0, 0, TARGET_W, TARGET_H);
-        const imgData = ctx.getImageData(0, 0, TARGET_W, TARGET_H);
-        const data = imgData.data;
-
-        // Find filled dark circles directly by pixel density (Pure Vision)
-        const getMeanIntensity = (cx: number, cy: number, r: number = 11): number => {
-          let total = 0;
-          let count = 0;
-          const startX = Math.max(0, Math.floor(cx - r));
-          const endX = Math.min(TARGET_W, Math.ceil(cx + r));
-          const startY = Math.max(0, Math.floor(cy - r));
-          const endY = Math.min(TARGET_H, Math.ceil(cy + r));
-
-          for (let y = startY; y < endY; y++) {
-            for (let x = startX; x < endX; x++) {
-              const idx = (y * TARGET_W + x) * 4;
-              const gray = 0.299 * data[idx] + 0.587 * data[idx + 1] + 0.114 * data[idx + 2];
-              total += gray;
-              count++;
-            }
-          }
-          return count > 0 ? total / count : 255;
-        };
-
-        // 1. PURE WHITE CONNECTED COMPONENT BLOB DETECTOR (NO GRID/X,Y ASSUMPTIONS)
-        // Detect solid white circles in inverted image dynamically
-        const whiteBlobs: { x: number; y: number; size: number }[] = [];
-        const step = 4;
-        const visited = new Uint8Array(TARGET_W * TARGET_H);
-
-        for (let y = 50; y < TARGET_H - 50; y += step) {
-          for (let x = 50; x < TARGET_W - 50; x += step) {
-            const idx = y * TARGET_W + x;
-            if (visited[idx]) continue;
-
-            const pIdx = idx * 4;
-            const gray = 0.299 * data[pIdx] + 0.587 * data[pIdx + 1] + 0.114 * data[pIdx + 2];
-            
-            // Inverted white bubble check
-            if (gray < 70) {
-              // Found a solid white filled bubble blob in inverted space
-              let sumX = 0, sumY = 0, count = 0;
-              for (let dy = -10; dy <= 10; dy += 2) {
-                for (let dx = -10; dx <= 10; dx += 2) {
-                  const ny = y + dy;
-                  const nx = x + dx;
-                  if (nx >= 0 && nx < TARGET_W && ny >= 0 && ny < TARGET_H) {
-                    const nIdx = (ny * TARGET_W + nx) * 4;
-                    const g = 0.299 * data[nIdx] + 0.587 * data[nIdx + 1] + 0.114 * data[nIdx + 2];
-                    if (g < 90) {
-                      sumX += nx;
-                      sumY += ny;
-                      count++;
-                      visited[ny * TARGET_W + nx] = 1;
-                    }
-                  }
-                }
-              }
-
-              if (count >= 15) {
-                whiteBlobs.push({
-                  x: Math.round(sumX / count),
-                  y: Math.round(sumY / count),
-                  size: count
-                });
-              }
-            }
-          }
-        }
-
-        // Map whiteBlobs to questions and Student ID dynamically
-        const GRID_Y_START = 735;
-        const GRID_ROW_SPACING = 42.1;
-        const GROUPS_X = [
-          [130, 168, 206, 244],
-          [348, 386, 424, 462],
-          [566, 604, 642, 680],
-          [784, 822, 860, 898],
-          [1002, 1040, 1078, 1116],
-        ];
-
-        const idBoxMinX = TARGET_W * 0.095;
-        const idBoxMaxX = TARGET_W * 0.270;
-        const idBoxMinY = TARGET_H * 0.122;
-        const idBoxMaxY = TARGET_H * 0.235;
-        const colWidth = (idBoxMaxX - idBoxMinX) / 7;
-        const rowHeight = (idBoxMaxY - idBoxMinY) / 10;
-
-        const last4Digits: string[] = ['0', '0', '0', '0'];
-        const answers: Record<string, string | null> = {};
-        let filledCount = 0;
-
-        // Process Question Rows based on closest white blobs
-        GROUPS_X.forEach((gxs, gIdx) => {
-          for (let row = 0; row < 15; row++) {
-            const q = (gIdx * 15 + row + 1).toString();
-            const approxY = GRID_Y_START + row * GRID_ROW_SPACING;
-
-            // Find closest white blob within row Y window
-            let bestOpt: string | null = null;
-            let minDistance = Infinity;
-
-            gxs.forEach((gx, optIdx) => {
-              const matchingBlob = whiteBlobs.find(
-                (b) => Math.abs(b.x - gx) < 18 && Math.abs(b.y - approxY) < 22
-              );
-              if (matchingBlob) {
-                const dist = Math.abs(matchingBlob.y - approxY);
-                if (dist < minDistance) {
-                  minDistance = dist;
-                  bestOpt = OPTIONS[optIdx];
-                }
-              }
-            });
-
-            if (bestOpt) {
-              answers[q] = bestOpt;
-              filledCount++;
-            } else {
-              answers[q] = null;
-            }
-          }
-        });
-
-        // Student ID Reading from White Blobs in ID Area
-        for (let col = 3; col < 7; col++) {
-          const cCenterX = idBoxMinX + col * colWidth + colWidth / 2;
-          let minDistance = Infinity;
-          let detectedDigit = '0';
-
-          for (let digit = 0; digit < 10; digit++) {
-            const digitY = idBoxMinY + digit * rowHeight + rowHeight / 2;
-            const matchingBlob = whiteBlobs.find(
-              (b) => Math.abs(b.x - cCenterX) < 14 && Math.abs(b.y - digitY) < 15
-            );
-            if (matchingBlob) {
-              detectedDigit = digit.toString();
-              break;
-            }
-          }
-          last4Digits[col - 3] = detectedDigit;
-        }
-
-        const studentId = "JY26-" + last4Digits.join('');
-
-        // 3. Score
-        let score: number | null = null;
-        let correctCount: number | null = null;
-        let wrongCount: number | null = null;
-
-        if (parsedAnswerKey) {
-          correctCount = 0;
-          wrongCount = 0;
-          Object.entries(parsedAnswerKey).forEach(([qNum, correctOpt]) => {
-            const studentAns = answers[qNum];
-            if (studentAns) {
-              if (studentAns === correctOpt) correctCount!++;
-              else wrongCount!++;
-            }
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        const base64Img = e.target?.result as string;
+        try {
+          const response = await fetch('/api/omr', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              image: base64Img,
+              answer_key: parsedAnswerKey
+            })
           });
-          score = correctCount * 4;
-        }
-
-        // Computer Vision Negative Preview Image
-        const visionCanvas = document.createElement('canvas');
-        visionCanvas.width = TARGET_W;
-        visionCanvas.height = TARGET_H;
-        const vCtx = visionCanvas.getContext('2d');
-        var processedVisionImg = '';
-
-        if (vCtx) {
-          vCtx.fillStyle = 'black';
-          vCtx.fillRect(0, 0, TARGET_W, TARGET_H);
-          vCtx.drawImage(canvas, 0, 0);
-
-          const vData = vCtx.getImageData(0, 0, TARGET_W, TARGET_H);
-          const d = vData.data;
-          for (let i = 0; i < d.length; i += 4) {
-            const gray = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
-            const inv = 255 - gray;
-            d[i] = inv > 120 ? 255 : inv;
-            d[i + 1] = inv > 120 ? 255 : inv;
-            d[i + 2] = inv > 120 ? 255 : inv;
+          
+          const data = await response.json();
+          if (!response.ok) {
+            reject(data.error || 'OMR Engine Error');
+            return;
           }
-          vCtx.putImageData(vData, 0, 0);
-
-          GROUPS_X.forEach((gxs, gIdx) => {
-            for (let row = 0; row < 15; row++) {
-              const q = (gIdx * 15 + row + 1).toString();
-              const approxY = GRID_Y_START + row * GRID_ROW_SPACING;
-              const detAns = answers[q];
-
-              // Re-find bestY local centroid for preview ring placement
-              let bestY = Math.round(approxY);
-              let lowestMeanInRow = 255;
-              for (let testY = Math.round(approxY - 18); testY <= Math.round(approxY + 18); testY += 2) {
-                const testMeans = gxs.map((gx) => getMeanIntensity(gx, testY, 11));
-                const currentMin = Math.min(...testMeans);
-                if (currentMin < lowestMeanInRow) {
-                  lowestMeanInRow = currentMin;
-                  bestY = testY;
-                }
-              }
-
-              gxs.forEach((x, optIdx) => {
-                const opt = OPTIONS[optIdx];
-                if (detAns === opt) {
-                  vCtx.beginPath();
-                  vCtx.arc(x, bestY, 11, 0, 2 * Math.PI);
-                  vCtx.fillStyle = '#ef4444';
-                  vCtx.fill();
-                }
-              });
-            }
-          });
-
-          processedVisionImg = visionCanvas.toDataURL('image/jpeg');
+          resolve(data as OMRResult);
+        } catch (err) {
+          reject('Network Error: Could not reach Python OMR Engine');
         }
-
-        resolve({
-          student_id: studentId,
-          answers,
-          total_questions: 75,
-          filled_count: filledCount,
-          blank_count: 75 - filledCount,
-          score,
-          correct_count: correctCount,
-          wrong_count: wrongCount,
-          max_score: parsedAnswerKey ? Object.keys(parsedAnswerKey).length * 4 : 300,
-          vision_preview: processedVisionImg
-        });
       };
-      img.onerror = () => reject('Failed to load image');
+      reader.onerror = () => reject('Failed to read image file');
+      reader.readAsDataURL(file);
     });
   };
 
@@ -366,7 +145,7 @@ export const OMRScannerPage: React.FC = () => {
     setError(null);
 
     try {
-      const res = await processOmrPureVision(files[0]);
+      const res = await processOmrAPI(files[0]);
       setResults(res);
     } catch (err: any) {
       setError(err?.toString() || 'Error in OMR Processing');
