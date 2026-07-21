@@ -89,103 +89,83 @@ export const ProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
             const percentage = totalMaxMarks > 0 ? ((totalObtained / totalMaxMarks) * 100).toFixed(1) : 0;
             
             return (
-              <div key={data.studentId} className="progress-card w-full max-w-[210mm] mx-auto bg-white border border-gray-200 rounded-3xl shadow-2xl overflow-hidden relative">
-                {/* Background Pattern */}
-                <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-pink-400 to-orange-400 rounded-full blur-3xl opacity-10 -mr-20 -mt-20"></div>
-                <div className="absolute bottom-0 left-0 w-64 h-64 bg-gradient-to-tr from-indigo-400 to-cyan-400 rounded-full blur-3xl opacity-10 -ml-20 -mb-20"></div>
+              <div key={data.studentId} className="progress-card w-full max-w-[210mm] mx-auto bg-white border-2 border-gray-800 p-8 relative font-serif text-black">
                 
                 {/* Header */}
-                <div className="px-10 pt-10 pb-6 flex items-center justify-between border-b border-gray-100 relative z-10">
-                  <div className="flex items-center gap-5">
-                    <div className="w-20 h-20 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-2xl flex items-center justify-center font-black text-white text-3xl shadow-lg shadow-indigo-500/30 transform -rotate-3">
-                      JY
-                    </div>
-                    <div>
-                      <h2 className="text-3xl font-black tracking-tight text-gray-900">JY School</h2>
-                      <p className="text-gray-500 font-semibold text-sm tracking-widest uppercase mt-1">Academic Progress Report</p>
-                    </div>
+                <div className="flex items-center justify-between border-b-4 border-double border-gray-800 pb-4 mb-6">
+                  <div className="flex items-center gap-4">
+                    <h2 className="text-3xl font-bold uppercase tracking-wider text-black whitespace-nowrap truncate">JY School</h2>
                   </div>
-                  <div className="text-right">
-                    <div className="inline-flex items-center gap-2 bg-pink-50 text-pink-600 px-4 py-1.5 rounded-full font-bold text-sm border border-pink-100">
-                      <Star className="w-4 h-4 fill-pink-600" /> Session 2026-27
-                    </div>
+                  <div className="text-right flex-shrink-0 ml-4">
+                    <p className="text-lg font-bold uppercase underline tracking-wider">Academic Progress Report</p>
+                    <p className="text-sm font-semibold mt-1">Session: 2026-27</p>
                   </div>
                 </div>
 
-                {/* Student Details */}
-                <div className="px-10 py-8 grid grid-cols-[auto_1fr] gap-8 items-center relative z-10">
-                  <div className="w-32 h-32 bg-gray-50 rounded-2xl border-2 border-gray-200 p-2 shadow-sm">
-                    <div className="w-full h-full bg-gray-200 rounded-xl flex items-center justify-center text-gray-400">
-                       <User className="w-12 h-12" />
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-x-8 gap-y-6 bg-gray-50/50 p-6 rounded-2xl border border-gray-100">
-                    <div>
-                      <p className="text-[10px] uppercase font-black text-gray-400 tracking-widest mb-1">Student Name</p>
-                      <p className="text-xl font-bold text-gray-900">{data.studentName}</p>
-                    </div>
-                    <div>
-                      <p className="text-[10px] uppercase font-black text-gray-400 tracking-widest mb-1">Examination</p>
-                      <p className="text-xl font-bold text-indigo-600">{selectedExam?.name}</p>
-                    </div>
-                    <div>
-                      <p className="text-[10px] uppercase font-black text-gray-400 tracking-widest mb-1">Class & Section</p>
-                      <p className="text-base font-bold text-gray-700">{data.className}</p>
-                    </div>
-                    <div>
-                      <p className="text-[10px] uppercase font-black text-gray-400 tracking-widest mb-1">Roll Number</p>
-                      <p className="text-base font-bold text-gray-700">{data.rollNo}</p>
-                    </div>
+                {/* Student Details & Photo */}
+                <div className="flex justify-between items-start mb-6">
+                  <table className="w-[70%] text-sm font-bold border-collapse">
+                    <tbody>
+                      <tr><td className="py-1.5 text-gray-600">Student Name:</td><td className="py-1.5 px-2 text-black border-b border-gray-300">{data.studentName}</td></tr>
+                      <tr><td className="py-1.5 text-gray-600">Examination:</td><td className="py-1.5 px-2 text-black border-b border-gray-300">{selectedExam?.name}</td></tr>
+                      <tr><td className="py-1.5 text-gray-600">Class & Section:</td><td className="py-1.5 px-2 text-black border-b border-gray-300">{data.className}</td></tr>
+                      <tr><td className="py-1.5 text-gray-600">Roll Number:</td><td className="py-1.5 px-2 text-black border-b border-gray-300">{data.rollNo}</td></tr>
+                    </tbody>
+                  </table>
+                  
+                  <div className="w-[100px] h-[120px] border-2 border-gray-800 bg-gray-50 flex items-center justify-center p-1 overflow-hidden shrink-0">
+                    <img 
+                      src={data.photoUrl || data.studentPhotoUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(data.studentName || 'Student')}&background=random`} 
+                      alt="Student" 
+                      className="w-full h-full object-cover"
+                      onError={(e) => { e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(data.studentName || 'Student')}&background=random`; }}
+                    />
                   </div>
                 </div>
 
                 {/* Marks Table */}
-                <div className="px-10 pb-8 relative z-10">
-                  <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-                    <table className="w-full text-sm border-collapse">
-                      <thead>
-                        <tr className="bg-gray-50/80 border-b border-gray-200">
-                          <th className="text-left py-4 px-6 font-black text-gray-500 uppercase tracking-wider text-xs">Subject</th>
-                          <th className="text-center py-4 px-6 font-black text-gray-500 uppercase tracking-wider text-xs">Max Marks</th>
-                          <th className="text-center py-4 px-6 font-black text-gray-500 uppercase tracking-wider text-xs">Marks Obtained</th>
-                          <th className="text-center py-4 px-6 font-black text-gray-500 uppercase tracking-wider text-xs">Grade</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-gray-100">
-                        {data.marks.map((m: any, idx: number) => (
-                          <tr key={idx} className="hover:bg-gray-50/50">
-                            <td className="py-4 px-6 font-bold text-gray-800">{m.subject}</td>
-                            <td className="py-4 px-6 text-center font-semibold text-gray-500">{m.maxMarks || 100}</td>
-                            <td className="py-4 px-6 text-center font-bold text-gray-900">{m.obtained}</td>
-                            <td className="py-4 px-6 text-center font-bold text-indigo-600 bg-indigo-50/30">{m.grade}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                      <tfoot>
-                        <tr className="bg-gray-900 text-white border-t-2 border-gray-200">
-                          <td className="py-4 px-6 font-black uppercase tracking-wider">Total Score</td>
-                          <td className="py-4 px-6 text-center font-bold text-gray-300">{totalMaxMarks}</td>
-                          <td className="py-4 px-6 text-center font-black text-xl text-yellow-400">{totalObtained}</td>
-                          <td className="py-4 px-6 text-center font-black text-xl text-yellow-400">{percentage}%</td>
-                        </tr>
-                      </tfoot>
-                    </table>
-                  </div>
-                </div>
+                <table className="w-full text-sm border-collapse border-2 border-gray-800 mb-8">
+                  <thead>
+                    <tr className="bg-gray-200">
+                      <th className="border border-gray-800 py-3 px-4 text-left font-bold uppercase">Subject</th>
+                      <th className="border border-gray-800 py-3 px-4 text-center font-bold uppercase w-32">Max Marks</th>
+                      <th className="border border-gray-800 py-3 px-4 text-center font-bold uppercase w-32">Marks Obtained</th>
+                      <th className="border border-gray-800 py-3 px-4 text-center font-bold uppercase w-24">Grade</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {data.marks.map((m: any, idx: number) => (
+                      <tr key={idx} className="even:bg-gray-50">
+                        <td className="border border-gray-800 py-2 px-4 font-semibold text-black">{m.subject}</td>
+                        <td className="border border-gray-800 py-2 px-4 text-center text-black">{m.maxMarks || 100}</td>
+                        <td className="border border-gray-800 py-2 px-4 text-center font-bold text-black">{m.obtained}</td>
+                        <td className="border border-gray-800 py-2 px-4 text-center font-bold text-black">{m.grade}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                  <tfoot>
+                    <tr className="bg-gray-100 border-t-2 border-gray-800">
+                      <td className="border border-gray-800 py-3 px-4 font-bold text-right uppercase">Total Score:</td>
+                      <td className="border border-gray-800 py-3 px-4 text-center font-bold text-black">{totalMaxMarks}</td>
+                      <td className="border border-gray-800 py-3 px-4 text-center font-bold text-black">{totalObtained}</td>
+                      <td className="border border-gray-800 py-3 px-4 text-center font-bold text-black">{percentage}%</td>
+                    </tr>
+                  </tfoot>
+                </table>
 
                 {/* Footer Signatures */}
-                <div className="px-10 pb-10 pt-6 flex justify-between items-end relative z-10">
+                <div className="flex justify-between items-end pt-8 mt-4 border-t border-gray-300">
                   <div className="text-center">
-                    <div className="w-48 border-b-2 border-dashed border-gray-300 mb-3"></div>
-                    <p className="text-[10px] uppercase font-black tracking-widest text-gray-400">Class Teacher</p>
+                    <div className="w-40 border-b-2 border-gray-600 mb-2"></div>
+                    <p className="text-xs uppercase font-bold text-gray-700">Class Teacher</p>
                   </div>
                   <div className="text-center">
-                    <div className="w-48 border-b-2 border-dashed border-gray-300 mb-3"></div>
-                    <p className="text-[10px] uppercase font-black tracking-widest text-gray-400">Parent / Guardian</p>
+                    <div className="w-40 border-b-2 border-gray-600 mb-2"></div>
+                    <p className="text-xs uppercase font-bold text-gray-700">Parent / Guardian</p>
                   </div>
                   <div className="text-center">
-                    <div className="w-48 border-b-2 border-solid border-gray-800 mb-3"></div>
-                    <p className="text-[10px] uppercase font-black tracking-widest text-gray-800">Principal</p>
+                    <div className="w-40 border-b-2 border-gray-800 mb-2"></div>
+                    <p className="text-xs uppercase font-bold text-gray-900">Principal</p>
                   </div>
                 </div>
               </div>
