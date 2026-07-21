@@ -6,7 +6,7 @@ import {
   LayoutDashboard, Users, GraduationCap, School, BookOpen,
   CalendarCheck, ClipboardList, PenTool, Calendar, CreditCard,
   Megaphone, MessageSquare, BarChart3, Settings, LogOut,
-  Shield, FileText, UserCheck, X, ChevronDown, Smartphone, MapPin,
+  Shield, FileText, UserCheck, X, ChevronDown, Smartphone, MapPin, Target,
 } from 'lucide-react';
 import { usePWA } from '../../hooks/usePWA';
 import { getPhotoUrl } from '../../utils/photo';
