@@ -137,9 +137,9 @@ const WelcomeBanner: React.FC<{ name: string; role: string; photoUrl?: string }>
 interface StatCardProps {
   label: string; value: string | number; icon: React.ElementType;
   gradient: string; glow: string; link?: string; sub?: string;
-  badge?: string; badgeColor?: string;
+  badge?: string; badgeColor?: string; onClick?: () => void;
 }
-const StatCard: React.FC<StatCardProps> = ({ label, value, icon: Icon, gradient, glow, link, sub, badge, badgeColor }) => {
+const StatCard: React.FC<StatCardProps> = ({ label, value, icon: Icon, gradient, glow, link, sub, badge, badgeColor, onClick }) => {
   const iconColor = gradient.includes('#6366f1') ? '#6366f1'
     : gradient.includes('#10b981') ? '#10b981'
     : gradient.includes('#f59e0b') ? '#d97706'
@@ -180,6 +180,9 @@ const StatCard: React.FC<StatCardProps> = ({ label, value, icon: Icon, gradient,
       </div>
     </div>
   );
+  if (onClick) {
+    return <div onClick={onClick}>{inner}</div>;
+  }
   return link ? <Link to={link}>{inner}</Link> : inner;
 };
 
@@ -427,9 +430,37 @@ const AdminView: React.FC<{ data: any }> = ({ data }) => {
 
 /* ── Teacher View ───────────────────────────────────────── */
 const TeacherView: React.FC<{ data: any }> = ({ data }) => {
+  const navigate = useNavigate();
+  const [showMarksModal, setShowMarksModal] = React.useState(false);
+  const [exams, setExams] = React.useState<any[]>([]);
+  const [selectedExamId, setSelectedExamId] = React.useState('');
+  const [selectedClassId, setSelectedClassId] = React.useState('');
+  const [loadingExams, setLoadingExams] = React.useState(false);
+
+  const handleOpenMarksModal = async () => {
+    setShowMarksModal(true);
+    setLoadingExams(true);
+    try {
+      const res = await api.get('/api/exams');
+      setExams(res.data?.data || res.data || []);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoadingExams(false);
+    }
+  };
+
+  const handleGoToMarks = () => {
+    if (selectedExamId && selectedClassId) {
+      navigate(`/exams/${selectedExamId}/entry?classId=${selectedClassId}`);
+    }
+  };
+
   const { rate = 0, present = 0, absent = 0, total = 0 } = data.todayAttendanceSummary || {};
   const { teacherProfile, myAttendance, pendingSalary, recentHomework } = data;
   const classBarData = (data.assignedClasses || []).map((c: any) => ({ name: c.className, students: c.studentCount }));
+
+  const selectedExam = exams.find(e => e.id === selectedExamId);
 
   return (
     <div className="space-y-7">
@@ -440,7 +471,7 @@ const TeacherView: React.FC<{ data: any }> = ({ data }) => {
           { label: 'Total Students', value: data.totalStudents || 0, icon: Users, gradient: 'linear-gradient(135deg,#8b5cf6 0%,#6d28d9 100%)', glow: 'rgba(255,255,255,0.2)', sub: 'Across all classes', link: '/teachers/students' },
           { label: "Today's Att.", value: `${rate}%`, icon: Clock, gradient: 'linear-gradient(135deg,#10b981 0%,#059669 100%)', glow: 'rgba(255,255,255,0.2)', sub: `${present}P · ${absent}A`, link: '/teacher-attendance' },
           { label: 'My Timetable', value: 'View', icon: School, gradient: 'linear-gradient(135deg,#f59e0b 0%,#d97706 100%)', glow: 'rgba(255,255,255,0.2)', sub: 'Weekly Schedule', link: '/timetable' },
-          { label: 'Marks Entry', value: 'Enter', icon: PenTool, gradient: 'linear-gradient(135deg,#ec4899 0%,#e11d48 100%)', glow: 'rgba(255,255,255,0.2)', sub: 'Update grades', link: '/exams?tab=written-exam' },
+          { label: 'Marks Entry', value: 'Enter', icon: PenTool, gradient: 'linear-gradient(135deg,#ec4899 0%,#e11d48 100%)', glow: 'rgba(255,255,255,0.2)', sub: 'Update grades', onClick: handleOpenMarksModal },
           { label: 'Result Cards', value: 'View', icon: FileText, gradient: 'linear-gradient(135deg,#14b8a6 0%,#0f766e 100%)', glow: 'rgba(255,255,255,0.2)', sub: 'Progress Cards', link: '/exams?tab=jee-progress-card' },
           { label: 'Admit Cards', value: 'View', icon: BookMarked, gradient: 'linear-gradient(135deg,#8b5cf6 0%,#3b82f6 100%)', glow: 'rgba(255,255,255,0.2)', sub: 'Students Admit Cards', link: '/teacher/admit-cards' },
           { label: 'Leave Apply', value: 'Apply', icon: FileText, gradient: 'linear-gradient(135deg,#06b6d4 0%,#2563eb 100%)', glow: 'rgba(255,255,255,0.2)', sub: 'Request leave', link: '/leave' },
