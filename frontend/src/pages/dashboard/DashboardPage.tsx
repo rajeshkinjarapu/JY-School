@@ -517,6 +517,7 @@ const TeacherView: React.FC<{ data: any }> = ({ data }) => {
 
 /* ── Student View ───────────────────────────────────────── */
 const StudentView: React.FC<{ data: any }> = ({ data }) => {
+  const navigate = useNavigate();
   const attPct = data.attendancePercentage || 0;
   const feeStatus = data.feeStatus?.status || 'NO_FEES';
   const attColor = attPct >= 80 ? '#10b981' : attPct >= 60 ? '#f59e0b' : '#f43f5e';

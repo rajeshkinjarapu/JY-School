@@ -155,6 +155,8 @@ export default function AttendanceDailyReportPage() {
                 <p className="text-[9px] md:text-xs font-black text-gray-500 uppercase tracking-widest">Principal</p>
               </div>
             </div>
+          </>
+        )}
           </div>
         </div>
       </div>

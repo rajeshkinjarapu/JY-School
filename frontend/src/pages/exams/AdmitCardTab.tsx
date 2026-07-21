@@ -81,7 +81,7 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
     const originalDisplay = el.style.display;
     el.style.display = 'flex';
     await new Promise(resolve => setTimeout(resolve, 100));
-    const imgData = await toJpeg(el, { cacheBust: true, useCORS: true, pixelRatio: 2, quality: 0.95, backgroundColor: '#ffffff' });
+    const imgData = await toJpeg(el, { cacheBust: true, pixelRatio: 2, quality: 0.95, backgroundColor: '#ffffff' });
     const pdf = new jsPDF('p', 'mm', 'a4');
     const pdfWidth = pdf.internal.pageSize.getWidth();
     const pdfHeight = (el.offsetHeight * pdfWidth) / el.offsetWidth;
@@ -133,7 +133,7 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
         const el = templates[i] as HTMLElement;
         const student = students[i];
         
-        const imgData = await toJpeg(el, { cacheBust: true, useCORS: true, pixelRatio: 1.5, quality: 0.75 });
+        const imgData = await toJpeg(el, { cacheBust: true, pixelRatio: 1.5, quality: 0.75 });
         
         const pdf = new jsPDF('p', 'mm', 'a4');
         const pdfWidth = pdf.internal.pageSize.getWidth();
