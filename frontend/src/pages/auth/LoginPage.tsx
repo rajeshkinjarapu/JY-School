@@ -64,7 +64,6 @@ export const LoginPage: React.FC = () => {
         <h1 className="text-4xl sm:text-5xl font-black text-white drop-shadow-lg tracking-tight text-center px-4">
           JY SCHOOL
         </h1>
-        <p className="text-white/90 font-medium text-lg mt-1 tracking-wide uppercase drop-shadow-sm">Education ERP</p>
       </div>
 
       <div className="w-full max-w-sm sm:max-w-md bg-white/95 backdrop-blur-xl rounded-[2.5rem] shadow-2xl p-6 sm:p-8 border border-white/50 overflow-hidden relative z-10 mx-4 flex flex-col max-h-[60vh] sm:max-h-[65vh]">
