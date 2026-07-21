@@ -24,6 +24,27 @@ GROUPS_X = [
 
 OPTIONS = ['A', 'B', 'C', 'D']
 
+# ── STUDENT ID GRID POSITIONS ──────────────────────────────
+ID_GRID_Y_START     = 205    # Y center of '0' bubble row
+ID_GRID_ROW_SPACING = 31     # Y distance between 0..9 rows
+ID_COLS_X           = [121, 153, 185, 217, 248, 280, 312] # 7 columns
+
+def read_student_id(gray, fill_threshold=140):
+    digits = []
+    for col_x in ID_COLS_X:
+        vals = []
+        for digit in range(10):
+            y = ID_GRID_Y_START + digit * ID_GRID_ROW_SPACING
+            r = 10
+            region = gray[max(0, y-r):y+r, max(0, col_x-r):col_x+r]
+            vals.append(float(np.mean(region)) if region.size > 0 else 255.0)
+        min_val = min(vals)
+        if min_val < fill_threshold:
+            digits.append(str(vals.index(min_val)))
+        else:
+            digits.append('?')
+    return "".join(digits)
+
 def process_omr(image_bytes, fill_threshold=140):
     nparr = np.frombuffer(image_bytes, np.uint8)
     raw = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
@@ -33,6 +54,8 @@ def process_omr(image_bytes, fill_threshold=140):
     sheet = cv2.resize(raw, (TARGET_W, TARGET_H))
     gray = cv2.cvtColor(sheet, cv2.COLOR_BGR2GRAY)
     gray = cv2.GaussianBlur(gray, (3, 3), 0)
+
+    student_id = read_student_id(gray, fill_threshold)
 
     answers = {}
     for g_idx, gxs in enumerate(GROUPS_X):
@@ -53,7 +76,8 @@ def process_omr(image_bytes, fill_threshold=140):
                 answers[str(q)] = None
 
     filled_count = sum(1 for a in answers.values() if a is not None)
-    return answers, filled_count
+    return student_id, answers, filled_count
+
 
 class handler(BaseHTTPRequestHandler):
     def do_POST(self):
@@ -75,7 +99,7 @@ class handler(BaseHTTPRequestHandler):
                 img_data = img_data.split(',')[1]
             image_bytes = base64.b64decode(img_data)
 
-            answers, filled_count = process_omr(image_bytes)
+            student_id, answers, filled_count = process_omr(image_bytes)
 
             self.send_response(200)
             self.send_header('Content-Type', 'application/json')
@@ -83,6 +107,7 @@ class handler(BaseHTTPRequestHandler):
             self.end_headers()
             response_payload = {
                 'success': True,
+                'student_id': student_id,
                 'answers': answers,
                 'total_questions': 75,
                 'filled_count': filled_count,

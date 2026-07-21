@@ -13,16 +13,26 @@ TARGET_H = 1600
 GRID_Y_START     = 752    # Y of Q01 bubble center
 GRID_ROW_SPACING = 41     # pixels between question rows
 
-GROUPS_X = [
-    [132, 169, 208, 248],    # Group 1  (Q01–Q15):  A  B  C  D
-    [350, 389, 426, 464],    # Group 2  (Q16–Q30)
-    [567, 603, 641, 679],    # Group 3  (Q31–Q45)
-    [780, 816, 855, 889],    # Group 4  (Q46–Q60)
-    [993, 1031, 1069, 1107], # Group 5  (Q61–Q75)
-]
+# ── STUDENT ID GRID POSITIONS ──────────────────────────────
+ID_GRID_Y_START     = 205    # Y center of '0' bubble row
+ID_GRID_ROW_SPACING = 31     # Y distance between 0..9 rows
+ID_COLS_X           = [121, 153, 185, 217, 248, 280, 312] # 7 columns
 
-OPTIONS     = ['A', 'B', 'C', 'D']
-OPT_IDX_MAP = {'A': 0, 'B': 1, 'C': 2, 'D': 3}
+def read_student_id(gray, fill_threshold=140):
+    """Read 7-digit Student ID from Student ID bubble grid."""
+    digits = []
+    for col_x in ID_COLS_X:
+        vals = []
+        for digit in range(10): # 0..9
+            y = ID_GRID_Y_START + digit * ID_GRID_ROW_SPACING
+            vals.append(_mean(gray, col_x, y, r=10))
+        min_val = min(vals)
+        if min_val < fill_threshold:
+            digits.append(str(vals.index(min_val)))
+        else:
+            digits.append('?')
+    return "".join(digits)
+
 
 # ─────────────────────────────────────────────────────────────
 def _load(image_path):
@@ -84,6 +94,12 @@ def calibrate(image_path):
 def debug_answers(image_path, fill_threshold=140):
     sheet, gray = _load(image_path)
     output = sheet.copy()
+    
+    sid = read_student_id(gray, fill_threshold)
+    print(f"\n==========================================")
+    print(f" Detected Student ID: {sid}")
+    print(f"==========================================")
+
     answers = read_answers(image_path, fill_threshold)
 
     for g_idx, gxs in enumerate(GROUPS_X):

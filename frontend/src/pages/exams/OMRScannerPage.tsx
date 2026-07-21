@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Upload, FileType, CheckCircle, AlertCircle, RefreshCw, FileText } from 'lucide-react';
 
 interface OMRResult {
+  student_id?: string;
   answers: Record<string, string | null>;
   total_questions: number;
   filled_count: number;
@@ -138,9 +139,16 @@ export const OMRScannerPage: React.FC = () => {
           {results && (
             <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100 space-y-6">
               <div className="flex items-center justify-between border-b pb-4">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-3">
                   <FileText className="w-6 h-6 text-indigo-600" />
-                  <h2 className="text-lg font-bold text-gray-800">OMR Scan Results</h2>
+                  <div>
+                    <h2 className="text-lg font-bold text-gray-800">OMR Scan Results</h2>
+                    {results.student_id && (
+                      <span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-100">
+                        Student ID: {results.student_id}
+                      </span>
+                    )}
+                  </div>
                 </div>
                 <div className="flex gap-3">
                   <span className="px-3 py-1 bg-emerald-100 text-emerald-800 rounded-full text-xs font-semibold">
