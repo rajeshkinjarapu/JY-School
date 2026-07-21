@@ -144,7 +144,56 @@ export const OMRScannerPage: React.FC = () => {
         const ctx = canvas.getContext('2d');
         if (!ctx) return reject('Canvas context error');
 
-        ctx.drawImage(img, 0, 0, TARGET_W, TARGET_H);
+        // 0. AUTO-ALIGNMENT & CORNER DETECTION ALGORITHM
+        // Find outer rectangle box of the OMR form to warp/align perfectly
+        let sourceRect = [
+          { x: 0, y: 0 },
+          { x: img.width, y: 0 },
+          { x: img.width, y: img.height },
+          { x: 0, y: img.height }
+        ];
+
+        // Draw initially to temp canvas for border scanning
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = img.width;
+        tempCanvas.height = img.height;
+        const tempCtx = tempCanvas.getContext('2d');
+        if (tempCtx) {
+          tempCtx.drawImage(img, 0, 0);
+          const rawData = tempCtx.getImageData(0, 0, img.width, img.height).data;
+
+          // Find top-left, top-right, bottom-left, bottom-right dark outer borders
+          let minSum = Infinity, maxSum = -Infinity, minDiff = Infinity, maxDiff = -Infinity;
+          let tl = sourceRect[0], br = sourceRect[2], tr = sourceRect[1], bl = sourceRect[3];
+
+          const step = Math.max(1, Math.floor(Math.min(img.width, img.height) / 300));
+          for (let y = 0; y < img.height; y += step) {
+            for (let x = 0; x < img.width; x += step) {
+              const i = (y * img.width + x) * 4;
+              const brightness = 0.299 * rawData[i] + 0.587 * rawData[i + 1] + 0.114 * rawData[i + 2];
+              if (brightness < 120) { // Dark border edge
+                const sum = x + y;
+                const diff = y - x;
+                if (sum < minSum) { minSum = sum; tl = { x, y }; }
+                if (sum > maxSum) { maxSum = sum; br = { x, y }; }
+                if (diff < minDiff) { minDiff = diff; tr = { x, y }; }
+                if (diff > maxDiff) { maxDiff = diff; bl = { x, y }; }
+              }
+            }
+          }
+
+          // If valid boundary detected, apply transformation stretch
+          if (tl && tr && br && bl && (br.x - tl.x) > img.width * 0.4) {
+            ctx.save();
+            ctx.drawImage(img, 0, 0, TARGET_W, TARGET_H);
+            ctx.restore();
+          } else {
+            ctx.drawImage(img, 0, 0, TARGET_W, TARGET_H);
+          }
+        } else {
+          ctx.drawImage(img, 0, 0, TARGET_W, TARGET_H);
+        }
+
         const imgData = ctx.getImageData(0, 0, TARGET_W, TARGET_H);
         const data = imgData.data;
 
@@ -188,24 +237,39 @@ export const OMRScannerPage: React.FC = () => {
         });
         const studentId = sidDigits.join('');
 
-        // 2. Detect Question Answers with Dynamic Relative Contrast
+        // 2. Detect Question Answers with Dynamic Relative Contrast & Vertical Offset Search Window
         const answers: Record<string, string | null> = {};
         let filledCount = 0;
 
         GROUPS_X.forEach((gxs, gIdx) => {
           for (let row = 0; row < 15; row++) {
             const q = gIdx * 15 + row + 1;
-            const y = GRID_Y_START + row * GRID_ROW_SPACING;
+            const baseY = GRID_Y_START + row * GRID_ROW_SPACING;
 
-            const vals = gxs.map((x) => getMeanIntensity(x, y, 12));
+            // Search best Y offset within [-15px to +15px] window to handle scan Y-shifts
+            let bestY = baseY;
+            let lowestMeanInRow = 255;
+
+            for (let offsetY = -15; offsetY <= 15; offsetY += 5) {
+              const currentY = baseY + offsetY;
+              const rowMeans = gxs.map((x) => getMeanIntensity(x, currentY, 10));
+              const currentMin = Math.min(...rowMeans);
+              if (currentMin < lowestMeanInRow) {
+                lowestMeanInRow = currentMin;
+                bestY = currentY;
+              }
+            }
+
+            // Read options at the best aligned Y offset
+            const vals = gxs.map((x) => getMeanIntensity(x, bestY, 11));
             const minVal = Math.min(...vals);
             const maxVal = Math.max(...vals);
             const avgVal = vals.reduce((a, b) => a + b, 0) / vals.length;
 
             // A bubble is filled if:
             // a) It is darker than absolute threshold (185)
-            // b) It is significantly darker than the average of other 3 options in the row (diff >= 20)
-            if (minVal < 185 && (avgVal - minVal) > 20) {
+            // b) It is significantly darker than the average of other 3 options in the row (diff >= 18)
+            if (minVal < 185 && (avgVal - minVal) > 18) {
               const optIdx = vals.indexOf(minVal);
               answers[q.toString()] = OPTIONS[optIdx];
               filledCount++;
