@@ -154,21 +154,30 @@ export const bulkImport = async (req: AuthRequest, res: Response, next: NextFunc
 
     for (const row of results) {
       try {
-        const email = row.Email || row.email;
         const name = row.Name || row.name;
-        const password = row.Password || row.password || 'Teacher@123';
-        const phone = row.Phone || row.phone || null;
-        const qualification = row.Qualification || row.qualification || null;
-        const specialization = row.Specialization || row.specialization || null;
+        const phone = row.Phone || row.phone;
+        const password = phone; // Password is mobile no
+        const specialization = row.Subject || row.subject || null;
 
-        if (!email || !name) {
-          failed.push({ row, reason: 'Name and Email are required' });
+        if (!name || !phone) {
+          failed.push({ row, reason: 'Name and Phone are required' });
           continue;
         }
 
-        const existing = await prisma.user.findUnique({ where: { email } });
+        // Auto-generate email based on phone since email is unique and required by Prisma
+        const generatedEmail = `${phone}@jyschool.com`;
+
+        const existing = await prisma.user.findFirst({ 
+          where: { 
+            OR: [
+              { email: generatedEmail },
+              { phone: String(phone) }
+            ]
+          } 
+        });
+        
         if (existing) {
-          failed.push({ row, reason: 'Email already exists' });
+          failed.push({ row, reason: 'Phone number already registered' });
           continue;
         }
 
@@ -177,14 +186,14 @@ export const bulkImport = async (req: AuthRequest, res: Response, next: NextFunc
         const employeeId = generateEmployeeId(count + 1);
 
         const user = await prisma.user.create({
-          data: { name, email: String(email), password: hashedPassword, role: 'TEACHER', phone: phone ? String(phone) : null },
+          data: { name, email: generatedEmail, password: hashedPassword, role: 'TEACHER', phone: String(phone) },
         });
 
         await prisma.teacher.create({
           data: {
             userId: user.id,
             employeeId,
-            qualification: qualification ? String(qualification) : null,
+            qualification: null,
             specialization: specialization ? String(specialization) : null,
           },
         });
@@ -218,11 +227,8 @@ export const exportCsv = async (_req: AuthRequest, res: Response): Promise<void>
   const rows = teachers.map((t) => ({
     'Employee ID': t.employeeId,
     'Name': t.user.name,
-    'Email': t.user.email,
     'Phone': t.user.phone || '',
-    'Qualification': t.qualification || '',
-    'Specialization': t.specialization || '',
-    'Joining Date': t.joiningDate.toISOString().split('T')[0],
+    'Subject': t.specialization || '',
   }));
 
   const wb = XLSX.utils.book_new();

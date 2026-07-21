@@ -197,15 +197,32 @@ export const changePassword = async (req: AuthRequest, res: Response, next: Next
 };
 
 export const updateProfile = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
-  const { photoUrl } = req.body;
+  const { photoUrl, email, qualification, joiningDate } = req.body;
 
-  if (!photoUrl) return next(createError('Nothing to update', 400));
+  if (Object.keys(req.body).length === 0) return next(createError('Nothing to update', 400));
+
+  const updateData: any = {};
+  if (photoUrl !== undefined) updateData.photoUrl = photoUrl;
+  if (email !== undefined) updateData.email = email;
 
   const user = await prisma.user.update({
     where: { id: req.user!.id },
-    data: { photoUrl },
+    data: updateData,
   });
 
+  if (user.role === 'TEACHER' && (qualification !== undefined || joiningDate !== undefined)) {
+    const teacherUpdate: any = {};
+    if (qualification !== undefined) teacherUpdate.qualification = qualification;
+    if (joiningDate !== undefined) teacherUpdate.joiningDate = new Date(joiningDate);
+    
+    await prisma.teacher.update({
+      where: { userId: user.id },
+      data: teacherUpdate,
+    });
+  }
+
   const { password: _p, refreshToken: _rt, resetOtp: _o, resetOtpExp: _e, ...safeUser } = user as any;
+  
+  // also fetch the teacher if it is one to send it back safely? No, the frontend just updates context with response
   successResponse(res, safeUser, 'Profile updated successfully');
 };

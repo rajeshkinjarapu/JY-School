@@ -4,8 +4,7 @@ export const generateRollNo = (count: number): string => {
 };
 
 export const generateEmployeeId = (count: number): string => {
-  const year = new Date().getFullYear().toString().slice(-2);
-  return `EMP${year}${String(count).padStart(4, '0')}`;
+  return `JY${String(count).padStart(6, '0')}`;
 };
 
 export const generateOtp = (): string => {

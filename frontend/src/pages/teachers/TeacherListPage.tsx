@@ -125,7 +125,7 @@ export const TeacherListPage: React.FC = () => {
               </button>
               <button
                 onClick={() => {
-                  const csvContent = "data:text/csv;charset=utf-8,Name,Email,Password,Phone,Qualification,Specialization\nTeacher 1,teacher1@example.com,Teacher@123,9876543210,M.Sc,Physics";
+                  const csvContent = "data:text/csv;charset=utf-8,Name,Phone,Subject\nTeacher 1,9876543210,Physics";
                   const encodedUri = encodeURI(csvContent);
                   const tempLink = document.createElement("a");
                   tempLink.setAttribute("href", encodedUri);
@@ -161,7 +161,7 @@ export const TeacherListPage: React.FC = () => {
                 <tr className="bg-gray-50/50 dark:bg-white/5 text-gray-500 font-semibold border-b border-gray-150 dark:border-white/10">
                   <th className="px-6 py-4 font-extrabold text-xs uppercase tracking-wider text-gray-400">Teacher</th>
                   <th className="px-6 py-4 font-extrabold text-xs uppercase tracking-wider text-gray-400">Employee ID</th>
-                  <th className="px-6 py-4 font-extrabold text-xs uppercase tracking-wider text-gray-400">Specialization</th>
+                  <th className="px-6 py-4 font-extrabold text-xs uppercase tracking-wider text-gray-400">Subject</th>
                   <th className="px-6 py-4 font-extrabold text-xs uppercase tracking-wider text-gray-400">Qualification</th>
                   <th className="px-6 py-4 font-extrabold text-xs uppercase tracking-wider text-gray-400 text-right">Actions</th>
                 </tr>
