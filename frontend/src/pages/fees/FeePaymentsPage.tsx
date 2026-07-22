@@ -29,6 +29,9 @@ export const FeePaymentsPage: React.FC = () => {
   const [utrNumber, setUtrNumber] = useState('');
   const [receiptUrl, setReceiptUrl] = useState('');
   const [isUploading, setIsUploading] = useState(false);
+  const [expandedRow, setExpandedRow] = useState<string | null>(null);
+
+  const toggleRow = (id: string) => setExpandedRow(prev => prev === id ? null : id);
 
   // Smart student selector states
   const [filterClass, setFilterClass] = useState('');
@@ -255,31 +258,32 @@ export const FeePaymentsPage: React.FC = () => {
             <div className="overflow-x-auto w-full max-w-full block"><table className="w-full text-sm text-left">
               <thead className="bg-indigo-50/50 text-indigo-900 font-bold border-b border-indigo-100">
                 <tr>
-                  <th className="px-6 py-4">Student</th>
-                  <th className="px-6 py-4">Fee Structure</th>
-                  <th className="px-6 py-4">Amount Paid</th>
-                  <th className="px-6 py-4">Date</th>
-                  <th className="px-6 py-4">Method</th>
-                  <th className="px-6 py-4">Receipt No</th>
-                  <th className="px-6 py-4 text-right">Invoice</th>
+                  <th className="px-3 sm:px-6 py-4">Student</th>
+                  <th className="px-3 sm:px-6 py-4">Fee Structure</th>
+                  <th className="px-3 sm:px-6 py-4">Amount Paid</th>
+                  <th className="px-6 py-4 hidden md:table-cell">Date</th>
+                  <th className="px-6 py-4 hidden md:table-cell">Method</th>
+                  <th className="px-6 py-4 hidden md:table-cell">Receipt No</th>
+                  <th className="px-6 py-4 text-right hidden md:table-cell">Invoice</th>
                 </tr>
               </thead>
               <tbody className="divide-y">
                 {payments.map((p) => (
-                  <tr key={p.id} className="hover:bg-indigo-50/30 transition-colors">
-                    <td className="px-6 py-4 font-bold text-slate-800">{p.student?.user?.name || 'Unknown student'}</td>
-                    <td className="px-6 py-4 text-slate-500">{p.feeStructure?.name || 'Deleted structure'}</td>
-                    <td className="px-6 py-4 font-bold">₹{p.amountPaid.toLocaleString()}</td>
-                    <td className="px-6 py-4 text-gray-500">
+                  <React.Fragment key={p.id}>
+                  <tr onClick={() => toggleRow(p.id)} className="hover:bg-indigo-50/30 transition-colors cursor-pointer md:cursor-default">
+                    <td className="px-3 sm:px-6 py-4 font-bold text-slate-800 break-words whitespace-normal break-all sm:break-normal max-w-[100px] sm:max-w-none leading-tight sm:leading-normal text-xs sm:text-sm">{p.student?.user?.name || 'Unknown student'}</td>
+                    <td className="px-3 sm:px-6 py-4 text-slate-500 whitespace-normal break-words text-xs sm:text-sm">{p.feeStructure?.name || 'Deleted structure'}</td>
+                    <td className="px-3 sm:px-6 py-4 font-bold text-xs sm:text-sm whitespace-nowrap">₹{p.amountPaid.toLocaleString()}</td>
+                    <td className="px-6 py-4 text-gray-500 hidden md:table-cell">
                       {new Date(p.paymentDate).toLocaleDateString()}
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-4 hidden md:table-cell">
                       <Badge variant={p.method === 'UPI' ? 'danger' : 'info'}>{p.method}</Badge>
                     </td>
-                    <td className="px-6 py-4 font-mono text-xs text-gray-400 opacity-70 truncate max-w-[120px]">{p.receiptNo}</td>
-                    <td className="px-6 py-4 text-right flex items-center justify-end gap-2">
+                    <td className="px-6 py-4 font-mono text-xs text-gray-400 opacity-70 truncate max-w-[120px] hidden md:table-cell">{p.receiptNo}</td>
+                    <td className="px-6 py-4 text-right hidden md:flex items-center justify-end gap-2 h-full">
                       <button
-                        onClick={() => handlePrintReceipt(p.id)}
+                        onClick={(e) => { e.stopPropagation(); handlePrintReceipt(p.id); }}
                         className="p-1.5 rounded-lg text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950/20 cursor-pointer"
                         title="Print Dual Receipt"
                       >
@@ -287,7 +291,7 @@ export const FeePaymentsPage: React.FC = () => {
                       </button>
                       {(user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN' || user?.role === 'ACCOUNTANT') && (
                         <button
-                          onClick={() => handleDeletePayment(p.id)}
+                          onClick={(e) => { e.stopPropagation(); handleDeletePayment(p.id); }}
                           className="p-1.5 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 cursor-pointer"
                           title="Delete Payment"
                         >
@@ -296,6 +300,41 @@ export const FeePaymentsPage: React.FC = () => {
                       )}
                     </td>
                   </tr>
+                  {expandedRow === p.id && (
+                    <tr className="md:hidden bg-indigo-50/20 border-b border-indigo-100/50 animate-scale-in origin-top">
+                      <td colSpan={3} className="px-4 py-4 space-y-3">
+                        <div className="flex justify-between text-xs items-center">
+                          <span className="font-semibold text-slate-600">Date:</span>
+                          <span className="text-slate-800">{new Date(p.paymentDate).toLocaleDateString()}</span>
+                        </div>
+                        <div className="flex justify-between text-xs items-center">
+                          <span className="font-semibold text-slate-600">Method:</span>
+                          <span><Badge variant={p.method === 'UPI' ? 'danger' : 'info'}>{p.method}</Badge></span>
+                        </div>
+                        <div className="flex justify-between text-xs items-center">
+                          <span className="font-semibold text-slate-600">Receipt No:</span>
+                          <span className="font-mono text-[10px] text-slate-500 truncate max-w-[150px]">{p.receiptNo || '-'}</span>
+                        </div>
+                        <div className="flex justify-end gap-2 mt-4 pt-3 border-t border-indigo-100/60">
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handlePrintReceipt(p.id); }}
+                            className="flex-1 py-2 px-3 flex items-center justify-center gap-2 rounded-lg text-indigo-600 bg-indigo-100 hover:bg-indigo-200 font-bold text-xs active:scale-95 transition-transform"
+                          >
+                            <FileDown className="w-4 h-4" /> Receipt
+                          </button>
+                          {(user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN' || user?.role === 'ACCOUNTANT') && (
+                            <button
+                              onClick={(e) => { e.stopPropagation(); handleDeletePayment(p.id); }}
+                              className="flex-1 py-2 px-3 flex items-center justify-center gap-2 rounded-lg text-red-600 bg-red-100 hover:bg-red-200 font-bold text-xs active:scale-95 transition-transform"
+                            >
+                              <Trash2 className="w-4 h-4" /> Delete
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                  </React.Fragment>
                 ))}
               </tbody>
             </table></div>
