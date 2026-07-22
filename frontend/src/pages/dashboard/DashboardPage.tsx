@@ -389,7 +389,7 @@ const AdminView: React.FC<{ data: any }> = ({ data }) => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         <ChartCard>
           <SectionHeader title="Recent Payments" subtitle="Latest fee transactions" icon={Wallet} iconColor="#6366f1"
-            action={<Link to="/finance" className="flex items-center gap-1 text-xs font-bold text-indigo-600 hover:text-indigo-700">View All <ChevronRight className="w-3.5 h-3.5" /></Link>} />
+            action={<Link to="/fee-payment" className="flex items-center gap-1 text-xs font-bold text-indigo-600 hover:text-indigo-700">View All <ChevronRight className="w-3.5 h-3.5" /></Link>} />
           <div className="space-y-3">
             {data.recentPayments?.length === 0 && <p className="text-sm text-slate-400 text-center py-8">No recent payments.</p>}
             {data.recentPayments?.map((p: any) => (

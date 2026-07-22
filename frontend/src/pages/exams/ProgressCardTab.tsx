@@ -131,6 +131,30 @@ export const ProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
     window.print();
   };
 
+  const handlePrintSingle = (index: number) => {
+    const parentContainer = document.getElementById('progress-cards-print-container');
+    if (parentContainer) {
+      parentContainer.classList.remove('hidden');
+      parentContainer.style.display = 'block';
+    }
+
+    const cards = document.querySelectorAll('.progress-card-wrapper');
+    cards.forEach((el, i) => {
+      (el as HTMLElement).style.display = i === index ? 'flex' : 'none';
+    });
+
+    window.print();
+
+    cards.forEach((el) => {
+      (el as HTMLElement).style.display = '';
+    });
+    
+    if (parentContainer) {
+      parentContainer.classList.add('hidden');
+      parentContainer.style.display = '';
+    }
+  };
+
   const generatePDFForElement = async (el: HTMLElement, fileName: string) => {
     const parentContainer = document.getElementById('progress-cards-print-container');
     const originalParentDisplay = parentContainer?.style.display;
@@ -153,7 +177,7 @@ export const ProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
     // Allow DOM to process
     await new Promise(resolve => setTimeout(resolve, 100));
     
-    const imgData = await toJpeg(el, { cacheBust: true, pixelRatio: 2, quality: 0.95, backgroundColor: '#ffffff' });
+    const imgData = await toJpeg(el, { skipFonts: true, pixelRatio: 2, quality: 0.95, backgroundColor: '#ffffff' });
     const pdf = new jsPDF('p', 'mm', 'a4');
     const pdfWidth = pdf.internal.pageSize.getWidth();
     const pdfHeight = (el.offsetHeight * pdfWidth) / el.offsetWidth;
@@ -218,7 +242,7 @@ export const ProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
         // Update toast progress every 5 cards
         if (i % 5 === 0) toast.loading(`Generated ${i} of ${templates.length}...`, { id: loadingToastId });
         
-        const imgData = await toJpeg(el, { cacheBust: true, pixelRatio: 1.5, quality: 0.8, backgroundColor: '#ffffff' });
+        const imgData = await toJpeg(el, { skipFonts: true, pixelRatio: 1.5, quality: 0.8, backgroundColor: '#ffffff' });
         
         const pdf = new jsPDF('p', 'mm', 'a4');
         const pdfWidth = pdf.internal.pageSize.getWidth();
@@ -458,9 +482,12 @@ export const ProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
                       </td>
                       {!isTeacher && <td className="py-3 px-4 text-gray-600 font-medium">{data.rollNo || '-'}</td>}
                       <td className="py-3 px-4 text-center font-bold text-emerald-600">{data.total}</td>
-                      <td className="py-3 px-4 text-right">
-                        <button onClick={() => handleDownloadSingle(data.studentId, data.studentName, idx)} className="btn-secondary text-xs flex items-center gap-1 ml-auto hover:bg-indigo-50 hover:text-indigo-600 transition-colors">
-                          <Download className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Download</span> PDF
+                      <td className="py-3 px-4 flex justify-end gap-2">
+                        <button onClick={() => handleDownloadSingle(data.studentId, data.studentName, idx)} className="btn-secondary text-xs flex items-center gap-1 hover:bg-indigo-50 hover:text-indigo-600 transition-colors">
+                          <Download className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Download</span>
+                        </button>
+                        <button onClick={() => handlePrintSingle(idx)} className="btn-secondary text-xs flex items-center gap-1 hover:bg-indigo-50 hover:text-indigo-600 transition-colors">
+                          <Printer className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Print</span>
                         </button>
                       </td>
                     </tr>

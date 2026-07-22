@@ -41,7 +41,7 @@ export const ProgressCardTemplate: React.FC<ProgressCardTemplateProps> = ({ data
           {/* Logo */}
           <div className="w-20 h-20 sm:w-24 sm:h-24 flex-shrink-0 flex items-center justify-center">
             {logoUrl ? (
-              <img src={logoUrl} alt="Logo" className="max-w-full max-h-full object-contain" style={{ filter: 'drop-shadow(0px 0px 4px rgba(255, 255, 255, 0.9))' }} />
+              <img src={logoUrl} crossOrigin="anonymous" alt="Logo" className="max-w-full max-h-full object-contain" style={{ filter: 'drop-shadow(0px 0px 4px rgba(255, 255, 255, 0.9))' }} />
             ) : (
               <div className="text-white font-bold text-xl text-center leading-none flex items-center justify-center">
                 LOGO
@@ -196,7 +196,7 @@ export const ProgressCardTemplate: React.FC<ProgressCardTemplateProps> = ({ data
             <div className="text-center w-32 sm:w-48">
               <div className="h-24 flex items-end justify-center mb-2 relative">
                 {teacherSignatureUrl ? (
-                  <img src={teacherSignatureUrl} alt="Teacher Signature" className="max-h-20 object-contain mix-blend-multiply" />
+                  <img src={teacherSignatureUrl} crossOrigin="anonymous" alt="Teacher Signature" className="max-h-20 object-contain mix-blend-multiply" />
                 ) : (
                   <div className="text-blue-800/60 font-signature text-[22px] transform -rotate-12" style={{ fontFamily: '"Brush Script MT", cursive' }}>Signature</div>
                 )}
@@ -217,7 +217,7 @@ export const ProgressCardTemplate: React.FC<ProgressCardTemplateProps> = ({ data
             <div className="text-center w-48">
               <div className="h-24 flex items-end justify-center mb-2 relative">
                 {principalSignatureUrl ? (
-                  <img src={principalSignatureUrl} alt="Principal Signature" className="max-h-20 object-contain mix-blend-multiply" />
+                  <img src={principalSignatureUrl} crossOrigin="anonymous" alt="Principal Signature" className="max-h-20 object-contain mix-blend-multiply" />
                 ) : (
                   <div className="text-green-800/60 font-signature text-[22px] transform -rotate-12" style={{ fontFamily: '"Brush Script MT", cursive' }}>Signature</div>
                 )}
