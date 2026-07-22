@@ -74,7 +74,7 @@ export const LeaveTypePage: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
         {/* Left Column: Form Panel (1 Col) */}
-        <div className="md:bg-white md:dark:bg-gray-900 md:border md:border-gray-150 md:dark:border-gray-800 md:rounded-3xl md:p-6 md:shadow-sm space-y-4 animate-fade-in">
+        <div className="px-4 md:px-0 md:bg-white md:dark:bg-gray-900 md:border md:border-gray-150 md:dark:border-gray-800 md:rounded-3xl md:p-6 md:shadow-sm space-y-4 animate-fade-in">
           <h4 className="text-base font-extrabold text-gray-950 dark:text-white pb-3 border-b border-gray-100 dark:border-gray-800">
             Leave Type
           </h4>
@@ -138,7 +138,7 @@ export const LeaveTypePage: React.FC = () => {
         </div>
 
         {/* Right Column: Table Panel (2 Cols) */}
-        <div className="lg:col-span-2 md:bg-white md:dark:bg-gray-900 md:border md:border-gray-150 md:dark:border-gray-800 md:rounded-3xl md:p-6 md:shadow-sm space-y-4 animate-fade-in mt-6 md:mt-0">
+        <div className="lg:col-span-2 px-4 md:px-0 md:bg-white md:dark:bg-gray-900 md:border md:border-gray-150 md:dark:border-gray-800 md:rounded-3xl md:p-6 md:shadow-sm space-y-4 animate-fade-in mt-6 md:mt-0">
           <h4 className="text-base font-extrabold text-gray-955 dark:text-white pb-3 border-b border-gray-100 dark:border-gray-800">
             Leave Type
           </h4>

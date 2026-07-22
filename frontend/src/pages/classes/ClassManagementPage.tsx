@@ -117,7 +117,7 @@ export const ClassManagementPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-end md:justify-between items-center md:bg-white md:dark:bg-gray-900 md:p-4 md:rounded-2xl md:border md:border-gray-150 md:dark:border-gray-800">
+      <div className="flex justify-end px-4 md:px-0 md:justify-between items-center md:bg-white md:dark:bg-gray-900 md:p-4 md:rounded-2xl md:border md:border-gray-150 md:dark:border-gray-800">
         <div className="hidden md:block">
           <h3 className="font-bold text-gray-900 dark:text-white">Classes Directory</h3>
           <p className="text-xs text-gray-400">Manage all grades, sections, and class teacher assignments.</p>
@@ -133,7 +133,7 @@ export const ClassManagementPage: React.FC = () => {
       {loading ? (
         <LoadingSpinner size="lg" className="py-12" />
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 px-4 md:px-0">
           {classes.map((cls) => (
             <div key={cls.id} className="bg-gradient-to-br from-white to-indigo-50/30 p-6 space-y-4 hover:shadow-glow-primary transition-all duration-300 relative group rounded-3xl border border-indigo-50 backdrop-blur-md animate-fade-in-up hover:-translate-y-1">
               <div className="absolute top-4 right-4 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">

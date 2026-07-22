@@ -214,17 +214,18 @@ const TeacherAttendancePage: React.FC = () => {
           {/* Teacher List */}
           <div className="md:bg-white md:rounded-[1.5rem] md:border md:border-slate-100 overflow-hidden"
             style={{ boxShadow: window.innerWidth < 768 ? 'none' : '0 4px 24px rgba(0,0,0,0.04)' }}>
-            <div className="md:p-5 pb-2 md:pb-5 md:border-b border-slate-50">
+            <div className="px-4 md:px-5 pb-2 md:py-5 md:border-b border-slate-50">
               <h3 className="font-black text-slate-800">Teachers — {teachers.length} staff members</h3>
             </div>
-            <div className="divide-y divide-slate-50">
+            <div className="divide-y divide-slate-50 px-4 md:px-0">
               {teachers.map(t => {
                 const status = attendanceMap[t.id] || 'PRESENT';
                 const sc = STATUS_COLORS[status];
                 const StatusIcon = sc.icon;
                 return (
-                  <div key={t.id} className="flex items-center gap-4 p-4 hover:bg-slate-50/50 transition-colors">
-                    {t.user.photoUrl ? (
+                  <div key={t.id} className="flex flex-col md:flex-row md:items-center gap-4 py-4 md:p-4 hover:bg-slate-50/50 transition-colors">
+                    <div className="flex items-center gap-4">
+                      {t.user.photoUrl ? (
                       <img src={getPhotoUrl(t.user.photoUrl)} className="w-10 h-10 rounded-xl object-cover border border-slate-200" alt="" />
                     ) : (
                       <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-black text-sm shrink-0"
@@ -236,7 +237,8 @@ const TeacherAttendancePage: React.FC = () => {
                       <p className="font-bold text-slate-800 text-sm">{t.user.name}</p>
                       <p className="text-xs text-slate-400 font-medium">{t.employeeId}</p>
                     </div>
-                    <div className="flex items-center gap-2">
+                    </div>
+                    <div className="flex items-center gap-2 mt-2 md:mt-0">
                       {STATUS_OPTIONS.map(s => (
                         <button key={s}
                           onClick={() => setAttendanceMap(m => ({ ...m, [t.id]: s }))}

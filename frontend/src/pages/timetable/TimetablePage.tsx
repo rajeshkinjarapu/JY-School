@@ -345,7 +345,7 @@ export const TimetablePage: React.FC = () => {
   return (
     <div className="space-y-5">
       {/* ══ HEADER ══ */}
-      <div className="bg-white dark:bg-gray-900 p-5 rounded-2xl border border-gray-150 dark:border-gray-800 shadow-sm">
+      <div className="px-4 py-4 md:bg-white md:dark:bg-gray-900 md:p-5 md:rounded-2xl md:border md:border-gray-150 md:dark:border-gray-800 md:shadow-sm">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           <div>
             <h2 className="text-xl font-extrabold text-gray-900 dark:text-white flex items-center gap-2">
@@ -368,12 +368,11 @@ export const TimetablePage: React.FC = () => {
               </button>
             ))}
           </div>
-        </div>
       </div>
 
       {/* ══ FILTER BAR ══ */}
       {(activeTab === 'class' || activeTab === 'teacher') && (
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 md:bg-white md:dark:bg-gray-900 md:px-4 py-3 md:rounded-xl md:border md:border-gray-150 md:dark:border-gray-800">
+        <div className="px-4 md:px-0 flex flex-col sm:flex-row items-center justify-between gap-3 md:bg-white md:dark:bg-gray-900 py-3 md:rounded-xl md:border md:border-gray-150 md:dark:border-gray-800">
           <div className="flex items-center gap-3 flex-wrap">
             <span className="text-[10px] font-extrabold uppercase text-gray-400 tracking-widest">Filter:</span>
             {activeTab === 'class' ? (
@@ -419,7 +418,7 @@ export const TimetablePage: React.FC = () => {
         <>
           {/* ── CLASS TIMETABLE GRID ── */}
           {activeTab === 'class' && (
-            <div className="md:bg-white md:dark:bg-gray-900 md:rounded-xl md:border md:border-gray-150 md:dark:border-gray-800 overflow-hidden md:p-4 print:p-0">
+            <div className="px-4 md:px-0 md:bg-white md:dark:bg-gray-900 md:rounded-xl md:border md:border-gray-150 md:dark:border-gray-800 overflow-hidden md:p-4 print:p-0">
               {/* Print Only Header */}
               <div className="hidden print:block text-center mb-6">
                 <h1 className="text-2xl font-black text-indigo-700">JY SCHOOL</h1>

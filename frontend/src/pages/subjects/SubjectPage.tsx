@@ -116,7 +116,7 @@ export const SubjectPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-end md:justify-between items-center md:bg-white md:dark:bg-gray-900 md:p-4 md:rounded-2xl md:border md:border-gray-150 md:dark:border-gray-800">
+      <div className="flex justify-end px-4 md:px-0 md:justify-between items-center md:bg-white md:dark:bg-gray-900 md:p-4 md:rounded-2xl md:border md:border-gray-150 md:dark:border-gray-800">
         <div className="hidden md:block">
           <h3 className="font-bold text-gray-900 dark:text-white">Curriculum & Subjects</h3>
           <p className="text-xs text-gray-400">Map course subjects, codes, classes, and teachers.</p>

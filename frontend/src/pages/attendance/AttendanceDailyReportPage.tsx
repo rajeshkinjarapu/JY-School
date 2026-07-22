@@ -99,7 +99,7 @@ export default function AttendanceDailyReportPage() {
                  const updateScale = () => {
                    const parent = el.parentElement;
                     if (parent && !window.matchMedia('print').matches) {
-                      const padding = window.innerWidth < 768 ? 0 : 32;
+                      const padding = window.innerWidth < 768 ? 16 : 32;
                       const scale = Math.min(1, (parent.clientWidth - padding) / 1080);
                       el.style.setProperty('--scale', scale.toString());
                       el.parentElement.style.height = `${1920 * scale + (padding ? 64 : 0)}px`;

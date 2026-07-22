@@ -75,7 +75,7 @@ export const AnnouncementsPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center md:bg-white md:dark:bg-gray-900 md:p-4 md:rounded-2xl md:border md:border-gray-150 md:dark:border-gray-800">
+      <div className="flex justify-between items-center px-4 py-2 md:py-0 md:px-0 md:bg-white md:dark:bg-gray-900 md:p-4 md:rounded-2xl md:border md:border-gray-150 md:dark:border-gray-800">
         <div>
           <h3 className="font-bold text-gray-900 dark:text-white">Announcements Notice Board</h3>
           <p className="text-xs text-gray-400">View and broadcast latest school alerts.</p>
@@ -93,7 +93,7 @@ export const AnnouncementsPage: React.FC = () => {
       ) : (
         <div className="space-y-4 max-w-4xl mx-auto">
           {announcements.map((ann) => (
-            <div key={ann.id} className="md:card md:p-6 py-4 space-y-4 hover:shadow-xs relative group border-b border-gray-100 md:border-none">
+            <div key={ann.id} className="md:card md:p-6 px-4 py-4 space-y-4 hover:shadow-xs relative group border-b border-gray-100 md:border-none">
               {isManagement && (
                 <button
                   onClick={() => handleDelete(ann.id)}

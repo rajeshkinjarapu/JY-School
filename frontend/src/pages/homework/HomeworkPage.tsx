@@ -195,7 +195,7 @@ const HomeworkPage: React.FC = () => {
 
       {/* Homework Grid */}
       {homeworks.length === 0 ? (
-        <div className="text-center py-10 md:py-20 md:rounded-[2rem] md:bg-white md:border md:border-slate-100"
+        <div className="text-center py-10 px-4 md:py-20 md:rounded-[2rem] md:bg-white md:border md:border-slate-100"
           style={{ boxShadow: window.innerWidth < 768 ? 'none' : '0 4px 24px rgba(0,0,0,0.04)' }}>
           <BookMarked className="w-16 h-16 text-slate-300 mx-auto mb-4" />
           <h3 className="text-lg font-bold text-slate-500">No homework found</h3>
@@ -209,11 +209,11 @@ const HomeworkPage: React.FC = () => {
             const statusInfo = getStatusColor(hw.dueDate, hw.status);
             const dueDate = new Date(hw.dueDate);
             return (
-              <div key={hw.id} className="group relative md:bg-white md:rounded-[1.5rem] md:border md:border-slate-100 transition-all duration-300 md:hover:-translate-y-1 md:hover:shadow-xl overflow-hidden border-b border-gray-150 py-2 md:py-0"
+              <div key={hw.id} className="group relative md:bg-white md:rounded-[1.5rem] md:border md:border-slate-100 transition-all duration-300 md:hover:-translate-y-1 md:hover:shadow-xl overflow-hidden border-b border-gray-150 py-4 px-4 md:px-0 md:py-0"
                 style={{ boxShadow: window.innerWidth < 768 ? 'none' : '0 4px 24px rgba(0,0,0,0.06)' }}>
                 {/* Top accent */}
-                <div className="h-1.5 w-full" style={{ background: 'linear-gradient(90deg, #22c55e, #10b981)' }} />
-                <div className="p-5">
+                <div className="h-1.5 w-full hidden md:block" style={{ background: 'linear-gradient(90deg, #22c55e, #10b981)' }} />
+                <div className="md:p-5">
                   <div className="flex items-start justify-between gap-3 mb-3">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1.5">
