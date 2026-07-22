@@ -196,8 +196,51 @@ export const SubjectPage: React.FC = () => {
       {loading ? (
         <LoadingSpinner size="lg" className="py-12" />
       ) : (
-        <div className="card overflow-hidden">
-          <div className="overflow-x-auto w-full max-w-full block"><table className="w-full text-sm text-left">
+        <div className="card overflow-hidden bg-white/80 dark:bg-white/5 border border-gray-150 dark:border-white/10 rounded-3xl shadow-sm backdrop-blur-xl">
+          
+          {/* Mobile View */}
+          <div className="md:hidden flex flex-col gap-3 p-3 bg-gray-50/50 dark:bg-transparent">
+            {subjects.map((sub, idx) => (
+              <div key={sub.id} className="bg-white p-4 rounded-2xl shadow-sm border border-gray-150 flex items-center gap-3 relative overflow-visible mt-2 backdrop-blur-md">
+                 <div className="absolute -top-2.5 -left-2.5 w-7 h-7 bg-indigo-500 rounded-full flex items-center justify-center text-white font-black text-[10px] shadow-lg border-2 border-white z-10">
+                   {idx + 1}
+                 </div>
+                 <div className="shrink-0 pl-2">
+                   <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-black text-xl shadow-md border-2 border-white">
+                     {sub.name.substring(0, 2).toUpperCase()}
+                   </div>
+                 </div>
+                 <div className="flex-1 min-w-0">
+                   <h4 className="font-extrabold text-[15px] text-gray-900 truncate mb-1.5">{sub.name}</h4>
+                   <div className="flex flex-wrap gap-1.5">
+                     <span className="font-mono text-[10px] font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-100">{sub.code}</span>
+                     <span className="text-[10px] font-bold text-teal-700 bg-teal-50 px-2 py-0.5 rounded-md border border-teal-100">{sub.class ? `${sub.class.name}-${sub.class.section}` : 'N/A'}</span>
+                   </div>
+                   <div className="mt-1.5 text-[10px] font-semibold text-gray-500">
+                      Teacher: {sub.classSubjectTeachers?.[0]?.teacher ? sub.classSubjectTeachers[0].teacher.user.name : 'Unassigned'}
+                   </div>
+                 </div>
+                 <div className="shrink-0 flex flex-col gap-2">
+                   <button onClick={() => handleEditClick(sub)} className="flex items-center justify-center w-8 h-8 bg-gray-50 hover:bg-indigo-50 text-gray-400 hover:text-indigo-600 rounded-lg transition-all shadow-sm border border-gray-200 cursor-pointer">
+                     <Edit className="w-3.5 h-3.5" />
+                   </button>
+                   {isSuperAdmin && (
+                      <button onClick={() => handleDelete(sub.id)} className="flex items-center justify-center w-8 h-8 bg-red-50 hover:bg-red-100 text-red-400 hover:text-red-600 rounded-lg transition-all shadow-sm border border-red-200 cursor-pointer">
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                   )}
+                 </div>
+              </div>
+            ))}
+            {subjects.length === 0 && (
+              <div className="py-12 text-center text-gray-400 font-semibold">
+                No subjects found.
+              </div>
+            )}
+          </div>
+
+          {/* Desktop Table View */}
+          <div className="hidden md:block overflow-x-auto w-full max-w-full"><table className="w-full text-sm text-left border-collapse">
             <thead className="bg-gray-50 dark:bg-gray-800/40 text-gray-500 font-semibold border-b border-gray-100 dark:border-gray-800">
               <tr>
                 <th className="px-6 py-4">Subject Name</th>
