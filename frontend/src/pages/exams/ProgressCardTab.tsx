@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../api/axios';
-import { Printer, Download, FileText, CheckCircle, Settings, Upload, Save } from 'lucide-react';
+import { Printer, Download, FileText, CheckCircle, Settings, Upload, Save, MessageCircle } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 import { toJpeg } from 'html-to-image';
 import JSZip from 'jszip';
@@ -487,9 +487,15 @@ export const ProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
                       {!isTeacher && <td className="py-3 px-4 text-gray-600 font-medium hidden md:table-cell">{data.rollNo || '-'}</td>}
                       <td className="py-3 px-4 text-center font-bold text-emerald-600">{data.total}</td>
                       <td className="py-3 px-4 flex justify-end gap-1.5">
-                        <button onClick={() => handleDownloadSingle(data.studentId, data.studentName, idx)} className="bg-indigo-50 hover:bg-indigo-100 text-indigo-600 p-2 md:px-3 md:py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors">
-                          <Download className="w-4 h-4" /> <span className="hidden md:inline">Download</span>
-                        </button>
+                        {isSuperAdmin ? (
+                          <button onClick={() => handleDownloadSingle(data.studentId, data.studentName, idx)} className="bg-indigo-50 hover:bg-indigo-100 text-indigo-600 p-2 md:px-3 md:py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors">
+                            <Download className="w-4 h-4" /> <span className="hidden md:inline">Download</span>
+                          </button>
+                        ) : (
+                          <a href={`https://wa.me/${data.mobile.replace(/\D/g, '')}?text=Please%20check%20your%20progress%20card`} target="_blank" rel="noopener noreferrer" className="bg-green-50 hover:bg-green-100 text-green-600 p-2 md:px-3 md:py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors">
+                            <MessageCircle className="w-4 h-4" /> <span className="hidden md:inline">WhatsApp</span>
+                          </a>
+                        )}
                         <button onClick={() => handlePrintSingle(idx)} className="hidden md:flex bg-gray-50 hover:bg-gray-100 text-gray-600 p-2 md:px-3 md:py-1.5 rounded-lg text-xs font-semibold items-center gap-1.5 transition-colors">
                           <Printer className="w-4 h-4" /> <span className="hidden md:inline">Print</span>
                         </button>
