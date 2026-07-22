@@ -1,6 +1,7 @@
 // src/app/dashboard.tsx
 import React, { useEffect, useState } from "react";
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from "react-native";
+import { View, Text, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity, Image } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { fetchStudentDashboard, StudentDashboardData } from "../services/dashboard";
 import { Colors, Gradients, BorderRadius, Shadows } from "../theme";
 
@@ -49,8 +50,27 @@ export default function DashboardScreen() {
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>JY School Dashboard</Text>
+        <View style={styles.headerTop}>
+          <TouchableOpacity style={styles.iconButton}>
+            <Ionicons name="menu" size={24} color="#FFFFFF" />
+          </TouchableOpacity>
+          
+          <Text style={styles.greetingText}>Good Evening, Rajesh</Text>
+          
+          <View style={styles.headerRight}>
+            <TouchableOpacity style={styles.profileBadge}>
+              <Text style={styles.profileText}>R</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity style={styles.iconButtonOutline}>
+              <Ionicons name="notifications-outline" size={20} color="#FFFFFF" />
+            </TouchableOpacity>
+          </View>
+        </View>
       </View>
+
+      {/* Wavy background illusion or container adjustment */}
+      <View style={styles.bodyContainer}>
 
       {/* Attendance Card */}
       <View style={styles.glassCard}>
@@ -90,6 +110,7 @@ export default function DashboardScreen() {
           ))
         )}
       </View>
+      </View>
     </ScrollView>
   );
 }
@@ -100,16 +121,70 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background,
   },
   content: {
-    padding: 16,
+    paddingBottom: 20,
   },
   header: {
-    paddingVertical: 16,
-    alignItems: "center",
+    paddingVertical: 20,
+    paddingHorizontal: 16,
+    paddingTop: 40, // For safe area if needed
+    backgroundColor: '#2C497F',
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
+    paddingBottom: 30,
   },
-  headerTitle: {
-    fontSize: 22,
-    fontWeight: "bold",
-    color: Colors.primary,
+  headerTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  iconButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  greetingText: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: 'bold',
+    flex: 1,
+    marginLeft: 12,
+  },
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  profileBadge: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#FFB300',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
+  },
+  profileText: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  iconButtonOutline: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  bodyContainer: {
+    flex: 1,
+    marginTop: -20,
+    paddingHorizontal: 16,
   },
   glassCard: {
     width: "100%",
