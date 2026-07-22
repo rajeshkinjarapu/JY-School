@@ -116,12 +116,12 @@ export const SubjectPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center bg-white dark:bg-gray-900 p-4 rounded-2xl border border-gray-150 dark:border-gray-800">
-        <div>
+      <div className="flex justify-end md:justify-between items-center md:bg-white md:dark:bg-gray-900 md:p-4 md:rounded-2xl md:border md:border-gray-150 md:dark:border-gray-800">
+        <div className="hidden md:block">
           <h3 className="font-bold text-gray-900 dark:text-white">Curriculum & Subjects</h3>
           <p className="text-xs text-gray-400">Map course subjects, codes, classes, and teachers.</p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex gap-3 w-full md:w-auto">
 
           <button
             onClick={() => {
@@ -132,7 +132,7 @@ export const SubjectPage: React.FC = () => {
               setTeacherId('');
               setShowModal(true);
             }}
-            className="btn-primary flex items-center gap-2"
+            className="btn-primary flex items-center justify-center gap-2 w-full md:w-auto"
           >
             <Plus className="w-4.5 h-4.5" />
             <span>New Subject</span>
@@ -143,7 +143,7 @@ export const SubjectPage: React.FC = () => {
       {loading ? (
         <LoadingSpinner size="lg" className="py-12" />
       ) : (
-        <div className="bg-white/40 dark:bg-white/5 border border-white/60 dark:border-white/10 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden backdrop-blur-2xl">
+        <div className="md:bg-white/40 md:dark:bg-white/5 md:border md:border-white/60 md:dark:border-white/10 md:rounded-3xl md:shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden md:backdrop-blur-2xl">
           
           {/* Mobile View */}
           <div className="md:hidden flex flex-col gap-4 p-4 bg-transparent">

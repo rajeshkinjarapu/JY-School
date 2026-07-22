@@ -332,7 +332,7 @@ export const FinancePage: React.FC = () => {
       </div>
 
       {/* ══ RIGHT CONTENT PANEL ══ */}
-      <div className="flex-1 bg-white dark:bg-gray-900 border border-gray-150 dark:border-gray-800 rounded-3xl p-6 md:p-8 shadow-sm">
+      <div className="flex-1 bg-white dark:bg-gray-900 md:border border-gray-150 dark:border-gray-800 md:rounded-3xl p-0 md:p-8 md:shadow-sm">
         {loading ? (
           <LoadingSpinner size="lg" className="py-24" />
         ) : (

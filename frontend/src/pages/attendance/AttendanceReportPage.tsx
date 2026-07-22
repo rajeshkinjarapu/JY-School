@@ -65,16 +65,16 @@ export const AttendanceReportPage: React.FC = () => {
 
   return (
     <div className="space-y-4 sm:space-y-6 md:space-y-8 p-0 sm:p-4 md:p-8 bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 min-h-screen animate-fade-in-up pb-10 overflow-x-hidden">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 p-5 sm:p-6 md:p-8 rounded-none sm:rounded-3xl shadow-xl text-white transform transition-all sm:hover:scale-[1.01]">
-        <div>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 md:bg-gradient-to-r md:from-indigo-600 md:via-purple-600 md:to-pink-500 md:p-5 sm:p-6 md:p-8 rounded-none sm:rounded-3xl md:shadow-xl md:text-white transform transition-all sm:hover:scale-[1.01]">
+        <div className="hidden md:block">
           <h3 className="text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight whitespace-nowrap overflow-hidden text-ellipsis">Attendance Analytics</h3>
           <p className="text-indigo-100 mt-1 sm:mt-2 font-medium text-sm sm:text-lg opacity-90 leading-snug">View attendance rates and breakdown.</p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex gap-3 w-full md:w-auto">
           <select
             value={classId}
             onChange={(e) => setClassId(e.target.value)}
-            className="bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white font-semibold rounded-xl px-4 py-2.5 text-sm outline-none cursor-pointer focus:ring-2 focus:ring-indigo-500/50"
+            className="w-full md:w-auto bg-white dark:bg-gray-800 border-2 border-indigo-100 dark:border-gray-600 text-gray-900 dark:text-white font-bold rounded-xl px-4 py-2.5 text-sm outline-none cursor-pointer focus:ring-2 focus:ring-indigo-500/50"
           >
             <option value="">Select Class</option>
             {classes.map((c) => (
@@ -84,14 +84,11 @@ export const AttendanceReportPage: React.FC = () => {
             ))}
           </select>
           {classId && (
-            <button onClick={handleExport} className="btn-secondary flex items-center gap-2 text-sm">
+            <button onClick={handleExport} className="btn-secondary flex items-center justify-center gap-2 text-sm w-full md:w-auto">
               <FileDown className="w-4.5 h-4.5" />
               <span>Export</span>
             </button>
           )}
-          <Link to="/attendance" className="btn-primary text-sm">
-            Mark Daily
-          </Link>
         </div>
       </div>
 
@@ -100,8 +97,8 @@ export const AttendanceReportPage: React.FC = () => {
         loading ? (
           <LoadingSpinner size="lg" className="py-12" />
         ) : (
-          <div className="rounded-3xl border border-white/50 bg-white/80 backdrop-blur-lg overflow-hidden shadow-2xl">
-            <div className="overflow-x-auto w-full max-w-full block"><table className="w-full text-sm text-left">
+          <div className="md:rounded-3xl md:border md:border-white/50 md:bg-white/80 md:backdrop-blur-lg overflow-hidden md:shadow-2xl">
+            <div className="overflow-x-auto w-full max-w-full block"><table className="w-full text-sm text-left bg-white/40 md:bg-transparent rounded-2xl md:rounded-none overflow-hidden">
               <thead className="bg-indigo-50/50 text-indigo-900 font-bold border-b border-indigo-100">
                 <tr>
                   <th className="px-6 py-4">Student</th>
@@ -114,7 +111,7 @@ export const AttendanceReportPage: React.FC = () => {
               </thead>
               <tbody className="divide-y divide-indigo-50">
                 {report.map((item, idx) => (
-                  <tr key={idx} className="hover:bg-indigo-50/30 transition-colors">
+                  <tr key={idx} className="hover:bg-indigo-50/30 transition-colors bg-white md:bg-transparent">
                     <td className="px-6 py-4 font-bold text-slate-800">{item.studentName}</td>
                     <td className="px-6 py-4 font-mono text-xs text-slate-500">{item.rollNo}</td>
                     <td className="px-6 py-4 font-medium text-slate-600">{item.totalDays}</td>
@@ -128,7 +125,7 @@ export const AttendanceReportPage: React.FC = () => {
                   </tr>
                 ))}
                 {report.length === 0 && (
-                  <tr>
+                  <tr className="bg-white md:bg-transparent">
                     <td colSpan={6} className="py-8 text-center text-slate-400 font-medium">
                       No records configured for this selection.
                     </td>
@@ -139,7 +136,7 @@ export const AttendanceReportPage: React.FC = () => {
           </div>
         )
       ) : (
-        <div className="rounded-3xl border border-white/50 bg-white/80 backdrop-blur-lg p-12 text-center text-indigo-400 shadow-2xl">
+        <div className="md:rounded-3xl md:border md:border-white/50 md:bg-white/80 md:backdrop-blur-lg md:p-12 text-center text-indigo-400 md:shadow-2xl flex flex-col items-center justify-center py-20 bg-transparent">
           <CalendarDays className="w-16 h-16 mx-auto text-indigo-300 mb-4 opacity-50" />
           <p className="font-bold text-lg text-indigo-900/60">Please select a class to view attendance analytics.</p>
         </div>

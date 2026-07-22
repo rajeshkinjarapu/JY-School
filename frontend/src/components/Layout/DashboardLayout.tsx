@@ -9,7 +9,7 @@ export const DashboardLayout: React.FC = () => {
 
   const getPageTitle = (pathname: string) => {
     if (pathname.startsWith('/dashboard')) return 'Dashboard';
-    if (pathname.startsWith('/students')) return 'Students';
+    if (pathname.startsWith('/students')) return 'Total Students';
     if (pathname.startsWith('/teachers')) return 'Teachers';
     if (pathname.startsWith('/classes')) return 'Classes & Sections';
     if (pathname.startsWith('/subjects')) return 'Subjects & Curriculum';

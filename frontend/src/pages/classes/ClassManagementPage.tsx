@@ -117,14 +117,13 @@ export const ClassManagementPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center bg-white dark:bg-gray-900 p-4 rounded-2xl border border-gray-150 dark:border-gray-800">
-        <div>
+      <div className="flex justify-end md:justify-between items-center md:bg-white md:dark:bg-gray-900 md:p-4 md:rounded-2xl md:border md:border-gray-150 md:dark:border-gray-800">
+        <div className="hidden md:block">
           <h3 className="font-bold text-gray-900 dark:text-white">Classes Directory</h3>
           <p className="text-xs text-gray-400">Manage all grades, sections, and class teacher assignments.</p>
         </div>
-        <div className="flex gap-3">
-
-          <button onClick={openCreateModal} className="btn-primary flex items-center gap-2">
+        <div className="flex gap-3 w-full md:w-auto">
+          <button onClick={openCreateModal} className="btn-primary flex items-center justify-center gap-2 w-full md:w-auto">
             <Plus className="w-4.5 h-4.5" />
             <span>New Class</span>
           </button>
@@ -156,15 +155,13 @@ export const ClassManagementPage: React.FC = () => {
                 )}
               </div>
               
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-16 rounded-xl bg-gradient-to-br from-indigo-500 to-primary-600 text-white flex items-center justify-center shadow-md">
-                  <School className="w-6 h-6" />
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-indigo-500/30 transform group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300">
+                  <School className="w-7 h-7" />
                 </div>
                 <div>
-                  <h4 className="font-extrabold text-lg text-indigo-950 group-hover:text-indigo-600 transition-colors">
-                    {cls.name}-{cls.section}
-                  </h4>
-                  <span className="text-xs text-gray-400">Academic Year: {cls.academicYear}</span>
+                  <h4 className="font-extrabold text-2xl text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400">{cls.name}-{cls.section}</h4>
+                  <span className="text-[11px] font-bold text-fuchsia-600 bg-fuchsia-50 px-2 py-0.5 rounded-full border border-fuchsia-100">Academic Year: {cls.academicYear}</span>
                 </div>
               </div>
 
