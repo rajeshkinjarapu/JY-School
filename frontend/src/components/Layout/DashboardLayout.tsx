@@ -16,6 +16,7 @@ export const DashboardLayout: React.FC = () => {
     if (pathname.startsWith('/attendance')) return 'Attendance Marking';
     if (pathname.startsWith('/exams')) return 'Examinations & Grades';
     if (pathname.startsWith('/timetable')) return 'Class Timetables';
+    if (pathname.startsWith('/fees/collect') || pathname.startsWith('/fee-payment')) return 'Collect Payment';
     if (pathname.startsWith('/finance') || pathname.startsWith('/fees')) return 'Fee Management';
     if (pathname.startsWith('/announcements')) return 'Notice Board';
     if (pathname.startsWith('/messages')) return 'Real-time Messaging';

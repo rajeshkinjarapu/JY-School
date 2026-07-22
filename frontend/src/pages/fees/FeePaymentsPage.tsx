@@ -362,20 +362,12 @@ export const FeePaymentsPage: React.FC = () => {
         <div className={user?.role === 'TEACHER' ? "w-full max-w-4xl mx-auto mt-2" : "fixed inset-0 z-[100] flex flex-col sm:items-center sm:justify-center bg-indigo-900/30 backdrop-blur-md"}>
           {user?.role !== 'TEACHER' && <div className="fixed inset-0 hidden sm:block" onClick={() => setShowModal(false)} />}
           <div className={`relative bg-white/95 sm:backdrop-blur-xl sm:border border-white/80 w-full ${user?.role === 'TEACHER' ? 'sm:rounded-[2rem] shadow-2xl h-auto' : 'h-full sm:h-auto sm:max-h-[90vh] sm:max-w-lg p-0 sm:p-0 sm:rounded-[2rem] shadow-[0_20px_50px_rgba(8,_112,_184,_0.15)]'} overflow-hidden flex flex-col z-10 animate-scale-in`}>
-            <div className="bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 p-5 sm:px-6 flex justify-between items-center text-white shrink-0 shadow-sm relative overflow-hidden">
-              <div className="absolute top-[-20px] right-[-20px] w-24 h-24 bg-white/20 rounded-full blur-xl mix-blend-overlay"></div>
-              <div className="relative z-10">
-                <h3 className="text-xl font-extrabold tracking-tight drop-shadow-md">Collect Payment</h3>
-                <p className="text-xs text-pink-50 mt-1 font-medium">Select multiple fees to collect them at once.</p>
-              </div>
-              {user?.role !== 'TEACHER' && (
-                <button onClick={() => setShowModal(false)} className="relative z-10 p-2 bg-white/20 hover:bg-white/30 rounded-full transition-colors backdrop-blur-md">
-                  <X className="w-5 h-5 text-white" />
-                </button>
-              )}
-            </div>
-
-            <div className="p-4 sm:p-6 flex-1 overflow-y-auto space-y-5 bg-gradient-to-b from-pink-50/50 via-purple-50/30 to-white">
+            {user?.role !== 'TEACHER' && (
+              <button onClick={() => setShowModal(false)} className="absolute top-4 right-4 z-20 p-2 bg-pink-100 hover:bg-pink-200 rounded-full transition-colors">
+                <X className="w-5 h-5 text-pink-600" />
+              </button>
+            )}
+            <div className="p-4 sm:p-6 flex-1 overflow-y-auto space-y-5 bg-gradient-to-b from-pink-50/50 via-purple-50/30 to-white relative pt-12 sm:pt-6">
               <form onSubmit={handleSubmit} className="space-y-5">
               {/* ── Smart Student Selector ── */}
               <div className="space-y-3">

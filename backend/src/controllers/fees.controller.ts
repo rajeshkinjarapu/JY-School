@@ -184,7 +184,9 @@ export const createPayment = async (req: AuthRequest, res: Response, next: NextF
       const actualAmount = Math.min(Number(p.amountPaid), remaining);
 
       const totalPaid = alreadyPaid + actualAmount;
-      const status = totalPaid >= structure.amount ? 'PAID' : 'PARTIAL';
+      const status = req.user?.role === 'TEACHER' 
+        ? 'PENDING' 
+        : (totalPaid >= structure.amount ? 'PAID' : 'PARTIAL');
       
       const payment = await tx.feePayment.create({
         data: { 
@@ -231,7 +233,7 @@ export const deleteFeePayment = async (req: AuthRequest, res: Response, next: Ne
 export const updateFeePayment = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
     const id = req.params.id as string;
-    const { amountPaid, method, remarks } = req.body;
+    const { amountPaid, method, remarks, status } = req.body;
     
     const payment = await prisma.feePayment.findUnique({ where: { id } });
     if (!payment) return next(createError('Fee payment not found', 404));
@@ -239,9 +241,10 @@ export const updateFeePayment = async (req: AuthRequest, res: Response, next: Ne
     const updatedPayment = await prisma.feePayment.update({
       where: { id },
       data: {
-        amountPaid: amountPaid ? Number(amountPaid) : payment.amountPaid,
+        amountPaid: amountPaid !== undefined ? Number(amountPaid) : payment.amountPaid,
         method: method || payment.method,
-        remarks: remarks !== undefined ? remarks : payment.remarks
+        remarks: remarks !== undefined ? remarks : payment.remarks,
+        status: status || payment.status
       }
     });
 

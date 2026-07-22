@@ -57,6 +57,22 @@ export const FinancePage: React.FC = () => {
 
   // Receipt Modal State
   const [selectedReceipt, setSelectedReceipt] = useState<any>(null);
+  
+  // Expandable Row State for Mobile
+  const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
+  const toggleRow = (id: string) => {
+    setExpandedRows(prev => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  const handleApprovePayment = async (id: string) => {
+    try {
+      await api.put(`/api/fees/payments/${id}`, { status: 'PAID' });
+      toast.success('Payment approved successfully');
+      fetchData();
+    } catch (e: any) {
+      toast.error('Failed to approve payment');
+    }
+  };
 
   // Bulk Upload Ref
   const fileInputRef = React.useRef<HTMLInputElement>(null);
@@ -792,55 +808,123 @@ export const FinancePage: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm text-left">
-                    <thead>
-                      <tr className="text-gray-450 border-b border-gray-150 dark:border-gray-800 font-bold">
-                        <th className="pb-3 text-[10px] uppercase tracking-wider">Student</th>
-                        <th className="pb-3 text-[10px] uppercase tracking-wider">Fee Category</th>
-                        <th className="pb-3 text-[10px] uppercase tracking-wider">Amount Paid</th>
-                        <th className="pb-3 text-[10px] uppercase tracking-wider">Payment Method</th>
-                        <th className="pb-3 text-[10px] uppercase tracking-wider">Status</th>
-                        <th className="pb-3 text-[10px] uppercase tracking-wider text-right">Date</th>
-                        <th className="pb-3 text-[10px] uppercase tracking-wider text-right hidden md:table-cell">Receipt</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-                      {filteredPayments.map(p => (
-                        <tr key={p.id} className="hover:bg-gray-50/50 dark:hover:bg-gray-850/10">
-                          <td className="py-4">
-                            <div className="font-bold text-gray-900 dark:text-white">{p.student?.user?.name || 'Student'}</div>
-                            <div className="text-[10px] text-gray-400 mt-0.5">{p.student?.rollNo || ''}</div>
-                          </td>
-                          <td className="py-4 text-xs font-semibold text-gray-600 dark:text-gray-300">{p.feeStructure?.name || 'Fees'}</td>
-                          <td className="py-4 font-extrabold text-indigo-600 dark:text-indigo-400">₹{p.amountPaid.toLocaleString()}</td>
-                          <td className="py-4">
-                            <span className="text-xs font-bold text-gray-500 dark:text-gray-400">{p.method}</span>
-                          </td>
-                          <td className="py-4">
-                            <Badge variant={p.status === 'PAID' ? 'success' : 'warning'}>{p.status}</Badge>
-                          </td>
-                          <td className="py-4 text-right text-xs text-gray-400 font-semibold">
-                            {new Date(p.paymentDate).toLocaleDateString()}
-                          </td>
-                          <td className="py-4 text-right hidden md:table-cell">
-                            <button
-                              onClick={() => handlePrintReceipt(p.id)}
-                              className="p-1.5 rounded-lg text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950/20 cursor-pointer"
-                              title="Download Receipt"
-                            >
-                              <FileDown className="w-4 h-4" />
-                            </button>
-                          </td>
+                <div className="bg-white/40 dark:bg-white/5 border border-white/60 dark:border-white/10 rounded-3xl shadow-sm overflow-hidden backdrop-blur-xl">
+                  
+                  {/* Mobile View */}
+                  <div className="md:hidden flex flex-col divide-y divide-gray-100 dark:divide-white/10">
+                    {filteredPayments.map(p => (
+                      <div key={p.id} className="bg-white dark:bg-white/5 flex flex-col relative">
+                        <div 
+                          className="flex items-center justify-between p-3 gap-2 cursor-pointer hover:bg-indigo-50/50 transition-colors"
+                          onClick={() => toggleRow(p.id)}
+                        >
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <h4 className="font-extrabold text-[13px] text-gray-900 dark:text-white truncate max-w-[120px]">{p.student?.user?.name || 'Student'}</h4>
+                              <span className="text-[10px] font-bold text-teal-700 bg-teal-50 px-1.5 py-0.5 rounded border border-teal-100 shrink-0 truncate max-w-[80px]">
+                                {p.feeStructure?.name || 'Fee'}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="shrink-0 flex items-center gap-2">
+                            <span className="font-black text-indigo-600 dark:text-indigo-400 text-sm">₹{p.amountPaid.toLocaleString()}</span>
+                            <div className={`transform transition-transform ${expandedRows[p.id] ? 'rotate-180' : ''}`}>
+                              <ArrowRight className="w-4 h-4 text-gray-400" />
+                            </div>
+                          </div>
+                        </div>
+
+                        {expandedRows[p.id] && (
+                          <div className="p-3 bg-gray-50/80 dark:bg-black/20 border-t border-gray-100 dark:border-white/5 space-y-3 animate-fade-in text-xs">
+                            <div className="grid grid-cols-2 gap-2">
+                              <div>
+                                <span className="block text-gray-400 font-bold mb-0.5 text-[10px] uppercase">Payment Method</span>
+                                <span className="font-semibold text-gray-700 dark:text-gray-300">{p.method}</span>
+                              </div>
+                              <div>
+                                <span className="block text-gray-400 font-bold mb-0.5 text-[10px] uppercase">Date</span>
+                                <span className="font-semibold text-gray-700 dark:text-gray-300">{new Date(p.paymentDate).toLocaleDateString()}</span>
+                              </div>
+                            </div>
+                            <div className="flex items-center justify-between mt-2">
+                              <div>
+                                <Badge variant={p.status === 'PAID' ? 'success' : 'warning'}>{p.status}</Badge>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                {p.status === 'PENDING' && isAdmin && (
+                                  <button onClick={() => handleApprovePayment(p.id)} className="px-3 py-1 bg-teal-500 hover:bg-teal-600 text-white rounded-lg font-bold text-[10px] shadow-md transition-all">Approve</button>
+                                )}
+                                <button onClick={() => handlePrintReceipt(p.id)} className="px-3 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg font-bold text-[10px] border border-indigo-200 transition-all">Receipt</button>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                    {filteredPayments.length === 0 && (
+                      <div className="py-8 text-center text-gray-400 font-semibold text-sm">No transactions recorded.</div>
+                    )}
+                  </div>
+
+                  {/* Desktop View */}
+                  <div className="hidden md:block overflow-x-auto">
+                    <table className="w-full text-sm text-left">
+                      <thead>
+                        <tr className="bg-indigo-50/50 text-indigo-900 border-b border-indigo-100 font-bold">
+                          <th className="px-5 py-4 text-xs uppercase tracking-wider">Student</th>
+                          <th className="px-5 py-4 text-xs uppercase tracking-wider">Fee Category</th>
+                          <th className="px-5 py-4 text-xs uppercase tracking-wider text-right">Amount Paid</th>
+                          <th className="px-5 py-4 text-xs uppercase tracking-wider text-center">Status / Method</th>
+                          <th className="px-5 py-4 text-xs uppercase tracking-wider text-right">Date</th>
+                          <th className="px-5 py-4 text-xs uppercase tracking-wider text-right">Actions</th>
                         </tr>
-                      ))}
-                      {filteredPayments.length === 0 && (
-                        <tr>
-                          <td colSpan={6} className="py-8 text-center text-gray-400">No transactions recorded.</td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody className="divide-y divide-gray-100 dark:divide-white/10">
+                        {filteredPayments.map(p => (
+                          <tr key={p.id} className="hover:bg-white transition-all duration-300 border-b border-indigo-50/50 hover:shadow-glow-primary">
+                            <td className="px-5 py-4">
+                              <div className="font-extrabold text-[15px] text-indigo-950 dark:text-white">{p.student?.user?.name || 'Student'}</div>
+                              <div className="text-[11px] text-gray-400 mt-0.5">{p.student?.rollNo || ''}</div>
+                            </td>
+                            <td className="px-5 py-4">
+                              <span className="text-[11px] font-bold text-teal-700 bg-teal-50 px-2 py-1 rounded-md border border-teal-100">{p.feeStructure?.name || 'Fees'}</span>
+                            </td>
+                            <td className="px-5 py-4 font-black text-indigo-600 dark:text-indigo-400 text-right text-lg">₹{p.amountPaid.toLocaleString()}</td>
+                            <td className="px-5 py-4 text-center">
+                              <div className="flex flex-col items-center gap-1.5">
+                                <Badge variant={p.status === 'PAID' ? 'success' : 'warning'}>{p.status}</Badge>
+                                <span className="text-[10px] font-bold text-gray-400">{p.method}</span>
+                              </div>
+                            </td>
+                            <td className="px-5 py-4 text-right text-xs text-gray-500 font-semibold">
+                              {new Date(p.paymentDate).toLocaleDateString()}
+                            </td>
+                            <td className="px-5 py-4 text-right">
+                              <div className="flex items-center justify-end gap-2">
+                                {p.status === 'PENDING' && isAdmin && (
+                                  <button onClick={() => handleApprovePayment(p.id)} className="px-3 py-1.5 bg-teal-500 hover:bg-teal-600 text-white rounded-lg font-bold text-xs shadow-md shadow-teal-500/20 transition-all cursor-pointer">
+                                    Approve
+                                  </button>
+                                )}
+                                <button
+                                  onClick={() => handlePrintReceipt(p.id)}
+                                  className="p-2 rounded-xl text-indigo-500 hover:text-white hover:bg-indigo-500 hover:shadow-md transition-all border border-indigo-100 cursor-pointer"
+                                  title="Download Receipt"
+                                >
+                                  <FileDown className="w-4 h-4" />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                        {filteredPayments.length === 0 && (
+                          <tr>
+                            <td colSpan={6} className="py-12 text-center text-gray-400 font-semibold">No transactions recorded.</td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
 
                 {/* Transaction Entry Modal */}
