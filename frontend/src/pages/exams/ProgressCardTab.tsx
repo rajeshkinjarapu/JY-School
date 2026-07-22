@@ -472,7 +472,17 @@ export const ProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
                         <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold shrink-0">
                           {data.studentName?.[0] || 'S'}
                         </div>
-                        <span className="truncate">{data.studentName}</span>
+                        <span className="truncate hidden md:inline">{data.studentName}</span>
+                        <span className="truncate md:hidden">
+                          {(() => {
+                            if (!data.studentName) return '';
+                            const parts = data.studentName.trim().split(' ');
+                            if (parts.length > 1) {
+                              return `${parts[0][0]}. ${parts.slice(1).join(' ')}`;
+                            }
+                            return data.studentName;
+                          })()}
+                        </span>
                       </td>
                       {!isTeacher && <td className="py-3 px-4 text-gray-600 font-medium hidden md:table-cell">{data.rollNo || '-'}</td>}
                       <td className="py-3 px-4 text-center font-bold text-emerald-600">{data.total}</td>

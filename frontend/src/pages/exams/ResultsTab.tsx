@@ -265,7 +265,19 @@ export const ResultsTab: React.FC<{ exams: any[] }> = ({ exams }) => {
                           </div>
                         </td>
                         <td className="p-4">
-                          <p className="font-bold text-indigo-900 whitespace-nowrap overflow-hidden text-ellipsis max-w-[150px] md:max-w-[200px]">{student.name}</p>
+                          <p className="font-bold text-indigo-900 whitespace-nowrap overflow-hidden text-ellipsis max-w-[150px] md:max-w-[200px]">
+                            <span className="hidden md:inline">{student.name}</span>
+                            <span className="md:hidden">
+                              {(() => {
+                                if (!student.name) return '';
+                                const parts = student.name.trim().split(' ');
+                                if (parts.length > 1) {
+                                  return `${parts[0][0]}. ${parts.slice(1).join(' ')}`;
+                                }
+                                return student.name;
+                              })()}
+                            </span>
+                          </p>
                         </td>
                         <td className="hidden md:table-cell p-4">
                           <p className="text-xs text-gray-500 font-semibold print-roll-no">{student.rollNo || '-'}</p>
