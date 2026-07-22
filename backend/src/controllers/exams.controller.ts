@@ -132,7 +132,7 @@ export const getResults = async (req: AuthRequest, res: Response, next: NextFunc
       marks: {
         where: classId ? { student: { classId } } : undefined,
         include: {
-          student: { include: { user: { select: { name: true } }, class: { select: { name: true, section: true } } } },
+          student: { include: { user: { select: { name: true, photoUrl: true } }, class: { select: { name: true, section: true } } } },
           subject: { select: { name: true, code: true } },
         },
       },
@@ -148,6 +148,7 @@ export const getResults = async (req: AuthRequest, res: Response, next: NextFunc
       studentMap.set(key, {
         studentId: key,
         name: mark.student.user.name,
+        photo: mark.student.user.photoUrl,
         rollNo: mark.student.rollNo,
         className: mark.student.class ? `${mark.student.class.name} - ${mark.student.class.section}` : '',
         marks: [],

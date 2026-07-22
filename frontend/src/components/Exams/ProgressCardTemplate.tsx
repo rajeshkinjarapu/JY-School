@@ -65,12 +65,6 @@ export const ProgressCardTemplate: React.FC<ProgressCardTemplateProps> = ({ data
             </div>
           </div>
           
-          {/* Decorative Right Element matching Logo width for balance */}
-          <div className="w-24 flex-shrink-0 hidden sm:block text-right">
-             <div className="w-16 h-16 ml-auto border-[3px] border-indigo-400/30 rounded-lg flex items-center justify-center text-xs font-bold text-indigo-200/50 rotate-12">
-               SEAL
-             </div>
-          </div>
         </div>
 
         {/* Content Area */}
@@ -98,7 +92,7 @@ export const ProgressCardTemplate: React.FC<ProgressCardTemplateProps> = ({ data
                     <td className="border border-gray-300 font-bold py-1.5 sm:py-2 px-2 sm:px-3 uppercase text-gray-800">{exam?.name}</td>
                   </tr>
                   <tr>
-                    <td className="border border-gray-300 bg-indigo-50 font-black py-1.5 sm:py-2 px-2 sm:px-3 uppercase text-indigo-900 tracking-wider">Contact Number</td>
+                    <td className="border border-gray-300 bg-indigo-50 font-black py-1.5 sm:py-2 px-2 sm:px-3 uppercase text-indigo-900 tracking-wider">WhatsApp Number</td>
                     <td className="border border-gray-300 font-bold py-1.5 sm:py-2 px-2 sm:px-3 uppercase text-gray-800">{data.mobile || '-'}</td>
                   </tr>
                   <tr>
@@ -128,11 +122,11 @@ export const ProgressCardTemplate: React.FC<ProgressCardTemplateProps> = ({ data
             <table className="w-full text-[11px] sm:text-[13px] border-collapse">
               <thead>
                 <tr className="bg-gradient-to-r from-indigo-900 to-[#1e2a5c]">
-                  <th className="border border-gray-400 py-1.5 sm:py-2 px-1 sm:px-2 uppercase text-center w-12 text-white">S.No</th>
-                  <th className="border border-gray-400 py-1.5 sm:py-2 px-2 sm:px-4 uppercase text-left text-white">Subject</th>
-                  <th className="border border-gray-400 py-1.5 sm:py-2 px-2 sm:px-4 uppercase text-center text-white">Max Marks</th>
-                  <th className="border border-gray-400 py-1.5 sm:py-2 px-2 sm:px-4 uppercase text-center text-white">Obtained</th>
-                  <th className="border border-gray-400 py-1.5 sm:py-2 px-2 sm:px-4 uppercase text-center text-white">Percentage</th>
+                  <th className="border border-gray-400 py-1.5 sm:py-2 px-1 sm:px-2 uppercase text-center w-12 text-white print:text-black">S.No</th>
+                  <th className="border border-gray-400 py-1.5 sm:py-2 px-2 sm:px-4 uppercase text-left text-white print:text-black">Subject</th>
+                  <th className="border border-gray-400 py-1.5 sm:py-2 px-2 sm:px-4 uppercase text-center text-white print:text-black">Max Marks</th>
+                  <th className="border border-gray-400 py-1.5 sm:py-2 px-2 sm:px-4 uppercase text-center text-white print:text-black">Obtained</th>
+                  <th className="border border-gray-400 py-1.5 sm:py-2 px-2 sm:px-4 uppercase text-center text-white print:text-black">Percentage</th>
                 </tr>
               </thead>
               <tbody className="bg-white">
@@ -150,7 +144,7 @@ export const ProgressCardTemplate: React.FC<ProgressCardTemplateProps> = ({ data
                 
                 {/* Grand Total Row */}
                 <tr className="bg-gradient-to-r from-amber-50 to-amber-100 border-t-4 border-t-amber-400 shadow-[0_-2px_4px_rgba(0,0,0,0.05)]">
-                  <td colSpan={2} className="border border-amber-200 py-2 sm:py-3 px-2 sm:px-4 text-right font-black uppercase text-indigo-900 tracking-wider text-[13px] sm:text-[15px]">Grand Total</td>
+                  <td colSpan={2} className="border border-amber-200 py-2 sm:py-3 px-2 sm:px-4 text-center font-black uppercase text-indigo-900 tracking-wider text-[13px] sm:text-[15px]">Grand Total</td>
                   <td className="border border-amber-200 py-2 sm:py-3 px-2 sm:px-4 text-center font-black text-indigo-900 text-[13px] sm:text-[15px]">{totalMaxMarks}</td>
                   <td className="border border-amber-200 py-2 sm:py-3 px-2 sm:px-4 text-center font-black text-blue-700 text-[15px] sm:text-[18px]">{totalObtained}</td>
                   <td className="border border-amber-200 py-2 sm:py-3 px-2 sm:px-4 text-center font-black text-emerald-600 text-[15px] sm:text-[18px] drop-shadow-sm">{percentage}%</td>
@@ -204,14 +198,6 @@ export const ProgressCardTemplate: React.FC<ProgressCardTemplateProps> = ({ data
               <div className="border-t border-gray-800 pt-1">
                 <p className="text-[12px] font-bold text-gray-800 uppercase tracking-widest">Class Teacher</p>
               </div>
-            </div>
-            
-            {/* Authenticity Stamp / Note */}
-            <div className="text-center pb-1">
-               <div className="w-16 h-16 rounded-full border-2 border-gray-300 flex items-center justify-center mx-auto mb-2 opacity-50">
-                 <span className="text-[10px] font-bold text-gray-400 uppercase rotate-[-30deg] tracking-wider">Valid</span>
-               </div>
-               <p className="text-[9px] text-gray-400 uppercase tracking-wider">System Generated Result</p>
             </div>
             
             <div className="text-center w-48">

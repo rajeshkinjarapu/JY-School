@@ -25,6 +25,7 @@ export const JEEProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
   const [logoUrl, setLogoUrl] = useState('');
   const [signatureUrl, setSignatureUrl] = useState('');
   const [teacherSignatureUrl, setTeacherSignatureUrl] = useState('');
+  const [examNameOverride, setExamNameOverride] = useState('');
   const [published, setPublished] = useState(false);
 
   const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
@@ -41,6 +42,7 @@ export const JEEProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
       setLogoUrl(selectedExam.admitCardSettings?.logoUrl || '');
       setSignatureUrl(selectedExam.admitCardSettings?.signatureUrl || '');
       setTeacherSignatureUrl(selectedExam.admitCardSettings?.teacherSignatureUrl || '');
+      setExamNameOverride(selectedExam.admitCardSettings?.examNameOverride || '');
       setPublished(selectedExam.admitCardSettings?.progressCardPublished || false);
     }
   }, [selectedExam]);
@@ -110,7 +112,7 @@ export const JEEProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
     if (!selectedExamId) return;
     try {
       const currentSettings = selectedExam?.admitCardSettings || {};
-      const newSettings = { ...currentSettings, logoUrl, signatureUrl, teacherSignatureUrl, progressCardPublished: published };
+      const newSettings = { ...currentSettings, logoUrl, signatureUrl, teacherSignatureUrl, examNameOverride, progressCardPublished: published };
       
       await api.post(`/api/exams/${selectedExamId}/admit-card-settings`, {
         admitCardPublished: selectedExam?.admitCardPublished || false,
@@ -208,7 +210,8 @@ export const JEEProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
       toast.success('Downloaded successfully!', { id: toastId });
     } catch (e: any) {
       console.error(e);
-      toast.error('Failed to generate PDF', { id: toastId });
+      toast.error('Failed to generate PDF. Opening print dialog instead...', { id: toastId });
+      handlePrintSingle(index);
     }
   };
 
@@ -334,29 +337,9 @@ export const JEEProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
                 </button>
               ) : (
                 <div className="flex items-center gap-2 flex-1 md:flex-none">
-                  <span className="bg-emerald-100 text-emerald-700 px-3 py-1.5 rounded-lg text-sm font-bold flex items-center gap-1.5 border border-emerald-200 justify-center w-full md:w-auto">
+                  <span className="bg-emerald-100 text-emerald-700 px-4 py-1.5 rounded-lg text-sm font-bold flex items-center gap-2 border border-emerald-200 justify-center w-full md:w-auto shadow-sm">
                     <CheckCircle className="w-4 h-4" /> Published
                   </span>
-                  <button 
-                    onClick={async () => {
-                      if (!window.confirm('Are you sure you want to unpublish these results?')) return;
-                      setPublished(false);
-                      try {
-                        const newSettings = { ...(selectedExam.admitCardSettings || {}), progressCardPublished: false };
-                        await api.post(`/api/exams/${selectedExamId}/admit-card-settings`, {
-                          admitCardPublished: selectedExam?.admitCardPublished || false,
-                          admitCardSettings: newSettings
-                        });
-                        toast.success('Results unpublished successfully!');
-                      } catch (e: any) {
-                        toast.error('Failed to unpublish');
-                        setPublished(true);
-                      }
-                    }}
-                    className="bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1.5 rounded-lg text-sm font-bold flex items-center gap-2 justify-center"
-                  >
-                    Unpublish
-                  </button>
                 </div>
               )}
               <button onClick={() => setShowSettings(!showSettings)} className="btn-secondary flex items-center gap-2 flex-1 md:flex-none justify-center">
@@ -385,6 +368,17 @@ export const JEEProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="space-y-4">
+              <label className="block text-sm font-bold text-gray-700 dark:text-gray-300">Custom Exam Name (Optional)</label>
+              <input
+                type="text"
+                value={examNameOverride}
+                onChange={(e) => setExamNameOverride(e.target.value)}
+                placeholder={`Default: ${selectedExam?.name || 'EXAMINATION RESULT CARD'}`}
+                className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 text-gray-800"
+              />
+            </div>
+            
             <div className="space-y-4">
               <label className="block text-sm font-bold text-gray-700 dark:text-gray-300">School Logo Image</label>
               <div className="flex items-center gap-4">
