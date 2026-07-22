@@ -33,7 +33,6 @@ export const DashboardLayout: React.FC = () => {
     <div className="flex h-screen overflow-hidden bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 dark:from-[#1e1b4b] dark:via-[#2e1065] dark:to-[#312e81]">
       <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
       <div className="flex flex-col flex-1 overflow-hidden min-w-0">
-        <Header onMenuClick={() => setSidebarOpen(true)} title={getPageTitle(location.pathname)} />
         <main className="flex-1 overflow-y-auto p-0 md:p-5 lg:p-7 animate-fade-in-up">
           <Outlet />
         </main>
