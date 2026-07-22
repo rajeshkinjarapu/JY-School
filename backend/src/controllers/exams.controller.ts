@@ -197,3 +197,29 @@ export const updateAdmitCardSettings = async (req: AuthRequest, res: Response, n
     next(error);
   }
 };
+
+export const publishResults = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const { published } = req.body;
+
+    const exam = await prisma.exam.findUnique({ where: { id } });
+    if (!exam) {
+      return next(createError('Exam not found', 404));
+    }
+
+    const currentSettings = (exam.admitCardSettings as any) || {};
+    currentSettings.progressCardPublished = !!published;
+
+    const updatedExam = await prisma.exam.update({
+      where: { id },
+      data: {
+        admitCardSettings: currentSettings,
+      },
+    });
+
+    successResponse(res, updatedExam, 'Results published status updated successfully');
+  } catch (error) {
+    next(error);
+  }
+};
