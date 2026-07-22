@@ -808,28 +808,27 @@ export const FinancePage: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="bg-white/40 dark:bg-white/5 border border-white/60 dark:border-white/10 rounded-3xl shadow-sm overflow-hidden backdrop-blur-xl">
+                <div className="bg-white/40 dark:bg-white/5 md:border border-white/60 dark:border-white/10 md:rounded-3xl md:shadow-sm overflow-hidden backdrop-blur-xl">
                   
                   {/* Mobile View */}
-                  <div className="md:hidden flex flex-col divide-y divide-gray-100 dark:divide-white/10">
-                    {filteredPayments.map(p => (
-                      <div key={p.id} className="bg-white dark:bg-white/5 flex flex-col relative">
+                  <div className="md:hidden flex flex-col">
+                    {filteredPayments.map((p, idx) => (
+                      <div key={p.id} className="bg-transparent flex flex-col relative py-2">
                         <div 
-                          className="flex items-center justify-between p-3 gap-2 cursor-pointer hover:bg-indigo-50/50 transition-colors"
+                          className="flex items-center justify-between gap-1 cursor-pointer"
                           onClick={() => toggleRow(p.id)}
                         >
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2">
-                              <h4 className="font-extrabold text-[13px] text-gray-900 dark:text-white truncate max-w-[120px]">{p.student?.user?.name || 'Student'}</h4>
-                              <span className="text-[10px] font-bold text-teal-700 bg-teal-50 px-1.5 py-0.5 rounded border border-teal-100 shrink-0 truncate max-w-[80px]">
-                                {p.feeStructure?.name || 'Fee'}
-                              </span>
-                            </div>
+                          <div className="flex-1 min-w-0 flex items-center gap-1.5">
+                            <span className="text-[10px] font-bold text-gray-400 w-4">{idx + 1}.</span>
+                            <h4 className="font-extrabold text-[12px] text-gray-900 dark:text-white truncate max-w-[90px]">{p.student?.user?.name || 'Student'}</h4>
+                            <span className="text-[9px] font-bold text-teal-700 bg-teal-50 px-1 py-0.5 rounded border border-teal-100 shrink-0 truncate max-w-[65px]">
+                              {p.feeStructure?.name || 'Fee'}
+                            </span>
                           </div>
-                          <div className="shrink-0 flex items-center gap-2">
-                            <span className="font-black text-indigo-600 dark:text-indigo-400 text-sm">₹{p.amountPaid.toLocaleString()}</span>
+                          <div className="shrink-0 flex items-center gap-1">
+                            <span className="font-black text-indigo-600 dark:text-indigo-400 text-[13px]">₹{p.amountPaid.toLocaleString()}</span>
                             <div className={`transform transition-transform ${expandedRows[p.id] ? 'rotate-180' : ''}`}>
-                              <ArrowRight className="w-4 h-4 text-gray-400" />
+                              <ArrowRight className="w-3.5 h-3.5 text-gray-400" />
                             </div>
                           </div>
                         </div>
