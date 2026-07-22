@@ -11,11 +11,11 @@ const router = Router();
 
 router.use(authenticate);
 
-// Teacher creates leave or permission
-router.post('/', authorize('TEACHER', 'SUPER_ADMIN', 'ADMIN'), requestLeave);
+// Teacher or Student creates leave or permission
+router.post('/', authorize('TEACHER', 'STUDENT', 'SUPER_ADMIN', 'ADMIN'), requestLeave);
 
 // Get my leaves
-router.get('/my', authorize('TEACHER', 'SUPER_ADMIN', 'ADMIN'), getMyLeaves);
+router.get('/my', authorize('TEACHER', 'STUDENT', 'SUPER_ADMIN', 'ADMIN'), getMyLeaves);
 
 // Admin gets all leaves
 router.get('/', authorize('SUPER_ADMIN', 'ADMIN'), getAllLeaves);

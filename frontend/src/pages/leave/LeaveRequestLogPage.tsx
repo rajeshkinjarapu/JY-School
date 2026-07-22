@@ -30,18 +30,16 @@ export const LeaveRequestLogPage: React.FC = () => {
     setLeaveTypes(types);
     if (types.length > 0) setFormTypeId(types[0].id);
 
-    // Load requests
-    const storedReqs = localStorage.getItem('fin_leave_requests');
-    if (!storedReqs) {
-      const defaultRequests = [
-        { id: '1', applicant: 'Rajesh Kumar (Maths Teacher)', typeName: 'Sick Leave', startDate: '2026-07-06', endDate: '2026-07-08', reason: 'Fever and cold', status: 'Approved' },
-        { id: '2', applicant: 'Srinivas Rao (Office Assistant)', typeName: 'Casual Leave', startDate: '2026-07-10', endDate: '2026-07-11', reason: 'Personal work', status: 'Pending' },
-      ];
-      localStorage.setItem('fin_leave_requests', JSON.stringify(defaultRequests));
-      setRequests(defaultRequests);
-    } else {
-      setRequests(JSON.parse(storedReqs));
-    }
+    // Load requests from API
+    const fetchLeaves = async () => {
+      try {
+        const res = await api.get('/api/leave');
+        setRequests(res.data.data || res.data || []);
+      } catch (err) {
+        console.error('Failed to fetch leaves', err);
+      }
+    };
+    fetchLeaves();
 
     // Fetch teachers list
     api.get('/api/teachers')
@@ -88,10 +86,15 @@ export const LeaveRequestLogPage: React.FC = () => {
     setFormEndDate('');
   };
 
-  const handleUpdateStatus = (id: string, newStatus: string) => {
-    const updated = requests.map(r => r.id === id ? { ...r, status: newStatus } : r);
-    saveRequests(updated);
-    toast.success(`Leave request ${newStatus.toLowerCase()} successfully.`);
+  const handleUpdateStatus = async (id: string, newStatus: string) => {
+    try {
+      await api.put(`/api/leave/${id}/status`, { status: newStatus.toUpperCase() });
+      const updated = requests.map(r => r.id === id ? { ...r, status: newStatus } : r);
+      setRequests(updated);
+      toast.success(`Leave request ${newStatus.toLowerCase()} successfully.`);
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Failed to update status');
+    }
   };
 
   const handleDelete = (id: string) => {
@@ -141,10 +144,10 @@ export const LeaveRequestLogPage: React.FC = () => {
             <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
               {(isAdmin ? requests : requests.filter(r => r.applicant === user?.name)).map((r) => (
                 <tr key={r.id} className="hover:bg-gray-50/50 dark:hover:bg-gray-855/10 transition-colors">
-                  <td className="py-4 font-bold text-gray-900 dark:text-white">{r.applicant}</td>
-                  <td className="py-4 text-gray-600 dark:text-gray-300 font-semibold">{r.typeName}</td>
-                  <td className="py-4 text-xs text-gray-500 font-semibold">{r.startDate}</td>
-                  <td className="py-4 text-xs text-gray-500 font-semibold">{r.endDate}</td>
+                  <td className="py-4 font-bold text-gray-900 dark:text-white">{r.requester?.name || r.applicant}</td>
+                  <td className="py-4 text-gray-600 dark:text-gray-300 font-semibold">{r.type || r.typeName}</td>
+                  <td className="py-4 text-xs text-gray-500 font-semibold">{new Date(r.startDate).toLocaleDateString()}</td>
+                  <td className="py-4 text-xs text-gray-500 font-semibold">{r.endDate ? new Date(r.endDate).toLocaleDateString() : '-'}</td>
                   <td className="py-4 text-xs text-gray-400 font-medium max-w-[200px] truncate" title={r.reason}>
                     {r.reason}
                   </td>
@@ -163,16 +166,16 @@ export const LeaveRequestLogPage: React.FC = () => {
                     </span>
                   </td>
                   <td className="py-4 text-right flex justify-end gap-2">
-                    {isAdmin && r.status === 'Pending' && (
+                    {isAdmin && (r.status === 'Pending' || r.status === 'PENDING') && (
                       <>
                         <button
-                          onClick={() => handleUpdateStatus(r.id, 'Approved')}
+                          onClick={() => handleUpdateStatus(r.id, 'APPROVED')}
                           className="px-2 py-1 bg-teal-50 hover:bg-teal-100 text-teal-700 rounded-lg text-[10px] font-bold transition-all cursor-pointer"
                         >
                           Approve
                         </button>
                         <button
-                          onClick={() => handleUpdateStatus(r.id, 'Rejected')}
+                          onClick={() => handleUpdateStatus(r.id, 'REJECTED')}
                           className="px-2 py-1 bg-red-50 hover:bg-red-100 text-red-750 rounded-lg text-[10px] font-bold transition-all cursor-pointer"
                         >
                           Reject
