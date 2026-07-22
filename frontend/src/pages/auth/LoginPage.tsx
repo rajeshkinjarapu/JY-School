@@ -58,8 +58,8 @@ export const LoginPage: React.FC = () => {
 
       {/* School Header */}
       <div className="relative z-10 flex flex-col items-center mb-6 sm:mb-8 mt-2">
-        <div className="w-20 h-20 sm:w-24 sm:h-24 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center mb-3 shadow-[0_0_30px_rgba(255,255,255,0.3)] border border-white/40">
-          <GraduationCap className="w-12 h-12 sm:w-14 sm:h-14 text-white drop-shadow-md" />
+        <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full flex items-center justify-center mb-3 shadow-[0_0_30px_rgba(255,255,255,0.5)] border-4 border-white/80 overflow-hidden bg-white hover:scale-105 transition-transform duration-300">
+          <img src="/logo.svg" alt="JY School Logo" className="w-full h-full object-cover" />
         </div>
         <h1 className="text-4xl sm:text-5xl font-black text-white drop-shadow-lg tracking-tight text-center px-4">
           JY SCHOOL
