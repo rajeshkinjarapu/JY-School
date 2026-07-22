@@ -35,6 +35,7 @@ export const AccountantDashboard: React.FC = () => {
   const [receiptUrl, setReceiptUrl] = useState('');
   const [isUploading, setIsUploading] = useState(false);
   const [isSubmittingPayment, setIsSubmittingPayment] = useState(false);
+  const [paymentDate, setPaymentDate] = useState(new Date().toISOString().split('T')[0]);
 
   const fetchDashboardData = async () => {
     try {
@@ -141,10 +142,7 @@ export const AccountantDashboard: React.FC = () => {
       toast.error('UTR Reference Number is required for UPI payments.');
       return;
     }
-    if (method === 'UPI' && !receiptUrl) {
-      toast.error('Please upload the transaction receipt screenshot.');
-      return;
-    }
+
     setIsSubmittingPayment(true);
     try {
       await api.post('/api/fees/payments', {
@@ -155,6 +153,7 @@ export const AccountantDashboard: React.FC = () => {
         remarks,
         utrNumber: method === 'UPI' ? utrNumber : null,
         receiptUrl: method === 'UPI' ? receiptUrl : null,
+        paymentDate,
       });
       toast.success('Tuition payment collected successfully!');
       setShowModal(false);
@@ -164,6 +163,7 @@ export const AccountantDashboard: React.FC = () => {
       setRemarks('');
       setUtrNumber('');
       setReceiptUrl('');
+      setPaymentDate(new Date().toISOString().split('T')[0]);
       fetchDashboardData();
     } catch (error: any) {
       toast.error(error.message || 'Failed to record tuition collection.');
@@ -573,6 +573,17 @@ export const AccountantDashboard: React.FC = () => {
               </div>
 
               <div>
+                <label className="label">Payment Date</label>
+                <input
+                  type="date"
+                  required
+                  value={paymentDate}
+                  onChange={(e) => setPaymentDate(e.target.value)}
+                  className="input text-xs focus:ring-teal-500"
+                />
+              </div>
+
+              <div>
                 <label className="label">Payment Mode</label>
                 <select
                   value={method}
@@ -606,7 +617,6 @@ export const AccountantDashboard: React.FC = () => {
                     <div className="relative">
                       <input
                         type="file"
-                        required={!receiptUrl}
                         accept="image/*,application/pdf"
                         onChange={handleFileChange}
                         className="w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100 cursor-pointer"

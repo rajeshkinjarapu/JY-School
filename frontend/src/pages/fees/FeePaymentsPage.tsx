@@ -23,6 +23,7 @@ export const FeePaymentsPage: React.FC = () => {
   // Form states
   const [studentId, setStudentId] = useState('');
   const [selectedFees, setSelectedFees] = useState<{ feeStructureId: string; amountPaid: number }[]>([]);
+  const [paymentDate, setPaymentDate] = useState(new Date().toISOString().split('T')[0]);
   const [method, setMethod] = useState('CASH');
   const [remarks, setRemarks] = useState('');
   const [utrNumber, setUtrNumber] = useState('');
@@ -116,10 +117,7 @@ export const FeePaymentsPage: React.FC = () => {
       toast.error('UTR Reference Number is required for UPI payments.');
       return;
     }
-    if (method === 'UPI' && !receiptUrl) {
-      toast.error('Please upload the transaction receipt screenshot.');
-      return;
-    }
+
     setIsSubmitting(true);
     try {
       await api.post('/api/fees/payments', {
@@ -129,12 +127,14 @@ export const FeePaymentsPage: React.FC = () => {
         remarks,
         utrNumber: method === 'UPI' ? utrNumber : null,
         receiptUrl: method === 'UPI' ? receiptUrl : null,
+        paymentDate,
       });
       toast.success('Payment transaction recorded!');
       setShowModal(false);
       setStudentId('');
       setSelectedFees([]);
       setRemarks('');
+      setPaymentDate(new Date().toISOString().split('T')[0]);
       setUtrNumber('');
       setReceiptUrl('');
       fetchData();
@@ -504,6 +504,17 @@ export const FeePaymentsPage: React.FC = () => {
               )}
 
               <div>
+                <label className="label">Payment Date</label>
+                <input 
+                  type="date" 
+                  value={paymentDate} 
+                  onChange={(e) => setPaymentDate(e.target.value)} 
+                  className="input text-xs" 
+                  required
+                />
+              </div>
+
+              <div>
                 <label className="label">Payment Method</label>
                 <select value={method} onChange={(e) => setMethod(e.target.value)} className="input text-xs">
                   <option value="CASH">Cash</option>
@@ -532,7 +543,6 @@ export const FeePaymentsPage: React.FC = () => {
                     <label className="label">Upload Payment Receipt</label>
                     <input
                       type="file"
-                      required={!receiptUrl}
                       accept="image/*,application/pdf"
                       onChange={handleFileChange}
                       className="w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100 cursor-pointer"

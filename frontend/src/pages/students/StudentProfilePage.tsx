@@ -37,6 +37,7 @@ export const StudentProfilePage: React.FC = () => {
   const [remarks, setRemarks] = useState('');
   const [utrNumber, setUtrNumber] = useState('');
   const [receiptUrl, setReceiptUrl] = useState('');
+  const [paymentDate, setPaymentDate] = useState(new Date().toISOString().split('T')[0]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const fetchStudentProfile = async () => {
@@ -118,6 +119,7 @@ export const StudentProfilePage: React.FC = () => {
         payments: selectedFees,
         method,
         remarks,
+        paymentDate,
       };
 
       if (method === 'UPI') {
@@ -133,6 +135,7 @@ export const StudentProfilePage: React.FC = () => {
       setRemarks('');
       setUtrNumber('');
       setReceiptUrl('');
+      setPaymentDate(new Date().toISOString().split('T')[0]);
       fetchStudentProfile();
     } catch (error: any) {
       toast.error(error.response?.data?.message || error.message || 'Error recording payment');
@@ -764,6 +767,17 @@ export const StudentProfilePage: React.FC = () => {
                     <span className="text-lg font-black text-indigo-600 dark:text-indigo-400">₹{selectedFees.reduce((sum, f) => sum + f.amountPaid, 0).toLocaleString()}</span>
                   </div>
                 )}
+              </div>
+
+              <div>
+                <label className="label">Payment Date</label>
+                <input 
+                  type="date" 
+                  value={paymentDate} 
+                  onChange={(e) => setPaymentDate(e.target.value)} 
+                  className="input text-xs" 
+                  required
+                />
               </div>
 
               <div>

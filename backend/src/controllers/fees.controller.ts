@@ -146,7 +146,7 @@ export const getPayments = async (req: AuthRequest, res: Response): Promise<void
 };
 
 export const createPayment = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
-  const { studentId, feeStructureId, amountPaid, method, remarks, utrNumber, receiptUrl, payments } = req.body;
+  const { studentId, feeStructureId, amountPaid, method, remarks, utrNumber, receiptUrl, payments, paymentDate } = req.body;
 
   const student = await prisma.student.findUnique({ where: { id: studentId } });
   if (!student) return next(createError('Student not found', 404));
@@ -196,7 +196,8 @@ export const createPayment = async (req: AuthRequest, res: Response, next: NextF
           remarks,
           utrNumber: utrNumber || null,
           receiptUrl: receiptUrl || null,
-          receiptNo: paymentList.length > 1 ? `${baseReceiptNo}-${idx}` : baseReceiptNo
+          receiptNo: paymentList.length > 1 ? `${baseReceiptNo}-${idx}` : baseReceiptNo,
+          paymentDate: paymentDate ? new Date(paymentDate) : new Date()
         },
         include: {
           student: { include: { user: { select: { name: true } } } },
