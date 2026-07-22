@@ -98,10 +98,11 @@ export default function AttendanceDailyReportPage() {
                if (el) {
                  const updateScale = () => {
                    const parent = el.parentElement;
-                   if (parent && !window.matchMedia('print').matches) {
-                     const scale = Math.min(1, (parent.clientWidth - 32) / 1080);
-                     el.style.setProperty('--scale', scale.toString());
-                     el.parentElement.style.height = `${1920 * scale + 64}px`;
+                    if (parent && !window.matchMedia('print').matches) {
+                      const padding = window.innerWidth < 768 ? 0 : 32;
+                      const scale = Math.min(1, (parent.clientWidth - padding) / 1080);
+                      el.style.setProperty('--scale', scale.toString());
+                      el.parentElement.style.height = `${1920 * scale + (padding ? 64 : 0)}px`;
                    } else {
                      el.style.setProperty('--scale', '1');
                      if (parent) parent.style.height = 'auto';
@@ -139,6 +140,12 @@ export default function AttendanceDailyReportPage() {
                 <LoadingSpinner size="lg" className="py-24 m-auto" />
               ) : (
             <>
+              {(() => {
+                const primaryClasses = data.filter(r => r.className.match(/(NUR|PP1|PP2|1st|2nd|3rd|4th|5th)/i));
+                const secondaryClasses = data.filter(r => !r.className.match(/(NUR|PP1|PP2|1st|2nd|3rd|4th|5th)/i));
+                
+                return (
+                  <>
               {/* Overall Summary Widgets */}
               <div className="grid grid-cols-4 gap-8 mb-12 shrink-0">
                 {[
@@ -155,28 +162,55 @@ export default function AttendanceDailyReportPage() {
                 ))}
               </div>
 
-              {/* Class-wise Table */}
-              <div className="flex-1 min-h-0 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="bg-slate-800 text-white">
-                      <th className="py-4 px-6 font-black uppercase tracking-widest text-lg">Class</th>
-                      <th className="py-4 px-6 font-black uppercase tracking-widest text-lg text-center">Total Students</th>
-                      <th className="py-4 px-6 font-black uppercase tracking-widest text-lg text-center text-emerald-400">Present</th>
-                      <th className="py-4 px-6 font-black uppercase tracking-widest text-lg text-center text-rose-400">Absent</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {data.map((row, index) => (
-                      <tr key={row.classId} className={index % 2 === 0 ? 'bg-white' : 'bg-slate-50'}>
-                        <td className="py-3 px-6 font-bold text-xl text-slate-800 border-r border-slate-100">{row.className}</td>
-                        <td className="py-3 px-6 font-bold text-xl text-center text-slate-600 border-r border-slate-100">{row.total}</td>
-                        <td className="py-3 px-6 font-black text-2xl text-center text-emerald-600 bg-emerald-50/30 border-r border-slate-100">{row.present}</td>
-                        <td className="py-3 px-6 font-black text-2xl text-center text-rose-600 bg-rose-50/30">{row.absent}</td>
+              {/* Class-wise Tables */}
+              <div className="flex-1 min-h-0 flex gap-4">
+                {/* Primary Classes Table */}
+                <div className="flex-1 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="bg-slate-800 text-white">
+                        <th className="py-4 px-4 font-black uppercase tracking-widest text-sm">Class</th>
+                        <th className="py-4 px-4 font-black uppercase tracking-widest text-sm text-center">Total</th>
+                        <th className="py-4 px-4 font-black uppercase tracking-widest text-sm text-center text-emerald-400">Present</th>
+                        <th className="py-4 px-4 font-black uppercase tracking-widest text-sm text-center text-rose-400">Absent</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {primaryClasses.map((row, index) => (
+                        <tr key={row.classId} className={index % 2 === 0 ? 'bg-white' : 'bg-slate-50'}>
+                          <td className="py-3 px-4 font-bold text-lg text-slate-800 border-r border-slate-100">{row.className}</td>
+                          <td className="py-3 px-4 font-bold text-lg text-center text-slate-600 border-r border-slate-100">{row.total}</td>
+                          <td className="py-3 px-4 font-black text-xl text-center text-emerald-600 bg-emerald-50/30 border-r border-slate-100">{row.present}</td>
+                          <td className="py-3 px-4 font-black text-xl text-center text-rose-600 bg-rose-50/30">{row.absent}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Secondary Classes Table */}
+                <div className="flex-1 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="bg-slate-800 text-white">
+                        <th className="py-4 px-4 font-black uppercase tracking-widest text-sm">Class</th>
+                        <th className="py-4 px-4 font-black uppercase tracking-widest text-sm text-center">Total</th>
+                        <th className="py-4 px-4 font-black uppercase tracking-widest text-sm text-center text-emerald-400">Present</th>
+                        <th className="py-4 px-4 font-black uppercase tracking-widest text-sm text-center text-rose-400">Absent</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {secondaryClasses.map((row, index) => (
+                        <tr key={row.classId} className={index % 2 === 0 ? 'bg-white' : 'bg-slate-50'}>
+                          <td className="py-3 px-4 font-bold text-lg text-slate-800 border-r border-slate-100">{row.className}</td>
+                          <td className="py-3 px-4 font-bold text-lg text-center text-slate-600 border-r border-slate-100">{row.total}</td>
+                          <td className="py-3 px-4 font-black text-xl text-center text-emerald-600 bg-emerald-50/30 border-r border-slate-100">{row.present}</td>
+                          <td className="py-3 px-4 font-black text-xl text-center text-rose-600 bg-rose-50/30">{row.absent}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
 
               {/* Footer Signature Area */}
@@ -191,6 +225,9 @@ export default function AttendanceDailyReportPage() {
                   <p className="text-lg font-black text-slate-500 uppercase tracking-[0.2em]">Principal Signature</p>
                 </div>
               </div>
+                  </>
+                );
+              })()}
             </>
           )}
             </div>

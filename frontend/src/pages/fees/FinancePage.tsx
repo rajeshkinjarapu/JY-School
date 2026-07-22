@@ -295,7 +295,7 @@ export const FinancePage: React.FC = () => {
   return (
     <div className="flex flex-col lg:flex-row gap-6">
       {/* ══ LEFT SIDEBAR TABS (Matching sidebar design) ══ */}
-      <div className={`print:hidden w-full lg:w-64 shrink-0 bg-white dark:bg-gray-900 border border-gray-150 dark:border-gray-800 rounded-3xl p-4 flex flex-col gap-1.5 shadow-sm ${activeTab === 'transaction' ? 'hidden' : ''}`}>
+      <div className={`print:hidden w-full lg:w-64 shrink-0 md:bg-white md:dark:bg-gray-900 md:border md:border-gray-150 md:dark:border-gray-800 md:rounded-3xl md:p-4 flex flex-col gap-1.5 md:shadow-sm ${activeTab === 'transaction' ? 'hidden' : ''}`}>
         <div className="px-3 py-2 text-xs font-black uppercase text-gray-400 tracking-wider flex items-center gap-1.5 border-b border-gray-100 dark:border-gray-800 mb-2">
           <Wallet className="w-4 h-4 text-indigo-500" />
           Finance Submenu
@@ -808,7 +808,7 @@ export const FinancePage: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="bg-white/40 dark:bg-white/5 md:border border-white/60 dark:border-white/10 md:rounded-3xl md:shadow-sm overflow-hidden backdrop-blur-xl">
+                <div className="md:bg-white/40 md:dark:bg-white/5 md:border md:border-white/60 md:dark:border-white/10 md:rounded-3xl md:shadow-sm overflow-hidden md:backdrop-blur-xl">
                   
                   {/* Mobile View */}
                   <div className="md:hidden flex flex-col">

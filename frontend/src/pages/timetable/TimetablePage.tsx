@@ -373,7 +373,7 @@ export const TimetablePage: React.FC = () => {
 
       {/* ══ FILTER BAR ══ */}
       {(activeTab === 'class' || activeTab === 'teacher') && (
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white dark:bg-gray-900 px-4 py-3 rounded-xl border border-gray-150 dark:border-gray-800">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 md:bg-white md:dark:bg-gray-900 md:px-4 py-3 md:rounded-xl md:border md:border-gray-150 md:dark:border-gray-800">
           <div className="flex items-center gap-3 flex-wrap">
             <span className="text-[10px] font-extrabold uppercase text-gray-400 tracking-widest">Filter:</span>
             {activeTab === 'class' ? (
@@ -393,20 +393,20 @@ export const TimetablePage: React.FC = () => {
               </span>
             )}
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 w-full md:w-auto">
             <button onClick={() => window.print()}
-              className="px-3.5 py-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer">
-              <Printer className="w-4 h-4 text-indigo-500" /> Print Timetable
+              className="px-3.5 py-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg text-xs font-bold flex items-center justify-center flex-1 md:flex-none gap-1.5 transition-all cursor-pointer">
+              <Printer className="w-4 h-4 text-indigo-500" /> <span className="hidden md:inline">Print</span>
             </button>
             {isAdmin && activeTab === 'class' && (
               <>
                 <button onClick={() => openSlotModal('Monday', 1)}
-                  className="btn-secondary flex items-center gap-1.5 text-xs font-bold cursor-pointer">
-                  <Plus className="w-4 h-4" /> Manual Add
+                  className="btn-secondary flex items-center justify-center flex-1 md:flex-none gap-1.5 text-xs font-bold cursor-pointer">
+                  <Plus className="w-4 h-4" /> <span className="hidden md:inline">Manual Add</span><span className="md:hidden">Add</span>
                 </button>
                 <button onClick={() => setShowAutoModal(true)}
-                  className="btn-primary flex items-center gap-1.5 text-xs font-bold cursor-pointer">
-                  <Wand2 className="w-4 h-4" /> Auto Generate
+                  className="btn-primary flex items-center justify-center flex-1 md:flex-none gap-1.5 text-xs font-bold cursor-pointer">
+                  <Wand2 className="w-4 h-4" /> <span className="hidden md:inline">Auto Generate</span><span className="md:hidden">Auto</span>
                 </button>
               </>
             )}
@@ -419,7 +419,7 @@ export const TimetablePage: React.FC = () => {
         <>
           {/* ── CLASS TIMETABLE GRID ── */}
           {activeTab === 'class' && (
-            <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-150 dark:border-gray-800 overflow-hidden p-4 print:p-0">
+            <div className="md:bg-white md:dark:bg-gray-900 md:rounded-xl md:border md:border-gray-150 md:dark:border-gray-800 overflow-hidden md:p-4 print:p-0">
               {/* Print Only Header */}
               <div className="hidden print:block text-center mb-6">
                 <h1 className="text-2xl font-black text-indigo-700">JY SCHOOL</h1>
