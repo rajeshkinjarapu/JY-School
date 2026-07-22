@@ -775,12 +775,20 @@ export const ExamListPage: React.FC = () => {
 
   return (
     <div className="space-y-4 sm:space-y-6 md:space-y-8 p-0 sm:p-4 md:p-8 bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 min-h-screen overflow-x-hidden">
+      
+      {/* Mobile Header Title */}
+      {!activeTab && (
+        <div className="md:hidden bg-white px-4 py-3 border-b border-gray-100 shadow-sm sticky top-0 z-20 flex items-center justify-between">
+          <h1 className="text-sm font-extrabold text-slate-800 uppercase tracking-wider">Examination Module</h1>
+        </div>
+      )}
+      
       <div className="space-y-4 sm:space-y-6 md:space-y-8">
-        {/* ══ TOP NAVIGATION HEADER REMOVED ══ */}
-
-        <div className="space-y-4 sm:space-y-6 md:space-y-8">
         {!activeTab && (
-          <div className="rounded-none sm:rounded-[2rem] border-y sm:border border-white/50 bg-white/80 backdrop-blur-xl p-5 sm:p-8 md:p-10 shadow-2xl">
+          <div className="rounded-none sm:rounded-[2rem] border-y sm:border border-white/50 bg-white/80 backdrop-blur-xl p-3 sm:p-6 md:p-8 shadow-2xl">
+            {/* Desktop Heading */}
+            <h2 className="hidden md:block text-xl font-black text-slate-800 uppercase tracking-wider mb-6">Examination Module</h2>
+            
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
               {/* Examinations List - Visible only for Admin */}
               {isAdmin && (
