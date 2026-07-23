@@ -179,7 +179,8 @@ export const ProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
     // Allow DOM to process
     await new Promise(resolve => setTimeout(resolve, 100));
     
-    const imgData = await toJpeg(el, { skipFonts: true, pixelRatio: 2, quality: 0.95, backgroundColor: '#ffffff' });
+    // Lower pixelRatio to prevent canvas memory limits on mobile devices
+    const imgData = await toJpeg(el, { skipFonts: true, pixelRatio: 1, quality: 0.9, backgroundColor: '#ffffff' });
     const pdf = new jsPDF('p', 'mm', 'a4');
     const pdfWidth = pdf.internal.pageSize.getWidth();
     const pdfHeight = (el.offsetHeight * pdfWidth) / el.offsetWidth;
@@ -286,7 +287,8 @@ export const ProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
         // Update toast progress every 5 cards
         if (i % 5 === 0) toast.loading(`Generated ${i} of ${templates.length}...`, { id: loadingToastId });
         
-        const imgData = await toJpeg(el, { skipFonts: true, pixelRatio: 1.5, quality: 0.8, backgroundColor: '#ffffff' });
+        // Lower pixelRatio for batch generation as well
+        const imgData = await toJpeg(el, { skipFonts: true, pixelRatio: 1, quality: 0.8, backgroundColor: '#ffffff' });
         
         const pdf = new jsPDF('p', 'mm', 'a4');
         const pdfWidth = pdf.internal.pageSize.getWidth();
