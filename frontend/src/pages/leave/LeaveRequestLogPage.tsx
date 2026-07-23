@@ -305,3 +305,4 @@ export const LeaveRequestLogPage: React.FC = () => {
 };
 
 export default LeaveRequestLogPage;
+

@@ -346,3 +346,4 @@ export const ResultsTab: React.FC<{ exams: any[] }> = ({ exams }) => {
     </div>
   );
 };
+

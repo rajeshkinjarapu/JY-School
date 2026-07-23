@@ -146,3 +146,4 @@ export const AttendanceReportPage: React.FC = () => {
   );
 };
 export default AttendanceReportPage;
+

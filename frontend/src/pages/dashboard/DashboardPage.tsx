@@ -710,3 +710,4 @@ const StudentView: React.FC<{ data: any }> = ({ data }) => {
 };
 
 export default DashboardPage;
+

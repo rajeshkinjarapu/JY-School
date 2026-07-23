@@ -198,3 +198,4 @@ export const LeaveTypePage: React.FC = () => {
 };
 
 export default LeaveTypePage;
+

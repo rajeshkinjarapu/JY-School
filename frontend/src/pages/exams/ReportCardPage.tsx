@@ -9,3 +9,4 @@ const ReportCardPage: React.FC = () => {
 };
 
 export default ReportCardPage;
+

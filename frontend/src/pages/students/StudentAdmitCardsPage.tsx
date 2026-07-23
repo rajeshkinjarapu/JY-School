@@ -80,3 +80,4 @@ export const StudentAdmitCardsPage: React.FC = () => {
 };
 
 export default StudentAdmitCardsPage;
+

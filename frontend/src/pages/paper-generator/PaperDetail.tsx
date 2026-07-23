@@ -383,3 +383,4 @@ export const PaperDetail: React.FC = () => {
     </div>
   );
 };
+

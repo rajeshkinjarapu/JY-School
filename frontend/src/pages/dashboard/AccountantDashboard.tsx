@@ -672,3 +672,4 @@ export const AccountantDashboard: React.FC = () => {
 };
 
 export default AccountantDashboard;
+

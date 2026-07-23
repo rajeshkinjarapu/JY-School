@@ -499,3 +499,4 @@ export const OMRScannerPage: React.FC = () => {
     </div>
   );
 };
+

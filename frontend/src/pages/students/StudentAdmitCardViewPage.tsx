@@ -86,3 +86,4 @@ export const StudentAdmitCardViewPage: React.FC = () => {
     </div>
   );
 };
+

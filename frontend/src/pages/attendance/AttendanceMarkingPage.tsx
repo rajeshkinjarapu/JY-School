@@ -336,3 +336,4 @@ export const AttendanceMarkingPage: React.FC = () => {
   );
 };
 export default AttendanceMarkingPage;
+

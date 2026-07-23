@@ -243,3 +243,4 @@ export const FeeStructurePage: React.FC = () => {
   );
 };
 export default FeeStructurePage;
+

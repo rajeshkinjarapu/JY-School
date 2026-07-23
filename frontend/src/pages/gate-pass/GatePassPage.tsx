@@ -515,3 +515,4 @@ const GatePassPage: React.FC = () => {
 };
 
 export default GatePassPage;
+

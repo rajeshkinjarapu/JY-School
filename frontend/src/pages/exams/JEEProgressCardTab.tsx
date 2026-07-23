@@ -202,7 +202,7 @@ export const JEEProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
     
     let canShareNatively = false;
     try {
-      if (navigator.share && navigator.canShare) {
+      if ("share" in navigator && "canShare" in navigator) {
         canShareNatively = navigator.canShare({ files: [new File([''], 't.pdf', { type: 'application/pdf' })] });
       }
     } catch (e) {}
@@ -793,3 +793,5 @@ export const JEEProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
     </div>
   );
 };
+
+

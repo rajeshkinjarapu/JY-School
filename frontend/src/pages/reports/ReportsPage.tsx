@@ -280,3 +280,4 @@ export const ReportsPage: React.FC = () => {
   );
 };
 export default ReportsPage;
+

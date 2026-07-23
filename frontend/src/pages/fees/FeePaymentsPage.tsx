@@ -643,3 +643,4 @@ export const FeePaymentsPage: React.FC = () => {
   );
 };
 export default FeePaymentsPage;
+

@@ -351,3 +351,4 @@ const SalaryPage: React.FC = () => {
 };
 
 export default SalaryPage;
+

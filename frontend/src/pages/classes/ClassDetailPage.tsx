@@ -166,3 +166,4 @@ export const ClassDetailPage: React.FC = () => {
   );
 };
 export default ClassDetailPage;
+

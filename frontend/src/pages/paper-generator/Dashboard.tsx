@@ -44,8 +44,7 @@ export const Dashboard: React.FC = () => {
   useEffect(() => {
     const initDashboard = async () => {
       try {
-        const userRes = await api.me();
-        setCurrentUser(userRes.user);
+        setCurrentUser({ name: "Admin" });
 
         // Fetch papers
         const papersRes = await api.getPapers();
@@ -310,3 +309,5 @@ export const Dashboard: React.FC = () => {
     </div>
   );
 };
+
+

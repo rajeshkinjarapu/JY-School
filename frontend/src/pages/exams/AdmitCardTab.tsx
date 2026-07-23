@@ -813,3 +813,4 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
     </div>
   );
 };
+
