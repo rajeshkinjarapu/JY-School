@@ -63,18 +63,7 @@ export const OfficeToolsDashboard = () => {
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="flex justify-between items-center bg-white p-6 rounded-2xl shadow-sm border border-slate-100 relative overflow-hidden">
-        <div className="absolute top-0 right-0 -mt-10 -mr-10 w-40 h-40 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-full blur-3xl opacity-60 pointer-events-none"></div>
-        <div className="relative z-10">
-          <h1 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-indigo-800 to-purple-700 tracking-tight flex items-center gap-3">
-            <span className="p-2.5 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-xl shadow-sm border border-white">
-              <Briefcase className="w-6 h-6 text-indigo-600" strokeWidth={2.5} />
-            </span>
-            Office Tools
-          </h1>
-          <p className="text-sm text-slate-500 mt-2 font-medium">Manage and access all office utility tools from this professional dashboard.</p>
-        </div>
-      </div>
+
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
         {tools.map((tool, index) => {
