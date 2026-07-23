@@ -52,7 +52,7 @@ export const Dashboard: React.FC = () => {
         setPapers(papersRes.papers);
 
         // Fetch questions count for stats
-        const questionsRes = await api.getQuestions();
+        const questionsRes = await api.get('/api/questions', { params:  });
         const qs = questionsRes.questions;
         
         const phys = qs.filter((q: any) => q.subject === 'Physics').length;

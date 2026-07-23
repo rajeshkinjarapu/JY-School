@@ -40,7 +40,7 @@ export const QuestionForm: React.FC<QuestionFormProps> = ({ questionId, initialD
   useEffect(() => {
     const fetchMeta = async () => {
       try {
-        const res = await api.getQuestionMeta();
+        const res = await api.get('/api/questions/meta');
         const currentMeta = res.meta[formData.subject] || { chapters: [], topics: [] };
         setSuggestions(currentMeta);
       } catch (err) {
@@ -56,7 +56,7 @@ export const QuestionForm: React.FC<QuestionFormProps> = ({ questionId, initialD
       const fetchQuestion = async () => {
         setLoading(true);
         try {
-          const res = await api.getQuestion(questionId);
+          const res = await api.get(/api/questions/$(questionId));
           const q = res.question;
           setFormData({
             subject: q.subject,
@@ -131,7 +131,7 @@ export const QuestionForm: React.FC<QuestionFormProps> = ({ questionId, initialD
     if (!imageFile) return;
     setUploadingImage(true);
     try {
-      const res = await api.uploadImage(imageFile);
+      const res = await api.post('/api/questions/upload', imageFile);
       setFormData((prev) => ({ ...prev, imageUrl: res.imageUrl }));
       setImageFile(null);
     } catch (err: any) {
@@ -155,14 +155,14 @@ export const QuestionForm: React.FC<QuestionFormProps> = ({ questionId, initialD
       let finalData = { ...formData };
       if (imageFile) {
         // Automatically upload image first if selected
-        const uploadRes = await api.uploadImage(imageFile);
+        const uploadRes = await api.post('/api/questions/upload', imageFile);
         finalData.imageUrl = uploadRes.imageUrl;
       }
 
       if (questionId) {
-        await api.updateQuestion(questionId, finalData);
+        await api.put(/api/questions/$(questionId), finalData);
       } else {
-        await api.createQuestion(finalData);
+        await api.post('/api/questions', finalData);
       }
       onSuccess();
     } catch (err: any) {
