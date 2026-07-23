@@ -1,5 +1,5 @@
 import React from 'react';
-import { User, MapPin, Phone, GraduationCap, Trophy, CheckCircle2, Award } from 'lucide-react';
+import { Award } from 'lucide-react';
 
 interface ProgressCardTemplateProps {
   data?: any;
@@ -21,365 +21,250 @@ export const ProgressCardTemplate: React.FC<ProgressCardTemplateProps> = ({
     mobile: data.mobile || "+91 9876543210",
     rank: data.rank || "1",
     photo: data.photo || "",
+    total: data.total || 0,
+    academicYear: data.academicYear || "2023-2024",
+    location: data.location || "Narasannapeta",
     marks: data.marks && data.marks.length > 0 ? data.marks : [
       { subject: "Mathematics", maxMarks: 100, obtained: 98 },
       { subject: "Physics", maxMarks: 100, obtained: 95 },
       { subject: "Chemistry", maxMarks: 100, obtained: 92 },
-      { subject: "Biology", maxMarks: 100, obtained: 89 },
-      { subject: "English", maxMarks: 100, obtained: 85 }
     ]
   };
 
-  const totalMaxMarks = safeData.marks.reduce((acc: number, curr: any) => acc + (curr.maxMarks || 100), 0);
-  const totalObtained = safeData.marks.reduce((acc: number, curr: any) => acc + curr.obtained, 0);
-  const percentage = totalMaxMarks > 0 ? ((totalObtained / totalMaxMarks) * 100).toFixed(1) : "0.0";
-  const percentNumber = Number(percentage);
+  const TOTAL_MAX_MARKS = safeData.marks.reduce((sum: number, m: any) => sum + (Number(m.maxMarks) || 100), 0);
+  const totalPct = TOTAL_MAX_MARKS > 0 ? ((safeData.total / TOTAL_MAX_MARKS) * 100).toFixed(1) : '0.0';
+  const barWidth = Math.min(Number(totalPct), 100);
+  const PASS_THRESHOLD = 35;
 
-  const API_BASE = settings?.apiBase || 'http://localhost:5000';
+  const examTitle = settings?.examNameOverride || exam?.name || 'EXAMINATION RESULT CARD';
+  const logoUrl = settings?.logoUrl;
+  const teacherSignatureUrl = settings?.teacherSignatureUrl;
+  const principalSignatureUrl = settings?.signatureUrl;
+
+  const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
   const resolveUrl = (url: string) => {
     if (!url) return '';
     if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) return url;
     return `${API_BASE}${url}`;
   };
-  
-  const logoUrl = resolveUrl(settings?.logoUrl); 
-  const principalSignatureUrl = resolveUrl(settings?.signatureUrl || '');
-  const teacherSignatureUrl = resolveUrl(settings?.teacherSignatureUrl || '');
-
-  let performanceRating = "Needs Improvement";
-  let performanceColor = "bg-rose-100 text-rose-700 border-rose-200";
-  let progressColor = "from-rose-500 to-pink-500";
-  let gradeLetter = "F";
-  let gradeColor = "text-rose-600";
-  
-  if (percentNumber >= 90) { 
-    performanceRating = "Outstanding"; 
-    performanceColor = "bg-emerald-100 text-emerald-700 border-emerald-200"; 
-    progressColor = "from-emerald-400 to-teal-500";
-    gradeLetter = "A+";
-    gradeColor = "text-emerald-500";
-  } else if (percentNumber >= 75) { 
-    performanceRating = "Excellent"; 
-    performanceColor = "bg-blue-100 text-blue-700 border-blue-200"; 
-    progressColor = "from-blue-400 to-indigo-500";
-    gradeLetter = "A";
-    gradeColor = "text-blue-500";
-  } else if (percentNumber >= 60) { 
-    performanceRating = "Very Good"; 
-    performanceColor = "bg-purple-100 text-purple-700 border-purple-200"; 
-    progressColor = "from-purple-400 to-fuchsia-500";
-    gradeLetter = "B";
-    gradeColor = "text-purple-500";
-  } else if (percentNumber >= 40) { 
-    performanceRating = "Good"; 
-    performanceColor = "bg-amber-100 text-amber-700 border-amber-200"; 
-    progressColor = "from-amber-400 to-orange-500";
-    gradeLetter = "C";
-    gradeColor = "text-amber-500";
-  }
-
-  const getSubjectGrade = (obtained: number, max: number) => {
-    const p = (obtained / max) * 100;
-    if (p >= 90) return { grade: "A+", color: "bg-emerald-100 text-emerald-700 border-emerald-200" };
-    if (p >= 80) return { grade: "A", color: "bg-blue-100 text-blue-700 border-blue-200" };
-    if (p >= 70) return { grade: "B", color: "bg-purple-100 text-purple-700 border-purple-200" };
-    if (p >= 50) return { grade: "C", color: "bg-amber-100 text-amber-700 border-amber-200" };
-    return { grade: "D", color: "bg-rose-100 text-rose-700 border-rose-200" };
-  };
 
   return (
-    <div className="w-full max-w-[210mm] min-h-[297mm] mx-auto bg-white relative box-border flex flex-col shadow-2xl overflow-hidden print:shadow-none font-sans" style={{ pageBreakInside: 'avoid', pageBreakAfter: 'always' }}>
-      
-      {/* ===== VIBRANT BACKGROUND BLOBS ===== */}
-      <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[30%] bg-gradient-to-br from-indigo-500/20 to-purple-500/20 rounded-full blur-3xl pointer-events-none z-0"></div>
-      <div className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[40%] bg-gradient-to-tl from-pink-500/20 to-orange-400/20 rounded-full blur-3xl pointer-events-none z-0"></div>
-      <div className="absolute top-[40%] left-[20%] w-[30%] h-[20%] bg-gradient-to-r from-cyan-400/10 to-blue-500/10 rounded-full blur-3xl pointer-events-none z-0"></div>
-      
-      {/* Decorative Border */}
-      <div className="absolute inset-0 border-[8px] border-transparent pointer-events-none z-50 rounded-lg" style={{ background: 'linear-gradient(white, white) padding-box, linear-gradient(135deg, #6366f1, #ec4899, #eab308) border-box' }}></div>
+    <div className="w-[794px] h-[1123px] bg-white rounded-xl shadow-2xl flex flex-col relative overflow-hidden font-sans print:shadow-none mx-auto shrink-0" style={{ fontFamily: "'Segoe UI', 'Roboto', system-ui, -apple-system, sans-serif" }}>
+      <style>{`
+        .jee-card { background: #ffffff; height: 100%; display: flex; flex-direction: column; position: relative; }
+        .jee-card .top-bar { height: 8px; background: linear-gradient(90deg, #0b1a33 0%, #1a4a7a 40%, #d4a017 80%, #f39c12 100%); flex-shrink: 0; }
+        .jee-card .card-header { display: flex; align-items: center; padding: 18px 32px 12px 32px; gap: 16px; flex-shrink: 0; border-bottom: 3px solid #f39c12; }
+        .jee-card .card-header .logo-wrap { width: 100px; height: 100px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .jee-card .card-header .logo-wrap img { max-width: 100%; max-height: 100px; object-fit: contain; }
+        .jee-card .card-header .title-wrap { text-align: center; flex: 1; padding: 0 8px; }
+        .jee-card .card-header .title-wrap .school-name { font-size: 28px; font-weight: 900; color: #0b1a33; letter-spacing: 1.5px; font-family: 'Times New Roman', 'Georgia', serif; line-height: 1.2; white-space: nowrap; }
+        .jee-card .card-header .title-wrap .school-sub { font-size: 16px; font-weight: 400; color: #1a4a7a; letter-spacing: 0.8px; margin: 2px 0; white-space: nowrap; }
+        .jee-card .card-header .title-wrap .school-address { font-size: 13px; font-weight: 400; color: #5a7a8a; letter-spacing: 0.3px; margin-top: 2px; white-space: nowrap; }
+        .jee-card .card-header .title-wrap .exam-title { font-size: 22px; font-weight: 400; color: #0b1a33; letter-spacing: 2px; margin: 6px 0 0; text-transform: uppercase; white-space: nowrap; }
+        .jee-card .card-header .title-wrap .result-card-label { font-size: 18px; font-weight: 400; color: #d4a017; letter-spacing: 4px; margin-top: 2px; text-transform: uppercase; white-space: nowrap; }
+        .jee-card .card-header .spacer { width: 100px; flex-shrink: 0; }
+        .jee-card .deco-line { display: flex; align-items: center; justify-content: center; gap: 14px; padding: 6px 32px 10px 32px; flex-shrink: 0; }
+        .jee-card .deco-line .ornament { font-size: 18px; color: #d4a017; flex-shrink: 0; }
+        .jee-card .deco-line .line { flex: 1; max-width: 140px; height: 2px; background: linear-gradient(90deg, transparent, #d4a017, transparent); }
+        .jee-card .student-info { margin: 6px 28px 14px 28px; border: 2px solid #d4a017; border-radius: 12px; overflow: hidden; background: #ffffff; box-shadow: 0 4px 16px rgba(212, 160, 23, 0.12); display: grid; grid-template-columns: 1fr auto; flex-shrink: 0; }
+        .jee-card .student-info .info-details { display: flex; flex-direction: column; }
+        .jee-card .student-info .info-row { display: grid; grid-template-columns: 150px 1fr; border-bottom: 1px solid #f5ede4; }
+        .jee-card .student-info .info-row:last-child { border-bottom: none; }
+        .jee-card .student-info .info-row .label { background: #fdf9f4; padding: 7px 18px; font-weight: 600; font-size: 13px; color: #6a3a1a; border-right: 1px solid #f5ede4; display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+        .jee-card .student-info .info-row .value { padding: 7px 18px; font-weight: 500; font-size: 14px; color: #0b1a33; background: #ffffff; display: flex; align-items: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .jee-card .student-info .info-row:nth-child(even) .value { background: #fefcf9; }
+        .jee-card .student-info .photo-col { padding: 14px 20px 14px 12px; display: flex; align-items: flex-start; justify-content: center; border-left: 2px solid #f5ede4; background: #fefcf9; min-width: 130px; }
+        .jee-card .student-info .photo-col img { width: 95px; height: 114px; object-fit: cover; border: 3px solid #d4a017; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08); border-radius: 6px; background: #fff; flex-shrink: 0; }
+        .jee-card .student-info .photo-col .placeholder-photo { width: 95px; height: 114px; background: #ede8e0; display: flex; align-items: center; justify-content: center; color: #8a7a6a; font-size: 44px; border: 3px dashed #c8b8a8; border-radius: 6px; flex-shrink: 0; }
+        .jee-card .perf-table-wrap { margin: 4px 28px 12px 28px; padding: 0; flex-shrink: 0; }
+        .jee-card .perf-table-wrap .perf-title { font-size: 16px; font-weight: 700; color: #0b1a33; margin-bottom: 10px; display: flex; align-items: center; gap: 12px; white-space: nowrap; }
+        .jee-card .perf-table-wrap .perf-title .icon { font-size: 22px; }
+        .jee-card .perf-table-wrap .perf-title .max-hint { margin-left: auto; font-size: 13px; font-weight: 400; color: #6a8aaa; white-space: nowrap; }
+        .perf-table { width: 100%; border-collapse: collapse; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04); font-size: 14px; }
+        .perf-table thead tr { background: linear-gradient(135deg, #0b1a33, #1a3a5a); }
+        .perf-table thead th { color: #ffffff; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; padding: 10px 16px; text-align: center; white-space: nowrap; font-size: 13px; border: 1px solid #1a3a5a; }
+        .perf-table tbody td { padding: 9px 16px; text-align: center; white-space: nowrap; border: 1px solid #e8e0d8; background: #fff; font-weight: 500; color: #0b1a33; }
+        .perf-table tbody tr:nth-child(even) td { background: #fdfcf9; }
+        .perf-table tbody .subject-label { font-weight: 600; text-align: left; padding-left: 20px; color: #1a3a5a; }
+        .perf-table tbody .marks-cell { font-weight: 700; font-size: 16px; }
+        .perf-table tbody .max-cell { color: #6a8aaa; font-weight: 400; }
+        .perf-table tbody .pct-cell { font-weight: 600; }
+        .perf-table tbody .total-row td { background: #fdf9f4 !important; font-weight: 700; font-size: 15px; border-top: 2.5px solid #d4a017; border-bottom: 2.5px solid #d4a017; }
+        .perf-table tbody .total-row .total-label { text-align: left; padding-left: 20px; color: #0b1a33; font-weight: 800; }
+        .perf-table tbody .total-row .marks-cell { font-size: 18px; color: #0b1a33; }
+        .jee-card .score-bar-wrap { margin: 8px 28px 18px 28px; background: #fff; border: 1px solid #e6edf4; border-radius: 10px; padding: 14px 20px; flex-shrink: 0; box-shadow: 0 4px 12px rgba(0,0,0,0.02); }
+        .jee-card .score-bar { height: 16px; background: #eef2f7; border-radius: 20px; overflow: hidden; position: relative; border: 1px solid #dce4ed; }
+        .jee-card .score-bar .fill { height: 100%; background: linear-gradient(90deg, #1a4a7a, #3498db); border-radius: 20px; transition: width 0.5s ease; position: relative; }
+        .jee-card .score-bar .fill::after { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0) 100%); background-size: 200% 100%; animation: shimmer 2s infinite linear; }
+        @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+        .jee-card .score-labels { display: flex; justify-content: space-between; margin-top: 8px; font-size: 12px; font-weight: 600; color: #6a8aaa; }
+        .jee-card .result-footer { margin: auto 28px 20px 28px; padding-top: 16px; border-top: 2px dashed #e6edf4; display: flex; justify-content: space-between; align-items: flex-end; }
+        .jee-card .result-footer .left { display: flex; flex-direction: column; gap: 4px; }
+        .jee-card .result-footer .total-label { font-size: 15px; font-weight: 700; color: #3a5a7a; }
+        .jee-card .result-footer .percentage { font-size: 42px; font-weight: 900; color: #0b1a33; line-height: 1; letter-spacing: -1px; }
+        .jee-card .result-footer .signatures { display: flex; gap: 40px; }
+        .jee-card .result-footer .sig-block { display: flex; flex-direction: column; align-items: center; width: 140px; }
+        .jee-card .result-footer .sig-block img { max-width: 140px; max-height: 50px; object-fit: contain; margin-bottom: 6px; }
+        .jee-card .result-footer .sig-block .sig-placeholder { width: 100%; height: 50px; border-bottom: 1.5px dashed #c8d6e4; margin-bottom: 6px; }
+        .jee-card .result-footer .sig-label { font-size: 13px; font-weight: 600; color: #1a3a5a; text-align: center; }
+        .jee-card .card-footer-note { background: #0b1a33; color: #aabaca; font-size: 11px; text-align: center; padding: 8px; font-weight: 500; letter-spacing: 0.5px; flex-shrink: 0; }
+      `}</style>
 
-      <div className="w-full h-full relative flex flex-col z-10 p-4 print:p-2">
-        
-        {/* ===== VIBRANT HEADER ===== */}
-        <div className="rounded-2xl overflow-hidden shadow-[0_10px_30px_rgba(99,102,241,0.2)] relative mt-2 mx-2 border border-white/50 bg-gradient-to-r from-violet-600 via-fuchsia-600 to-rose-500">
-          <div className="absolute inset-0 bg-white/5 opacity-10"></div>
-          
-          <div className="px-6 py-8 sm:px-10 flex flex-col sm:flex-row items-center justify-between gap-6 relative z-10">
-            {/* Logo */}
-            <div className="w-20 h-20 bg-white/20 rounded-2xl flex items-center justify-center p-2 backdrop-blur-md shadow-inner shrink-0">
+      <div className="jee-card">
+        <div className="top-bar"></div>
+
+        <div className="card-header">
+            <div className="logo-wrap">
               {logoUrl ? (
-                <img src={logoUrl} alt="School Logo" className="h-20 w-20 object-contain drop-shadow-lg" />
+                <img src={resolveUrl(logoUrl)} alt="Logo" />
               ) : (
-                <GraduationCap className="w-14 h-14 text-fuchsia-600" />
+                <Award className="w-12 h-12 text-[#1a4a7a]" />
               )}
             </div>
-            
-            {/* School Info */}
-            <div className="flex-1 text-center relative z-10">
-              <h1 className="text-3xl sm:text-4xl font-black text-white mb-2 drop-shadow-lg tracking-tight">
-                SRI VENKATESWARA JY SCHOOL
-              </h1>
-              <div className="inline-block bg-white/20 backdrop-blur-md px-6 py-1.5 rounded-full border border-white/30 shadow-inner mb-3">
-                <p className="text-xs sm:text-sm font-bold tracking-[0.2em] text-white uppercase drop-shadow-md">
-                  IIT-JEE • NEET • Olympiads
-                </p>
-              </div>
-              
-              <div className="flex items-center justify-center gap-1.5 text-[11px] font-semibold text-white/90">
-                <MapPin className="w-3.5 h-3.5 text-rose-200" />
-                <span className="tracking-wide">SVL Paradise Campus, Narasannapeta, AP</span>
-              </div>
+            <div className="title-wrap">
+                <div className="school-name">SRI VENKATESWARA JY SCHOOL</div>
+                <div className="school-sub">(IIT-JEE / NEET Foundation · Olympiads)</div>
+                <div className="school-address">Opp. Hero Showroom, SVL Paradise Campus, Narasannapeta</div>
+                <div className="exam-title">{examTitle}</div>
+                <div className="result-card-label">✦ RESULT CARD ✦</div>
             </div>
-          </div>
+            <div className="spacer"></div>
         </div>
 
-        {/* ===== EXAM TITLE BADGE ===== */}
-        <div className="relative flex justify-center -mt-5 z-20">
-          <div className="bg-gradient-to-r from-amber-400 to-orange-500 text-white font-black px-10 py-3 rounded-full shadow-[0_8px_25px_rgba(245,158,11,0.5)] border-4 border-white text-sm sm:text-base tracking-[0.2em] uppercase transform transition-transform hover:scale-105">
-            {exam?.name || 'Academic Progress Report'}
-          </div>
+        <div className="deco-line">
+            <span className="ornament">✦</span>
+            <div className="line"></div>
+            <span className="ornament" style={{ color: '#d4a017' }}>★</span>
+            <div className="line"></div>
+            <span className="ornament">✦</span>
         </div>
 
-        {/* ===== MAIN CONTENT ===== */}
-        <div className="flex-grow px-4 sm:px-8 py-8 flex flex-col gap-6">
-          
-          {/* ===== COLORFUL STUDENT INFO ===== */}
-          <div className="flex flex-col sm:flex-row gap-6 items-stretch bg-white/70 backdrop-blur-xl rounded-3xl shadow-[0_8px_30px_rgba(0,0,0,0.06)] border border-white p-3 relative overflow-hidden">
-            {/* Glossy highlight */}
-            <div className="absolute top-0 left-0 w-full h-1/2 bg-gradient-to-b from-white/60 to-transparent pointer-events-none"></div>
-
-            {/* Details */}
-            <div className="flex-grow p-4 pr-2 relative z-10">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-6 h-full content-center">
-                
-                <div className="col-span-1 md:col-span-2">
-                  <div className="inline-block px-3 py-1 bg-indigo-100 text-indigo-700 rounded-lg text-[10px] font-extrabold uppercase tracking-widest mb-1.5">Student Name</div>
-                  <p className="text-xl sm:text-2xl font-black text-gray-800 uppercase tracking-tight">{safeData.studentName}</p>
+        <div className="student-info">
+            <div className="info-details">
+                <div className="info-row">
+                    <div className="label">👤 Student Name</div>
+                    <div className="value">{safeData.studentName}</div>
                 </div>
-                
-                <div>
-                  <div className="inline-block px-3 py-1 bg-rose-100 text-rose-700 rounded-lg text-[9px] font-extrabold uppercase tracking-widest mb-1.5">Roll No / ID</div>
-                  <p className="text-base font-bold text-gray-800">{safeData.rollNo}</p>
+                <div className="info-row">
+                    <div className="label">🆔 Student ID</div>
+                    <div className="value">{safeData.rollNo}</div>
                 </div>
-                
-                <div>
-                  <div className="inline-block px-3 py-1 bg-emerald-100 text-emerald-700 rounded-lg text-[9px] font-extrabold uppercase tracking-widest mb-1.5">Class & Section</div>
-                  <div className="flex items-center gap-2">
-                    <span className="font-bold text-gray-800 text-base">{safeData.className}</span>
-                    <span className="text-gray-300">|</span>
-                    <span className="font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md">{safeData.section || 'A'}</span>
+                <div className="info-row">
+                    <div className="label">📚 Class</div>
+                    <div className="value">{safeData.className}</div>
+                </div>
+                <div className="info-row">
+                    <div className="label">📖 Section</div>
+                    <div className="value">{safeData.section}</div>
+                </div>
+                <div className="info-row">
+                    <div className="label">📞 Mobile</div>
+                    <div className="value">{safeData.mobile}</div>
+                </div>
+                <div className="info-row">
+                    <div className="label">📅 Academic Year</div>
+                    <div className="value">{safeData.academicYear}</div>
+                </div>
+                <div className="info-row">
+                    <div className="label">📍 Location</div>
+                    <div className="value">{safeData.location}</div>
+                </div>
+                {safeData.rank && (
+                  <div className="info-row">
+                    <div className="label">🏅 Class Rank</div>
+                    <div className="value">#{safeData.rank}</div>
                   </div>
-                </div>
-
-                <div>
-                  <div className="inline-block px-3 py-1 bg-amber-100 text-amber-700 rounded-lg text-[9px] font-extrabold uppercase tracking-widest mb-1.5">Contact</div>
-                  <p className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                    <Phone className="w-4 h-4 text-amber-500" />
-                    {safeData.mobile || 'N/A'}
-                  </p>
-                </div>
-
-                <div>
-                  <div className="inline-block px-3 py-1 bg-purple-100 text-purple-700 rounded-lg text-[9px] font-extrabold uppercase tracking-widest mb-1.5">Class Rank</div>
-                  <div className="flex items-center gap-2">
-                    <div className="bg-purple-100 p-1.5 rounded-xl text-purple-600 shadow-inner">
-                      <Trophy className="w-5 h-5" />
-                    </div>
-                    <span className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-500">#{safeData.rank || '-'}</span>
-                  </div>
-                </div>
-              </div>
+                )}
             </div>
-
-            {/* Photo */}
-            <div className="w-[150px] shrink-0 p-2 flex items-center justify-center relative z-10">
-              <div className="w-full aspect-[3/4] bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl shadow-[0_8px_20px_rgba(99,102,241,0.15)] border-4 border-white overflow-hidden flex items-center justify-center relative group">
+            <div className="photo-col">
                 {safeData.photo ? (
-                  <img src={resolveUrl(safeData.photo)} alt="Student" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                  <img src={resolveUrl(safeData.photo)} alt="Student Photo" />
                 ) : (
-                  <div className="w-full h-full flex flex-col items-center justify-center gap-3">
-                    <User className="w-14 h-14 text-indigo-300" />
-                    <span className="text-[10px] font-black text-indigo-400 uppercase tracking-widest bg-white/50 px-3 py-1 rounded-full">Photo</span>
-                  </div>
+                  <div className="placeholder-photo">📷</div>
                 )}
-              </div>
             </div>
-          </div>
+        </div>
 
-          {/* ===== VIBRANT MARKS TABLE ===== */}
-          <div>
-            <div className="flex items-center gap-3 mb-4 pl-2">
-              <Award className="w-6 h-6 text-fuchsia-500" />
-              <h3 className="font-black text-gray-800 text-lg uppercase tracking-wider">Scholastic Performance</h3>
+        <div className="perf-table-wrap">
+            <div className="perf-title">
+                <span className="icon">📊</span>
+                <span>Performance Summary</span>
+                <span className="max-hint">Max Marks: {TOTAL_MAX_MARKS}</span>
             </div>
-            
-            <div className="bg-white/80 backdrop-blur-md rounded-3xl overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.05)] border border-white">
-              <table className="w-full text-sm text-left border-collapse">
+
+            <table className="perf-table">
                 <thead>
-                  <tr className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white">
-                    <th className="py-4 px-5 font-black uppercase tracking-widest text-[11px] text-center w-16">#</th>
-                    <th className="py-4 px-5 font-black uppercase tracking-widest text-[11px]">Subject</th>
-                    <th className="py-4 px-5 font-black uppercase tracking-widest text-[11px] text-center w-28">Max</th>
-                    <th className="py-4 px-5 font-black uppercase tracking-widest text-[11px] text-center w-28">Obtained</th>
-                    <th className="py-4 px-5 font-black uppercase tracking-widest text-[11px] text-center w-28">Grade</th>
-                  </tr>
+                    <tr>
+                        <th style={{ textAlign: 'left', paddingLeft: '20px' }}>Subject</th>
+                        <th>Marks</th>
+                        <th>Max Marks</th>
+                        <th>%</th>
+                    </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100/80">
-                  {safeData.marks.map((m: any, idx: number) => {
-                    const { grade, color } = getSubjectGrade(m.obtained, m.maxMarks || 100);
-                    return (
-                      <tr key={idx} className="hover:bg-indigo-50/50 transition-colors bg-white/40">
-                        <td className="py-3.5 px-5 text-center text-gray-400 font-bold text-xs">{String(idx + 1).padStart(2, '0')}</td>
-                        <td className="py-3.5 px-5 font-bold text-gray-700 text-base">{m.subject}</td>
-                        <td className="py-3.5 px-5 text-center text-gray-500 font-semibold">{m.maxMarks || 100}</td>
-                        <td className="py-3.5 px-5 text-center font-black text-gray-800 text-lg">{m.obtained}</td>
-                        <td className="py-3.5 px-5 text-center">
-                          <span className={`inline-flex items-center justify-center w-10 h-10 rounded-xl font-black text-sm shadow-sm border ${color}`}>
-                            {grade}
-                          </span>
-                        </td>
-                      </tr>
-                    );
-                  })}
+                <tbody>
+                    {safeData.marks.map((sub: any, i: number) => {
+                      const max = Number(sub.maxMarks) || 100;
+                      const obt = Number(sub.obtained) || 0;
+                      const subPct = max > 0 ? ((obt / max) * 100).toFixed(1) : '0.0';
+                      return (
+                        <tr key={i}>
+                            <td className="subject-label"><span className="sub-icon">📘</span> {sub.subject}</td>
+                            <td className="marks-cell">{obt}</td>
+                            <td className="max-cell">{max}</td>
+                            <td className="pct-cell">{subPct}%</td>
+                        </tr>
+                      );
+                    })}
+                    <tr className="total-row">
+                        <td className="total-label">📌 TOTAL</td>
+                        <td className="marks-cell">{safeData.total}</td>
+                        <td className="max-cell">{TOTAL_MAX_MARKS}</td>
+                        <td className="pct-cell">{totalPct}%</td>
+                    </tr>
                 </tbody>
-              </table>
-            </div>
-          </div>
-
-          {/* ===== COLORFUL SUMMARY ===== */}
-          <div className="grid grid-cols-12 gap-5 mt-2">
-            
-            {/* Grand Total & Percentage */}
-            <div className="col-span-12 md:col-span-6 bg-gradient-to-br from-indigo-600 via-purple-600 to-fuchsia-600 rounded-3xl p-6 text-white shadow-[0_10px_30px_rgba(147,51,234,0.3)] relative overflow-hidden flex flex-col justify-center border border-white/20">
-              {/* Glass decorative circles */}
-              <div className="absolute top-[-20%] right-[-10%] w-40 h-40 bg-white/20 rounded-full blur-2xl"></div>
-              <div className="absolute bottom-[-20%] left-[-10%] w-32 h-32 bg-cyan-400/30 rounded-full blur-2xl"></div>
-              
-              <div className="relative z-10 flex flex-col sm:flex-row justify-between items-center gap-6">
-                <div className="text-center sm:text-left bg-black/10 p-4 rounded-2xl backdrop-blur-sm border border-white/10 w-full sm:w-auto flex-1">
-                  <span className="text-[10px] font-black text-indigo-200 uppercase tracking-widest block mb-1">Grand Total</span>
-                  <div className="flex items-baseline justify-center sm:justify-start gap-1">
-                    <span className="text-4xl font-black text-white drop-shadow-md">{totalObtained}</span>
-                    <span className="text-sm font-bold text-indigo-200">/ {totalMaxMarks}</span>
-                  </div>
-                </div>
-                
-                <div className="hidden sm:block h-16 w-[2px] bg-white/20 rounded-full"></div>
-                
-                <div className="text-center sm:text-right bg-white/10 p-4 rounded-2xl backdrop-blur-sm border border-white/20 w-full sm:w-auto shadow-inner flex-1">
-                  <span className="text-[10px] font-black text-fuchsia-200 uppercase tracking-widest block mb-1">Percentage</span>
-                  <div className="flex items-baseline justify-center sm:justify-end gap-0.5">
-                    <span className="text-4xl font-black text-white drop-shadow-md">{percentage}</span>
-                    <span className="text-lg font-bold text-fuchsia-300">%</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Grade & Performance */}
-            <div className="col-span-6 md:col-span-3 bg-white/80 backdrop-blur-md rounded-3xl p-5 shadow-[0_8px_30px_rgba(0,0,0,0.06)] border border-white flex flex-col justify-center items-center relative overflow-hidden">
-              <div className="absolute top-0 w-full h-1 bg-gradient-to-r from-emerald-400 to-teal-400"></div>
-              <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Final Grade</span>
-              <span className={`text-5xl font-black ${gradeColor} mb-3 drop-shadow-sm`}>{gradeLetter}</span>
-              <span className={`text-[10px] font-black uppercase tracking-widest px-4 py-1.5 rounded-xl border shadow-sm ${performanceColor}`}>
-                {performanceRating}
-              </span>
-            </div>
-
-            {/* Progress Bar */}
-            <div className="col-span-6 md:col-span-3 bg-white/80 backdrop-blur-md rounded-3xl p-5 shadow-[0_8px_30px_rgba(0,0,0,0.06)] border border-white flex flex-col justify-center relative overflow-hidden">
-               <div className="absolute top-0 w-full h-1 bg-gradient-to-r from-orange-400 to-rose-400"></div>
-              <div className="flex justify-between items-center mb-4">
-                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Score Graph</span>
-                <div className="p-1.5 bg-gray-50 rounded-lg shadow-inner">
-                  <CheckCircle2 className={`w-5 h-5 ${percentNumber >= 50 ? 'text-emerald-500' : 'text-gray-300'}`} />
-                </div>
-              </div>
-              <div className="h-4 w-full bg-gray-100 rounded-full overflow-hidden shadow-inner border border-gray-200/50">
-                <div 
-                  className={`h-full rounded-full bg-gradient-to-r ${progressColor} shadow-[0_0_10px_rgba(0,0,0,0.2)]`}
-                  style={{ width: `${Math.max(5, percentNumber)}%` }}
-                ></div>
-              </div>
-              <div className="flex justify-between mt-2 text-[9px] font-black text-gray-400">
-                <span>0%</span>
-                <span>50%</span>
-                <span>100%</span>
-              </div>
-            </div>
-            
-          </div>
+            </table>
         </div>
 
-        {/* ===== FOOTER ===== */}
-        <div className="mt-auto bg-white/90 backdrop-blur-lg border-t-2 border-indigo-50 p-6 mx-4 mb-4 rounded-3xl shadow-[0_-5px_30px_rgba(0,0,0,0.03)]">
-          
-          {/* Grading Legend */}
-          <div className="flex justify-center gap-3 sm:gap-6 mb-8 flex-wrap">
-            {[
-              { label: 'A+: 90-100', color: 'bg-emerald-500', text: 'text-emerald-700', bg: 'bg-emerald-50' },
-              { label: 'A: 80-89', color: 'bg-blue-500', text: 'text-blue-700', bg: 'bg-blue-50' },
-              { label: 'B: 60-79', color: 'bg-purple-500', text: 'text-purple-700', bg: 'bg-purple-50' },
-              { label: 'C: 40-59', color: 'bg-amber-500', text: 'text-amber-700', bg: 'bg-amber-50' },
-              { label: 'D: Below 40', color: 'bg-rose-500', text: 'text-rose-700', bg: 'bg-rose-50' }
-            ].map((g, i) => (
-              <div key={i} className={`text-[9px] font-black uppercase tracking-wider flex items-center gap-2 px-3 py-1.5 rounded-lg ${g.bg} ${g.text} border border-white shadow-sm`}>
-                <span className={`w-2.5 h-2.5 rounded-full shadow-inner ${g.color}`}></span> {g.label}
-              </div>
-            ))}
-          </div>
-
-          <div className="flex justify-between items-end px-4 sm:px-8 relative">
-            
-            {/* Teacher Signature */}
-            <div className="flex flex-col items-center w-36 z-10">
-              <div className="h-14 flex items-end justify-center mb-3 w-full relative">
-                {teacherSignatureUrl ? (
-                  <img src={teacherSignatureUrl} alt="Teacher" className="max-h-14 object-contain" />
-                ) : (
-                  <div className="w-full border-b-2 border-gray-300 border-dashed mb-1"></div>
-                )}
-              </div>
-              <div className="bg-gray-100/80 px-4 py-1.5 rounded-full border border-gray-200">
-                <p className="text-[9px] font-black text-gray-500 uppercase tracking-widest text-center">Class Teacher</p>
-              </div>
+        <div className="score-bar-wrap">
+            <div className="score-bar">
+                <div className="fill" style={{ width: `${barWidth}%` }}></div>
             </div>
-            
-            {/* School Seal */}
-            <div className="flex flex-col items-center justify-center pb-2 absolute left-1/2 transform -translate-x-1/2 bottom-0 z-0">
-               <div className="w-20 h-20 rounded-full border-4 border-indigo-100 flex flex-col items-center justify-center bg-white shadow-[0_5px_15px_rgba(99,102,241,0.15)] relative overflow-hidden group">
-                  <div className="absolute inset-0 bg-gradient-to-tr from-indigo-50 to-purple-50 opacity-50"></div>
-                  <Award className="w-6 h-6 text-indigo-300 mb-0.5" />
-                  <span className="text-[7px] font-black text-indigo-400 uppercase text-center leading-tight tracking-wider z-10">Official<br/>Seal</span>
-               </div>
+            <div className="score-labels">
+                <span>0</span>
+                <span>Threshold: {PASS_THRESHOLD}%</span>
+                <span>{TOTAL_MAX_MARKS}</span>
             </div>
-            
-            {/* Principal Signature */}
-            <div className="flex flex-col items-center w-36 z-10">
-              <div className="h-14 flex items-end justify-center mb-3 w-full relative">
-                {principalSignatureUrl ? (
-                  <img src={principalSignatureUrl} alt="Principal" className="max-h-14 object-contain" />
-                ) : (
-                  <div className="w-full border-b-2 border-gray-300 border-dashed mb-1"></div>
-                )}
-              </div>
-              <div className="bg-gray-100/80 px-4 py-1.5 rounded-full border border-gray-200">
-                <p className="text-[9px] font-black text-gray-500 uppercase tracking-widest text-center">Principal</p>
-              </div>
-            </div>
-            
-          </div>
-          
-          <div className="text-center mt-8 pt-4 border-t border-gray-100">
-             <p className="text-[8px] text-gray-400 font-bold uppercase tracking-widest bg-gray-50 inline-block px-4 py-1 rounded-full border border-gray-100">
-               System Generated Report • Not valid without authorized signatures
-             </p>
-          </div>
         </div>
-        
+
+        <div className="result-footer">
+            <div className="left">
+                <div className="total-label">📋 Total Marks: {safeData.total} / {TOTAL_MAX_MARKS}</div>
+                <div className="percentage">{totalPct}%</div>
+            </div>
+            <div className="signatures">
+                <div className="sig-block">
+                    {teacherSignatureUrl ? (
+                      <img src={resolveUrl(teacherSignatureUrl)} alt="Teacher Signature" />
+                    ) : (
+                      <div className="sig-placeholder"></div>
+                    )}
+                    <div className="sig-label">✍ Teacher Signature</div>
+                </div>
+                <div className="sig-block">
+                    {principalSignatureUrl ? (
+                      <img src={resolveUrl(principalSignatureUrl)} alt="Principal Signature" />
+                    ) : (
+                      <div className="sig-placeholder"></div>
+                    )}
+                    <div className="sig-label">✍ Principal Signature</div>
+                </div>
+            </div>
+        </div>
+
+        <div className="card-footer-note">
+            ★ This is a system-generated result card for {examTitle} ★
+        </div>
       </div>
     </div>
   );
 };
-
-export default ProgressCardTemplate;

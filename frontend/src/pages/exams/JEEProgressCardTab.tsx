@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../api/axios';
-import { Printer, Download, FileText, CheckCircle, Settings, Upload, Save, MessageCircle } from 'lucide-react';
+import { Printer, Download, FileText, CheckCircle, Settings, Upload, Save, FileSpreadsheet } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
 import toast from 'react-hot-toast';
+import * as XLSX from 'xlsx';
 import { ProgressCardTemplate } from '../../components/Exams/ProgressCardTemplate';
 import { LoadingSpinner } from '../../components/UI/LoadingSpinner';
 import { useAuth } from '../../hooks/useAuth';
@@ -13,13 +14,14 @@ import { useAuth } from '../../hooks/useAuth';
 export const JEEProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
   const { user } = useAuth();
   const isSuperAdmin = user?.role === 'SUPER_ADMIN';
-  const isTeacher = user?.role === 'TEACHER';
+  const isTeacher = user?.role === 'TEACHER' || user?.role === 'ADMIN'; // Treated the same for this view per instructions
   
   const [selectedExamId, setSelectedExamId] = useState('');
   const [selectedClassId, setSelectedClassId] = useState('');
   const [studentsData, setStudentsData] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [isGeneratingReport, setIsGeneratingReport] = useState(false);
   
   const [showSettings, setShowSettings] = useState(false);
   const [logoUrl, setLogoUrl] = useState('');
@@ -56,11 +58,7 @@ export const JEEProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
       setLoading(true);
       try {
         const res: any = await api.get(`/api/exams/${selectedExamId}/results?classId=${selectedClassId}`);
-        // Map the results to the data format expected by ProgressCardTemplate
-        // the API returns { studentId, name, rollNo, className, marks, total, percentage, grade, rank }
-        // We map it to { studentName, rollNo, className, section, mobile, rank, marks, photo }
         const formattedData = (res.data?.data || res.data || []).map((s: any) => {
-           // extract section if it's combined in className like "10th - A"
            let cName = s.className;
            let sec = '';
            if (cName.includes(' - ')) {
@@ -129,34 +127,6 @@ export const JEEProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
     }
   };
 
-  const handlePrint = () => {
-    window.print();
-  };
-
-  const handlePrintSingle = (index: number) => {
-    const parentContainer = document.getElementById('progress-cards-print-container');
-    if (parentContainer) {
-      parentContainer.classList.remove('hidden');
-      parentContainer.style.display = 'block';
-    }
-
-    const cards = document.querySelectorAll('.progress-card-wrapper');
-    cards.forEach((el, i) => {
-      (el as HTMLElement).style.display = i === index ? 'flex' : 'none';
-    });
-
-    window.print();
-
-    cards.forEach((el) => {
-      (el as HTMLElement).style.display = '';
-    });
-    
-    if (parentContainer) {
-      parentContainer.classList.add('hidden');
-      parentContainer.style.display = '';
-    }
-  };
-
   const generatePDFForElement = async (el: HTMLElement, fileName: string) => {
     const parentContainer = document.getElementById('progress-cards-print-container');
     const originalParentDisplay = parentContainer?.style.display || '';
@@ -168,7 +138,6 @@ export const JEEProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
     if (parentContainer) {
       parentContainer.classList.remove('hidden');
       parentContainer.style.display = 'flex';
-      // Keep in viewport but hide behind other content to fix mobile rendering issues
       parentContainer.style.position = 'fixed';
       parentContainer.style.top = '0';
       parentContainer.style.left = '0';
@@ -178,26 +147,24 @@ export const JEEProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
     const originalDisplay = el.style.display;
     el.style.display = 'flex';
     
-    // Wait a bit for images and layout to render
     await new Promise(resolve => setTimeout(resolve, 300));
     
     try {
       const canvas = await html2canvas(el, { 
-        scale: window.innerWidth < 768 ? 1 : 2, // Reduced scale for mobile memory
+        scale: window.innerWidth < 768 ? 1.5 : 2,
         useCORS: true, 
-        allowTaint: false, // Don't taint canvas to allow toDataURL
+        allowTaint: false,
         backgroundColor: '#ffffff',
         logging: false,
-        onclone: (documentClone) => {
-          // You can modify the clone here if needed to remove unsupported CSS
-        }
+        width: 794,
+        height: 1123,
       });
       
-      const imgData = canvas.toDataURL('image/jpeg', 0.85); // slightly lower quality for smaller file/memory
+      const imgData = canvas.toDataURL('image/jpeg', 0.95);
       
       const pdf = new jsPDF('p', 'mm', 'a4');
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+      const pdfWidth = 210;
+      const pdfHeight = (1123 / 794) * pdfWidth;
       
       pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight, undefined, 'FAST');
       
@@ -231,11 +198,12 @@ export const JEEProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
     }
   };
 
+  const getWaUrl = (mobile: string) => `https://wa.me/${(mobile || '').replace(/\D/g, '')}?text=Please%20check%20your%20progress%20card`;
+
   const handleWhatsAppShare = async (studentId: string, studentName: string, index: number, mobile: string) => {
     const el = document.getElementById(`progress-card-${index}`);
     if (!el) return toast.error('Could not find card element');
     
-    // Check if we can share natively
     let canShareNatively = false;
     try {
       if (navigator.share && navigator.canShare) {
@@ -289,7 +257,7 @@ export const JEEProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
     }
   };
 
-  const handleDownloadAll = async () => {
+  const handleDownloadAllZip = async () => {
     if (studentsData.length === 0) return;
     setIsDownloading(true);
     const loadingToastId = toast.loading(`Generating ${studentsData.length} progress cards...`);
@@ -313,7 +281,6 @@ export const JEEProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
       }
 
       await new Promise(resolve => setTimeout(resolve, 500));
-
       const templates = document.querySelectorAll('.progress-card-wrapper');
 
       for (let i = 0; i < templates.length; i++) {
@@ -324,20 +291,22 @@ export const JEEProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
         
         const originalDisplay = el.style.display;
         el.style.display = 'flex';
-        await new Promise(resolve => setTimeout(resolve, 100)); // Small delay for layout
+        await new Promise(resolve => setTimeout(resolve, 100));
         
         const canvas = await html2canvas(el, { 
-          scale: window.innerWidth < 768 ? 1 : 2, 
+          scale: 1.5, 
           useCORS: true, 
           allowTaint: false,
           backgroundColor: '#ffffff',
-          logging: false
+          logging: false,
+          width: 794,
+          height: 1123,
         });
-        const imgData = canvas.toDataURL('image/jpeg', 0.85);
+        const imgData = canvas.toDataURL('image/jpeg', 0.95);
         
         const pdf = new jsPDF('p', 'mm', 'a4');
-        const pdfWidth = pdf.internal.pageSize.getWidth();
-        const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+        const pdfWidth = 210;
+        const pdfHeight = (1123 / 794) * pdfWidth;
         
         pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight, undefined, 'FAST');
         const fileName = `${data.studentName || `Student_${i+1}`}_ProgressCard.pdf`;
@@ -368,10 +337,218 @@ export const JEEProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
     }
   };
 
-  const getWaUrl = (mobile: string) => `https://wa.me/${(mobile || '').replace(/\D/g, '')}?text=Please%20check%20your%20progress%20card`;
+  const handlePrintAll = () => {
+    const parentContainer = document.getElementById('progress-cards-print-container');
+    if (parentContainer) {
+      parentContainer.classList.remove('hidden');
+      parentContainer.style.display = 'block';
+    }
+
+    const cards = document.querySelectorAll('.progress-card-wrapper');
+    cards.forEach((el) => {
+      (el as HTMLElement).style.display = 'flex';
+    });
+
+    window.print();
+
+    cards.forEach((el) => {
+      (el as HTMLElement).style.display = '';
+    });
+    
+    if (parentContainer) {
+      parentContainer.classList.add('hidden');
+      parentContainer.style.display = '';
+    }
+  };
+
+  // ----- REPORTS GENERATION LOGIC -----
+  
+  const generateTabularPDF = (data: any[], title: string, subTitle: string, filename: string) => {
+    try {
+      const doc = new jsPDF('l', 'mm', 'a4');
+      const pageWidth = 297;
+      const pageHeight = 210;
+      const margin = 14;
+      const usableWidth = pageWidth - 2 * margin;
+
+      const schoolName = 'SRI VENKATESWARA JY SCHOOL';
+      const headers = ['S.No / Rank', 'Student ID', 'Student Name', 'Class', 'Section', 'Mobile', 'Mat', 'Phy', 'Che', 'Total'];
+
+      doc.setFontSize(18);
+      doc.setFont('helvetica', 'bold');
+      doc.text(schoolName, pageWidth / 2, 16, { align: 'center' });
+
+      doc.setFontSize(14);
+      doc.setFont('helvetica', 'normal');
+      doc.text(title, pageWidth / 2, 24, { align: 'center' });
+
+      doc.setFontSize(11);
+      doc.text(subTitle, pageWidth / 2, 30, { align: 'center' });
+
+      const dateStr = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+      doc.setFontSize(9);
+      doc.text(`Generated: ${dateStr}`, pageWidth - margin, 36, { align: 'right' });
+
+      const colWidths = [20, 30, 50, 20, 20, 30, 16, 16, 16, 20];
+      const totalColWidth = colWidths.reduce((a, b) => a + b, 0);
+      const scale = usableWidth / totalColWidth;
+      const scaledWidths = colWidths.map(w => w * scale);
+
+      let y = 42;
+      const rowHeight = 7;
+      const headerHeight = 9;
+
+      // Draw Headers
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'bold');
+      let x = margin;
+      headers.forEach((h, i) => {
+          doc.rect(x, y, scaledWidths[i], headerHeight, 'S');
+          doc.text(h, x + scaledWidths[i] / 2, y + headerHeight / 2 + 1.5, { align: 'center' });
+          x += scaledWidths[i];
+      });
+      y += headerHeight;
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8);
+
+      data.forEach((row, idx) => {
+          if (y + rowHeight > pageHeight - margin) {
+              doc.addPage();
+              y = margin + 4;
+              doc.setFontSize(9);
+              doc.setFont('helvetica', 'bold');
+              x = margin;
+              headers.forEach((h, i) => {
+                  doc.rect(x, y, scaledWidths[i], headerHeight, 'S');
+                  doc.text(h, x + scaledWidths[i] / 2, y + headerHeight / 2 + 1.5, { align: 'center' });
+                  x += scaledWidths[i];
+              });
+              y += headerHeight;
+              doc.setFont('helvetica', 'normal');
+              doc.setFontSize(8);
+          }
+
+          x = margin;
+          const rowData = [
+            `#${row.rank}`, 
+            row.rollNo || row.studentId, 
+            row.studentName, 
+            row.className, 
+            row.section, 
+            row.mobile,
+            row.marks?.find((m:any) => m.subject?.toLowerCase().startsWith('mat'))?.obtained || '-',
+            row.marks?.find((m:any) => m.subject?.toLowerCase().startsWith('phy'))?.obtained || '-',
+            row.marks?.find((m:any) => m.subject?.toLowerCase().startsWith('che'))?.obtained || '-',
+            String(row.total)
+          ];
+
+          rowData.forEach((cell, i) => {
+              doc.rect(x, y, scaledWidths[i], rowHeight, 'S');
+              const align = (i === 0 || i === 1 || i === 5 || i > 5) ? 'center' : 'left';
+              const pad = align === 'center' ? scaledWidths[i] / 2 : 2;
+              doc.text(String(cell), x + pad, y + rowHeight / 2 + 1.5, { align: align as 'center'|'left' });
+              x += scaledWidths[i];
+          });
+          y += rowHeight;
+      });
+
+      doc.setFontSize(8);
+      doc.setFont('helvetica', 'italic');
+      doc.text('★ This is a system-generated report ★', pageWidth / 2, pageHeight - 6, { align: 'center' });
+
+      doc.save(filename);
+      toast.success('Report Downloaded Successfully!');
+    } catch (e: any) {
+      console.error(e);
+      toast.error('Failed to generate report: ' + e.message);
+    }
+  };
+
+  const handleClassWiseReport = () => {
+    if (studentsData.length === 0) return toast.error('No student data found');
+    const cName = selectedExam?.classes?.find((c:any) => c.id === selectedClassId);
+    generateTabularPDF(
+      studentsData, 
+      `CLASS WISE REPORT (${cName ? cName.name + '-' + cName.section : 'Class'})`,
+      `${selectedExam?.name || 'Examination'} · Result Summary`,
+      `ClassWiseReport_${selectedClassId}.pdf`
+    );
+  };
+
+  const handleOverallRankList = async (format: 'pdf' | 'excel') => {
+    setIsGeneratingReport(true);
+    const toastId = toast.loading('Fetching all results and generating report...');
+    try {
+      // Fetch all results without class filter
+      const res: any = await api.get(`/api/exams/${selectedExamId}/results`);
+      const allData = (res.data?.data || res.data || []).map((s: any) => {
+        let cName = s.className;
+        let sec = '';
+        if (cName.includes(' - ')) {
+           [cName, sec] = cName.split(' - ');
+        }
+        return {
+           studentId: s.studentId,
+           studentName: s.name,
+           rollNo: s.rollNo,
+           className: cName,
+           section: sec,
+           mobile: s.mobile || '-',
+           rank: s.rank, // Backend natively calculates this when no class is provided
+           total: s.total,
+           marks: s.marks
+        };
+      });
+
+      if (allData.length === 0) {
+        toast.error('No students found for this exam', { id: toastId });
+        return;
+      }
+
+      toast.success('Data fetched. Preparing file...', { id: toastId });
+
+      if (format === 'pdf') {
+        generateTabularPDF(
+          allData, 
+          'OVERALL RANK LIST (All Students)',
+          `${selectedExam?.name || 'Examination'} · Rank Wise Summary (Total: ${allData.length})`,
+          `Overall_RankList_${selectedExamId}.pdf`
+        );
+      } else {
+        // Excel Export
+        const excelData = [['Rank', 'Student Name', 'Class', 'Section', 'Student ID', 'Mobile', 'Mat', 'Phy', 'Che', 'Total']];
+        allData.forEach((row: any) => {
+          excelData.push([
+            row.rank,
+            row.studentName,
+            row.className,
+            row.section,
+            row.rollNo || row.studentId,
+            row.mobile,
+            row.marks?.find((m:any) => m.subject?.toLowerCase().startsWith('mat'))?.obtained || '-',
+            row.marks?.find((m:any) => m.subject?.toLowerCase().startsWith('phy'))?.obtained || '-',
+            row.marks?.find((m:any) => m.subject?.toLowerCase().startsWith('che'))?.obtained || '-',
+            row.total
+          ]);
+        });
+        const ws = XLSX.utils.aoa_to_sheet(excelData);
+        ws['!cols'] = [{wch: 8}, {wch: 30}, {wch: 15}, {wch: 15}, {wch: 20}, {wch: 15}, {wch: 10}, {wch: 10}, {wch: 10}, {wch: 12}];
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Overall Rank List');
+        XLSX.writeFile(wb, `Overall_RankList_${selectedExamId}.xlsx`);
+      }
+    } catch (e: any) {
+      console.error(e);
+      toast.error('Failed to generate overall report', { id: toastId });
+    } finally {
+      setIsGeneratingReport(false);
+    }
+  };
 
   return (
     <div className="space-y-6">
+      {/* Top Filter Bar */}
       <div className="flex flex-col sm:flex-row justify-between items-center bg-gradient-to-r from-indigo-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 p-4 sm:p-5 rounded-2xl border border-indigo-100 dark:border-gray-800 shadow-sm print:hidden gap-4">
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 w-full sm:w-auto">
           <span className="text-xs font-black uppercase text-indigo-500 tracking-wider shrink-0 ml-1 sm:ml-0">Select Details:</span>
@@ -400,58 +577,47 @@ export const JEEProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
           </div>
         </div>
         
-        <div className="flex flex-wrap gap-2 w-full md:w-auto justify-start md:justify-end mt-2 md:mt-0">
-          {isSuperAdmin && selectedExam && (
-            <>
-              {!published ? (
-                <button 
-                  onClick={async () => {
-                    const confirmPublish = window.confirm('Are you sure you want to publish these results? This will make them visible to students and parents.');
-                    if (confirmPublish) {
-                      setPublished(true);
-                      try {
-                        const newSettings = { ...(selectedExam.admitCardSettings || {}), progressCardPublished: true };
-                        await api.post(`/api/exams/${selectedExamId}/admit-card-settings`, {
-                          admitCardPublished: selectedExam?.admitCardPublished || false,
-                          admitCardSettings: newSettings
-                        });
-                        toast.success('Results published successfully!');
-                      } catch (e: any) {
-                        toast.error('Failed to publish');
-                        setPublished(false);
-                      }
-                    }
-                  }} 
-                  className="bg-emerald-500 hover:bg-emerald-600 text-white px-3 py-1.5 rounded-lg text-sm font-bold flex items-center gap-2 flex-1 md:flex-none justify-center shadow-md shadow-emerald-500/20"
-                >
-                  <CheckCircle className="w-4 h-4" /> Publish Cards
-                </button>
-              ) : (
-                <div className="flex items-center gap-2 flex-1 md:flex-none">
-                  <span className="bg-emerald-100 text-emerald-700 px-4 py-1.5 rounded-lg text-sm font-bold flex items-center gap-2 border border-emerald-200 justify-center w-full md:w-auto shadow-sm">
-                    <CheckCircle className="w-4 h-4" /> Published
-                  </span>
-                </div>
-              )}
-              <button onClick={() => setShowSettings(!showSettings)} className="btn-secondary flex items-center gap-2 flex-1 md:flex-none justify-center">
-                <Settings className="w-4 h-4" /> Settings
-              </button>
-            </>
-          )}
-          {studentsData.length > 0 && (
-            <>
-              <button onClick={handleDownloadAll} disabled={isDownloading} className="btn-secondary flex items-center gap-2 flex-1 md:flex-none justify-center">
-                {isDownloading ? <LoadingSpinner size="sm" /> : <Download className="w-4 h-4" />} 
-                {isDownloading ? 'Generating...' : 'Download ZIP'}
-              </button>
-              <button onClick={handlePrint} className="btn-primary flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 border-none shadow-lg shadow-blue-500/30 flex-1 md:flex-none justify-center">
-                <Printer className="w-4 h-4" /> Print All Cards
-              </button>
-            </>
-          )}
-        </div>
+        {/* Settings Button for Super Admin */}
+        {isSuperAdmin && selectedExam && (
+          <div className="flex gap-2 w-full md:w-auto justify-start md:justify-end mt-2 md:mt-0">
+             <button onClick={() => setShowSettings(!showSettings)} className="btn-secondary flex items-center gap-2 flex-1 md:flex-none justify-center">
+               <Settings className="w-4 h-4" /> {showSettings ? 'Hide Settings' : 'Settings'}
+             </button>
+             {!published ? (
+               <button 
+                 onClick={async () => {
+                   const confirmPublish = window.confirm('Are you sure you want to publish these results?');
+                   if (confirmPublish) {
+                     setPublished(true);
+                     try {
+                       const newSettings = { ...(selectedExam.admitCardSettings || {}), progressCardPublished: true };
+                       await api.post(`/api/exams/${selectedExamId}/admit-card-settings`, {
+                         admitCardPublished: selectedExam?.admitCardPublished || false,
+                         admitCardSettings: newSettings
+                       });
+                       toast.success('Results published successfully!');
+                     } catch (e: any) {
+                       toast.error('Failed to publish');
+                       setPublished(false);
+                     }
+                   }
+                 }} 
+                 className="bg-emerald-500 hover:bg-emerald-600 text-white px-3 py-1.5 rounded-lg text-sm font-bold flex items-center gap-2 flex-1 md:flex-none justify-center shadow-md shadow-emerald-500/20"
+               >
+                 <CheckCircle className="w-4 h-4" /> Publish Cards
+               </button>
+             ) : (
+               <div className="flex items-center gap-2 flex-1 md:flex-none">
+                 <span className="bg-emerald-100 text-emerald-700 px-4 py-1.5 rounded-lg text-sm font-bold flex items-center gap-2 border border-emerald-200 justify-center w-full md:w-auto shadow-sm">
+                   <CheckCircle className="w-4 h-4" /> Published
+                 </span>
+               </div>
+             )}
+          </div>
+        )}
       </div>
 
+      {/* Super Admin Settings Panel */}
       {showSettings && selectedExamId && isSuperAdmin && (
         <div className="bg-white dark:bg-gray-900 border border-indigo-100 dark:border-gray-800 p-6 rounded-xl shadow-sm mb-6 print:hidden">
           <div className="flex justify-between items-center border-b border-gray-100 dark:border-gray-800 pb-4 mb-6">
@@ -522,6 +688,27 @@ export const JEEProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
         </div>
       )}
 
+      {/* Global Actions (Super Admin Only) */}
+      {isSuperAdmin && studentsData.length > 0 && (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 print:hidden">
+            <button onClick={handleDownloadAllZip} disabled={isDownloading} className="flex flex-col items-center justify-center p-4 bg-indigo-50 border border-indigo-100 rounded-xl hover:bg-indigo-100 transition-colors gap-2 text-indigo-700 font-bold text-sm">
+               {isDownloading ? <LoadingSpinner size="sm" /> : <Download className="w-6 h-6" />}
+               Generate ZIP (All)
+            </button>
+            <button onClick={handleClassWiseReport} className="flex flex-col items-center justify-center p-4 bg-blue-50 border border-blue-100 rounded-xl hover:bg-blue-100 transition-colors gap-2 text-blue-700 font-bold text-sm">
+               <FileText className="w-6 h-6" />
+               Class Wise Report (PDF)
+            </button>
+            <button onClick={() => handleOverallRankList('pdf')} disabled={isGeneratingReport} className="flex flex-col items-center justify-center p-4 bg-purple-50 border border-purple-100 rounded-xl hover:bg-purple-100 transition-colors gap-2 text-purple-700 font-bold text-sm">
+               <FileText className="w-6 h-6" />
+               Overall Rank List (PDF)
+            </button>
+            <button onClick={() => handleOverallRankList('excel')} disabled={isGeneratingReport} className="flex flex-col items-center justify-center p-4 bg-emerald-50 border border-emerald-100 rounded-xl hover:bg-emerald-100 transition-colors gap-2 text-emerald-700 font-bold text-sm">
+               <FileSpreadsheet className="w-6 h-6" />
+               Overall Rank List (Excel)
+            </button>
+        </div>
+      )}
 
       {loading && <div className="p-12 flex justify-center"><LoadingSpinner size="lg" /></div>}
 
@@ -534,92 +721,84 @@ export const JEEProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
           </div>
         ) : (
         <>
-          {/* Table View of Students for Progress Cards */}
+          {/* Mobile-friendly Rank List for Teachers & Super Admins */}
           <div className="card print:hidden overflow-hidden w-full">
             <div className="p-4 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
               <div>
-                <h3 className="font-bold text-gray-800">Class Progress Cards</h3>
+                <h3 className="font-bold text-gray-800">Class Rank List</h3>
                 <p className="text-xs text-gray-500">Generated {studentsData.length} cards based on exam results.</p>
               </div>
+              {isSuperAdmin && (
+                 <button onClick={handlePrintAll} className="hidden md:flex btn-primary items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 border-none shadow-lg shadow-blue-500/30 text-sm">
+                    <Printer className="w-4 h-4" /> Print All Cards
+                 </button>
+              )}
             </div>
+            
+            {/* Table layout (hidden on small mobile screens if desired, but making it fully responsive) */}
             <div className="overflow-x-auto w-full">
-              <table className="w-full text-sm text-left whitespace-nowrap">
+              <table className="w-full text-sm text-left whitespace-nowrap min-w-full">
                 <thead className="bg-gray-50 text-gray-600 font-bold uppercase text-xs">
                   <tr>
-                    <th className="py-3 px-4 w-16">Rank</th>
+                    <th className="py-3 px-4 w-12 text-center">Rank</th>
                     <th className="py-3 px-4">Student Name</th>
+                    {/* Hide detailed stats on small screens if you want, but user requested mobile friendly. Let's keep it clean */}
                     {!isTeacher && <th className="py-3 px-4 hidden md:table-cell">Student ID</th>}
-                    {!isTeacher && (
-                      <>
-                        <th className="py-3 px-4 text-center hidden md:table-cell">Mat</th>
-                        <th className="py-3 px-4 text-center hidden md:table-cell">Phy</th>
-                        <th className="py-3 px-4 text-center hidden md:table-cell">Che</th>
-                      </>
-                    )}
-                    <th className="py-3 px-4 text-center">Score</th>
+                    <th className="py-3 px-4 text-center">Total Marks</th>
                     <th className="py-3 px-4 text-right">Action</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
                   {studentsData.map((data, idx) => (
                     <tr key={data.studentId} className="hover:bg-gray-50 transition-colors bg-white">
-                      <td className="py-3 px-4">
-                        <span className="font-bold text-indigo-600 bg-indigo-50 px-2 py-1 rounded">#{data.rank}</span>
+                      <td className="py-3 px-4 text-center">
+                        <span className="font-bold text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-lg">#{data.rank}</span>
                       </td>
-                      <td className="py-3 px-4 font-bold text-gray-900 max-w-[150px] md:max-w-none">
-                        <span className="whitespace-normal break-words">{data.studentName}</span>
+                      <td className="py-3 px-4 font-bold text-gray-900 whitespace-normal break-words max-w-[150px] md:max-w-none">
+                        {data.studentName}
+                        <div className="text-xs font-normal text-gray-500 mt-0.5">{data.className} {data.section}</div>
                       </td>
                       {!isTeacher && <td className="py-3 px-4 text-gray-600 font-medium hidden md:table-cell">{data.rollNo || '-'}</td>}
-                      {!isTeacher && (
-                        <>
-                          <td className="py-3 px-4 text-center font-semibold text-gray-700 hidden md:table-cell">{data.marks?.find((m: any) => m.subject?.toLowerCase().startsWith('mat'))?.obtained ?? '-'}</td>
-                          <td className="py-3 px-4 text-center font-semibold text-gray-700 hidden md:table-cell">{data.marks?.find((m: any) => m.subject?.toLowerCase().startsWith('phy'))?.obtained ?? '-'}</td>
-                          <td className="py-3 px-4 text-center font-semibold text-gray-700 hidden md:table-cell">{data.marks?.find((m: any) => m.subject?.toLowerCase().startsWith('che'))?.obtained ?? '-'}</td>
-                        </>
-                      )}
-                      <td className="py-3 px-4 text-center font-bold text-emerald-600">{data.total}</td>
-                      <td className="py-3 px-4 flex justify-end gap-1.5">
-                        {isSuperAdmin ? (
-                          <button onClick={() => handleDownloadSingle(data.studentId, data.studentName, idx)} className="bg-indigo-50 hover:bg-indigo-100 text-indigo-600 p-2 md:px-3 md:py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors">
-                            <Download className="w-4 h-4" /> <span className="hidden md:inline">Download</span>
-                          </button>
-                        ) : (
-                          <button onClick={() => handleWhatsAppShare(data.studentId, data.studentName, idx, data.mobile)} className="bg-green-50 hover:bg-green-100 text-green-600 p-2 md:px-3 md:py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors">
+                      
+                      <td className="py-3 px-4 text-center">
+                        <span className="font-bold text-emerald-600 text-base">{data.total}</span>
+                      </td>
+                      
+                      <td className="py-3 px-4 flex justify-end gap-2 items-center">
+                        <button onClick={() => handleDownloadSingle(data.studentId, data.studentName, idx)} className="bg-indigo-50 hover:bg-indigo-100 text-indigo-600 p-2 rounded-lg text-xs font-semibold flex items-center justify-center transition-colors" title="Download PDF">
+                            <Download className="w-4 h-4" /> 
+                        </button>
+                        
+                        <button onClick={() => handleWhatsAppShare(data.studentId, data.studentName, idx, data.mobile)} className="bg-green-50 hover:bg-green-100 text-green-600 p-2 md:px-3 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors" title="Send WhatsApp">
                             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                               <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/>
-                            </svg> <span className="hidden md:inline">WhatsApp</span>
-                          </button>
-                        )}
-                        <button onClick={() => handlePrintSingle(idx)} className="hidden md:flex bg-gray-50 hover:bg-gray-100 text-gray-600 p-2 md:px-3 md:py-1.5 rounded-lg text-xs font-semibold items-center gap-1.5 transition-colors">
-                          <Printer className="w-4 h-4" /> <span className="hidden md:inline">Print</span>
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          {/* Hidden Container for Printing & PDF Generation */}
-          <div id="progress-cards-print-container" className="hidden print:flex print-area bg-gray-50 dark:bg-gray-900 p-0 flex-col items-center">
-
-          
-            {studentsData.map((data, idx) => (
-              <div key={data.studentId} id={`progress-card-${idx}`} className="flex justify-center bg-white" style={{ width: '210mm' }}>
-                <ProgressCardTemplate data={data} exam={selectedExam} settings={selectedExam?.admitCardSettings} />
-              </div>
-            ))}
-          </div>
-        </>
-        )
-      )}
-
-      {!loading && selectedExamId && selectedClassId && studentsData.length === 0 && (
-        <div className="p-12 text-center text-gray-400 font-medium bg-white rounded-xl border border-gray-100">
-          No results found for this class. Make sure marks are entered and finalized.
-        </div>
-      )}
-    </div>
-  );
-};
+593:                             </svg> <span className="hidden md:inline">Share</span>
+594:                         </button>
+595:                       </td>
+596:                     </tr>
+597:                   ))}
+598:                 </tbody>
+599:               </table>
+600:             </div>
+601:           </div>
+602: 
+603:           {/* Hidden Container for Printing & PDF Generation */}
+604:           <div id="progress-cards-print-container" className="hidden print:flex print-area bg-gray-50 dark:bg-gray-900 p-0 flex-col items-center">
+605:             {studentsData.map((data, idx) => (
+606:               <div key={data.studentId} id={`progress-card-${idx}`} className="progress-card-wrapper justify-center bg-white hidden" style={{ width: '210mm' }}>
+607:                 <ProgressCardTemplate data={data} exam={selectedExam} settings={selectedExam?.admitCardSettings} />
+608:               </div>
+609:             ))}
+610:           </div>
+611:         </>
+612:         )
+613:       )}
+614: 
+615:       {!loading && selectedExamId && selectedClassId && studentsData.length === 0 && (
+616:         <div className="p-12 text-center text-gray-400 font-medium bg-white rounded-xl border border-gray-100">
+617:           No results found for this class. Make sure marks are entered and finalized.
+618:         </div>
+619:       )}
+620:     </div>
+621:   );
+622: };
