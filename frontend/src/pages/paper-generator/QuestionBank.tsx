@@ -169,7 +169,7 @@ export const QuestionBank: React.FC = () => {
       <nav className="border-b border-slate-200 bg-white/75 backdrop-blur-md sticky top-0 z-30">
         <div className="w-full mx-auto px-2 lg:px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Link to="/question-bank" className="p-2 hover:bg-slate-100 border border-slate-200 hover:border-slate-350 rounded-xl transition-colors text-slate-600">
+            <Link to="/question-bank" className="p-2 hover:bg-slate-100 border border-slate-200 hover:border-slate-350 rounded-xl transition-colors text-slate-800">
               <ArrowLeft className="w-5 h-5" />
             </Link>
             <span className="font-extrabold text-lg tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-accentIndigo to-accentTeal">
@@ -229,7 +229,7 @@ export const QuestionBank: React.FC = () => {
                 </h3>
                 <button
                   onClick={handleClearFilters}
-                  className="text-[10px] font-semibold text-slate-400 hover:text-slate-600"
+                  className="text-[10px] font-semibold text-slate-400 hover:text-slate-800"
                 >
                   Clear All
                 </button>
@@ -241,14 +241,14 @@ export const QuestionBank: React.FC = () => {
                   Subject
                 </label>
                 <div className="flex flex-col gap-1">
-                  {['Physics', 'Chemistry', 'Mathematics'].map((subj) => (
+                  {(meta ? Object.keys(meta) : ['Physics', 'Chemistry', 'Mathematics']).map((subj) => (
                     <button
                       key={subj}
                       onClick={() => setSubject(subject === subj ? '' : subj)}
                       className={`text-left px-3 py-2 rounded-xl text-xs font-semibold transition-all ${
                         subject === subj
                           ? 'bg-accentIndigo/10 text-accentIndigo border border-accentIndigo/30'
-                          : 'bg-slate-100 hover:bg-slate-200 text-slate-600 border border-transparent'
+                          : 'bg-white hover:bg-indigo-50 text-slate-700 border border-slate-200 shadow-sm hover:shadow-md hover:border-indigo-200'
                       }`}
                     >
                       {subj}
@@ -381,10 +381,10 @@ export const QuestionBank: React.FC = () => {
                             }`}>
                               {q.subject}
                             </span>
-                            <span className="bg-slate-100 text-slate-600 px-2 py-0.5 rounded uppercase">
+                            <span className="bg-slate-100 text-slate-800 px-2 py-0.5 rounded uppercase">
                               {q.difficulty}
                             </span>
-                            <span className="bg-slate-100 text-slate-600 px-2 py-0.5 rounded uppercase">
+                            <span className="bg-slate-100 text-slate-800 px-2 py-0.5 rounded uppercase">
                               {q.type.replace('_', ' ')}
                             </span>
                             {q.tags && q.tags.split(',').map((t) => (
@@ -439,3 +439,5 @@ export const QuestionBank: React.FC = () => {
     </div>
   );
 };
+
+
