@@ -263,13 +263,15 @@ export const StudentProfilePage: React.FC = () => {
               <span>Back to Roster</span>
             </Link>
             <div className="flex items-center gap-3 w-full sm:w-auto">
-              <button
-                onClick={() => setShowModal(true)}
-                className="flex-1 sm:flex-none bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white flex items-center justify-center gap-2 px-6 py-3 rounded-2xl text-sm font-bold shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 hover:-translate-y-0.5 transition-all"
-              >
-                <CreditCard className="w-4 h-4" />
-                <span>Pay Fee</span>
-              </button>
+              {(isAdmin || user?.role === 'ACCOUNTANT') && (
+                <button
+                  onClick={() => setShowModal(true)}
+                  className="flex-1 sm:flex-none bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white flex items-center justify-center gap-2 px-6 py-3 rounded-2xl text-sm font-bold shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 hover:-translate-y-0.5 transition-all"
+                >
+                  <CreditCard className="w-4 h-4" />
+                  <span>Pay Fee</span>
+                </button>
+              )}
               <button
                 onClick={() => window.print()}
                 className="flex-1 sm:flex-none bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700 flex items-center justify-center gap-2 px-6 py-3 rounded-2xl text-sm font-bold shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all"

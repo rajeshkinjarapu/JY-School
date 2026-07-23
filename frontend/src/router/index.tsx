@@ -279,11 +279,19 @@ export const router = createBrowserRouter([
       },
       {
         path: 'finance',
-        element: withSuspense(<FinancePage />),
+        element: withSuspense(
+          <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN', 'ACCOUNTANT']}>
+            <FinancePage />
+          </ProtectedRoute>
+        ),
       },
       {
         path: 'fee-payment',
-        element: withSuspense(<FeePaymentsPage />),
+        element: withSuspense(
+          <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN', 'ACCOUNTANT']}>
+            <FeePaymentsPage />
+          </ProtectedRoute>
+        ),
       },
       {
         path: 'announcements',
