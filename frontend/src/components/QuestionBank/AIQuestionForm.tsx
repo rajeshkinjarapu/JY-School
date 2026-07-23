@@ -52,26 +52,26 @@ export const AIQuestionForm: React.FC<AIQuestionFormProps> = ({ onSuccess, onCan
   };
 
   return (
-    <div className="w-full text-white grid grid-cols-1 lg:grid-cols-2 gap-8">
-      <div className="bg-gradient-to-br from-indigo-600/90 via-purple-600/90 to-pink-600/90 backdrop-blur-md rounded-2xl p-6 border border-white/20 shadow-xl flex flex-col h-[calc(100vh-120px)]">
-        <h2 className="text-xl font-bold mb-4 text-white drop-shadow-md flex items-center gap-2">
+    <div className="w-full text-slate-900 grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 backdrop-blur-md rounded-2xl p-6 border border-indigo-200 shadow-xl flex flex-col h-[calc(100vh-120px)]">
+        <h2 className="text-xl font-bold mb-4 text-slate-900 drop-shadow-md flex items-center gap-2">
           <Sparkles className="text-yellow-300 w-6 h-6" />
           Add Questions with AI
         </h2>
 
         {error && (
-          <div className="mb-4 bg-red-900/50 border border-red-500/50 text-red-200 p-3 rounded-lg flex items-center gap-2">
+          <div className="mb-4 bg-red-50 border border-red-200 text-red-700 p-3 rounded-lg flex items-center gap-2">
             <AlertCircle className="w-5 h-5 flex-shrink-0" />
             <span>{error}</span>
           </div>
         )}
 
         <div className="mb-4">
-          <label className="block text-sm font-medium mb-1 text-white/90">Preferred Subject</label>
+          <label className="block text-sm font-medium mb-1 text-slate-800">Preferred Subject</label>
           <select
             value={subject}
             onChange={(e) => setSubject(e.target.value)}
-            className="w-full bg-slate-900/50 border border-white/20 rounded-lg p-2 text-white focus:outline-none focus:border-white/50"
+            className="w-full bg-white/80 border border-indigo-200 rounded-lg p-2 text-slate-900 focus:outline-none focus:border-white/50"
           >
             <option value="Physics">Physics</option>
             <option value="Chemistry">Chemistry</option>
@@ -80,20 +80,20 @@ export const AIQuestionForm: React.FC<AIQuestionFormProps> = ({ onSuccess, onCan
         </div>
 
         <div className="flex-1 flex flex-col mb-4">
-          <label className="block text-sm font-medium mb-1 text-white/90">Paste your questions or give instructions</label>
+          <label className="block text-sm font-medium mb-1 text-slate-800">Paste your questions or give instructions</label>
           <textarea
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
             placeholder="E.g. Create 3 physics questions from Electrostatics. OR Just paste raw text of questions."
-            className="w-full flex-1 bg-slate-900/50 border border-white/20 rounded-lg p-3 text-white font-sans focus:outline-none focus:border-white/50 resize-none"
+            className="w-full flex-1 bg-white/80 border border-indigo-200 rounded-lg p-3 text-slate-900 font-sans focus:outline-none focus:border-white/50 resize-none"
           />
         </div>
 
-        <div className="flex justify-end gap-3 pt-4 border-t border-white/20">
+        <div className="flex justify-end gap-3 pt-4 border-t border-indigo-200">
           <button
             type="button"
             onClick={onCancel}
-            className="px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/20 text-white rounded-lg text-sm transition-colors"
+            className="px-4 py-2 bg-white/80 hover:bg-white border border-indigo-200 text-slate-900 rounded-lg text-sm transition-colors"
           >
             Cancel
           </button>
@@ -109,7 +109,7 @@ export const AIQuestionForm: React.FC<AIQuestionFormProps> = ({ onSuccess, onCan
         </div>
       </div>
 
-      <div className="bg-gradient-to-br from-indigo-900/90 via-purple-900/90 to-slate-900/90 backdrop-blur-md rounded-2xl p-6 border border-white/20 shadow-xl flex flex-col h-[calc(100vh-120px)] overflow-hidden">
+      <div className="bg-gradient-to-br from-indigo-100 via-purple-100 to-pink-100 backdrop-blur-md rounded-2xl p-6 border border-indigo-200 shadow-xl flex flex-col h-[calc(100vh-120px)] overflow-hidden">
         <div className="flex justify-between items-center mb-6 shrink-0">
           <h2 className="text-lg font-bold flex items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-full bg-teal-500 animate-pulse" />
@@ -119,7 +119,7 @@ export const AIQuestionForm: React.FC<AIQuestionFormProps> = ({ onSuccess, onCan
             <button
               onClick={handleSaveAll}
               disabled={saving}
-              className="px-4 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-white font-semibold rounded-lg text-sm flex items-center gap-2 shadow-lg disabled:opacity-50"
+              className="px-4 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-slate-900 font-semibold rounded-lg text-sm flex items-center gap-2 shadow-lg disabled:opacity-50"
             >
               {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
               {saving ? 'Saving...' : 'Save All'}
@@ -129,7 +129,7 @@ export const AIQuestionForm: React.FC<AIQuestionFormProps> = ({ onSuccess, onCan
 
         <div className="flex-1 overflow-y-auto space-y-6 pr-2 custom-scrollbar">
           {parsedQuestions.length === 0 ? (
-            <div className="flex items-center justify-center h-full text-white/50 text-sm">
+            <div className="flex items-center justify-center h-full text-slate-500 text-sm">
               Waiting for AI extraction...
             </div>
           ) : (
@@ -187,3 +187,4 @@ export const AIQuestionForm: React.FC<AIQuestionFormProps> = ({ onSuccess, onCan
     </div>
   );
 };
+

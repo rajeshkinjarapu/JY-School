@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { qbApi as api } from '../../utils/questionBankApi';
 import { LaTeXPreview } from './LaTeXPreview';
-import { Upload, X, Check, AlertCircle } from 'lucide-react';
+import { Upload, X, Check, AlertCircle, Sparkles, PenTool } from 'lucide-react';
 
 interface QuestionFormProps {
   questionId?: number | null; // Null means creating
@@ -170,19 +170,19 @@ const ManualQuestionForm: React.FC<QuestionFormProps> = ({ questionId, initialDa
   };
 
   if (loading && questionId) {
-    return <div className="text-white text-center py-10">Loading question details...</div>;
+    return <div className="text-slate-900 text-center py-10">Loading question details...</div>;
   }
 
   return (
-    <div className="w-full text-white grid grid-cols-1 lg:grid-cols-2 gap-8">
+    <div className="w-full text-slate-900 grid grid-cols-1 lg:grid-cols-2 gap-8">
       {/* Edit Form */}
-      <div className="bg-gradient-to-br from-indigo-600/90 via-purple-600/90 to-pink-600/90 backdrop-blur-md rounded-2xl p-6 border border-white/20 shadow-xl">
-        <h2 className="text-xl font-bold mb-6 text-white drop-shadow-md">
+      <div className="bg-gradient-to-br from-indigo-100 via-purple-100 to-pink-100 backdrop-blur-md rounded-2xl p-6 border border-indigo-200 shadow-xl">
+        <h2 className="text-xl font-bold mb-6 text-slate-900 drop-shadow-md">
           {questionId ? 'Edit Question' : 'Create New Question'}
         </h2>
 
         {error && (
-          <div className="mb-4 bg-red-900/50 border border-red-500/50 text-red-200 p-3 rounded-lg flex items-center gap-2">
+          <div className="mb-4 bg-red-50 border border-red-200 text-red-700 p-3 rounded-lg flex items-center gap-2">
             <AlertCircle className="w-5 h-5 flex-shrink-0" />
             <span>{error}</span>
           </div>
@@ -191,12 +191,12 @@ const ManualQuestionForm: React.FC<QuestionFormProps> = ({ questionId, initialDa
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium mb-1 text-slate-300">Subject</label>
+              <label className="block text-sm font-medium mb-1 text-slate-700">Subject</label>
               <select
                 name="subject"
                 value={formData.subject}
                 onChange={handleChange}
-                className="w-full bg-slate-900/50 border border-slate-700 rounded-lg p-2.5 text-white focus:outline-none focus:border-indigo-600"
+                className="w-full bg-white/80 border border-indigo-200 rounded-lg p-2.5 text-slate-900 focus:outline-none focus:border-indigo-600"
               >
                 <option value="Physics">Physics</option>
                 <option value="Chemistry">Chemistry</option>
@@ -204,12 +204,12 @@ const ManualQuestionForm: React.FC<QuestionFormProps> = ({ questionId, initialDa
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1 text-slate-300">Difficulty</label>
+              <label className="block text-sm font-medium mb-1 text-slate-700">Difficulty</label>
               <select
                 name="difficulty"
                 value={formData.difficulty}
                 onChange={handleChange}
-                className="w-full bg-slate-900/50 border border-slate-700 rounded-lg p-2.5 text-white focus:outline-none focus:border-indigo-600"
+                className="w-full bg-white/80 border border-indigo-200 rounded-lg p-2.5 text-slate-900 focus:outline-none focus:border-indigo-600"
               >
                 <option value="Easy">Easy</option>
                 <option value="Medium">Medium</option>
@@ -220,7 +220,7 @@ const ManualQuestionForm: React.FC<QuestionFormProps> = ({ questionId, initialDa
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium mb-1 text-slate-300">Chapter</label>
+              <label className="block text-sm font-medium mb-1 text-slate-700">Chapter</label>
               <input
                 type="text"
                 name="chapter"
@@ -229,7 +229,7 @@ const ManualQuestionForm: React.FC<QuestionFormProps> = ({ questionId, initialDa
                 list="chapters-list"
                 placeholder="e.g. Electrostatics"
                 required
-                className="w-full bg-slate-900/50 border border-slate-700 rounded-lg p-2.5 text-white focus:outline-none focus:border-indigo-600"
+                className="w-full bg-white/80 border border-indigo-200 rounded-lg p-2.5 text-slate-900 focus:outline-none focus:border-indigo-600"
               />
               <datalist id="chapters-list">
                 {suggestions.chapters.map((ch) => (
@@ -238,7 +238,7 @@ const ManualQuestionForm: React.FC<QuestionFormProps> = ({ questionId, initialDa
               </datalist>
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1 text-slate-300">Topic</label>
+              <label className="block text-sm font-medium mb-1 text-slate-700">Topic</label>
               <input
                 type="text"
                 name="topic"
@@ -247,7 +247,7 @@ const ManualQuestionForm: React.FC<QuestionFormProps> = ({ questionId, initialDa
                 list="topics-list"
                 placeholder="e.g. Coulomb's Law"
                 required
-                className="w-full bg-slate-900/50 border border-slate-700 rounded-lg p-2.5 text-white focus:outline-none focus:border-indigo-600"
+                className="w-full bg-white/80 border border-indigo-200 rounded-lg p-2.5 text-slate-900 focus:outline-none focus:border-indigo-600"
               />
               <datalist id="topics-list">
                 {suggestions.topics.map((t) => (
@@ -258,12 +258,12 @@ const ManualQuestionForm: React.FC<QuestionFormProps> = ({ questionId, initialDa
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1 text-slate-300">Question Type</label>
+            <label className="block text-sm font-medium mb-1 text-slate-700">Question Type</label>
             <select
               name="type"
               value={formData.type}
               onChange={handleChange}
-              className="w-full bg-slate-900/50 border border-slate-700 rounded-lg p-2.5 text-white focus:outline-none focus:border-indigo-600"
+              className="w-full bg-white/80 border border-indigo-200 rounded-lg p-2.5 text-slate-900 focus:outline-none focus:border-indigo-600"
             >
               <option value="MCQ_SINGLE">MCQ (Single Correct)</option>
               <option value="MCQ_MULTI">MCQ (Multi Correct)</option>
@@ -273,7 +273,7 @@ const ManualQuestionForm: React.FC<QuestionFormProps> = ({ questionId, initialDa
 
           <div>
             <div className="flex justify-between items-center mb-1">
-              <label className="block text-sm font-medium text-slate-300">
+              <label className="block text-sm font-medium text-slate-700">
                 Question Text <span className="text-slate-500 font-mono text-xs">(supports $math$ and $$math$$)</span>
               </label>
             </div>
@@ -284,17 +284,17 @@ const ManualQuestionForm: React.FC<QuestionFormProps> = ({ questionId, initialDa
               onChange={handleChange}
               required
               placeholder="Type question statement here. Use LaTeX for math. E.g. Find the value of $\int x^2 dx$."
-              className="w-full bg-slate-900/50 border border-slate-700 rounded-lg p-2.5 text-white font-sans focus:outline-none focus:border-indigo-600 resize-y"
+              className="w-full bg-white/80 border border-indigo-200 rounded-lg p-2.5 text-slate-900 font-sans focus:outline-none focus:border-indigo-600 resize-y"
             />
           </div>
 
           {/* MCQ Options Fields */}
           {formData.type.startsWith('MCQ') && (
-            <div className="space-y-3 p-4 bg-slate-900/30 rounded-xl border border-slate-700/40">
-              <h3 className="text-sm font-semibold text-slate-300">Multiple Choice Options</h3>
+            <div className="space-y-3 p-4 bg-white/60 rounded-xl border border-indigo-100">
+              <h3 className="text-sm font-semibold text-slate-700">Multiple Choice Options</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs text-slate-400 mb-1">Option A</label>
+                  <label className="block text-xs text-slate-600 mb-1">Option A</label>
                   <input
                     type="text"
                     name="optionA"
@@ -302,11 +302,11 @@ const ManualQuestionForm: React.FC<QuestionFormProps> = ({ questionId, initialDa
                     onChange={handleChange}
                     required={formData.type.startsWith('MCQ')}
                     placeholder="LaTeX math allowed"
-                    className="w-full bg-slate-900/60 border border-slate-700 rounded-lg p-2 text-white focus:outline-none focus:border-indigo-600 text-sm"
+                    className="w-full bg-white/80 border border-indigo-200 rounded-lg p-2 text-slate-900 focus:outline-none focus:border-indigo-600 text-sm"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs text-slate-400 mb-1">Option B</label>
+                  <label className="block text-xs text-slate-600 mb-1">Option B</label>
                   <input
                     type="text"
                     name="optionB"
@@ -314,11 +314,11 @@ const ManualQuestionForm: React.FC<QuestionFormProps> = ({ questionId, initialDa
                     onChange={handleChange}
                     required={formData.type.startsWith('MCQ')}
                     placeholder="LaTeX math allowed"
-                    className="w-full bg-slate-900/60 border border-slate-700 rounded-lg p-2 text-white focus:outline-none focus:border-indigo-600 text-sm"
+                    className="w-full bg-white/80 border border-indigo-200 rounded-lg p-2 text-slate-900 focus:outline-none focus:border-indigo-600 text-sm"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs text-slate-400 mb-1">Option C</label>
+                  <label className="block text-xs text-slate-600 mb-1">Option C</label>
                   <input
                     type="text"
                     name="optionC"
@@ -326,11 +326,11 @@ const ManualQuestionForm: React.FC<QuestionFormProps> = ({ questionId, initialDa
                     onChange={handleChange}
                     required={formData.type.startsWith('MCQ')}
                     placeholder="LaTeX math allowed"
-                    className="w-full bg-slate-900/60 border border-slate-700 rounded-lg p-2 text-white focus:outline-none focus:border-indigo-600 text-sm"
+                    className="w-full bg-white/80 border border-indigo-200 rounded-lg p-2 text-slate-900 focus:outline-none focus:border-indigo-600 text-sm"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs text-slate-400 mb-1">Option D</label>
+                  <label className="block text-xs text-slate-600 mb-1">Option D</label>
                   <input
                     type="text"
                     name="optionD"
@@ -338,7 +338,7 @@ const ManualQuestionForm: React.FC<QuestionFormProps> = ({ questionId, initialDa
                     onChange={handleChange}
                     required={formData.type.startsWith('MCQ')}
                     placeholder="LaTeX math allowed"
-                    className="w-full bg-slate-900/60 border border-slate-700 rounded-lg p-2 text-white focus:outline-none focus:border-indigo-600 text-sm"
+                    className="w-full bg-white/80 border border-indigo-200 rounded-lg p-2 text-slate-900 focus:outline-none focus:border-indigo-600 text-sm"
                   />
                 </div>
               </div>
@@ -348,7 +348,7 @@ const ManualQuestionForm: React.FC<QuestionFormProps> = ({ questionId, initialDa
           {/* Correct Answer Selection */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium mb-1 text-slate-300">Correct Answer</label>
+              <label className="block text-sm font-medium mb-1 text-slate-700">Correct Answer</label>
               
               {formData.type === 'MCQ_SINGLE' && (
                 <div className="flex gap-2">
@@ -359,8 +359,8 @@ const ManualQuestionForm: React.FC<QuestionFormProps> = ({ questionId, initialDa
                       onClick={() => setFormData((prev) => ({ ...prev, correctAnswer: opt }))}
                       className={`flex-1 py-2 rounded-lg border text-center font-bold text-sm transition-all ${
                         formData.correctAnswer === opt
-                          ? 'bg-indigo-600 border-indigo-600 text-white'
-                          : 'bg-slate-900/50 border-slate-700 text-slate-400 hover:border-slate-500'
+                          ? 'bg-indigo-600 border-indigo-600 text-slate-900'
+                          : 'bg-white/80 border-indigo-200 text-slate-600 hover:border-slate-500'
                       }`}
                     >
                       {opt}
@@ -380,8 +380,8 @@ const ManualQuestionForm: React.FC<QuestionFormProps> = ({ questionId, initialDa
                         onClick={() => handleMultiAnswerToggle(opt)}
                         className={`flex-1 py-2 rounded-lg border text-center font-bold text-sm transition-all ${
                           active
-                            ? 'bg-accentPurple border-accentPurple text-white'
-                            : 'bg-slate-900/50 border-slate-700 text-slate-400 hover:border-slate-500'
+                            ? 'bg-accentPurple border-accentPurple text-slate-900'
+                            : 'bg-white/80 border-indigo-200 text-slate-600 hover:border-slate-500'
                         }`}
                       >
                         {opt}
@@ -399,14 +399,14 @@ const ManualQuestionForm: React.FC<QuestionFormProps> = ({ questionId, initialDa
                   onChange={handleChange}
                   placeholder="e.g. 5 or 2.75"
                   required
-                  className="w-full bg-slate-900/50 border border-slate-700 rounded-lg p-2.5 text-white focus:outline-none focus:border-indigo-600 font-mono"
+                  className="w-full bg-white/80 border border-indigo-200 rounded-lg p-2.5 text-slate-900 focus:outline-none focus:border-indigo-600 font-mono"
                 />
               )}
             </div>
 
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <label className="block text-sm font-medium mb-1 text-slate-300">Marks</label>
+                <label className="block text-sm font-medium mb-1 text-slate-700">Marks</label>
                 <input
                   type="number"
                   name="marks"
@@ -414,11 +414,11 @@ const ManualQuestionForm: React.FC<QuestionFormProps> = ({ questionId, initialDa
                   onChange={handleChange}
                   min={1}
                   required
-                  className="w-full bg-slate-900/50 border border-slate-700 rounded-lg p-2.5 text-white focus:outline-none focus:border-indigo-600 text-center font-semibold"
+                  className="w-full bg-white/80 border border-indigo-200 rounded-lg p-2.5 text-slate-900 focus:outline-none focus:border-indigo-600 text-center font-semibold"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1 text-slate-300">Negative</label>
+                <label className="block text-sm font-medium mb-1 text-slate-700">Negative</label>
                 <input
                   type="number"
                   name="negativeMarks"
@@ -426,7 +426,7 @@ const ManualQuestionForm: React.FC<QuestionFormProps> = ({ questionId, initialDa
                   onChange={handleChange}
                   max={0}
                   required
-                  className="w-full bg-slate-900/50 border border-slate-700 rounded-lg p-2.5 text-white focus:outline-none focus:border-indigo-600 text-center font-semibold"
+                  className="w-full bg-white/80 border border-indigo-200 rounded-lg p-2.5 text-slate-900 focus:outline-none focus:border-indigo-600 text-center font-semibold"
                 />
               </div>
             </div>
@@ -434,22 +434,22 @@ const ManualQuestionForm: React.FC<QuestionFormProps> = ({ questionId, initialDa
 
           {/* Diagram Upload */}
           <div>
-            <label className="block text-sm font-medium mb-1 text-slate-300">Insert Diagram / Image</label>
+            <label className="block text-sm font-medium mb-1 text-slate-700">Insert Diagram / Image</label>
             <div className="flex gap-4 items-center">
               {formData.imageUrl ? (
-                <div className="relative flex items-center justify-between w-full bg-slate-900/50 border border-slate-700/80 rounded-xl p-2 px-4">
+                <div className="relative flex items-center justify-between w-full bg-white/80 border border-indigo-200 rounded-xl p-2 px-4">
                   <div className="flex items-center gap-3">
                     <img
                       src={formData.imageUrl}
                       alt="Uploaded Diagram"
-                      className="w-12 h-12 object-contain bg-white rounded border border-slate-700"
+                      className="w-12 h-12 object-contain bg-white rounded border border-indigo-200"
                     />
-                    <span className="text-xs text-slate-400 truncate max-w-[200px]">{formData.imageUrl}</span>
+                    <span className="text-xs text-slate-600 truncate max-w-[200px]">{formData.imageUrl}</span>
                   </div>
                   <button
                     type="button"
                     onClick={handleRemoveImage}
-                    className="p-1.5 bg-slate-800 hover:bg-red-900/50 rounded-full border border-slate-700 hover:border-red-500/50 transition-colors"
+                    className="p-1.5 bg-white hover:bg-red-50 rounded-full border border-indigo-200 hover:border-red-200 transition-colors"
                   >
                     <X className="w-4 h-4 text-red-400" />
                   </button>
@@ -465,7 +465,7 @@ const ManualQuestionForm: React.FC<QuestionFormProps> = ({ questionId, initialDa
                   />
                   <label
                     htmlFor="diagram-file"
-                    className="flex flex-col items-center justify-center border-2 border-dashed border-slate-700 hover:border-slate-500 rounded-xl p-4 cursor-pointer hover:bg-slate-900/10 transition-all"
+                    className="flex flex-col items-center justify-center border-2 border-dashed border-indigo-200 hover:border-slate-500 rounded-xl p-4 cursor-pointer hover:bg-slate-900/10 transition-all"
                   >
                     {imageFile ? (
                       <div className="flex items-center gap-2 text-sm text-teal-500">
@@ -473,7 +473,7 @@ const ManualQuestionForm: React.FC<QuestionFormProps> = ({ questionId, initialDa
                         <span>Ready to upload: {imageFile.name}</span>
                       </div>
                     ) : (
-                      <div className="flex items-center gap-2 text-sm text-slate-400">
+                      <div className="flex items-center gap-2 text-sm text-slate-600">
                         <Upload className="w-5 h-5" />
                         <span>Choose an image (diagrams, graphs)</span>
                       </div>
@@ -485,19 +485,19 @@ const ManualQuestionForm: React.FC<QuestionFormProps> = ({ questionId, initialDa
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1 text-slate-300">Tags</label>
+            <label className="block text-sm font-medium mb-1 text-slate-700">Tags</label>
             <input
               type="text"
               name="tags"
               value={formData.tags}
               onChange={handleChange}
               placeholder="e.g. kinematics, graph, pyq-2025"
-              className="w-full bg-slate-900/50 border border-slate-700 rounded-lg p-2.5 text-white focus:outline-none focus:border-indigo-600 text-sm"
+              className="w-full bg-white/80 border border-indigo-200 rounded-lg p-2.5 text-slate-900 focus:outline-none focus:border-indigo-600 text-sm"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1 text-slate-300">
+            <label className="block text-sm font-medium mb-1 text-slate-700">
               Detailed Solution / Explanation <span className="text-slate-500 font-mono text-xs">(supports $math$)</span>
             </label>
             <textarea
@@ -507,22 +507,22 @@ const ManualQuestionForm: React.FC<QuestionFormProps> = ({ questionId, initialDa
               onChange={handleChange}
               required
               placeholder="Provide solution steps using LaTeX for math equations."
-              className="w-full bg-slate-900/50 border border-slate-700 rounded-lg p-2.5 text-white focus:outline-none focus:border-indigo-600 resize-y text-sm"
+              className="w-full bg-white/80 border border-indigo-200 rounded-lg p-2.5 text-slate-900 focus:outline-none focus:border-indigo-600 resize-y text-sm"
             />
           </div>
 
-          <div className="flex justify-end gap-3 pt-4 border-t border-slate-700/30">
+          <div className="flex justify-end gap-3 pt-4 border-t border-indigo-200/30">
             <button
               type="button"
               onClick={onCancel}
-              className="px-4 py-2 border border-slate-700 hover:bg-slate-700/50 text-slate-300 rounded-lg text-sm transition-colors"
+              className="px-4 py-2 border border-indigo-200 hover:bg-indigo-50 text-slate-700 rounded-lg text-sm transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading || uploadingImage}
-              className="px-5 py-2 bg-gradient-to-r from-indigo-600 to-accentPurple hover:brightness-110 font-medium text-white rounded-lg text-sm shadow-neon transition-all disabled:opacity-50"
+              className="px-5 py-2 bg-gradient-to-r from-indigo-600 to-accentPurple hover:brightness-110 font-medium text-slate-900 rounded-lg text-sm shadow-neon transition-all disabled:opacity-50"
             >
               {loading ? 'Saving...' : 'Save Question'}
             </button>
@@ -531,13 +531,13 @@ const ManualQuestionForm: React.FC<QuestionFormProps> = ({ questionId, initialDa
       </div>
 
       {/* Live Preview Panel */}
-      <div className="bg-gradient-to-br from-indigo-600/90 via-purple-600/90 to-pink-600/90 backdrop-blur-md rounded-2xl p-6 border border-white/20 shadow-xl flex flex-col h-[fit-content] sticky top-6">
+      <div className="bg-gradient-to-br from-indigo-100 via-purple-100 to-pink-100 backdrop-blur-md rounded-2xl p-6 border border-indigo-200 shadow-xl flex flex-col h-[fit-content] sticky top-6">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-lg font-bold flex items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-full bg-teal-500 animate-pulse" />
             Live Preview
           </h2>
-          <span className="bg-slate-900 border border-slate-700 rounded-full px-3 py-1 text-xs text-slate-400">
+          <span className="bg-slate-900 border border-indigo-200 rounded-full px-3 py-1 text-xs text-slate-600">
             {formData.subject} | {formData.difficulty}
           </span>
         </div>
@@ -591,7 +591,7 @@ const ManualQuestionForm: React.FC<QuestionFormProps> = ({ questionId, initialDa
           </div>
 
           <div className="mt-8 border-t border-slate-200 pt-4 font-sans">
-            <div className="text-xs text-slate-400 mb-2">SOLUTION & AUDIT INFO:</div>
+            <div className="text-xs text-slate-600 mb-2">SOLUTION & AUDIT INFO:</div>
             <div className="grid grid-cols-2 gap-2 text-xs text-slate-600 mb-3 bg-slate-50 p-2 rounded border border-slate-200">
               <div>Correct Key: <span className="font-bold text-emerald-600 font-mono text-[13px]">{formData.correctAnswer}</span></div>
               <div>Type: <span className="font-bold text-slate-700">{formData.type}</span></div>
@@ -617,10 +617,36 @@ const ManualQuestionForm: React.FC<QuestionFormProps> = ({ questionId, initialDa
 import { AIQuestionForm } from './AIQuestionForm';
 
 export const QuestionForm: React.FC<QuestionFormProps> = (props) => {
+  const [mode, setMode] = useState<'AI' | 'MANUAL'>('MANUAL');
+  
   if (props.questionId) {
-    // If we have an ID, we are editing an existing question manually
     return <ManualQuestionForm {...props} />;
   }
-  // Otherwise, we are creating new questions via AI Bulk Import
-  return <AIQuestionForm onSuccess={props.onSuccess} onCancel={props.onCancel} />;
+
+  return (
+    <div className="flex flex-col space-y-4">
+      <div className="flex justify-end gap-3 px-2">
+        <button
+          onClick={() => setMode('MANUAL')}
+          className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2 ${mode === 'MANUAL' ? 'bg-indigo-600 text-white shadow-md' : 'bg-white/50 text-slate-700 hover:bg-white/80'}`}
+        >
+          <PenTool className="w-4 h-4" /> Manual Entry
+        </button>
+        <button
+          onClick={() => setMode('AI')}
+          className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2 ${mode === 'AI' ? 'bg-fuchsia-600 text-white shadow-md' : 'bg-white/50 text-slate-700 hover:bg-white/80'}`}
+        >
+          <Sparkles className="w-4 h-4" /> AI Smart Import
+        </button>
+      </div>
+      {mode === 'AI' ? (
+        <AIQuestionForm onSuccess={props.onSuccess} onCancel={props.onCancel} />
+      ) : (
+        <ManualQuestionForm {...props} />
+      )}
+    </div>
+  );
 };
+
+
+
