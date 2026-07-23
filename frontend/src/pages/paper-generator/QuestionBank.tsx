@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import api from '../../api/axios';
+import { qbApi as api } from '../../utils/questionBankApi';
 import { QuestionForm } from '../../components/QuestionBank/QuestionForm';
 import { LaTeXPreview } from '../../components/QuestionBank/LaTeXPreview';
 import {
@@ -50,7 +50,7 @@ export const QuestionBank: React.FC = () => {
       const file = e.target.files[0];
       setImporting(true);
       try {
-        const res = await api.post('/api/questions/import', file);
+        const res = await api.importQuestion(file);
         setImportPrefill(res.question);
         setActiveQuestionId(null);
         setShowForm(true); // Open prefilled editor
@@ -88,7 +88,7 @@ export const QuestionBank: React.FC = () => {
         tag,
         chapter,
       };
-      const res = await api.get('/api/questions', { params: filters });
+      const res = await api.getQuestions(filters);
       setQuestions(res.questions);
     } catch (err: any) {
       setError(err.message || 'Failed to load questions');
@@ -104,7 +104,7 @@ export const QuestionBank: React.FC = () => {
   useEffect(() => {
     const fetchMetadata = async () => {
       try {
-        const metaRes = await api.get('/api/questions/meta');
+        const metaRes = await api.getQuestionMeta();
         setMeta(metaRes.meta);
         if (subject && metaRes.meta[subject]) {
           setAvailableChapters(metaRes.meta[subject].chapters);
@@ -139,7 +139,7 @@ export const QuestionBank: React.FC = () => {
   const handleDelete = async (id: number) => {
     if (!window.confirm('Are you sure you want to delete this question? This cannot be undone.')) return;
     try {
-      await api.delete(/api/questions/$(id));
+      await api.deleteQuestion(id);
       setQuestions((prev) => prev.filter((q) => q.id !== id));
     } catch (err: any) {
       alert(err.message || 'Failed to delete question');

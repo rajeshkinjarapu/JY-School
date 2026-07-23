@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import api from '../../api/axios';
+import { qbApi as api } from '../../utils/questionBankApi';
 import { LaTeXPreview } from '../../components/QuestionBank/LaTeXPreview';
 import {
   ArrowLeft,
@@ -86,7 +86,7 @@ export const PaperBuilder: React.FC = () => {
   useEffect(() => {
     const fetchTemplates = async () => {
       try {
-        const res = await api.get('/api/templates');
+        const res = await api.getTemplates();
         setTemplates(res.templates);
       } catch (err) {
         console.error('Failed to load templates:', err);
@@ -257,7 +257,7 @@ export const PaperBuilder: React.FC = () => {
     }
 
     try {
-      const res = await api.post('/api/papers', payload);
+      const res = await api.createPaper(payload);
       navigate(`/papers/${res.paper.id}`);
     } catch (err: any) {
       setError(err.message || 'Failed to save paper configuration');

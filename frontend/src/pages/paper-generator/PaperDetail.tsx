@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import api from '../../api/axios';
+import { qbApi as api } from '../../utils/questionBankApi';
 import { PrintablePaper } from '../../components/QuestionBank/PrintablePaper';
 import { downloadTexFile } from '../../utils/latexExporter';
 import {
@@ -81,9 +81,9 @@ export const PaperDetail: React.FC = () => {
     try {
       let res;
       if (setVal === 'A') {
-        res = await api.get(/api/papers/$(parseInt(id)));
+        res = await api.getPaper(parseInt(id));
       } else {
-        res = await api.get(/api/papers/$(parseInt(id))/scramble?set=$(setVal));
+        res = await api.getPaperScrambled(parseInt(id), setVal);
       }
       setPaper(res);
     } catch (err: any) {
@@ -114,7 +114,7 @@ export const PaperDetail: React.FC = () => {
       // Fetch the print element's inner HTML (contains pre-rendered KaTeX symbols as pure SVG/HTML!)
       const printHtml = printAreaRef.current.innerHTML;
 
-      const blob = await api.post('/api/papers/export-pdf', printHtml, { responseType: 'blob' });
+      const blob = await api.exportPdf(printHtml);
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
