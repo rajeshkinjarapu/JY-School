@@ -77,7 +77,8 @@ router.put('/templates/:id', authenticate, authorize('SUPER_ADMIN', 'ADMIN', 'TE
 router.delete('/templates/:id', authenticate, authorize('SUPER_ADMIN', 'ADMIN'), deleteTemplate);
 
 // AI and Bulk Imports
-router.post('/import-ai', parseWithGemini);
-router.post('/bulk', bulkCreateQuestions);
+router.post('/questions/import-ai', authenticate, authorize('SUPER_ADMIN', 'ADMIN', 'TEACHER'), parseWithGemini);
+router.post('/questions/bulk', authenticate, authorize('SUPER_ADMIN', 'ADMIN', 'TEACHER'), bulkCreateQuestions);
 export default router;
+
 
