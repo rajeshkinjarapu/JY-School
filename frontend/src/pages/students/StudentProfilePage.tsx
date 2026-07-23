@@ -15,7 +15,6 @@ import {
   Hash, MapPin, Sparkles, GraduationCap, Camera, CreditCard, FileDown, Trash2, Edit2
 } from 'lucide-react';
 import { FeeReceiptPrint } from '../../components/fees/FeeReceiptPrint';
-import { getPhotoUrl } from '../../utils/photo';
 
 export const StudentProfilePage: React.FC = () => {
   const { id } = useParams();

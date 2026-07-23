@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import api from '../../api/axios';
 import { Printer, Download, FileText, CheckCircle, Settings, Upload, Save, MessageCircle } from 'lucide-react';
 import { jsPDF } from 'jspdf';
-import { toJpeg } from 'html-to-image';
+import html2canvas from 'html2canvas';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
 import toast from 'react-hot-toast';
@@ -176,11 +176,15 @@ export const JEEProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
     // We assume the parent container makes it visible, but just in case:
     el.style.display = 'flex';
     
-    // Allow DOM to process
-    await new Promise(resolve => setTimeout(resolve, 100));
+    // Use html2canvas instead of html-to-image for better mobile/Safari compatibility
+    const canvas = await html2canvas(el, { 
+      scale: 1, // equivalent to pixelRatio: 1
+      useCORS: true, 
+      allowTaint: true,
+      backgroundColor: '#ffffff'
+    });
+    const imgData = canvas.toDataURL('image/jpeg', 0.9);
     
-    // Lower pixelRatio to prevent canvas memory limits on mobile devices
-    const imgData = await toJpeg(el, { skipFonts: true, pixelRatio: 1, quality: 0.9, backgroundColor: '#ffffff' });
     const pdf = new jsPDF('p', 'mm', 'a4');
     const pdfWidth = pdf.internal.pageSize.getWidth();
     const pdfHeight = (el.offsetHeight * pdfWidth) / el.offsetWidth;
@@ -287,8 +291,14 @@ export const JEEProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
         // Update toast progress every 5 cards
         if (i % 5 === 0) toast.loading(`Generated ${i} of ${templates.length}...`, { id: loadingToastId });
         
-        // Lower pixelRatio for batch generation as well
-        const imgData = await toJpeg(el, { skipFonts: true, pixelRatio: 1, quality: 0.8, backgroundColor: '#ffffff' });
+        // Use html2canvas for batch generation as well
+        const canvas = await html2canvas(el, { 
+          scale: 1, 
+          useCORS: true, 
+          allowTaint: true,
+          backgroundColor: '#ffffff'
+        });
+        const imgData = canvas.toDataURL('image/jpeg', 0.8);
         
         const pdf = new jsPDF('p', 'mm', 'a4');
         const pdfWidth = pdf.internal.pageSize.getWidth();
