@@ -203,10 +203,11 @@ export default function AttendanceDailyReportPage() {
             </>
           )}
             </div>
-          </div>
+      </div>
         </div>
       </div>
-    </div>
   );
 }
+
+
 
