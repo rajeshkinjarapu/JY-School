@@ -59,9 +59,9 @@ export const JEEProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
       try {
         const res: any = await api.get(`/api/exams/${selectedExamId}/results?classId=${selectedClassId}`);
         const formattedData = (res.data?.data || res.data || []).map((s: any) => {
-           let cName = s.className;
+           let cName = s.className || '';
            let sec = '';
-           if (cName.includes(' - ')) {
+           if (cName && cName.includes(' - ')) {
               [cName, sec] = cName.split(' - ');
            }
            return {
