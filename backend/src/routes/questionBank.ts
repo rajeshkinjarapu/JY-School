@@ -1,3 +1,5 @@
+import { parseWithGemini } from '../controllers/question-bank/import.controller';
+import { bulkCreateQuestions } from '../controllers/question-bank/question.controller';
 import { Router } from 'express';
 import {
   getQuestions,
@@ -74,4 +76,8 @@ router.post('/templates', authenticate, authorize('SUPER_ADMIN', 'ADMIN', 'TEACH
 router.put('/templates/:id', authenticate, authorize('SUPER_ADMIN', 'ADMIN', 'TEACHER'), updateTemplate);
 router.delete('/templates/:id', authenticate, authorize('SUPER_ADMIN', 'ADMIN'), deleteTemplate);
 
+// AI and Bulk Imports
+router.post('/import-ai', parseWithGemini);
+router.post('/bulk', bulkCreateQuestions);
 export default router;
+

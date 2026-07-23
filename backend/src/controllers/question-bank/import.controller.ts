@@ -184,3 +184,67 @@ export const importQuestionFile = async (req: Request, res: Response) => {
     return res.status(500).json({ error: 'Internal server error processing file extraction' });
   }
 };
+import { Request, Response } from 'express';
+import fs from 'fs';
+import { GoogleGenAI } from '@google/genai';
+
+// Initialize Gemini SDK (Make sure GEMINI_API_KEY is in .env)
+const ai = new GoogleGenAI({});
+
+export const parseWithGemini = async (req: Request, res: Response) => {
+  try {
+    const { text, subject } = req.body;
+    if (!text) {
+      return res.status(400).json({ message: 'Text input is required.' });
+    }
+
+    const prompt = \
+You are an AI assistant for an exam portal. Extract multiple exam questions from the following text and return a JSON array of objects.
+Do not wrap the output in markdown code blocks like \\\json. Just return the raw JSON array.
+Each object must strictly match this structure:
+{
+  "subject": "Physics" | "Chemistry" | "Mathematics",
+  "chapter": "String",
+  "topic": "String",
+  "type": "MCQ_SINGLE" | "MCQ_MULTI" | "NUMERICAL",
+  "difficulty": "Easy" | "Medium" | "Hard",
+  "questionText": "String (LaTeX math enabled, e.g. \^2\$)",
+  "optionA": "String",
+  "optionB": "String",
+  "optionC": "String",
+  "optionD": "String",
+  "correctAnswer": "A" | "B" | "C" | "D" | "A,B" | "Float/Int for numerical",
+  "solution": "String (LaTeX explanation)",
+  "marks": 4,
+  "negativeMarks": -1
+}
+
+Infer the subject, chapter, and topic from the context if not explicitly provided.
+\
+
+Raw Text:
+\
+\;
+
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: prompt,
+      config: {
+        responseMimeType: 'application/json',
+      }
+    });
+
+    if (response.text) {
+      let parsed = JSON.parse(response.text);
+      if (!Array.isArray(parsed)) {
+          parsed = [parsed];
+      }
+      return res.status(200).json({ questions: parsed });
+    } else {
+      return res.status(500).json({ message: 'Failed to generate content.' });
+    }
+  } catch (error: any) {
+    console.error('Gemini parsing error:', error);
+    return res.status(500).json({ message: error.message || 'Server error' });
+  }
+};

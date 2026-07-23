@@ -50,6 +50,15 @@ export const qbApi = {
     return res.data;
   },
 
+  async parseQuestionsWithAI(text: string, subject?: string) {
+    const res = await api.post('/api/questions/import-ai', { text, subject });
+    return res.data;
+  },
+
+  async bulkCreateQuestions(questions: any[]) {
+    const res = await api.post('/api/questions/bulk', { questions });
+    return res.data;
+  },
   // Papers API
   async getPapers() {
     const res = await api.get('/api/papers');
@@ -112,3 +121,4 @@ export const qbApi = {
     return res.data;
   },
 };
+

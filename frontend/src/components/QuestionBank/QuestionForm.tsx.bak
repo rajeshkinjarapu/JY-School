@@ -10,7 +10,7 @@ interface QuestionFormProps {
   onCancel: () => void;
 }
 
-const ManualQuestionForm: React.FC<QuestionFormProps> = ({ questionId, initialData, onSuccess, onCancel }) => {
+export const QuestionForm: React.FC<QuestionFormProps> = ({ questionId, initialData, onSuccess, onCancel }) => {
   const [formData, setFormData] = useState({
     subject: initialData?.subject || 'Physics',
     chapter: initialData?.chapter || '',
@@ -613,14 +613,3 @@ const ManualQuestionForm: React.FC<QuestionFormProps> = ({ questionId, initialDa
 
 
 
-
-import { AIQuestionForm } from './AIQuestionForm';
-
-export const QuestionForm: React.FC<QuestionFormProps> = (props) => {
-  if (props.questionId) {
-    // If we have an ID, we are editing an existing question manually
-    return <ManualQuestionForm {...props} />;
-  }
-  // Otherwise, we are creating new questions via AI Bulk Import
-  return <AIQuestionForm onSuccess={props.onSuccess} onCancel={props.onCancel} />;
-};

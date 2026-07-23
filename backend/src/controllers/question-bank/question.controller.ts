@@ -238,3 +238,27 @@ export const getQuestionMeta = async (req: Request, res: Response) => {
     return res.status(500).json({ error: 'Internal server error fetching metadata' });
   }
 };
+export const bulkCreateQuestions = async (req: Request, res: Response) => {
+  try {
+    const { questions } = req.body;
+    if (!questions || !Array.isArray(questions)) {
+      return res.status(400).json({ message: 'Questions array is required.' });
+    }
+
+    // Assign createdBy if available
+    const questionsToInsert = questions.map(q => ({
+      ...q,
+      createdById: (req as any).user?.id || undefined,
+      tags: q.tags || 'AI-Generated',
+    }));
+
+    const result = await prisma.question.createMany({
+      data: questionsToInsert,
+    });
+
+    return res.status(201).json({ message: \Successfully created \ questions.\ });
+  } catch (error: any) {
+    console.error('Bulk create error:', error);
+    return res.status(500).json({ message: error.message || 'Server error' });
+  }
+};
