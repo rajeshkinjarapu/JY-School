@@ -155,5 +155,9 @@
   
   @page { size: A4 portrait; margin: 0; }
   body { -webkit-print-color-adjust: exact; print-color-adjust: exact; background: white; margin: 0; padding: 0; }
-  html, body { height: 297mm; overflow: hidden; }
+  html, body { height: auto !important; min-height: 100% !important; overflow: visible !important; }
+  
+  /* Prevent layout clipping from h-screen and overflow-hidden */
+  .h-screen, .min-h-screen { height: auto !important; min-height: 0 !important; }
+  .overflow-hidden, .overflow-y-auto, .overflow-x-hidden { overflow: visible !important; }
 }
