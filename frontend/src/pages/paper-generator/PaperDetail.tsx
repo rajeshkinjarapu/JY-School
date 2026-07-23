@@ -140,10 +140,10 @@ export const PaperDetail: React.FC = () => {
 
   if (loading && !paper) {
     return (
-      <div className="min-h-screen bg-slate-50 text-slate-800 flex items-center justify-center font-sans">
+      <div className="min-h-screen bg-slate-50 text-indigo-950 font-medium flex items-center justify-center font-sans">
         <div className="flex flex-col items-center gap-3">
           <div className="w-12 h-12 border-4 border-t-accentIndigo border-slate-300 rounded-full animate-spin" />
-          <p className="text-slate-500 text-sm">Compiling LaTeX elements...</p>
+          <p className="text-indigo-700 font-medium text-sm">Compiling LaTeX elements...</p>
         </div>
       </div>
     );
@@ -151,7 +151,7 @@ export const PaperDetail: React.FC = () => {
 
   if (!paper) {
     return (
-      <div className="min-h-screen bg-slate-50 text-slate-800 flex items-center justify-center font-sans">
+      <div className="min-h-screen bg-slate-50 text-indigo-950 font-medium flex items-center justify-center font-sans">
         <div className="text-center">
           <h2 className="text-xl font-bold">Paper Not Found</h2>
           <Link to="/question-bank" className="text-accentIndigo hover:underline mt-2 inline-block">
@@ -163,7 +163,7 @@ export const PaperDetail: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-800 font-sans pb-16 print:bg-white print:pb-0">
+    <div className="min-h-screen bg-slate-50 text-indigo-950 font-medium font-sans pb-16 print:bg-white print:pb-0">
       {/* Interactive Controls Nav (Hidden in print) */}
       <header className="border-b border-slate-200 bg-white/75 backdrop-blur-md sticky top-0 z-30 print:hidden">
         <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
@@ -221,13 +221,13 @@ export const PaperDetail: React.FC = () => {
         
         {/* Toggle options bar */}
         <div className="lg:col-span-1 bg-white border border-slate-200 rounded-3xl p-5 space-y-5 h-fit shadow-sm">
-          <h3 className="font-bold text-xs uppercase tracking-wider text-slate-500 border-b border-slate-100 pb-2">
+          <h3 className="font-bold text-xs uppercase tracking-wider text-indigo-700 font-medium border-b border-slate-100 pb-2">
             Configure View
           </h3>
 
           {/* Randomizer Set Swapper */}
           <div>
-            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-1">
+            <label className="block text-xs font-semibold text-indigo-700 font-medium uppercase tracking-wider mb-2 flex items-center gap-1">
               <Sparkles className="w-3.5 h-3.5 text-accentTeal animate-pulse" />
               Anti-Cheating Set (Randomized)
             </label>
@@ -240,21 +240,21 @@ export const PaperDetail: React.FC = () => {
                   className={`py-1.5 rounded-lg text-xs font-bold transition-all ${
                     activeSet === setCode
                       ? 'bg-accentIndigo text-white'
-                      : 'text-slate-500 hover:text-slate-700'
+                      : 'text-indigo-700 font-medium hover:text-slate-700'
                   }`}
                 >
                   Set {setCode}
                 </button>
               ))}
             </div>
-            <p className="text-[9px] text-slate-500 font-sans mt-1">
+            <p className="text-[9px] text-indigo-700 font-medium font-sans mt-1">
               Automatically scrambles question index ordering and MCQ option sets dynamically.
             </p>
           </div>
 
           {/* Document Mode selector */}
           <div className="space-y-2">
-            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider">
+            <label className="block text-xs font-semibold text-indigo-700 font-medium uppercase tracking-wider">
               Document Layout Mode
             </label>
 
@@ -266,7 +266,7 @@ export const PaperDetail: React.FC = () => {
               className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all border flex items-center gap-2 ${
                 !showAnswerKey && !showSolutions
                   ? 'bg-accentIndigo/10 text-accentIndigo border-accentIndigo/30'
-                  : 'bg-slate-50 border-transparent text-slate-500 hover:bg-slate-100'
+                  : 'bg-slate-50 border-transparent text-indigo-700 font-medium hover:bg-slate-100'
               }`}
             >
               <Layout className="w-4 h-4" />
@@ -281,7 +281,7 @@ export const PaperDetail: React.FC = () => {
               className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all border flex items-center gap-2 ${
                 showAnswerKey
                   ? 'bg-accentTeal/10 text-accentTeal border-accentTeal/30'
-                  : 'bg-slate-50 border-transparent text-slate-500 hover:bg-slate-100'
+                  : 'bg-slate-50 border-transparent text-indigo-700 font-medium hover:bg-slate-100'
               }`}
             >
               <CheckSquare className="w-4 h-4" />
@@ -296,7 +296,7 @@ export const PaperDetail: React.FC = () => {
               className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all border flex items-center gap-2 ${
                 showSolutions
                   ? 'bg-accentPurple/10 text-accentPurple border-accentPurple/30'
-                  : 'bg-slate-50 border-transparent text-slate-500 hover:bg-slate-100'
+                  : 'bg-slate-50 border-transparent text-indigo-700 font-medium hover:bg-slate-100'
               }`}
             >
               <BookOpen className="w-4 h-4" />
@@ -306,7 +306,7 @@ export const PaperDetail: React.FC = () => {
 
           {/* Toggles */}
           <div className="space-y-3 pt-3 border-t border-slate-200">
-            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider">
+            <label className="block text-xs font-semibold text-indigo-700 font-medium uppercase tracking-wider">
               Exam Properties
             </label>
 
@@ -383,4 +383,5 @@ export const PaperDetail: React.FC = () => {
     </div>
   );
 };
+
 

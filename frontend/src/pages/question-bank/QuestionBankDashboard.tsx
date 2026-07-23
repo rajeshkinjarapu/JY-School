@@ -39,7 +39,7 @@ export const QuestionBankDashboard = () => {
                 else if (tool.title === 'Paper Generator') navigate('/question-bank/papers/new');
                 else if (tool.title === 'Dashboard') navigate('/question-bank');
               }}
-              className="group relative bg-white border border-slate-100 rounded-3xl p-6 shadow-sm hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 cursor-pointer overflow-hidden flex flex-col justify-between min-h-[160px]"
+              className="group relative bg-white/90 backdrop-blur-md border-2 border-indigo-100 shadow-xl shadow-indigo-200/50 hover:border-indigo-400 rounded-3xl p-6 shadow-sm hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 cursor-pointer overflow-hidden flex flex-col justify-between min-h-[160px]"
             >
               {/* Colorful Background Glow on Hover */}
               <div className={`absolute -right-10 -top-10 w-40 h-40 bg-gradient-to-br ${tool.color} rounded-full opacity-0 group-hover:opacity-10 blur-2xl transition-opacity duration-500`}></div>
@@ -57,7 +57,7 @@ export const QuestionBankDashboard = () => {
                 <h3 className="font-bold text-slate-800 text-xl tracking-tight mb-1 group-hover:text-indigo-600 transition-colors">
                   {tool.title}
                 </h3>
-                <p className="text-slate-500 text-sm font-medium leading-relaxed">
+                <p className="text-indigo-700 font-medium text-sm font-medium leading-relaxed">
                   {tool.description}
                 </p>
               </div>
@@ -70,4 +70,5 @@ export const QuestionBankDashboard = () => {
 };
 
 export default QuestionBankDashboard;
+
 

@@ -164,7 +164,7 @@ export const QuestionBank: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50/50 via-purple-50/50 to-pink-50/50 text-slate-850 font-sans pb-12">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 text-slate-850 font-sans pb-12">
       {/* Header Banner */}
       <nav className="border-b border-slate-200 bg-white/75 backdrop-blur-md sticky top-0 z-30">
         <div className="w-full mx-auto px-2 lg:px-6 h-16 flex items-center justify-between">
@@ -188,7 +188,7 @@ export const QuestionBank: React.FC = () => {
             />
             <label
               htmlFor="smart-import-input"
-              className={`px-4 py-2 border border-slate-200 bg-white hover:bg-gradient-to-br from-indigo-50/50 via-purple-50/50 to-pink-50/50 text-slate-700 rounded-xl text-xs font-semibold flex items-center gap-1.5 cursor-pointer select-none transition-all shadow-sm ${
+              className={`px-4 py-2 border border-slate-200 bg-white hover:bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 text-slate-700 rounded-xl text-xs font-semibold flex items-center gap-1.5 cursor-pointer select-none transition-all shadow-sm ${
                 importing ? 'opacity-50 pointer-events-none' : ''
               }`}
             >
@@ -221,7 +221,7 @@ export const QuestionBank: React.FC = () => {
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
             {/* Filter Panel (Left) */}
-            <div className="bg-white border border-slate-200 rounded-2xl p-5 h-fit space-y-5 shadow-sm text-slate-800">
+            <div className="bg-white/90 backdrop-blur-xl border-2 border-indigo-100 rounded-3xl p-6 shadow-xl shadow-indigo-200/50 h-fit space-y-5 shadow-sm text-slate-800">
               <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                 <h3 className="font-bold text-sm flex items-center gap-1.5 text-slate-800">
                   <SlidersHorizontal className="w-4 h-4 text-accentTeal" />
@@ -247,7 +247,7 @@ export const QuestionBank: React.FC = () => {
                       onClick={() => setSubject(subject === subj ? '' : subj)}
                       className={`text-left px-3 py-2 rounded-xl text-xs font-semibold transition-all ${
                         subject === subj
-                          ? 'bg-accentIndigo/10 text-accentIndigo border border-accentIndigo/30'
+                          ? 'bg-indigo-600 text-white shadow-md border-indigo-600'
                           : 'bg-white hover:bg-indigo-50 text-slate-700 border border-slate-200 shadow-sm hover:shadow-md hover:border-indigo-200'
                       }`}
                     >
@@ -400,7 +400,7 @@ export const QuestionBank: React.FC = () => {
                         </div>
 
                         {/* Question Preview Box (White Sheet Mockup) */}
-                        <div className="bg-gradient-to-br from-indigo-50/50 via-purple-50/50 to-pink-50/50/50 border border-slate-150 rounded-xl p-4 font-serif text-[13px] text-slate-800">
+                        <div className="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50/50 border border-slate-150 rounded-xl p-4 font-serif text-[13px] text-slate-800">
                           <LaTeXPreview text={q.questionText} />
                         </div>
                       </div>
@@ -414,14 +414,14 @@ export const QuestionBank: React.FC = () => {
                         <div className="flex gap-2">
                           <button
                             onClick={() => handleEdit(q.id)}
-                            className="p-2 bg-gradient-to-br from-indigo-50/50 via-purple-50/50 to-pink-50/50 hover:bg-slate-100 hover:text-accentIndigo border border-slate-200 hover:border-accentIndigo/30 rounded-lg text-slate-500 transition-colors"
+                            className="p-2 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 hover:bg-slate-100 hover:text-accentIndigo border border-slate-200 hover:border-accentIndigo/30 rounded-lg text-slate-500 transition-colors"
                             title="Edit Question"
                           >
                             <Edit className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => handleDelete(q.id)}
-                            className="p-2 bg-gradient-to-br from-indigo-50/50 via-purple-50/50 to-pink-50/50 hover:bg-red-50 hover:text-red-500 border border-slate-200 hover:border-red-200 rounded-lg text-slate-500 transition-colors"
+                            className="p-2 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 hover:bg-red-50 hover:text-red-500 border border-slate-200 hover:border-red-200 rounded-lg text-slate-500 transition-colors"
                             title="Delete Question"
                           >
                             <Trash2 className="w-4 h-4" />
@@ -439,6 +439,7 @@ export const QuestionBank: React.FC = () => {
     </div>
   );
 };
+
 
 
 

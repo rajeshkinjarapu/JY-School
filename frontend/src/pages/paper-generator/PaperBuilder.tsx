@@ -267,12 +267,12 @@ export const PaperBuilder: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50/50 via-purple-50/50 to-pink-50/50 text-slate-800 font-sans pb-16">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 text-indigo-950 font-medium font-sans pb-16">
       {/* Top navbar */}
       <nav className="border-b border-slate-200 bg-white/75 backdrop-blur-md sticky top-0 z-30 text-slate-850">
         <div className="w-full mx-auto px-2 lg:px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Link to="/question-bank" className="p-2 hover:bg-slate-100 border border-slate-200 hover:border-slate-350 rounded-xl transition-colors text-slate-600">
+            <Link to="/question-bank" className="p-2 hover:bg-slate-100 border border-slate-200 hover:border-slate-350 rounded-xl transition-colors text-indigo-800 font-medium">
               <ArrowLeft className="w-5 h-5" />
             </Link>
             <span className="font-extrabold text-lg tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-accentIndigo to-accentTeal">
@@ -300,146 +300,146 @@ export const PaperBuilder: React.FC = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Metadata Settings Card (Left Column) */}
-          <div className="bg-white border border-slate-200 rounded-3xl p-6 h-fit space-y-4 shadow-sm">
+          <div className="bg-white/90 backdrop-blur-xl border-2 border-indigo-100 rounded-3xl p-6 shadow-xl shadow-indigo-200/50 h-fit space-y-4 shadow-sm">
             <h3 className="font-bold text-sm flex items-center gap-1.5 border-b border-slate-100 pb-3 text-slate-700">
               <Settings className="w-4 h-4 text-accentIndigo" />
               Paper Information
             </h3>
 
             <div>
-              <label className="block text-xs text-slate-500 font-semibold mb-1">Paper Title / Header</label>
+              <label className="block text-xs text-indigo-700 font-medium font-semibold mb-1">Paper Title / Header</label>
               <input
                 type="text"
                 placeholder="e.g. JEE Mains Test Series - Test 1"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs focus:outline-none focus:border-accentIndigo text-slate-800 font-sans"
+                className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs focus:outline-none focus:border-accentIndigo text-indigo-950 font-medium font-sans"
               />
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs text-slate-500 font-semibold mb-1">Duration (Min)</label>
+                <label className="block text-xs text-indigo-700 font-medium font-semibold mb-1">Duration (Min)</label>
                 <input
                   type="number"
                   value={duration}
                   onChange={(e) => setDuration(e.target.value)}
-                  className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs focus:outline-none focus:border-accentIndigo text-slate-800 text-center font-bold"
+                  className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs focus:outline-none focus:border-accentIndigo text-indigo-950 font-medium text-center font-bold"
                 />
               </div>
               <div>
-                <label className="block text-xs text-slate-500 font-semibold mb-1">Total Marks</label>
+                <label className="block text-xs text-indigo-700 font-medium font-semibold mb-1">Total Marks</label>
                 <input
                   type="number"
                   value={totalMarks}
                   onChange={(e) => setTotalMarks(e.target.value)}
-                  className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs focus:outline-none focus:border-accentIndigo text-slate-800 text-center font-bold"
+                  className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs focus:outline-none focus:border-accentIndigo text-indigo-950 font-medium text-center font-bold"
                 />
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs text-slate-500 font-semibold mb-1">Exam Date</label>
+                <label className="block text-xs text-indigo-700 font-medium font-semibold mb-1">Exam Date</label>
                 <input
                   type="date"
                   value={examDate}
                   onChange={(e) => setExamDate(e.target.value)}
-                  className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs focus:outline-none focus:border-accentIndigo text-slate-800 font-sans"
+                  className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs focus:outline-none focus:border-accentIndigo text-indigo-950 font-medium font-sans"
                 />
               </div>
               <div>
-                <label className="block text-xs text-slate-500 font-semibold mb-1">Paper Set Code</label>
+                <label className="block text-xs text-indigo-700 font-medium font-semibold mb-1">Paper Set Code</label>
                 <input
                   type="text"
                   placeholder="SET A"
                   value={paperCode}
                   onChange={(e) => setPaperCode(e.target.value)}
-                  className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs focus:outline-none focus:border-accentIndigo text-slate-800 text-center uppercase font-mono font-bold"
+                  className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs focus:outline-none focus:border-accentIndigo text-indigo-950 font-medium text-center uppercase font-mono font-bold"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs text-slate-500 font-semibold mb-1">Watermark (Text)</label>
+              <label className="block text-xs text-indigo-700 font-medium font-semibold mb-1">Watermark (Text)</label>
               <input
                 type="text"
                 placeholder="e.g. CONFIDENTIAL / INSTITUTE NAME"
                 value={watermark}
                 onChange={(e) => setWatermark(e.target.value)}
-                className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs focus:outline-none focus:border-accentIndigo text-slate-800 uppercase font-sans font-semibold"
+                className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs focus:outline-none focus:border-accentIndigo text-indigo-950 font-medium uppercase font-sans font-semibold"
               />
             </div>
 
             <div>
-              <label className="block text-xs text-slate-500 font-semibold mb-1">Class / Grade Designation</label>
+              <label className="block text-xs text-indigo-700 font-medium font-semibold mb-1">Class / Grade Designation</label>
               <input
                 type="text"
                 placeholder="e.g. 6th A"
                 value={className}
                 onChange={(e) => setClassName(e.target.value)}
-                className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs focus:outline-none focus:border-accentIndigo text-slate-800 font-sans"
+                className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs focus:outline-none focus:border-accentIndigo text-indigo-950 font-medium font-sans"
               />
             </div>
 
             <div>
-              <label className="block text-xs text-slate-500 font-semibold mb-1">Institute / School Name</label>
+              <label className="block text-xs text-indigo-700 font-medium font-semibold mb-1">Institute / School Name</label>
               <input
                 type="text"
                 placeholder="e.g. SRI VENKATESWARA JY SCHOOL"
                 value={instituteName}
                 onChange={(e) => setInstituteName(e.target.value)}
-                className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs focus:outline-none focus:border-accentIndigo text-slate-800 font-sans uppercase font-bold"
+                className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs focus:outline-none focus:border-accentIndigo text-indigo-950 font-medium font-sans uppercase font-bold"
               />
             </div>
 
             <div>
-              <label className="block text-xs text-slate-500 font-semibold mb-1">Header Subtitle 1</label>
+              <label className="block text-xs text-indigo-700 font-medium font-semibold mb-1">Header Subtitle 1</label>
               <input
                 type="text"
                 placeholder="e.g. (IIT-JEE/NEET Foundation - Olympiads)"
                 value={subHeader1}
                 onChange={(e) => setSubHeader1(e.target.value)}
-                className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs focus:outline-none focus:border-accentIndigo text-slate-800 font-sans"
+                className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs focus:outline-none focus:border-accentIndigo text-indigo-950 font-medium font-sans"
               />
             </div>
 
             <div>
-              <label className="block text-xs text-slate-500 font-semibold mb-1">Header Subtitle 2</label>
+              <label className="block text-xs text-indigo-700 font-medium font-semibold mb-1">Header Subtitle 2</label>
               <input
                 type="text"
                 placeholder="e.g. SVL Paradise Campus, Narasannapeta"
                 value={subHeader2}
                 onChange={(e) => setSubHeader2(e.target.value)}
-                className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs focus:outline-none focus:border-accentIndigo text-slate-800 font-sans"
+                className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs focus:outline-none focus:border-accentIndigo text-indigo-950 font-medium font-sans"
               />
             </div>
 
             <div>
-              <label className="block text-xs text-slate-500 font-semibold mb-1">Custom Logo (URL Image)</label>
+              <label className="block text-xs text-indigo-700 font-medium font-semibold mb-1">Custom Logo (URL Image)</label>
               <input
                 type="text"
                 placeholder="e.g. /uploads/logo.png"
                 value={logoUrl}
                 onChange={(e) => setLogoUrl(e.target.value)}
-                className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs focus:outline-none focus:border-accentIndigo text-slate-800 font-sans"
+                className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs focus:outline-none focus:border-accentIndigo text-indigo-950 font-medium font-sans"
               />
             </div>
 
             <div>
-              <label className="block text-xs text-slate-500 font-semibold mb-1">Instructions (supports $math$)</label>
+              <label className="block text-xs text-indigo-700 font-medium font-semibold mb-1">Instructions (supports $math$)</label>
               <textarea
                 rows={3}
                 value={instructions}
                 onChange={(e) => setInstructions(e.target.value)}
                 placeholder="Type paper instructions here..."
-                className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs focus:outline-none focus:border-accentIndigo text-slate-800 font-sans"
+                className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs focus:outline-none focus:border-accentIndigo text-indigo-950 font-medium font-sans"
               />
             </div>
 
             {/* Creation Mode Switcher */}
             <div className="pt-4 border-t border-slate-200">
-              <label className="block text-xs text-slate-500 font-semibold mb-2">Compilation Mode</label>
+              <label className="block text-xs text-indigo-700 font-medium font-semibold mb-2">Compilation Mode</label>
               <div className="grid grid-cols-2 gap-2 bg-slate-100 p-1 rounded-xl">
                 <button
                   type="button"
@@ -447,7 +447,7 @@ export const PaperBuilder: React.FC = () => {
                   className={`py-2 rounded-lg text-xs font-bold transition-all ${
                     mode === 'MANUAL'
                       ? 'bg-accentIndigo text-white shadow-sm'
-                      : 'text-slate-500 hover:text-slate-700'
+                      : 'text-indigo-700 font-medium hover:text-slate-700'
                   }`}
                 >
                   Manual Selection
@@ -458,7 +458,7 @@ export const PaperBuilder: React.FC = () => {
                   className={`py-2 rounded-lg text-xs font-bold transition-all ${
                     mode === 'AUTO'
                       ? 'bg-accentTeal text-white shadow-sm'
-                      : 'text-slate-500 hover:text-slate-700'
+                      : 'text-indigo-700 font-medium hover:text-slate-700'
                   }`}
                 >
                   Auto-Blueprint
@@ -477,19 +477,19 @@ export const PaperBuilder: React.FC = () => {
                     <Sparkles className="w-5 h-5 animate-pulse" />
                     Auto-Generate JEE Paper
                   </h3>
-                  <span className="text-xs text-slate-500 font-sans">Rule-based compilation</span>
+                  <span className="text-xs text-indigo-700 font-medium font-sans">Rule-based compilation</span>
                 </div>
 
                 {/* Templates Selector */}
                 <div>
-                  <label className="block text-xs text-slate-600 font-semibold mb-1">
+                  <label className="block text-xs text-indigo-800 font-medium font-semibold mb-1">
                     Load Existing Blueprint Template (Optional)
                   </label>
                   <div className="relative">
                     <select
                       value={selectedTemplateId}
                       onChange={handleTemplateChange}
-                      className="w-full bg-white border border-indigo-200 shadow-sm rounded-xl p-3 text-xs focus:outline-none focus:border-accentTeal text-slate-800 font-sans"
+                      className="w-full bg-white border border-indigo-200 shadow-sm rounded-xl p-3 text-xs focus:outline-none focus:border-accentTeal text-indigo-950 font-medium font-sans"
                     >
                       <option value="">-- Select A Saved Blueprint Blueprint --</option>
                       {templates.map((t) => (
@@ -503,39 +503,39 @@ export const PaperBuilder: React.FC = () => {
 
                 {/* Blueprint Parameters */}
                 <div className="p-4 bg-white border border-indigo-200 shadow-sm rounded-2xl space-y-4">
-                  <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider">Number of Questions per Subject</h4>
+                  <h4 className="text-xs font-bold text-indigo-950 font-medium uppercase tracking-wider">Number of Questions per Subject</h4>
                   <div className="grid grid-cols-3 gap-4">
-                    <div className="bg-gradient-to-br from-indigo-50/50 via-purple-50/50 to-pink-50/50 p-3 rounded-xl border border-slate-200 text-center">
-                      <span className="text-xs text-slate-600">Physics</span>
+                    <div className="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-3 rounded-xl border border-slate-200 text-center">
+                      <span className="text-xs text-indigo-800 font-medium">Physics</span>
                       <input
                         type="number"
                         value={physicsCount}
                         onChange={(e) => setPhysicsCount(parseInt(e.target.value) || 0)}
-                        className="w-full bg-transparent text-center font-bold text-lg text-slate-800 mt-1 border-b border-slate-300 focus:outline-none focus:border-accentTeal"
+                        className="w-full bg-transparent text-center font-bold text-lg text-indigo-950 font-medium mt-1 border-b border-slate-300 focus:outline-none focus:border-accentTeal"
                       />
                     </div>
 
-                    <div className="bg-gradient-to-br from-indigo-50/50 via-purple-50/50 to-pink-50/50 p-3 rounded-xl border border-slate-200 text-center">
-                      <span className="text-xs text-slate-600">Chemistry</span>
+                    <div className="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-3 rounded-xl border border-slate-200 text-center">
+                      <span className="text-xs text-indigo-800 font-medium">Chemistry</span>
                       <input
                         type="number"
                         value={chemistryCount}
                         onChange={(e) => setChemistryCount(parseInt(e.target.value) || 0)}
-                        className="w-full bg-transparent text-center font-bold text-lg text-slate-800 mt-1 border-b border-slate-300 focus:outline-none focus:border-accentTeal"
+                        className="w-full bg-transparent text-center font-bold text-lg text-indigo-950 font-medium mt-1 border-b border-slate-300 focus:outline-none focus:border-accentTeal"
                       />
                     </div>
 
-                    <div className="bg-gradient-to-br from-indigo-50/50 via-purple-50/50 to-pink-50/50 p-3 rounded-xl border border-slate-200 text-center">
-                      <span className="text-xs text-slate-600">Mathematics</span>
+                    <div className="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-3 rounded-xl border border-slate-200 text-center">
+                      <span className="text-xs text-indigo-800 font-medium">Mathematics</span>
                       <input
                         type="number"
                         value={mathCount}
                         onChange={(e) => setMathCount(parseInt(e.target.value) || 0)}
-                        className="w-full bg-transparent text-center font-bold text-lg text-slate-800 mt-1 border-b border-slate-300 focus:outline-none focus:border-accentTeal"
+                        className="w-full bg-transparent text-center font-bold text-lg text-indigo-950 font-medium mt-1 border-b border-slate-300 focus:outline-none focus:border-accentTeal"
                       />
                     </div>
                   </div>
-                  <p className="text-[10px] text-slate-500 font-sans italic leading-relaxed text-center">
+                  <p className="text-[10px] text-indigo-700 font-medium font-sans italic leading-relaxed text-center">
                     Note: Generates double-section layouts for each subject (80% MCQ Single Correct + 20% Numerical questions) randomly selected from your question database bank.
                   </p>
                 </div>
@@ -544,9 +544,9 @@ export const PaperBuilder: React.FC = () => {
               /* MANUAL WORKSPACE PANES Split */
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
                 {/* Question Bank Left Pane */}
-                <div className="bg-white shadow-md border border-slate-200 rounded-3xl p-5 space-y-4">
+                <div className="bg-white/90 backdrop-blur-xl border-2 border-indigo-100 rounded-3xl p-5 shadow-xl shadow-indigo-200/50 space-y-4">
                   <div className="flex justify-between items-center border-b border-slate-200 pb-2.5">
-                    <h4 className="font-bold text-xs text-slate-800 uppercase tracking-wider flex items-center gap-1">
+                    <h4 className="font-bold text-xs text-indigo-950 font-medium uppercase tracking-wider flex items-center gap-1">
                       <FolderOpen className="w-4 h-4 text-accentIndigo" />
                       Browse Bank
                     </h4>
@@ -567,7 +567,7 @@ export const PaperBuilder: React.FC = () => {
                       placeholder="Filter questions..."
                       value={bankSearch}
                       onChange={(e) => setBankSearch(e.target.value)}
-                      className="w-full bg-white border border-indigo-200 shadow-sm rounded-lg p-2 text-[11px] text-slate-800 focus:outline-none focus:border-accentIndigo font-sans"
+                      className="w-full bg-white border border-indigo-200 shadow-sm rounded-lg p-2 text-[11px] text-indigo-950 font-medium focus:outline-none focus:border-accentIndigo font-sans"
                     />
                     <button type="submit" className="p-2 bg-indigo-600 text-white rounded-lg text-xs hover:bg-indigo-700 shadow-md transition-colors">
                       <Search className="w-3.5 h-3.5" />
@@ -576,7 +576,7 @@ export const PaperBuilder: React.FC = () => {
 
                   <div className="max-h-[500px] overflow-y-auto pr-1 space-y-3 font-sans">
                     {bankLoading ? (
-                      <div className="text-center py-10 text-xs text-slate-500">Loading bank questions...</div>
+                      <div className="text-center py-10 text-xs text-indigo-700 font-medium">Loading bank questions...</div>
                     ) : bankQuestions.length === 0 ? (
                       <div className="text-center py-10 text-xs text-indigo-600 bg-indigo-50 border-2 border-dashed border-indigo-200 shadow-sm font-semibold rounded-xl">
                         No unused questions found in subject.
@@ -585,13 +585,13 @@ export const PaperBuilder: React.FC = () => {
                       bankQuestions.map((q) => (
                         <div
                           key={q.id}
-                          className="bg-gradient-to-br from-indigo-50/50 via-purple-50/50 to-pink-50/50 hover:bg-indigo-50 border border-slate-200 rounded-xl p-3 flex flex-col justify-between"
+                          className="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 hover:bg-indigo-50 border border-slate-200 rounded-xl p-3 flex flex-col justify-between"
                         >
-                          <div className="font-serif text-[11.5px] line-clamp-3 text-slate-800">
+                          <div className="font-serif text-[11.5px] line-clamp-3 text-indigo-950 font-medium">
                             <LaTeXPreview text={q.questionText} />
                           </div>
                           <div className="flex justify-between items-center mt-3 pt-2 border-t border-slate-200/50">
-                            <span className="text-[9px] text-slate-500 uppercase font-mono font-bold">
+                            <span className="text-[9px] text-indigo-700 font-medium uppercase font-mono font-bold">
                               ID: {q.id} | {q.chapter} ({q.type})
                             </span>
                             <button
@@ -609,16 +609,16 @@ export const PaperBuilder: React.FC = () => {
                 </div>
 
                 {/* Paper Sections Right Pane */}
-                <div className="bg-white shadow-md border border-slate-200 rounded-3xl p-5 space-y-4">
+                <div className="bg-white/90 backdrop-blur-xl border-2 border-indigo-100 rounded-3xl p-5 shadow-xl shadow-indigo-200/50 space-y-4">
                   <div className="flex justify-between items-center border-b border-slate-200 pb-2.5">
-                    <h4 className="font-bold text-xs text-slate-800 uppercase tracking-wider flex items-center gap-1">
+                    <h4 className="font-bold text-xs text-indigo-950 font-medium uppercase tracking-wider flex items-center gap-1">
                       <ListOrdered className="w-4 h-4 text-accentTeal" />
                       Paper Layout
                     </h4>
                     <button
                       type="button"
                       onClick={handleAddSection}
-                      className="px-2.5 py-0.5 bg-slate-800 hover:bg-slate-700 border border-slate-300 hover:border-slate-600 text-slate-800 rounded text-[10px] font-bold transition-all"
+                      className="px-2.5 py-0.5 bg-slate-800 hover:bg-slate-700 border border-slate-300 hover:border-slate-600 text-indigo-950 font-medium rounded text-[10px] font-bold transition-all"
                     >
                       + Add Section
                     </button>
@@ -652,10 +652,10 @@ export const PaperBuilder: React.FC = () => {
 
                     return (
                       <div className="space-y-3 font-sans">
-                        <div className="flex justify-between items-center bg-gradient-to-br from-indigo-50/50 via-purple-50/50 to-pink-50/50 p-2.5 rounded-xl border border-slate-200 text-xs">
+                        <div className="flex justify-between items-center bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-2.5 rounded-xl border border-slate-200 text-xs">
                           <div>
-                            Section: <span className="font-bold text-slate-800">{activeSec.name}</span>
-                            <span className="ml-1 text-[9px] text-slate-500 font-mono">({activeSec.type})</span>
+                            Section: <span className="font-bold text-indigo-950 font-medium">{activeSec.name}</span>
+                            <span className="ml-1 text-[9px] text-indigo-700 font-medium font-mono">({activeSec.type})</span>
                           </div>
                           <button
                             type="button"
@@ -678,7 +678,7 @@ export const PaperBuilder: React.FC = () => {
                                 className="bg-white border border-slate-200 p-2.5 rounded-xl flex items-center justify-between gap-3 text-xs"
                               >
                                 <div className="flex-1 font-serif text-[11px] truncate text-slate-700 pr-2">
-                                  <span className="font-sans font-bold text-[10px] mr-1.5 text-slate-500">Q.{idx+1}</span>
+                                  <span className="font-sans font-bold text-[10px] mr-1.5 text-indigo-700 font-medium">Q.{idx+1}</span>
                                   <LaTeXPreview text={q.questionText} className="inline" />
                                 </div>
 
@@ -688,7 +688,7 @@ export const PaperBuilder: React.FC = () => {
                                     type="button"
                                     onClick={() => handleMoveQuestion(activeSec.id, idx, 'UP')}
                                     disabled={idx === 0}
-                                    className="p-1 hover:bg-slate-200 disabled:opacity-30 rounded text-slate-600"
+                                    className="p-1 hover:bg-slate-200 disabled:opacity-30 rounded text-indigo-800 font-medium"
                                   >
                                     <ArrowUp className="w-3.5 h-3.5" />
                                   </button>
@@ -696,14 +696,14 @@ export const PaperBuilder: React.FC = () => {
                                     type="button"
                                     onClick={() => handleMoveQuestion(activeSec.id, idx, 'DOWN')}
                                     disabled={idx === activeSec.questions.length - 1}
-                                    className="p-1 hover:bg-slate-200 disabled:opacity-30 rounded text-slate-600"
+                                    className="p-1 hover:bg-slate-200 disabled:opacity-30 rounded text-indigo-800 font-medium"
                                   >
                                     <ArrowDown className="w-3.5 h-3.5" />
                                   </button>
                                   <button
                                     type="button"
                                     onClick={() => handleRemoveQuestionFromSection(activeSec.id, q.id)}
-                                    className="p-1 hover:bg-red-950/20 text-slate-500 hover:text-red-400 rounded"
+                                    className="p-1 hover:bg-red-950/20 text-indigo-700 font-medium hover:text-red-400 rounded"
                                   >
                                     <Trash2 className="w-3.5 h-3.5" />
                                   </button>
@@ -724,6 +724,7 @@ export const PaperBuilder: React.FC = () => {
     </div>
   );
 };
+
 
 
 
