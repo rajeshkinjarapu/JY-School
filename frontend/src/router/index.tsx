@@ -244,7 +244,7 @@ export const router = createBrowserRouter([
         element: withSuspense(<StudentAdmitCardViewPage />),
       },
       {
-        path: 'exams/paper-generator',
+        path: 'question-bank/dashboard',
         element: withSuspense(
           <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN', 'TEACHER']}>
             <PaperGeneratorDashboard />
@@ -252,7 +252,7 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: 'exams/paper-generator/questions',
+        path: 'question-bank/questions',
         element: withSuspense(
           <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN', 'TEACHER']}>
             <QuestionBankPage />
@@ -260,7 +260,7 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: 'exams/paper-generator/papers/new',
+        path: 'question-bank/papers/new',
         element: withSuspense(
           <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN', 'TEACHER']}>
             <PaperBuilderPage />
@@ -268,7 +268,7 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: 'exams/paper-generator/papers/:id',
+        path: 'question-bank/papers/:id',
         element: withSuspense(
           <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN', 'TEACHER']}>
             <PaperDetailPage />

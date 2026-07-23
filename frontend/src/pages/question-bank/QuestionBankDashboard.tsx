@@ -1,67 +1,82 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
-  LayoutDashboard, 
-  HelpCircle, 
-  BookOpen, 
-  FolderTree, 
-  List, 
-  BarChart, 
-  Type, 
-  FileUp, 
-  FileText, 
-  Key, 
-  CheckCircle, 
-  PieChart, 
-  Settings, 
-  ChevronRight 
+  LayoutDashboard, HelpCircle, BookOpen, FolderTree, List, BarChart, Type, 
+  FileUp, FileText, Key, CheckCircle, PieChart, Settings, ChevronRight, Sparkles 
 } from 'lucide-react';
 
 export const QuestionBankDashboard = () => {
   const navigate = useNavigate();
   const tools = [
-    { title: 'Dashboard', description: 'Overview and analytics', icon: LayoutDashboard, gradient: 'from-blue-500 to-cyan-400', shadow: 'shadow-blue-500/30' },
-    { title: 'Questions', description: 'Manage all questions', icon: HelpCircle, gradient: 'from-indigo-500 to-purple-500', shadow: 'shadow-indigo-500/30' },
-    { title: 'Subjects', description: 'Manage subjects', icon: BookOpen, gradient: 'from-fuchsia-500 to-pink-500', shadow: 'shadow-fuchsia-500/30' },
-    { title: 'Chapters', description: 'Manage chapters', icon: FolderTree, gradient: 'from-rose-500 to-orange-400', shadow: 'shadow-rose-500/30' },
-    { title: 'Topics', description: 'Manage topics', icon: List, gradient: 'from-emerald-500 to-teal-400', shadow: 'shadow-emerald-500/30' },
-    { title: 'Difficulty Levels', description: 'Configure difficulty levels', icon: BarChart, gradient: 'from-amber-500 to-yellow-400', shadow: 'shadow-amber-500/30' },
-    { title: 'Question Types', description: 'Configure question types', icon: Type, gradient: 'from-violet-500 to-indigo-500', shadow: 'shadow-violet-500/30' },
-    { title: 'Import / Export', description: 'Bulk data operations', icon: FileUp, gradient: 'from-slate-700 to-slate-500', shadow: 'shadow-slate-500/30' },
-    { title: 'Question Paper Generator', description: 'Generate question papers', icon: FileText, gradient: 'from-blue-600 to-indigo-600', shadow: 'shadow-blue-500/30' },
-    { title: 'Answer Keys', description: 'Manage answer keys', icon: Key, gradient: 'from-teal-500 to-emerald-500', shadow: 'shadow-teal-500/30' },
-    { title: 'Review & Approval', description: 'Review questions', icon: CheckCircle, gradient: 'from-orange-500 to-red-500', shadow: 'shadow-orange-500/30' },
-    { title: 'Reports', description: 'Question bank reports', icon: PieChart, gradient: 'from-purple-500 to-fuchsia-500', shadow: 'shadow-purple-500/30' },
-    { title: 'Settings', description: 'Question bank settings', icon: Settings, gradient: 'from-gray-500 to-slate-500', shadow: 'shadow-gray-500/30' },
+    { title: 'Dashboard', description: 'Overview and analytics', icon: LayoutDashboard, color: 'from-blue-600 to-blue-400' },
+    { title: 'Questions', description: 'Manage all questions', icon: HelpCircle, color: 'from-indigo-600 to-indigo-400' },
+    { title: 'Subjects', description: 'Manage subjects', icon: BookOpen, color: 'from-fuchsia-600 to-fuchsia-400' },
+    { title: 'Chapters', description: 'Manage chapters', icon: FolderTree, color: 'from-rose-600 to-rose-400' },
+    { title: 'Topics', description: 'Manage topics', icon: List, color: 'from-emerald-600 to-emerald-400' },
+    { title: 'Difficulty Levels', description: 'Configure difficulty levels', icon: BarChart, color: 'from-amber-500 to-yellow-400' },
+    { title: 'Question Types', description: 'Configure question types', icon: Type, color: 'from-violet-600 to-violet-400' },
+    { title: 'Import / Export', description: 'Bulk data operations', icon: FileUp, color: 'from-slate-700 to-slate-500' },
+    { title: 'Paper Generator', description: 'Generate question papers', icon: FileText, color: 'from-blue-600 to-indigo-600' },
+    { title: 'Answer Keys', description: 'Manage answer keys', icon: Key, color: 'from-teal-600 to-teal-400' },
+    { title: 'Review & Approval', description: 'Review questions', icon: CheckCircle, color: 'from-orange-600 to-orange-400' },
+    { title: 'Reports', description: 'Question bank reports', icon: PieChart, color: 'from-purple-600 to-purple-400' },
+    { title: 'Settings', description: 'Question bank settings', icon: Settings, color: 'from-gray-700 to-gray-500' },
   ];
 
   return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-7xl mx-auto p-4 md:p-8">
+      {/* Premium Header */}
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-900 via-purple-900 to-indigo-800 p-8 md:p-12 shadow-2xl">
+        <div className="absolute top-0 right-0 -mt-20 -mr-20 w-80 h-80 bg-white opacity-5 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-0 left-0 -mb-20 -ml-20 w-64 h-64 bg-pink-500 opacity-10 rounded-full blur-2xl"></div>
+        
+        <div className="relative z-10">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-white/20 backdrop-blur-md mb-6">
+            <Sparkles className="w-5 h-5 text-amber-300" />
+            <span className="text-white text-sm font-semibold tracking-wide uppercase">Premium Tools</span>
+          </div>
+          <h1 className="text-4xl md:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-white to-indigo-200 mb-4 drop-shadow-sm">
+            Question Bank System
+          </h1>
+          <p className="text-indigo-200 text-lg md:text-xl max-w-2xl font-medium leading-relaxed">
+            Manage your entire assessment workflow from a single, powerful dashboard. Create, organize, and generate high-quality question papers with ease.
+          </p>
+        </div>
+      </div>
+
+      {/* Grid of Tools */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {tools.map((tool, index) => {
           const Icon = tool.icon;
           return (
             <div 
               key={index}
               onClick={() => {
-                if (tool.title === 'Questions') navigate('/exams/paper-generator/questions');
-                else if (tool.title === 'Question Paper Generator') navigate('/exams/paper-generator/papers/new');
-                else if (tool.title === 'Dashboard') navigate('/exams/paper-generator');
+                if (tool.title === 'Questions') navigate('/question-bank/questions');
+                else if (tool.title === 'Paper Generator') navigate('/question-bank/papers/new');
+                else if (tool.title === 'Dashboard') navigate('/question-bank');
               }}
-              className="group relative bg-white border border-slate-100 p-6 rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer overflow-hidden flex flex-col items-start gap-4"
+              className="group relative bg-white border border-slate-100 rounded-3xl p-6 shadow-sm hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 cursor-pointer overflow-hidden flex flex-col justify-between min-h-[160px]"
             >
-              <div className={`absolute inset-0 opacity-0 group-hover:opacity-5 transition-opacity duration-300 bg-gradient-to-br ${tool.gradient}`}></div>
+              {/* Colorful Background Glow on Hover */}
+              <div className={`absolute -right-10 -top-10 w-40 h-40 bg-gradient-to-br ${tool.color} rounded-full opacity-0 group-hover:opacity-10 blur-2xl transition-opacity duration-500`}></div>
               
-              <div className={`relative z-10 p-4 rounded-xl bg-gradient-to-br ${tool.gradient} shadow-lg ${tool.shadow} text-white group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300`}>
-                <Icon className="w-6 h-6" strokeWidth={2} />
+              <div className="relative z-10 flex items-start justify-between w-full">
+                <div className={`p-4 rounded-2xl bg-gradient-to-br ${tool.color} shadow-lg text-white group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300`}>
+                  <Icon className="w-7 h-7" strokeWidth={2.5} />
+                </div>
+                <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transform translate-x-4 group-hover:translate-x-0 transition-all duration-300 shadow-sm border border-slate-100">
+                  <ChevronRight className="w-5 h-5 text-slate-400" />
+                </div>
               </div>
               
-              <div className="relative z-10 w-full mt-2">
-                <div className="flex items-center justify-between w-full">
-                  <h3 className="font-extrabold text-slate-800 text-lg group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-slate-800 group-hover:to-slate-600 transition-colors">{tool.title}</h3>
-                  <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-slate-600 transition-colors transform group-hover:translate-x-1" />
-                </div>
-                <p className="text-slate-500 text-sm mt-1.5 font-medium leading-relaxed">{tool.description}</p>
+              <div className="relative z-10 mt-6">
+                <h3 className="font-bold text-slate-800 text-xl tracking-tight mb-1 group-hover:text-indigo-600 transition-colors">
+                  {tool.title}
+                </h3>
+                <p className="text-slate-500 text-sm font-medium leading-relaxed">
+                  {tool.description}
+                </p>
               </div>
             </div>
           );

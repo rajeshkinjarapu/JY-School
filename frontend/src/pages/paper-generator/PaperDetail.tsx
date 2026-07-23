@@ -154,7 +154,7 @@ export const PaperDetail: React.FC = () => {
       <div className="min-h-screen bg-slate-50 text-slate-800 flex items-center justify-center font-sans">
         <div className="text-center">
           <h2 className="text-xl font-bold">Paper Not Found</h2>
-          <Link to="/" className="text-accentIndigo hover:underline mt-2 inline-block">
+          <Link to="/question-bank" className="text-accentIndigo hover:underline mt-2 inline-block">
             Return to Dashboard
           </Link>
         </div>
@@ -168,7 +168,7 @@ export const PaperDetail: React.FC = () => {
       <header className="border-b border-slate-200 bg-white/75 backdrop-blur-md sticky top-0 z-30 print:hidden">
         <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Link to="/" className="p-2 hover:bg-slate-100 border border-slate-200 hover:border-slate-300 rounded-xl transition-colors text-slate-600">
+            <Link to="/question-bank" className="p-2 hover:bg-slate-100 border border-slate-200 hover:border-slate-300 rounded-xl transition-colors text-slate-600">
               <ArrowLeft className="w-5 h-5" />
             </Link>
             <span className="font-extrabold text-sm text-slate-700 line-clamp-1 max-w-xs md:max-w-md">

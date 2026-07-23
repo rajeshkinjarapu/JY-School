@@ -30,7 +30,11 @@ export const DashboardLayout: React.FC = () => {
     if (pathname.startsWith('/teacher-attendance')) return 'Staff Attendance';
     if (pathname.startsWith('/homework')) return 'Homework Manager';
     if (pathname.startsWith('/office-tools')) return 'OFFICE TOOLS';
-    return 'JY SCHOOL';
+    if (pathname.startsWith('/question-bank/questions')) return 'Question Bank';
+    if (pathname.startsWith('/question-bank/papers/new')) return 'Paper Generator';
+    if (pathname.startsWith('/question-bank/papers')) return 'Paper Details';
+    if (pathname.startsWith('/question-bank')) return 'Question Bank Dashboard';
+    return '';
   };
 
   return (

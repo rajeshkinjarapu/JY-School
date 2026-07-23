@@ -270,9 +270,9 @@ export const PaperBuilder: React.FC = () => {
     <div className="min-h-screen bg-slate-50 text-slate-800 font-sans pb-16">
       {/* Top navbar */}
       <nav className="border-b border-slate-200 bg-white/75 backdrop-blur-md sticky top-0 z-30 text-slate-850">
-        <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+        <div className="w-full mx-auto px-2 lg:px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Link to="/" className="p-2 hover:bg-slate-100 border border-slate-200 hover:border-slate-350 rounded-xl transition-colors text-slate-600">
+            <Link to="/question-bank" className="p-2 hover:bg-slate-100 border border-slate-200 hover:border-slate-350 rounded-xl transition-colors text-slate-600">
               <ArrowLeft className="w-5 h-5" />
             </Link>
             <span className="font-extrabold text-lg tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-accentIndigo to-accentTeal">
@@ -291,7 +291,7 @@ export const PaperBuilder: React.FC = () => {
       </nav>
 
       {/* Builder Layout */}
-      <main className="max-w-7xl mx-auto px-4 pt-8">
+      <main className="w-full mx-auto px-2 lg:px-6 pt-8">
         {error && (
           <div className="mb-6 bg-red-50 border border-red-200 text-red-700 p-4 rounded-2xl text-sm font-semibold">
             {error}
@@ -471,8 +471,8 @@ export const PaperBuilder: React.FC = () => {
           <div className="lg:col-span-2 space-y-6">
             {mode === 'AUTO' ? (
               /* AUTO BLUEPRINT COMPILATION PANEL */
-              <div className="bg-slate-900/40 border border-slate-850 rounded-3xl p-6 space-y-6">
-                <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <div className="bg-white shadow-md border border-slate-200 rounded-3xl p-6 space-y-6">
+                <div className="flex items-center justify-between border-b border-slate-200 pb-3">
                   <h3 className="font-bold text-base text-accentTeal flex items-center gap-1.5">
                     <Sparkles className="w-5 h-5 animate-pulse" />
                     Auto-Generate JEE Paper
@@ -482,14 +482,14 @@ export const PaperBuilder: React.FC = () => {
 
                 {/* Templates Selector */}
                 <div>
-                  <label className="block text-xs text-slate-400 font-semibold mb-1">
+                  <label className="block text-xs text-slate-600 font-semibold mb-1">
                     Load Existing Blueprint Template (Optional)
                   </label>
                   <div className="relative">
                     <select
                       value={selectedTemplateId}
                       onChange={handleTemplateChange}
-                      className="w-full bg-slate-950/40 border border-slate-800 rounded-xl p-3 text-xs focus:outline-none focus:border-accentTeal text-slate-200 font-sans"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs focus:outline-none focus:border-accentTeal text-slate-800 font-sans"
                     >
                       <option value="">-- Select A Saved Blueprint Blueprint --</option>
                       {templates.map((t) => (
@@ -502,36 +502,36 @@ export const PaperBuilder: React.FC = () => {
                 </div>
 
                 {/* Blueprint Parameters */}
-                <div className="p-4 bg-slate-950/20 border border-slate-850 rounded-2xl space-y-4">
-                  <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider">Number of Questions per Subject</h4>
+                <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-4">
+                  <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider">Number of Questions per Subject</h4>
                   <div className="grid grid-cols-3 gap-4">
-                    <div className="bg-slate-900/60 p-3 rounded-xl border border-slate-800 text-center">
-                      <span className="text-xs text-slate-400">Physics</span>
+                    <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 text-center">
+                      <span className="text-xs text-slate-600">Physics</span>
                       <input
                         type="number"
                         value={physicsCount}
                         onChange={(e) => setPhysicsCount(parseInt(e.target.value) || 0)}
-                        className="w-full bg-transparent text-center font-bold text-lg text-white mt-1 border-b border-slate-700 focus:outline-none focus:border-accentTeal"
+                        className="w-full bg-transparent text-center font-bold text-lg text-slate-800 mt-1 border-b border-slate-300 focus:outline-none focus:border-accentTeal"
                       />
                     </div>
 
-                    <div className="bg-slate-900/60 p-3 rounded-xl border border-slate-800 text-center">
-                      <span className="text-xs text-slate-400">Chemistry</span>
+                    <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 text-center">
+                      <span className="text-xs text-slate-600">Chemistry</span>
                       <input
                         type="number"
                         value={chemistryCount}
                         onChange={(e) => setChemistryCount(parseInt(e.target.value) || 0)}
-                        className="w-full bg-transparent text-center font-bold text-lg text-white mt-1 border-b border-slate-700 focus:outline-none focus:border-accentTeal"
+                        className="w-full bg-transparent text-center font-bold text-lg text-slate-800 mt-1 border-b border-slate-300 focus:outline-none focus:border-accentTeal"
                       />
                     </div>
 
-                    <div className="bg-slate-900/60 p-3 rounded-xl border border-slate-800 text-center">
-                      <span className="text-xs text-slate-400">Mathematics</span>
+                    <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 text-center">
+                      <span className="text-xs text-slate-600">Mathematics</span>
                       <input
                         type="number"
                         value={mathCount}
                         onChange={(e) => setMathCount(parseInt(e.target.value) || 0)}
-                        className="w-full bg-transparent text-center font-bold text-lg text-white mt-1 border-b border-slate-700 focus:outline-none focus:border-accentTeal"
+                        className="w-full bg-transparent text-center font-bold text-lg text-slate-800 mt-1 border-b border-slate-300 focus:outline-none focus:border-accentTeal"
                       />
                     </div>
                   </div>
@@ -544,16 +544,16 @@ export const PaperBuilder: React.FC = () => {
               /* MANUAL WORKSPACE PANES Split */
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
                 {/* Question Bank Left Pane */}
-                <div className="bg-slate-900/40 border border-slate-850 rounded-3xl p-5 space-y-4">
-                  <div className="flex justify-between items-center border-b border-slate-800 pb-2.5">
-                    <h4 className="font-bold text-xs text-slate-300 uppercase tracking-wider flex items-center gap-1">
+                <div className="bg-white shadow-md border border-slate-200 rounded-3xl p-5 space-y-4">
+                  <div className="flex justify-between items-center border-b border-slate-200 pb-2.5">
+                    <h4 className="font-bold text-xs text-slate-800 uppercase tracking-wider flex items-center gap-1">
                       <FolderOpen className="w-4 h-4 text-accentIndigo" />
                       Browse Bank
                     </h4>
                     <select
                       value={bankSubject}
                       onChange={(e) => setBankSubject(e.target.value)}
-                      className="bg-slate-950/40 border border-slate-800 rounded px-2 py-0.5 text-[10px] text-accentTeal focus:outline-none font-bold"
+                      className="bg-slate-50 border border-slate-200 rounded px-2 py-0.5 text-[10px] text-accentTeal focus:outline-none font-bold"
                     >
                       <option value="Physics">Physics</option>
                       <option value="Chemistry">Chemistry</option>
@@ -567,7 +567,7 @@ export const PaperBuilder: React.FC = () => {
                       placeholder="Filter questions..."
                       value={bankSearch}
                       onChange={(e) => setBankSearch(e.target.value)}
-                      className="w-full bg-slate-950/40 border border-slate-800 rounded-lg p-2 text-[11px] text-white focus:outline-none focus:border-accentIndigo font-sans"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-[11px] text-slate-800 focus:outline-none focus:border-accentIndigo font-sans"
                     />
                     <button type="submit" className="p-2 bg-slate-800 rounded-lg text-xs hover:bg-slate-750 transition-colors">
                       <Search className="w-3.5 h-3.5" />
@@ -578,19 +578,19 @@ export const PaperBuilder: React.FC = () => {
                     {bankLoading ? (
                       <div className="text-center py-10 text-xs text-slate-500">Loading bank questions...</div>
                     ) : bankQuestions.length === 0 ? (
-                      <div className="text-center py-10 text-xs text-slate-500 border border-dashed border-slate-800 rounded-xl">
+                      <div className="text-center py-10 text-xs text-slate-500 border border-dashed border-slate-200 rounded-xl">
                         No unused questions found in subject.
                       </div>
                     ) : (
                       bankQuestions.map((q) => (
                         <div
                           key={q.id}
-                          className="bg-slate-950/30 hover:bg-slate-950/60 border border-slate-850 rounded-xl p-3 flex flex-col justify-between"
+                          className="bg-slate-50 hover:bg-indigo-50 border border-slate-200 rounded-xl p-3 flex flex-col justify-between"
                         >
-                          <div className="font-serif text-[11.5px] line-clamp-3 text-slate-300">
+                          <div className="font-serif text-[11.5px] line-clamp-3 text-slate-800">
                             <LaTeXPreview text={q.questionText} />
                           </div>
-                          <div className="flex justify-between items-center mt-3 pt-2 border-t border-slate-850/50">
+                          <div className="flex justify-between items-center mt-3 pt-2 border-t border-slate-200/50">
                             <span className="text-[9px] text-slate-500 uppercase font-mono font-bold">
                               ID: {q.id} | {q.chapter} ({q.type})
                             </span>
@@ -609,16 +609,16 @@ export const PaperBuilder: React.FC = () => {
                 </div>
 
                 {/* Paper Sections Right Pane */}
-                <div className="bg-slate-900/40 border border-slate-850 rounded-3xl p-5 space-y-4">
-                  <div className="flex justify-between items-center border-b border-slate-800 pb-2.5">
-                    <h4 className="font-bold text-xs text-slate-300 uppercase tracking-wider flex items-center gap-1">
+                <div className="bg-white shadow-md border border-slate-200 rounded-3xl p-5 space-y-4">
+                  <div className="flex justify-between items-center border-b border-slate-200 pb-2.5">
+                    <h4 className="font-bold text-xs text-slate-800 uppercase tracking-wider flex items-center gap-1">
                       <ListOrdered className="w-4 h-4 text-accentTeal" />
                       Paper Layout
                     </h4>
                     <button
                       type="button"
                       onClick={handleAddSection}
-                      className="px-2.5 py-0.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 hover:border-slate-600 text-slate-300 rounded text-[10px] font-bold transition-all"
+                      className="px-2.5 py-0.5 bg-slate-800 hover:bg-slate-700 border border-slate-300 hover:border-slate-600 text-slate-800 rounded text-[10px] font-bold transition-all"
                     >
                       + Add Section
                     </button>
@@ -634,7 +634,7 @@ export const PaperBuilder: React.FC = () => {
                         className={`px-3 py-1.5 rounded-xl text-[10px] font-bold transition-all flex items-center gap-1 border ${
                           activeSectionId === sec.id
                             ? 'bg-accentIndigo border-accentIndigo text-white'
-                            : 'bg-slate-950/20 border-slate-850 hover:bg-slate-950/40 text-slate-450 hover:text-slate-200'
+                            : 'bg-slate-50 border-slate-200 hover:bg-slate-50 text-slate-600 hover:text-slate-800'
                         }`}
                       >
                         <span>{sec.name}</span>
@@ -652,9 +652,9 @@ export const PaperBuilder: React.FC = () => {
 
                     return (
                       <div className="space-y-3 font-sans">
-                        <div className="flex justify-between items-center bg-slate-950/30 p-2.5 rounded-xl border border-slate-850 text-xs">
+                        <div className="flex justify-between items-center bg-slate-50 p-2.5 rounded-xl border border-slate-200 text-xs">
                           <div>
-                            Section: <span className="font-bold text-slate-200">{activeSec.name}</span>
+                            Section: <span className="font-bold text-slate-800">{activeSec.name}</span>
                             <span className="ml-1 text-[9px] text-slate-500 font-mono">({activeSec.type})</span>
                           </div>
                           <button
@@ -667,7 +667,7 @@ export const PaperBuilder: React.FC = () => {
                         </div>
 
                         {activeSec.questions.length === 0 ? (
-                          <div className="text-center py-10 text-xs text-slate-500 border border-dashed border-slate-800 rounded-xl">
+                          <div className="text-center py-10 text-xs text-slate-500 border border-dashed border-slate-200 rounded-xl">
                             No questions added to this section. Click "Add" in left bank pane to assign questions here.
                           </div>
                         ) : (
@@ -675,9 +675,9 @@ export const PaperBuilder: React.FC = () => {
                             {activeSec.questions.map((q, idx) => (
                               <div
                                 key={q.id}
-                                className="bg-slate-950/50 border border-slate-850 p-2.5 rounded-xl flex items-center justify-between gap-3 text-xs"
+                                className="bg-white border border-slate-200 p-2.5 rounded-xl flex items-center justify-between gap-3 text-xs"
                               >
-                                <div className="flex-1 font-serif text-[11px] truncate text-slate-350 pr-2">
+                                <div className="flex-1 font-serif text-[11px] truncate text-slate-700 pr-2">
                                   <span className="font-sans font-bold text-[10px] mr-1.5 text-slate-500">Q.{idx+1}</span>
                                   <LaTeXPreview text={q.questionText} className="inline" />
                                 </div>
@@ -688,7 +688,7 @@ export const PaperBuilder: React.FC = () => {
                                     type="button"
                                     onClick={() => handleMoveQuestion(activeSec.id, idx, 'UP')}
                                     disabled={idx === 0}
-                                    className="p-1 hover:bg-slate-800 disabled:opacity-30 rounded text-slate-400"
+                                    className="p-1 hover:bg-slate-200 disabled:opacity-30 rounded text-slate-600"
                                   >
                                     <ArrowUp className="w-3.5 h-3.5" />
                                   </button>
@@ -696,7 +696,7 @@ export const PaperBuilder: React.FC = () => {
                                     type="button"
                                     onClick={() => handleMoveQuestion(activeSec.id, idx, 'DOWN')}
                                     disabled={idx === activeSec.questions.length - 1}
-                                    className="p-1 hover:bg-slate-800 disabled:opacity-30 rounded text-slate-400"
+                                    className="p-1 hover:bg-slate-200 disabled:opacity-30 rounded text-slate-600"
                                   >
                                     <ArrowDown className="w-3.5 h-3.5" />
                                   </button>
@@ -724,3 +724,4 @@ export const PaperBuilder: React.FC = () => {
     </div>
   );
 };
+
