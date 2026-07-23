@@ -4,29 +4,29 @@ import { Briefcase, FileText, Settings, Database, Server, Image, Calendar, Book,
 export const OfficeToolsDashboard = () => {
   const tools = [
     { 
-      title: 'Tool 1', 
-      description: 'Description for tool 1', 
+      title: 'STUDY CERTIFICATE', 
+      description: 'Generate study certificates for students', 
       icon: FileText, 
       gradient: 'from-blue-500 to-cyan-400',
       shadow: 'shadow-blue-500/30'
     },
     { 
-      title: 'Tool 2', 
-      description: 'Description for tool 2', 
+      title: 'DUPLICATE ACADEMIC PROGRESS CARD', 
+      description: 'Issue duplicate progress cards', 
       icon: Settings, 
       gradient: 'from-indigo-500 to-purple-500',
       shadow: 'shadow-indigo-500/30'
     },
     { 
-      title: 'Tool 3', 
-      description: 'Description for tool 3', 
+      title: 'ORIGINAL ACADEMIC PROGRESS CARD', 
+      description: 'Generate original progress cards', 
       icon: Database, 
       gradient: 'from-fuchsia-500 to-pink-500',
       shadow: 'shadow-fuchsia-500/30'
     },
     { 
-      title: 'Tool 4', 
-      description: 'Description for tool 4', 
+      title: 'TRANSFER CERTIFICATE', 
+      description: 'Issue transfer certificates (TC)', 
       icon: Server, 
       gradient: 'from-rose-500 to-orange-400',
       shadow: 'shadow-rose-500/30'
