@@ -71,7 +71,7 @@ const ManualQuestionForm: React.FC<QuestionFormProps> = ({ questionId, initialDa
         setUploadingImage(true);
         const imgData = new FormData();
         imgData.append('image', imageFile);
-        const uploadRes = await api.uploadQuestionImage(imgData);
+        const uploadRes = await api.uploadImage(imgData);
         finalImageUrl = uploadRes.imageUrl;
         setUploadingImage(false);
       }
@@ -238,7 +238,7 @@ const ManualQuestionForm: React.FC<QuestionFormProps> = ({ questionId, initialDa
                             setFormData((p) => ({ ...p, correctAnswer: opt }));
                           } else {
                             const current = formData.correctAnswer.split(',').filter(Boolean);
-                            const updated = current.includes(opt) ? current.filter((x) => x !== opt) : [...current, opt].sort();
+                            const updated = current.includes(opt) ? current.filter((x: string) => x !== opt) : [...current, opt].sort();
                             setFormData((p) => ({ ...p, correctAnswer: updated.join(',') }));
                           }
                         }}
@@ -479,3 +479,4 @@ export const QuestionForm: React.FC<QuestionFormProps> = (props) => {
   }
   return <AIQuestionForm onSuccess={props.onSuccess} onCancel={props.onCancel} />;
 };
+
