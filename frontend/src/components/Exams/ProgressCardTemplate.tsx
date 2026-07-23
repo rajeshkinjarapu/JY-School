@@ -102,13 +102,13 @@ export const ProgressCardTemplate: React.FC<ProgressCardTemplateProps> = ({
         
         {/* ===== VIBRANT HEADER ===== */}
         <div className="rounded-2xl overflow-hidden shadow-[0_10px_30px_rgba(99,102,241,0.2)] relative mt-2 mx-2 border border-white/50 bg-gradient-to-r from-violet-600 via-fuchsia-600 to-rose-500">
-          <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10 mix-blend-overlay"></div>
+          <div className="absolute inset-0 bg-white/5 opacity-10"></div>
           
           <div className="px-6 py-8 sm:px-10 flex flex-col sm:flex-row items-center justify-between gap-6 relative z-10">
             {/* Logo */}
-            <div className="w-28 h-28 shrink-0 bg-white p-2 rounded-full shadow-[0_0_30px_rgba(255,255,255,0.4)] flex items-center justify-center relative border-[3px] border-white/80">
+            <div className="w-20 h-20 bg-white/20 rounded-2xl flex items-center justify-center p-2 backdrop-blur-md shadow-inner shrink-0">
               {logoUrl ? (
-                <img src={logoUrl} crossOrigin="anonymous" alt="Logo" className="w-full h-full object-contain rounded-full" />
+                <img src={logoUrl} alt="School Logo" className="h-20 w-20 object-contain drop-shadow-lg" />
               ) : (
                 <GraduationCap className="w-14 h-14 text-fuchsia-600" />
               )}
@@ -335,7 +335,7 @@ export const ProgressCardTemplate: React.FC<ProgressCardTemplateProps> = ({
             <div className="flex flex-col items-center w-36 z-10">
               <div className="h-14 flex items-end justify-center mb-3 w-full relative">
                 {teacherSignatureUrl ? (
-                  <img src={teacherSignatureUrl} crossOrigin="anonymous" alt="Teacher" className="max-h-14 object-contain mix-blend-multiply" style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.1))' }} />
+                  <img src={teacherSignatureUrl} alt="Teacher" className="max-h-14 object-contain" />
                 ) : (
                   <div className="w-full border-b-2 border-gray-300 border-dashed mb-1"></div>
                 )}
@@ -358,7 +358,7 @@ export const ProgressCardTemplate: React.FC<ProgressCardTemplateProps> = ({
             <div className="flex flex-col items-center w-36 z-10">
               <div className="h-14 flex items-end justify-center mb-3 w-full relative">
                 {principalSignatureUrl ? (
-                  <img src={principalSignatureUrl} crossOrigin="anonymous" alt="Principal" className="max-h-14 object-contain mix-blend-multiply" style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.1))' }} />
+                  <img src={principalSignatureUrl} alt="Principal" className="max-h-14 object-contain" />
                 ) : (
                   <div className="w-full border-b-2 border-gray-300 border-dashed mb-1"></div>
                 )}
