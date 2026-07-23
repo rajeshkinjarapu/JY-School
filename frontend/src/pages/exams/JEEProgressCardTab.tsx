@@ -183,14 +183,17 @@ export const JEEProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
     
     try {
       const canvas = await html2canvas(el, { 
-        scale: window.innerWidth < 768 ? 1.5 : 2, // Better quality, fallback to 1.5 on mobile for memory
+        scale: window.innerWidth < 768 ? 1 : 2, // Reduced scale for mobile memory
         useCORS: true, 
-        allowTaint: true,
+        allowTaint: false, // Don't taint canvas to allow toDataURL
         backgroundColor: '#ffffff',
-        logging: false
+        logging: false,
+        onclone: (documentClone) => {
+          // You can modify the clone here if needed to remove unsupported CSS
+        }
       });
       
-      const imgData = canvas.toDataURL('image/jpeg', 0.95);
+      const imgData = canvas.toDataURL('image/jpeg', 0.85); // slightly lower quality for smaller file/memory
       
       const pdf = new jsPDF('p', 'mm', 'a4');
       const pdfWidth = pdf.internal.pageSize.getWidth();
@@ -324,13 +327,13 @@ export const JEEProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
         await new Promise(resolve => setTimeout(resolve, 100)); // Small delay for layout
         
         const canvas = await html2canvas(el, { 
-          scale: window.innerWidth < 768 ? 1.5 : 2, 
+          scale: window.innerWidth < 768 ? 1 : 2, 
           useCORS: true, 
-          allowTaint: true,
+          allowTaint: false,
           backgroundColor: '#ffffff',
           logging: false
         });
-        const imgData = canvas.toDataURL('image/jpeg', 0.9);
+        const imgData = canvas.toDataURL('image/jpeg', 0.85);
         
         const pdf = new jsPDF('p', 'mm', 'a4');
         const pdfWidth = pdf.internal.pageSize.getWidth();
