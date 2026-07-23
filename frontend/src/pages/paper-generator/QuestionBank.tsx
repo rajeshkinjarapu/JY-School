@@ -164,10 +164,10 @@ export const QuestionBank: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-850 font-sans pb-12">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50/50 via-purple-50/50 to-pink-50/50 text-slate-850 font-sans pb-12">
       {/* Header Banner */}
       <nav className="border-b border-slate-200 bg-white/75 backdrop-blur-md sticky top-0 z-30">
-        <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+        <div className="w-full mx-auto px-2 lg:px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Link to="/question-bank" className="p-2 hover:bg-slate-100 border border-slate-200 hover:border-slate-350 rounded-xl transition-colors text-slate-600">
               <ArrowLeft className="w-5 h-5" />
@@ -188,7 +188,7 @@ export const QuestionBank: React.FC = () => {
             />
             <label
               htmlFor="smart-import-input"
-              className={`px-4 py-2 border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-semibold flex items-center gap-1.5 cursor-pointer select-none transition-all shadow-sm ${
+              className={`px-4 py-2 border border-slate-200 bg-white hover:bg-gradient-to-br from-indigo-50/50 via-purple-50/50 to-pink-50/50 text-slate-700 rounded-xl text-xs font-semibold flex items-center gap-1.5 cursor-pointer select-none transition-all shadow-sm ${
                 importing ? 'opacity-50 pointer-events-none' : ''
               }`}
             >
@@ -208,7 +208,7 @@ export const QuestionBank: React.FC = () => {
       </nav>
 
       {/* Main Body */}
-      <main className="max-w-7xl mx-auto px-4 pt-8">
+      <main className="w-full mx-auto px-2 lg:px-6 pt-4">
         {showForm ? (
           <div className="animate-fadeIn">
             <QuestionForm
@@ -400,7 +400,7 @@ export const QuestionBank: React.FC = () => {
                         </div>
 
                         {/* Question Preview Box (White Sheet Mockup) */}
-                        <div className="bg-slate-50/50 border border-slate-150 rounded-xl p-4 font-serif text-[13px] text-slate-800">
+                        <div className="bg-gradient-to-br from-indigo-50/50 via-purple-50/50 to-pink-50/50/50 border border-slate-150 rounded-xl p-4 font-serif text-[13px] text-slate-800">
                           <LaTeXPreview text={q.questionText} />
                         </div>
                       </div>
@@ -414,14 +414,14 @@ export const QuestionBank: React.FC = () => {
                         <div className="flex gap-2">
                           <button
                             onClick={() => handleEdit(q.id)}
-                            className="p-2 bg-slate-50 hover:bg-slate-100 hover:text-accentIndigo border border-slate-200 hover:border-accentIndigo/30 rounded-lg text-slate-500 transition-colors"
+                            className="p-2 bg-gradient-to-br from-indigo-50/50 via-purple-50/50 to-pink-50/50 hover:bg-slate-100 hover:text-accentIndigo border border-slate-200 hover:border-accentIndigo/30 rounded-lg text-slate-500 transition-colors"
                             title="Edit Question"
                           >
                             <Edit className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => handleDelete(q.id)}
-                            className="p-2 bg-slate-50 hover:bg-red-50 hover:text-red-500 border border-slate-200 hover:border-red-200 rounded-lg text-slate-500 transition-colors"
+                            className="p-2 bg-gradient-to-br from-indigo-50/50 via-purple-50/50 to-pink-50/50 hover:bg-red-50 hover:text-red-500 border border-slate-200 hover:border-red-200 rounded-lg text-slate-500 transition-colors"
                             title="Delete Question"
                           >
                             <Trash2 className="w-4 h-4" />

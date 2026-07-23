@@ -267,7 +267,7 @@ export const PaperBuilder: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-800 font-sans pb-16">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50/50 via-purple-50/50 to-pink-50/50 text-slate-800 font-sans pb-16">
       {/* Top navbar */}
       <nav className="border-b border-slate-200 bg-white/75 backdrop-blur-md sticky top-0 z-30 text-slate-850">
         <div className="w-full mx-auto px-2 lg:px-6 h-16 flex items-center justify-between">
@@ -489,7 +489,7 @@ export const PaperBuilder: React.FC = () => {
                     <select
                       value={selectedTemplateId}
                       onChange={handleTemplateChange}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs focus:outline-none focus:border-accentTeal text-slate-800 font-sans"
+                      className="w-full bg-gradient-to-br from-indigo-50/50 via-purple-50/50 to-pink-50/50 border border-slate-200 rounded-xl p-3 text-xs focus:outline-none focus:border-accentTeal text-slate-800 font-sans"
                     >
                       <option value="">-- Select A Saved Blueprint Blueprint --</option>
                       {templates.map((t) => (
@@ -502,10 +502,10 @@ export const PaperBuilder: React.FC = () => {
                 </div>
 
                 {/* Blueprint Parameters */}
-                <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-4">
+                <div className="p-4 bg-gradient-to-br from-indigo-50/50 via-purple-50/50 to-pink-50/50 border border-slate-200 rounded-2xl space-y-4">
                   <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider">Number of Questions per Subject</h4>
                   <div className="grid grid-cols-3 gap-4">
-                    <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 text-center">
+                    <div className="bg-gradient-to-br from-indigo-50/50 via-purple-50/50 to-pink-50/50 p-3 rounded-xl border border-slate-200 text-center">
                       <span className="text-xs text-slate-600">Physics</span>
                       <input
                         type="number"
@@ -515,7 +515,7 @@ export const PaperBuilder: React.FC = () => {
                       />
                     </div>
 
-                    <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 text-center">
+                    <div className="bg-gradient-to-br from-indigo-50/50 via-purple-50/50 to-pink-50/50 p-3 rounded-xl border border-slate-200 text-center">
                       <span className="text-xs text-slate-600">Chemistry</span>
                       <input
                         type="number"
@@ -525,7 +525,7 @@ export const PaperBuilder: React.FC = () => {
                       />
                     </div>
 
-                    <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 text-center">
+                    <div className="bg-gradient-to-br from-indigo-50/50 via-purple-50/50 to-pink-50/50 p-3 rounded-xl border border-slate-200 text-center">
                       <span className="text-xs text-slate-600">Mathematics</span>
                       <input
                         type="number"
@@ -553,7 +553,7 @@ export const PaperBuilder: React.FC = () => {
                     <select
                       value={bankSubject}
                       onChange={(e) => setBankSubject(e.target.value)}
-                      className="bg-slate-50 border border-slate-200 rounded px-2 py-0.5 text-[10px] text-accentTeal focus:outline-none font-bold"
+                      className="bg-gradient-to-br from-indigo-50/50 via-purple-50/50 to-pink-50/50 border border-slate-200 rounded px-2 py-0.5 text-[10px] text-accentTeal focus:outline-none font-bold"
                     >
                       <option value="Physics">Physics</option>
                       <option value="Chemistry">Chemistry</option>
@@ -567,7 +567,7 @@ export const PaperBuilder: React.FC = () => {
                       placeholder="Filter questions..."
                       value={bankSearch}
                       onChange={(e) => setBankSearch(e.target.value)}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-[11px] text-slate-800 focus:outline-none focus:border-accentIndigo font-sans"
+                      className="w-full bg-gradient-to-br from-indigo-50/50 via-purple-50/50 to-pink-50/50 border border-slate-200 rounded-lg p-2 text-[11px] text-slate-800 focus:outline-none focus:border-accentIndigo font-sans"
                     />
                     <button type="submit" className="p-2 bg-slate-800 rounded-lg text-xs hover:bg-slate-750 transition-colors">
                       <Search className="w-3.5 h-3.5" />
@@ -585,7 +585,7 @@ export const PaperBuilder: React.FC = () => {
                       bankQuestions.map((q) => (
                         <div
                           key={q.id}
-                          className="bg-slate-50 hover:bg-indigo-50 border border-slate-200 rounded-xl p-3 flex flex-col justify-between"
+                          className="bg-gradient-to-br from-indigo-50/50 via-purple-50/50 to-pink-50/50 hover:bg-indigo-50 border border-slate-200 rounded-xl p-3 flex flex-col justify-between"
                         >
                           <div className="font-serif text-[11.5px] line-clamp-3 text-slate-800">
                             <LaTeXPreview text={q.questionText} />
@@ -634,7 +634,7 @@ export const PaperBuilder: React.FC = () => {
                         className={`px-3 py-1.5 rounded-xl text-[10px] font-bold transition-all flex items-center gap-1 border ${
                           activeSectionId === sec.id
                             ? 'bg-accentIndigo border-accentIndigo text-white'
-                            : 'bg-slate-50 border-slate-200 hover:bg-slate-50 text-slate-600 hover:text-slate-800'
+                            : 'bg-gradient-to-br from-indigo-50/50 via-purple-50/50 to-pink-50/50 border-slate-200 hover:bg-gradient-to-br from-indigo-50/50 via-purple-50/50 to-pink-50/50 text-slate-600 hover:text-slate-800'
                         }`}
                       >
                         <span>{sec.name}</span>
@@ -652,7 +652,7 @@ export const PaperBuilder: React.FC = () => {
 
                     return (
                       <div className="space-y-3 font-sans">
-                        <div className="flex justify-between items-center bg-slate-50 p-2.5 rounded-xl border border-slate-200 text-xs">
+                        <div className="flex justify-between items-center bg-gradient-to-br from-indigo-50/50 via-purple-50/50 to-pink-50/50 p-2.5 rounded-xl border border-slate-200 text-xs">
                           <div>
                             Section: <span className="font-bold text-slate-800">{activeSec.name}</span>
                             <span className="ml-1 text-[9px] text-slate-500 font-mono">({activeSec.type})</span>

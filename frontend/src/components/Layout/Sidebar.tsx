@@ -244,11 +244,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
           className="absolute top-4 right-4 p-1.5 rounded-lg text-slate-500 hover:text-white hover:bg-white/10 transition-all cursor-pointer">
           <X className="w-4 h-4" />
         </button>
-        <Content />
+        {Content()}
       </aside>
       {/* Desktop */}
       <aside className="hidden lg:flex flex-col w-[260px] shrink-0 h-screen sticky top-0" style={sidebarStyle}>
-        <Content />
+        {Content()}
       </aside>
     </>
   );
