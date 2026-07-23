@@ -6,7 +6,7 @@ import {
   LayoutDashboard, Users, GraduationCap, School, BookOpen,
   CalendarCheck, ClipboardList, PenTool, Calendar, CreditCard,
   Megaphone, MessageSquare, BarChart3, Settings, LogOut,
-  Shield, FileText, UserCheck, X, ChevronDown, Smartphone, MapPin, Target, Briefcase
+  Shield, FileText, UserCheck, X, ChevronDown, Smartphone, MapPin, Target, Briefcase, Bus
 } from 'lucide-react';
 import { usePWA } from '../../hooks/usePWA';
 import { getPhotoUrl } from '../../utils/photo';
@@ -41,6 +41,7 @@ const NAV_COLORS: Record<string, { text: string; bg: string; glow: string }> = {
   Reports:       { text: '#fda4af', bg: 'rgba(244,63,94,0.18)',  glow: '0 0 12px rgba(244,63,94,.5)'   },
   Settings:      { text: '#94a3b8', bg: 'rgba(100,116,139,0.18)',glow: '0 0 12px rgba(100,116,139,.5)' },
   'Office Tools':{ text: '#67e8f9', bg: 'rgba(6,182,212,0.18)', glow: '0 0 12px rgba(6,182,212,.5)' },
+  Transport:     { text: '#fcd34d', bg: 'rgba(251,191,36,0.18)', glow: '0 0 12px rgba(251,191,36,.5)' },
   Roles:         { text: '#a5b4fc', bg: 'rgba(99,102,241,0.15)', glow: '0 0 12px rgba(99,102,241,.4)'  },
   'Total Students': { text: '#67e8f9', bg: 'rgba(6,182,212,0.18)',   glow: '0 0 12px rgba(6,182,212,.5)'   },
   'My Attendance':{ text: '#fde68a', bg: 'rgba(245,158,11,0.18)', glow: '0 0 12px rgba(245,158,11,.5)'  },
@@ -93,6 +94,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
       { to: '/teacher-attendance', label: 'Staff Attendance', icon: UserCheck },
       { to: '/homework',         label: 'Homework',          icon: BookOpen  },
       ...(role === 'SUPER_ADMIN' ? [{ to: '/office-tools', label: 'Office Tools', icon: Briefcase }] : []),
+      { to: '/transport',     label: 'Transport',     icon: Bus },
       { to: '/settings',      label: 'Settings',      icon: Settings      },
     ];
     if (role === 'TEACHER') return [...base,

@@ -60,6 +60,7 @@ const HomeworkPage = lazy(() => import('../pages/homework/HomeworkPage'));
 const TeacherAttendancePage = lazy(() => import('../pages/teacher-attendance/TeacherAttendancePage'));
 const SalaryPage = lazy(() => import('../pages/hr/SalaryPage'));
 const OfficeToolsDashboard = lazy(() => import('../pages/office-tools/OfficeToolsDashboard'));
+const TransportDashboard = lazy(() => import('../pages/transport/TransportDashboard'));
 const AttendanceWrapper = () => {
   const { user } = useAuth();
   if (user?.role === 'STUDENT') {
@@ -314,6 +315,14 @@ export const router = createBrowserRouter([
         element: withSuspense(
           <ProtectedRoute allowedRoles={['SUPER_ADMIN']}>
             <OfficeToolsDashboard />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'transport',
+        element: withSuspense(
+          <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN']}>
+            <TransportDashboard />
           </ProtectedRoute>
         ),
       },
