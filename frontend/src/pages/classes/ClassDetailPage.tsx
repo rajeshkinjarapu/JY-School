@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useOutletContext } from 'react-router-dom';
 import api from '../../api/axios';
 import { useAuth } from '../../hooks/useAuth';
 import { LoadingSpinner } from '../../components/UI/LoadingSpinner';
@@ -9,6 +9,8 @@ import { ArrowLeft, BookOpen, Users, Calendar } from 'lucide-react';
 
 export const ClassDetailPage: React.FC = () => {
   const { id } = useParams();
+  const outletContext = useOutletContext<any>();
+  const setDynamicTitle = outletContext?.setDynamicTitle;
   const { user } = useAuth();
   const [cls, setCls] = useState<any>(null);
   const [students, setStudents] = useState<any[]>([]);
@@ -166,4 +168,5 @@ export const ClassDetailPage: React.FC = () => {
   );
 };
 export default ClassDetailPage;
+
 

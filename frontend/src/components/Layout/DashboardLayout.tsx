@@ -1,13 +1,20 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
 
 export const DashboardLayout: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [dynamicTitle, setDynamicTitle] = useState('');
   const location = useLocation();
 
+  useEffect(() => {
+    setDynamicTitle('');
+  }, [location.pathname]);
+
   const getPageTitle = (pathname: string) => {
+    if (dynamicTitle) return dynamicTitle;
+    
     // Exact Matches First
     if (pathname === '/dashboard') return 'Dashboard';
     if (pathname === '/students') return 'Student Directory';
@@ -82,7 +89,7 @@ export const DashboardLayout: React.FC = () => {
       <div className="flex flex-col flex-1 overflow-hidden min-w-0">
         <Header onMenuClick={() => setSidebarOpen(true)} title={getPageTitle(location.pathname)} />
         <main className="flex-1 overflow-y-auto p-0 md:p-5 lg:p-7 animate-fade-in-up">
-          <Outlet />
+          <Outlet context={{ setDynamicTitle }} />
         </main>
       </div>
     </div>

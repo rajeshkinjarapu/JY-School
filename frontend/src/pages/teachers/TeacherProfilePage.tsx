@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useOutletContext } from 'react-router-dom';
 import api from '../../api/axios';
 import { LoadingSpinner } from '../../components/UI/LoadingSpinner';
 import { Avatar } from '../../components/UI/Avatar';
@@ -11,6 +11,8 @@ import { compressImage } from '../../utils/imageCompressor';
 
 export const TeacherProfilePage: React.FC = () => {
   const { id } = useParams();
+  const outletContext = useOutletContext<any>();
+  const setDynamicTitle = outletContext?.setDynamicTitle;
   const [teacher, setTeacher] = useState<any>(null);
   const [assignedClasses, setAssignedClasses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -174,4 +176,5 @@ export const TeacherProfilePage: React.FC = () => {
   );
 };
 export default TeacherProfilePage;
+
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useOutletContext } from 'react-router-dom';
 import { qbApi as api } from '../../utils/questionBankApi';
 import { PrintablePaper } from '../../components/QuestionBank/PrintablePaper';
 import { downloadTexFile } from '../../utils/latexExporter';
@@ -383,5 +383,6 @@ export const PaperDetail: React.FC = () => {
     </div>
   );
 };
+
 
 

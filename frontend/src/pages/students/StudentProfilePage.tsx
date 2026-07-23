@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useOutletContext } from 'react-router-dom';
 import api from '../../api/axios';
 import { useAuth } from '../../hooks/useAuth';
 import { getPhotoUrl } from '../../utils/photo';
@@ -18,6 +18,8 @@ import { FeeReceiptPrint } from '../../components/fees/FeeReceiptPrint';
 
 export const StudentProfilePage: React.FC = () => {
   const { id } = useParams();
+  const outletContext = useOutletContext<any>();
+  const setDynamicTitle = outletContext?.setDynamicTitle;
   const { user } = useAuth();
   const isAdmin = user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN';
   const [student, setStudent] = useState<any>(null);
