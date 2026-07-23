@@ -489,7 +489,7 @@ export const PaperBuilder: React.FC = () => {
                     <select
                       value={selectedTemplateId}
                       onChange={handleTemplateChange}
-                      className="w-full bg-gradient-to-br from-indigo-50/50 via-purple-50/50 to-pink-50/50 border border-slate-200 rounded-xl p-3 text-xs focus:outline-none focus:border-accentTeal text-slate-800 font-sans"
+                      className="w-full bg-white border border-indigo-200 shadow-sm rounded-xl p-3 text-xs focus:outline-none focus:border-accentTeal text-slate-800 font-sans"
                     >
                       <option value="">-- Select A Saved Blueprint Blueprint --</option>
                       {templates.map((t) => (
@@ -502,7 +502,7 @@ export const PaperBuilder: React.FC = () => {
                 </div>
 
                 {/* Blueprint Parameters */}
-                <div className="p-4 bg-gradient-to-br from-indigo-50/50 via-purple-50/50 to-pink-50/50 border border-slate-200 rounded-2xl space-y-4">
+                <div className="p-4 bg-white border border-indigo-200 shadow-sm rounded-2xl space-y-4">
                   <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider">Number of Questions per Subject</h4>
                   <div className="grid grid-cols-3 gap-4">
                     <div className="bg-gradient-to-br from-indigo-50/50 via-purple-50/50 to-pink-50/50 p-3 rounded-xl border border-slate-200 text-center">
@@ -553,7 +553,7 @@ export const PaperBuilder: React.FC = () => {
                     <select
                       value={bankSubject}
                       onChange={(e) => setBankSubject(e.target.value)}
-                      className="bg-gradient-to-br from-indigo-50/50 via-purple-50/50 to-pink-50/50 border border-slate-200 rounded px-2 py-0.5 text-[10px] text-accentTeal focus:outline-none font-bold"
+                      className="bg-white border border-indigo-200 shadow-sm rounded px-2 py-0.5 text-[10px] text-indigo-700 focus:outline-none font-bold bg-indigo-50"
                     >
                       <option value="Physics">Physics</option>
                       <option value="Chemistry">Chemistry</option>
@@ -567,9 +567,9 @@ export const PaperBuilder: React.FC = () => {
                       placeholder="Filter questions..."
                       value={bankSearch}
                       onChange={(e) => setBankSearch(e.target.value)}
-                      className="w-full bg-gradient-to-br from-indigo-50/50 via-purple-50/50 to-pink-50/50 border border-slate-200 rounded-lg p-2 text-[11px] text-slate-800 focus:outline-none focus:border-accentIndigo font-sans"
+                      className="w-full bg-white border border-indigo-200 shadow-sm rounded-lg p-2 text-[11px] text-slate-800 focus:outline-none focus:border-accentIndigo font-sans"
                     />
-                    <button type="submit" className="p-2 bg-slate-800 rounded-lg text-xs hover:bg-slate-750 transition-colors">
+                    <button type="submit" className="p-2 bg-indigo-600 text-white rounded-lg text-xs hover:bg-indigo-700 shadow-md transition-colors">
                       <Search className="w-3.5 h-3.5" />
                     </button>
                   </form>
@@ -578,7 +578,7 @@ export const PaperBuilder: React.FC = () => {
                     {bankLoading ? (
                       <div className="text-center py-10 text-xs text-slate-500">Loading bank questions...</div>
                     ) : bankQuestions.length === 0 ? (
-                      <div className="text-center py-10 text-xs text-slate-500 border border-dashed border-slate-200 rounded-xl">
+                      <div className="text-center py-10 text-xs text-indigo-600 bg-indigo-50 border-2 border-dashed border-indigo-200 shadow-sm font-semibold rounded-xl">
                         No unused questions found in subject.
                       </div>
                     ) : (
@@ -634,7 +634,7 @@ export const PaperBuilder: React.FC = () => {
                         className={`px-3 py-1.5 rounded-xl text-[10px] font-bold transition-all flex items-center gap-1 border ${
                           activeSectionId === sec.id
                             ? 'bg-accentIndigo border-accentIndigo text-white'
-                            : 'bg-gradient-to-br from-indigo-50/50 via-purple-50/50 to-pink-50/50 border-slate-200 hover:bg-gradient-to-br from-indigo-50/50 via-purple-50/50 to-pink-50/50 text-slate-600 hover:text-slate-800'
+                            : 'bg-white border-indigo-200 shadow-sm hover:border-indigo-400 text-indigo-700 font-semibold'
                         }`}
                       >
                         <span>{sec.name}</span>
@@ -667,7 +667,7 @@ export const PaperBuilder: React.FC = () => {
                         </div>
 
                         {activeSec.questions.length === 0 ? (
-                          <div className="text-center py-10 text-xs text-slate-500 border border-dashed border-slate-200 rounded-xl">
+                          <div className="text-center py-10 text-xs text-indigo-600 bg-indigo-50 border-2 border-dashed border-indigo-200 shadow-sm font-semibold rounded-xl">
                             No questions added to this section. Click "Add" in left bank pane to assign questions here.
                           </div>
                         ) : (
@@ -724,4 +724,5 @@ export const PaperBuilder: React.FC = () => {
     </div>
   );
 };
+
 
