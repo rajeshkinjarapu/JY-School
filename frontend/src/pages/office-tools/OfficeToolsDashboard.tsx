@@ -1,7 +1,10 @@
 import React from 'react';
 import { Briefcase, FileText, Settings, Database, Server, Image, Calendar, Book, ChevronRight } from 'lucide-react';
 
+import { useNavigate } from 'react-router-dom';
+
 export const OfficeToolsDashboard = () => {
+  const navigate = useNavigate();
   const tools = [
     { 
       title: 'STUDY CERTIFICATE', 
@@ -73,7 +76,7 @@ export const OfficeToolsDashboard = () => {
               key={index} 
               onClick={() => {
                 if (tool.title === 'ORIGINAL ACADEMIC PROGRESS CARD') {
-                  window.open('/Slip Test Manual.html', '_blank');
+                  navigate('/dashboard/office-tools/slip-test');
                 }
               }}
               className="group relative bg-white border border-slate-100 p-6 rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer overflow-hidden flex flex-col items-start gap-4"
