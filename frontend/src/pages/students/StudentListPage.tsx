@@ -144,9 +144,30 @@ export const StudentListPage: React.FC = () => {
     if (photoInputRef.current) photoInputRef.current.value = "";
   };
 
+  const handleBulkStudentUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const uploadToast = toast.loading("Uploading students from file...");
+    try {
+      const res = await api.post("/api/students/bulk-import", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      toast.success(res.data.message || "Students uploaded successfully!", { id: uploadToast });
+      fetchStudents();
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || "Failed to upload students", { id: uploadToast });
+    }
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
   return (
     <div className="space-y-6">
       <input type="file" accept=".zip" className="hidden" ref={photoInputRef} onChange={handleBulkPhotoUpload} />
+      <input type="file" accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" className="hidden" ref={fileInputRef} onChange={handleBulkStudentUpload} />
       {/* No Duplicate Page Header */}
       {/* Search & Action Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 md:bg-white/80 md:dark:bg-white/5 md:p-4 md:rounded-2xl md:border md:border-gray-150 md:dark:border-white/10 md:shadow-sm md:backdrop-blur-xl">
@@ -188,21 +209,24 @@ export const StudentListPage: React.FC = () => {
                 <Upload className="w-4 h-4" /> Bulk Photos
               </button>
               <button
+                onClick={() => fileInputRef.current?.click()}
+                className="hidden md:flex items-center gap-1.5 px-3.5 py-2.5 text-sm font-bold text-gray-600 dark:text-white bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl hover:bg-gray-100 dark:hover:bg-white/10 transition-all cursor-pointer"
+              >
+                <Upload className="w-4 h-4" /> Upload Students
+              </button>
+              <button
                 onClick={exportStudents}
-                className="flex items-center gap-1.5 px-3.5 py-2.5 text-sm font-bold text-gray-600 dark:text-white bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl hover:bg-gray-100 dark:hover:bg-white/10 transition-all cursor-pointer"
+                className="hidden md:flex items-center gap-1.5 px-3.5 py-2.5 text-sm font-bold text-gray-600 dark:text-white bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl hover:bg-gray-100 dark:hover:bg-white/10 transition-all cursor-pointer"
               >
                 <FileDown className="w-4 h-4" /> Export
               </button>
+              <Link
+                to="/students/new"
+                className="hidden md:flex items-center gap-1.5 px-4 py-2.5 text-sm font-extrabold text-white bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 rounded-xl shadow-md shadow-indigo-500/25 transition-all cursor-pointer"
+              >
+                <UserPlus className="w-4 h-4" /> Add Student
+              </Link>
             </>
-          )}
-
-          {isAdmin && (
-            <Link
-              to="/students/new"
-              className="flex items-center gap-1.5 px-4 py-2.5 text-sm font-extrabold text-white bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 rounded-xl shadow-md shadow-indigo-500/25 transition-all cursor-pointer"
-            >
-              <UserPlus className="w-4 h-4" /> Add Student
-            </Link>
           )}
         </div>
       </div>
