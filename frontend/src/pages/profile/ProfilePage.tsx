@@ -121,19 +121,21 @@ export const ProfilePage: React.FC = () => {
             size="lg"
             className="w-24 h-24 sm:w-28 sm:h-28 text-3xl"
           />
-          <label
-            className="cursor-pointer absolute bottom-0 right-0 inline-flex items-center gap-1.5 text-xs font-bold text-white bg-primary-600 hover:bg-primary-700 px-2.5 py-1.5 rounded-full transition-colors shadow-sm hover:scale-105 active:scale-95 select-none z-10"
-            title="Upload Photo"
-          >
-            <Camera className="w-4 h-4" />
-            <input
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={handlePhotoUpload}
-              disabled={uploading}
-            />
-          </label>
+          {user.role !== 'STUDENT' && (
+            <label
+              className="cursor-pointer absolute bottom-0 right-0 inline-flex items-center gap-1.5 text-xs font-bold text-white bg-primary-600 hover:bg-primary-700 px-2.5 py-1.5 rounded-full transition-colors shadow-sm hover:scale-105 active:scale-95 select-none z-10"
+              title="Upload Photo"
+            >
+              <Camera className="w-4 h-4" />
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handlePhotoUpload}
+                disabled={uploading}
+              />
+            </label>
+          )}
         </div>
         <div className="flex-1 text-center sm:text-left space-y-1">
           <h2 className="text-2xl font-bold">{user.name}</h2>

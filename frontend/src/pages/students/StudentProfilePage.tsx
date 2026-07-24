@@ -303,7 +303,7 @@ export const StudentProfilePage: React.FC = () => {
                     variant="rectangular" 
                     className="w-32 h-32 md:w-40 md:h-40 rounded-2xl object-cover" 
                   />
-                  {isAdmin && (
+                  {(isAdmin || user?.role === 'TEACHER') && (
                     <label className="absolute -bottom-4 left-1/2 -translate-x-1/2 cursor-pointer flex items-center justify-center gap-2 px-4 py-2 bg-gray-900 hover:bg-black text-white rounded-full text-xs font-bold shadow-lg transition-transform hover:scale-105 select-none whitespace-nowrap">
                       <Camera className="w-3.5 h-3.5" />
                       <span>{uploading ? '...' : 'Update'}</span>
