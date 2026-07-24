@@ -99,11 +99,8 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
       );
       
       let optionsLayout = '';
-      if (maxLen < 15) {
-        // Short: 4 columns, strict alignment
-        optionsLayout = 'grid grid-cols-4 gap-2 w-full';
-      } else if (maxLen < 45) {
-        // Medium: 2 columns, strict alignment
+      if (maxLen < 45) {
+        // Short/Medium: 2 columns, strict alignment so B always aligns with B
         optionsLayout = 'grid grid-cols-2 gap-y-2 gap-x-4 w-full pr-8';
       } else {
         // Long: 1 column, strict alignment
