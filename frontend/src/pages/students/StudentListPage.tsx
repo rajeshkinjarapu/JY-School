@@ -124,10 +124,30 @@ export const StudentListPage: React.FC = () => {
     }
   };
 
+  const handleBulkPhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const uploadToast = toast.loading("Uploading photos from ZIP...");
+    try {
+      const res = await api.post("/api/students/bulk-photos", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      toast.success(res.data.message || "Photos uploaded successfully!", { id: uploadToast });
+      fetchStudents();
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || "Failed to upload photos", { id: uploadToast });
+    }
+    if (photoInputRef.current) photoInputRef.current.value = "";
+  };
+
   return (
     <div className="space-y-6">
+      <input type="file" accept=".zip" className="hidden" ref={photoInputRef} onChange={handleBulkPhotoUpload} />
       {/* No Duplicate Page Header */}
-
       {/* Search & Action Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 md:bg-white/80 md:dark:bg-white/5 md:p-4 md:rounded-2xl md:border md:border-gray-150 md:dark:border-white/10 md:shadow-sm md:backdrop-blur-xl">
         <div className="flex-1 relative flex items-center gap-3">
@@ -161,6 +181,12 @@ export const StudentListPage: React.FC = () => {
 
           {isSuperAdmin && (
             <>
+              <button
+                onClick={() => photoInputRef.current?.click()}
+                className="hidden md:flex items-center gap-1.5 px-3.5 py-2.5 text-sm font-bold text-gray-600 dark:text-white bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl hover:bg-gray-100 dark:hover:bg-white/10 transition-all cursor-pointer"
+              >
+                <Upload className="w-4 h-4" /> Bulk Photos
+              </button>
               <button
                 onClick={exportStudents}
                 className="flex items-center gap-1.5 px-3.5 py-2.5 text-sm font-bold text-gray-600 dark:text-white bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl hover:bg-gray-100 dark:hover:bg-white/10 transition-all cursor-pointer"
