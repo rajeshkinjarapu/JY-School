@@ -205,15 +205,15 @@ export const StudentListPage: React.FC = () => {
 
                   <div className="shrink-0 pl-2">
                     {photoUrl ? (
-                      <img
-                        src={getPhotoUrl(photoUrl)}
-                        alt={name}
-                        className="w-14 h-14 rounded-2xl object-cover shadow-md border-2 border-white dark:border-white/10"
-                        onError={(e) => {
-                          e.currentTarget.onerror = null;
-                          e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`;
-                        }}
-                      />
+                        <img
+                          src={getPhotoUrl(photoUrl)}
+                          alt={name}
+                          className="w-14 h-14 rounded-2xl object-cover object-top shadow-md border-2 border-white dark:border-white/10"
+                          onError={(e) => {
+                            e.currentTarget.onerror = null;
+                            e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`;
+                          }}
+                        />
                     ) : (
                       <div
                         className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${getColor(name)} flex items-center justify-center text-white font-black text-xl shadow-md border-2 border-white dark:border-white/10`}
@@ -320,7 +320,7 @@ export const StudentListPage: React.FC = () => {
                           <img
                             src={getPhotoUrl(photoUrl)}
                             alt={name}
-                            className="w-12 h-16 rounded-xl object-cover border-2 border-white dark:border-gray-800 shadow-lg ring-2 ring-indigo-100 dark:ring-indigo-900/30 transform group-hover:scale-105 transition-transform"
+                            className="w-12 h-16 rounded-xl object-cover object-top border-2 border-white dark:border-gray-800 shadow-lg ring-2 ring-indigo-100 dark:ring-indigo-900/30 transform group-hover:scale-105 transition-transform"
                             onError={(e) => {
                               e.currentTarget.onerror = null;
                               e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`;
