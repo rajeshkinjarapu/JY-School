@@ -156,6 +156,8 @@ export const JEEProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
         quality: 0.95,
         backgroundColor: '#ffffff',
         pixelRatio: window.innerWidth < 768 ? 1.5 : 2,
+        style: { margin: '0' },
+        useCORS: true
       });
       
       const pdf = new jsPDF('p', 'mm', 'a4');
@@ -293,6 +295,8 @@ export const JEEProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
           quality: 0.95,
           backgroundColor: '#ffffff',
           pixelRatio: 2,
+          style: { margin: '0' },
+          useCORS: true
         });
         
         const pdf = new jsPDF('p', 'mm', 'a4');
@@ -338,6 +342,34 @@ export const JEEProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
     const cards = document.querySelectorAll('.progress-card-wrapper');
     cards.forEach((el) => {
       (el as HTMLElement).style.display = 'flex';
+    });
+
+    window.print();
+
+    cards.forEach((el) => {
+      (el as HTMLElement).style.display = '';
+    });
+    
+    if (parentContainer) {
+      parentContainer.classList.add('hidden');
+      parentContainer.style.display = '';
+    }
+  };
+
+  const handlePrintSingle = (idx: number) => {
+    const parentContainer = document.getElementById('progress-cards-print-container');
+    if (parentContainer) {
+      parentContainer.classList.remove('hidden');
+      parentContainer.style.display = 'block';
+    }
+
+    const cards = document.querySelectorAll('.progress-card-wrapper');
+    cards.forEach((el, index) => {
+      if (index === idx) {
+        (el as HTMLElement).style.display = 'flex';
+      } else {
+        (el as HTMLElement).style.display = 'none';
+      }
     });
 
     window.print();
@@ -735,6 +767,9 @@ export const JEEProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
                     <th className="py-3 px-4">Student Name</th>
                     {/* Hide detailed stats on small screens if you want, but user requested mobile friendly. Let's keep it clean */}
                     {!isTeacher && <th className="py-3 px-4 hidden md:table-cell">Student ID</th>}
+                    <th className="py-3 px-4 text-center hidden md:table-cell">Mat</th>
+                    <th className="py-3 px-4 text-center hidden md:table-cell">Phy</th>
+                    <th className="py-3 px-4 text-center hidden md:table-cell">Che</th>
                     <th className="py-3 px-4 text-center">Total Marks</th>
                     <th className="py-3 px-4 text-right">Action</th>
                   </tr>
@@ -750,12 +785,23 @@ export const JEEProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
                         <div className="text-xs font-normal text-gray-500 mt-0.5">{data.className} {data.section}</div>
                       </td>
                       {!isTeacher && <td className="py-3 px-4 text-gray-600 font-medium hidden md:table-cell">{data.rollNo || '-'}</td>}
-                      
+                      <td className="py-3 px-4 text-center hidden md:table-cell font-medium text-gray-700">
+                        {data.marks?.find((m: any) => m.subject === 'Mathematics' || m.subject === 'Maths' || m.subject === 'MAT')?.obtained ?? '-'}
+                      </td>
+                      <td className="py-3 px-4 text-center hidden md:table-cell font-medium text-gray-700">
+                        {data.marks?.find((m: any) => m.subject === 'Physics' || m.subject === 'PHY')?.obtained ?? '-'}
+                      </td>
+                      <td className="py-3 px-4 text-center hidden md:table-cell font-medium text-gray-700">
+                        {data.marks?.find((m: any) => m.subject === 'Chemistry' || m.subject === 'CHE')?.obtained ?? '-'}
+                      </td>
                       <td className="py-3 px-4 text-center">
                         <span className="font-bold text-emerald-600 text-base">{data.total}</span>
                       </td>
                       
                       <td className="py-3 px-4 flex justify-end gap-2 items-center">
+                        <button onClick={() => handlePrintSingle(idx)} className="bg-blue-50 hover:bg-blue-100 text-blue-600 p-2 rounded-lg text-xs font-semibold flex items-center justify-center transition-colors" title="Print Card">
+                            <Printer className="w-4 h-4" />
+                        </button>
                         <button onClick={() => handleDownloadSingle(data.studentId, data.studentName, idx)} className="bg-indigo-50 hover:bg-indigo-100 text-indigo-600 p-2 rounded-lg text-xs font-semibold flex items-center justify-center transition-colors" title="Download PDF">
                             <Download className="w-4 h-4" /> 
                         </button>
