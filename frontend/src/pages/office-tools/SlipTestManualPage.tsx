@@ -5,7 +5,7 @@ import { Download, ChevronLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import html2canvas from 'html2canvas';
 import toast from 'react-hot-toast';
-import { SlipTestRankCard, ProcessedStudent } from '../../components/OfficeTools/SlipTestRankCard';
+import { SlipTestRankCard, type ProcessedStudent } from '../../components/OfficeTools/SlipTestRankCard';
 
 export const SlipTestManualPage = () => {
   const navigate = useNavigate();
