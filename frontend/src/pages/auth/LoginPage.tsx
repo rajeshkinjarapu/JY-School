@@ -49,7 +49,7 @@ export const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="h-screen w-screen overflow-hidden flex flex-col items-center justify-center bg-gradient-to-br from-indigo-500 via-fuchsia-500 to-rose-500 relative font-sans">
+    <div className="fixed inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-indigo-500 via-fuchsia-500 to-rose-500 font-sans overflow-hidden">
       
       {/* Decorative Blobs */}
       <div className="absolute top-0 left-0 w-64 h-64 bg-yellow-400 rounded-full mix-blend-multiply filter blur-3xl opacity-40 animate-blob"></div>
