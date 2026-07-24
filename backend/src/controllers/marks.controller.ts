@@ -250,24 +250,44 @@ export const downloadReportCard = async (req: AuthRequest, res: Response, next: 
     doc.text(mark.subject.name, 50, rowY, { width: 200 });
     doc.text(mark.marksObtained.toString(), 250, rowY, { width: 120 });
     doc.text(mark.maxMarks.toString(), 370, rowY, { width: 90 });
-    doc.text(mark.grade || '', 460, rowY, { width: 60 });
+    doc.text(mark.grade || '-', 460, rowY, { width: 60 });
     doc.moveDown();
-    doc.moveTo(50, doc.y).lineTo(550, doc.y).stroke('#f1f5f9');
   }
-
+  
+  doc.moveTo(50, doc.y).lineTo(550, doc.y).stroke('#e2e8f0');
   doc.moveDown();
-  doc.moveTo(50, doc.y).lineTo(550, doc.y).stroke('#6366f1');
-  doc.moveDown(0.5);
-
-  // Result
-  doc.fontSize(12).fillColor('#1e293b');
+  
+  // Footer Stats
+  doc.fontSize(11).fillColor('#4f46e5');
   doc.text(`Total: ${totalObtained} / ${totalMax}`, { continued: true });
-  doc.text(`  Percentage: ${percentage}%`, { continued: true });
-  doc.text(`  Grade: ${grade}`, { align: 'right' });
-  doc.moveDown();
-
-  doc.fontSize(14).fillColor(passed ? '#16a34a' : '#dc2626');
-  doc.text(passed ? '✓ PASSED' : '✗ FAILED', { align: 'center' });
+  doc.text(`Percentage: ${percentage}%`, { align: 'right' });
+  doc.text(`Grade: ${grade}`, { continued: true });
+  doc.text(`Result: ${passed ? 'PASS' : 'FAIL'}`, { align: 'right' });
 
   doc.end();
+};
+
+export const clearMarks = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const examId = req.params.examId as string;
+    const classId = req.query.classId as string;
+    
+    if (!examId || !classId) return next(createError('Exam ID and Class ID are required', 400));
+    
+    // Find students in this class
+    const students = await prisma.student.findMany({ where: { classId } });
+    const studentIds = students.map(s => s.id);
+    
+    // Delete marks for these students in this exam
+    const result = await prisma.mark.deleteMany({
+      where: {
+        examId,
+        studentId: { in: studentIds }
+      }
+    });
+    
+    successResponse(res, result, `Successfully cleared ${result.count} marks records.`);
+  } catch (error) {
+    next(error);
+  }
 };
