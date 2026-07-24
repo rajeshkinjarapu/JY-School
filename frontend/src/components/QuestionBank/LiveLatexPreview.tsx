@@ -9,6 +9,7 @@ interface LiveLatexPreviewProps {
   maxMarks: string;
   time: string;
   instructions: string[];
+  isDoubleColumn?: boolean;
 }
 
 export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
@@ -17,7 +18,8 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
   examName,
   maxMarks,
   time,
-  instructions
+  instructions,
+  isDoubleColumn = false
 }) => {
   // Utility to render LaTeX string into HTML string safely
   const renderLatex = (text: string) => {
@@ -130,6 +132,21 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
       style={{ width: '210mm', minHeight: '297mm', boxSizing: 'border-box' }}
       id="a4-preview-paper"
     >
+      <style>{`
+        .katex-display {
+          overflow-x: auto;
+          overflow-y: hidden;
+          max-width: 100%;
+        }
+        .katex {
+          white-space: normal !important;
+          word-break: break-word;
+        }
+        .katex-html {
+          display: inline-flex !important;
+          flex-wrap: wrap;
+        }
+      `}</style>
       <div className="p-8 font-serif">
         
         {/* Header Section - No extra top margin */}
@@ -154,8 +171,8 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
           </div>
         )}
 
-        {/* Dynamic Content rendered with KaTeX and Smart Parser */}
-        <div className="w-full">
+        {/* Questions Section - Support Double Column */}
+        <div className={isDoubleColumn ? "columns-2 gap-8" : ""}>
           {parseBlocks()}
         </div>
 

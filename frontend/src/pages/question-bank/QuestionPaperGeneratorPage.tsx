@@ -28,6 +28,8 @@ export const QuestionPaperGeneratorPage = () => {
   const [geminiApiKey, setGeminiApiKey] = useState<string>(() => {
     return localStorage.getItem('jy_gemini_api_key') || '';
   });
+  const [isDoubleColumn, setIsDoubleColumn] = useState(false);
+  
   // Editor State
   const [content, setContent] = useState(
     '1. What is the capital of France?\n(A) London\n(B) Paris\n(C) Berlin\n(D) Madrid\n\n2. Solve for x: $2x + 5 = 15$\n(A) 2\n(B) 4\n(C) 5\n(D) 10\n\n3. Which of the following is the quadratic formula?\n(A) $x = \\frac{b}{2a}$\n(B) $x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$\n(C) $x = mc^2$\n(D) $x = y + c$'
@@ -298,8 +300,28 @@ export const QuestionPaperGeneratorPage = () => {
         </div>
 
         {/* Right Side: Live Preview (Full Width on Print) */}
-        <div className="w-1/2 p-8 overflow-y-auto bg-slate-100 print:w-full print:p-0 print:bg-white custom-scrollbar flex justify-center">
-          <div className="paper-zoom origin-top transition-transform">
+        <div className="w-1/2 overflow-y-auto bg-slate-100 print:w-full print:bg-white custom-scrollbar flex flex-col relative">
+          <div className="sticky top-0 z-10 bg-slate-100/80 backdrop-blur-md border-b border-slate-200 px-6 py-3 flex justify-between items-center print:hidden">
+            <h3 className="font-semibold text-slate-700 flex items-center gap-2">
+              Live Preview
+            </h3>
+            <div className="flex bg-slate-200 rounded-lg p-1">
+              <button 
+                onClick={() => setIsDoubleColumn(false)}
+                className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${!isDoubleColumn ? 'bg-white shadow text-blue-600' : 'text-slate-600 hover:text-slate-800'}`}
+              >
+                Single View
+              </button>
+              <button 
+                onClick={() => setIsDoubleColumn(true)}
+                className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${isDoubleColumn ? 'bg-white shadow text-blue-600' : 'text-slate-600 hover:text-slate-800'}`}
+              >
+                Double View
+              </button>
+            </div>
+          </div>
+          <div className="flex justify-center p-8 print:p-0">
+            <div className="paper-zoom origin-top transition-transform">
             <LiveLatexPreview 
               content={content}
               schoolName={schoolName}
@@ -307,7 +329,9 @@ export const QuestionPaperGeneratorPage = () => {
               maxMarks={maxMarks}
               time={time}
               instructions={instructions.split('\n').filter(i => i.trim() !== '')}
+              isDoubleColumn={isDoubleColumn}
             />
+          </div>
           </div>
         </div>
 
