@@ -1,4 +1,5 @@
 import React from 'react';
+import { createPortal } from 'react-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { Link, useNavigate } from 'react-router-dom';
 import { Avatar } from '../../components/UI/Avatar';
@@ -565,9 +566,9 @@ const TeacherView: React.FC<{ data: any }> = ({ data }) => {
         </ChartCard>
       )}
 
-      {showMarksModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-950/45 backdrop-blur-sm">
-          <div className="fixed inset-0" onClick={() => setShowMarksModal(false)} />
+      {showMarksModal && typeof document !== 'undefined' && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-gray-950/45 backdrop-blur-sm" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh' }}>
+          <div className="absolute inset-0" onClick={() => setShowMarksModal(false)} />
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 relative z-10 border border-gray-100">
             <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
               <PenTool className="w-5 h-5 text-indigo-600" /> Select Exam & Class
@@ -618,7 +619,8 @@ const TeacherView: React.FC<{ data: any }> = ({ data }) => {
               </div>
             )}
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
