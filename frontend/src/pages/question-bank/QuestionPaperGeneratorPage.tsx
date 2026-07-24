@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
-import { ChevronLeft, Sparkles, Upload, Save, Printer, FileText } from 'lucide-react';
+import { ChevronLeft, Sparkles, Upload, Save, Printer, FileText, Settings, Maximize, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { LiveLatexPreview } from '../../components/QuestionBank/LiveLatexPreview';
-import api from '../../api/axios';
 
 export const QuestionPaperGeneratorPage = () => {
   const navigate = useNavigate();
   
   // Paper Settings State
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [schoolName, setSchoolName] = useState('SRI JYOTHI HIGH SCHOOL');
   const [examName, setExamName] = useState('FINAL EXAMINATION');
   const [maxMarks, setMaxMarks] = useState('100');
@@ -23,6 +23,18 @@ export const QuestionPaperGeneratorPage = () => {
 
   const handlePrint = () => {
     window.print();
+  };
+
+  const toggleFullScreen = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch((err) => {
+        toast.error(`Error attempting to enable fullscreen: ${err.message}`);
+      });
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      }
+    }
   };
 
   const handleAiGenerate = async () => {
@@ -81,11 +93,25 @@ export const QuestionPaperGeneratorPage = () => {
               <FileText className="w-5 h-5 text-blue-600" />
               AI Paper Generator
             </h1>
-            <p className="text-sm text-slate-500">Dual-layout editor with Live LaTeX preview</p>
           </div>
         </div>
         
         <div className="flex items-center gap-3">
+          <button
+            onClick={toggleFullScreen}
+            className="p-2 bg-slate-100 text-slate-700 rounded-xl hover:bg-slate-200 transition-all flex items-center gap-2"
+            title="Full Screen"
+          >
+            <Maximize className="w-5 h-5" />
+          </button>
+          <div className="w-px h-6 bg-slate-200 mx-1"></div>
+          <button
+            onClick={() => setIsSettingsOpen(true)}
+            className="px-4 py-2 bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 rounded-xl font-medium transition-all flex items-center gap-2"
+          >
+            <Settings className="w-4 h-4" />
+            Paper Settings
+          </button>
           <button
             onClick={handleUpload}
             className="px-4 py-2 bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 rounded-xl font-medium transition-all flex items-center gap-2"
@@ -123,57 +149,6 @@ export const QuestionPaperGeneratorPage = () => {
         
         {/* Left Side: Editor (Hidden on Print) */}
         <div className="w-1/2 p-6 overflow-y-auto border-r border-slate-200 bg-white print:hidden custom-scrollbar">
-          
-          <div className="mb-6 space-y-4">
-            <h3 className="font-semibold text-slate-700 border-b pb-2">Paper Headings & Settings</h3>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs font-medium text-slate-500 mb-1">School Name</label>
-                <input
-                  type="text"
-                  value={schoolName}
-                  onChange={(e) => setSchoolName(e.target.value)}
-                  className="w-full rounded-lg border-slate-200 bg-slate-50 border p-2 text-sm focus:ring-2 focus:ring-blue-500/20 outline-none"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-slate-500 mb-1">Exam Name</label>
-                <input
-                  type="text"
-                  value={examName}
-                  onChange={(e) => setExamName(e.target.value)}
-                  className="w-full rounded-lg border-slate-200 bg-slate-50 border p-2 text-sm focus:ring-2 focus:ring-blue-500/20 outline-none"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-slate-500 mb-1">Max Marks</label>
-                <input
-                  type="text"
-                  value={maxMarks}
-                  onChange={(e) => setMaxMarks(e.target.value)}
-                  className="w-full rounded-lg border-slate-200 bg-slate-50 border p-2 text-sm focus:ring-2 focus:ring-blue-500/20 outline-none"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-slate-500 mb-1">Time</label>
-                <input
-                  type="text"
-                  value={time}
-                  onChange={(e) => setTime(e.target.value)}
-                  className="w-full rounded-lg border-slate-200 bg-slate-50 border p-2 text-sm focus:ring-2 focus:ring-blue-500/20 outline-none"
-                />
-              </div>
-              <div className="col-span-2">
-                <label className="block text-xs font-medium text-slate-500 mb-1">General Instructions (One per line, Max 5)</label>
-                <textarea
-                  value={instructions}
-                  onChange={(e) => setInstructions(e.target.value)}
-                  className="w-full rounded-lg border-slate-200 bg-slate-50 border p-2 text-sm focus:ring-2 focus:ring-blue-500/20 outline-none resize-none h-20"
-                />
-              </div>
-            </div>
-          </div>
-
           <div className="h-full flex flex-col pb-20">
             <h3 className="font-semibold text-slate-700 border-b pb-2 mb-4 flex justify-between">
               <span>Question Content (LaTeX Support)</span>
@@ -182,25 +157,101 @@ export const QuestionPaperGeneratorPage = () => {
             <textarea
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              className="flex-1 w-full rounded-xl border-slate-200 bg-slate-50 border p-4 font-mono text-sm focus:ring-2 focus:ring-blue-500/20 outline-none resize-none min-h-[400px]"
+              className="flex-1 w-full rounded-xl border-slate-200 bg-slate-50 border p-4 font-mono text-[13px] leading-relaxed focus:ring-2 focus:ring-blue-500/20 outline-none resize-none min-h-[400px]"
               placeholder="1. Question text&#10;(A) Option A&#10;(B) Option B&#10;(C) Option C&#10;(D) Option D"
             />
           </div>
         </div>
 
         {/* Right Side: Live Preview (Full Width on Print) */}
-        <div className="w-1/2 p-8 overflow-y-auto bg-slate-100 print:w-full print:p-0 print:bg-white custom-scrollbar">
-          <LiveLatexPreview 
-            content={content}
-            schoolName={schoolName}
-            examName={examName}
-            maxMarks={maxMarks}
-            time={time}
-            instructions={instructions.split('\n').filter(i => i.trim() !== '')}
-          />
+        <div className="w-1/2 p-8 overflow-y-auto bg-slate-100 print:w-full print:p-0 print:bg-white custom-scrollbar flex justify-center">
+          <div className="origin-top transition-transform">
+            <LiveLatexPreview 
+              content={content}
+              schoolName={schoolName}
+              examName={examName}
+              maxMarks={maxMarks}
+              time={time}
+              instructions={instructions.split('\n').filter(i => i.trim() !== '')}
+            />
+          </div>
         </div>
 
       </div>
+
+      {/* Settings Modal */}
+      {isSettingsOpen && (
+        <div className="fixed inset-0 z-[200] bg-black/50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+              <h2 className="font-bold text-lg text-slate-800 flex items-center gap-2">
+                <Settings className="w-5 h-5 text-blue-600" /> Paper Settings
+              </h2>
+              <button onClick={() => setIsSettingsOpen(false)} className="p-2 hover:bg-slate-200 rounded-full transition-colors">
+                <X className="w-5 h-5 text-slate-500" />
+              </button>
+            </div>
+            
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">School Name</label>
+                <input
+                  type="text"
+                  value={schoolName}
+                  onChange={(e) => setSchoolName(e.target.value)}
+                  className="w-full rounded-lg border-slate-200 bg-white border p-2.5 text-sm focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Exam Name</label>
+                <input
+                  type="text"
+                  value={examName}
+                  onChange={(e) => setExamName(e.target.value)}
+                  className="w-full rounded-lg border-slate-200 bg-white border p-2.5 text-sm focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Max Marks</label>
+                  <input
+                    type="text"
+                    value={maxMarks}
+                    onChange={(e) => setMaxMarks(e.target.value)}
+                    className="w-full rounded-lg border-slate-200 bg-white border p-2.5 text-sm focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Time</label>
+                  <input
+                    type="text"
+                    value={time}
+                    onChange={(e) => setTime(e.target.value)}
+                    className="w-full rounded-lg border-slate-200 bg-white border p-2.5 text-sm focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">General Instructions (One per line)</label>
+                <textarea
+                  value={instructions}
+                  onChange={(e) => setInstructions(e.target.value)}
+                  className="w-full rounded-lg border-slate-200 bg-white border p-2.5 text-sm focus:ring-2 focus:ring-blue-500/20 outline-none resize-none h-24 transition-all"
+                />
+              </div>
+            </div>
+            
+            <div className="px-6 py-4 border-t border-slate-100 bg-slate-50 flex justify-end">
+              <button 
+                onClick={() => setIsSettingsOpen(false)}
+                className="px-6 py-2 bg-blue-600 text-white font-medium rounded-xl hover:bg-blue-700 transition-colors shadow-sm"
+              >
+                Save Settings
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <style>{`
         .custom-scrollbar::-webkit-scrollbar { width: 8px; height: 8px; }

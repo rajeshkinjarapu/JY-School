@@ -86,35 +86,41 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
       const optC = matchC ? matchC[1].trim() : '';
       const optD = matchD ? matchD[1].trim() : '';
 
-      // Determine layout based on option length
-      const maxLen = Math.max(optA.length, optB.length, optC.length, optD.length);
+      // Strip common LaTeX symbols to estimate visual length
+      const estimateVisualLength = (text: string) => {
+        return text.replace(/\$|\\[a-zA-Z]+|{|}|_|\\/g, '').trim().length;
+      };
+
+      const maxLen = Math.max(
+        estimateVisualLength(optA), 
+        estimateVisualLength(optB), 
+        estimateVisualLength(optC), 
+        estimateVisualLength(optD)
+      );
       
       let optionsLayout = '';
       if (maxLen < 15) {
-        // Short: Single line
+        // Short: Single line, evenly spaced
         optionsLayout = 'flex flex-row justify-between w-full pr-12';
-      } else if (maxLen < 40) {
-        // Medium: 2x2 Grid
-        optionsLayout = 'grid grid-cols-2 gap-y-1 gap-x-8 w-full';
+      } else if (maxLen < 45) {
+        // Medium: 2x2 Grid with generous spacing
+        optionsLayout = 'grid grid-cols-2 gap-y-2 gap-x-12 w-full pr-8';
       } else {
         // Long: 1 Column
-        optionsLayout = 'flex flex-col space-y-1 w-full';
+        optionsLayout = 'flex flex-col space-y-2 w-full';
       }
 
       return (
         <div key={idx} className="mb-4 break-inside-avoid text-[12pt] leading-snug">
           {/* Question Text */}
-          <div className="mb-1" dangerouslySetInnerHTML={{ __html: renderLatex(questionText) }} />
+          <div className="mb-2" dangerouslySetInnerHTML={{ __html: renderLatex(questionText) }} />
           
-          {/* Options Box - We align the start of (A) with the start of the text.
-              Usually there's a small indent for options, but user requested option A aligned with question text. 
-              If question text starts with "1. ", we align with the text part. 
-              Let's just use ml-5 to align under the number. */}
-          <div className={`ml-5 ${optionsLayout}`}>
-            <div className="flex"><span className="mr-2">(A)</span> <span dangerouslySetInnerHTML={{ __html: renderLatex(optA) }} /></div>
-            <div className="flex"><span className="mr-2">(B)</span> <span dangerouslySetInnerHTML={{ __html: renderLatex(optB) }} /></div>
-            <div className="flex"><span className="mr-2">(C)</span> <span dangerouslySetInnerHTML={{ __html: renderLatex(optC) }} /></div>
-            <div className="flex"><span className="mr-2">(D)</span> <span dangerouslySetInnerHTML={{ __html: renderLatex(optD) }} /></div>
+          {/* Options Box - align under question text */}
+          <div className={`ml-6 ${optionsLayout}`}>
+            <div className="flex"><span className="mr-2 font-medium">(A)</span> <span dangerouslySetInnerHTML={{ __html: renderLatex(optA) }} /></div>
+            <div className="flex"><span className="mr-2 font-medium">(B)</span> <span dangerouslySetInnerHTML={{ __html: renderLatex(optB) }} /></div>
+            <div className="flex"><span className="mr-2 font-medium">(C)</span> <span dangerouslySetInnerHTML={{ __html: renderLatex(optC) }} /></div>
+            <div className="flex"><span className="mr-2 font-medium">(D)</span> <span dangerouslySetInnerHTML={{ __html: renderLatex(optD) }} /></div>
           </div>
         </div>
       );
