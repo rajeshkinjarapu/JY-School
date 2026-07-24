@@ -58,7 +58,7 @@ export const LoginPage: React.FC = () => {
 
       {/* School Header */}
       <div className="relative z-10 flex flex-col items-center mb-6 sm:mb-8 mt-2">
-        <div className="w-32 h-32 sm:w-40 sm:h-40 rounded-full flex items-center justify-center mb-3 drop-shadow-[0_0_20px_rgba(255,255,255,0.6)] hover:scale-105 transition-transform duration-300">
+        <div className="w-28 h-28 sm:w-36 sm:h-36 rounded-full flex items-center justify-center mb-3 drop-shadow-[0_0_20px_rgba(255,255,255,0.6)] hover:scale-105 transition-transform duration-300">
           <img src="/logo.png" alt="JY School Logo" className="w-full h-full object-contain" />
         </div>
         <h1 className="text-4xl sm:text-5xl font-black text-white drop-shadow-lg tracking-tight text-center px-4">
