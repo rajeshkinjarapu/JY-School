@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ChevronLeft, Sparkles, Upload, Save, Printer, FileText, Settings, Maximize, X } from 'lucide-react';
+import { ChevronLeft, Sparkles, Upload, Save, Printer, FileText, Settings, Maximize, X, Wand2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { LiveLatexPreview } from '../../components/QuestionBank/LiveLatexPreview';
@@ -14,6 +14,12 @@ export const QuestionPaperGeneratorPage = () => {
   const [maxMarks, setMaxMarks] = useState('100');
   const [time, setTime] = useState('3 Hours');
   const [instructions, setInstructions] = useState('Answer all questions.\nEach question carries equal marks.\nRead questions carefully before answering.');
+  
+  // AI Modal State
+  const [isAiModalOpen, setIsAiModalOpen] = useState(false);
+  const [aiSourceType, setAiSourceType] = useState('text');
+  const [aiInput, setAiInput] = useState('');
+  const [aiInstructions, setAiInstructions] = useState('');
   
   // Editor State
   const [content, setContent] = useState(
@@ -51,21 +57,41 @@ export const QuestionPaperGeneratorPage = () => {
     }, 2000);
   };
 
-  const handleUpload = () => {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = '.pdf,image/*';
-    input.onchange = (e: any) => {
-      const file = e.target.files[0];
-      if (file) {
-        toast.loading(`Analyzing ${file.name}...`, { id: 'upload' });
-        setTimeout(() => {
-          setContent(content + '\n\n5. What is the value of $\\pi$ to 2 decimal places?\n(A) 3.14\n(B) 3.15\n(C) 3.12\n(D) 3.16');
-          toast.success("Document parsed successfully!", { id: 'upload' });
-        }, 3000);
+  const autoFormatText = () => {
+    const lines = content.split('\n');
+    let formatted = [];
+    
+    for (let i = 0; i < lines.length; i++) {
+      let line = lines[i].trim();
+      if (!line) {
+        formatted.push('');
+        continue;
       }
-    };
-    input.click();
+      
+      // Handle inline options like "A) 2V B) 200V C) 20V D) 10V"
+      const optionRegex = /\b([a-dA-D])[\)\.]\s+/g;
+      if (line.match(optionRegex) && (line.match(optionRegex)?.length ?? 0) > 1) {
+         line = line.replace(/\b([a-dA-D])[\)\.]\s+/g, (match, letter) => `\n(${letter.toUpperCase()}) `);
+         line = line.trim();
+      }
+      
+      // Format standard options "A) " -> "(A) "
+      line = line.replace(/^\b([a-dA-D])[\)\.]\s+/i, (match, letter) => `(${letter.toUpperCase()}) `);
+      
+      // Add newline before question numbers if missing
+      if (/^\d+[\.\)]\s/.test(line)) {
+        if (formatted.length > 0 && formatted[formatted.length - 1] !== '') {
+          formatted.push('');
+        }
+        line = line.replace(/^(\d+)[\.\)]\s/, '$1. ');
+      }
+      
+      formatted.push(line);
+    }
+    
+    // Convert any single newlines within options to correct format if they got squished, but simple join is usually fine
+    setContent(formatted.join('\n'));
+    toast.success("Auto-formatted text!");
   };
 
   const handleSave = async () => {
@@ -116,19 +142,11 @@ export const QuestionPaperGeneratorPage = () => {
             Paper Settings
           </button>
           <button
-            onClick={handleUpload}
-            className="px-4 py-2 bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 rounded-xl font-medium transition-all flex items-center gap-2"
-          >
-            <Upload className="w-4 h-4" />
-            Upload Document
-          </button>
-          <button
-            onClick={handleAiGenerate}
-            disabled={isGenerating}
-            className="px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl hover:shadow-lg hover:shadow-purple-500/30 font-medium transition-all flex items-center gap-2 disabled:opacity-50"
+            onClick={() => setIsAiModalOpen(true)}
+            className="px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl hover:shadow-lg hover:shadow-purple-500/30 font-medium transition-all flex items-center gap-2"
           >
             <Sparkles className="w-4 h-4" />
-            {isGenerating ? 'Generating...' : 'AI Generate'}
+            ✨ AI Generate
           </button>
           <button
             onClick={handleSave}
@@ -153,9 +171,14 @@ export const QuestionPaperGeneratorPage = () => {
         {/* Left Side: Editor (Hidden on Print) */}
         <div className="w-1/2 p-6 overflow-y-auto border-r border-slate-200 bg-white print:hidden custom-scrollbar">
           <div className="h-full flex flex-col pb-20">
-            <h3 className="font-semibold text-slate-700 border-b pb-2 mb-4 flex justify-between">
+            <h3 className="font-semibold text-slate-700 border-b pb-2 mb-4 flex justify-between items-center">
               <span>Question Content (LaTeX Support)</span>
-              <span className="text-xs text-slate-400 font-normal">Format: 1. Question (A) Opt (B) Opt</span>
+              <button 
+                onClick={autoFormatText}
+                className="px-3 py-1.5 bg-blue-50 text-blue-700 text-xs font-bold rounded-lg hover:bg-blue-100 transition-colors flex items-center gap-1.5 border border-blue-200 shadow-sm"
+              >
+                <Wand2 className="w-3.5 h-3.5" /> Auto-Align Format
+              </button>
             </h3>
             <textarea
               value={content}
@@ -181,6 +204,112 @@ export const QuestionPaperGeneratorPage = () => {
         </div>
 
       </div>
+
+      {/* AI Generate Modal */}
+      {isAiModalOpen && (
+        <div className="fixed inset-0 z-[200] bg-black/50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+              <h2 className="font-bold text-lg text-slate-800 flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-purple-600" /> AI Generate & Upload
+              </h2>
+              <button onClick={() => setIsAiModalOpen(false)} className="p-2 hover:bg-slate-200 rounded-full transition-colors">
+                <X className="w-5 h-5 text-slate-500" />
+              </button>
+            </div>
+            
+            <div className="p-6 space-y-6">
+              {/* Source Tabs */}
+              <div className="flex gap-2 p-1 bg-slate-100 rounded-lg">
+                <button 
+                  onClick={() => setAiSourceType('text')}
+                  className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${aiSourceType === 'text' ? 'bg-white shadow text-blue-600' : 'text-slate-600 hover:text-slate-800'}`}
+                >
+                  📝 Text Prompt
+                </button>
+                <button 
+                  onClick={() => setAiSourceType('file')}
+                  className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${aiSourceType === 'file' ? 'bg-white shadow text-blue-600' : 'text-slate-600 hover:text-slate-800'}`}
+                >
+                  📄 Upload File
+                </button>
+                <button 
+                  onClick={() => setAiSourceType('url')}
+                  className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${aiSourceType === 'url' ? 'bg-white shadow text-blue-600' : 'text-slate-600 hover:text-slate-800'}`}
+                >
+                  🔗 Website Link
+                </button>
+              </div>
+
+              {/* Dynamic Input Area */}
+              {aiSourceType === 'text' && (
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Paste your syllabus, topic, or questions</label>
+                  <textarea
+                    value={aiInput}
+                    onChange={(e) => setAiInput(e.target.value)}
+                    className="w-full rounded-lg border-slate-200 bg-white border p-3 text-sm focus:ring-2 focus:ring-purple-500/20 outline-none resize-none h-32 transition-all custom-scrollbar"
+                    placeholder="E.g., Generate 10 MCQ questions on Quantum Physics for 12th grade..."
+                  />
+                </div>
+              )}
+              {aiSourceType === 'file' && (
+                <div className="border-2 border-dashed border-slate-300 rounded-xl p-8 flex flex-col items-center justify-center bg-slate-50 hover:bg-slate-100 transition-colors cursor-pointer group">
+                  <div className="p-3 bg-white rounded-full shadow-sm mb-3 group-hover:scale-110 transition-transform">
+                    <Upload className="w-6 h-6 text-blue-500" />
+                  </div>
+                  <p className="text-sm font-medium text-slate-700">Click to upload or drag and drop</p>
+                  <p className="text-xs text-slate-500 mt-1">Supports PDF, DOCX, JPG, PNG (Max 10MB)</p>
+                </div>
+              )}
+              {aiSourceType === 'url' && (
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Website URL</label>
+                  <input
+                    type="url"
+                    value={aiInput}
+                    onChange={(e) => setAiInput(e.target.value)}
+                    className="w-full rounded-lg border-slate-200 bg-white border p-3 text-sm focus:ring-2 focus:ring-purple-500/20 outline-none transition-all"
+                    placeholder="https://example.com/article"
+                  />
+                </div>
+              )}
+
+              {/* Specific Instructions */}
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Custom AI Instructions (Optional)</label>
+                <input
+                  type="text"
+                  value={aiInstructions}
+                  onChange={(e) => setAiInstructions(e.target.value)}
+                  className="w-full rounded-lg border-slate-200 bg-white border p-3 text-sm focus:ring-2 focus:ring-purple-500/20 outline-none transition-all"
+                  placeholder="E.g., Only extract multiple choice questions, ignore theory..."
+                />
+              </div>
+            </div>
+            
+            <div className="px-6 py-4 border-t border-slate-100 bg-slate-50 flex justify-end gap-3">
+              <button 
+                onClick={() => setIsAiModalOpen(false)}
+                className="px-6 py-2 bg-white border border-slate-300 text-slate-700 font-medium rounded-xl hover:bg-slate-50 transition-colors shadow-sm"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={() => {
+                  setIsAiModalOpen(false);
+                  handleAiGenerate();
+                }}
+                disabled={isGenerating}
+                className="px-6 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-medium rounded-xl hover:shadow-lg transition-colors shadow-sm flex items-center gap-2"
+              >
+                <Sparkles className="w-4 h-4" />
+                Generate Now
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Settings Modal */}
       {isSettingsOpen && (
