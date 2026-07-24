@@ -47,14 +47,65 @@ export const QuestionPaperGeneratorPage = () => {
   };
 
   const handleAiGenerate = async () => {
+    if (aiSourceType === 'file') {
+      toast.error("File upload is currently in beta. Please copy and paste your text into the Text Prompt tab.");
+      return;
+    }
+
+    if (!aiInput.trim()) {
+      toast.error("Please enter some text or URL first.");
+      return;
+    }
+
     setIsGenerating(true);
     toast.loading("AI is generating questions...", { id: 'ai-gen' });
     
-    setTimeout(() => {
-      setContent(content + '\n\n4. Calculate the integral of $\\int x^2 dx$.\n(A) $x^3 + C$\n(B) $\\frac{x^3}{3} + C$\n(C) $2x$\n(D) $x^2 + C$');
+    try {
+      const finalPrompt = aiInstructions 
+        ? `Instructions: ${aiInstructions}\n\nContent:\n${aiInput}` 
+        : aiInput;
+
+      const response = await api.post('/api/questions/import-ai', {
+        text: finalPrompt,
+        subject: 'General'
+      });
+
+      const questions = response.data.questions || [];
+      
+      if (questions.length === 0) {
+        toast.error("No questions could be generated. Try different text.", { id: 'ai-gen' });
+        setIsGenerating(false);
+        return;
+      }
+
+      let generatedText = '\n\n';
+      const lines = content.split('\n');
+      let maxQ = 0;
+      for (const line of lines) {
+        const match = line.match(/^(\d+)\.\s/);
+        if (match) {
+          const num = parseInt(match[1], 10);
+          if (num > maxQ) maxQ = num;
+        }
+      }
+
+      questions.forEach((q: any, i: number) => {
+        generatedText += `${maxQ + i + 1}. ${q.questionText}\n`;
+        if (q.optionA) generatedText += `(A) ${q.optionA}\n`;
+        if (q.optionB) generatedText += `(B) ${q.optionB}\n`;
+        if (q.optionC) generatedText += `(C) ${q.optionC}\n`;
+        if (q.optionD) generatedText += `(D) ${q.optionD}\n`;
+        generatedText += '\n';
+      });
+
+      setContent(content.trim() + generatedText);
       setIsGenerating(false);
-      toast.success("Questions generated!", { id: 'ai-gen' });
-    }, 2000);
+      toast.success(`${questions.length} questions generated successfully!`, { id: 'ai-gen' });
+    } catch (error: any) {
+      console.error(error);
+      setIsGenerating(false);
+      toast.error("AI Generation failed: " + (error.response?.data?.message || error.message), { id: 'ai-gen' });
+    }
   };
 
   const autoFormatText = () => {
