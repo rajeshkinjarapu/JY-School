@@ -473,14 +473,14 @@ export const bulkUploadPhotos = async (req: AuthRequest, res: Response, next: Ne
         continue;
       }
       
-      const finalName = `photo-${rollNo}-${Date.now()}${ext}`;
-      const savePath = path.join(uploadDir, finalName);
-      
-      fs.writeFileSync(savePath, zipEntry.getData());
+      const fileBuffer = zipEntry.getData();
+      const base64Str = fileBuffer.toString('base64');
+      const mimeType = ext === '.png' ? 'image/png' : ext === '.webp' ? 'image/webp' : 'image/jpeg';
+      const dataUri = `data:${mimeType};base64,${base64Str}`;
       
       await prisma.user.update({
         where: { id: student.userId },
-        data: { photoUrl: `/uploads/${finalName}` }
+        data: { photoUrl: dataUri }
       });
       
       success++;
