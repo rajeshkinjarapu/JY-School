@@ -22,7 +22,7 @@ export const ProgressCardTemplate: React.FC<ProgressCardTemplateProps> = ({
     rank: data.rank || "1",
     photo: data.photo || "",
     total: data.total || 0,
-    academicYear: data.academicYear || "2023-2024",
+    academicYear: data.academicYear || "2026-2027",
     location: data.location || "Narasannapeta",
     marks: data.marks && data.marks.length > 0 ? data.marks : [
       { subject: "Mathematics", maxMarks: 100, obtained: 98 },

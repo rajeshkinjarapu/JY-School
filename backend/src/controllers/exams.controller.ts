@@ -132,7 +132,7 @@ export const getResults = async (req: AuthRequest, res: Response, next: NextFunc
       marks: {
         where: classId ? { student: { classId } } : undefined,
         include: {
-          student: { include: { user: { select: { name: true, photoUrl: true } }, class: { select: { name: true, section: true } } } },
+          student: { include: { user: { select: { name: true, photoUrl: true, phone: true } }, class: { select: { name: true, section: true } } } },
           subject: { select: { name: true, code: true } },
         },
       },
@@ -141,7 +141,7 @@ export const getResults = async (req: AuthRequest, res: Response, next: NextFunc
   if (!exam) return next(createError('Exam not found', 404));
 
   // Group marks by student
-  const studentMap = new Map<string, { studentId: string; name: string; rollNo: string; className: string; marks: any[]; total: number; percentage: number; grade: string }>();
+  const studentMap = new Map<string, { studentId: string; name: string; rollNo: string; className: string; mobile: string; marks: any[]; total: number; percentage: number; grade: string }>();
   for (const mark of exam.marks) {
     const key = mark.studentId;
     if (!studentMap.has(key)) {
@@ -149,6 +149,7 @@ export const getResults = async (req: AuthRequest, res: Response, next: NextFunc
         studentId: key,
         name: mark.student.user.name,
         photo: mark.student.user.photoUrl,
+        mobile: mark.student.user.phone || '-',
         rollNo: mark.student.rollNo,
         className: mark.student.class ? `${mark.student.class.name} - ${mark.student.class.section}` : '',
         marks: [],
