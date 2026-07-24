@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { qbApi as api } from '../../utils/questionBankApi';
 import { LaTeXPreview } from './LaTeXPreview';
 import { Sparkles, AlertCircle, Loader2, Save, FileText, CheckCircle2, Edit2, X, Settings2 } from 'lucide-react';
@@ -14,7 +14,9 @@ export const AIQuestionForm: React.FC<AIQuestionFormProps> = ({ onSuccess, onCan
   const [inputText, setInputText] = useState('');
   const [subject, setSubject] = useState('Physics');
   const [provider, setProvider] = useState('gemini');
-  const [apiKey, setApiKey] = useState('');
+  const [apiKey, setApiKey] = useState<string>(() => {
+    return localStorage.getItem('jy_gemini_api_key') || '';
+  });
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [savingIndividual, setSavingIndividual] = useState<Record<number, boolean>>({});
@@ -192,7 +194,10 @@ export const AIQuestionForm: React.FC<AIQuestionFormProps> = ({ onSuccess, onCan
               <input
                 type="password"
                 value={apiKey}
-                onChange={(e) => setApiKey(e.target.value)}
+                onChange={(e) => {
+                  setApiKey(e.target.value);
+                  localStorage.setItem('jy_gemini_api_key', e.target.value);
+                }}
                 placeholder="sk-..."
                 className="w-full bg-white border border-indigo-200 rounded-lg p-2 text-sm text-slate-900 focus:outline-none focus:border-indigo-400"
               />
