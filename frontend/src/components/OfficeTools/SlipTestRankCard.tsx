@@ -106,16 +106,13 @@ export const SlipTestRankCard = React.forwardRef<HTMLDivElement, SlipTestRankCar
             fontSize: '30px', fontWeight: 900, color: '#0a1e3a', letterSpacing: '1.5px',
             fontFamily: "'Times New Roman', 'Georgia', serif", lineHeight: 1.2, whiteSpace: 'nowrap'
           }}>
-            SRI JYOTHI HIGH SCHOOL
+            SRI VENKATESWARA JY SCHOOL
           </div>
           <div style={{ fontSize: '16px', fontWeight: 600, color: '#1a4a7a', letterSpacing: '0.5px', margin: '2px 0' }}>
-            EMPOWERING MINDS SHAPING FUTURE
+            (IIT-JEE/NEET Foundation – Olympiads)
           </div>
-          <div style={{ fontSize: '14px', fontWeight: 500, color: '#2a5a7a', letterSpacing: '0.3px', margin: '0 0 2px 0' }}>
-            Recognised by Govt. of AP (E.M & T.M)
-          </div>
-          <div style={{ fontSize: '13px', fontWeight: 400, color: '#4a7a8a', letterSpacing: '0.2px', marginTop: '2px' }}>
-            Narasannapeta, Srikakulam Dist.
+          <div style={{ fontSize: '13px', fontWeight: 500, color: '#4a7a8a', letterSpacing: '0.2px', marginTop: '2px' }}>
+            Opp. Hero Showroom, SVL Paradise Campus, Narasannapeta
           </div>
         </div>
         <div style={{ width: '80px', flexShrink: 0 }}></div>
