@@ -188,6 +188,7 @@ model Exam {
   subjects           Json?
   admitCardPublished Boolean    @default(false)
   admitCardSettings  Json?
+  frozenClasses      Json?      @default("[]")
   createdAt          DateTime   @default(now())
 
   marks              Mark[]

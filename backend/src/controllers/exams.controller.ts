@@ -247,3 +247,43 @@ export const publishResults = async (req: AuthRequest, res: Response, next: Next
     next(error);
   }
 };
+
+export const toggleFreezeClass = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const { classId, isFrozen } = req.body;
+
+    const exam = await prisma.exam.findUnique({ where: { id } });
+    if (!exam) {
+      return next(createError('Exam not found', 404));
+    }
+
+    let frozenClasses: string[] = [];
+    if (exam.frozenClasses) {
+      if (typeof exam.frozenClasses === 'string') {
+        frozenClasses = JSON.parse(exam.frozenClasses as string);
+      } else if (Array.isArray(exam.frozenClasses)) {
+        frozenClasses = exam.frozenClasses as string[];
+      }
+    }
+
+    if (isFrozen) {
+      if (!frozenClasses.includes(classId)) {
+        frozenClasses.push(classId);
+      }
+    } else {
+      frozenClasses = frozenClasses.filter(c => c !== classId);
+    }
+
+    const updatedExam = await prisma.exam.update({
+      where: { id },
+      data: {
+        frozenClasses,
+      },
+    });
+
+    successResponse(res, updatedExam, isFrozen ? 'Marks frozen successfully' : 'Marks unfrozen successfully');
+  } catch (error) {
+    next(error);
+  }
+};

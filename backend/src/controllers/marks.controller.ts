@@ -65,7 +65,22 @@ export const bulkCreate = async (req: AuthRequest, res: Response, next: NextFunc
 
     // Pre-fetch all real subjects for those classes
     const classIds = [...new Set(students.map(s => s.classId))];
-    let realSubjects = await prisma.subject.findMany({ where: { classId: { in: classIds } } });
+    
+    let frozenClasses: string[] = [];
+    if (exam?.frozenClasses) {
+      if (typeof exam.frozenClasses === 'string') {
+        frozenClasses = JSON.parse(exam.frozenClasses);
+      } else if (Array.isArray(exam.frozenClasses)) {
+        frozenClasses = exam.frozenClasses as string[];
+      }
+    }
+
+    const frozenClassIdsBeingModified = classIds.filter(cId => cId && frozenClasses.includes(cId));
+    if (frozenClassIdsBeingModified.length > 0) {
+      return next(createError('Marks for one or more classes have been frozen. Cannot update.', 403));
+    }
+
+    let realSubjects = await prisma.subject.findMany({ where: { classId: { in: classIds as string[] } } });
 
     // Create any missing subjects dynamically
     for (const m of marks) {
@@ -279,9 +294,23 @@ export const clearMarks = async (req: AuthRequest, res: Response, next: NextFunc
     const students = await prisma.student.findMany({ where: { classId } });
     const studentIds = students.map(s => s.id);
     
+    const exam = await prisma.exam.findUnique({ where: { id: examId }});
+    
+    let frozenClasses: string[] = [];
+    if (exam?.frozenClasses) {
+      if (typeof exam.frozenClasses === 'string') {
+        frozenClasses = JSON.parse(exam.frozenClasses);
+      } else if (Array.isArray(exam.frozenClasses)) {
+        frozenClasses = exam.frozenClasses as string[];
+      }
+    }
+    
+    if (frozenClasses.includes(classId)) {
+       return next(createError('Marks for this class have been frozen. Cannot clear.', 403));
+    }
+    
     let targetSubjectId = subjectId;
     if (subjectId) {
-       const exam = await prisma.exam.findUnique({ where: { id: examId }});
        const examSubjects: any[] = Array.isArray(exam?.subjects) ? exam.subjects : [];
        const fakeSubject = examSubjects.find(s => s.id === subjectId);
        if (fakeSubject) {
