@@ -50,6 +50,33 @@ export const sendOtpEmail = async (email: string, otp: string, name: string): Pr
   });
 };
 
+export const sendResetLinkEmail = async (email: string, resetLink: string, name: string): Promise<void> => {
+  await sendEmail({
+    to: email,
+    subject: 'Reset Your Password — JY School',
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #f5f5f5;">
+        <div style="background: linear-gradient(135deg, #6366f1, #14b8a6); padding: 30px; border-radius: 10px; text-align: center; margin-bottom: 20px;">
+          <h1 style="color: white; margin: 0;">JY School</h1>
+          <p style="color: rgba(255,255,255,0.8); margin: 5px 0 0;">Student Management System</p>
+        </div>
+        <div style="background: white; padding: 30px; border-radius: 10px; text-align: center;">
+          <h2 style="color: #1e293b;">Password Reset Request</h2>
+          <p style="color: #64748b; text-align: left;">Hi ${name},</p>
+          <p style="color: #64748b; text-align: left;">You recently requested to reset your password for your JY School account. Click the button below to reset it.</p>
+          
+          <a href="${resetLink}" style="display: inline-block; background: #6366f1; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; margin: 25px 0;">
+            Reset Password
+          </a>
+          
+          <p style="color: #64748b; text-align: left;">This link expires in <strong>10 minutes</strong>.</p>
+          <p style="color: #94a3b8; font-size: 12px; text-align: left; margin-top: 20px;">If you didn't request this, please ignore this email and your password will remain unchanged.</p>
+        </div>
+      </div>
+    `,
+  });
+};
+
 export const sendWelcomeEmail = async (email: string, name: string, role: string, password: string): Promise<void> => {
   await sendEmail({
     to: email,

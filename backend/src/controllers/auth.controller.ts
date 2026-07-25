@@ -4,7 +4,8 @@ import { AuthRequest } from '../middlewares/auth';
 import { createError } from '../middlewares/errorHandler';
 import { prisma } from '../utils/prisma';
 import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from '../utils/jwt';
-import { sendOtpEmail, sendWelcomeEmail } from '../utils/email';
+import { sendOtpEmail, sendWelcomeEmail, sendResetLinkEmail } from '../utils/email';
+import crypto from 'crypto';
 import { successResponse } from '../utils/response';
 import { generateRollNo, generateEmployeeId, generateOtp } from '../utils/helpers';
 import { Role } from '../types/enums';
@@ -152,28 +153,31 @@ export const forgotPassword = async (req: AuthRequest, res: Response, next: Next
   const user = await prisma.user.findUnique({ where: { email } });
   if (!user) return next(createError('No user found with this email', 404));
 
-  const otp = generateOtp();
+  const token = crypto.randomBytes(32).toString('hex');
   const resetOtpExp = new Date(Date.now() + 10 * 60 * 1000);
 
-  await prisma.user.update({ where: { id: user.id }, data: { resetOtp: otp, resetOtpExp } });
+  await prisma.user.update({ where: { id: user.id }, data: { resetOtp: token, resetOtpExp } });
+
+  const clientUrl = process.env.CLIENT_URL || req.headers.origin || 'http://localhost:5173';
+  const resetLink = `${clientUrl}/reset-password?token=${token}&email=${encodeURIComponent(email)}`;
 
   try {
-    await sendOtpEmail(email, otp, user.name);
+    await sendResetLinkEmail(email, resetLink, user.name);
   } catch (e) {
-    console.error('OTP email failed:', e);
+    console.error('Reset link email failed:', e);
   }
 
-  successResponse(res, null, 'OTP sent to your email');
+  successResponse(res, null, 'Reset link sent to your email');
 };
 
 export const resetPassword = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
-  const { email, otp, newPassword } = req.body;
+  const { email, token, newPassword } = req.body;
 
   const user = await prisma.user.findUnique({ where: { email } });
-  if (!user || !user.resetOtp || !user.resetOtpExp) return next(createError('Invalid OTP request', 400));
+  if (!user || !user.resetOtp || !user.resetOtpExp) return next(createError('Invalid password reset request', 400));
 
-  if (user.resetOtp !== otp) return next(createError('Invalid OTP', 400));
-  if (user.resetOtpExp < new Date()) return next(createError('OTP has expired', 400));
+  if (user.resetOtp !== token) return next(createError('Invalid or expired token', 400));
+  if (user.resetOtpExp < new Date()) return next(createError('Token has expired', 400));
 
   const hashedPassword = await bcrypt.hash(newPassword, 12);
   await prisma.user.update({

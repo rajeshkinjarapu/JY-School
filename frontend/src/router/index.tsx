@@ -17,6 +17,7 @@ const withSuspense = (element: React.ReactElement) => (
 
 const LoginPage = lazy(() => import('../pages/auth/LoginPage'));
 const ForgotPasswordPage = lazy(() => import('../pages/auth/ForgotPasswordPage'));
+const ResetPasswordPage = lazy(() => import('../pages/auth/ResetPasswordPage'));
 const DashboardPage = lazy(() => import('../pages/dashboard/DashboardPage'));
 const StudentListPage = lazy(() => import('../pages/students/StudentListPage'));
 const StudentFormPage = lazy(() => import('../pages/students/StudentFormPage'));
@@ -82,6 +83,10 @@ export const router = createBrowserRouter([
   {
     path: '/forgot-password',
     element: withSuspense(<ForgotPasswordPage />),
+  },
+  {
+    path: '/reset-password',
+    element: withSuspense(<ResetPasswordPage />),
   },
   {
     path: '/',
