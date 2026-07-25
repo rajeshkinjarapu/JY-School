@@ -25,7 +25,12 @@ export const StudentListPage: React.FC = () => {
 
   const [search, setSearch] = useState("");
   const [classId, setClassId] = useState("");
+  const [page, setPage] = useState(1);
   const queryClient = useQueryClient();
+
+  React.useEffect(() => {
+    setPage(1);
+  }, [search, classId]);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const photoInputRef = useRef<HTMLInputElement>(null);
@@ -40,54 +45,67 @@ export const StudentListPage: React.FC = () => {
   });
 
   const {
-    data: students = [],
+    data: studentsData,
     isLoading: loading,
     refetch: fetchStudents,
   } = useQuery({
-    queryKey: ["students", search, classId],
+    queryKey: ["students", search, classId, page],
     queryFn: async () => {
       const res = await api.get("/api/students", {
-        params: { search, classId, limit: 5000 },
+        params: { search, classId, limit: 50, page },
       });
-      return res.data?.data || res.data || [];
+      return res.data || { data: [], meta: { total: 0, totalPages: 1 } };
     },
     staleTime: 1000 * 60 * 5,
   });
 
-  const exportStudents = () => {
-    const doc = new jsPDF();
+  const students = studentsData?.data || [];
+  const meta = studentsData?.meta || { total: 0, totalPages: 1 };
 
-    doc.setFontSize(18);
-    doc.text("Student List", 14, 22);
+  const exportStudents = async () => {
+    const toastId = toast.loading("Preparing PDF...");
+    try {
+      const res = await api.get("/api/students", {
+        params: { search, classId, limit: 5000 },
+      });
+      const exportData = res.data?.data || [];
 
-    const tableColumn = ["S.No", "Student ID", "Student Name", "Mobile No"];
-    const tableRows: any[] = [];
+      const doc = new jsPDF();
 
-    students.forEach((student: any, index: number) => {
-      const studentData = [
-        index + 1,
-        student.rollNo || "-",
-        student.user?.name || "-",
-        student.user?.phone || "-",
-      ];
-      tableRows.push(studentData);
-    });
+      doc.setFontSize(18);
+      doc.text("Student List", 14, 22);
 
-    autoTable(doc, {
-      head: [tableColumn],
-      body: tableRows,
-      startY: 30,
-      theme: "grid",
-      styles: { fontSize: 10, cellPadding: 3 },
-      headStyles: {
-        fillColor: [79, 70, 229],
-        textColor: 255,
-        fontStyle: "bold",
-      },
-    });
+      const tableColumn = ["S.No", "Student ID", "Student Name", "Mobile No"];
+      const tableRows: any[] = [];
 
-    doc.save("Student_List.pdf");
-    toast.success("PDF generated successfully!");
+      exportData.forEach((student: any, index: number) => {
+        const studentData = [
+          index + 1,
+          student.rollNo || "-",
+          student.user?.name || "-",
+          student.user?.phone || "-",
+        ];
+        tableRows.push(studentData);
+      });
+
+      autoTable(doc, {
+        head: [tableColumn],
+        body: tableRows,
+        startY: 30,
+        theme: "grid",
+        styles: { fontSize: 10, cellPadding: 3 },
+        headStyles: {
+          fillColor: [79, 70, 229],
+          textColor: 255,
+          fontStyle: "bold",
+        },
+      });
+
+      doc.save("Student_List.pdf");
+      toast.success("PDF generated successfully!", { id: toastId });
+    } catch (error) {
+      toast.error("Failed to generate PDF", { id: toastId });
+    }
   };
 
   // Initials avatar fallback
@@ -183,7 +201,7 @@ export const StudentListPage: React.FC = () => {
             />
           </div>
           <span className="hidden sm:inline-flex items-center justify-center px-3 py-2 text-xs font-black text-indigo-600 bg-indigo-100 rounded-lg whitespace-nowrap">
-            {students.length} Records
+            {meta.total} Records
           </span>
         </div>
         <div className="flex gap-2 flex-wrap">
@@ -472,17 +490,44 @@ export const StudentListPage: React.FC = () => {
 
           {/* Table Footer */}
           {students.length > 0 && (
-            <div className="px-5 py-3 border-t border-gray-100 dark:border-white/10 bg-slate-50/50 dark:bg-white/5 flex items-center justify-between">
+            <div className="px-5 py-3 border-t border-gray-100 dark:border-white/10 bg-slate-50/50 dark:bg-white/5 flex flex-col sm:flex-row items-center justify-between gap-4">
               <span className="text-xs text-gray-400 font-semibold">
                 Showing{" "}
                 <span className="text-gray-700 dark:text-gray-200 font-bold">
-                  {students.length}
+                  {Math.min((page - 1) * 50 + 1, meta.total)}
                 </span>{" "}
-                student{students.length !== 1 ? "s" : ""}
+                to{" "}
+                <span className="text-gray-700 dark:text-gray-200 font-bold">
+                  {Math.min(page * 50, meta.total)}
+                </span>{" "}
+                of{" "}
+                <span className="text-gray-700 dark:text-gray-200 font-bold">
+                  {meta.total}
+                </span>{" "}
+                student{meta.total !== 1 ? "s" : ""}
               </span>
-              <span className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider">
-                JY SCHOOL
-              </span>
+              
+              {meta.totalPages > 1 && (
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setPage(p => Math.max(1, p - 1))}
+                    disabled={page === 1}
+                    className="px-3 py-1.5 text-xs font-bold text-gray-600 bg-white border border-gray-200 rounded-lg disabled:opacity-50 hover:bg-gray-50 transition-colors cursor-pointer"
+                  >
+                    Previous
+                  </button>
+                  <span className="text-xs font-bold text-gray-600 dark:text-gray-300">
+                    Page {page} of {meta.totalPages}
+                  </span>
+                  <button
+                    onClick={() => setPage(p => Math.min(meta.totalPages, p + 1))}
+                    disabled={page === meta.totalPages}
+                    className="px-3 py-1.5 text-xs font-bold text-gray-600 bg-white border border-gray-200 rounded-lg disabled:opacity-50 hover:bg-gray-50 transition-colors cursor-pointer"
+                  >
+                    Next
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </div>
