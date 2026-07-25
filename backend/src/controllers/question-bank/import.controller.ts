@@ -72,7 +72,8 @@ const parseQuestionFromText = (text: string) => {
       return res.status(400).json({ message: 'Text input or image is required.' });
     }
 
-    const promptText = `You are an AI assistant for an exam portal. Extract multiple exam questions from the following text and return a JSON array of objects.
+    const promptText = `You are an AI assistant for an exam portal. Extract multiple exam questions from the provided content (which may be text, a handwritten document, an image, or a PDF). 
+Your primary goal is to perfectly transcribe the content, including handwritten text and mathematical equations, into a structured JSON array of objects.
 Do not wrap the output in markdown code blocks like \`\`\`json. Just return the raw JSON array.
 Each object must strictly match this structure:
 {
