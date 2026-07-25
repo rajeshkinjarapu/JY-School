@@ -35,8 +35,8 @@ export const OfficeToolsDashboard = () => {
       shadow: 'shadow-rose-500/30'
     },
     { 
-      title: 'Tool 5', 
-      description: 'Description for tool 5', 
+      title: 'SLIP TEST RANK CARD', 
+      description: 'Generate manual rank cards for slip tests', 
       icon: Image, 
       gradient: 'from-emerald-500 to-teal-400',
       shadow: 'shadow-emerald-500/30'
@@ -75,8 +75,8 @@ export const OfficeToolsDashboard = () => {
             <div 
               key={index} 
               onClick={() => {
-                if (tool.title === 'ORIGINAL ACADEMIC PROGRESS CARD') {
-                  navigate('/dashboard/office-tools/slip-test');
+                if (tool.title === 'SLIP TEST RANK CARD') {
+                  navigate('/office-tools/slip-test');
                 }
               }}
               className="group relative bg-white border border-slate-100 p-6 rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer overflow-hidden flex flex-col items-start gap-4"
