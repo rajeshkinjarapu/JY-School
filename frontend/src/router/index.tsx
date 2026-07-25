@@ -15,30 +15,55 @@ const withSuspense = (element: React.ReactElement) => (
   <Suspense fallback={pageLoader}>{element}</Suspense>
 );
 
+export const routeImports: Record<string, () => Promise<any>> = {
+  '/dashboard': () => import('../pages/dashboard/DashboardPage'),
+  '/students': () => import('../pages/students/StudentListPage'),
+  '/teachers': () => import('../pages/teachers/TeacherListPage'),
+  '/classes': () => import('../pages/classes/ClassManagementPage'),
+  '/subjects': () => import('../pages/subjects/SubjectPage'),
+  '/attendance': () => import('../pages/attendance/AttendanceDashboard'),
+  '/exams': () => import('../pages/exams/ExamListPage'),
+  '/timetable': () => import('../pages/timetable/TimetablePage'),
+  '/leave/gate-pass': () => import('../pages/gate-pass/GatePassPage'),
+  '/leave/type': () => import('../pages/leave/LeaveTypePage'),
+  '/finance': () => import('../pages/fees/FinancePage'),
+  '/fee-payment': () => import('../pages/fees/FeePaymentsPage'),
+  '/announcements': () => import('../pages/announcements/AnnouncementsPage'),
+  '/messages': () => import('../pages/messages/MessagesPage'),
+  '/reports': () => import('../pages/reports/ReportsPage'),
+  '/hr/salary': () => import('../pages/hr/SalaryPage'),
+  '/teacher-attendance': () => import('../pages/teacher-attendance/TeacherAttendancePage'),
+  '/homework': () => import('../pages/homework/HomeworkPage'),
+  '/office-tools': () => import('../pages/office-tools/OfficeToolsDashboard'),
+  '/question-bank': () => import('../pages/question-bank/QuestionBankDashboard'),
+  '/transport': () => import('../pages/transport/TransportDashboard'),
+  '/settings': () => import('../pages/settings/SettingsPage'),
+};
+
 const LoginPage = lazy(() => import('../pages/auth/LoginPage'));
 const ForgotPasswordPage = lazy(() => import('../pages/auth/ForgotPasswordPage'));
 const ResetPasswordPage = lazy(() => import('../pages/auth/ResetPasswordPage'));
-const DashboardPage = lazy(() => import('../pages/dashboard/DashboardPage'));
-const StudentListPage = lazy(() => import('../pages/students/StudentListPage'));
+const DashboardPage = lazy(routeImports['/dashboard']);
+const StudentListPage = lazy(routeImports['/students']);
 const StudentFormPage = lazy(() => import('../pages/students/StudentFormPage'));
 const StudentProfilePage = lazy(() => import('../pages/students/StudentProfilePage'));
 const StudentAdmitCardViewPage = lazy(() => import('../pages/students/StudentAdmitCardViewPage').then((mod) => ({ default: mod.StudentAdmitCardViewPage })));
 const StudentAdmitCardsPage = lazy(() => import('../pages/students/StudentAdmitCardsPage').then((mod) => ({ default: mod.StudentAdmitCardsPage })));
-const TeacherListPage = lazy(() => import('../pages/teachers/TeacherListPage'));
+const TeacherListPage = lazy(routeImports['/teachers']);
 const TeacherFormPage = lazy(() => import('../pages/teachers/TeacherFormPage'));
 const TeacherProfilePage = lazy(() => import('../pages/teachers/TeacherProfilePage'));
 const TeacherStudentsPage = lazy(() => import('../pages/teachers/TeacherStudentsPage'));
 const TeacherClassesPage = lazy(() => import('../pages/teachers/TeacherClassesPage'));
 const TeacherAdmitCardsPage = lazy(() => import('../pages/teachers/TeacherAdmitCardsPage').then((mod) => ({ default: mod.TeacherAdmitCardsPage })));
-const ClassManagementPage = lazy(() => import('../pages/classes/ClassManagementPage'));
+const ClassManagementPage = lazy(routeImports['/classes']);
 const ClassDetailPage = lazy(() => import('../pages/classes/ClassDetailPage'));
-const SubjectPage = lazy(() => import('../pages/subjects/SubjectPage'));
-const AttendanceDashboard = lazy(() => import('../pages/attendance/AttendanceDashboard'));
+const SubjectPage = lazy(routeImports['/subjects']);
+const AttendanceDashboard = lazy(routeImports['/attendance']);
 const AttendanceMarkingPage = lazy(() => import('../pages/attendance/AttendanceMarkingPage'));
 const MyAttendancePage = lazy(() => import('../pages/attendance/MyAttendancePage').then((mod) => ({ default: mod.MyAttendancePage })));
 const AttendanceReportPage = lazy(() => import('../pages/attendance/AttendanceReportPage'));
 const AttendanceDailyReportPage = lazy(() => import('../pages/attendance/AttendanceDailyReportPage'));
-const ExamListPage = lazy(() => import('../pages/exams/ExamListPage'));
+const ExamListPage = lazy(routeImports['/exams']);
 const MarksEntryPage = lazy(() => import('../pages/exams/MarksEntryPage'));
 const ReportCardPage = lazy(() => import('../pages/exams/ReportCardPage'));
 const OMRScannerPage = lazy(() => import('../pages/exams/OMRScannerPage').then((mod) => ({ default: mod.OMRScannerPage })));
@@ -46,27 +71,27 @@ const PaperGeneratorDashboard = lazy(() => import('../pages/paper-generator/Dash
 const QuestionBankPage = lazy(() => import('../pages/paper-generator/QuestionBank').then((mod) => ({ default: mod.QuestionBank })));
 const PaperBuilderPage = lazy(() => import('../pages/paper-generator/PaperBuilder').then((mod) => ({ default: mod.PaperBuilder })));
 const PaperDetailPage = lazy(() => import('../pages/paper-generator/PaperDetail').then((mod) => ({ default: mod.PaperDetail })));
-const TimetablePage = lazy(() => import('../pages/timetable/TimetablePage'));
-const FinancePage = lazy(() => import('../pages/fees/FinancePage'));
-const FeePaymentsPage = lazy(() => import('../pages/fees/FeePaymentsPage'));
-const AnnouncementsPage = lazy(() => import('../pages/announcements/AnnouncementsPage'));
-const MessagesPage = lazy(() => import('../pages/messages/MessagesPage'));
-const ReportsPage = lazy(() => import('../pages/reports/ReportsPage'));
-const SettingsPage = lazy(() => import('../pages/settings/SettingsPage'));
+const TimetablePage = lazy(routeImports['/timetable']);
+const FinancePage = lazy(routeImports['/finance']);
+const FeePaymentsPage = lazy(routeImports['/fee-payment']);
+const AnnouncementsPage = lazy(routeImports['/announcements']);
+const MessagesPage = lazy(routeImports['/messages']);
+const ReportsPage = lazy(routeImports['/reports']);
+const SettingsPage = lazy(routeImports['/settings']);
 const RolesPage = lazy(() => import('../pages/settings/RolesPage'));
 const ProfilePage = lazy(() => import('../pages/profile/ProfilePage'));
-const LeaveTypePage = lazy(() => import('../pages/leave/LeaveTypePage'));
+const LeaveTypePage = lazy(routeImports['/leave/type']);
 const LeaveRequestLogPage = lazy(() => import('../pages/leave/LeaveRequestLogPage'));
-const GatePassPage = lazy(() => import('../pages/gate-pass/GatePassPage'));
-const HomeworkPage = lazy(() => import('../pages/homework/HomeworkPage'));
-const TeacherAttendancePage = lazy(() => import('../pages/teacher-attendance/TeacherAttendancePage'));
-const SalaryPage = lazy(() => import('../pages/hr/SalaryPage'));
-const OfficeToolsDashboard = lazy(() => import('../pages/office-tools/OfficeToolsDashboard'));
+const GatePassPage = lazy(routeImports['/leave/gate-pass']);
+const HomeworkPage = lazy(routeImports['/homework']);
+const TeacherAttendancePage = lazy(routeImports['/teacher-attendance']);
+const SalaryPage = lazy(routeImports['/hr/salary']);
+const OfficeToolsDashboard = lazy(routeImports['/office-tools']);
 const SlipTestManualPage = lazy(() => import('../pages/office-tools/SlipTestManualPage'));
-const QuestionBankDashboard = lazy(() => import('../pages/question-bank/QuestionBankDashboard'));
+const QuestionBankDashboard = lazy(routeImports['/question-bank']);
 const QuestionPaperGeneratorPage = lazy(() => import('../pages/question-bank/QuestionPaperGeneratorPage'));
 const SavedPapersPage = lazy(() => import('../pages/question-bank/SavedPapersPage'));
-const TransportDashboard = lazy(() => import('../pages/transport/TransportDashboard'));
+const TransportDashboard = lazy(routeImports['/transport']);
 const AttendanceWrapper = () => {
   const { user } = useAuth();
   if (user?.role === 'STUDENT') {

@@ -145,6 +145,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
       <NavLink
         to={to}
         onClick={() => setIsOpen(false)}
+        onMouseEnter={() => {
+          if (window.innerWidth > 1024) {
+            import('../../router').then(module => {
+              const loader = module.routeImports[to];
+              if (loader) loader();
+            }).catch(() => {});
+          }
+        }}
         style={isActive ? { background: c.bg, boxShadow: c.glow } : {}}
         className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 cursor-pointer select-none group
           ${isActive ? 'text-white' : 'text-slate-400 hover:text-white hover:bg-white/6'}`}

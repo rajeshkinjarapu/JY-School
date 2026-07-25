@@ -17,11 +17,14 @@ const updateSW = registerSW({
   },
 });
 
+const isDesktop = window.innerWidth > 1024;
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       refetchOnWindowFocus: false,
       retry: 1,
+      staleTime: isDesktop ? 5 * 60 * 1000 : 0, // 5 minutes caching for desktop only
     },
   },
 });
