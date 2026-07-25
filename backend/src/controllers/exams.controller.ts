@@ -169,7 +169,23 @@ export const getResults = async (req: AuthRequest, res: Response, next: NextFunc
     }
   }
 
+  const subjectOrder: Record<string, number> = {
+    'MATHS': 1,
+    'MATHEMATICS': 1,
+    'PHYSICS': 2,
+    'CHEMISTRY': 3,
+    'BOTANY': 4,
+    'ZOOLOGY': 5,
+  };
+
   const results = Array.from(studentMap.values()).map((s) => {
+    s.marks.sort((a, b) => {
+      const weightA = subjectOrder[a.subject.toUpperCase()] || 99;
+      const weightB = subjectOrder[b.subject.toUpperCase()] || 99;
+      if (weightA !== weightB) return weightA - weightB;
+      return a.subject.localeCompare(b.subject);
+    });
+    
     const totalMax = s.marks.reduce((sum, m) => sum + m.max, 0);
     const percentage = totalMax > 0 ? parseFloat(((s.total / totalMax) * 100).toFixed(2)) : 0;
     return { ...s, percentage, grade: calculateGrade(s.total, totalMax) };
