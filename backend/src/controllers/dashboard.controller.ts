@@ -12,10 +12,15 @@ const memoryCache: { [key: string]: { data: any; expiry: number } } = {};
 const fetchWithCache = async (cacheKey: string, ttlSeconds: number, fetcher: () => Promise<any>) => {
   if (redis) {
     try {
-      const cached = await redis.get(cacheKey);
+      // Create a timeout promise to avoid hanging on slow network
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Redis GET timeout')), 800)
+      );
+      
+      const cached = await Promise.race([redis.get(cacheKey), timeoutPromise]) as any;
       if (cached) return cached;
     } catch (e) {
-      console.error('Redis get error:', e);
+      console.warn('⚠️ Redis get skipped (too slow or error):', (e as Error).message);
     }
   } else {
     const nowMs = Date.now();
@@ -27,11 +32,9 @@ const fetchWithCache = async (cacheKey: string, ttlSeconds: number, fetcher: () 
   const data = await fetcher();
 
   if (redis) {
-    try {
-      await redis.set(cacheKey, data, { ex: ttlSeconds });
-    } catch (e) {
-      console.error('Redis set error:', e);
-    }
+    // Fire and forget - do NOT await this so the user response is instant!
+    redis.set(cacheKey, data, { ex: ttlSeconds })
+      .catch(e => console.error('Redis set error:', e));
   } else {
     memoryCache[cacheKey] = { data, expiry: Date.now() + ttlSeconds * 1000 };
   }
