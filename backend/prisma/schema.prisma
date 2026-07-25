@@ -44,6 +44,10 @@ model User {
   approvedGatePasses GatePass[] @relation("ApprovedGatePasses")
   leaveRequests    LeaveRequest[] @relation("LeaveRequests")
   approvedLeaves   LeaveRequest[] @relation("ApprovedLeaves")
+
+  @@index([email])
+  @@index([role])
+  @@index([isActive])
 }
 
 model Student {
@@ -74,6 +78,7 @@ model Student {
   gatePasses            GatePass[]
 
   @@index([classId])
+  @@index([rollNo])
 }
 
 model Teacher {
@@ -92,6 +97,8 @@ model Teacher {
   homeworks             Homework[]
   teacherAttendances    TeacherAttendance[]
   salaries              Salary[]
+
+  @@index([employeeId])
 }
 
 model Class {
@@ -278,6 +285,8 @@ model FeePayment {
 
   @@index([studentId])
   @@index([feeStructureId])
+  @@index([status])
+  @@index([receiptNo])
 }
 
 model FeeDiscount {
@@ -357,6 +366,7 @@ model GatePass {
 
   @@index([requesterId])
   @@index([studentId])
+  @@index([status])
 }
 
 model SchoolSettings {
@@ -671,4 +681,5 @@ model LeaveRequest {
   updatedAt    DateTime  @updatedAt
 
   @@index([userId])
+  @@index([status])
 }
