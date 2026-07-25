@@ -154,7 +154,11 @@ export const ResultsTab: React.FC<{ exams: any[] }> = ({ exams }) => {
         margin: { left: 10, right: 10, bottom: 15 } // Reduce side margins slightly to give more space
       });
       
-      doc.save(`Results_${selectedExam?.name || 'Exam'}_Class_${selectedClassId}.pdf`);
+      const selectedClass = selectedExam?.classes?.find((c: any) => c.id === selectedClassId);
+      const classNameStr = selectedClass ? `${selectedClass.name}${selectedClass.section || ''}` : `Class`;
+      const fileName = `${classNameStr} - Results - ${selectedExam?.name || 'Exam'}.pdf`;
+      
+      doc.save(fileName);
       toast.success('PDF downloaded successfully!', { id: toastId });
     } catch (e: any) {
       console.error(e);
