@@ -1,11 +1,12 @@
 import { Router } from 'express';
 import { authenticate, authorize } from '../middlewares/auth';
-import { getAll, getById, create, update, deleteExam, getResults, updateAdmitCardSettings, publishResults, toggleFreezeClass } from '../controllers/exams.controller';
+import { getAll, getById, create, update, deleteExam, getResults, updateAdmitCardSettings, publishResults, toggleFreezeClass, getAllStatus } from '../controllers/exams.controller';
 
 const router = Router();
 
 router.use(authenticate);
 
+router.get('/status/all', authorize('SUPER_ADMIN', 'ADMIN'), getAllStatus);
 router.get('/', getAll);
 router.get('/:id', getById);
 router.get('/:id/results', getResults);

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../api/axios';
 import { LoadingSpinner } from '../../components/UI/LoadingSpinner';
-import { Shield, Lock, Unlock, CheckCircle2 } from 'lucide-react';
+import { Shield, Lock, Unlock, CheckCircle2, Edit3, XCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export const ExamStatusTab: React.FC<{ exams: any[] }> = ({ exams }) => {
@@ -9,11 +9,10 @@ export const ExamStatusTab: React.FC<{ exams: any[] }> = ({ exams }) => {
   const [examData, setExamData] = useState<any[]>([]);
 
   useEffect(() => {
-    // We already have exams from parent, but we might want to refresh them to get latest frozenClasses
     const fetchLatestExams = async () => {
       setLoading(true);
       try {
-        const res: any = await api.get('/api/exams');
+        const res: any = await api.get('/api/exams/status/all');
         setExamData(res.data.data || res.data || []);
       } catch (error) {
         console.error(error);
@@ -32,7 +31,6 @@ export const ExamStatusTab: React.FC<{ exams: any[] }> = ({ exams }) => {
       await api.post(`/api/exams/${examId}/freeze`, { classId, isFrozen: !isCurrentlyFrozen });
       toast.success(`Marks ${!isCurrentlyFrozen ? 'frozen' : 'unfrozen'} successfully`);
       
-      // Update local state
       setExamData(prev => prev.map(ex => {
         if (ex.id === examId) {
           let frozenClasses = [];
@@ -66,7 +64,7 @@ export const ExamStatusTab: React.FC<{ exams: any[] }> = ({ exams }) => {
           </div>
           <div>
             <h2 className="text-xl font-bold text-slate-800">Status Overview</h2>
-            <p className="text-sm text-slate-500">Monitor and manage marks freeze status for all classes</p>
+            <p className="text-sm text-slate-500">Monitor and manage marks entry and freeze status for all classes</p>
           </div>
         </div>
 
@@ -89,9 +87,12 @@ export const ExamStatusTab: React.FC<{ exams: any[] }> = ({ exams }) => {
                     frozenClasses = typeof exam.frozenClasses === 'string' ? JSON.parse(exam.frozenClasses) : exam.frozenClasses;
                   } catch(e) {}
                 }
+                const classesWithMarks = exam.classesWithMarks || [];
 
-                return (exam.classes || []).map((cls: any, idx: number) => {
+                return (exam.classes || []).map((cls: any) => {
                   const isFrozen = frozenClasses.includes(cls.id);
+                  const hasMarks = classesWithMarks.includes(cls.id);
+
                   return (
                     <tr key={`${exam.id}-${cls.id}`} className="hover:bg-slate-50/50 transition-colors group">
                       <td className="p-4">
@@ -112,10 +113,15 @@ export const ExamStatusTab: React.FC<{ exams: any[] }> = ({ exams }) => {
                             <Lock className="w-3.5 h-3.5" />
                             <span className="text-xs font-bold uppercase">Frozen</span>
                           </div>
-                        ) : (
+                        ) : hasMarks ? (
                           <div className="flex items-center gap-1.5 text-amber-600 bg-amber-50 px-2.5 py-1 rounded-md w-fit border border-amber-100">
-                            <Unlock className="w-3.5 h-3.5" />
-                            <span className="text-xs font-bold uppercase">Pending</span>
+                            <Edit3 className="w-3.5 h-3.5" />
+                            <span className="text-xs font-bold uppercase">Draft (Pending)</span>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-1.5 text-slate-500 bg-slate-100 px-2.5 py-1 rounded-md w-fit border border-slate-200">
+                            <XCircle className="w-3.5 h-3.5" />
+                            <span className="text-xs font-bold uppercase">Not Entered</span>
                           </div>
                         )}
                       </td>

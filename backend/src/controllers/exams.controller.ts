@@ -287,3 +287,39 @@ export const toggleFreezeClass = async (req: AuthRequest, res: Response, next: N
     next(error);
   }
 };
+
+export const getAllStatus = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const exams = await prisma.exam.findMany({
+      include: {
+        classes: { select: { id: true, name: true, section: true } },
+      },
+      orderBy: { examDate: 'desc' },
+    });
+
+    const marksGrouped = await prisma.mark.groupBy({
+      by: ['examId', 'studentId'],
+    });
+
+    const students = await prisma.student.findMany({ select: { id: true, classId: true } });
+    const studentClassMap = new Map(students.map(s => [s.id, s.classId]));
+
+    const examClassMarksMap: Record<string, Set<string>> = {};
+    for (const m of marksGrouped) {
+       const classId = studentClassMap.get(m.studentId);
+       if (classId) {
+         if (!examClassMarksMap[m.examId]) examClassMarksMap[m.examId] = new Set();
+         examClassMarksMap[m.examId].add(classId);
+       }
+    }
+
+    const result = exams.map(exam => ({
+       ...exam,
+       classesWithMarks: Array.from(examClassMarksMap[exam.id] || [])
+    }));
+
+    successResponse(res, result, 'Exam status fetched');
+  } catch (error) {
+    next(error);
+  }
+};
