@@ -159,8 +159,14 @@ export const getResults = async (req: AuthRequest, res: Response, next: NextFunc
       });
     }
     const entry = studentMap.get(key)!;
-    entry.marks.push({ subject: mark.subject.name, obtained: mark.marksObtained, max: mark.maxMarks, grade: mark.grade });
-    entry.total += mark.marksObtained;
+    const existingMarkIndex = entry.marks.findIndex(m => m.subject === mark.subject.name);
+    if (existingMarkIndex !== -1) {
+      entry.total = entry.total - entry.marks[existingMarkIndex].obtained + mark.marksObtained;
+      entry.marks[existingMarkIndex] = { subject: mark.subject.name, obtained: mark.marksObtained, max: mark.maxMarks, grade: mark.grade };
+    } else {
+      entry.marks.push({ subject: mark.subject.name, obtained: mark.marksObtained, max: mark.maxMarks, grade: mark.grade });
+      entry.total += mark.marksObtained;
+    }
   }
 
   const results = Array.from(studentMap.values()).map((s) => {
