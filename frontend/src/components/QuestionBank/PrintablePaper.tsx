@@ -173,7 +173,7 @@ export const PrintablePaper: React.FC<PrintablePaperProps> = ({
               </h2>
 
               {/* Question Layout (Double vs Single Column) */}
-              <div className={isDoubleColumn ? "two-column-layout relative" : "space-y-4 relative"}>
+              <div className={isDoubleColumn ? "two-column-layout relative" : "space-y-3 relative"}>
                 {section.questions.map((q) => {
                   const qNum = absoluteQuestionCounter++;
                   return (

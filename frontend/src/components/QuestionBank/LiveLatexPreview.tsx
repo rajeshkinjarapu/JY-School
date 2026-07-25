@@ -201,7 +201,7 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
               const qRest = qMatch ? questionText.substring(qMatch[0].length) : questionText;
 
               return (
-                <div className="mb-2 break-inside-avoid text-[11pt] leading-snug">
+                <div className="mb-1 break-inside-avoid text-[11pt] leading-snug">
                   <div className="mb-0.5 flex" style={{ gap: '0.4em' }}>
                     <strong className="flex-shrink-0">{qNum}.</strong>
                     <div dangerouslySetInnerHTML={{ __html: renderLatex(qRest) }} />
