@@ -92,7 +92,7 @@ export const ExamStatusTab: React.FC<{ exams: any[] }> = ({ exams }) => {
 
                 return (exam.classes || []).map((cls: any) => {
                   const hasMarks = classesWithMarks.includes(cls.id);
-                  const isFrozen = frozenClasses.includes(cls.id) || (isPublished && hasMarks);
+                  const isExplicitlyFrozen = frozenClasses.includes(cls.id);
 
                   return (
                     <tr key={`${exam.id}-${cls.id}`} className="hover:bg-slate-50/50 transition-colors group">
@@ -109,10 +109,15 @@ export const ExamStatusTab: React.FC<{ exams: any[] }> = ({ exams }) => {
                         </span>
                       </td>
                       <td className="p-4">
-                        {isFrozen ? (
+                        {isExplicitlyFrozen ? (
                           <div className="flex items-center gap-1.5 text-green-600 bg-green-50 px-2.5 py-1 rounded-md w-fit border border-green-100">
                             <Lock className="w-3.5 h-3.5" />
-                            <span className="text-xs font-bold uppercase">{isPublished ? 'PUBLISHED' : 'FROZEN'}</span>
+                            <span className="text-xs font-bold uppercase">Frozen</span>
+                          </div>
+                        ) : (isPublished && hasMarks) ? (
+                          <div className="flex items-center gap-1.5 text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-md w-fit border border-emerald-100">
+                            <CheckCircle2 className="w-3.5 h-3.5" />
+                            <span className="text-xs font-bold uppercase">Published</span>
                           </div>
                         ) : hasMarks ? (
                           <div className="flex items-center gap-1.5 text-amber-600 bg-amber-50 px-2.5 py-1 rounded-md w-fit border border-amber-100">
@@ -127,27 +132,23 @@ export const ExamStatusTab: React.FC<{ exams: any[] }> = ({ exams }) => {
                         )}
                       </td>
                       <td className="p-4 text-center">
-                        {isPublished ? (
-                          <span className="text-[10px] font-bold text-slate-400 uppercase">Results Out</span>
-                        ) : (
-                          <button
-                            onClick={() => toggleFreeze(exam.id, cls.id, isFrozen)}
-                            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-1.5 mx-auto ${
-                              isFrozen 
-                                ? 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-900' 
-                                : 'bg-indigo-600 text-white hover:bg-indigo-700 hover:shadow-indigo-500/20 shadow-md'
-                            }`}
-                          >
-                            {isFrozen ? (
-                              <>Unfreeze</>
-                            ) : (
-                              <>
-                                <Lock className="w-3 h-3" />
-                                Freeze
-                              </>
-                            )}
-                          </button>
-                        )}
+                        <button
+                          onClick={() => toggleFreeze(exam.id, cls.id, isExplicitlyFrozen)}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-1.5 mx-auto ${
+                            isExplicitlyFrozen 
+                              ? 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-900' 
+                              : 'bg-indigo-600 text-white hover:bg-indigo-700 hover:shadow-indigo-500/20 shadow-md'
+                          }`}
+                        >
+                          {isExplicitlyFrozen ? (
+                            <>Unfreeze</>
+                          ) : (
+                            <>
+                              <Lock className="w-3 h-3" />
+                              Freeze
+                            </>
+                          )}
+                        </button>
                       </td>
                     </tr>
                   );

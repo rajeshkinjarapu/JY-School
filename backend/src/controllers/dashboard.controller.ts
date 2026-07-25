@@ -4,59 +4,21 @@ import { prisma } from '../utils/prisma';
 import { successResponse } from '../utils/response';
 import { Role, Gender, AttendanceStatus } from '../types/enums';
 
-import { redis } from '../utils/redis';
+// Simple in-memory cache to speed up the dashboard
+const cache: { [key: string]: { data: any; expiry: number } } = {};
 
-// Simple in-memory cache as fallback
-const memoryCache: { [key: string]: { data: any; expiry: number } } = {};
-
-const fetchWithCache = async (cacheKey: string, ttlSeconds: number, fetcher: () => Promise<any>) => {
-  if (redis) {
-    try {
-      // Create a timeout promise to avoid hanging on slow network
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Redis GET timeout')), 800)
-      );
-      
-      const cached = await Promise.race([redis.get(cacheKey), timeoutPromise]) as any;
-      if (cached) return cached;
-    } catch (e) {
-      console.warn('⚠️ Redis get skipped (too slow or error):', (e as Error).message);
-    }
-  } else {
-    const nowMs = Date.now();
-    if (memoryCache[cacheKey] && memoryCache[cacheKey].expiry > nowMs) {
-      return memoryCache[cacheKey].data;
-    }
-  }
-
-  const data = await fetcher();
-
-  if (redis) {
-    // Fire and forget - do NOT await this so the user response is instant!
-    redis.set(cacheKey, data, { ex: ttlSeconds })
-      .catch(e => console.error('Redis set error:', e));
-  } else {
-    memoryCache[cacheKey] = { data, expiry: Date.now() + ttlSeconds * 1000 };
-  }
-
-  return data;
-};
-
-export const clearDashboardCache = async () => {
-  Object.keys(memoryCache).forEach(key => delete memoryCache[key]);
-  if (redis) {
-    try {
-       const keys = await redis.keys('*dashboard*');
-       if (keys.length) await redis.del(...keys);
-    } catch(e) {}
-  }
+export const clearDashboardCache = () => {
+  Object.keys(cache).forEach(key => delete cache[key]);
 };
 
 export const getAdminDashboard = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
     const cacheKey = 'admin_dashboard';
-    
-    const responseData = await fetchWithCache(cacheKey, 180, async () => {
+    const nowMs = Date.now();
+    if (cache[cacheKey] && cache[cacheKey].expiry > nowMs) {
+      successResponse(res, cache[cacheKey].data, 'Admin dashboard data fetched from cache');
+      return;
+    }
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -168,7 +130,7 @@ export const getAdminDashboard = async (req: AuthRequest, res: Response, next: N
       });
     }
 
-    return {
+    const responseData = {
       totalStudents,
       totalTeachers,
       totalClasses,
@@ -181,7 +143,12 @@ export const getAdminDashboard = async (req: AuthRequest, res: Response, next: N
       recentAnnouncements,
       attendanceTrend
     };
-    });
+
+    // Cache for 3 minutes (180000 ms) to make dashboard lightning fast
+    cache[cacheKey] = {
+      data: responseData,
+      expiry: Date.now() + 180000
+    };
 
     successResponse(res, responseData, 'Admin dashboard data fetched successfully');
   } catch (error) {
@@ -202,10 +169,8 @@ export const getTeacherDashboard = async (req: AuthRequest, res: Response, next:
       return;
     }
 
-    const cacheKey = `teacher_dashboard_${teacher.id}`;
-    const responseData = await fetchWithCache(cacheKey, 180, async () => {
-      // Assigned Classes with student count
-      const assignedClasses = await prisma.classSubjectTeacher.findMany({
+    // Assigned Classes with student count
+    const assignedClasses = await prisma.classSubjectTeacher.findMany({
       where: { teacherId: teacher.id },
       include: {
         class: {
@@ -293,7 +258,7 @@ export const getTeacherDashboard = async (req: AuthRequest, res: Response, next:
     const myTotal = myAttendanceThisMonth.length;
     const myAttendanceRate = myTotal > 0 ? Math.round((myPresent / myTotal) * 100) : 0;
 
-      return {
+    successResponse(res, {
       teacherProfile: {
         id: teacher.id,
         name: (teacher as any).user.name,
@@ -328,10 +293,7 @@ export const getTeacherDashboard = async (req: AuthRequest, res: Response, next:
         netSalary: (pendingSalary as any).netSalary,
         status: (pendingSalary as any).status,
       } : null,
-    };
-    });
-
-    successResponse(res, responseData, 'Teacher dashboard data fetched successfully');
+    }, 'Teacher dashboard data fetched successfully');
   } catch (error) {
     next(error);
   }
@@ -352,10 +314,8 @@ export const getStudentDashboard = async (req: AuthRequest, res: Response, next:
       return;
     }
 
-    const cacheKey = `student_dashboard_${student.id}`;
-    const responseData = await fetchWithCache(cacheKey, 180, async () => {
-      // Attendance rate last 30 days
-      const thirtyDaysAgo = new Date();
+    // Attendance rate last 30 days
+    const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
     thirtyDaysAgo.setHours(0, 0, 0, 0);
 
@@ -450,7 +410,7 @@ export const getStudentDashboard = async (req: AuthRequest, res: Response, next:
 
     const { medicalInfo, ...studentWithoutMedical } = student;
 
-    return {
+    successResponse(res, {
       student: studentWithoutMedical,
       attendancePercentage,
       recentMarks: recentMarks.map(m => ({
@@ -466,10 +426,7 @@ export const getStudentDashboard = async (req: AuthRequest, res: Response, next:
       timetableToday,
       announcements,
       admitCards
-    };
-    });
-
-    successResponse(res, responseData, 'Student dashboard data fetched successfully');
+    }, 'Student dashboard data fetched successfully');
   } catch (error) {
     next(error);
   }
@@ -478,11 +435,9 @@ export const getStudentDashboard = async (req: AuthRequest, res: Response, next:
 
 export const getAccountantDashboard = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const cacheKey = 'accountant_dashboard';
-    const responseData = await fetchWithCache(cacheKey, 180, async () => {
-      const revenueResult = await prisma.feePayment.aggregate({
-        _sum: { amountPaid: true }
-      });
+    const revenueResult = await prisma.feePayment.aggregate({
+      _sum: { amountPaid: true }
+    });
     const totalCollected = revenueResult._sum.amountPaid || 0;
 
     const structures = await prisma.feeStructure.findMany({
@@ -611,7 +566,7 @@ export const getAccountantDashboard = async (req: AuthRequest, res: Response, ne
       });
     }
 
-    return {
+    successResponse(res, {
       totalCollected,
       pendingDues,
       totalExpected,
@@ -621,10 +576,7 @@ export const getAccountantDashboard = async (req: AuthRequest, res: Response, ne
       overdueInvoicesCount,
       overduePayments,
       structureSummary
-    };
-    });
-
-    successResponse(res, responseData, 'Accountant dashboard data fetched successfully');
+    }, 'Accountant dashboard data fetched successfully');
   } catch (error) {
     next(error);
   }
