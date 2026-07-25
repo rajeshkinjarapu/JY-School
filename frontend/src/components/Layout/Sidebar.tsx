@@ -140,6 +140,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
       ? location.pathname === '/dashboard' || location.pathname.startsWith('/dashboard/')
       : location.pathname.startsWith(to);
     const c = NAV_COLORS[label] || NAV_COLORS['Settings'];
+    
+    let hoverTimeout: any;
 
     return (
       <NavLink
@@ -147,11 +149,16 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
         onClick={() => setIsOpen(false)}
         onMouseEnter={() => {
           if (window.innerWidth > 1024 || user?.role === 'SUPER_ADMIN') {
-            import('../../router').then(module => {
-              const loader = module.routeImports[to];
-              if (loader) loader();
-            }).catch(() => {});
+            hoverTimeout = setTimeout(() => {
+              import('../../router').then(module => {
+                const loader = module.routeImports[to];
+                if (loader) loader();
+              }).catch(() => {});
+            }, 150);
           }
+        }}
+        onMouseLeave={() => {
+          if (hoverTimeout) clearTimeout(hoverTimeout);
         }}
         style={isActive ? { background: c.bg, boxShadow: c.glow } : {}}
         className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 cursor-pointer select-none group
