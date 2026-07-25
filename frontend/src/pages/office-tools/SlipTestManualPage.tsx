@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import api from '../../api/axios';
 import { Download, ChevronLeft, Settings, Save, Trash2, FileSpreadsheet, X, Upload } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useOutletContext } from 'react-router-dom';
 import html2canvas from 'html2canvas';
 import toast from 'react-hot-toast';
 import { SlipTestRankCard, type ProcessedStudent } from '../../components/OfficeTools/SlipTestRankCard';
@@ -10,88 +10,83 @@ import * as XLSX from 'xlsx';
 
 export const SlipTestManualPage = () => {
   const navigate = useNavigate();
+  const { setDynamicTitle } = useOutletContext<{ setDynamicTitle?: (title: string) => void }>() || {};
   const cardRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (setDynamicTitle) {
+      setDynamicTitle('Slip Test Manager');
+    }
+  }, [setDynamicTitle]);
+
 
   // Form State
   const [testName, setTestName] = useState('SLIP TEST');
-  const [subjectId, setSubjectId] = useState('');
+  const HARDCODED_SUBJECTS = ['TELUGU', 'HINDI', 'ENGLISH', 'MATHS', 'BIOLOGY', 'CHEMISTRY', 'PHYSICS', 'SCIENCE', 'SOCIAL'];
+  const [subjectName, setSubjectName] = useState('');
   const [examDate, setExamDate] = useState('');
   const [classId, setClassId] = useState('');
   const [maxMarks, setMaxMarks] = useState(20);
   
   // Signatures State
-  const [teacherSigSrc, setTeacherSigSrc] = useState('');
-  const [principalSigSrc, setPrincipalSigSrc] = useState('');
+  const [teacherSign, setTeacherSign] = useState<string>('');
+  const [principalSign, setPrincipalSign] = useState<string>('');
 
   // UI State
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
-  // Input State for marks mapping
-  const [marks, setMarks] = useState<Record<string, string>>({});
-
-  // Load saved settings on mount
-  useEffect(() => {
-    try {
-      const savedSettings = localStorage.getItem('slipTestSettings');
-      if (savedSettings) {
-        const parsed = JSON.parse(savedSettings);
-        if (parsed.testName) setTestName(parsed.testName);
-        if (parsed.maxMarks) setMaxMarks(parsed.maxMarks);
-        if (parsed.teacherSigSrc) setTeacherSigSrc(parsed.teacherSigSrc);
-        if (parsed.principalSigSrc) setPrincipalSigSrc(parsed.principalSigSrc);
-      }
-    } catch (e) {
-      console.error("Failed to load settings", e);
-    }
-  }, []);
-
-  // Auto-save settings when they change
-  useEffect(() => {
-    const settingsToSave = {
-      testName,
-      maxMarks,
-      teacherSigSrc,
-      principalSigSrc
-    };
-    localStorage.setItem('slipTestSettings', JSON.stringify(settingsToSave));
-  }, [testName, maxMarks, teacherSigSrc, principalSigSrc]);
+  // Marks State
+  const [marks, setMarks] = useState<Record<string, number | ''>>({});
 
   // Fetch Classes
   const { data: classes = [] } = useQuery({
-    queryKey: ["classes"],
+    queryKey: ['classes'],
     queryFn: async () => {
-      const res = await api.get("/api/classes");
-      return res.data || [];
-    },
+      const res = await api.get('/api/classes');
+      return res.data;
+    }
   });
 
-  // Fetch Subjects based on Class
-  const { data: subjects = [] } = useQuery({
-    queryKey: ["subjects", classId],
+  // Fetch Students for selected class
+  const { data: students = [] } = useQuery({
+    queryKey: ['students', classId],
     queryFn: async () => {
       if (!classId) return [];
-      const res = await api.get(`/api/subjects`, { params: { classId } });
-      return res.data || [];
+      const res = await api.get(`/api/students?classId=${classId}`);
+      return res.data;
     },
-    enabled: !!classId,
+    enabled: !!classId
   });
 
+  // Load saved settings on mount
+  useEffect(() => {
+    const saved = localStorage.getItem('slipTestSettings');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (parsed.testName) setTestName(parsed.testName);
+        if (parsed.subjectName) setSubjectName(parsed.subjectName);
+        if (parsed.examDate) setExamDate(parsed.examDate);
+        if (parsed.classId) setClassId(parsed.classId);
+        if (parsed.maxMarks) setMaxMarks(parsed.maxMarks);
+        if (parsed.teacherSign) setTeacherSign(parsed.teacherSign);
+        if (parsed.principalSign) setPrincipalSign(parsed.principalSign);
+      } catch (e) {
+        console.error("Failed to parse settings", e);
+      }
+    }
+  }, []);
+
+  // Save settings when they change
+  useEffect(() => {
+    const settings = { testName, subjectName, examDate, classId, maxMarks, teacherSign, principalSign };
+    localStorage.setItem('slipTestSettings', JSON.stringify(settings));
+  }, [testName, subjectName, examDate, classId, maxMarks, teacherSign, principalSign]);
+
+  // Derived Values
   const selectedClass = classes.find((c: any) => c.id === classId);
-  const selectedSubject = subjects.find((s: any) => s.id === subjectId);
 
-  // Fetch Students for the selected class
-  const { data: students = [], isLoading: isLoadingStudents } = useQuery({
-    queryKey: ["students", classId],
-    queryFn: async () => {
-      if (!classId) return [];
-      const res = await api.get("/api/students", {
-        params: { classId, limit: 500 },
-      });
-      return res.data?.data || res.data || [];
-    },
-    enabled: !!classId,
-  });
 
   // Calculate dense rankings whenever marks change
   const processedStudents: ProcessedStudent[] = React.useMemo(() => {
@@ -180,13 +175,13 @@ export const SlipTestManualPage = () => {
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Slip Test Marks");
 
-    const filename = `${testName}_${selectedSubject?.name || 'Subject'}_${selectedClass?.name || 'Class'}.xlsx`.replace(/[^a-z0-9_]/gi, '_');
+    const filename = `${testName}_${subjectName || 'Subject'}_${selectedClass?.name || 'Class'}.xlsx`.replace(/[^a-z0-9_]/gi, '_');
     XLSX.writeFile(workbook, filename);
     toast.success("Excel Downloaded!");
   };
 
   const handleSaveToDB = async () => {
-    if (!classId || !subjectId || !examDate) {
+    if (!classId || !subjectName || !examDate) {
       toast.error("Please select Class, Subject, and Date in Settings.");
       setIsSettingsOpen(true);
       return;
@@ -207,7 +202,7 @@ export const SlipTestManualPage = () => {
         date: examDate,
         maxMarks: maxMarks,
         classId: classId,
-        subjectId: subjectId
+        subjectId: subjectName // Passing subjectName as subjectId, backend will handle it
       });
 
       const slipTestId = slipTestRes.data.id;
@@ -253,20 +248,7 @@ export const SlipTestManualPage = () => {
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-10">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <button
-            onClick={() => navigate(-1)}
-            className="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-500"
-          >
-            <ChevronLeft className="w-6 h-6" />
-          </button>
-          <div>
-            <h1 className="text-2xl font-bold text-slate-800">Slip Test Manager</h1>
-            <p className="text-slate-500">Generate professional slip test rank cards and sync with DB.</p>
-          </div>
-        </div>
-        
+      <div className="flex justify-end">
         <button 
           onClick={() => setIsSettingsOpen(true)}
           className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 rounded-xl shadow-sm transition-colors font-medium"
@@ -369,13 +351,13 @@ export const SlipTestManualPage = () => {
                 ref={cardRef}
                 students={processedStudents}
                 testName={testName}
-                subject={selectedSubject?.name || 'SUBJECT'}
+                subject={subjectName || 'SUBJECT'}
                 examDate={examDate}
                 className={selectedClass?.name || 'Class'}
                 maxMarks={maxMarks}
                 logoSrc="/logo.png"
-                teacherSigSrc={teacherSigSrc}
-                principalSigSrc={principalSigSrc}
+                teacherSigSrc={teacherSign}
+                principalSigSrc={principalSign}
               />
             </div>
           </div>
@@ -415,14 +397,13 @@ export const SlipTestManualPage = () => {
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Subject</label>
                   <select
-                    value={subjectId}
-                    onChange={(e) => setSubjectId(e.target.value)}
-                    disabled={!classId}
-                    className="w-full rounded-xl border-slate-200 bg-slate-50 border p-3 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all disabled:opacity-50"
+                    value={subjectName}
+                    onChange={(e) => setSubjectName(e.target.value)}
+                    className="w-full rounded-xl border-slate-200 bg-slate-50 border p-3 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
                   >
                     <option value="">Select Subject...</option>
-                    {subjects.map((s: any) => (
-                      <option key={s.id} value={s.id}>{s.name}</option>
+                    {HARDCODED_SUBJECTS.map((s) => (
+                      <option key={s} value={s}>{s}</option>
                     ))}
                   </select>
                 </div>
@@ -470,11 +451,11 @@ export const SlipTestManualPage = () => {
                         type="file" 
                         accept="image/*" 
                         className="hidden" 
-                        onChange={(e) => handleImageUpload(e, setTeacherSigSrc)} 
+                        onChange={(e) => handleImageUpload(e, setTeacherSign)} 
                       />
-                      {teacherSigSrc ? (
+                      {teacherSign ? (
                         <>
-                          <img src={teacherSigSrc} alt="Teacher Sig" className="h-full object-contain p-2" />
+                          <img src={teacherSign} alt="Teacher Sig" className="h-full object-contain p-2" />
                           <div className="absolute inset-0 bg-black/50 hidden group-hover:flex items-center justify-center text-white">
                             <Upload className="w-5 h-5" />
                           </div>
@@ -486,8 +467,8 @@ export const SlipTestManualPage = () => {
                         </div>
                       )}
                     </label>
-                    {teacherSigSrc && (
-                      <button onClick={() => setTeacherSigSrc('')} className="text-xs text-red-500 hover:underline">Remove</button>
+                    {teacherSign && (
+                      <button onClick={() => setTeacherSign('')} className="text-xs text-red-500 hover:underline">Remove</button>
                     )}
                   </div>
 
@@ -499,11 +480,11 @@ export const SlipTestManualPage = () => {
                         type="file" 
                         accept="image/*" 
                         className="hidden" 
-                        onChange={(e) => handleImageUpload(e, setPrincipalSigSrc)} 
+                        onChange={(e) => handleImageUpload(e, setPrincipalSign)} 
                       />
-                      {principalSigSrc ? (
+                      {principalSign ? (
                         <>
-                          <img src={principalSigSrc} alt="Principal Sig" className="h-full object-contain p-2" />
+                          <img src={principalSign} alt="Principal Sig" className="h-full object-contain p-2" />
                           <div className="absolute inset-0 bg-black/50 hidden group-hover:flex items-center justify-center text-white">
                             <Upload className="w-5 h-5" />
                           </div>
@@ -515,8 +496,8 @@ export const SlipTestManualPage = () => {
                         </div>
                       )}
                     </label>
-                    {principalSigSrc && (
-                      <button onClick={() => setPrincipalSigSrc('')} className="text-xs text-red-500 hover:underline">Remove</button>
+                    {principalSign && (
+                      <button onClick={() => setPrincipalSign('')} className="text-xs text-red-500 hover:underline">Remove</button>
                     )}
                   </div>
                 </div>

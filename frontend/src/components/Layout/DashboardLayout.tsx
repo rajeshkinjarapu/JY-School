@@ -62,6 +62,7 @@ export const DashboardLayout: React.FC = () => {
     if (pathname === '/messages') return 'Real-time Messaging';
     if (pathname === '/reports') return 'Reports Generator';
     if (pathname === '/office-tools') return 'Office Tools';
+    if (pathname.includes('/office-tools/slip-test')) return 'Slip Test Manager';
     
     if (pathname === '/settings') return 'School Settings';
     if (pathname === '/roles') return 'Roles & Permissions';

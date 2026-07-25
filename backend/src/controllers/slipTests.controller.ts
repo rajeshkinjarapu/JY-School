@@ -26,13 +26,37 @@ export const getAllSlipTests = async (req: Request, res: Response) => {
 export const createSlipTest = async (req: Request, res: Response) => {
   try {
     const { name, date, maxMarks, classId, subjectId } = req.body;
+    
+    let finalSubjectId = subjectId;
+    
+    // If subjectId doesn't look like a UUID, assume it's a name and try to find/create it
+    if (subjectId && !subjectId.includes('-')) {
+      let existingSubject = await prisma.subject.findFirst({
+        where: { 
+          name: subjectId,
+          classId: classId
+        }
+      });
+      
+      if (!existingSubject) {
+        existingSubject = await prisma.subject.create({
+          data: {
+            name: subjectId,
+            code: subjectId.substring(0, 3).toUpperCase(),
+            classId: classId
+          }
+        });
+      }
+      finalSubjectId = existingSubject.id;
+    }
+
     const slipTest = await prisma.slipTest.create({
       data: {
         name,
         date: new Date(date),
         maxMarks: Number(maxMarks) || 25,
         classId,
-        subjectId
+        subjectId: finalSubjectId
       },
       include: {
         class: true,
@@ -41,6 +65,7 @@ export const createSlipTest = async (req: Request, res: Response) => {
     });
     res.status(201).json(slipTest);
   } catch (error) {
+    console.error("Create slip test error:", error);
     res.status(500).json({ message: 'Internal server error' });
   }
 };

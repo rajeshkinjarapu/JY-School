@@ -30,7 +30,8 @@ export const ForgotPasswordPage: React.FC = () => {
       setIsSuccess(true);
       toast.success('Reset link sent to your email!');
     } catch (error: any) {
-      toast.error(error.message || 'Error requesting password reset.');
+      const errorMsg = error.response?.data?.message || error.message || 'Error requesting password reset.';
+      toast.error(errorMsg);
     } finally {
       setIsSubmitting(false);
     }
