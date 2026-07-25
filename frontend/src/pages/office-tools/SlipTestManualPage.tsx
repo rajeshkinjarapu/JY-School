@@ -1,11 +1,12 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import api from '../../api/axios';
-import { Download, ChevronLeft } from 'lucide-react';
+import { Download, ChevronLeft, Settings, Save, Trash2, FileSpreadsheet, X, Upload } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import html2canvas from 'html2canvas';
 import toast from 'react-hot-toast';
 import { SlipTestRankCard, type ProcessedStudent } from '../../components/OfficeTools/SlipTestRankCard';
+import * as XLSX from 'xlsx';
 
 export const SlipTestManualPage = () => {
   const navigate = useNavigate();
@@ -13,13 +14,48 @@ export const SlipTestManualPage = () => {
 
   // Form State
   const [testName, setTestName] = useState('SLIP TEST');
-  const [subject, setSubject] = useState('');
+  const [subjectId, setSubjectId] = useState('');
   const [examDate, setExamDate] = useState('');
   const [classId, setClassId] = useState('');
   const [maxMarks, setMaxMarks] = useState(20);
+  
+  // Signatures State
+  const [teacherSigSrc, setTeacherSigSrc] = useState('');
+  const [principalSigSrc, setPrincipalSigSrc] = useState('');
+
+  // UI State
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   // Input State for marks mapping
   const [marks, setMarks] = useState<Record<string, string>>({});
+
+  // Load saved settings on mount
+  useEffect(() => {
+    try {
+      const savedSettings = localStorage.getItem('slipTestSettings');
+      if (savedSettings) {
+        const parsed = JSON.parse(savedSettings);
+        if (parsed.testName) setTestName(parsed.testName);
+        if (parsed.maxMarks) setMaxMarks(parsed.maxMarks);
+        if (parsed.teacherSigSrc) setTeacherSigSrc(parsed.teacherSigSrc);
+        if (parsed.principalSigSrc) setPrincipalSigSrc(parsed.principalSigSrc);
+      }
+    } catch (e) {
+      console.error("Failed to load settings", e);
+    }
+  }, []);
+
+  // Auto-save settings when they change
+  useEffect(() => {
+    const settingsToSave = {
+      testName,
+      maxMarks,
+      teacherSigSrc,
+      principalSigSrc
+    };
+    localStorage.setItem('slipTestSettings', JSON.stringify(settingsToSave));
+  }, [testName, maxMarks, teacherSigSrc, principalSigSrc]);
 
   // Fetch Classes
   const { data: classes = [] } = useQuery({
@@ -30,7 +66,19 @@ export const SlipTestManualPage = () => {
     },
   });
 
+  // Fetch Subjects based on Class
+  const { data: subjects = [] } = useQuery({
+    queryKey: ["subjects", classId],
+    queryFn: async () => {
+      if (!classId) return [];
+      const res = await api.get(`/api/subjects`, { params: { classId } });
+      return res.data || [];
+    },
+    enabled: !!classId,
+  });
+
   const selectedClass = classes.find((c: any) => c.id === classId);
+  const selectedSubject = subjects.find((s: any) => s.id === subjectId);
 
   // Fetch Students for the selected class
   const { data: students = [], isLoading: isLoadingStudents } = useQuery({
@@ -55,6 +103,7 @@ export const SlipTestManualPage = () => {
       const markNum = parseFloat(markStr);
       return {
         id: s.id,
+        rollNo: s.rollNo,
         name: s.user?.name || 'Unknown',
         marks: isNaN(markNum) ? -1 : markNum
       };
@@ -82,14 +131,14 @@ export const SlipTestManualPage = () => {
     });
   }, [students, marks, maxMarks]);
 
-  const handleDownload = async () => {
+  const handleDownloadImage = async () => {
     if (!cardRef.current) return;
     
     try {
       toast.loading("Generating High-Res Image...", { id: "download" });
       
       const canvas = await html2canvas(cardRef.current, {
-        scale: 4, // Higher scale for better quality
+        scale: 4, 
         useCORS: true,
         backgroundColor: "#ffffff",
         logging: false
@@ -99,7 +148,7 @@ export const SlipTestManualPage = () => {
       
       const a = document.createElement('a');
       a.href = dataUrl;
-      const filename = `${testName}_${subject}_${selectedClass?.name || 'Class'}.jpg`.replace(/[^a-z0-9_]/gi, '_');
+      const filename = `${testName}_${selectedSubject?.name || 'Subject'}_${selectedClass?.name || 'Class'}.jpg`.replace(/[^a-z0-9_]/gi, '_');
       a.download = filename;
       document.body.appendChild(a);
       a.click();
@@ -112,55 +161,282 @@ export const SlipTestManualPage = () => {
     }
   };
 
+  const handleDownloadExcel = () => {
+    if (processedStudents.length === 0) {
+      toast.error("No data to export");
+      return;
+    }
+
+    const excelData = processedStudents.map((s) => ({
+      "Rank": s.rank,
+      "Student ID": s.rollNo || 'N/A',
+      "Name of the Student": s.name,
+      "Obtained Marks": s.marks,
+      "Maximum Marks": maxMarks,
+      "Percentage (%)": s.percentage
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(excelData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Slip Test Marks");
+
+    const filename = `${testName}_${selectedSubject?.name || 'Subject'}_${selectedClass?.name || 'Class'}.xlsx`.replace(/[^a-z0-9_]/gi, '_');
+    XLSX.writeFile(workbook, filename);
+    toast.success("Excel Downloaded!");
+  };
+
+  const handleSaveToDB = async () => {
+    if (!classId || !subjectId || !examDate) {
+      toast.error("Please select Class, Subject, and Date in Settings.");
+      setIsSettingsOpen(true);
+      return;
+    }
+
+    if (processedStudents.length === 0) {
+      toast.error("Please enter marks for at least one student.");
+      return;
+    }
+
+    setIsSaving(true);
+    const toastId = toast.loading("Saving to Database...");
+
+    try {
+      // 1. Create Slip Test
+      const slipTestRes = await api.post('/api/slipTests', {
+        name: testName,
+        date: examDate,
+        maxMarks: maxMarks,
+        classId: classId,
+        subjectId: subjectId
+      });
+
+      const slipTestId = slipTestRes.data.id;
+
+      // 2. Save Marks
+      const marksData = processedStudents.map(s => ({
+        studentId: s.id,
+        marksObtained: s.marks
+      }));
+
+      await api.post(`/api/slipTests/${slipTestId}/marks`, {
+        marks: marksData
+      });
+
+      toast.success("Marks saved to database successfully!", { id: toastId });
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to save to database.", { id: toastId });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleClearMarks = () => {
+    if (window.confirm("Are you sure you want to clear all entered marks?")) {
+      setMarks({});
+      toast.success("Marks cleared.");
+    }
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, setter: React.Dispatch<React.SetStateAction<string>>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      if (event.target?.result) {
+        setter(event.target.result as string);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
   return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="flex items-center gap-4">
-        <button
-          onClick={() => navigate(-1)}
-          className="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-500"
-        >
-          <ChevronLeft className="w-6 h-6" />
-        </button>
-        <div>
-          <h1 className="text-2xl font-bold text-slate-800">Slip Test Manager</h1>
-          <p className="text-slate-500">Generate professional slip test rank cards directly from student data.</p>
+    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-10">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() => navigate(-1)}
+            className="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-500"
+          >
+            <ChevronLeft className="w-6 h-6" />
+          </button>
+          <div>
+            <h1 className="text-2xl font-bold text-slate-800">Slip Test Manager</h1>
+            <p className="text-slate-500">Generate professional slip test rank cards and sync with DB.</p>
+          </div>
         </div>
+        
+        <button 
+          onClick={() => setIsSettingsOpen(true)}
+          className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 rounded-xl shadow-sm transition-colors font-medium"
+        >
+          <Settings className="w-4 h-4" />
+          Test Settings
+        </button>
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 items-start">
         {/* LEFT COLUMN: Controls & Input */}
         <div className="xl:col-span-4 space-y-6">
           <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
-            <h3 className="font-semibold text-slate-800 flex items-center gap-2">
-              <span className="p-1.5 bg-blue-100 text-blue-600 rounded-lg">1</span> 
-              Test Details
-            </h3>
+            <div className="flex justify-between items-center">
+              <h3 className="font-semibold text-slate-800 flex items-center gap-2">
+                <span className="p-1.5 bg-indigo-100 text-indigo-600 rounded-lg">1</span> 
+                Enter Marks
+              </h3>
+              <span className="text-xs bg-slate-100 px-2 py-1 rounded-md font-medium text-slate-600">
+                {students.length} Students
+              </span>
+            </div>
             
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Class</label>
-                <select
-                  value={classId}
-                  onChange={(e) => setClassId(e.target.value)}
-                  className="w-full rounded-xl border-slate-200 bg-slate-50 border p-3 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
-                >
-                  <option value="">Select Class...</option>
-                  {classes.map((c: any) => (
-                    <option key={c.id} value={c.id}>{c.name}</option>
-                  ))}
-                </select>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
+            <div className="flex gap-2">
+              <button 
+                onClick={handleSaveToDB}
+                disabled={isSaving || processedStudents.length === 0}
+                className="flex-1 flex justify-center items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-xl transition-colors font-medium disabled:opacity-50"
+              >
+                <Save className="w-4 h-4" />
+                {isSaving ? "Saving..." : "Save to DB"}
+              </button>
+              <button 
+                onClick={handleClearMarks}
+                disabled={processedStudents.length === 0}
+                className="flex justify-center items-center px-4 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl transition-colors disabled:opacity-50"
+                title="Clear Marks"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="max-h-[500px] overflow-y-auto pr-2 custom-scrollbar space-y-2 mt-4">
+              {!classId ? (
+                <div className="text-center py-8 text-slate-500">
+                  Please select a Class in <span className="font-semibold cursor-pointer text-blue-600 underline" onClick={() => setIsSettingsOpen(true)}>Settings</span> to view students.
+                </div>
+              ) : isLoadingStudents ? (
+                <div className="text-center py-8 text-slate-500">Loading students...</div>
+              ) : students.length === 0 ? (
+                <div className="text-center py-8 text-slate-500">No students found.</div>
+              ) : (
+                students.map((student: any) => (
+                  <div key={student.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-100 hover:border-blue-200 transition-colors">
+                    <div className="truncate pr-4 flex-1">
+                      <p className="font-medium text-slate-800 text-sm truncate">{student.user?.name}</p>
+                      <p className="text-xs text-slate-500">{student.rollNo || 'No Roll No'}</p>
+                    </div>
+                    <input
+                      type="number"
+                      placeholder="Marks"
+                      value={marks[student.id] || ''}
+                      onChange={(e) => setMarks({ ...marks, [student.id]: e.target.value })}
+                      className="w-24 p-2 text-center rounded-lg border-slate-200 border focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none font-semibold text-blue-600"
+                    />
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* RIGHT COLUMN: Preview & Download */}
+        <div className="xl:col-span-8 flex flex-col items-center">
+          <div className="w-full flex justify-between items-center mb-4 bg-white p-4 rounded-2xl shadow-sm border border-slate-200">
+            <h3 className="font-semibold text-slate-800">Live Preview</h3>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleDownloadExcel}
+                disabled={processedStudents.length === 0}
+                className="px-4 py-2.5 bg-green-50 hover:bg-green-100 border border-green-200 text-green-700 rounded-xl font-medium transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <FileSpreadsheet className="w-4 h-4" />
+                Excel
+              </button>
+              <button
+                onClick={handleDownloadImage}
+                disabled={processedStudents.length === 0}
+                className="px-6 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl shadow-lg shadow-blue-500/30 font-medium transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Download className="w-4 h-4" />
+                JPG
+              </button>
+            </div>
+          </div>
+
+          <div className="bg-slate-100 p-8 rounded-3xl w-full flex justify-center overflow-x-auto shadow-inner min-h-[600px]">
+            <div className="origin-top scale-[0.60] sm:scale-[0.80] xl:scale-[0.90] transition-transform">
+              <SlipTestRankCard 
+                ref={cardRef}
+                students={processedStudents}
+                testName={testName}
+                subject={selectedSubject?.name || 'SUBJECT'}
+                examDate={examDate}
+                className={selectedClass?.name || 'Class'}
+                maxMarks={maxMarks}
+                logoSrc="/logo.png"
+                teacherSigSrc={teacherSigSrc}
+                principalSigSrc={principalSigSrc}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Test Settings Modal Overlay */}
+      {isSettingsOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div className="flex items-center justify-between p-6 border-b border-slate-100">
+              <h2 className="text-xl font-bold text-slate-800">Test Settings</h2>
+              <button 
+                onClick={() => setIsSettingsOpen(false)}
+                className="p-2 hover:bg-slate-100 rounded-full text-slate-500 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="p-6 overflow-y-auto flex-1 space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Max Marks</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Class</label>
+                  <select
+                    value={classId}
+                    onChange={(e) => setClassId(e.target.value)}
+                    className="w-full rounded-xl border-slate-200 bg-slate-50 border p-3 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+                  >
+                    <option value="">Select Class...</option>
+                    {classes.map((c: any) => (
+                      <option key={c.id} value={c.id}>{c.name}</option>
+                    ))}
+                  </select>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Subject</label>
+                  <select
+                    value={subjectId}
+                    onChange={(e) => setSubjectId(e.target.value)}
+                    disabled={!classId}
+                    className="w-full rounded-xl border-slate-200 bg-slate-50 border p-3 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all disabled:opacity-50"
+                  >
+                    <option value="">Select Subject...</option>
+                    {subjects.map((s: any) => (
+                      <option key={s.id} value={s.id}>{s.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Date</label>
                   <input
-                    type="number"
-                    value={maxMarks}
-                    onChange={(e) => setMaxMarks(Number(e.target.value))}
+                    type="date"
+                    value={examDate}
+                    onChange={(e) => setExamDate(e.target.value)}
                     className="w-full rounded-xl border-slate-200 bg-slate-50 border p-3 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
                   />
                 </div>
+
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Test Name</label>
                   <input
@@ -171,102 +447,95 @@ export const SlipTestManualPage = () => {
                     className="w-full rounded-xl border-slate-200 bg-slate-50 border p-3 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
                   />
                 </div>
-              </div>
 
-              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Subject</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Max Marks</label>
                   <input
-                    type="text"
-                    value={subject}
-                    onChange={(e) => setSubject(e.target.value)}
-                    placeholder="e.g. MATHS"
-                    className="w-full rounded-xl border-slate-200 bg-slate-50 border p-3 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Date</label>
-                  <input
-                    type="date"
-                    value={examDate}
-                    onChange={(e) => setExamDate(e.target.value)}
+                    type="number"
+                    value={maxMarks}
+                    onChange={(e) => setMaxMarks(Number(e.target.value))}
                     className="w-full rounded-xl border-slate-200 bg-slate-50 border p-3 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
                   />
                 </div>
               </div>
-            </div>
-          </div>
 
-          {classId && (
-            <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
-              <div className="flex justify-between items-center">
-                <h3 className="font-semibold text-slate-800 flex items-center gap-2">
-                  <span className="p-1.5 bg-indigo-100 text-indigo-600 rounded-lg">2</span> 
-                  Enter Marks
-                </h3>
-                <span className="text-xs bg-slate-100 px-2 py-1 rounded-md font-medium text-slate-600">
-                  {students.length} Students
-                </span>
-              </div>
-              
-              <div className="max-h-[400px] overflow-y-auto pr-2 custom-scrollbar space-y-2">
-                {isLoadingStudents ? (
-                  <div className="text-center py-8 text-slate-500">Loading students...</div>
-                ) : students.length === 0 ? (
-                  <div className="text-center py-8 text-slate-500">No students found.</div>
-                ) : (
-                  students.map((student: any) => (
-                    <div key={student.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-100 hover:border-blue-200 transition-colors">
-                      <div className="truncate pr-4 flex-1">
-                        <p className="font-medium text-slate-800 text-sm truncate">{student.user?.name}</p>
-                        <p className="text-xs text-slate-500">{student.rollNo || 'No Roll No'}</p>
-                      </div>
-                      <input
-                        type="number"
-                        placeholder="Marks"
-                        value={marks[student.id] || ''}
-                        onChange={(e) => setMarks({ ...marks, [student.id]: e.target.value })}
-                        className="w-24 p-2 text-center rounded-lg border-slate-200 border focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none font-semibold text-blue-600"
+              <div className="border-t border-slate-100 pt-6">
+                <h3 className="font-semibold text-slate-800 mb-4">Signatures</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Teacher Signature */}
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-slate-700">Teacher Signature</label>
+                    <label className="flex items-center justify-center w-full h-24 border-2 border-dashed border-slate-300 rounded-xl hover:border-blue-500 hover:bg-blue-50 transition-colors cursor-pointer relative overflow-hidden group bg-white">
+                      <input 
+                        type="file" 
+                        accept="image/*" 
+                        className="hidden" 
+                        onChange={(e) => handleImageUpload(e, setTeacherSigSrc)} 
                       />
-                    </div>
-                  ))
-                )}
+                      {teacherSigSrc ? (
+                        <>
+                          <img src={teacherSigSrc} alt="Teacher Sig" className="h-full object-contain p-2" />
+                          <div className="absolute inset-0 bg-black/50 hidden group-hover:flex items-center justify-center text-white">
+                            <Upload className="w-5 h-5" />
+                          </div>
+                        </>
+                      ) : (
+                        <div className="text-center text-slate-500 flex flex-col items-center">
+                          <Upload className="w-5 h-5 mb-1 opacity-50" />
+                          <span className="text-xs">Upload Image</span>
+                        </div>
+                      )}
+                    </label>
+                    {teacherSigSrc && (
+                      <button onClick={() => setTeacherSigSrc('')} className="text-xs text-red-500 hover:underline">Remove</button>
+                    )}
+                  </div>
+
+                  {/* Principal Signature */}
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-slate-700">Principal Signature</label>
+                    <label className="flex items-center justify-center w-full h-24 border-2 border-dashed border-slate-300 rounded-xl hover:border-blue-500 hover:bg-blue-50 transition-colors cursor-pointer relative overflow-hidden group bg-white">
+                      <input 
+                        type="file" 
+                        accept="image/*" 
+                        className="hidden" 
+                        onChange={(e) => handleImageUpload(e, setPrincipalSigSrc)} 
+                      />
+                      {principalSigSrc ? (
+                        <>
+                          <img src={principalSigSrc} alt="Principal Sig" className="h-full object-contain p-2" />
+                          <div className="absolute inset-0 bg-black/50 hidden group-hover:flex items-center justify-center text-white">
+                            <Upload className="w-5 h-5" />
+                          </div>
+                        </>
+                      ) : (
+                        <div className="text-center text-slate-500 flex flex-col items-center">
+                          <Upload className="w-5 h-5 mb-1 opacity-50" />
+                          <span className="text-xs">Upload Image</span>
+                        </div>
+                      )}
+                    </label>
+                    {principalSigSrc && (
+                      <button onClick={() => setPrincipalSigSrc('')} className="text-xs text-red-500 hover:underline">Remove</button>
+                    )}
+                  </div>
+                </div>
+                <p className="text-xs text-slate-400 mt-4">Settings and signatures are automatically saved in this browser for future use.</p>
               </div>
             </div>
-          )}
-        </div>
-
-        {/* RIGHT COLUMN: Preview & Download */}
-        <div className="xl:col-span-8 flex flex-col items-center">
-          <div className="w-full flex justify-between items-center mb-4 bg-white p-4 rounded-2xl shadow-sm border border-slate-200">
-            <h3 className="font-semibold text-slate-800">Live Preview</h3>
-            <button
-              onClick={handleDownload}
-              disabled={processedStudents.length === 0}
-              className="px-6 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl shadow-lg shadow-blue-500/30 font-medium transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <Download className="w-4 h-4" />
-              Download JPG
-            </button>
-          </div>
-
-          <div className="bg-slate-100 p-8 rounded-3xl w-full flex justify-center overflow-x-auto shadow-inner min-h-[600px]">
-            <div className="origin-top scale-[0.60] sm:scale-[0.80] xl:scale-[0.90] transition-transform">
-              <SlipTestRankCard 
-                ref={cardRef}
-                students={processedStudents}
-                testName={testName}
-                subject={subject}
-                examDate={examDate}
-                className={selectedClass?.name || ''}
-                maxMarks={maxMarks}
-                logoSrc="/logo.png"
-              />
+            
+            <div className="p-4 border-t border-slate-100 bg-slate-50 flex justify-end">
+              <button 
+                onClick={() => setIsSettingsOpen(false)}
+                className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-sm transition-colors font-medium"
+              >
+                Done
+              </button>
             </div>
           </div>
         </div>
-      </div>
-      
+      )}
+
       <style>{`
         .custom-scrollbar::-webkit-scrollbar {
           width: 6px;
