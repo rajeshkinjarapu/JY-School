@@ -143,7 +143,7 @@ export const SlipTestManualPage = () => {
       
       const a = document.createElement('a');
       a.href = dataUrl;
-      const filename = `${testName}_${selectedSubject?.name || 'Subject'}_${selectedClass?.name || 'Class'}.jpg`.replace(/[^a-z0-9_]/gi, '_');
+      const filename = `${testName}_${subjectName || 'Subject'}_${selectedClass?.name || 'Class'}.jpg`.replace(/[^a-z0-9_]/gi, '_');
       a.download = filename;
       document.body.appendChild(a);
       a.click();
