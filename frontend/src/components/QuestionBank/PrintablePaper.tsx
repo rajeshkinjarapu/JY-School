@@ -201,9 +201,9 @@ export const PrintablePaper: React.FC<PrintablePaperProps> = ({
                       {/* Options Grid (with horizontal column alignment based on text length) */}
                       {q.type.startsWith('MCQ') && (
                         <div className={`${
-                          ((q.optionA || '').length + (q.optionB || '').length + (q.optionC || '').length + (q.optionD || '').length) < 60
+                          Math.max((q.optionA || '').length, (q.optionB || '').length, (q.optionC || '').length, (q.optionD || '').length) < 25
                             ? 'grid grid-cols-4 gap-2 mt-2 text-black'
-                            : ((q.optionA || '').length + (q.optionB || '').length + (q.optionC || '').length + (q.optionD || '').length) < 120
+                            : Math.max((q.optionA || '').length, (q.optionB || '').length, (q.optionC || '').length, (q.optionD || '').length) < 80
                             ? 'grid grid-cols-2 gap-2 mt-2 text-black'
                             : 'flex flex-col gap-1.5 mt-2 text-black'
                         } font-sans text-xs mt-3`}>
