@@ -110,12 +110,14 @@ export const AttendanceMarkingPage: React.FC = () => {
       })),
     };
 
-    try {
-      await api.post('/api/attendance/bulk', payload);
-      toast.success('Attendance records saved successfully!');
-    } catch (e: any) {
-      toast.error(e.message || 'Failed to save attendance');
-    }
+    // OPTIMISTIC UPDATE: Show success immediately!
+    toast.success('Attendance records saved successfully!');
+
+    // Send to server in background without blocking UI
+    api.post('/api/attendance/bulk', payload).catch(e => {
+      console.error("Background sync failed:", e);
+      toast.error('Failed to sync attendance in background');
+    });
   };
 
   const uniqueClassNames = Array.from(new Set(classes.map(c => c.name)));

@@ -146,7 +146,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
         to={to}
         onClick={() => setIsOpen(false)}
         onMouseEnter={() => {
-          if (window.innerWidth > 1024) {
+          if (window.innerWidth > 1024 || user?.role === 'SUPER_ADMIN') {
             import('../../router').then(module => {
               const loader = module.routeImports[to];
               if (loader) loader();

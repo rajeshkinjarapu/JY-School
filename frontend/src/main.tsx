@@ -17,14 +17,28 @@ const updateSW = registerSW({
   },
 });
 
+let isSuperAdmin = false;
+try {
+  const token = localStorage.getItem('accessToken');
+  if (token) {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    if (payload.role === 'SUPER_ADMIN') {
+      isSuperAdmin = true;
+    }
+  }
+} catch (e) {
+  // Ignore decode errors
+}
+
 const isDesktop = window.innerWidth > 1024;
+const isFastModeEnabled = isDesktop || isSuperAdmin;
 
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       refetchOnWindowFocus: false,
       retry: 1,
-      staleTime: isDesktop ? 5 * 60 * 1000 : 0, // 5 minutes caching for desktop only
+      staleTime: isFastModeEnabled ? 5 * 60 * 1000 : 0, // 5 minutes caching for desktop or super admin
     },
   },
 });
