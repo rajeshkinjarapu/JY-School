@@ -187,7 +187,7 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
               );
               
               let optionsLayout = '';
-              if (maxLen < 25) {
+              if (maxLen < 15) {
                 optionsLayout = 'grid grid-cols-4 w-full gap-x-2 gap-y-0.5';
               } else if (maxLen < 80) {
                 optionsLayout = 'grid grid-cols-2 w-full gap-x-2 gap-y-0.5';
