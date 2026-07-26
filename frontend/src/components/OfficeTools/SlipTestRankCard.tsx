@@ -3,6 +3,7 @@ import React from 'react';
 interface StudentMark {
   id: string;
   name: string;
+  rollNo?: string;
   marks: number;
 }
 

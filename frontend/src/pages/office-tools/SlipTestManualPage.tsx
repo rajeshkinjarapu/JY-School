@@ -49,7 +49,7 @@ export const SlipTestManualPage = () => {
   });
 
   // Fetch Students for selected class
-  const { data: students = [] } = useQuery({
+  const { data: students = [], isLoading: isLoadingStudents } = useQuery({
     queryKey: ['students', classId],
     queryFn: async () => {
       if (!classId) return [];
@@ -95,7 +95,7 @@ export const SlipTestManualPage = () => {
     // First map to StudentMark format, ignoring those without valid marks
     const validStudents = students.map((s: any) => {
       const markStr = marks[s.id] || '';
-      const markNum = parseFloat(markStr);
+      const markNum = parseFloat(String(markStr));
       return {
         id: s.id,
         rollNo: s.rollNo,

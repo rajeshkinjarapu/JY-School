@@ -2,7 +2,9 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 import './index.css';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClient } from '@tanstack/react-query';
+import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
+import { get, set, del } from 'idb-keyval';
 import { AuthProvider } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { Toaster } from 'react-hot-toast';
@@ -39,9 +41,22 @@ const queryClient = new QueryClient({
       refetchOnWindowFocus: false,
       retry: 1,
       staleTime: isFastModeEnabled ? 5 * 60 * 1000 : 0, // 5 minutes caching for desktop or super admin
+      gcTime: 1000 * 60 * 60 * 24, // 24 hours
     },
   },
 });
+
+const idbPersister = {
+  persistClient: async (client: any) => {
+    await set('react-query-cache', client);
+  },
+  restoreClient: async () => {
+    return await get('react-query-cache');
+  },
+  removeClient: async () => {
+    await del('react-query-cache');
+  },
+};
 
 // Handle Vite dynamic import errors (e.g. after a new deployment)
 window.addEventListener('vite:preloadError', () => {
@@ -50,13 +65,13 @@ window.addEventListener('vite:preloadError', () => {
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <QueryClientProvider client={queryClient}>
+    <PersistQueryClientProvider client={queryClient} persistOptions={{ persister: idbPersister }}>
       <ThemeProvider>
         <AuthProvider>
           <App />
           <Toaster position="top-right" reverseOrder={false} />
         </AuthProvider>
       </ThemeProvider>
-    </QueryClientProvider>
+    </PersistQueryClientProvider>
   </React.StrictMode>
 );
