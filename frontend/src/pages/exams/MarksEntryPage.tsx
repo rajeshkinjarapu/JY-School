@@ -337,14 +337,6 @@ export const MarksEntryPage: React.FC = () => {
                                     placeholder="--"
                                     disabled={isClassFrozen}
                                   />
-                                  <input 
-                                    type="text"
-                                    value={remarksData[key] || ''}
-                                    onChange={(e) => handleRemarkChange(student.id, sub.id, e.target.value)}
-                                    placeholder="Remark"
-                                    className={`w-[100px] text-xs p-2 border-2 rounded-lg outline-none ${isClassFrozen ? 'bg-gray-100 cursor-not-allowed border-gray-200' : 'border-slate-200 focus:border-indigo-400 bg-white'}`}
-                                    disabled={isClassFrozen}
-                                  />
                           </div>
                         </div>
                       </td>
