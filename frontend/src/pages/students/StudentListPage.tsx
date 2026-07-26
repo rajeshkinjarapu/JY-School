@@ -56,7 +56,7 @@ export const StudentListPage: React.FC = () => {
       });
       return res.data || { data: [], meta: { total: 0, totalPages: 1 } };
     },
-    staleTime: 1000 * 60 * 5,
+    staleTime: 0,
   });
 
   const students = studentsData?.data || [];

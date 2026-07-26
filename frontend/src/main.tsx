@@ -40,7 +40,7 @@ const queryClient = new QueryClient({
     queries: {
       refetchOnWindowFocus: false,
       retry: 1,
-      staleTime: isFastModeEnabled ? 5 * 60 * 1000 : 0, // 5 minutes caching for desktop or super admin
+      staleTime: 0, // Always refetch in background to ensure fresh data
       gcTime: 1000 * 60 * 60 * 24, // 24 hours
     },
   },
