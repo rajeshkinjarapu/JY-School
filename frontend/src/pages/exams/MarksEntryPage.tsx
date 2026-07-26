@@ -333,7 +333,7 @@ export const MarksEntryPage: React.FC = () => {
                                     max={sub.maxMarks || 100} 
                                     value={marksData[key] ?? ''}
                                     onChange={(e) => handleMarkChange(student.id, sub.id, e.target.value)}
-                                    className={`w-[70px] text-center p-2 text-sm font-bold border-2 rounded-lg outline-none transition-all ${isClassFrozen ? 'bg-gray-100 cursor-not-allowed border-gray-200' : 'bg-white focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100'} ${markVal && Number(markVal) < passMark ? 'border-red-300 text-red-600 bg-red-50' : 'border-slate-200 text-slate-800'}`}
+                                    className={`w-[70px] text-center p-2 text-sm font-bold border-2 rounded-lg outline-none transition-all ${isClassFrozen ? 'bg-gray-100 cursor-not-allowed border-gray-200' : 'bg-white focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100'} ${marksData[key] && Number(marksData[key]) < (sub.passMarks || 35) ? 'border-red-300 text-red-600 bg-red-50' : 'border-slate-200 text-slate-800'}`}
                                     placeholder="--"
                                     disabled={isClassFrozen}
                                   />
