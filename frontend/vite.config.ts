@@ -57,23 +57,34 @@ export default defineConfig({
     minify: 'esbuild',
     rollupOptions: {
       output: {
-        manualChunks: {
-          // React core
-          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
-          // Charts — only loaded on dashboard
-          'vendor-charts': ['recharts'],
-          // PDF generation — only loaded when exporting
-          'vendor-pdf': ['jspdf', 'jspdf-autotable'],
-          // Excel — only loaded when importing/exporting sheets
-          'vendor-excel': ['xlsx'],
-          // Math rendering — only needed in question bank
-          'vendor-math': ['katex'],
-          // Real-time messaging
-          'vendor-socket': ['socket.io-client'],
-          // Date utilities
-          'vendor-date': ['moment', 'date-fns'],
-          // Query caching
-          'vendor-query': ['@tanstack/react-query', '@tanstack/react-query-persist-client'],
+        // Vite 8 (rolldown) requires manualChunks as a function, not an object
+        manualChunks: (id: string) => {
+          if (id.includes('node_modules')) {
+            if (id.includes('recharts') || id.includes('d3-') || id.includes('victory-')) {
+              return 'vendor-charts';
+            }
+            if (id.includes('jspdf') || id.includes('jspdf-autotable')) {
+              return 'vendor-pdf';
+            }
+            if (id.includes('node_modules/xlsx')) {
+              return 'vendor-excel';
+            }
+            if (id.includes('katex')) {
+              return 'vendor-math';
+            }
+            if (id.includes('socket.io-client') || id.includes('engine.io-client')) {
+              return 'vendor-socket';
+            }
+            if (id.includes('node_modules/moment') || id.includes('date-fns')) {
+              return 'vendor-date';
+            }
+            if (id.includes('@tanstack/react-query')) {
+              return 'vendor-query';
+            }
+            if (id.includes('react-dom') || id.includes('react-router-dom')) {
+              return 'vendor-react';
+            }
+          }
         },
       },
     },
