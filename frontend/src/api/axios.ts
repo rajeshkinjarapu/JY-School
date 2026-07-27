@@ -11,6 +11,9 @@ export const api = axios.create({
 
 const unwrapResponseData = (payload: any) => {
   if (payload && typeof payload === 'object' && 'data' in payload && payload.success !== undefined) {
+    if (payload.pagination) {
+      return { data: payload.data, meta: payload.pagination };
+    }
     return payload.data;
   }
   return payload;
