@@ -57,8 +57,21 @@ export const bulkImportFees = async (req: AuthRequest, res: Response, next: Next
 export const getStructures = async (req: AuthRequest, res: Response): Promise<void> => {
   const classId = (req.query.classId as string) || '';
   const term = (req.query.term as string) || '';
+  const studentId = (req.query.studentId as string) || '';
+  
   const where: any = {};
-  if (classId) where.classId = classId;
+  
+  if (studentId && classId) {
+    where.OR = [
+      { classId: classId },
+      { studentId: studentId }
+    ];
+  } else if (studentId) {
+    where.studentId = studentId;
+  } else if (classId) {
+    where.classId = classId;
+  }
+
   if (term) where.term = term;
 
   const structures = await prisma.feeStructure.findMany({

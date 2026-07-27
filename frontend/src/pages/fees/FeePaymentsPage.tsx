@@ -176,14 +176,18 @@ export const FeePaymentsPage: React.FC = () => {
     try {
       // Find full student from state to get classId, since payment.student might lack it
       const fullStudent = students.find(s => s.id === studentData.id) || studentData;
-      const classId = fullStudent?.classId || fullStudent?.class?.id;
+      const classId = fullStudent?.classId || fullStudent?.class?.id || '';
       
+      const queryParams = new URLSearchParams();
+      if (classId) queryParams.append('classId', classId);
+      queryParams.append('studentId', studentData.id);
+
       const [structRes, payRes]: any[] = await Promise.all([
-        classId ? api.get(`/api/fees/structures?classId=${classId}`) : Promise.resolve({ data: [] }),
+        api.get(`/api/fees/structures?${queryParams.toString()}`),
         api.get(`/api/fees/payments?studentId=${studentData.id}&limit=500`),
       ]);
 
-      const structs: any[] = structRes.data || [];
+      const structs: any[] = structRes.data?.data || structRes.data || [];
       const studentPayments: any[] = (payRes.data?.data || payRes.data || []).filter(
         (p: any) => p.studentId === studentData.id || p.student?.id === studentData.id
       );
