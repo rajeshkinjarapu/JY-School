@@ -54,6 +54,29 @@ export default defineConfig({
   ],
   build: {
     outDir: 'dist',
+    minify: 'esbuild',
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // React core
+          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+          // Charts — only loaded on dashboard
+          'vendor-charts': ['recharts'],
+          // PDF generation — only loaded when exporting
+          'vendor-pdf': ['jspdf', 'jspdf-autotable'],
+          // Excel — only loaded when importing/exporting sheets
+          'vendor-excel': ['xlsx'],
+          // Math rendering — only needed in question bank
+          'vendor-math': ['katex'],
+          // Real-time messaging
+          'vendor-socket': ['socket.io-client'],
+          // Date utilities
+          'vendor-date': ['moment', 'date-fns'],
+          // Query caching
+          'vendor-query': ['@tanstack/react-query', '@tanstack/react-query-persist-client'],
+        },
+      },
+    },
   },
   server: { proxy: { '/api': 'http://localhost:5000', '/uploads': 'http://localhost:5000' } },
 })

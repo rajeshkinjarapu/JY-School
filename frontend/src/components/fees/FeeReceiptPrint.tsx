@@ -142,3 +142,263 @@ export const FeeReceiptPrint: React.FC<FeeReceiptPrintProps> = ({ payment, schoo
     </div>
   );
 };
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Fee Statement PDF Generator (jsPDF — A4 professional)
+// Usage: generateFeeStatementPDF({ studentName, ... })
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface FeeStatementItem {
+  name: string;
+  term?: string;
+  totalAmount: number;
+  paidAmount: number;
+  dueDate?: string;
+}
+
+export interface FeeStatementData {
+  studentName: string;
+  studentId: string;
+  className: string;
+  section: string;
+  fatherName?: string;
+  phone?: string;
+  feeItems: FeeStatementItem[];
+  schoolName?: string;
+  schoolAddress?: string;
+}
+
+export const generateFeeStatementPDF = async (data: FeeStatementData): Promise<void> => {
+  const jsPDF = (await import('jspdf')).default;
+  const autoTable = (await import('jspdf-autotable')).default;
+
+  const {
+    studentName,
+    studentId,
+    className,
+    section,
+    fatherName = '—',
+    phone = '—',
+    feeItems,
+    schoolName = 'JY SCHOOL',
+    schoolAddress = 'Opp. Hero Showroom, SVL Paradise Campus, Narasannapeta',
+  } = data;
+
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  const pageW = doc.internal.pageSize.getWidth();
+  const pageH = doc.internal.pageSize.getHeight();
+  const margin = 14;
+  const contentW = pageW - margin * 2;
+
+  // Colors
+  const primary: [number, number, number]  = [79, 70, 229];
+  const dark: [number, number, number]     = [15, 23, 42];
+  const muted: [number, number, number]    = [100, 116, 139];
+  const green: [number, number, number]    = [22, 163, 74];
+  const red: [number, number, number]      = [220, 38, 38];
+  const lightBg: [number, number, number]  = [238, 242, 255];
+  const border: [number, number, number]   = [199, 210, 254];
+
+  let y = margin;
+
+  // ── HEADER BANNER ─────────────────────────────────────────────────────────
+  doc.setFillColor(...primary);
+  doc.roundedRect(margin, y, contentW, 34, 3, 3, 'F');
+
+  // Logo circle
+  doc.setFillColor(255, 255, 255);
+  doc.circle(margin + 16, y + 17, 12, 'F');
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(9);
+  doc.setTextColor(...primary);
+  doc.text('JY', margin + 13, y + 20);
+
+  // School info
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(13);
+  doc.setTextColor(255, 255, 255);
+  doc.text(schoolName.toUpperCase(), margin + 32, y + 12);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(7);
+  doc.setTextColor(210, 210, 255);
+  doc.text(schoolAddress, margin + 32, y + 19);
+
+  // Statement label (right side pill)
+  doc.setFillColor(255, 255, 255);
+  doc.roundedRect(pageW - margin - 52, y + 8, 50, 17, 2, 2, 'F');
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(7.5);
+  doc.setTextColor(...primary);
+  doc.text('FEE DUES STATEMENT', pageW - margin - 27, y + 15, { align: 'center' });
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(6.5);
+  doc.setTextColor(...muted);
+  const today = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+  doc.text(`Date: ${today}`, pageW - margin - 27, y + 21, { align: 'center' });
+
+  y += 42;
+
+  // ── STUDENT DETAILS BOX ───────────────────────────────────────────────────
+  doc.setFillColor(...lightBg);
+  doc.setDrawColor(...border);
+  doc.setLineWidth(0.3);
+  doc.roundedRect(margin, y, contentW, 32, 2, 2, 'FD');
+
+  const half = contentW / 2;
+
+  // Left side
+  const drawField = (label: string, value: string, lx: number, ly: number) => {
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(6.5);
+    doc.setTextColor(...muted);
+    doc.text(label, lx, ly);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9.5);
+    doc.setTextColor(...dark);
+    doc.text(value, lx, ly + 7);
+  };
+
+  drawField('STUDENT NAME', studentName.toUpperCase(), margin + 5, y + 9);
+  drawField('STUDENT ID / ROLL NO', studentId, margin + 5, y + 22);
+  drawField('CLASS & SECTION', `${className} — ${section}`, margin + half + 3, y + 9);
+  drawField("FATHER'S NAME", fatherName, margin + half + 3, y + 22);
+
+  // Divider
+  doc.setDrawColor(...border);
+  doc.line(margin + half, y + 4, margin + half, y + 28);
+
+  y += 40;
+
+  // ── FEE TABLE ─────────────────────────────────────────────────────────────
+  const rows = feeItems.map((item, idx) => {
+    const pending = Math.max(0, item.totalAmount - item.paidAmount);
+    const status = pending === 0 ? 'PAID ✓' : pending < item.totalAmount ? 'PARTIAL' : 'UNPAID';
+    return [
+      idx + 1,
+      item.name + (item.term ? ` (${item.term})` : ''),
+      `₹ ${item.totalAmount.toLocaleString('en-IN')}`,
+      `₹ ${item.paidAmount.toLocaleString('en-IN')}`,
+      `₹ ${pending.toLocaleString('en-IN')}`,
+      item.dueDate
+        ? new Date(item.dueDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: '2-digit' })
+        : '—',
+      status,
+    ];
+  });
+
+  autoTable(doc, {
+    startY: y,
+    head: [['#', 'Fee Description', 'Total', 'Paid', 'Pending', 'Due Date', 'Status']],
+    body: rows,
+    margin: { left: margin, right: margin },
+    styles: { fontSize: 8.5, cellPadding: 3, font: 'helvetica', textColor: dark },
+    headStyles: { fillColor: primary, textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 8 },
+    alternateRowStyles: { fillColor: [248, 249, 255] },
+    columnStyles: {
+      0: { halign: 'center', cellWidth: 9 },
+      1: { cellWidth: 52 },
+      2: { halign: 'right', cellWidth: 24 },
+      3: { halign: 'right', cellWidth: 24, textColor: green },
+      4: { halign: 'right', cellWidth: 24, fontStyle: 'bold', textColor: red },
+      5: { halign: 'center', cellWidth: 22, textColor: muted },
+      6: { halign: 'center', cellWidth: 22 },
+    },
+    didParseCell: (hookData) => {
+      if (hookData.column.index === 6 && hookData.section === 'body') {
+        const val = String(hookData.cell.raw);
+        if (val.includes('PAID')) hookData.cell.styles.textColor = green;
+        else if (val === 'PARTIAL') hookData.cell.styles.textColor = [217, 119, 6];
+        else hookData.cell.styles.textColor = red;
+        hookData.cell.styles.fontStyle = 'bold';
+      }
+    },
+  });
+
+  y = (doc as any).lastAutoTable.finalY + 8;
+
+  // ── SUMMARY BOXES ─────────────────────────────────────────────────────────
+  const totalAmt = feeItems.reduce((s, i) => s + i.totalAmount, 0);
+  const totalPaid = feeItems.reduce((s, i) => s + i.paidAmount, 0);
+  const totalPending = Math.max(0, totalAmt - totalPaid);
+  const pct = totalAmt > 0 ? Math.round((totalPaid / totalAmt) * 100) : 0;
+
+  const bw = (contentW - 8) / 3;
+
+  const drawBox = (
+    label: string,
+    value: string,
+    x: number,
+    fillRgb: [number, number, number],
+    strokeRgb: [number, number, number],
+    textRgb: [number, number, number],
+  ) => {
+    doc.setFillColor(...fillRgb);
+    doc.setDrawColor(...strokeRgb);
+    doc.setLineWidth(0.4);
+    doc.roundedRect(x, y, bw, 24, 2, 2, 'FD');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(6.5);
+    doc.setTextColor(...muted);
+    doc.text(label, x + bw / 2, y + 7, { align: 'center' });
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(11);
+    doc.setTextColor(...textRgb);
+    doc.text(value, x + bw / 2, y + 18, { align: 'center' });
+  };
+
+  drawBox('TOTAL AMOUNT', `₹ ${totalAmt.toLocaleString('en-IN')}`, margin, lightBg, border, dark);
+  drawBox('AMOUNT PAID', `₹ ${totalPaid.toLocaleString('en-IN')}`, margin + bw + 4, [240, 253, 244], [134, 239, 172], green);
+  drawBox('AMOUNT PENDING', `₹ ${totalPending.toLocaleString('en-IN')}`, margin + (bw + 4) * 2, totalPending > 0 ? [254, 242, 242] : [240, 253, 244], totalPending > 0 ? [252, 165, 165] : [134, 239, 172], totalPending > 0 ? red : green);
+
+  y += 30;
+
+  // Progress bar
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(7.5);
+  doc.setTextColor(...muted);
+  doc.text(`Payment Progress: ${pct}% completed`, margin, y + 4);
+  doc.setFillColor(229, 231, 235);
+  doc.roundedRect(margin, y + 7, contentW, 4.5, 2, 2, 'F');
+  if (pct > 0) {
+    doc.setFillColor(...(pct === 100 ? green : primary));
+    doc.roundedRect(margin, y + 7, Math.max(5, contentW * (pct / 100)), 4.5, 2, 2, 'F');
+  }
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(7);
+  doc.setTextColor(...primary);
+  doc.text(`${pct}%`, margin + Math.max(5, contentW * (pct / 100)) + 2, y + 11);
+
+  y += 18;
+
+  // Notice text
+  if (totalPending > 0) {
+    doc.setFillColor(255, 251, 235);
+    doc.setDrawColor(253, 230, 138);
+    doc.roundedRect(margin, y, contentW, 12, 2, 2, 'FD');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(7.5);
+    doc.setTextColor(146, 64, 14);
+    doc.text(
+      `⚠  Pending amount of ₹ ${totalPending.toLocaleString('en-IN')} must be cleared at the earliest to avoid late fees.`,
+      margin + contentW / 2, y + 7.5, { align: 'center' }
+    );
+    y += 18;
+  }
+
+  // ── FOOTER ─────────────────────────────────────────────────────────────────
+  const footerY = pageH - 20;
+  doc.setDrawColor(...border);
+  doc.setLineWidth(0.3);
+  doc.line(margin, footerY, pageW - margin, footerY);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(7);
+  doc.setTextColor(...muted);
+  doc.text(`This is a system-generated document from ${schoolName}. No signature is required.`, margin, footerY + 6);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(...primary);
+  doc.text('Accounts Office Stamp / Signature: _____________________', pageW - margin, footerY + 6, { align: 'right' });
+
+  // Save
+  const safeName = studentName.replace(/[^a-z0-9]/gi, '_').slice(0, 20);
+  doc.save(`Fee_Statement_${safeName}_${studentId}.pdf`);
+};

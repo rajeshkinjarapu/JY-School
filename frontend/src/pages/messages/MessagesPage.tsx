@@ -23,8 +23,14 @@ export const MessagesPage: React.FC = () => {
 
   const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000';
 
+  const activePartnerRef = useRef<any>(null);
+
   useEffect(() => {
-    // 1. Init Socket.io
+    activePartnerRef.current = activePartner;
+  }, [activePartner]);
+
+  useEffect(() => {
+    // 1. Init Socket.io — only once per user session
     const socket = io(SOCKET_URL, {
       withCredentials: true,
     });
@@ -35,8 +41,9 @@ export const MessagesPage: React.FC = () => {
     }
 
     socket.on('new_message', (data) => {
+      const partner = activePartnerRef.current;
       // If message is from current active conversation partner, append it
-      if (activePartner && (data.senderId === activePartner.id || data.receiverId === activePartner.id)) {
+      if (partner && (data.senderId === partner.id || data.receiverId === partner.id)) {
         setMessages((prev) => [...prev, data]);
       }
       // Refresh list
@@ -46,7 +53,7 @@ export const MessagesPage: React.FC = () => {
     return () => {
       socket.disconnect();
     };
-  }, [user, activePartner]);
+  }, [user]); // ← Removed activePartner: socket no longer reconnects on partner change
 
   const fetchConversations = async () => {
     try {

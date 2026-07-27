@@ -40,7 +40,7 @@ const queryClient = new QueryClient({
     queries: {
       refetchOnWindowFocus: false,
       retry: 1,
-      staleTime: 0, // Always refetch in background to ensure fresh data
+      staleTime: 1000 * 60 * 2, // 2 minutes — prevents unnecessary refetches on navigation
       gcTime: 1000 * 60 * 60 * 24, // 24 hours
     },
   },

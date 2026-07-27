@@ -2,11 +2,11 @@ import React, { useEffect, useState, useMemo } from 'react';
 import api from '../../api/axios';
 import { LoadingSpinner } from '../../components/UI/LoadingSpinner';
 import { Badge } from '../../components/UI/Badge';
-import { Plus, FileDown, Trash2, Search, X, ChevronDown } from 'lucide-react';
+import { Plus, FileDown, Trash2, Search, X, ChevronDown, FileText } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
-import { FeeReceiptPrint } from '../../components/fees/FeeReceiptPrint';
+import { FeeReceiptPrint, generateFeeStatementPDF } from '../../components/fees/FeeReceiptPrint';
 
 export const FeePaymentsPage: React.FC = () => {
   const { user } = useAuth();
@@ -170,6 +170,56 @@ export const FeePaymentsPage: React.FC = () => {
     }
   };
 
+  // ── Fee Statement PDF Generator ─────────────────────────────────────────
+  const handleGenerateStatement = async (studentData: any) => {
+    const statementToast = toast.loading('Generating fee statement...');
+    try {
+      // Fetch all fee structures for this student's class
+      const classId = studentData?.classId || studentData?.class?.id;
+      const [structRes, payRes]: any[] = await Promise.all([
+        classId ? api.get(`/api/fees/structures?classId=${classId}`) : Promise.resolve({ data: [] }),
+        api.get(`/api/fees/payments?studentId=${studentData.id}&limit=500`),
+      ]);
+
+      const structs: any[] = structRes.data || [];
+      const studentPayments: any[] = (payRes.data?.data || payRes.data || []).filter(
+        (p: any) => p.studentId === studentData.id || p.student?.id === studentData.id
+      );
+
+      // Build fee items
+      const feeItems = structs.map((s: any) => {
+        const paid = studentPayments
+          .filter((p: any) => p.feeStructureId === s.id)
+          .reduce((sum: number, p: any) => sum + (p.amountPaid || 0), 0);
+        return {
+          name: s.name,
+          term: s.term,
+          totalAmount: s.amount,
+          paidAmount: paid,
+          dueDate: s.dueDate,
+        };
+      });
+
+      if (feeItems.length === 0) {
+        toast.error('No fee structures found for this student.', { id: statementToast });
+        return;
+      }
+
+      await generateFeeStatementPDF({
+        studentName: studentData.user?.name || studentData.name || 'Student',
+        studentId: studentData.rollNo || studentData.id?.slice(0, 8) || '—',
+        className: studentData.class?.name || '—',
+        section: studentData.class?.section || '—',
+        fatherName: studentData.fatherName || studentData.parentName || '—',
+        phone: studentData.user?.phone || '—',
+        feeItems,
+      });
+      toast.success('Fee statement downloaded!', { id: statementToast });
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to generate statement.', { id: statementToast });
+    }
+  };
+
   const exportPaymentsExcel = async () => {
     const importToast = toast.loading('Generating Excel sheet...');
     try {
@@ -303,6 +353,16 @@ export const FeePaymentsPage: React.FC = () => {
                       >
                         <FileDown className="w-4 h-4" />
                       </button>
+                      {/* Fee Statement Button */}
+                      {(user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN' || user?.role === 'ACCOUNTANT') && (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleGenerateStatement(p.student); }}
+                          className="p-1.5 rounded-lg text-gray-400 hover:text-purple-600 hover:bg-purple-50 cursor-pointer"
+                          title="Download Fee Statement PDF"
+                        >
+                          <FileText className="w-4 h-4" />
+                        </button>
+                      )}
                       {(user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN' || user?.role === 'ACCOUNTANT') && (
                         <button
                           onClick={(e) => { e.stopPropagation(); handleDeletePayment(p.id); }}
@@ -336,6 +396,15 @@ export const FeePaymentsPage: React.FC = () => {
                           >
                             <FileDown className="w-4 h-4" /> Receipt
                           </button>
+                          {/* Fee Statement — Mobile */}
+                          {(user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN' || user?.role === 'ACCOUNTANT') && (
+                            <button
+                              onClick={(e) => { e.stopPropagation(); handleGenerateStatement(p.student); }}
+                              className="flex-1 py-2 px-3 flex items-center justify-center gap-2 rounded-lg text-purple-600 bg-purple-100 hover:bg-purple-200 font-bold text-xs active:scale-95 transition-transform"
+                            >
+                              <FileText className="w-4 h-4" /> Statement
+                            </button>
+                          )}
                           {(user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN' || user?.role === 'ACCOUNTANT') && (
                             <button
                               onClick={(e) => { e.stopPropagation(); handleDeletePayment(p.id); }}

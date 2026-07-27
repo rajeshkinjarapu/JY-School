@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, memo } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import api from '../../api/axios';
@@ -135,13 +135,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
 
   const links = getLinks();
 
-  const NavItem = ({ to, label, icon: Icon }: { to: string; label: string; icon: any }) => {
+  // Memoized NavItem — prevents sidebar flicker/jump when location changes
+  const NavItem = memo(({ to, label, icon: Icon }: { to: string; label: string; icon: any }) => {
     const isActive = to === '/dashboard'
       ? location.pathname === '/dashboard' || location.pathname.startsWith('/dashboard/')
       : location.pathname.startsWith(to);
     const c = NAV_COLORS[label] || NAV_COLORS['Settings'];
-    
-    let hoverTimeout: any;
+    const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     return (
       <NavLink
@@ -149,7 +149,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
         onClick={() => setIsOpen(false)}
         onMouseEnter={() => {
           if (window.innerWidth > 1024 || user?.role === 'SUPER_ADMIN') {
-            hoverTimeout = setTimeout(() => {
+            hoverTimeoutRef.current = setTimeout(() => {
               import('../../router').then(module => {
                 const loader = module.routeImports[to];
                 if (loader) loader();
@@ -158,26 +158,27 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
           }
         }}
         onMouseLeave={() => {
-          if (hoverTimeout) clearTimeout(hoverTimeout);
+          if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
         }}
         style={isActive ? { background: c.bg, boxShadow: c.glow } : {}}
-        className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 cursor-pointer select-none group
+        className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-150 cursor-pointer select-none group will-change-transform
           ${isActive ? 'text-white' : 'text-slate-400 hover:text-white hover:bg-white/6'}`}
       >
         <span
           style={isActive ? { color: c.text } : {}}
-          className={`flex items-center justify-center w-7 h-7 rounded-lg shrink-0 transition-all
+          className={`flex items-center justify-center w-7 h-7 rounded-lg shrink-0 transition-colors duration-150
             ${isActive ? '' : 'group-hover:opacity-100 opacity-60'}`}
         >
           <Icon className="w-[17px] h-[17px]" strokeWidth={isActive ? 2.5 : 2} />
         </span>
         <span className="flex-1 truncate">{label}</span>
-        {isActive && (
-          <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: c.text }} />
-        )}
+        <span
+          className="w-1.5 h-1.5 rounded-full shrink-0 transition-opacity duration-150"
+          style={{ background: c.text, opacity: isActive ? 1 : 0 }}
+        />
       </NavLink>
     );
-  };
+  });
 
   const renderContent = () => (
     <div className="flex flex-col h-full">

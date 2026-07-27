@@ -189,7 +189,7 @@ export const MarksEntryPage: React.FC = () => {
     : subjects.filter(s => s.id === selectedSubjectId);
 
   return (
-    <div className="bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 min-h-screen font-sans overflow-x-hidden flex flex-col pb-20 md:pb-0">
+    <div className="bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 min-h-screen font-sans overflow-x-hidden flex flex-col pb-28 md:pb-0">
       
       {/* Header Section */}
       <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white p-4 md:p-6 shadow-2xl shadow-purple-500/20 border-b border-white/10 flex flex-col md:flex-row md:items-center justify-between gap-4 z-10 sticky top-0 rounded-b-3xl mb-6 relative overflow-hidden">
@@ -408,24 +408,50 @@ export const MarksEntryPage: React.FC = () => {
       </div>
       </div>
 
-      {/* Mobile Sticky Save Button */}
+      {/* Mobile Sticky Save Bar — always at bottom */}
       {students.length > 0 && !isClassFrozen && (
-        <div className="md:hidden fixed bottom-0 left-0 right-0 p-4 bg-white/80 backdrop-blur-xl border-t border-slate-200 shadow-[0_-10px_40px_rgba(0,0,0,0.05)] z-20 flex gap-3">
-          <button onClick={() => handleSave(false)} className="flex-1 py-3.5 bg-indigo-50 text-indigo-600 rounded-xl font-bold text-sm flex items-center justify-center gap-2 active:scale-95 transition-transform">
+        <div
+          className="md:hidden fixed bottom-0 left-0 right-0 z-50 flex gap-3"
+          style={{
+            padding: '12px 16px',
+            paddingBottom: 'max(12px, env(safe-area-inset-bottom, 12px))',
+            background: 'rgba(255,255,255,0.92)',
+            backdropFilter: 'blur(20px)',
+            borderTop: '1px solid rgba(99,102,241,0.15)',
+            boxShadow: '0 -8px 32px rgba(0,0,0,0.08)',
+          }}
+        >
+          <button
+            onClick={() => handleSave(false)}
+            className="flex-1 py-3.5 bg-indigo-50 text-indigo-600 border border-indigo-200 rounded-xl font-bold text-sm flex items-center justify-center gap-2 active:scale-95 transition-transform cursor-pointer"
+          >
             <Save className="w-5 h-5" />
-            DRAFT
+            SAVE DRAFT
           </button>
-          <button onClick={() => handleSave(true)} className="flex-[2] py-3.5 bg-indigo-600 text-white rounded-xl font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/30 active:scale-95 transition-transform">
+          <button
+            onClick={() => handleSave(true)}
+            className="flex-[2] py-3.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/30 active:scale-95 transition-transform cursor-pointer"
+          >
             <Lock className="w-5 h-5" />
-            FREEZE
+            FREEZE MARKS
           </button>
         </div>
       )}
       {students.length > 0 && isClassFrozen && (
-        <div className="md:hidden fixed bottom-0 left-0 right-0 p-4 bg-white/80 backdrop-blur-xl border-t border-slate-200 shadow-[0_-10px_40px_rgba(0,0,0,0.05)] z-20 flex gap-3">
-           <div className="flex-1 py-3.5 bg-green-500/10 text-green-600 rounded-xl font-bold text-sm flex items-center justify-center gap-2">
+        <div
+          className="md:hidden fixed bottom-0 left-0 right-0 z-50 flex gap-3"
+          style={{
+            padding: '12px 16px',
+            paddingBottom: 'max(12px, env(safe-area-inset-bottom, 12px))',
+            background: 'rgba(255,255,255,0.92)',
+            backdropFilter: 'blur(20px)',
+            borderTop: '1px solid rgba(34,197,94,0.2)',
+            boxShadow: '0 -8px 32px rgba(0,0,0,0.08)',
+          }}
+        >
+          <div className="flex-1 py-3.5 bg-green-50 border border-green-200 text-green-700 rounded-xl font-bold text-sm flex items-center justify-center gap-2">
             <Lock className="w-5 h-5" />
-            FROZEN
+            MARKS FROZEN
           </div>
         </div>
       )}
