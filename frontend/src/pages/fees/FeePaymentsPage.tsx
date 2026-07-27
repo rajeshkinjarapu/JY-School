@@ -174,8 +174,10 @@ export const FeePaymentsPage: React.FC = () => {
   const handleGenerateStatement = async (studentData: any) => {
     const statementToast = toast.loading('Generating fee statement...');
     try {
-      // Fetch all fee structures for this student's class
-      const classId = studentData?.classId || studentData?.class?.id;
+      // Find full student from state to get classId, since payment.student might lack it
+      const fullStudent = students.find(s => s.id === studentData.id) || studentData;
+      const classId = fullStudent?.classId || fullStudent?.class?.id;
+      
       const [structRes, payRes]: any[] = await Promise.all([
         classId ? api.get(`/api/fees/structures?classId=${classId}`) : Promise.resolve({ data: [] }),
         api.get(`/api/fees/payments?studentId=${studentData.id}&limit=500`),
@@ -206,12 +208,12 @@ export const FeePaymentsPage: React.FC = () => {
       }
 
       await generateFeeStatementPDF({
-        studentName: studentData.user?.name || studentData.name || 'Student',
-        studentId: studentData.rollNo || studentData.id?.slice(0, 8) || '—',
-        className: studentData.class?.name || '—',
-        section: studentData.class?.section || '—',
-        fatherName: studentData.fatherName || studentData.parentName || '—',
-        phone: studentData.user?.phone || '—',
+        studentName: fullStudent.user?.name || fullStudent.name || 'Student',
+        studentId: fullStudent.rollNo || fullStudent.id?.slice(0, 8) || '—',
+        className: fullStudent.class?.name || '—',
+        section: fullStudent.class?.section || '—',
+        fatherName: fullStudent.fatherName || fullStudent.parentName || '—',
+        phone: fullStudent.user?.phone || '—',
         feeItems,
       });
       toast.success('Fee statement downloaded!', { id: statementToast });
