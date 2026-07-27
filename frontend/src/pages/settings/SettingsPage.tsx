@@ -76,7 +76,7 @@ export const SettingsPage: React.FC = () => {
         },
       });
       setUsers(res.data.data || res.data || []);
-      setTotalUsers(res.data.total || 0);
+      setTotalUsers(res.data.pagination?.total || 0);
     } catch (e) {
       console.error(e);
       toast.error('Failed to load users directory');
@@ -194,7 +194,7 @@ export const SettingsPage: React.FC = () => {
   if (loadingSettings) return <LoadingSpinner size="lg" className="h-[50vh]" />;
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="w-full max-w-7xl mx-auto space-y-6">
       {/* Navigation Tabs */}
       <div className="flex border-b border-gray-200 dark:border-gray-800">
         <button
