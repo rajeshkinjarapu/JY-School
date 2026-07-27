@@ -54,6 +54,7 @@ export const TeacherFormPage: React.FC = () => {
         qualification: teacher.qualification || '',
         specialization: teacher.specialization || '',
         joiningDate: teacher.joiningDate ? new Date(teacher.joiningDate).toISOString().split('T')[0] : '',
+        canEditStudents: teacher.canEditStudents || false,
       });
       setPhotoUrl(teacher.user.photoUrl || '');
     } catch (e) {
@@ -153,6 +154,19 @@ export const TeacherFormPage: React.FC = () => {
             <div>
               <label className="label">Joining Date</label>
               <input type="date" className="input" {...register('joiningDate')} />
+            </div>
+            
+            <div className="flex items-center gap-3 pt-6">
+              <input 
+                type="checkbox" 
+                id="canEditStudents" 
+                className="w-5 h-5 rounded border-gray-300 text-primary-600 focus:ring-primary-500" 
+                {...register('canEditStudents')} 
+              />
+              <label htmlFor="canEditStudents" className="text-sm font-semibold text-gray-900 cursor-pointer">
+                Allow to Edit Student Details
+                <span className="block text-xs font-normal text-gray-500">Grants permission to update student profiles and class assignments</span>
+              </label>
             </div>
           </div>
 

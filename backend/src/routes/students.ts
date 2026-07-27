@@ -18,7 +18,7 @@ router.get('/:id', authorize('SUPER_ADMIN', 'ADMIN', 'TEACHER'), getById);
 router.post('/', authorize('SUPER_ADMIN', 'ADMIN'), create);
 router.post('/bulk-import', authorize('SUPER_ADMIN', 'ADMIN'), upload.single('file'), bulkImport);
 router.post('/bulk-photos', authorize('SUPER_ADMIN', 'ADMIN'), upload.single('file'), bulkUploadPhotos);
-router.put('/:id', authorize('SUPER_ADMIN', 'ADMIN'), update);
+router.put('/:id', authorize('SUPER_ADMIN', 'ADMIN', 'TEACHER'), update);
 router.patch('/:id/class', authorize('SUPER_ADMIN', 'ADMIN', 'TEACHER'), changeClass);
 router.delete('/:id', authorize('SUPER_ADMIN', 'ADMIN'), deleteStudent);
 

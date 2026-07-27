@@ -107,9 +107,17 @@ export const create = async (req: Request, res: Response, next: NextFunction): P
   successResponse(res, student, 'Student created', 201);
 };
 
-export const update = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+export const update = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   const id = req.params.id as string;
   const { name, phone, photoUrl, classId, dob, gender, address, bloodGroup, studentId, fatherName, motherName, aadharNo, penNumber } = req.body;
+
+  // Check teacher permission if the user is a teacher
+  if (req.user?.role === 'TEACHER') {
+    const teacher = await prisma.teacher.findUnique({ where: { userId: req.user.id } });
+    if (!teacher || !teacher.canEditStudents) {
+      return next(createError('You do not have permission to edit student details', 403));
+    }
+  }
 
   const student = await prisma.student.findUnique({ where: { id }, include: { user: true } });
   if (!student) return next(createError('Student not found', 404));

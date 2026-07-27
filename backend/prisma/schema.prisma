@@ -89,6 +89,7 @@ model Teacher {
   specialization        String?
   joiningDate           DateTime  @default(now())
   employeeId            String    @unique
+  canEditStudents       Boolean   @default(false)
 
   classSubjectTeachers  ClassSubjectTeacher[]
   timetableSlots        Timetable[]
