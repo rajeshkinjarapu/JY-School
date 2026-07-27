@@ -84,44 +84,44 @@ export const AdmitCardTemplate: React.FC<AdmitCardTemplateProps> = ({ student, e
               <table className="w-full text-sm text-left border-collapse">
                 <tbody>
                   <tr className="border-b border-indigo-100 hover:bg-indigo-50/50">
-                    <td className="p-3 px-5 font-bold text-indigo-900 uppercase text-[11px] tracking-wider w-2/5 border-r border-indigo-100 bg-indigo-50/40">Candidate Name</td>
-                    <td className="p-3 px-5 font-black text-indigo-950 text-base uppercase">
+                    <td className="p-3 px-5 font-extrabold text-indigo-900 uppercase text-sm tracking-wider w-2/5 border-r border-indigo-100 bg-indigo-50/40">Candidate Name</td>
+                    <td className="p-3 px-5 font-black text-indigo-950 text-lg uppercase">
                       {student?.user?.name || student?.name}
                     </td>
                   </tr>
                   <tr className="border-b border-indigo-100 hover:bg-indigo-50/50">
-                    <td className="p-3 px-5 font-bold text-indigo-900 uppercase text-[11px] tracking-wider border-r border-indigo-100 bg-indigo-50/40">Roll Number</td>
-                    <td className="p-3 px-5 font-bold text-indigo-900 text-base">
+                    <td className="p-3 px-5 font-extrabold text-indigo-900 uppercase text-sm tracking-wider border-r border-indigo-100 bg-indigo-50/40">Roll Number</td>
+                    <td className="p-3 px-5 font-black text-indigo-950 text-lg">
                       {student?.rollNo || 'N/A'}
                     </td>
                   </tr>
                   <tr className="border-b border-indigo-100 hover:bg-indigo-50/50">
-                    <td className="p-3 px-5 font-bold text-indigo-900 uppercase text-[11px] tracking-wider border-r border-indigo-100 bg-indigo-50/40">Class</td>
-                    <td className="p-3 px-5 font-bold text-gray-800">
+                    <td className="p-3 px-5 font-extrabold text-indigo-900 uppercase text-sm tracking-wider border-r border-indigo-100 bg-indigo-50/40">Class</td>
+                    <td className="p-3 px-5 font-black text-indigo-950 text-lg">
                       {className || student?.class?.name || student?.className || '-'}
                     </td>
                   </tr>
                   <tr className="border-b border-indigo-100 hover:bg-indigo-50/50">
-                    <td className="p-3 px-5 font-bold text-indigo-900 uppercase text-[11px] tracking-wider border-r border-indigo-100 bg-indigo-50/40">Section</td>
-                    <td className="p-3 px-5 font-bold text-gray-800">
+                    <td className="p-3 px-5 font-extrabold text-indigo-900 uppercase text-sm tracking-wider border-r border-indigo-100 bg-indigo-50/40">Section</td>
+                    <td className="p-3 px-5 font-black text-indigo-950 text-lg">
                       {section || student?.class?.section || student?.section || '-'}
                     </td>
                   </tr>
                   <tr className="border-b border-indigo-100 hover:bg-indigo-50/50">
-                    <td className="p-3 px-5 font-bold text-indigo-900 uppercase text-[11px] tracking-wider border-r border-indigo-100 bg-indigo-50/40">Gender</td>
-                    <td className="p-3 px-5 font-bold text-gray-800">
+                    <td className="p-3 px-5 font-extrabold text-indigo-900 uppercase text-sm tracking-wider border-r border-indigo-100 bg-indigo-50/40">Gender</td>
+                    <td className="p-3 px-5 font-black text-indigo-950 text-lg">
                       {student?.gender || 'Male'}
                     </td>
                   </tr>
                   <tr className="border-b border-indigo-100 hover:bg-indigo-50/50">
-                    <td className="p-3 px-5 font-bold text-indigo-900 uppercase text-[11px] tracking-wider border-r border-indigo-100 bg-indigo-50/40">Date of Birth</td>
-                    <td className="p-3 px-5 font-bold text-gray-800">
+                    <td className="p-3 px-5 font-extrabold text-indigo-900 uppercase text-sm tracking-wider border-r border-indigo-100 bg-indigo-50/40">Date of Birth</td>
+                    <td className="p-3 px-5 font-black text-indigo-950 text-lg">
                       12/05/2010
                     </td>
                   </tr>
                   <tr className="hover:bg-indigo-50/50">
-                    <td className="p-3 px-5 font-bold text-indigo-900 uppercase text-[11px] tracking-wider border-r border-indigo-100 bg-indigo-50/40">Exam Center</td>
-                    <td className="p-3 px-5 font-bold text-indigo-700">
+                    <td className="p-3 px-5 font-extrabold text-indigo-900 uppercase text-sm tracking-wider border-r border-indigo-100 bg-indigo-50/40">Exam Center</td>
+                    <td className="p-3 px-5 font-black text-indigo-950 text-lg">
                       {settings.examCenterOverride || 'JY School Main Campus, Hall A'}
                     </td>
                   </tr>
@@ -158,20 +158,20 @@ export const AdmitCardTemplate: React.FC<AdmitCardTemplateProps> = ({ student, e
               <table className="w-full text-sm text-left border-collapse">
                 <thead className="bg-indigo-600 text-white border-b-2 border-indigo-700">
                   <tr>
-                    <th className="py-3 px-5 font-bold uppercase text-[11px] tracking-widest text-center w-14 border-r border-indigo-500/50">S.No</th>
-                    <th className="py-3 px-5 font-bold uppercase text-[11px] tracking-widest border-r border-indigo-500/50">Date</th>
-                    <th className="py-3 px-5 font-bold uppercase text-[11px] tracking-widest border-r border-indigo-500/50">Subject</th>
-                    <th className="py-3 px-5 font-bold uppercase text-[11px] tracking-widest border-r border-indigo-500/50">Time</th>
-                    <th className="py-3 px-5 font-bold uppercase text-[11px] tracking-widest text-center">Invigilator Sign</th>
+                    <th className="py-3 px-5 font-extrabold uppercase text-[13px] tracking-widest text-center w-14 border-r border-indigo-500/50">S.No</th>
+                    <th className="py-3 px-5 font-extrabold uppercase text-[13px] tracking-widest border-r border-indigo-500/50">Date</th>
+                    <th className="py-3 px-5 font-extrabold uppercase text-[13px] tracking-widest border-r border-indigo-500/50">Subject</th>
+                    <th className="py-3 px-5 font-extrabold uppercase text-[13px] tracking-widest border-r border-indigo-500/50">Time</th>
+                    <th className="py-3 px-5 font-extrabold uppercase text-[13px] tracking-widest text-center">Invigilator Sign</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-indigo-100 bg-white">
                   {(settings.schedule?.length > 0 ? settings.schedule : examPlans)?.map((plan: any, i: number) => (
                     <tr key={plan.id || i} className="hover:bg-indigo-50/50 transition-colors">
-                      <td className="py-3 px-5 font-bold text-center text-indigo-400 border-r border-indigo-100">{i + 1}</td>
-                      <td className="py-3 px-5 font-bold text-gray-700 border-r border-indigo-100">{plan.date || plan.examDate ? new Date(plan.date || plan.examDate).toLocaleDateString('en-GB') : '-'}</td>
-                      <td className="py-3 px-5 font-black text-indigo-950 border-r border-indigo-100">{plan.subject?.name || plan.subject}</td>
-                      <td className="py-3 px-5 font-bold text-indigo-600 border-r border-indigo-100">{plan.timing || `${plan.startTime || ''} ${plan.startTime && plan.endTime ? '-' : ''} ${plan.endTime || ''}`}</td>
+                      <td className="py-3 px-5 font-black text-lg text-center text-indigo-400 border-r border-indigo-100">{i + 1}</td>
+                      <td className="py-3 px-5 font-black text-lg text-gray-700 border-r border-indigo-100">{plan.date || plan.examDate ? new Date(plan.date || plan.examDate).toLocaleDateString('en-GB') : '-'}</td>
+                      <td className="py-3 px-5 font-black text-lg text-indigo-950 border-r border-indigo-100">{plan.subject?.name || plan.subject}</td>
+                      <td className="py-3 px-5 font-black text-lg text-indigo-600 border-r border-indigo-100">{plan.timing || `${plan.startTime || ''} ${plan.startTime && plan.endTime ? '-' : ''} ${plan.endTime || ''}`}</td>
                       <td className="py-3 px-5 text-center text-indigo-200">...............</td>
                     </tr>
                   ))}
