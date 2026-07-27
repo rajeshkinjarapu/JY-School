@@ -49,8 +49,10 @@ const app = express();
 app.set('trust proxy', 1);
 const httpServer = createServer(app);
 
-// Init Socket.io
-initSocket(httpServer);
+// Init Socket.io (Only if not on Vercel)
+if (!process.env.VERCEL) {
+  initSocket(httpServer);
+}
 
 // Core Middleware
 app.use(helmet({ crossOriginResourcePolicy: false }));
@@ -115,9 +117,11 @@ app.use((_req, res) => {
 app.use(errorHandler);
 
 const PORT = parseInt(process.env.PORT || '5000', 10);
-httpServer.listen(PORT, () => {
-  console.log(`🚀 JY School SMS Backend running on http://localhost:${PORT}`);
-  console.log(`📱 Environment: ${process.env.NODE_ENV}`);
-});
+if (!process.env.VERCEL) {
+  httpServer.listen(PORT, () => {
+    console.log(`🚀 JY School SMS Backend running on http://localhost:${PORT}`);
+    console.log(`📱 Environment: ${process.env.NODE_ENV}`);
+  });
+}
 
 export default app;
