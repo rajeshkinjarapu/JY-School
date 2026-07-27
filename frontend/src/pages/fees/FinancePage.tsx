@@ -8,9 +8,10 @@ import {
   CreditCard, Plus, FileDown, ShieldCheck, Printer, ArrowRight,
   TrendingUp, Wallet, Award, Briefcase, DollarSign, Layers,
   Receipt, FileText, Search, Filter, Trash2, Edit3, Calendar,
-  Clock, CheckCircle, AlertTriangle
+  Clock, CheckCircle, AlertTriangle, Users
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { StudentFeeDetailsTab } from './StudentFeeDetailsTab';
 
 export const FinancePage: React.FC = () => {
   const { user } = useAuth();
@@ -307,6 +308,7 @@ export const FinancePage: React.FC = () => {
           { key: 'fee-head', label: 'Fee Head', icon: DollarSign },
           { key: 'fee-concession', label: 'Fee Concession', icon: Award },
           { key: 'fee-structure', label: 'Fee Structure', icon: Briefcase },
+          { key: 'student-fee-details', label: 'Student Fee Details', icon: Users },
           { key: 'transaction', label: 'Transaction', icon: Receipt },
           { key: 'receipt', label: 'Receipt', icon: FileText },
           { key: 'report', label: 'Report', icon: TrendingUp },
@@ -338,6 +340,15 @@ export const FinancePage: React.FC = () => {
         ) : (
           <>
             {/* ── 1. PAYMENT METHOD TAB ── */}
+            {activeTab === 'student-fee-details' && (
+              <StudentFeeDetailsTab 
+                students={students} 
+                structures={structures} 
+                payments={payments} 
+                classes={classes} 
+              />
+            )}
+
             {activeTab === 'payment-method' && (
               <div className="space-y-6 animate-fade-in">
                 <div className="flex items-center justify-between pb-4 border-b border-gray-100 dark:border-gray-800">
