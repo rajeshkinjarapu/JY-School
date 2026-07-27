@@ -11,7 +11,9 @@ import { Role } from '../types/enums';
 export const bulkImportFees = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   if (!req.file) return next(createError('No file uploaded', 400));
   try {
-    const workbook = XLSX.read(req.file.buffer, { type: 'buffer' });
+    const workbook = req.file.buffer 
+      ? XLSX.read(req.file.buffer, { type: 'buffer' })
+      : XLSX.readFile(req.file.path);
     const sheetName = workbook.SheetNames[0];
     const results = XLSX.utils.sheet_to_json<any>(workbook.Sheets[sheetName]);
 

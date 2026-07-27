@@ -11,6 +11,11 @@ import {
 
 const router = Router();
 
+// Public Routes
+router.get('/public/:id', getFormDetails);
+router.post('/public/:id/submit', submitFormResponse);
+
+// Protected Routes
 router.use(authenticate);
 
 router.get('/', getForms);

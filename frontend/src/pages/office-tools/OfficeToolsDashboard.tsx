@@ -42,8 +42,8 @@ export const OfficeToolsDashboard = () => {
       shadow: 'shadow-emerald-500/30'
     },
     { 
-      title: 'Tool 6', 
-      description: 'Description for tool 6', 
+      title: 'GENERATE FORMS', 
+      description: 'Create dynamic forms and collect responses', 
       icon: Calendar, 
       gradient: 'from-amber-500 to-yellow-400',
       shadow: 'shadow-amber-500/30'
@@ -77,6 +77,8 @@ export const OfficeToolsDashboard = () => {
               onClick={() => {
                 if (tool.title === 'SLIP TEST RANK CARD') {
                   navigate('/office-tools/slip-test');
+                } else if (tool.title === 'GENERATE FORMS') {
+                  navigate('/office-tools/forms');
                 }
               }}
               className="group relative bg-white border border-slate-100 p-6 rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer overflow-hidden flex flex-col items-start gap-4"

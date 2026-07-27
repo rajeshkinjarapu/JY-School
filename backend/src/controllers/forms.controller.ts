@@ -98,21 +98,23 @@ export const submitFormResponse = async (req: AuthRequest, res: Response, next: 
   try {
     const { id } = req.params; // Form ID
     const { answers } = req.body;
-    const submittedById = req.user?.id;
+    const submittedById = req.user?.id || null;
 
-    if (!submittedById) return next(createError('Unauthorized', 401));
     if (!answers) return next(createError('Answers are required', 400));
 
     const form = await prisma.customForm.findUnique({ where: { id } });
     if (!form) return next(createError('Form not found', 404));
+    if (!form.isActive) return next(createError('This form is no longer accepting responses', 400));
 
-    // Check if user already submitted this form
-    const existingSubmission = await prisma.formSubmission.findFirst({
-      where: { formId: id, submittedById },
-    });
+    // Check if user already submitted this form (only if logged in)
+    if (submittedById) {
+      const existingSubmission = await prisma.formSubmission.findFirst({
+        where: { formId: id, submittedById },
+      });
 
-    if (existingSubmission) {
-      return next(createError('You have already submitted this form', 400));
+      if (existingSubmission) {
+        return next(createError('You have already submitted this form', 400));
+      }
     }
 
     const answersStr = typeof answers === 'string' ? answers : JSON.stringify(answers);
@@ -120,7 +122,7 @@ export const submitFormResponse = async (req: AuthRequest, res: Response, next: 
     const submission = await prisma.formSubmission.create({
       data: {
         formId: id,
-        submittedById,
+        ...(submittedById && { submittedById }),
         answers: answersStr,
       },
     });

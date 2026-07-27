@@ -544,8 +544,8 @@ model FormSubmission {
   id           String     @id @default(uuid())
   formId       String
   form         CustomForm @relation(fields: [formId], references: [id], onDelete: Cascade)
-  submittedById String
-  submittedBy  User       @relation(fields: [submittedById], references: [id])
+  submittedById String?
+  submittedBy  User?      @relation(fields: [submittedById], references: [id])
   answers      String     // JSON string mapping field names to user inputs
   submittedAt  DateTime   @default(now())
 }

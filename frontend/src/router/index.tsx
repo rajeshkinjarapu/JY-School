@@ -92,6 +92,11 @@ const QuestionBankDashboard = lazy(routeImports['/question-bank']);
 const QuestionPaperGeneratorPage = lazy(() => import('../pages/question-bank/QuestionPaperGeneratorPage'));
 const SavedPapersPage = lazy(() => import('../pages/question-bank/SavedPapersPage'));
 const TransportDashboard = lazy(routeImports['/transport']);
+const FormManagerPage = lazy(() => import('../pages/office-tools/forms/FormManagerPage').then((mod) => ({ default: mod.FormManagerPage })));
+const FormBuilderPage = lazy(() => import('../pages/office-tools/forms/FormBuilderPage').then((mod) => ({ default: mod.FormBuilderPage })));
+const FormResponsesPage = lazy(() => import('../pages/office-tools/forms/FormResponsesPage').then((mod) => ({ default: mod.FormResponsesPage })));
+const PublicFormPage = lazy(() => import('../pages/public/PublicFormPage').then((mod) => ({ default: mod.PublicFormPage })));
+
 const AttendanceWrapper = () => {
   const { user } = useAuth();
   if (user?.role === 'STUDENT') {
@@ -112,6 +117,10 @@ export const router = createBrowserRouter([
   {
     path: '/reset-password',
     element: withSuspense(<ResetPasswordPage />),
+  },
+  {
+    path: '/forms/public/:id',
+    element: withSuspense(<PublicFormPage />),
   },
   {
     path: '/',
@@ -352,8 +361,32 @@ export const router = createBrowserRouter([
       {
         path: 'office-tools',
         element: withSuspense(
-          <ProtectedRoute allowedRoles={['SUPER_ADMIN']}>
+          <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN']}>
             <OfficeToolsDashboard />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'office-tools/forms',
+        element: withSuspense(
+          <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN']}>
+            <FormManagerPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'office-tools/forms/builder',
+        element: withSuspense(
+          <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN']}>
+            <FormBuilderPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'office-tools/forms/:id/responses',
+        element: withSuspense(
+          <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN']}>
+            <FormResponsesPage />
           </ProtectedRoute>
         ),
       },
