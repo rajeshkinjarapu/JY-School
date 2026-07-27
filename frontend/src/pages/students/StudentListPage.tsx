@@ -54,7 +54,10 @@ export const StudentListPage: React.FC = () => {
       const res = await api.get("/api/students", {
         params: { search, classId, limit: 50, page },
       });
-      return res.data || { data: [], meta: { total: 0, totalPages: 1 } };
+      // Extract data and meta before React Query deep clones and strips non-enumerable properties
+      const arr = Array.isArray(res.data) ? res.data : (res.data?.data || []);
+      const meta = (res.data as any)?.meta || { total: 0, totalPages: 1 };
+      return { data: arr, meta };
     },
     staleTime: 0,
   });
