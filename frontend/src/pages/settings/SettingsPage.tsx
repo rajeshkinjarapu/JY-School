@@ -75,8 +75,8 @@ export const SettingsPage: React.FC = () => {
           role: userRoleFilter,
         },
       });
-      setUsers(res.data.data || res.data || []);
-      setTotalUsers(res.data.pagination?.total || 0);
+      setUsers(Array.isArray(res.data) ? res.data : (res.data?.data || []));
+      setTotalUsers((res.data as any)?.meta?.total || 0);
     } catch (e) {
       console.error(e);
       toast.error('Failed to load users directory');
