@@ -53,8 +53,8 @@ export const SlipTestManualPage = () => {
     queryKey: ['students', classId],
     queryFn: async () => {
       if (!classId) return [];
-      const res = await api.get(`/api/students?classId=${classId}`);
-      return res.data;
+      const res = await api.get(`/api/students?classId=${classId}&limit=1000`);
+      return res.data?.data || res.data || [];
     },
     enabled: !!classId
   });
