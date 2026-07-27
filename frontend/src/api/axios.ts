@@ -11,10 +11,15 @@ export const api = axios.create({
 
 const unwrapResponseData = (payload: any) => {
   if (payload && typeof payload === 'object' && 'data' in payload && payload.success !== undefined) {
-    if (payload.pagination) {
-      return { data: payload.data, meta: payload.pagination };
+    const data = payload.data;
+    if (payload.pagination && Array.isArray(data)) {
+      Object.defineProperty(data, 'meta', { value: payload.pagination, enumerable: false });
+      Object.defineProperty(data, 'data', { value: data, enumerable: false });
+    } else if (payload.pagination) {
+      data.meta = payload.pagination;
+      data.data = data;
     }
-    return payload.data;
+    return data;
   }
   return payload;
 };
