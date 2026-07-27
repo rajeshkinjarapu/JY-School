@@ -458,7 +458,7 @@ const TeacherView: React.FC<{ data: any }> = ({ data }) => {
     setShowMarksModal(true);
     setLoadingExams(true);
     try {
-      const res = await api.get('/api/exams');
+      const res = await api.get('/api/exams?limit=5000');
       setExams(res.data?.data || res.data || []);
     } catch (e) {
       console.error(e);

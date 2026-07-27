@@ -29,9 +29,9 @@ export const SlipTestsTab: React.FC = () => {
   const fetchData = async () => {
     try {
       const [stRes, classRes, subRes]: any = await Promise.all([
-        api.get('/api/slip-tests'),
-        api.get('/api/classes'),
-        api.get('/api/subjects')
+        api.get('/api/slip-tests?limit=5000'),
+        api.get('/api/classes?limit=5000'),
+        api.get('/api/subjects?limit=5000')
       ]);
       setSlipTests(stRes.data || stRes || []);
       setClasses(classRes.data || classRes || []);

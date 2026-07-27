@@ -9,7 +9,7 @@ import {
   MapPin, FileSpreadsheet, Download, Printer, CheckCircle
 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams, useOutletContext } from 'react-router-dom';
 import * as XLSX from 'xlsx';
 import { SlipTestsTab } from './SlipTestsTab';
 import { AdmitCardTab } from './AdmitCardTab';
@@ -28,6 +28,8 @@ export const ExamListPage: React.FC = () => {
   // Search parameters for linking tabs from sidebar
   const [searchParams, setSearchParams] = useSearchParams();
   const tabParam = searchParams.get('tab');
+  
+  const { setDynamicTitle } = (useOutletContext() as { setDynamicTitle?: (title: string) => void }) || {};
 
   // Tabs
   const [activeTab, setActiveTab] = useState<'examination' | 'exam-plan' | 'question-group' | 'question-bank' | 'question-papers' | 'add-online-exam' | 'online-exams' | 'written-exam' | 'admit-card' | 'results' | 'progress-card' | 'jee-progress-card' | 'settings' | 'slip-tests' | 'status-overview' | ''>('');
@@ -37,6 +39,32 @@ export const ExamListPage: React.FC = () => {
       setActiveTab(tabParam as any);
     }
   }, [tabParam]);
+
+  useEffect(() => {
+    if (setDynamicTitle) {
+      if (activeTab === '') setDynamicTitle('Examinations & Grades');
+      else {
+        const titles: Record<string, string> = {
+          'examination': 'Create & Manage Exams',
+          'exam-plan': 'Exam Plan',
+          'question-group': 'Question Groups',
+          'question-bank': 'Question Bank',
+          'question-papers': 'Question Papers',
+          'add-online-exam': 'Add Online Exam',
+          'online-exams': 'Online Exams',
+          'written-exam': 'Written Exam',
+          'admit-card': 'Admit Cards',
+          'results': 'Results Entry',
+          'progress-card': 'Progress Cards',
+          'jee-progress-card': 'JEE Progress Cards',
+          'settings': 'Exam Settings',
+          'slip-tests': 'Slip Tests',
+          'status-overview': 'Status Overview'
+        };
+        setDynamicTitle(titles[activeTab] || 'Examinations');
+      }
+    }
+  }, [activeTab, setDynamicTitle]);
 
   // Base Data
   const [exams, setExams] = useState<any[]>([]);
@@ -90,7 +118,7 @@ export const ExamListPage: React.FC = () => {
 
   const fetchExams = async () => {
     try {
-      const res: any = await api.get('/api/exams');
+      const res: any = await api.get('/api/exams?limit=5000');
       const list = res.data || res || [];
       setExams(list);
       if (list.length > 0 && !selectedExamId) {
@@ -496,7 +524,7 @@ export const ExamListPage: React.FC = () => {
   // -------------------------------------------------------------
   const fetchBaseFilters = async () => {
     try {
-      const classRes: any = await api.get('/api/classes');
+      const classRes: any = await api.get('/api/classes?limit=5000');
       const classList = classRes.data || classRes || [];
       setClasses(classList);
 
@@ -507,7 +535,7 @@ export const ExamListPage: React.FC = () => {
 
       if (isAdmin) {
         try {
-          const teachRes: any = await api.get('/api/teachers');
+          const teachRes: any = await api.get('/api/teachers?limit=5000');
           const teacherList = teachRes.data?.data || teachRes.data || [];
           setTeachers(teacherList);
         } catch (e) {

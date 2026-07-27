@@ -80,8 +80,8 @@ const TeacherAttendancePage: React.FC = () => {
       } else {
         const [attRes, leaveRes, gpRes]: any = await Promise.all([
           api.get('/api/teacher-attendance', { params: { month: selectedMonth + 1, year: selectedYear } }),
-          api.get('/api/leave/my'),
-          api.get('/api/gate-pass', { params: { limit: 100 } })
+          api.get('/api/leave/my?limit=5000'),
+          api.get('/api/gate-pass?limit=5000')
         ]);
         setMyRecords(attRes.data?.data || []);
         

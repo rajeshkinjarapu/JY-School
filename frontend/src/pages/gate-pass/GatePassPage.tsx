@@ -76,7 +76,7 @@ const GatePassPage: React.FC = () => {
   const load = async () => {
     setLoading(true);
     try {
-      const res = await api.get('/api/gate-pass');
+      const res = await api.get('/api/gate-pass?limit=5000');
       setItems(res.data || []);
     } catch {
       toast.error('Unable to load gate passes');
@@ -92,7 +92,7 @@ const GatePassPage: React.FC = () => {
     }).catch(() => {});
 
     if (canApprove) {
-      api.get('/api/classes').then((res: any) => {
+      api.get('/api/classes?limit=5000').then((res: any) => {
         const data = res.data || res || [];
         setClasses(data);
       }).catch(() => {});

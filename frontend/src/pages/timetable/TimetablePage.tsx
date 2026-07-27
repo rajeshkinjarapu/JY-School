@@ -130,8 +130,8 @@ export const TimetablePage: React.FC = () => {
   const fetchBaseData = async () => {
     try {
       const [cRes, tRes]: any = await Promise.all([
-        api.get("/api/classes"),
-        api.get("/api/teachers"),
+        api.get("/api/classes?limit=5000"),
+        api.get("/api/teachers?limit=5000"),
       ]);
       const cl = cRes.data || cRes || [];
       const tl = tRes.data?.data || tRes.data || [];

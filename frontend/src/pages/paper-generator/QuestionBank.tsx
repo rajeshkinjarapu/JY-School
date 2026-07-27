@@ -1,5 +1,5 @@
-﻿import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, Link, useOutletContext } from 'react-router-dom';
 import { qbApi as api } from '../../utils/questionBankApi';
 import { QuestionForm } from '../../components/QuestionBank/QuestionForm';
 import { LaTeXPreview } from '../../components/QuestionBank/LaTeXPreview';
@@ -37,6 +37,12 @@ export const QuestionBank: React.FC = () => {
   const navigate = useNavigate();
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(true);
+  const { setDynamicTitle } = (useOutletContext() as { setDynamicTitle?: (title: string) => void }) || {};
+
+  useEffect(() => {
+    if (setDynamicTitle) setDynamicTitle('Question Bank Manager');
+  }, [setDynamicTitle]);
+
   const [error, setError] = useState<string | null>(null);
 
   // Form states

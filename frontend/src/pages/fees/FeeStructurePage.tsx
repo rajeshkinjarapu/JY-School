@@ -22,8 +22,8 @@ export const FeeStructurePage: React.FC = () => {
   const fetchData = async () => {
     try {
       const [structRes, classRes]: any = await Promise.all([
-        api.get('/api/fees/structures'),
-        api.get('/api/classes'),
+        api.get('/api/fees/structures?limit=5000'),
+        api.get('/api/classes?limit=5000'),
       ]);
       setStructures(structRes.data || structRes || []);
       setClasses(classRes.data || classRes || []);

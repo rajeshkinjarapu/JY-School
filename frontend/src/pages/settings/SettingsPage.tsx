@@ -4,11 +4,20 @@ import { LoadingSpinner } from '../../components/UI/LoadingSpinner';
 import { Badge } from '../../components/UI/Badge';
 import { Save, School, CalendarDays, Users, Edit, Trash2, Plus, Search, Shield, Key } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { useOutletContext } from 'react-router-dom';
 
 export const SettingsPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'system' | 'users'>('system');
   const [loadingSettings, setLoadingSettings] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+
+  const { setDynamicTitle } = (useOutletContext() as { setDynamicTitle?: (title: string) => void }) || {};
+
+  useEffect(() => {
+    if (setDynamicTitle) {
+      setDynamicTitle(activeTab === 'system' ? 'System Settings' : 'User Management');
+    }
+  }, [activeTab, setDynamicTitle]);
 
   // System Settings States
   const [schoolName, setSchoolName] = useState('');

@@ -33,7 +33,7 @@ export const LeaveRequestLogPage: React.FC = () => {
     // Load requests from API
     const fetchLeaves = async () => {
       try {
-        const res = await api.get('/api/leave');
+        const res = await api.get('/api/leave?limit=5000');
         setRequests(res.data.data || res.data || []);
       } catch (err) {
         console.error('Failed to fetch leaves', err);
@@ -42,7 +42,7 @@ export const LeaveRequestLogPage: React.FC = () => {
     fetchLeaves();
 
     // Fetch teachers list
-    api.get('/api/teachers')
+    api.get('/api/teachers?limit=5000')
       .then((res: any) => {
         const list = res.data.data || res.data || [];
         setTeachers(list);

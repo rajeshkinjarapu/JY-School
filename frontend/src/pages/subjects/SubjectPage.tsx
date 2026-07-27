@@ -30,9 +30,9 @@ export const SubjectPage: React.FC = () => {
   const fetchData = async () => {
     try {
       const [subRes, classRes, teachRes]: any = await Promise.all([
-        api.get('/api/subjects'),
-        api.get('/api/classes'),
-        api.get('/api/teachers'),
+        api.get('/api/subjects?limit=5000'),
+        api.get('/api/classes?limit=5000'),
+        api.get('/api/teachers?limit=5000'),
       ]);
       setSubjects(subRes.data || subRes || []);
       setClasses(classRes.data || classRes || []);
