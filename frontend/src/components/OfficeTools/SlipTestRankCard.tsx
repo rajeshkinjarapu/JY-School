@@ -53,6 +53,7 @@ export const SlipTestRankCard = React.forwardRef<HTMLDivElement, SlipTestRankCar
     <div 
       id="resultCard" 
       ref={ref}
+      className="slip-test-card"
       style={{
         width: '794px',
         minHeight: '1123px',
@@ -63,14 +64,16 @@ export const SlipTestRankCard = React.forwardRef<HTMLDivElement, SlipTestRankCar
         display: 'flex',
         flexDirection: 'column',
         position: 'relative',
-        overflow: 'hidden'
+        overflow: 'hidden',
+        fontFamily: 'Arial, Helvetica, sans-serif'
       }}
     >
       <style>
         {`
+          .slip-test-card * { letter-spacing: normal !important; font-variant-ligatures: none !important; }
           .slip-table { width: 100%; border-collapse: collapse; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04); font-size: 13px; }
           .slip-table thead tr { background: #1a3a7a; }
-          .slip-table thead th { color: #ffffff; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; padding: 10px 14px; text-align: center; white-space: nowrap; font-size: 12px; border: 1px solid #1a3a6a; }
+          .slip-table thead th { color: #ffffff; font-weight: 700; text-transform: uppercase; padding: 10px 14px; text-align: center; white-space: nowrap; font-size: 12px; border: 1px solid #1a3a6a; }
           .slip-table tbody td { padding: 8px 14px; text-align: center; white-space: nowrap; border: 1px solid #e8e0d8; background: #ffffff; font-weight: 500; color: #0a1e3a; font-size: 13px; }
           .slip-table tbody tr:nth-child(even) td { background: #faf8f6; }
           .slip-table tbody .rank-1 { background: #fff9e6 !important; font-weight: 800; color: #d4a017; }
@@ -104,15 +107,15 @@ export const SlipTestRankCard = React.forwardRef<HTMLDivElement, SlipTestRankCar
         </div>
         <div style={{ textAlign: 'center', flex: 1, padding: '0 8px' }}>
           <div style={{
-            fontSize: '30px', fontWeight: 900, color: '#0a1e3a', letterSpacing: '1.5px',
+            fontSize: '30px', fontWeight: 900, color: '#0a1e3a',
             fontFamily: "'Times New Roman', 'Georgia', serif", lineHeight: 1.2, whiteSpace: 'nowrap'
           }}>
             SRI VENKATESWARA JY SCHOOL
           </div>
-          <div style={{ fontSize: '16px', fontWeight: 600, color: '#1a4a7a', letterSpacing: '0.5px', margin: '2px 0' }}>
+          <div style={{ fontSize: '16px', fontWeight: 600, color: '#1a4a7a', margin: '2px 0' }}>
             (IIT-JEE/NEET Foundation – Olympiads)
           </div>
-          <div style={{ fontSize: '13px', fontWeight: 500, color: '#4a7a8a', letterSpacing: '0.2px', marginTop: '2px' }}>
+          <div style={{ fontSize: '13px', fontWeight: 500, color: '#4a7a8a', marginTop: '2px' }}>
             Opp. Hero Showroom, SVL Paradise Campus, Narasannapeta
           </div>
         </div>
@@ -122,7 +125,7 @@ export const SlipTestRankCard = React.forwardRef<HTMLDivElement, SlipTestRankCar
       {/* Main Title */}
       <div style={{ textAlign: 'center', padding: '6px 32px 4px 32px', flexShrink: 0, background: '#ffffff' }}>
         <h2 style={{
-          fontSize: '28px', fontWeight: 800, color: '#0a1e3a', letterSpacing: '3px',
+          fontSize: '28px', fontWeight: 800, color: '#0a1e3a',
           textTransform: 'uppercase', fontFamily: "'Times New Roman', 'Georgia', serif",
           marginBottom: 0, borderBottom: '2px solid #d4a017', display: 'inline-block', paddingBottom: '4px'
         }}>
@@ -140,19 +143,19 @@ export const SlipTestRankCard = React.forwardRef<HTMLDivElement, SlipTestRankCar
           <tbody>
             <tr>
               <td style={{ padding: '8px 12px', textAlign: 'center', borderRight: '1px solid #e4ebf4', verticalAlign: 'middle' }}>
-                <span style={{ fontWeight: 400, color: '#4a7a9a', fontSize: '13px', letterSpacing: '0.5px', textTransform: 'uppercase', display: 'block' }}>CLASS</span>
+                <span style={{ fontWeight: 400, color: '#4a7a9a', fontSize: '13px', textTransform: 'uppercase', display: 'block' }}>CLASS</span>
                 <span style={{ fontWeight: 700, color: '#0a1e3a', fontSize: '17px', display: 'block', marginTop: '2px' }}>{className || '-'}</span>
               </td>
               <td style={{ padding: '8px 12px', textAlign: 'center', borderRight: '1px solid #e4ebf4', verticalAlign: 'middle' }}>
-                <span style={{ fontWeight: 400, color: '#4a7a9a', fontSize: '13px', letterSpacing: '0.5px', textTransform: 'uppercase', display: 'block' }}>SUBJECT</span>
+                <span style={{ fontWeight: 400, color: '#4a7a9a', fontSize: '13px', textTransform: 'uppercase', display: 'block' }}>SUBJECT</span>
                 <span style={{ fontWeight: 700, color: '#0a1e3a', fontSize: '17px', display: 'block', marginTop: '2px' }}>{subject || '-'}</span>
               </td>
               <td style={{ padding: '8px 12px', textAlign: 'center', borderRight: '1px solid #e4ebf4', verticalAlign: 'middle' }}>
-                <span style={{ fontWeight: 400, color: '#4a7a9a', fontSize: '13px', letterSpacing: '0.5px', textTransform: 'uppercase', display: 'block' }}>DATE</span>
+                <span style={{ fontWeight: 400, color: '#4a7a9a', fontSize: '13px', textTransform: 'uppercase', display: 'block' }}>DATE</span>
                 <span style={{ fontWeight: 700, color: '#0a1e3a', fontSize: '17px', display: 'block', marginTop: '2px' }}>{examDate ? new Date(examDate).toLocaleDateString('en-GB') : '-'}</span>
               </td>
               <td style={{ padding: '8px 12px', textAlign: 'center', verticalAlign: 'middle' }}>
-                <span style={{ fontWeight: 400, color: '#4a7a9a', fontSize: '13px', letterSpacing: '0.5px', textTransform: 'uppercase', display: 'block' }}>MAX MARKS</span>
+                <span style={{ fontWeight: 400, color: '#4a7a9a', fontSize: '13px', textTransform: 'uppercase', display: 'block' }}>MAX MARKS</span>
                 <span style={{ fontWeight: 800, color: '#c0392b', fontSize: '17px', display: 'block', marginTop: '2px' }}>{maxMarks}</span>
               </td>
             </tr>
