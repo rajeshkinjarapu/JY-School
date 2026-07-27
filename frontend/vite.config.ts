@@ -54,7 +54,7 @@ export default defineConfig({
   ],
   build: {
     outDir: 'dist',
-    minify: 'esbuild',
+    minify: 'oxc', // Vite 8 default — esbuild is no longer built-in
     rollupOptions: {
       output: {
         // Vite 8 (rolldown) requires manualChunks as a function, not an object
