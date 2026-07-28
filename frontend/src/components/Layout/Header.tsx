@@ -26,7 +26,7 @@ export const Header: React.FC<HeaderProps> = ({ onMenuClick, title }) => {
   };
 
   return (
-    <header className="print:hidden sticky top-0 z-30 flex items-center justify-between gap-4 px-5 py-3.5 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 bg-[length:200%_200%] animate-gradient-shift shadow-lg shadow-indigo-500/20">
+    <header className="print:hidden sticky top-0 z-30 flex items-center justify-between gap-4 px-5 py-3.5 shadow-lg shadow-black/30" style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e1b4b 60%, #0f172a 100%)' }}>
 
       {/* Left: Hamburger + Back + Page Title */}
       <div className="flex items-center gap-2 min-w-0">

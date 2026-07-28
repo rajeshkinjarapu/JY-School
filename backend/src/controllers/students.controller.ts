@@ -276,10 +276,26 @@ export const bulkImport = async (req: AuthRequest, res: Response, next: NextFunc
         const address = row.address || null;
         const bloodGroup = row.bloodgroup || null;
         const photoUrl = row.photourl || row.photo || null;
-        const fatherName = row.fathername || null;
-        const motherName = row.mothername || null;
-        const aadharNo = row.aadharno || row.aadhar || row.aadharnumber || null;
+        const fatherName = row.fathername || row['father name'] || row['Father Name'] || null;
+        const motherName = row.mothername || row['mother name'] || row['Mother Name'] || null;
+        const aadharNo = row.aadharno || row.aadhar || row.aadharnumber || row['aadhar number'] || null;
         const penNumber = row.pennumber || row.pen || null;
+        const dobRaw = row.dob || row['date of birth'] || row['Date of Birth'] || row['DOB'] || null;
+        let dob: Date | null = null;
+        if (dobRaw) {
+          try {
+            // Handle Excel serial dates (numbers) or string dates
+            if (typeof dobRaw === 'number') {
+              // Excel date serial
+              const excelEpoch = new Date(1899, 11, 30);
+              dob = new Date(excelEpoch.getTime() + dobRaw * 86400000);
+            } else {
+              dob = new Date(String(dobRaw));
+              if (isNaN(dob.getTime())) dob = null;
+            }
+          } catch { dob = null; }
+        }
+
 
         const rollNo = row.studentid || row.rollno || generateRollNo(currentStudentCount + 1);
         const email = rollNo; // UserID is always Student ID
@@ -292,11 +308,40 @@ export const bulkImport = async (req: AuthRequest, res: Response, next: NextFunc
           continue;
         }
 
-        const existing = await prisma.user.findUnique({ where: { email: String(email) } });
+        const existing = await prisma.user.findUnique({ where: { email: String(rollNo) } });
         if (existing) {
-          failed.push({ row, reason: 'Email/RollNo already exists' });
-          continue;
+          // UPDATE existing student instead of failing
+          const existingStudent = await prisma.student.findFirst({ where: { userId: existing.id } });
+          if (existingStudent) {
+            await prisma.user.update({
+              where: { id: existing.id },
+              data: {
+                name: name || undefined,
+                phone: phone ? String(phone) : undefined,
+              },
+            });
+            await prisma.student.update({
+              where: { id: existingStudent.id },
+              data: {
+                classId: classId ? String(classId) : undefined,
+                dob: dob || undefined,
+                gender: gender ? String(gender) : undefined,
+                address: address ? String(address) : undefined,
+                bloodGroup: bloodGroup ? String(bloodGroup) : undefined,
+                fatherName: fatherName ? String(fatherName) : undefined,
+                motherName: motherName ? String(motherName) : undefined,
+                aadharNo: aadharNo ? String(aadharNo) : undefined,
+                penNumber: penNumber ? String(penNumber) : undefined,
+              },
+            });
+            success++;
+            continue;
+          } else {
+            failed.push({ row, reason: 'User exists but student record missing' });
+            continue;
+          }
         }
+
 
         const hashedPassword = await bcrypt.hash(String(password), 10);
 
@@ -316,6 +361,7 @@ export const bulkImport = async (req: AuthRequest, res: Response, next: NextFunc
             userId: user.id,
             rollNo,
             classId: classId ? String(classId) : null,
+            dob: dob || null,
             gender: gender ? String(gender) : null,
             address: address ? String(address) : null,
             bloodGroup: bloodGroup ? String(bloodGroup) : null,
@@ -325,6 +371,7 @@ export const bulkImport = async (req: AuthRequest, res: Response, next: NextFunc
             penNumber: penNumber ? String(penNumber) : null,
           },
         });
+
         
         // Fee details creation
         const admissionFee = row['Admission fee'] || row['Admission Fee'] || null;

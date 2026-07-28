@@ -1,12 +1,20 @@
 import React, { useEffect, useState } from 'react';
 import api from '../../api/axios';
 import { LoadingSpinner } from '../../components/UI/LoadingSpinner';
-import { Badge } from '../../components/UI/Badge';
-import { Plus, Edit, Trash2, School, Upload, FileDown } from 'lucide-react';
-import { Avatar } from '../../components/UI/Avatar';
+import { Plus, Edit, Trash2, BookOpen, ChevronRight, School } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../hooks/useAuth';
-import { getPhotoUrl } from '../../utils/photo';
+
+const SUBJECT_COLORS = [
+  { bg: 'from-violet-500 to-purple-600', light: 'bg-violet-50', text: 'text-violet-700', border: 'border-violet-100', dot: 'bg-violet-500' },
+  { bg: 'from-blue-500 to-indigo-600', light: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-100', dot: 'bg-blue-500' },
+  { bg: 'from-emerald-500 to-teal-600', light: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-100', dot: 'bg-emerald-500' },
+  { bg: 'from-rose-500 to-pink-600', light: 'bg-rose-50', text: 'text-rose-700', border: 'border-rose-100', dot: 'bg-rose-500' },
+  { bg: 'from-amber-500 to-orange-500', light: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-100', dot: 'bg-amber-500' },
+  { bg: 'from-cyan-500 to-sky-600', light: 'bg-cyan-50', text: 'text-cyan-700', border: 'border-cyan-100', dot: 'bg-cyan-500' },
+  { bg: 'from-fuchsia-500 to-purple-600', light: 'bg-fuchsia-50', text: 'text-fuchsia-700', border: 'border-fuchsia-100', dot: 'bg-fuchsia-500' },
+  { bg: 'from-lime-500 to-green-600', light: 'bg-lime-50', text: 'text-lime-700', border: 'border-lime-100', dot: 'bg-lime-500' },
+];
 
 export const SubjectPage: React.FC = () => {
   const { user } = useAuth();
@@ -18,8 +26,7 @@ export const SubjectPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingSubject, setEditingSubject] = useState<any>(null);
-
-  const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const [expandedSubject, setExpandedSubject] = useState<string | null>(null);
 
   // Form states
   const [name, setName] = useState('');
@@ -48,6 +55,16 @@ export const SubjectPage: React.FC = () => {
     fetchData();
   }, []);
 
+  // Group subjects by name
+  const groupedSubjects = subjects.reduce((acc: Record<string, any[]>, sub: any) => {
+    const key = sub.name?.trim() || 'Unknown';
+    if (!acc[key]) acc[key] = [];
+    acc[key].push(sub);
+    return acc;
+  }, {});
+
+  const uniqueSubjectNames = Object.keys(groupedSubjects).sort();
+
   const handleEditClick = (sub: any) => {
     setEditingSubject(sub);
     setName(sub.name);
@@ -58,7 +75,7 @@ export const SubjectPage: React.FC = () => {
   };
 
   const handleDelete = async (id: string) => {
-    if (!window.confirm('Are you sure you want to delete this subject? This action cannot be undone.')) return;
+    if (!window.confirm('Are you sure you want to delete this subject entry?')) return;
     try {
       await api.delete(`/api/subjects/${id}`);
       toast.success('Subject deleted successfully!');
@@ -72,10 +89,7 @@ export const SubjectPage: React.FC = () => {
     e.preventDefault();
     try {
       if (editingSubject) {
-        // 1. Update subject details
         await api.put(`/api/subjects/${editingSubject.id}`, { name, code });
-
-        // 2. Assign/update teacher mapping
         if (teacherId) {
           await api.post('/api/subjects/assign-teacher', {
             classId,
@@ -85,11 +99,8 @@ export const SubjectPage: React.FC = () => {
         }
         toast.success('Subject updated successfully!');
       } else {
-        // 1. Create subject
         const subRes: any = await api.post('/api/subjects', { name, code, classId });
         const subject = subRes.data;
-
-        // 2. Assign teacher if selected
         if (teacherId) {
           await api.post('/api/subjects/assign-teacher', {
             classId,
@@ -112,17 +123,14 @@ export const SubjectPage: React.FC = () => {
     }
   };
 
-
-
   return (
     <div className="space-y-6">
       <div className="flex justify-end px-4 md:px-0 md:justify-between items-center md:bg-white md:dark:bg-gray-900 md:p-4 md:rounded-2xl md:border md:border-gray-150 md:dark:border-gray-800">
         <div className="hidden md:block">
           <h3 className="font-bold text-gray-900 dark:text-white">Curriculum & Subjects</h3>
-          <p className="text-xs text-gray-400">Map course subjects, codes, classes, and teachers.</p>
+          <p className="text-xs text-gray-400">Map course subjects, classes, and teachers.</p>
         </div>
         <div className="flex gap-3 w-full md:w-auto">
-
           <button
             onClick={() => {
               setEditingSubject(null);
@@ -142,124 +150,107 @@ export const SubjectPage: React.FC = () => {
 
       {loading ? (
         <LoadingSpinner size="lg" className="py-12" />
+      ) : uniqueSubjectNames.length === 0 ? (
+        <div className="py-16 text-center text-gray-400 font-semibold">
+          No subjects configured yet.
+        </div>
       ) : (
-        <div className="md:bg-white/40 md:dark:bg-white/5 md:border md:border-white/60 md:dark:border-white/10 md:rounded-3xl md:shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden md:backdrop-blur-2xl">
-          
-          {/* Mobile View */}
-          <div className="md:hidden flex flex-col gap-4 p-4 bg-transparent">
-            {subjects.map((sub, idx) => (
-              <div key={sub.id} className="bg-gradient-to-br from-white to-indigo-50/30 p-4 rounded-3xl shadow-sm hover:shadow-glow-primary hover:-translate-y-1 transition-all duration-300 border border-indigo-50 flex items-center gap-4 relative overflow-visible mt-2 backdrop-blur-md animate-fade-in-up" style={{ animationDelay: `${idx * 40}ms` }}>
-                 <div className="absolute -top-2.5 -left-2.5 w-7 h-7 bg-indigo-500 rounded-full flex items-center justify-center text-white font-black text-[10px] shadow-lg border-2 border-white z-10">
-                   {idx + 1}
-                 </div>
-                 <div className="shrink-0 pl-2">
-                   <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-black text-xl shadow-md border-2 border-white">
-                     {sub.name.substring(0, 2).toUpperCase()}
-                   </div>
-                 </div>
-                 <div className="flex-1 min-w-0">
-                   <h4 className="font-extrabold text-[15px] text-indigo-950 truncate mb-1.5">{sub.name}</h4>
-                   <div className="flex flex-wrap gap-1.5">
-                     <span className="font-mono text-[10px] font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-100">{sub.code}</span>
-                     <span className="text-[10px] font-bold text-teal-700 bg-teal-50 px-2 py-0.5 rounded-md border border-teal-100">{sub.class ? `${sub.class.name}-${sub.class.section}` : 'N/A'}</span>
-                   </div>
-                   <div className="mt-1.5 text-[10px] font-semibold text-gray-500">
-                      Teacher: {sub.classSubjectTeachers?.[0]?.teacher ? sub.classSubjectTeachers[0].teacher.user.name : 'Unassigned'}
-                   </div>
-                 </div>
-                 <div className="shrink-0 flex flex-col gap-2">
-                   <button onClick={() => handleEditClick(sub)} className="flex items-center justify-center w-8 h-8 bg-gray-50 hover:bg-indigo-50 text-gray-400 hover:text-indigo-600 rounded-lg transition-all shadow-sm border border-gray-200 cursor-pointer">
-                     <Edit className="w-3.5 h-3.5" />
-                   </button>
-                   {isSuperAdmin && (
-                      <button onClick={() => handleDelete(sub.id)} className="flex items-center justify-center w-8 h-8 bg-red-50 hover:bg-red-100 text-red-400 hover:text-red-600 rounded-lg transition-all shadow-sm border border-red-200 cursor-pointer">
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                   )}
-                 </div>
-              </div>
-            ))}
-            {subjects.length === 0 && (
-              <div className="py-12 text-center text-gray-400 font-semibold">
-                No subjects found.
-              </div>
-            )}
-          </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 px-4 md:px-0">
+          {uniqueSubjectNames.map((subjectName, idx) => {
+            const entries = groupedSubjects[subjectName];
+            const colorIdx = idx % SUBJECT_COLORS.length;
+            const color = SUBJECT_COLORS[colorIdx];
+            const isExpanded = expandedSubject === subjectName;
+            const abbr = subjectName.substring(0, 2).toUpperCase();
 
-          {/* Desktop Table View */}
-          <div className="hidden md:block overflow-x-auto w-full max-w-full"><table className="w-full text-sm text-left border-collapse">
-            <thead className="bg-indigo-50/50 text-indigo-900 font-semibold border-b border-indigo-100">
-              <tr>
-                <th className="px-6 py-4">Subject Name</th>
-                <th className="px-6 py-4">Code</th>
-                <th className="px-6 py-4">Class</th>
-                <th className="px-6 py-4">Assigned Teacher</th>
-                <th className="px-6 py-4 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100 dark:divide-gray-800/50">
-              {subjects.map((sub, idx) => (
-                <tr key={sub.id} className="hover:bg-white bg-transparent transition-all duration-300 group border-b border-indigo-50/50 hover:shadow-glow-primary animate-fade-in-up" style={{ animationDelay: `${idx * 30}ms` }}>
-                  <td className="px-6 py-4 font-semibold text-gray-950 dark:text-white">{sub.name}</td>
-                  <td className="px-6 py-4 font-mono text-xs text-gray-500">{sub.code}</td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-950/40 text-indigo-500 border border-indigo-100 dark:border-indigo-900 flex items-center justify-center shadow-sm">
-                        <School className="w-4.5 h-4.5" />
-                      </div>
-                      <span className="font-semibold text-gray-900 dark:text-white">
-                        {sub.class ? `${sub.class.name}-${sub.class.section}` : 'N/A'}
-                      </span>
+            return (
+              <div
+                key={subjectName}
+                className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-3xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden group animate-fade-in-up"
+                style={{ animationDelay: `${idx * 40}ms` }}
+              >
+                {/* Card Header */}
+                <div className={`bg-gradient-to-br ${color.bg} p-5 relative overflow-hidden`}>
+                  {/* Decorative circles */}
+                  <div className="absolute -top-4 -right-4 w-20 h-20 rounded-full bg-white/10" />
+                  <div className="absolute -bottom-6 -left-3 w-16 h-16 rounded-full bg-white/10" />
+                  <div className="flex items-center justify-between relative z-10">
+                    <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center text-white font-black text-xl shadow-inner border border-white/30">
+                      {abbr}
                     </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    {sub.classSubjectTeachers?.[0]?.teacher ? (
-                      <div className="flex items-center gap-2.5">
-                        <Avatar
-                          name={sub.classSubjectTeachers[0].teacher.user.name}
-                          src={getPhotoUrl(sub.classSubjectTeachers[0].teacher.user.photoUrl)}
-                          size="sm"
-                          className="w-6 h-6 border-2 border-white ring-1 ring-slate-100"
-                        />
-                        <span className="font-semibold text-gray-900 dark:text-white">
-                          {sub.classSubjectTeachers[0].teacher.user.name}
-                        </span>
+                    <span className="text-white/80 text-xs font-bold bg-white/20 px-2.5 py-1 rounded-full">
+                      {entries.length} {entries.length === 1 ? 'Class' : 'Classes'}
+                    </span>
+                  </div>
+                  <div className="mt-3 relative z-10">
+                    <h3 className="text-white font-black text-lg leading-tight drop-shadow-sm">{subjectName}</h3>
+                  </div>
+                </div>
+
+                {/* Class List */}
+                <div className="p-4">
+                  <div className={`space-y-1.5 overflow-hidden transition-all duration-300 ${isExpanded ? '' : 'max-h-[100px]'}`}>
+                    {entries.map((sub: any, i: number) => (
+                      <div key={sub.id} className="flex items-center justify-between gap-2 group/item">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <School className={`w-3.5 h-3.5 shrink-0 ${color.text}`} />
+                          <span className="text-xs font-bold text-gray-700 dark:text-gray-300 truncate">
+                            {sub.class ? `${sub.class.name}-${sub.class.section}` : 'N/A'}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover/item:opacity-100 transition-opacity">
+                          <button
+                            onClick={() => handleEditClick(sub)}
+                            className="p-1 rounded-lg hover:bg-indigo-50 text-gray-400 hover:text-indigo-600 transition-colors cursor-pointer"
+                            title="Edit"
+                          >
+                            <Edit className="w-3 h-3" />
+                          </button>
+                          {isSuperAdmin && (
+                            <button
+                              onClick={() => handleDelete(sub.id)}
+                              className="p-1 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors cursor-pointer"
+                              title="Delete"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </button>
+                          )}
+                        </div>
                       </div>
-                    ) : (
-                      <span className="text-gray-450 italic text-xs">Unassigned</span>
-                    )}
-                  </td>
-                  <td className="px-6 py-4 text-right">
-                    <div className="flex justify-end gap-2">
-                      <button
-                        onClick={() => handleEditClick(sub)}
-                        className="p-2 rounded-lg text-gray-400 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-950/20 transition-all cursor-pointer"
-                        title="Edit Subject"
-                      >
-                        <Edit className="w-4.5 h-4.5" />
-                      </button>
-                      {isSuperAdmin && (
-                        <button
-                          onClick={() => handleDelete(sub.id)}
-                          className="p-2 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 transition-all cursor-pointer"
-                          title="Delete Subject"
-                        >
-                          <Trash2 className="w-4.5 h-4.5" />
-                        </button>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-              {subjects.length === 0 && (
-                <tr>
-                  <td colSpan={5} className="py-8 text-center text-gray-400">
-                    No subjects configured yet.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table></div>
+                    ))}
+                  </div>
+
+                  {entries.length > 3 && (
+                    <button
+                      onClick={() => setExpandedSubject(isExpanded ? null : subjectName)}
+                      className={`mt-2 flex items-center gap-1 text-xs font-bold ${color.text} hover:underline cursor-pointer`}
+                    >
+                      {isExpanded ? 'Show less' : `+${entries.length - 3} more`}
+                      <ChevronRight className={`w-3 h-3 transition-transform ${isExpanded ? 'rotate-90' : ''}`} />
+                    </button>
+                  )}
+                </div>
+
+                {/* Add Class to Subject */}
+                <div className={`px-4 pb-4`}>
+                  <button
+                    onClick={() => {
+                      setEditingSubject(null);
+                      setName(subjectName);
+                      setCode(entries[0]?.code || '');
+                      setClassId('');
+                      setTeacherId('');
+                      setShowModal(true);
+                    }}
+                    className={`w-full py-1.5 text-xs font-bold ${color.light} ${color.text} ${color.border} border rounded-xl hover:opacity-80 transition-opacity flex items-center justify-center gap-1.5 cursor-pointer`}
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    Add to another class
+                  </button>
+                </div>
+              </div>
+            );
+          })}
         </div>
       )}
 
@@ -280,7 +271,7 @@ export const SubjectPage: React.FC = () => {
                 <input
                   type="text"
                   required
-                  placeholder="e.g. Computer Science"
+                  placeholder="e.g. Mathematics"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   className="input"
@@ -288,11 +279,10 @@ export const SubjectPage: React.FC = () => {
               </div>
 
               <div>
-                <label className="label">Subject Code</label>
+                <label className="label">Subject Code (optional)</label>
                 <input
                   type="text"
-                  required
-                  placeholder="e.g. CS10"
+                  placeholder="e.g. MATH"
                   value={code}
                   onChange={(e) => setCode(e.target.value)}
                   className="input"
@@ -354,4 +344,3 @@ export const SubjectPage: React.FC = () => {
 };
 
 export default SubjectPage;
-

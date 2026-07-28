@@ -18,7 +18,7 @@ export const FinancePage: React.FC = () => {
   const isAdmin = user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN' || user?.role === 'ACCOUNTANT';
 
   const [searchParams, setSearchParams] = useSearchParams();
-  const activeTab = searchParams.get('tab') || 'payment-method';
+  const activeTab = searchParams.get('tab') || 'home';
 
   const [loading, setLoading] = useState(true);
 
@@ -293,26 +293,76 @@ export const FinancePage: React.FC = () => {
     return matchesSearch && matchesStatus;
   });
 
+  const FINANCE_MENU = [
+    { key: 'payment-method', label: 'Payment Method', icon: CreditCard, gradient: 'from-indigo-500 to-blue-600', desc: 'Cash, UPI, Bank transfers' },
+    { key: 'fee-group', label: 'Fee Group', icon: Layers, gradient: 'from-emerald-500 to-teal-600', desc: 'Academic, Transport, Hostel' },
+    { key: 'fee-head', label: 'Fee Head', icon: DollarSign, gradient: 'from-amber-500 to-orange-500', desc: 'Tuition, Admission, Books' },
+    { key: 'fee-concession', label: 'Fee Concession', icon: Award, gradient: 'from-rose-500 to-pink-600', desc: 'Sibling waiver, Merit scholarship' },
+    { key: 'fee-structure', label: 'Fee Structure', icon: Briefcase, gradient: 'from-violet-500 to-purple-600', desc: 'Class-wise fee configuration' },
+    { key: 'student-fee-details', label: 'Student Fee Details', icon: Users, gradient: 'from-cyan-500 to-sky-600', desc: 'Student balances & dues' },
+    { key: 'transaction', label: 'Transaction', icon: Receipt, gradient: 'from-fuchsia-500 to-purple-600', desc: 'All payment transactions' },
+    { key: 'receipt', label: 'Receipt', icon: FileText, gradient: 'from-lime-500 to-green-600', desc: 'Fee receipts & invoices' },
+    { key: 'report', label: 'Report', icon: TrendingUp, gradient: 'from-blue-500 to-indigo-600', desc: 'Financial analytics & reports' },
+  ];
+
   return (
     <div className="flex flex-col lg:flex-row gap-6">
-      {/* ══ LEFT SIDEBAR TABS (Matching sidebar design) ══ */}
+      {/* ══ HOME GRID VIEW ══ */}
+      {activeTab === 'home' && (
+        <div className="w-full animate-fade-in">
+          <div className="mb-6">
+            <h2 className="text-2xl font-black text-gray-900 dark:text-white">Finance Dashboard</h2>
+            <p className="text-sm text-gray-400 mt-1">Manage fees, payments, and financial reports</p>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 gap-4 sm:gap-5">
+            {FINANCE_MENU.map((item, idx) => {
+              const Icon = item.icon;
+              return (
+                <button
+                  key={item.key}
+                  onClick={() => setTab(item.key)}
+                  className="group relative overflow-hidden rounded-3xl p-5 text-left shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 cursor-pointer border-0"
+                  style={{ animationDelay: `${idx * 50}ms` }}
+                >
+                  <div className={`absolute inset-0 bg-gradient-to-br ${item.gradient} opacity-100`} />
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300" />
+                  {/* Decorative circles */}
+                  <div className="absolute -top-4 -right-4 w-20 h-20 rounded-full bg-white/10" />
+                  <div className="absolute -bottom-6 -left-3 w-16 h-16 rounded-full bg-white/10" />
+                  <div className="relative z-10">
+                    <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center mb-4 border border-white/30 shadow-inner">
+                      <Icon className="w-6 h-6 text-white" />
+                    </div>
+                    <h3 className="text-white font-black text-base leading-tight mb-1">{item.label}</h3>
+                    <p className="text-white/70 text-xs font-medium">{item.desc}</p>
+                    <div className="mt-3 flex items-center gap-1 text-white/80 text-xs font-bold">
+                      Open <ArrowRight className="w-3.5 h-3.5" />
+                    </div>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* ══ SIDEBAR + CONTENT (when not on home) ══ */}
+      {activeTab !== 'home' && (
+        <>
+      {/* LEFT SIDEBAR TABS */}
       <div className={`print:hidden w-full lg:w-64 shrink-0 px-4 md:px-0 md:bg-white md:dark:bg-gray-900 md:border md:border-gray-150 md:dark:border-gray-800 md:rounded-3xl md:p-4 flex flex-col gap-1.5 md:shadow-sm ${activeTab === 'transaction' ? 'hidden' : ''}`}>
         <div className="px-3 py-2 text-xs font-black uppercase text-gray-400 tracking-wider flex items-center gap-1.5 border-b border-gray-100 dark:border-gray-800 mb-2">
           <Wallet className="w-4 h-4 text-indigo-500" />
           Finance Submenu
         </div>
-
-        {[
-          { key: 'payment-method', label: 'Payment Method', icon: CreditCard },
-          { key: 'fee-group', label: 'Fee Group', icon: Layers },
-          { key: 'fee-head', label: 'Fee Head', icon: DollarSign },
-          { key: 'fee-concession', label: 'Fee Concession', icon: Award },
-          { key: 'fee-structure', label: 'Fee Structure', icon: Briefcase },
-          { key: 'student-fee-details', label: 'Student Fee Details', icon: Users },
-          { key: 'transaction', label: 'Transaction', icon: Receipt },
-          { key: 'receipt', label: 'Receipt', icon: FileText },
-          { key: 'report', label: 'Report', icon: TrendingUp },
-        ].map(tab => {
+        <button
+          onClick={() => setTab('home')}
+          className="flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold transition-all text-left cursor-pointer text-gray-500 hover:bg-gray-50 hover:text-gray-900"
+        >
+          <ArrowRight className="w-4.5 h-4.5 rotate-180" />
+          <span>← Back to Home</span>
+        </button>
+        {FINANCE_MENU.map(tab => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.key;
           return (
@@ -1162,12 +1212,15 @@ export const FinancePage: React.FC = () => {
                   </div>
                 </div>
               </div>
-            )}
           </>
         )}
       </div>
+        </>
+      )}
     </div>
   );
+
+
 };
 export default FinancePage;
 

@@ -116,13 +116,27 @@ export const AdmitCardTemplate: React.FC<AdmitCardTemplateProps> = ({ student, e
                   <tr className="border-b border-indigo-100 hover:bg-indigo-50/50">
                     <td className="p-3 px-5 font-extrabold text-indigo-900 uppercase text-sm tracking-wider border-r border-indigo-100 bg-indigo-50/40">Date of Birth</td>
                     <td className="p-3 px-5 font-black text-indigo-950 text-lg">
-                      12/05/2010
+                      {student?.dob
+                        ? (() => { try { return format(new Date(student.dob), 'dd/MM/yyyy'); } catch { return String(student.dob); } })()
+                        : '-'}
+                    </td>
+                  </tr>
+                  <tr className="border-b border-indigo-100 hover:bg-indigo-50/50">
+                    <td className="p-3 px-5 font-extrabold text-indigo-900 uppercase text-sm tracking-wider border-r border-indigo-100 bg-indigo-50/40">Father Name</td>
+                    <td className="p-3 px-5 font-black text-indigo-950 text-lg">
+                      {student?.fatherName || '-'}
+                    </td>
+                  </tr>
+                  <tr className="border-b border-indigo-100 hover:bg-indigo-50/50">
+                    <td className="p-3 px-5 font-extrabold text-indigo-900 uppercase text-sm tracking-wider border-r border-indigo-100 bg-indigo-50/40">Mother Name</td>
+                    <td className="p-3 px-5 font-black text-indigo-950 text-lg">
+                      {student?.motherName || '-'}
                     </td>
                   </tr>
                   <tr className="hover:bg-indigo-50/50">
                     <td className="p-3 px-5 font-extrabold text-indigo-900 uppercase text-sm tracking-wider border-r border-indigo-100 bg-indigo-50/40">Exam Center</td>
                     <td className="p-3 px-5 font-black text-indigo-950 text-lg">
-                      {settings.examCenterOverride || 'JY School Main Campus, Hall A'}
+                      {settings.examCenterOverride || 'JY School , SVL Paradise Campus'}
                     </td>
                   </tr>
                 </tbody>

@@ -88,6 +88,7 @@ const TeacherAttendancePage = lazy(routeImports['/teacher-attendance']);
 const SalaryPage = lazy(routeImports['/hr/salary']);
 const OfficeToolsDashboard = lazy(routeImports['/office-tools']);
 const SlipTestManualPage = lazy(() => import('../pages/office-tools/SlipTestManualPage'));
+const FeeReminderPage = lazy(() => import('../pages/fees/FeeReminderPage'));
 const QuestionBankDashboard = lazy(routeImports['/question-bank']);
 const QuestionPaperGeneratorPage = lazy(() => import('../pages/question-bank/QuestionPaperGeneratorPage'));
 const SavedPapersPage = lazy(() => import('../pages/question-bank/SavedPapersPage'));
@@ -503,6 +504,14 @@ export const router = createBrowserRouter([
         element: withSuspense(
           <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN', 'TEACHER']}>
             <SalaryPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'fee-reminder',
+        element: withSuspense(
+          <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN', 'TEACHER']}>
+            <FeeReminderPage />
           </ProtectedRoute>
         ),
       },
