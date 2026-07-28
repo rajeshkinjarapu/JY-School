@@ -1212,6 +1212,7 @@ export const FinancePage: React.FC = () => {
                   </div>
                 </div>
               </div>
+            )}
           </>
         )}
       </div>
