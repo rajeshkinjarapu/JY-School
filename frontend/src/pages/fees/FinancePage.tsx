@@ -350,7 +350,7 @@ export const FinancePage: React.FC = () => {
       {activeTab !== 'home' && (
         <>
       {/* LEFT SIDEBAR TABS */}
-      <div className={`print:hidden w-full lg:w-64 shrink-0 px-4 md:px-0 md:bg-white md:dark:bg-gray-900 md:border md:border-gray-150 md:dark:border-gray-800 md:rounded-3xl md:p-4 flex flex-col gap-1.5 md:shadow-sm ${activeTab === 'transaction' ? 'hidden' : ''}`}>
+      <div className="hidden">
         <div className="px-3 py-2 text-xs font-black uppercase text-gray-400 tracking-wider flex items-center gap-1.5 border-b border-gray-100 dark:border-gray-800 mb-2">
           <Wallet className="w-4 h-4 text-indigo-500" />
           Finance Submenu
