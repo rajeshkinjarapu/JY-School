@@ -125,27 +125,28 @@ export const SubjectPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-end px-4 md:px-0 md:justify-between items-center md:bg-white md:dark:bg-gray-900 md:p-4 md:rounded-2xl md:border md:border-gray-150 md:dark:border-gray-800">
-        <div className="hidden md:block">
-          <h3 className="font-bold text-gray-900 dark:text-white">Curriculum & Subjects</h3>
-          <p className="text-xs text-gray-400">Map course subjects, classes, and teachers.</p>
-        </div>
-        <div className="flex gap-3 w-full md:w-auto">
-          <button
-            onClick={() => {
-              setEditingSubject(null);
-              setName('');
-              setCode('');
-              setClassId('');
-              setTeacherId('');
-              setShowModal(true);
-            }}
-            className="btn-primary flex items-center justify-center gap-2 w-full md:w-auto"
-          >
-            <Plus className="w-4.5 h-4.5" />
-            <span>New Subject</span>
-          </button>
-        </div>
+      <div className="flex justify-end px-4 md:px-0">
+        <button
+          type="button"
+          onClick={() => {
+            setEditingSubject(null);
+            setName('');
+            setCode('');
+            setClassId('');
+            setTeacherId('');
+            setShowModal(true);
+          }}
+          className="group relative flex w-full sm:w-auto items-center justify-center gap-3 overflow-hidden rounded-2xl bg-gradient-to-r from-indigo-600 via-violet-600 to-purple-600 px-5 py-3.5 text-sm font-bold text-white shadow-lg shadow-violet-500/25 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-violet-500/35 active:translate-y-0 active:scale-[0.98] cursor-pointer"
+        >
+          <span
+            aria-hidden
+            className="pointer-events-none absolute inset-0 bg-gradient-to-r from-transparent via-white/25 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-out"
+          />
+          <span className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/30 bg-white/20 backdrop-blur-sm">
+            <Plus className="h-4.5 w-4.5" strokeWidth={2.5} />
+          </span>
+          <span className="relative tracking-wide">New Subject</span>
+        </button>
       </div>
 
       {loading ? (
