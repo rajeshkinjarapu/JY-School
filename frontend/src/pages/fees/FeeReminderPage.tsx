@@ -6,7 +6,6 @@ import { Search, MessageCircle, Download, Users, IndianRupee, AlertCircle, Chevr
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import toast from 'react-hot-toast';
-import { useDebounce } from '../../hooks/useDebounce'; // Assuming useDebounce exists, or I will create a simple one if it doesn't. Wait, let me just not use debounce to avoid missing hook error, I'll use a simple state or just trigger search on enter. Let's use simple state and standard input.
 
 export const FeeReminderPage: React.FC = () => {
   const [selectedClassId, setSelectedClassId] = useState<string>('ALL');
