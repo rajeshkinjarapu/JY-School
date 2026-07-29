@@ -13,21 +13,6 @@ export const FeeReceiptPrint: React.FC<FeeReceiptPrintProps> = ({ payment, schoo
   const formatReceiptNumber = (rNo: string) => {
     if (!rNo) return '';
     if (rNo.includes('-')) {
-import React from 'react';
-import { format } from 'date-fns';
-import { Scissors } from 'lucide-react';
-
-interface FeeReceiptPrintProps {
-  payment: any;
-  schoolName?: string;
-}
-
-export const FeeReceiptPrint: React.FC<FeeReceiptPrintProps> = ({ payment, schoolName = 'JY SCHOOL' }) => {
-  if (!payment) return null;
-
-  const formatReceiptNumber = (rNo: string) => {
-    if (!rNo) return '';
-    if (rNo.includes('-')) {
       const clean = rNo.replace(/[^a-zA-Z0-9]/g, '');
       return 'JY' + clean.substring(0, 8).toUpperCase();
     }

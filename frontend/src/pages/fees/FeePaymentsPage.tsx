@@ -17,7 +17,7 @@ export const FeePaymentsPage: React.FC = () => {
   const [classes, setClasses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchParams] = useSearchParams();
-  const [showModal, setShowModal] = useState(searchParams.get('action') === 'collect');
+  const [showModal, setShowModal] = useState(false);
   const [printPayment, setPrintPayment] = useState<any>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -532,13 +532,13 @@ export const FeePaymentsPage: React.FC = () => {
                             >
                               <Trash2 className="w-4 h-4" /> Delete
                             </button>
-                          )}
                         </div>
                       </td>
                     </tr>
                   )}
                   </React.Fragment>
-                ))}
+                  );
+                })}
               </tbody>
             </table></div>
           </div>
@@ -555,11 +555,11 @@ export const FeePaymentsPage: React.FC = () => {
           <div className={`relative w-full h-full sm:h-auto ${
             user?.role === 'TEACHER'
               ? 'sm:rounded-[2rem] shadow-2xl'
-              : 'sm:max-w-3xl sm:rounded-[2rem] shadow-[0_32px_80px_rgba(80,0,200,0.22)]'
-          } bg-white overflow-hidden flex flex-col sm:flex-row z-10 animate-scale-in max-h-[100dvh] sm:max-h-[85vh]`}>
+              : 'sm:max-w-4xl sm:rounded-[24px] shadow-[0_20px_60px_rgba(30,30,80,0.15)]'
+          } bg-white overflow-hidden flex flex-col sm:flex-row z-10 animate-scale-in max-h-[100dvh] sm:max-h-[90vh]`}>
 
             {/* LEFT sidebar – gradient brand panel (hidden on mobile) */}
-            <div className="hidden sm:flex flex-col justify-between w-64 flex-shrink-0 bg-gradient-to-b from-purple-600 via-indigo-600 to-pink-600 p-7 text-white">
+            <div className="hidden sm:flex flex-col justify-between w-80 flex-shrink-0 bg-gradient-to-b from-indigo-600 via-purple-600 to-pink-500 p-8 text-white">
               <div>
                 <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center mb-5 shadow-lg">
                   <Plus className="w-6 h-6 text-white" />
