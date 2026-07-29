@@ -295,7 +295,7 @@ export const FinancePage: React.FC = () => {
 
   return (
     <div className="flex flex-col lg:flex-row gap-6">
-      {/* ══ LEFT SIDEBAR TABS (Matching sidebar design) ══ */}
+      {/* ══ LEFT SIDEBAR TABS ══ */}
       <div className={`print:hidden w-full lg:w-64 shrink-0 px-4 md:px-0 md:bg-white md:dark:bg-gray-900 md:border md:border-gray-150 md:dark:border-gray-800 md:rounded-3xl md:p-4 flex flex-col gap-1.5 md:shadow-sm ${activeTab === 'transaction' ? 'hidden' : ''}`}>
         <div className="px-3 py-2 text-xs font-black uppercase text-gray-400 tracking-wider flex items-center gap-1.5 border-b border-gray-100 dark:border-gray-800 mb-2">
           <Wallet className="w-4 h-4 text-indigo-500" />
@@ -303,15 +303,15 @@ export const FinancePage: React.FC = () => {
         </div>
 
         {[
-          { key: 'payment-method', label: 'Payment Method', icon: CreditCard },
-          { key: 'fee-group', label: 'Fee Group', icon: Layers },
-          { key: 'fee-head', label: 'Fee Head', icon: DollarSign },
-          { key: 'fee-concession', label: 'Fee Concession', icon: Award },
-          { key: 'fee-structure', label: 'Fee Structure', icon: Briefcase },
-          { key: 'student-fee-details', label: 'Student Fee Details', icon: Users },
-          { key: 'transaction', label: 'Transaction', icon: Receipt },
-          { key: 'receipt', label: 'Receipt', icon: FileText },
-          { key: 'report', label: 'Report', icon: TrendingUp },
+          { key: 'payment-method', label: 'Payment Method', icon: CreditCard, color: 'from-violet-500 to-purple-600' },
+          { key: 'fee-group', label: 'Fee Group', icon: Layers, color: 'from-blue-500 to-cyan-600' },
+          { key: 'fee-head', label: 'Fee Head', icon: DollarSign, color: 'from-emerald-500 to-teal-600' },
+          { key: 'fee-concession', label: 'Fee Concession', icon: Award, color: 'from-orange-500 to-amber-600' },
+          { key: 'fee-structure', label: 'Fee Structure', icon: Briefcase, color: 'from-rose-500 to-pink-600' },
+          { key: 'student-fee-details', label: 'Student Fee Details', icon: Users, color: 'from-indigo-500 to-blue-600' },
+          { key: 'transaction', label: 'Transaction', icon: Receipt, color: 'from-teal-500 to-green-600' },
+          { key: 'receipt', label: 'Receipt', icon: FileText, color: 'from-fuchsia-500 to-purple-600' },
+          { key: 'report', label: 'Report', icon: TrendingUp, color: 'from-sky-500 to-indigo-600' },
         ].map(tab => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.key;
@@ -321,7 +321,7 @@ export const FinancePage: React.FC = () => {
               onClick={() => setTab(tab.key)}
               className={`flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold transition-all text-left cursor-pointer ${
                 isActive
-                  ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/25 scale-[1.01]'
+                  ? `bg-gradient-to-r ${tab.color} text-white shadow-md scale-[1.01]`
                   : 'text-gray-500 dark:text-gray-450 hover:bg-gray-50 dark:hover:bg-gray-800/40 hover:text-gray-900 dark:hover:text-white'
               }`}
             >
@@ -334,7 +334,7 @@ export const FinancePage: React.FC = () => {
       </div>
 
       {/* ══ RIGHT CONTENT PANEL ══ */}
-      <div className="flex-1 bg-white dark:bg-gray-900 md:border border-gray-150 dark:border-gray-800 md:rounded-3xl p-0 md:p-8 md:shadow-sm">
+      <div className="flex-1 p-0">
         {loading ? (
           <LoadingSpinner size="lg" className="py-24" />
         ) : (
@@ -351,40 +351,57 @@ export const FinancePage: React.FC = () => {
 
             {activeTab === 'payment-method' && (
               <div className="space-y-6 animate-fade-in">
-                <div className="flex items-center justify-between pb-4 border-b border-gray-100 dark:border-gray-800">
-                  <div>
-                    <h3 className="text-lg font-black text-gray-900 dark:text-white">Payment Methods</h3>
-                    <p className="text-xs text-gray-400">Configure modes of payments available for school fees.</p>
+                {/* Header Banner */}
+                <div className="relative overflow-hidden bg-gradient-to-r from-violet-600 via-purple-600 to-indigo-700 rounded-2xl p-6 text-white shadow-lg">
+                  <div className="absolute inset-0 opacity-10" style={{backgroundImage: 'radial-gradient(circle at 80% 50%, white 1px, transparent 1px)', backgroundSize: '20px 20px'}} />
+                  <div className="relative flex items-center gap-4">
+                    <div className="p-3 bg-white/20 rounded-2xl backdrop-blur-sm">
+                      <CreditCard className="w-7 h-7 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-black">Payment Methods</h3>
+                      <p className="text-sm text-purple-200 mt-0.5">Configure modes of payments available for school fees.</p>
+                    </div>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {paymentMethods.map(m => (
-                    <div key={m.id} className="p-5 bg-gray-50 dark:bg-gray-800/40 border border-gray-150 dark:border-gray-800 rounded-2xl flex items-center justify-between">
-                      <div className="space-y-1">
-                        <span className="font-bold text-sm text-gray-900 dark:text-white">{m.name}</span>
-                        <p className="text-xs text-gray-400">{m.notes}</p>
+                  {paymentMethods.map((m, i) => {
+                    const colors = [
+                      { bg: 'from-violet-500 to-purple-600', light: 'bg-violet-50 dark:bg-violet-950/20', text: 'text-violet-700 dark:text-violet-300', border: 'border-violet-100 dark:border-violet-800' },
+                      { bg: 'from-emerald-500 to-teal-600', light: 'bg-emerald-50 dark:bg-emerald-950/20', text: 'text-emerald-700 dark:text-emerald-300', border: 'border-emerald-100 dark:border-emerald-800' },
+                      { bg: 'from-blue-500 to-cyan-600', light: 'bg-blue-50 dark:bg-blue-950/20', text: 'text-blue-700 dark:text-blue-300', border: 'border-blue-100 dark:border-blue-800' },
+                      { bg: 'from-orange-500 to-amber-600', light: 'bg-orange-50 dark:bg-orange-950/20', text: 'text-orange-700 dark:text-orange-300', border: 'border-orange-100 dark:border-orange-800' },
+                    ];
+                    const c = colors[i % colors.length];
+                    return (
+                      <div key={m.id} className={`relative overflow-hidden p-5 bg-white dark:bg-gray-900 border ${c.border} rounded-2xl flex items-center justify-between shadow-sm hover:shadow-md transition-all group`}>
+                        <div className={`absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b ${c.bg} rounded-l-2xl`} />
+                        <div className="pl-3 space-y-1">
+                          <span className="font-black text-sm text-gray-900 dark:text-white">{m.name}</span>
+                          <p className="text-xs text-gray-400">{m.notes}</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${m.isActive ? `${c.light} ${c.text}` : 'bg-red-50 text-red-600 dark:bg-red-950/20'}`}>
+                            {m.isActive ? '● Active' : '○ Disabled'}
+                          </span>
+                          {isAdmin && (
+                            <button
+                              onClick={() => {
+                                const updated = paymentMethods.map(item => item.id === m.id ? { ...item, isActive: !item.isActive } : item);
+                                setPaymentMethods(updated);
+                                saveMock('fin_payment_methods', updated);
+                                toast.success('Status updated!');
+                              }}
+                              className={`text-xs font-bold px-3 py-1 rounded-lg bg-gradient-to-r ${c.bg} text-white shadow-sm hover:opacity-90 transition-all cursor-pointer`}
+                            >
+                              Toggle
+                            </button>
+                          )}
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${m.isActive ? 'bg-teal-50 text-teal-700 dark:bg-teal-950/20' : 'bg-red-50 text-red-650'}`}>
-                          {m.isActive ? 'Active' : 'Disabled'}
-                        </span>
-                        {isAdmin && (
-                          <button
-                            onClick={() => {
-                              const updated = paymentMethods.map(item => item.id === m.id ? { ...item, isActive: !item.isActive } : item);
-                              setPaymentMethods(updated);
-                              saveMock('fin_payment_methods', updated);
-                              toast.success('Status updated!');
-                            }}
-                            className="text-xs text-indigo-500 font-bold hover:underline cursor-pointer"
-                          >
-                            Toggle
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -392,61 +409,73 @@ export const FinancePage: React.FC = () => {
             {/* ── 2. FEE GROUP TAB ── */}
             {activeTab === 'fee-group' && (
               <div className="space-y-6 animate-fade-in">
-                <div className="flex items-center justify-between pb-4 border-b border-gray-100 dark:border-gray-800">
-                  <div>
-                    <h3 className="text-lg font-black text-gray-900 dark:text-white">Fee Groups</h3>
-                    <p className="text-xs text-gray-400">Manage categories of fees like Tuition, Hostel, and Transport.</p>
+                {/* Header Banner */}
+                <div className="relative overflow-hidden bg-gradient-to-r from-blue-600 via-cyan-600 to-teal-600 rounded-2xl p-6 text-white shadow-lg">
+                  <div className="absolute inset-0 opacity-10" style={{backgroundImage: 'radial-gradient(circle at 20% 50%, white 1px, transparent 1px)', backgroundSize: '20px 20px'}} />
+                  <div className="relative flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className="p-3 bg-white/20 rounded-2xl backdrop-blur-sm">
+                        <Layers className="w-7 h-7 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="text-xl font-black">Fee Groups</h3>
+                        <p className="text-sm text-blue-200 mt-0.5">Manage categories of fees like Tuition, Hostel, and Transport.</p>
+                      </div>
+                    </div>
+                    {isAdmin && (
+                      <button
+                        onClick={() => {
+                          const name = prompt('Enter Fee Group Name:');
+                          const desc = prompt('Enter Description:');
+                          if (name) {
+                            const updated = [...feeGroups, { id: Date.now().toString(), name, description: desc }];
+                            setFeeGroups(updated);
+                            saveMock('fin_fee_groups', updated);
+                            toast.success('Group added!');
+                          }
+                        }}
+                        className="bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white font-bold text-xs px-4 py-2 rounded-xl flex items-center gap-1.5 transition-all cursor-pointer border border-white/30"
+                      >
+                        <Plus className="w-4 h-4" /> Add Group
+                      </button>
+                    )}
                   </div>
-                  {isAdmin && (
-                    <button
-                      onClick={() => {
-                        const name = prompt('Enter Fee Group Name:');
-                        const desc = prompt('Enter Description:');
-                        if (name) {
-                          const updated = [...feeGroups, { id: Date.now().toString(), name, description: desc }];
-                          setFeeGroups(updated);
-                          saveMock('fin_fee_groups', updated);
-                          toast.success('Group added!');
-                        }
-                      }}
-                      className="btn-primary py-1.5 px-3.5 text-xs flex items-center gap-1 cursor-pointer"
-                    >
-                      <Plus className="w-4 h-4" /> Add Group
-                    </button>
-                  )}
                 </div>
 
-                <div className="overflow-x-auto">
+                <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 overflow-hidden shadow-sm">
                   <table className="w-full text-sm text-left">
                     <thead>
-                      <tr className="text-gray-450 border-b border-gray-150 dark:border-gray-800 font-bold">
-                        <th className="pb-3 text-[10px] uppercase tracking-wider">Group Name</th>
-                        <th className="pb-3 text-[10px] uppercase tracking-wider">Description</th>
-                        {isAdmin && <th className="pb-3 text-right text-[10px] uppercase tracking-wider">Actions</th>}
+                      <tr className="bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-950/20 dark:to-cyan-950/20 border-b border-blue-100 dark:border-gray-800">
+                        <th className="px-5 py-4 text-[10px] uppercase tracking-wider font-black text-blue-700 dark:text-blue-400">Group Name</th>
+                        <th className="px-5 py-4 text-[10px] uppercase tracking-wider font-black text-blue-700 dark:text-blue-400">Description</th>
+                        {isAdmin && <th className="px-5 py-4 text-right text-[10px] uppercase tracking-wider font-black text-blue-700 dark:text-blue-400">Actions</th>}
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-                      {feeGroups.map(g => (
-                        <tr key={g.id} className="hover:bg-gray-50/50 dark:hover:bg-gray-850/10">
-                          <td className="py-4 font-bold text-gray-900 dark:text-white">{g.name}</td>
-                          <td className="py-4 text-xs text-gray-400">{g.description || '-'}</td>
-                          {isAdmin && (
-                            <td className="py-4 text-right">
-                              <button
-                                onClick={() => {
-                                  const updated = feeGroups.filter(item => item.id !== g.id);
-                                  setFeeGroups(updated);
-                                  saveMock('fin_fee_groups', updated);
-                                  toast.success('Deleted!');
-                                }}
-                                className="text-red-500 hover:text-red-650 cursor-pointer"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </button>
-                            </td>
-                          )}
-                        </tr>
-                      ))}
+                      {feeGroups.map((g, i) => {
+                        const rowColors = ['bg-violet-50/40 dark:bg-violet-950/10', 'bg-blue-50/40 dark:bg-blue-950/10', 'bg-emerald-50/40 dark:bg-emerald-950/10', 'bg-orange-50/40 dark:bg-orange-950/10'];
+                        return (
+                          <tr key={g.id} className={`hover:bg-gray-50/80 dark:hover:bg-white/5 transition-colors ${rowColors[i % 4]}`}>
+                            <td className="px-5 py-4 font-black text-gray-900 dark:text-white">{g.name}</td>
+                            <td className="px-5 py-4 text-xs text-gray-500">{g.description || '-'}</td>
+                            {isAdmin && (
+                              <td className="px-5 py-4 text-right">
+                                <button
+                                  onClick={() => {
+                                    const updated = feeGroups.filter(item => item.id !== g.id);
+                                    setFeeGroups(updated);
+                                    saveMock('fin_fee_groups', updated);
+                                    toast.success('Deleted!');
+                                  }}
+                                  className="p-1.5 rounded-lg text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors cursor-pointer"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              </td>
+                            )}
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>
@@ -456,53 +485,62 @@ export const FinancePage: React.FC = () => {
             {/* ── 3. FEE HEAD TAB ── */}
             {activeTab === 'fee-head' && (
               <div className="space-y-6 animate-fade-in">
-                <div className="flex items-center justify-between pb-4 border-b border-gray-100 dark:border-gray-800">
-                  <div>
-                    <h3 className="text-lg font-black text-gray-900 dark:text-white">Fee Heads</h3>
-                    <p className="text-xs text-gray-400">Define particular components linked to fee groups.</p>
+                {/* Header Banner */}
+                <div className="relative overflow-hidden bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-700 rounded-2xl p-6 text-white shadow-lg">
+                  <div className="absolute inset-0 opacity-10" style={{backgroundImage: 'radial-gradient(circle at 50% 20%, white 1px, transparent 1px)', backgroundSize: '20px 20px'}} />
+                  <div className="relative flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className="p-3 bg-white/20 rounded-2xl backdrop-blur-sm">
+                        <DollarSign className="w-7 h-7 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="text-xl font-black">Fee Heads</h3>
+                        <p className="text-sm text-emerald-200 mt-0.5">Define particular components linked to fee groups.</p>
+                      </div>
+                    </div>
+                    {isAdmin && (
+                      <button
+                        onClick={() => {
+                          const name = prompt('Enter Fee Head Name:');
+                          const gId = prompt(`Select Group ID:\n${feeGroups.map(g => `${g.id}: ${g.name}`).join('\n')}`);
+                          const desc = prompt('Enter Description:');
+                          if (name && gId) {
+                            const updated = [...feeHeads, { id: Date.now().toString(), name, groupId: gId, description: desc }];
+                            setFeeHeads(updated);
+                            saveMock('fin_fee_heads', updated);
+                            toast.success('Fee Head added!');
+                          }
+                        }}
+                        className="bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white font-bold text-xs px-4 py-2 rounded-xl flex items-center gap-1.5 transition-all cursor-pointer border border-white/30"
+                      >
+                        <Plus className="w-4 h-4" /> Add Fee Head
+                      </button>
+                    )}
                   </div>
-                  {isAdmin && (
-                    <button
-                      onClick={() => {
-                        const name = prompt('Enter Fee Head Name:');
-                        const gId = prompt(`Select Group ID:\n${feeGroups.map(g => `${g.id}: ${g.name}`).join('\n')}`);
-                        const desc = prompt('Enter Description:');
-                        if (name && gId) {
-                          const updated = [...feeHeads, { id: Date.now().toString(), name, groupId: gId, description: desc }];
-                          setFeeHeads(updated);
-                          saveMock('fin_fee_heads', updated);
-                          toast.success('Fee Head added!');
-                        }
-                      }}
-                      className="btn-primary py-1.5 px-3.5 text-xs flex items-center gap-1 cursor-pointer"
-                    >
-                      <Plus className="w-4 h-4" /> Add Fee Head
-                    </button>
-                  )}
                 </div>
 
-                <div className="overflow-x-auto">
+                <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 overflow-hidden shadow-sm">
                   <table className="w-full text-sm text-left">
                     <thead>
-                      <tr className="text-gray-455 border-b border-gray-150 dark:border-gray-800 font-bold">
-                        <th className="pb-3 text-[10px] uppercase tracking-wider">Fee Head</th>
-                        <th className="pb-3 text-[10px] uppercase tracking-wider">Associated Group</th>
-                        <th className="pb-3 text-[10px] uppercase tracking-wider">Description</th>
-                        {isAdmin && <th className="pb-3 text-right text-[10px] uppercase tracking-wider">Actions</th>}
+                      <tr className="bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/20 dark:to-teal-950/20 border-b border-emerald-100 dark:border-gray-800">
+                        <th className="px-5 py-4 text-[10px] uppercase tracking-wider font-black text-emerald-700 dark:text-emerald-400">Fee Head</th>
+                        <th className="px-5 py-4 text-[10px] uppercase tracking-wider font-black text-emerald-700 dark:text-emerald-400">Associated Group</th>
+                        <th className="px-5 py-4 text-[10px] uppercase tracking-wider font-black text-emerald-700 dark:text-emerald-400">Description</th>
+                        {isAdmin && <th className="px-5 py-4 text-right text-[10px] uppercase tracking-wider font-black text-emerald-700 dark:text-emerald-400">Actions</th>}
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
                       {feeHeads.map(h => {
                         const group = feeGroups.find(g => g.id === h.groupId);
                         return (
-                          <tr key={h.id} className="hover:bg-gray-50/50 dark:hover:bg-gray-850/10">
-                            <td className="py-4 font-bold text-gray-900 dark:text-white">{h.name}</td>
-                            <td className="py-4">
-                              <Badge variant="info">{group?.name || 'Default'}</Badge>
+                          <tr key={h.id} className="hover:bg-emerald-50/30 dark:hover:bg-emerald-950/10 transition-colors">
+                            <td className="px-5 py-4 font-black text-gray-900 dark:text-white">{h.name}</td>
+                            <td className="px-5 py-4">
+                              <span className="text-[11px] font-bold bg-emerald-100 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 px-2.5 py-1 rounded-lg">{group?.name || 'Default'}</span>
                             </td>
-                            <td className="py-4 text-xs text-gray-400">{h.description || '-'}</td>
+                            <td className="px-5 py-4 text-xs text-gray-500">{h.description || '-'}</td>
                             {isAdmin && (
-                              <td className="py-4 text-right">
+                              <td className="px-5 py-4 text-right">
                                 <button
                                   onClick={() => {
                                     const updated = feeHeads.filter(item => item.id !== h.id);
@@ -510,7 +548,7 @@ export const FinancePage: React.FC = () => {
                                     saveMock('fin_fee_heads', updated);
                                     toast.success('Deleted!');
                                   }}
-                                  className="text-red-500 hover:text-red-650 cursor-pointer"
+                                  className="p-1.5 rounded-lg text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors cursor-pointer"
                                 >
                                   <Trash2 className="w-4 h-4" />
                                 </button>
@@ -528,113 +566,142 @@ export const FinancePage: React.FC = () => {
             {/* ── 4. FEE CONCESSION TAB ── */}
             {activeTab === 'fee-concession' && (
               <div className="space-y-6 animate-fade-in">
-                <div className="flex items-center justify-between pb-4 border-b border-gray-100 dark:border-gray-800">
-                  <div>
-                    <h3 className="text-lg font-black text-gray-900 dark:text-white">Fee Concessions</h3>
-                    <p className="text-xs text-gray-400">Configure fee waivers or scholarship discount plans.</p>
+                {/* Header Banner */}
+                <div className="relative overflow-hidden bg-gradient-to-r from-orange-500 via-amber-500 to-yellow-500 rounded-2xl p-6 text-white shadow-lg">
+                  <div className="absolute inset-0 opacity-10" style={{backgroundImage: 'radial-gradient(circle at 70% 70%, white 1px, transparent 1px)', backgroundSize: '20px 20px'}} />
+                  <div className="relative flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className="p-3 bg-white/20 rounded-2xl backdrop-blur-sm">
+                        <Award className="w-7 h-7 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="text-xl font-black">Fee Concessions</h3>
+                        <p className="text-sm text-orange-100 mt-0.5">Configure fee waivers or scholarship discount plans.</p>
+                      </div>
+                    </div>
+                    {isAdmin && (
+                      <button
+                        onClick={() => {
+                          const name = prompt('Enter Concession Name:');
+                          const type = prompt('Enter Type (PERCENT or FIXED):') || 'PERCENT';
+                          const val = prompt('Enter Discount Value:');
+                          if (name && val) {
+                            const updated = [...feeConcessions, { id: Date.now().toString(), name, type, value: Number(val) }];
+                            setFeeConcessions(updated);
+                            saveMock('fin_fee_concessions', updated);
+                            toast.success('Concession added!');
+                          }
+                        }}
+                        className="bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white font-bold text-xs px-4 py-2 rounded-xl flex items-center gap-1.5 transition-all cursor-pointer border border-white/30"
+                      >
+                        <Plus className="w-4 h-4" /> Add Concession
+                      </button>
+                    )}
                   </div>
-                  {isAdmin && (
-                    <button
-                      onClick={() => {
-                        const name = prompt('Enter Concession Name:');
-                        const type = prompt('Enter Type (PERCENT or FIXED):') || 'PERCENT';
-                        const val = prompt('Enter Discount Value:');
-                        if (name && val) {
-                          const updated = [...feeConcessions, { id: Date.now().toString(), name, type, value: Number(val) }];
-                          setFeeConcessions(updated);
-                          saveMock('fin_fee_concessions', updated);
-                          toast.success('Concession added!');
-                        }
-                      }}
-                      className="btn-primary py-1.5 px-3.5 text-xs flex items-center gap-1 cursor-pointer"
-                    >
-                      <Plus className="w-4 h-4" /> Add Concession
-                    </button>
-                  )}
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {feeConcessions.map(c => (
-                    <div key={c.id} className="p-5 bg-gray-50 dark:bg-gray-800/40 border border-gray-150 dark:border-gray-800 rounded-2xl flex items-center justify-between">
-                      <div className="space-y-1">
-                        <span className="font-bold text-sm text-gray-900 dark:text-white">{c.name}</span>
-                        <p className="text-xs text-indigo-500 font-extrabold">{c.type === 'PERCENT' ? `${c.value}% Off` : `₹${c.value.toLocaleString()} Off`}</p>
+                  {feeConcessions.map((c, i) => {
+                    const concessionColors = [
+                      { gradient: 'from-orange-500 to-amber-500', bg: 'bg-orange-50 dark:bg-orange-950/20', text: 'text-orange-700 dark:text-orange-300', border: 'border-orange-200 dark:border-orange-800' },
+                      { gradient: 'from-purple-500 to-fuchsia-500', bg: 'bg-purple-50 dark:bg-purple-950/20', text: 'text-purple-700 dark:text-purple-300', border: 'border-purple-200 dark:border-purple-800' },
+                      { gradient: 'from-teal-500 to-green-500', bg: 'bg-teal-50 dark:bg-teal-950/20', text: 'text-teal-700 dark:text-teal-300', border: 'border-teal-200 dark:border-teal-800' },
+                    ];
+                    const cc = concessionColors[i % 3];
+                    return (
+                      <div key={c.id} className={`relative overflow-hidden bg-white dark:bg-gray-900 border ${cc.border} rounded-2xl p-5 shadow-sm hover:shadow-md transition-all`}>
+                        <div className={`absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl ${cc.gradient} opacity-10 rounded-bl-full`} />
+                        <div className="flex items-center justify-between">
+                          <div className="space-y-2">
+                            <span className="font-black text-sm text-gray-900 dark:text-white">{c.name}</span>
+                            <div className={`inline-flex items-center gap-1 text-xs font-black px-3 py-1 rounded-full bg-gradient-to-r ${cc.gradient} text-white shadow-sm`}>
+                              <Award className="w-3 h-3" />
+                              {c.type === 'PERCENT' ? `${c.value}% Off` : `₹${c.value.toLocaleString()} Off`}
+                            </div>
+                          </div>
+                          {isAdmin && (
+                            <button
+                              onClick={() => {
+                                const updated = feeConcessions.filter(item => item.id !== c.id);
+                                setFeeConcessions(updated);
+                                saveMock('fin_fee_concessions', updated);
+                                toast.success('Deleted!');
+                              }}
+                              className="p-1.5 rounded-lg text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors cursor-pointer"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          )}
+                        </div>
                       </div>
-                      {isAdmin && (
-                        <button
-                          onClick={() => {
-                            const updated = feeConcessions.filter(item => item.id !== c.id);
-                            setFeeConcessions(updated);
-                            saveMock('fin_fee_concessions', updated);
-                            toast.success('Deleted!');
-                          }}
-                          className="text-red-500 hover:text-red-650 cursor-pointer"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      )}
-                    </div>
-                  ))}
-                  </div>
+                    );
+                  })}
                 </div>
-              )}
+              </div>
+            )}
 
               {/* ── 5. FEE STRUCTURE TAB (FEES MASTER) ── */}
             {activeTab === 'fee-structure' && (
               <div className="space-y-6 animate-fade-in">
-                {/* Breadcrumbs matching screenshot */}
-                <div className="pb-4 border-b border-gray-100 dark:border-gray-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                  <div>
-                    <h3 className="text-xl font-black text-gray-900 dark:text-white">Fees Master</h3>
-                    <p className="text-xs text-indigo-500 font-semibold mt-0.5">Home / Fees Master</p>
-                  </div>
-                  {isAdmin && (
-                    <div className="flex gap-3">
-                      <input
-                        type="file"
-                        ref={fileInputRef}
-                        className="hidden"
-                        accept=".xlsx, .xls"
-                        onChange={handleBulkImport}
-                      />
-                      <button
-                        onClick={() => {
-                          const link = document.createElement('a');
-                          link.href = 'data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,'; // Optional: add an empty excel base64 string or link to a real template. We'll generate a CSV for simplicity
-                          const csvContent = "data:text/csv;charset=utf-8,Student ID,Fee Name,Amount\nJY24-001,Tuition fee,500";
-                          const encodedUri = encodeURI(csvContent);
-                          const tempLink = document.createElement("a");
-                          tempLink.setAttribute("href", encodedUri);
-                          tempLink.setAttribute("download", "fees_import_template.csv");
-                          document.body.appendChild(tempLink);
-                          tempLink.click();
-                          document.body.removeChild(tempLink);
-                        }}
-                        className="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs px-5 py-2.5 rounded-xl shadow-lg shadow-emerald-500/30 flex items-center gap-2 transition-all cursor-pointer"
-                      >
-                        <FileDown className="w-4 h-4" /> Get Template
-                      </button>
-                      <button
-                        onClick={() => fileInputRef.current?.click()}
-                        className="bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs px-5 py-2.5 rounded-xl shadow-lg shadow-blue-500/30 flex items-center gap-2 transition-all cursor-pointer"
-                      >
-                        <ArrowRight className="w-4 h-4" /> Import Fees
-                      </button>
-                      <button
-                        onClick={() => {
-                          if (classes.length === 0) {
-                            toast.error('Please configure classes first');
-                            return;
-                          }
-                          setStructClassId(classes[0]?.id || '');
-                          setShowStructureModal(true);
-                        }}
-                        className="bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-extrabold text-xs px-5 py-2.5 rounded-xl shadow-lg shadow-indigo-500/30 flex items-center gap-2 transition-all cursor-pointer"
-                      >
-                        <Plus className="w-4 h-4" /> Add Fee Component
-                      </button>
+                {/* Header Banner */}
+                <div className="relative overflow-hidden bg-gradient-to-r from-rose-600 via-pink-600 to-fuchsia-700 rounded-2xl p-6 text-white shadow-lg">
+                  <div className="absolute inset-0 opacity-10" style={{backgroundImage: 'radial-gradient(circle at 30% 80%, white 1px, transparent 1px)', backgroundSize: '20px 20px'}} />
+                  <div className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="flex items-center gap-4">
+                      <div className="p-3 bg-white/20 rounded-2xl backdrop-blur-sm">
+                        <Briefcase className="w-7 h-7 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="text-xl font-black">Fees Master</h3>
+                        <p className="text-sm text-rose-200 mt-0.5">Home / Fees Master</p>
+                      </div>
                     </div>
-                  )}
+                    {isAdmin && (
+                      <div className="flex flex-wrap gap-2">
+                        <input
+                          type="file"
+                          ref={fileInputRef}
+                          className="hidden"
+                          accept=".xlsx, .xls"
+                          onChange={handleBulkImport}
+                        />
+                        <button
+                          onClick={() => {
+                            const csvContent = "data:text/csv;charset=utf-8,Student ID,Fee Name,Amount\nJY24-001,Tuition fee,500";
+                            const encodedUri = encodeURI(csvContent);
+                            const tempLink = document.createElement("a");
+                            tempLink.setAttribute("href", encodedUri);
+                            tempLink.setAttribute("download", "fees_import_template.csv");
+                            document.body.appendChild(tempLink);
+                            tempLink.click();
+                            document.body.removeChild(tempLink);
+                          }}
+                          className="bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white font-bold text-xs px-4 py-2 rounded-xl flex items-center gap-1.5 transition-all cursor-pointer border border-white/30"
+                        >
+                          <FileDown className="w-4 h-4" /> Get Template
+                        </button>
+                        <button
+                          onClick={() => fileInputRef.current?.click()}
+                          className="bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white font-bold text-xs px-4 py-2 rounded-xl flex items-center gap-1.5 transition-all cursor-pointer border border-white/30"
+                        >
+                          <ArrowRight className="w-4 h-4" /> Import Fees
+                        </button>
+                        <button
+                          onClick={() => {
+                            if (classes.length === 0) {
+                              toast.error('Please configure classes first');
+                              return;
+                            }
+                            setStructClassId(classes[0]?.id || '');
+                            setShowStructureModal(true);
+                          }}
+                          className="bg-white text-rose-600 font-extrabold text-xs px-4 py-2 rounded-xl flex items-center gap-1.5 transition-all cursor-pointer shadow-sm hover:shadow-md"
+                        >
+                          <Plus className="w-4 h-4" /> Add Fee Component
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -1136,29 +1203,50 @@ export const FinancePage: React.FC = () => {
             {/* ── 10. REPORT TAB ── */}
             {activeTab === 'report' && (
               <div className="space-y-6 animate-fade-in">
-                <div className="pb-4 border-b border-gray-100 dark:border-gray-800">
-                  <h3 className="text-lg font-black text-gray-900 dark:text-white">Financial Statement Reports</h3>
-                  <p className="text-xs text-gray-400">Aggregated collection matrices and cash flow audits.</p>
+                {/* Header Banner */}
+                <div className="relative overflow-hidden bg-gradient-to-r from-sky-600 via-blue-600 to-indigo-700 rounded-2xl p-6 text-white shadow-lg">
+                  <div className="absolute inset-0 opacity-10" style={{backgroundImage: 'radial-gradient(circle at 60% 40%, white 1px, transparent 1px)', backgroundSize: '20px 20px'}} />
+                  <div className="relative flex items-center gap-4">
+                    <div className="p-3 bg-white/20 rounded-2xl backdrop-blur-sm">
+                      <TrendingUp className="w-7 h-7 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-black">Financial Statement Reports</h3>
+                      <p className="text-sm text-sky-200 mt-0.5">Aggregated collection matrices and cash flow audits.</p>
+                    </div>
+                  </div>
                 </div>
 
                 {/* Dashboard stats cards */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-                  <div className="p-6 bg-gradient-to-br from-indigo-500 to-indigo-650 text-white rounded-3xl space-y-2 shadow-lg shadow-indigo-500/10">
-                    <span className="text-[10px] font-black uppercase tracking-wider opacity-85">Total Collection</span>
+                  <div className="relative overflow-hidden p-6 bg-gradient-to-br from-violet-600 to-indigo-700 text-white rounded-2xl space-y-2 shadow-lg">
+                    <div className="absolute top-0 right-0 w-20 h-20 bg-white/10 rounded-full -translate-y-6 translate-x-6" />
+                    <div className="flex items-center gap-2">
+                      <Wallet className="w-5 h-5 opacity-80" />
+                      <span className="text-[10px] font-black uppercase tracking-wider opacity-85">Total Collection</span>
+                    </div>
                     <h4 className="text-3xl font-black">₹{payments.reduce((acc, curr) => acc + curr.amountPaid, 0).toLocaleString()}</h4>
                     <p className="text-[10px] opacity-75">All successful recorded transactions</p>
                   </div>
-                  <div className="p-6 bg-white dark:bg-gray-800 border border-gray-150 dark:border-gray-800 rounded-3xl space-y-2 shadow-xs">
-                    <span className="text-[10px] font-extrabold uppercase text-gray-400 tracking-wider">Total Active Structures</span>
-                    <h4 className="text-3xl font-black text-gray-900 dark:text-white">{structures.length}</h4>
-                    <p className="text-[10px] text-gray-400">Currently configured schedules</p>
+                  <div className="relative overflow-hidden p-6 bg-gradient-to-br from-emerald-500 to-teal-600 text-white rounded-2xl space-y-2 shadow-lg">
+                    <div className="absolute top-0 right-0 w-20 h-20 bg-white/10 rounded-full -translate-y-6 translate-x-6" />
+                    <div className="flex items-center gap-2">
+                      <Briefcase className="w-5 h-5 opacity-80" />
+                      <span className="text-[10px] font-black uppercase tracking-wider opacity-85">Total Active Structures</span>
+                    </div>
+                    <h4 className="text-3xl font-black">{structures.length}</h4>
+                    <p className="text-[10px] opacity-75">Currently configured schedules</p>
                   </div>
-                  <div className="p-6 bg-white dark:bg-gray-800 border border-gray-150 dark:border-gray-800 rounded-3xl space-y-2 shadow-xs">
-                    <span className="text-[10px] font-extrabold uppercase text-gray-400 tracking-wider">Cash-in-Hand Settlement</span>
-                    <h4 className="text-3xl font-black text-teal-650 dark:text-teal-400">
+                  <div className="relative overflow-hidden p-6 bg-gradient-to-br from-orange-500 to-rose-600 text-white rounded-2xl space-y-2 shadow-lg">
+                    <div className="absolute top-0 right-0 w-20 h-20 bg-white/10 rounded-full -translate-y-6 translate-x-6" />
+                    <div className="flex items-center gap-2">
+                      <DollarSign className="w-5 h-5 opacity-80" />
+                      <span className="text-[10px] font-black uppercase tracking-wider opacity-85">Cash-in-Hand</span>
+                    </div>
+                    <h4 className="text-3xl font-black">
                       ₹{payments.filter(p => p.method === 'CASH').reduce((acc, curr) => acc + curr.amountPaid, 0).toLocaleString()}
                     </h4>
-                    <p className="text-[10px] text-gray-400">Collected via counter cash payments</p>
+                    <p className="text-[10px] opacity-75">Collected via counter cash payments</p>
                   </div>
                 </div>
               </div>
