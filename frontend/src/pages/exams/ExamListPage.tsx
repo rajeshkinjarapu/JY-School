@@ -42,7 +42,7 @@ export const ExamListPage: React.FC = () => {
 
   useEffect(() => {
     if (setDynamicTitle) {
-      if (activeTab === '') setDynamicTitle('Examinations & Grades');
+      if (activeTab === '') setDynamicTitle('Examination Dashboard');
       else {
         const titles: Record<string, string> = {
           'examination': 'Create & Manage Exams',
@@ -83,6 +83,8 @@ export const ExamListPage: React.FC = () => {
   const [showExamModal, setShowExamModal] = useState(false);
   const [editExamId, setEditExamId] = useState<string | null>(null);
   const [examName, setExamName] = useState('');
+  const [examCategory, setExamCategory] = useState<'JEE' | 'BOARD' | ''>('');
+  const [boardExamType, setBoardExamType] = useState('');
   const [examClassIds, setExamClassIds] = useState<string[]>([]);
   const [examDate, setExamDate] = useState(new Date().toISOString().split('T')[0]);
   const [selectedExamSubjects, setSelectedExamSubjects] = useState<{id: string, name: string, maxMarks: number}[]>([]);
@@ -93,6 +95,8 @@ export const ExamListPage: React.FC = () => {
   const openCreateModal = () => {
     setEditExamId(null);
     setExamName('');
+    setExamCategory('');
+    setBoardExamType('');
     setExamClassIds([]);
     setExamDate(new Date().toISOString().split('T')[0]);
     setSelectedExamSubjects([]);
@@ -102,6 +106,9 @@ export const ExamListPage: React.FC = () => {
   const openEditModal = (exam: any) => {
     setEditExamId(exam.id);
     setExamName(exam.name);
+    if (exam.name.includes('JEE')) setExamCategory('JEE');
+    else if (['FA-1', 'FA-2', 'FA-3', 'FA-4', 'SA-1', 'SA-2', 'Pre-Final'].some(t => exam.name.includes(t))) setExamCategory('BOARD');
+    else setExamCategory('');
     setExamClassIds((exam.classes || []).map((c: any) => c.id));
     setExamDate(new Date(exam.examDate).toISOString().split('T')[0]);
     setSelectedExamSubjects(exam.subjects || []);
@@ -805,19 +812,9 @@ export const ExamListPage: React.FC = () => {
   return (
     <div className="space-y-4 sm:space-y-6 md:space-y-8 p-0 sm:p-4 md:p-8 bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 min-h-screen overflow-x-hidden">
       
-      {/* Mobile Header Title */}
-      {!activeTab && (
-        <div className="md:hidden bg-white px-4 py-3 border-b border-gray-100 shadow-sm sticky top-0 z-20 flex items-center justify-between">
-          <h1 className="text-sm font-extrabold text-slate-800 uppercase tracking-wider">Examination Module</h1>
-        </div>
-      )}
-      
       <div className="space-y-4 sm:space-y-6 md:space-y-8">
         {!activeTab && (
-          <div className="rounded-none sm:rounded-[2rem] border-y sm:border border-white/50 bg-white/80 backdrop-blur-xl p-3 sm:p-6 md:p-8 shadow-2xl">
-            {/* Desktop Heading */}
-            <h2 className="hidden md:block text-xl font-black text-slate-800 uppercase tracking-wider mb-6">Examination Module</h2>
-            
+          <div className="pt-2 sm:pt-4">
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
               {/* Examinations List - Visible only for Admin */}
               {isAdmin && (
@@ -906,8 +903,8 @@ export const ExamListPage: React.FC = () => {
 
       {/* Create Exam Modal */}
       {showExamModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-indigo-900/40 backdrop-blur-md p-4">
-          <div className="bg-white/90 backdrop-blur-xl w-full max-w-md p-6 rounded-3xl shadow-2xl shadow-indigo-900/50 border border-indigo-100 flex flex-col max-h-[90vh]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-indigo-900/40 backdrop-blur-md p-2 sm:p-4 animate-fade-in">
+          <div className="bg-white/95 backdrop-blur-xl w-full max-w-lg p-5 rounded-[2rem] shadow-2xl border border-indigo-100 flex flex-col max-h-[95vh]">
             <div className="flex justify-between items-center mb-6 border-b border-indigo-100 pb-4 shrink-0">
               <h3 className="text-xl font-black text-indigo-900 tracking-tight flex items-center gap-2">
                 <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500 text-white flex items-center justify-center shadow-md">
@@ -920,13 +917,39 @@ export const ExamListPage: React.FC = () => {
               </button>
             </div>
             
-            <form onSubmit={handleCreateExam} className="space-y-5 overflow-y-auto pr-2 custom-scrollbar flex-1 pb-4">
+            <form onSubmit={handleCreateExam} className="space-y-4 overflow-y-auto pr-2 custom-scrollbar flex-1 pb-2">
+              <div className="space-y-3">
+                <label className="block text-[10px] font-black text-indigo-900 uppercase tracking-wide">Exam Category</label>
+                <div className="flex gap-4">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="radio" name="examCategory" value="JEE" checked={examCategory === 'JEE'} onChange={() => { setExamCategory('JEE'); setBoardExamType(''); setExamName('JEE Mains Model Examination'); }} className="w-4 h-4 text-indigo-600 focus:ring-indigo-500" />
+                    <span className="text-sm font-bold text-slate-700">JEE Mains Exams</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="radio" name="examCategory" value="BOARD" checked={examCategory === 'BOARD'} onChange={() => { setExamCategory('BOARD'); setExamName(''); }} className="w-4 h-4 text-indigo-600 focus:ring-indigo-500" />
+                    <span className="text-sm font-bold text-slate-700">Board Exams</span>
+                  </label>
+                </div>
+              </div>
+
+              {examCategory === 'BOARD' && (
+                <div>
+                  <label className="block text-[10px] font-black text-indigo-900 mb-1.5 uppercase tracking-wide">Board Exam Type</label>
+                  <select value={boardExamType} onChange={(e) => { setBoardExamType(e.target.value); setExamName(e.target.value + ' Examination'); }} className="w-full px-3 py-2.5 bg-white border-2 border-indigo-50 rounded-xl text-sm font-bold text-slate-800 outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-50 transition-all shadow-sm">
+                    <option value="">Select Board Exam Type...</option>
+                    {['FA-1', 'FA-2', 'FA-3', 'FA-4', 'SA-1', 'SA-2', 'Pre-Final'].map(t => (
+                      <option key={t} value={t}>{t}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
               <div>
-                <label className="block text-xs font-black text-indigo-900 mb-2 uppercase tracking-wide">Exam Name / Title</label>
-                <input type="text" required placeholder="e.g. Mid-Term 1" value={examName} onChange={e => setExamName(e.target.value)} className="w-full px-4 py-3 bg-white border-2 border-indigo-100 rounded-xl text-sm font-bold text-slate-800 outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100 transition-all shadow-sm" />
+                <label className="block text-[10px] font-black text-indigo-900 mb-1.5 uppercase tracking-wide">Exam Name / Title</label>
+                <input type="text" required placeholder="e.g. Mid-Term 1" value={examName} onChange={e => setExamName(e.target.value)} className="w-full px-3 py-2.5 bg-white border-2 border-indigo-50 rounded-xl text-sm font-bold text-slate-800 outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-50 transition-all shadow-sm" />
               </div>
               <div>
-                <label className="block text-xs font-black text-indigo-900 mb-2 uppercase tracking-wide">Select Classes</label>
+                <label className="block text-[10px] font-black text-indigo-900 mb-1.5 uppercase tracking-wide">Select Classes</label>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-40 overflow-y-auto p-3 border-2 border-indigo-100 bg-white rounded-xl shadow-inner">
                   {classes.map(c => {
                     const isSelected = examClassIds.includes(c.id);
@@ -1699,17 +1722,17 @@ export const ExamListPage: React.FC = () => {
 
       {/* ══ TAB 7: EXAMINATIONS LIST ══ */}
       {activeTab === 'examination' && (
-        <div className="space-y-6">
-          <div className="flex justify-between items-center bg-gradient-to-r from-indigo-500 to-purple-600 p-5 rounded-2xl shadow-xl shadow-indigo-500/20 text-white">
-            <span className="text-sm font-extrabold uppercase tracking-wider">Examinations List</span>
+        <div className="space-y-4">
+          <div className="flex justify-between items-center bg-transparent p-2">
+            <h2 className="text-lg font-black text-slate-800 uppercase tracking-wider">Examinations List</h2>
             {isAdmin && (
-              <button onClick={openCreateModal} className="bg-white/20 hover:bg-white/30 backdrop-blur-md px-4 py-2 rounded-xl flex items-center gap-2 text-xs font-bold transition-all shadow-sm border border-white/20">
+              <button onClick={openCreateModal} className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl flex items-center gap-2 text-xs font-bold transition-all shadow-md">
                 <Plus className="w-4 h-4" /> Create Exam
               </button>
             )}
           </div>
 
-          <div className="bg-white/80 backdrop-blur-md rounded-3xl p-6 overflow-hidden shadow-xl border border-indigo-100">
+          <div className="bg-white/80 backdrop-blur-md rounded-2xl p-2 sm:p-4 overflow-hidden shadow-sm border border-indigo-50">
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse text-sm">
                 <thead>

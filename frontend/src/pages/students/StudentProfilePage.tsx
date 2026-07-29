@@ -48,6 +48,9 @@ export const StudentProfilePage: React.FC = () => {
   const [showSectionModal, setShowSectionModal] = useState(false);
   const [newClassId, setNewClassId] = useState('');
 
+  // Change Name Modal States
+  const [showNameModal, setShowNameModal] = useState(false);
+  const [newStudentName, setNewStudentName] = useState('');
   const fetchStudentProfile = async () => {
     try {
       const [studentRes, structRes, classRes]: any = await Promise.all([
@@ -241,6 +244,24 @@ export const StudentProfilePage: React.FC = () => {
     }
   };
 
+  const handleChangeNameSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newStudentName.trim()) return toast.error('Please enter a valid name.');
+    
+    setIsSubmitting(true);
+    const updateToast = toast.loading('Updating name...');
+    try {
+      await api.patch(`/api/students/${student.id}/name`, { name: newStudentName });
+      toast.success('Name updated successfully!', { id: updateToast });
+      setShowNameModal(false);
+      fetchStudentProfile();
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || err.message || 'Failed to update name', { id: updateToast });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   useEffect(() => {
     fetchStudentProfile();
   }, [id]);
@@ -325,8 +346,20 @@ export const StudentProfilePage: React.FC = () => {
               {/* Core Info */}
               <div className="flex-1 text-center md:text-left space-y-4">
                 <div className="flex flex-col md:flex-row items-center gap-3 justify-center md:justify-start">
-                  <h2 className="text-3xl lg:text-4xl font-black text-gray-900 dark:text-white tracking-tight">
+                  <h2 className="text-3xl lg:text-4xl font-black text-gray-900 dark:text-white tracking-tight flex items-center">
                     {student.user.name}
+                    {isAdmin && (
+                      <button 
+                        onClick={() => {
+                          setNewStudentName(student.user.name);
+                          setShowNameModal(true);
+                        }}
+                        className="ml-3 p-1.5 text-gray-400 hover:text-indigo-600 transition-colors bg-white/50 dark:bg-gray-800/50 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700"
+                        title="Edit Name"
+                      >
+                        <Edit2 className="w-5 h-5" />
+                      </button>
+                    )}
                   </h2>
                   <div className="flex items-center gap-2 mt-2 md:mt-0">
                     <Badge variant="info" className="px-3 py-1 text-xs font-black uppercase tracking-widest rounded-full bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400 border-none">
@@ -1016,6 +1049,39 @@ export const StudentProfilePage: React.FC = () => {
               <div className="flex gap-3 justify-end pt-2">
                 <button type="button" onClick={() => setShowDiscountModal(false)} className="btn-secondary text-sm">Cancel</button>
                 <button type="submit" disabled={isSubmitting} className="btn-primary text-sm">Save Fee</button>
+              </div>
+            </form>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* Change Name Modal */}
+      {showNameModal && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-gray-950/40 backdrop-blur-xs print:hidden">
+          <div className="fixed inset-0" onClick={() => setShowNameModal(false)} />
+          <div className="relative card w-full max-w-sm p-6 space-y-5 animate-scale-in z-10 bg-white dark:bg-gray-900 max-h-[90vh] overflow-y-auto">
+            <div>
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white">Edit Student Name</h3>
+              <p className="text-xs text-gray-450 mt-1">Change the full name of the student.</p>
+            </div>
+
+            <form onSubmit={handleChangeNameSubmit} className="space-y-4">
+              <div>
+                <label className="label">Full Name</label>
+                <input
+                  type="text"
+                  required
+                  value={newStudentName}
+                  onChange={(e) => setNewStudentName(e.target.value)}
+                  className="input"
+                  placeholder="Enter full name"
+                />
+              </div>
+
+              <div className="flex gap-3 justify-end pt-2">
+                <button type="button" onClick={() => setShowNameModal(false)} className="btn-secondary text-sm">Cancel</button>
+                <button type="submit" disabled={isSubmitting} className="btn-primary text-sm">Save Name</button>
               </div>
             </form>
           </div>

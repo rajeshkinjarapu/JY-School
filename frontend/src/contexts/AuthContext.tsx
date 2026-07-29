@@ -13,6 +13,20 @@ interface AuthContextType {
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// Merge profile photo into user.photoUrl if missing
+const mergeProfilePhoto = (userData: any): any => {
+  if (!userData) return userData;
+  // Student: use student.photoUrl if user.photoUrl is empty
+  if (userData.role === 'STUDENT' && !userData.photoUrl && userData.student?.photoUrl) {
+    return { ...userData, photoUrl: userData.student.photoUrl };
+  }
+  // Teacher: use teacher.photoUrl if user.photoUrl is empty
+  if (userData.role === 'TEACHER' && !userData.photoUrl && userData.teacher?.photoUrl) {
+    return { ...userData, photoUrl: userData.teacher.photoUrl };
+  }
+  return userData;
+};
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -22,7 +36,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const token = localStorage.getItem('accessToken');
       if (token) {
         const response = await getMe();
-        setUser(response.data || response);
+        const userData = response.data || response;
+        setUser(mergeProfilePhoto(userData));
       }
     } catch (error) {
       console.error('Fetch user error:', error);
@@ -37,10 +52,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     fetchUser();
   }, []);
 
-  const login = (accessToken: string, refreshToken: string, user: User) => {
+  const login = (accessToken: string, refreshToken: string, userData: User) => {
     localStorage.setItem('accessToken', accessToken);
     localStorage.setItem('refreshToken', refreshToken);
-    setUser(user);
+    setUser(mergeProfilePhoto(userData));
   };
 
   const logout = () => {
@@ -50,8 +65,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const updateUser = (updatedUser: User) => {
-    setUser(updatedUser);
-    localStorage.setItem('user', JSON.stringify(updatedUser));
+    const merged = mergeProfilePhoto(updatedUser);
+    setUser(merged);
+    localStorage.setItem('user', JSON.stringify(merged));
   };
 
   return (

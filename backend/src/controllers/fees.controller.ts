@@ -235,6 +235,125 @@ export const createPayment = async (req: AuthRequest, res: Response, next: NextF
   successResponse(res, createdPayments.length === 1 ? createdPayments[0] : createdPayments, 'Payment(s) recorded', 201);
 };
 
+export const bulkImportPayments = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  if (!req.file) return next(createError('No file uploaded', 400));
+  try {
+    const workbook = req.file.buffer
+      ? XLSX.read(req.file.buffer, { type: 'buffer', cellDates: true })
+      : XLSX.readFile(req.file.path, { cellDates: true });
+    const sheetName = workbook.SheetNames[0];
+    const rows = XLSX.utils.sheet_to_json<any>(workbook.Sheets[sheetName]);
+
+    const results: { row: number; rollNo: string; status: string; receiptNo?: string; error?: string }[] = [];
+
+    for (let i = 0; i < rows.length; i++) {
+      const row = rows[i];
+      const rollNo = String(row['Student ID'] || row['Roll No'] || row['RollNo'] || row['studentId'] || row['rollNo'] || '').trim();
+      const amountPaid = parseFloat(row['Amount Paid'] || row['amountPaid'] || row['Amount'] || row['amount'] || '0');
+      const rawMethod = String(row['Payment Mode'] || row['Payment Method'] || row['paymentMode'] || row['method'] || 'CASH').trim().toUpperCase();
+      const method = ['CASH', 'UPI', 'ONLINE', 'BANK_TRANSFER', 'CHEQUE'].includes(rawMethod) ? rawMethod : 'CASH';
+      const rawDate = row['Payment Date'] || row['paymentDate'] || row['Date'] || row['date'];
+      let paymentDate = new Date();
+      if (rawDate) {
+        if (rawDate instanceof Date && !isNaN(rawDate.getTime())) {
+          paymentDate = rawDate;
+        } else {
+          const d = new Date(rawDate);
+          if (!isNaN(d.getTime())) paymentDate = d;
+        }
+      }
+
+      if (!rollNo) {
+        results.push({ row: i + 2, rollNo: '-', status: 'ERROR', error: 'Student ID / Roll No is missing' });
+        continue;
+      }
+      if (!amountPaid || isNaN(amountPaid) || amountPaid <= 0) {
+        results.push({ row: i + 2, rollNo, status: 'ERROR', error: 'Invalid amount paid' });
+        continue;
+      }
+
+      // Lookup student by rollNo
+      const student = await prisma.student.findFirst({ where: { rollNo } });
+      if (!student) {
+        results.push({ row: i + 2, rollNo, status: 'ERROR', error: `Student with Roll No "${rollNo}" not found` });
+        continue;
+      }
+
+      // Get all fee structures applicable to this student
+      const structures = await prisma.feeStructure.findMany({
+        where: {
+          OR: [
+            { studentId: student.id },
+            ...(student.classId ? [{ classId: student.classId }] : []),
+          ],
+        },
+        orderBy: { dueDate: 'asc' },
+      });
+
+      // Calculate pending amount across all structures
+      let remaining = amountPaid;
+      const baseReceiptNo = 'JY' + Math.floor(10000000 + Math.random() * 90000000).toString();
+      let createdCount = 0;
+      let idx = 1;
+
+      for (const structure of structures) {
+        if (remaining <= 0) break;
+
+        const agg = await prisma.feePayment.aggregate({
+          where: { studentId: student.id, feeStructureId: structure.id },
+          _sum: { amountPaid: true },
+        });
+        const alreadyPaid = agg._sum.amountPaid || 0;
+        const pending = Math.max(0, structure.amount - alreadyPaid);
+        if (pending <= 0) continue;
+
+        const toApply = Math.min(remaining, pending);
+        const totalPaid = alreadyPaid + toApply;
+        const status = totalPaid >= structure.amount ? 'PAID' : 'PARTIAL';
+        const receiptNo = structures.length > 1 ? `${baseReceiptNo}-${idx}` : baseReceiptNo;
+
+        await prisma.feePayment.create({
+          data: {
+            studentId: student.id,
+            feeStructureId: structure.id,
+            amountPaid: toApply,
+            method: method as any,
+            status: status as any,
+            receiptNo,
+            paymentDate: isNaN(paymentDate.getTime()) ? new Date() : paymentDate,
+            remarks: 'Imported via Excel',
+          },
+        });
+
+        remaining -= toApply;
+        createdCount++;
+        idx++;
+      }
+
+      if (createdCount === 0 && remaining === amountPaid) {
+        results.push({ row: i + 2, rollNo, status: 'SKIPPED', error: 'All fees already fully paid for this student' });
+      } else {
+        results.push({
+          row: i + 2,
+          rollNo,
+          status: 'SUCCESS',
+          receiptNo: baseReceiptNo,
+        });
+      }
+    }
+
+    clearDashboardCache();
+
+    const successCount = results.filter(r => r.status === 'SUCCESS').length;
+    const errorCount = results.filter(r => r.status === 'ERROR').length;
+    const skippedCount = results.filter(r => r.status === 'SKIPPED').length;
+
+    successResponse(res, { summary: { total: rows.length, success: successCount, errors: errorCount, skipped: skippedCount }, results }, 'Bulk payment import completed');
+  } catch (error) {
+    next(createError('Error processing Excel file', 500));
+  }
+};
+
 export const deleteFeePayment = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   const id = req.params.id as string;
   const payment = await prisma.feePayment.findUnique({ where: { id } });

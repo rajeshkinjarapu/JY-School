@@ -152,13 +152,17 @@ export const getFeeReport = async (req: Request, res: Response, next: NextFuncti
   try {
     const { startDate, endDate } = req.query;
 
-    const start = startDate ? new Date(startDate as string) : new Date(new Date().getFullYear(), 0, 1);
-    const end = endDate ? new Date(endDate as string) : new Date();
+    const start = startDate ? new Date(startDate as string) : undefined;
+    const end = endDate ? new Date(endDate as string) : undefined;
+    if (end) end.setHours(23, 59, 59, 999);
+
+    const dateFilter = start || end ? {
+      ...(start && { gte: start }),
+      ...(end && { lte: end })
+    } : undefined;
 
     const payments = await prisma.feePayment.findMany({
-      where: {
-        paymentDate: { gte: start, lte: end }
-      },
+      where: dateFilter ? { paymentDate: dateFilter } : {},
       include: {
         student: {
           include: {
@@ -469,11 +473,17 @@ export const getMarksReportPdf = async (req: Request, res: Response, next: NextF
 export const getFeeReportPdf = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const { startDate, endDate } = req.query;
-    const start = startDate ? new Date(startDate as string) : new Date(new Date().getFullYear(), 0, 1);
-    const end = endDate ? new Date(endDate as string) : new Date();
+    const start = startDate ? new Date(startDate as string) : undefined;
+    const end = endDate ? new Date(endDate as string) : undefined;
+    if (end) end.setHours(23, 59, 59, 999);
+
+    const dateFilter = start || end ? {
+      ...(start && { gte: start }),
+      ...(end && { lte: end })
+    } : undefined;
 
     const payments = await prisma.feePayment.findMany({
-      where: { paymentDate: { gte: start, lte: end } },
+      where: dateFilter ? { paymentDate: dateFilter } : {},
       include: {
         student: { include: { user: { select: { name: true } }, class: true } },
         feeStructure: true
@@ -496,21 +506,24 @@ export const getFeeReportPdf = async (req: Request, res: Response, next: NextFun
     doc.fontSize(9).font('Helvetica').fillColor('#93c5fd').text('OFFICIAL ACADEMIC SYSTEM REPORT', 55, 68);
     doc.fontSize(12).font('Helvetica-Bold').fillColor('#ffffff').text('FEES REVENUE LEDGER', 320, 48, { align: 'right', width: 220 });
 
-    doc.fillColor('#334155').fontSize(9).font('Helvetica-Bold').text(`Transaction Period: ${start.toLocaleDateString()} to ${end.toLocaleDateString()}`, 40, 110);
+    doc.fillColor('#334155').fontSize(9).font('Helvetica-Bold').text(`Transaction Period: ${start ? start.toLocaleDateString() : 'All Time'} to ${end ? end.toLocaleDateString() : 'All Time'}`, 40, 110);
     doc.font('Helvetica').text(`Print Date: ${new Date().toLocaleDateString()}`, 40, 125);
 
     // Table Headers
     const tableY = 150;
     doc.rect(40, tableY, 515, 20).fill('#f1f5f9');
     doc.fontSize(8).font('Helvetica-Bold').fillColor('#475569');
-    doc.text('RECEIPT NO', 50, tableY + 6, { width: 90 });
-    doc.text('STUDENT NAME', 145, tableY + 6, { width: 110 });
-    doc.text('CLASS', 260, tableY + 6, { width: 60 });
-    doc.text('FEE COMPONENT', 325, tableY + 6, { width: 100 });
-    doc.text('METHOD', 430, tableY + 6, { width: 50 });
-    doc.text('AMOUNT', 485, tableY + 6, { width: 60, align: 'right' });
+    doc.text('S.NO', 45, tableY + 6, { width: 20 });
+    doc.text('STUDENT ID', 65, tableY + 6, { width: 55 });
+    doc.text('STUDENT NAME', 120, tableY + 6, { width: 110 });
+    doc.text('CLASS', 230, tableY + 6, { width: 45 });
+    doc.text('FEE COMPONENT', 275, tableY + 6, { width: 80 });
+    doc.text('METHOD', 355, tableY + 6, { width: 45 });
+    doc.text('PAYMENT DATE', 400, tableY + 6, { width: 65 });
+    doc.text('AMOUNT', 470, tableY + 6, { width: 75, align: 'right' });
 
     let currentY = tableY + 20;
+    let index = 1;
 
     payments.forEach((p) => {
       if (currentY > 750) {
@@ -518,25 +531,32 @@ export const getFeeReportPdf = async (req: Request, res: Response, next: NextFun
         currentY = 40;
         doc.rect(40, currentY, 515, 20).fill('#f1f5f9');
         doc.fontSize(8).font('Helvetica-Bold').fillColor('#475569');
-        doc.text('RECEIPT NO', 50, currentY + 6);
-        doc.text('STUDENT NAME', 145, currentY + 6);
-        doc.text('CLASS', 260, currentY + 6);
-        doc.text('FEE COMPONENT', 325, currentY + 6);
-        doc.text('METHOD', 430, currentY + 6);
-        doc.text('AMOUNT', 485, currentY + 6, { align: 'right', width: 60 });
+        doc.text('S.NO', 45, currentY + 6);
+        doc.text('STUDENT ID', 65, currentY + 6);
+        doc.text('STUDENT NAME', 120, currentY + 6);
+        doc.text('CLASS', 230, currentY + 6);
+        doc.text('FEE COMPONENT', 275, currentY + 6);
+        doc.text('METHOD', 355, currentY + 6);
+        doc.text('PAYMENT DATE', 400, currentY + 6);
+        doc.text('AMOUNT', 470, currentY + 6, { align: 'right', width: 75 });
         currentY += 20;
       }
 
+      const formattedDate = p.paymentDate ? new Date(p.paymentDate).toLocaleDateString() : '-';
+
       doc.fontSize(8).font('Helvetica').fillColor('#334155');
-      doc.text(p.receiptNo.slice(0, 15) + '...', 50, currentY + 5, { width: 90 });
-      doc.font('Helvetica-Bold').text(p.student.user.name, 145, currentY + 5, { width: 110 });
-      doc.font('Helvetica').text(p.student.class ? `${p.student.class.name}-${p.student.class.section}` : 'N/A', 260, currentY + 5, { width: 60 });
-      doc.text(p.feeStructure.name, 325, currentY + 5, { width: 100 });
-      doc.text(p.method, 430, currentY + 5, { width: 50 });
-      doc.font('Helvetica-Bold').text(`Rs. ${p.amountPaid.toLocaleString()}`, 485, currentY + 5, { width: 60, align: 'right' });
+      doc.text(index.toString(), 45, currentY + 5, { width: 20 });
+      doc.text(p.student.rollNo || '-', 65, currentY + 5, { width: 55 });
+      doc.font('Helvetica-Bold').text(p.student.user.name, 120, currentY + 5, { width: 110 });
+      doc.font('Helvetica').text(p.student.class ? `${p.student.class.name}-${p.student.class.section}` : 'N/A', 230, currentY + 5, { width: 45 });
+      doc.text(p.feeStructure.name, 275, currentY + 5, { width: 80 });
+      doc.text(p.method, 355, currentY + 5, { width: 45 });
+      doc.text(formattedDate, 400, currentY + 5, { width: 65 });
+      doc.font('Helvetica-Bold').text(`Rs. ${p.amountPaid.toLocaleString()}`, 470, currentY + 5, { width: 75, align: 'right' });
 
       doc.moveTo(40, currentY + 18).lineTo(555, currentY + 18).stroke('#f1f5f9');
       currentY += 18;
+      index++;
     });
 
     doc.fontSize(7).font('Helvetica').fillColor('#cbd5e1').text(`${schoolAddress}`, 40, 800, { align: 'center', width: 515 });

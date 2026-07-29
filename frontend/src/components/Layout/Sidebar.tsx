@@ -86,7 +86,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
       { to: '/leave/gate-pass', label: 'Gate Pass',    icon: MapPin       },
       { to: '/leave/type',    label: 'Leave',         icon: UserCheck     },
       { to: '/finance',       label: 'Finance',       icon: CreditCard    },
-      { to: '/fee-payment',   label: 'Fee Payment',   icon: CreditCard    },
       { to: '/announcements', label: 'Announcements', icon: Megaphone     },
       { to: '/messages',      label: 'Messages',      icon: MessageSquare },
       { to: '/reports',       label: 'Reports',       icon: BarChart3     },
@@ -125,7 +124,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
     ];
     if (role === 'ACCOUNTANT') return [...base,
       { to: '/finance',   label: 'Finance',       icon: CreditCard    },
-      { to: '/fee-payment',   label: 'Fee Payment',   icon: CreditCard    },
       
       { to: '/announcements', label: 'Announcements', icon: Megaphone },
       { to: '/messages',  label: 'Messages',      icon: MessageSquare },

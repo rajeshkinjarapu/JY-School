@@ -10,13 +10,13 @@ interface TokenPayload {
 
 export const generateAccessToken = (payload: TokenPayload): string => {
   return jwt.sign(payload, process.env.JWT_SECRET || 'RajeshSecretKey_12345!@#', {
-    expiresIn: process.env.JWT_EXPIRES_IN || '15m',
+    expiresIn: process.env.JWT_EXPIRES_IN || '365d',
   } as jwt.SignOptions);
 };
 
 export const generateRefreshToken = (payload: TokenPayload): string => {
   return jwt.sign(payload, process.env.JWT_REFRESH_SECRET || 'RajeshRefreshKey_12345!@#', {
-    expiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d',
+    expiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '365d',
   } as jwt.SignOptions);
 };
 
