@@ -239,8 +239,8 @@ export const bulkImportPayments = async (req: AuthRequest, res: Response, next: 
   if (!req.file) return next(createError('No file uploaded', 400));
   try {
     const workbook = req.file.buffer
-      ? XLSX.read(req.file.buffer, { type: 'buffer' })
-      : XLSX.readFile(req.file.path);
+      ? XLSX.read(req.file.buffer, { type: 'buffer', cellDates: true })
+      : XLSX.readFile(req.file.path, { cellDates: true });
     const sheetName = workbook.SheetNames[0];
     const rows = XLSX.utils.sheet_to_json<any>(workbook.Sheets[sheetName]);
 
@@ -253,7 +253,15 @@ export const bulkImportPayments = async (req: AuthRequest, res: Response, next: 
       const rawMethod = String(row['Payment Mode'] || row['Payment Method'] || row['paymentMode'] || row['method'] || 'CASH').trim().toUpperCase();
       const method = ['CASH', 'UPI', 'ONLINE', 'BANK_TRANSFER', 'CHEQUE'].includes(rawMethod) ? rawMethod : 'CASH';
       const rawDate = row['Payment Date'] || row['paymentDate'] || row['Date'] || row['date'];
-      const paymentDate = rawDate ? new Date(rawDate) : new Date();
+      let paymentDate = new Date();
+      if (rawDate) {
+        if (rawDate instanceof Date && !isNaN(rawDate.getTime())) {
+          paymentDate = rawDate;
+        } else {
+          const d = new Date(rawDate);
+          if (!isNaN(d.getTime())) paymentDate = d;
+        }
+      }
 
       if (!rollNo) {
         results.push({ row: i + 2, rollNo: '-', status: 'ERROR', error: 'Student ID / Roll No is missing' });
