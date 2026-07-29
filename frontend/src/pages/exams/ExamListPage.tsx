@@ -83,6 +83,8 @@ export const ExamListPage: React.FC = () => {
   const [showExamModal, setShowExamModal] = useState(false);
   const [editExamId, setEditExamId] = useState<string | null>(null);
   const [examName, setExamName] = useState('');
+  const [examCategory, setExamCategory] = useState<'JEE' | 'BOARD' | ''>('');
+  const [boardExamType, setBoardExamType] = useState('');
   const [examClassIds, setExamClassIds] = useState<string[]>([]);
   const [examDate, setExamDate] = useState(new Date().toISOString().split('T')[0]);
   const [selectedExamSubjects, setSelectedExamSubjects] = useState<{id: string, name: string, maxMarks: number}[]>([]);
@@ -93,6 +95,8 @@ export const ExamListPage: React.FC = () => {
   const openCreateModal = () => {
     setEditExamId(null);
     setExamName('');
+    setExamCategory('');
+    setBoardExamType('');
     setExamClassIds([]);
     setExamDate(new Date().toISOString().split('T')[0]);
     setSelectedExamSubjects([]);
@@ -102,6 +106,9 @@ export const ExamListPage: React.FC = () => {
   const openEditModal = (exam: any) => {
     setEditExamId(exam.id);
     setExamName(exam.name);
+    if (exam.name.includes('JEE')) setExamCategory('JEE');
+    else if (['FA-1', 'FA-2', 'FA-3', 'FA-4', 'SA-1', 'SA-2', 'Pre-Final'].some(t => exam.name.includes(t))) setExamCategory('BOARD');
+    else setExamCategory('');
     setExamClassIds((exam.classes || []).map((c: any) => c.id));
     setExamDate(new Date(exam.examDate).toISOString().split('T')[0]);
     setSelectedExamSubjects(exam.subjects || []);
@@ -911,6 +918,32 @@ export const ExamListPage: React.FC = () => {
             </div>
             
             <form onSubmit={handleCreateExam} className="space-y-4 overflow-y-auto pr-2 custom-scrollbar flex-1 pb-2">
+              <div className="space-y-3">
+                <label className="block text-[10px] font-black text-indigo-900 uppercase tracking-wide">Exam Category</label>
+                <div className="flex gap-4">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="radio" name="examCategory" value="JEE" checked={examCategory === 'JEE'} onChange={() => { setExamCategory('JEE'); setBoardExamType(''); setExamName('JEE Mains Model Examination'); }} className="w-4 h-4 text-indigo-600 focus:ring-indigo-500" />
+                    <span className="text-sm font-bold text-slate-700">JEE Mains Exams</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="radio" name="examCategory" value="BOARD" checked={examCategory === 'BOARD'} onChange={() => { setExamCategory('BOARD'); setExamName(''); }} className="w-4 h-4 text-indigo-600 focus:ring-indigo-500" />
+                    <span className="text-sm font-bold text-slate-700">Board Exams</span>
+                  </label>
+                </div>
+              </div>
+
+              {examCategory === 'BOARD' && (
+                <div>
+                  <label className="block text-[10px] font-black text-indigo-900 mb-1.5 uppercase tracking-wide">Board Exam Type</label>
+                  <select value={boardExamType} onChange={(e) => { setBoardExamType(e.target.value); setExamName(e.target.value + ' Examination'); }} className="w-full px-3 py-2.5 bg-white border-2 border-indigo-50 rounded-xl text-sm font-bold text-slate-800 outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-50 transition-all shadow-sm">
+                    <option value="">Select Board Exam Type...</option>
+                    {['FA-1', 'FA-2', 'FA-3', 'FA-4', 'SA-1', 'SA-2', 'Pre-Final'].map(t => (
+                      <option key={t} value={t}>{t}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
               <div>
                 <label className="block text-[10px] font-black text-indigo-900 mb-1.5 uppercase tracking-wide">Exam Name / Title</label>
                 <input type="text" required placeholder="e.g. Mid-Term 1" value={examName} onChange={e => setExamName(e.target.value)} className="w-full px-3 py-2.5 bg-white border-2 border-indigo-50 rounded-xl text-sm font-bold text-slate-800 outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-50 transition-all shadow-sm" />

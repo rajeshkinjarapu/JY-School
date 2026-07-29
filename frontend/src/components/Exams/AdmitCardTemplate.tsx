@@ -34,7 +34,6 @@ export const AdmitCardTemplate: React.FC<AdmitCardTemplateProps> = ({ student, e
           <img src={logoUrl} alt="Watermark" className="w-[400px] h-[400px] object-contain grayscale" />
         </div>
       )}
-
       {/* Outer Thick Border & Inner Thin Border */}
       <div className="w-full flex-1 border-4 border-slate-900 p-1 relative flex flex-col z-10 bg-transparent">
         <div className="w-full flex-1 border border-slate-900 flex flex-col bg-white/95 relative">
@@ -49,7 +48,7 @@ export const AdmitCardTemplate: React.FC<AdmitCardTemplateProps> = ({ student, e
               )}
             </div>
             <div className="flex-1 text-center pr-10">
-              <h1 className="text-[26px] sm:text-[32px] font-black uppercase tracking-wider text-slate-900 mb-1" style={{ fontFamily: '"Georgia", serif' }}>
+              <h1 className="text-[22px] sm:text-[28px] whitespace-nowrap font-black uppercase tracking-wider text-slate-900 mb-1" style={{ fontFamily: '"Georgia", serif' }}>
                 SRI VENKATESWARA JY SCHOOL
               </h1>
               <p className="text-[12px] font-bold uppercase tracking-[0.15em] text-slate-700 mb-2">
