@@ -445,10 +445,6 @@ export const FeePaymentsPage: React.FC = () => {
         </div>
       )}
 
-            </div>
-          </div>
-        </div>
-      )}
       </div>
 
       {/* ── Excel Bulk Import Modal ── */}
