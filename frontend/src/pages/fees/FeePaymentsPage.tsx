@@ -116,7 +116,8 @@ export const FeePaymentsPage: React.FC = () => {
       toast.error('Please select at least one fee component to pay.');
       return;
     }
-    if (method === 'UPI' && !utrNumber) {
+    const isAdminOrSuperAdmin = user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN';
+    if (method === 'UPI' && !utrNumber && !isAdminOrSuperAdmin) {
       toast.error('UTR Reference Number is required for UPI payments.');
       return;
     }
@@ -434,281 +435,355 @@ export const FeePaymentsPage: React.FC = () => {
 
       {/* Record Payment Modal / Inline Form for Teachers */}
       {(showModal || user?.role === 'TEACHER') && (
-        <div className={user?.role === 'TEACHER' ? "w-full max-w-4xl mx-auto mt-2" : "fixed inset-0 z-[100] flex flex-col sm:items-center sm:justify-center bg-indigo-900/30 backdrop-blur-md"}>
-          {user?.role !== 'TEACHER' && <div className="fixed inset-0 hidden sm:block" onClick={() => setShowModal(false)} />}
-          <div className={`relative bg-white/95 sm:backdrop-blur-xl sm:border border-white/80 w-full ${user?.role === 'TEACHER' ? 'sm:rounded-[2rem] shadow-2xl h-auto' : 'h-full sm:h-auto sm:max-h-[90vh] sm:max-w-lg p-0 sm:p-0 sm:rounded-[2rem] shadow-[0_20px_50px_rgba(8,_112,_184,_0.15)]'} overflow-hidden flex flex-col z-10 animate-scale-in`}>
-            <div className="p-4 sm:p-6 flex-1 overflow-y-auto space-y-5 bg-gradient-to-b from-pink-50/50 via-purple-50/30 to-white relative pt-12 sm:pt-6">
-              <form onSubmit={handleSubmit} className="space-y-5">
-              {/* ── Smart Student Selector ── */}
-              <div className="space-y-3">
-                <label className="label font-bold">Select Student</label>
+        <div className={user?.role === 'TEACHER' ? "w-full max-w-4xl mx-auto mt-2" : "fixed inset-0 z-[100] flex flex-col items-center justify-center bg-indigo-900/40 backdrop-blur-md p-4"}>
+          {user?.role !== 'TEACHER' && <div className="fixed inset-0" onClick={() => setShowModal(false)} />}
 
-                {/* Row 1: Class + Section */}
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <label className="text-[10px] font-bold text-purple-400 uppercase tracking-wider mb-1 block">Class</label>
-                    <select
-                      value={filterClass}
-                      onChange={(e) => { setFilterClass(e.target.value); setFilterSection(''); setSelectedStudent(null); setStudentId(''); setSelectedFees([]); }}
-                      className="w-full px-3 py-2 text-xs border border-purple-100 rounded-xl bg-purple-50/50 outline-none focus:ring-2 focus:ring-purple-400 font-semibold text-purple-900"
-                    >
-                      <option value="">All Classes</option>
-                      {uniqueClassNames.map((name) => (
-                        <option key={name} value={name}>{name}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="text-[10px] font-bold text-purple-400 uppercase tracking-wider mb-1 block">Section</label>
-                    <select
-                      value={filterSection}
-                      onChange={(e) => { setFilterSection(e.target.value); setSelectedStudent(null); setStudentId(''); setSelectedFees([]); }}
-                      className="w-full px-3 py-2 text-xs border border-purple-100 rounded-xl bg-purple-50/50 outline-none focus:ring-2 focus:ring-purple-400 font-semibold text-purple-900"
-                    >
-                      <option value="">All Sections</option>
-                      {uniqueSections.map(sec => (
-                        <option key={sec} value={sec}>{sec}</option>
-                      ))}
-                    </select>
-                  </div>
+          {/* ── Desktop-optimised modal shell ── */}
+          <div className={`relative w-full ${
+            user?.role === 'TEACHER'
+              ? 'sm:rounded-[2rem] shadow-2xl'
+              : 'sm:max-w-3xl sm:rounded-[2rem] shadow-[0_32px_80px_rgba(80,0,200,0.22)]'
+          } bg-white overflow-hidden flex flex-col sm:flex-row z-10 animate-scale-in max-h-[92vh] sm:max-h-[85vh]`}>
+
+            {/* LEFT sidebar – gradient brand panel (hidden on mobile) */}
+            <div className="hidden sm:flex flex-col justify-between w-64 flex-shrink-0 bg-gradient-to-b from-purple-600 via-indigo-600 to-pink-600 p-7 text-white">
+              <div>
+                <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center mb-5 shadow-lg">
+                  <Plus className="w-6 h-6 text-white" />
                 </div>
-
-                {/* Row 2: Search box with live dropdown */}
-                <div className="relative">
-                  <label className="text-[10px] font-bold text-pink-400 uppercase tracking-wider mb-1 block">Search by Name or Roll No</label>
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-pink-400" />
-                    <input
-                      type="text"
-                      placeholder="Type student name..."
-                      value={searchName}
-                      onFocus={() => setShowStudentDropdown(true)}
-                      onChange={(e) => { setSearchName(e.target.value); setShowStudentDropdown(true); }}
-                      className="w-full pl-8 pr-8 py-2 text-xs border border-pink-100 rounded-xl bg-pink-50/50 outline-none focus:ring-2 focus:ring-pink-400 font-medium text-pink-900"
-                    />
-                    {searchName && (
-                      <button type="button" onClick={() => { setSearchName(''); setSelectedStudent(null); setStudentId(''); setSelectedFees([]); }} className="absolute right-3 top-1/2 -translate-y-1/2 text-pink-400 hover:text-pink-600">
-                        <X className="w-3.5 h-3.5" />
-                      </button>
-                    )}
-                  </div>
-
-                  {/* Dropdown results */}
-                  {showStudentDropdown && (searchName || filterClass || filterSection) && (
-                    <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-pink-100 rounded-xl shadow-xl z-50 max-h-48 overflow-y-auto">
-                      {filteredStudents.length === 0 ? (
-                        <div className="px-4 py-3 text-xs text-pink-400 text-center">No students found</div>
-                      ) : (
-                        filteredStudents.slice(0, 20).map(s => (
-                          <button
-                            key={s.id}
-                            type="button"
-                            onClick={() => {
-                              setSelectedStudent(s);
-                              setStudentId(s.id);
-                              setSearchName(s.user.name);
-                              setSelectedFees([]);
-                              setShowStudentDropdown(false);
-                            }}
-                            className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-pink-50 text-left transition-colors border-b border-pink-50 last:border-0"
-                          >
-                            <div className="w-7 h-7 rounded-full bg-gradient-to-br from-pink-400 to-purple-500 flex items-center justify-center flex-shrink-0 shadow-sm">
-                              <span className="text-[10px] font-black text-white">{s.user.name?.[0]?.toUpperCase()}</span>
-                            </div>
-                            <div>
-                              <p className="text-xs font-bold text-gray-900">{s.user.name}</p>
-                              <p className="text-[10px] text-pink-500 font-medium">{s.rollNo} • {s.class ? `${s.class.name}-${s.class.section}` : 'No class'}</p>
-                            </div>
-                          </button>
-                        ))
-                      )}
-                    </div>
-                  )}
-                </div>
-
-                {/* Selected student badge */}
-                {selectedStudent && (
-                  <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-200 rounded-xl shadow-sm">
-                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center flex-shrink-0 shadow-md">
-                      <span className="text-sm font-black text-white">{selectedStudent.user.name?.[0]?.toUpperCase()}</span>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-bold text-indigo-900 truncate">{selectedStudent.user.name}</p>
-                      <p className="text-[10px] font-semibold text-indigo-600">{selectedStudent.rollNo} • {selectedStudent.class ? `${selectedStudent.class.name}-${selectedStudent.class.section}` : 'No class'}</p>
-                    </div>
-                    <button type="button" onClick={() => { setSelectedStudent(null); setStudentId(''); setSearchName(''); setSelectedFees([]); }} className="text-indigo-400 hover:text-indigo-600 bg-white p-1 rounded-full shadow-sm">
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
-                )}
+                <h2 className="text-2xl font-extrabold leading-tight">Collect Payment</h2>
+                <p className="text-indigo-200 text-xs mt-2 leading-relaxed">Record a new fee payment transaction for the student.</p>
               </div>
 
-              {studentId && (
-                <div>
-                  <label className="label mb-2 text-indigo-900">Select Fee Components & Amount</label>
-                  <div className="space-y-2 border border-indigo-100 rounded-xl p-3 bg-white/60 backdrop-blur-sm max-h-48 overflow-y-auto shadow-inner">
-                    {(() => {
-                      const availableStructures = structures.filter((s) => s.studentId === studentId || s.classId === students.find((st) => st.id === studentId)?.classId);
-                      const allPaid = availableStructures.every(s => {
-                        const paidSoFar = payments.filter(p => p.studentId === studentId && p.feeStructureId === s.id).reduce((sum, p) => sum + p.amountPaid, 0);
-                        return Math.max(0, s.amount - paidSoFar) <= 0;
-                      });
-
-                      return (
-                        <>
-                          {availableStructures.map((s) => {
-                            const paidSoFar = payments.filter(p => p.studentId === studentId && p.feeStructureId === s.id).reduce((sum, p) => sum + p.amountPaid, 0);
-                            const pendingAmount = Math.max(0, s.amount - paidSoFar);
-                            if (pendingAmount <= 0) return null;
-
-                            const isSelected = selectedFees.find(f => f.feeStructureId === s.id);
-
-                            return (
-                              <div key={s.id} className={`flex items-center justify-between p-2.5 rounded-xl border transition-all ${isSelected ? 'bg-indigo-50 border-indigo-300 shadow-sm' : 'bg-white border-gray-100 hover:border-indigo-200'}`}>
-                                <div className="flex items-center gap-3">
-                                  <input
-                                    type="checkbox"
-                                    className="w-4 h-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500"
-                                    checked={!!isSelected}
-                                    onChange={(e) => {
-                                      if (e.target.checked) {
-                                        setSelectedFees([...selectedFees, { feeStructureId: s.id, amountPaid: pendingAmount }]);
-                                      } else {
-                                        setSelectedFees(selectedFees.filter(f => f.feeStructureId !== s.id));
-                                      }
-                                    }}
-                                  />
-                                  <div>
-                                    <p className="text-xs font-bold text-gray-900">{s.name}</p>
-                                    <p className="text-[10px] text-pink-600 font-semibold">Pending: ₹{pendingAmount}</p>
-                                  </div>
-                                </div>
-                                {isSelected && (
-                                  <div className="flex items-center gap-1 bg-white p-1 rounded-lg border border-indigo-100 shadow-sm">
-                                    <span className="text-xs text-indigo-500 font-bold px-1">₹</span>
-                                    <input
-                                      type="number"
-                                      className="w-20 px-2 py-1 text-xs border-0 rounded focus:ring-0 outline-none text-indigo-900 font-bold bg-transparent"
-                                      value={isSelected.amountPaid}
-                                      onChange={(e) => {
-                                        setSelectedFees(selectedFees.map(f => f.feeStructureId === s.id ? { ...f, amountPaid: Number(e.target.value) } : f));
-                                      }}
-                                      max={pendingAmount}
-                                    />
-                                  </div>
-                                )}
-                              </div>
-                            );
-                          })}
-                          
-                          {allPaid && (
-                            <p className="text-xs text-emerald-600 font-bold text-center py-4 bg-emerald-50 rounded-lg border border-emerald-100">✨ All fees cleared for this student!</p>
-                          )}
-                        </>
-                      );
-                    })()}
-                  </div>
-                  
-                  {selectedFees.length > 0 && (
-                    <div className="mt-4 flex justify-between items-center p-4 bg-gradient-to-r from-pink-500 to-purple-600 rounded-xl shadow-lg border-none text-white">
-                      <span className="text-sm font-bold text-white/90">Total Amount to Pay</span>
-                      <span className="text-2xl font-black text-white drop-shadow-md">₹{selectedFees.reduce((sum, f) => sum + f.amountPaid, 0).toLocaleString()}</span>
+              {/* Summary panel */}
+              {selectedFees.length > 0 && (
+                <div className="bg-white/15 backdrop-blur-sm rounded-2xl p-4 space-y-2 border border-white/20">
+                  <p className="text-xs font-bold text-indigo-200 uppercase tracking-wider">Total to Collect</p>
+                  <p className="text-3xl font-black text-white">₹{selectedFees.reduce((sum, f) => sum + f.amountPaid, 0).toLocaleString()}</p>
+                  {selectedStudent && (
+                    <div className="flex items-center gap-2 mt-3 pt-3 border-t border-white/20">
+                      <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
+                        <span className="text-xs font-black">{selectedStudent.user.name?.[0]?.toUpperCase()}</span>
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-xs font-bold truncate">{selectedStudent.user.name}</p>
+                        <p className="text-[10px] text-indigo-300">{selectedStudent.class ? `${selectedStudent.class.name}-${selectedStudent.class.section}` : ''}</p>
+                      </div>
                     </div>
                   )}
                 </div>
               )}
 
-              <div>
-                <label className="label">Payment Date</label>
-                <input 
-                  type="date" 
-                  value={paymentDate} 
-                  onChange={(e) => setPaymentDate(e.target.value)} 
-                  className="input text-xs" 
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="label">Payment Method</label>
-                <select value={method} onChange={(e) => setMethod(e.target.value)} className="input text-xs">
-                  <option value="CASH">Cash</option>
-                  <option value="ONLINE">Online Transfer</option>
-                  <option value="BANK_TRANSFER">Bank Deposit</option>
-                  <option value="CHEQUE">Cheque</option>
-                  <option value="UPI">UPI / QR Code</option>
-                </select>
-              </div>
-
-              {/* UPI fields */}
-              {method === 'UPI' && (
-                <div className="space-y-4 border-l-2 border-primary-500 pl-3.5 my-2">
-                  <div>
-                    <label className="label">UPI UTR Reference Number</label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="e.g. 12-digit transaction number"
-                      value={utrNumber}
-                      onChange={(e) => setUtrNumber(e.target.value)}
-                      className="input text-xs"
-                    />
-                  </div>
-                  <div>
-                    <label className="label">Upload Payment Receipt</label>
-                    <input
-                      type="file"
-                      accept="image/*,application/pdf"
-                      onChange={handleFileChange}
-                      className="w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100 cursor-pointer"
-                    />
-                    {isUploading && (
-                      <span className="text-xxs text-primary-500 block mt-1 animate-pulse">
-                        Uploading receipt...
-                      </span>
-                    )}
-                    {receiptUrl && (
-                      <span className="text-xxs text-emerald-600 font-bold block mt-1">
-                        ✓ Receipt uploaded successfully
-                      </span>
-                    )}
-                  </div>
+              {!selectedFees.length && (
+                <div className="text-[11px] text-indigo-300 text-center border border-white/20 rounded-xl py-4 px-3">
+                  Select a student &amp; fee components to see the summary here.
                 </div>
               )}
+            </div>
 
-              <div>
-                <label className="label">Remarks</label>
-                <input
-                  type="text"
-                  placeholder="e.g. Cleared full balance"
-                  value={remarks}
-                  onChange={(e) => setRemarks(e.target.value)}
-                  className="input text-xs"
-                />
-              </div>
-
-              <div className="flex gap-3 justify-end pt-4 border-t border-purple-100/50 mt-2">
-                {user?.role !== 'TEACHER' && (
-                  <button
-                    type="button"
-                    onClick={() => setShowModal(false)}
-                    className="px-5 py-3 rounded-xl text-sm font-bold text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors"
-                  >
-                    Cancel
-                  </button>
-                )}
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="w-full sm:w-auto px-8 py-3 text-sm font-bold bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 hover:from-pink-600 hover:via-purple-600 hover:to-indigo-600 text-white shadow-xl shadow-purple-500/30 transform transition-all hover:-translate-y-1 rounded-xl"
-                >
-                  {isSubmitting ? 'Recording...' : 'Confirm & Record'}
+            {/* RIGHT – scrollable form */}
+            <div className="flex-1 overflow-y-auto bg-gradient-to-b from-slate-50/60 to-white">
+              {/* Mobile header */}
+              <div className="sm:hidden flex items-center justify-between px-5 py-4 bg-gradient-to-r from-purple-600 to-indigo-600 text-white">
+                <h2 className="text-base font-extrabold">Collect Payment</h2>
+                <button type="button" onClick={() => setShowModal(false)} className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center">
+                  <X className="w-4 h-4" />
                 </button>
               </div>
-            </form>
+
+              {/* Desktop close btn */}
+              {user?.role !== 'TEACHER' && (
+                <button
+                  type="button"
+                  onClick={() => setShowModal(false)}
+                  className="hidden sm:flex absolute top-4 right-4 w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 items-center justify-center text-gray-500 transition-colors z-20"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+
+              <form onSubmit={handleSubmit} className="p-5 sm:p-7 space-y-5">
+
+                {/* ── Smart Student Selector ── */}
+                <div className="space-y-3">
+                  <p className="text-xs font-extrabold text-slate-500 uppercase tracking-widest">Select Student</p>
+
+                  {/* Row 1: Class + Section */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-[10px] font-bold text-purple-500 uppercase tracking-wider mb-1 block">Class</label>
+                      <select
+                        value={filterClass}
+                        onChange={(e) => { setFilterClass(e.target.value); setFilterSection(''); setSelectedStudent(null); setStudentId(''); setSelectedFees([]); }}
+                        className="w-full px-3 py-2.5 text-xs border border-purple-100 rounded-xl bg-purple-50/50 outline-none focus:ring-2 focus:ring-purple-400 font-semibold text-purple-900"
+                      >
+                        <option value="">All Classes</option>
+                        {uniqueClassNames.map((name) => (
+                          <option key={name} value={name}>{name}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold text-purple-500 uppercase tracking-wider mb-1 block">Section</label>
+                      <select
+                        value={filterSection}
+                        onChange={(e) => { setFilterSection(e.target.value); setSelectedStudent(null); setStudentId(''); setSelectedFees([]); }}
+                        className="w-full px-3 py-2.5 text-xs border border-purple-100 rounded-xl bg-purple-50/50 outline-none focus:ring-2 focus:ring-purple-400 font-semibold text-purple-900"
+                      >
+                        <option value="">All Sections</option>
+                        {uniqueSections.map(sec => (
+                          <option key={sec} value={sec}>{sec}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Row 2: Search box with live dropdown */}
+                  <div className="relative">
+                    <label className="text-[10px] font-bold text-pink-500 uppercase tracking-wider mb-1 block">Search by Name or Roll No</label>
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-pink-400" />
+                      <input
+                        type="text"
+                        placeholder="Type student name..."
+                        value={searchName}
+                        onFocus={() => setShowStudentDropdown(true)}
+                        onChange={(e) => { setSearchName(e.target.value); setShowStudentDropdown(true); }}
+                        className="w-full pl-8 pr-8 py-2.5 text-xs border border-pink-100 rounded-xl bg-pink-50/50 outline-none focus:ring-2 focus:ring-pink-400 font-medium text-pink-900"
+                      />
+                      {searchName && (
+                        <button type="button" onClick={() => { setSearchName(''); setSelectedStudent(null); setStudentId(''); setSelectedFees([]); }} className="absolute right-3 top-1/2 -translate-y-1/2 text-pink-400 hover:text-pink-600">
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Dropdown results */}
+                    {showStudentDropdown && (searchName || filterClass || filterSection) && (
+                      <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-pink-100 rounded-xl shadow-xl z-50 max-h-44 overflow-y-auto">
+                        {filteredStudents.length === 0 ? (
+                          <div className="px-4 py-3 text-xs text-pink-400 text-center">No students found</div>
+                        ) : (
+                          filteredStudents.slice(0, 20).map(s => (
+                            <button
+                              key={s.id}
+                              type="button"
+                              onClick={() => {
+                                setSelectedStudent(s);
+                                setStudentId(s.id);
+                                setSearchName(s.user.name);
+                                setSelectedFees([]);
+                                setShowStudentDropdown(false);
+                              }}
+                              className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-pink-50 text-left transition-colors border-b border-pink-50 last:border-0"
+                            >
+                              <div className="w-7 h-7 rounded-full bg-gradient-to-br from-pink-400 to-purple-500 flex items-center justify-center flex-shrink-0 shadow-sm">
+                                <span className="text-[10px] font-black text-white">{s.user.name?.[0]?.toUpperCase()}</span>
+                              </div>
+                              <div>
+                                <p className="text-xs font-bold text-gray-900">{s.user.name}</p>
+                                <p className="text-[10px] text-pink-500 font-medium">{s.rollNo} • {s.class ? `${s.class.name}-${s.class.section}` : 'No class'}</p>
+                              </div>
+                            </button>
+                          ))
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Selected student badge */}
+                  {selectedStudent && (
+                    <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-200 rounded-xl shadow-sm">
+                      <div className="w-9 h-9 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center flex-shrink-0 shadow-md">
+                        <span className="text-sm font-black text-white">{selectedStudent.user.name?.[0]?.toUpperCase()}</span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-bold text-indigo-900 truncate">{selectedStudent.user.name}</p>
+                        <p className="text-[10px] font-semibold text-indigo-600">{selectedStudent.rollNo} • {selectedStudent.class ? `${selectedStudent.class.name}-${selectedStudent.class.section}` : 'No class'}</p>
+                      </div>
+                      <button type="button" onClick={() => { setSelectedStudent(null); setStudentId(''); setSearchName(''); setSelectedFees([]); }} className="text-indigo-400 hover:text-indigo-600 bg-white p-1 rounded-full shadow-sm">
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* ── Fee Components ── */}
+                {studentId && (
+                  <div>
+                    <p className="text-xs font-extrabold text-slate-500 uppercase tracking-widest mb-2">Fee Components &amp; Amount</p>
+                    <div className="space-y-2 border border-indigo-100 rounded-xl p-3 bg-white/60 backdrop-blur-sm max-h-44 overflow-y-auto shadow-inner">
+                      {(() => {
+                        const availableStructures = structures.filter((s) => s.studentId === studentId || s.classId === students.find((st) => st.id === studentId)?.classId);
+                        const allPaid = availableStructures.every(s => {
+                          const paidSoFar = payments.filter(p => p.studentId === studentId && p.feeStructureId === s.id).reduce((sum, p) => sum + p.amountPaid, 0);
+                          return Math.max(0, s.amount - paidSoFar) <= 0;
+                        });
+
+                        return (
+                          <>
+                            {availableStructures.map((s) => {
+                              const paidSoFar = payments.filter(p => p.studentId === studentId && p.feeStructureId === s.id).reduce((sum, p) => sum + p.amountPaid, 0);
+                              const pendingAmount = Math.max(0, s.amount - paidSoFar);
+                              if (pendingAmount <= 0) return null;
+                              const isSelected = selectedFees.find(f => f.feeStructureId === s.id);
+                              return (
+                                <div key={s.id} className={`flex items-center justify-between p-2.5 rounded-xl border transition-all ${isSelected ? 'bg-indigo-50 border-indigo-300 shadow-sm' : 'bg-white border-gray-100 hover:border-indigo-200'}`}>
+                                  <div className="flex items-center gap-3">
+                                    <input
+                                      type="checkbox"
+                                      className="w-4 h-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500"
+                                      checked={!!isSelected}
+                                      onChange={(e) => {
+                                        if (e.target.checked) {
+                                          setSelectedFees([...selectedFees, { feeStructureId: s.id, amountPaid: pendingAmount }]);
+                                        } else {
+                                          setSelectedFees(selectedFees.filter(f => f.feeStructureId !== s.id));
+                                        }
+                                      }}
+                                    />
+                                    <div>
+                                      <p className="text-xs font-bold text-gray-900">{s.name}</p>
+                                      <p className="text-[10px] text-pink-600 font-semibold">Pending: ₹{pendingAmount}</p>
+                                    </div>
+                                  </div>
+                                  {isSelected && (
+                                    <div className="flex items-center gap-1 bg-white p-1 rounded-lg border border-indigo-100 shadow-sm">
+                                      <span className="text-xs text-indigo-500 font-bold px-1">₹</span>
+                                      <input
+                                        type="number"
+                                        className="w-20 px-2 py-1 text-xs border-0 rounded focus:ring-0 outline-none text-indigo-900 font-bold bg-transparent"
+                                        value={isSelected.amountPaid}
+                                        onChange={(e) => {
+                                          setSelectedFees(selectedFees.map(f => f.feeStructureId === s.id ? { ...f, amountPaid: Number(e.target.value) } : f));
+                                        }}
+                                        max={pendingAmount}
+                                      />
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })}
+                            {allPaid && (
+                              <p className="text-xs text-emerald-600 font-bold text-center py-4 bg-emerald-50 rounded-lg border border-emerald-100">✨ All fees cleared for this student!</p>
+                            )}
+                          </>
+                        );
+                      })()}
+                    </div>
+
+                    {/* Mobile total */}
+                    {selectedFees.length > 0 && (
+                      <div className="sm:hidden mt-3 flex justify-between items-center p-4 bg-gradient-to-r from-pink-500 to-purple-600 rounded-xl shadow-lg text-white">
+                        <span className="text-sm font-bold text-white/90">Total Amount to Pay</span>
+                        <span className="text-2xl font-black">₹{selectedFees.reduce((sum, f) => sum + f.amountPaid, 0).toLocaleString()}</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* ── Two-column row: Date + Method (desktop) ── */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1 block">Payment Date</label>
+                    <input
+                      type="date"
+                      value={paymentDate}
+                      onChange={(e) => setPaymentDate(e.target.value)}
+                      className="w-full px-3 py-2.5 text-xs border border-slate-200 rounded-xl bg-slate-50 outline-none focus:ring-2 focus:ring-indigo-400 font-semibold text-slate-900"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1 block">Payment Method</label>
+                    <select
+                      value={method}
+                      onChange={(e) => setMethod(e.target.value)}
+                      className="w-full px-3 py-2.5 text-xs border border-slate-200 rounded-xl bg-slate-50 outline-none focus:ring-2 focus:ring-indigo-400 font-semibold text-slate-900"
+                    >
+                      <option value="CASH">Cash</option>
+                      <option value="ONLINE">Online Transfer</option>
+                      <option value="BANK_TRANSFER">Bank Deposit</option>
+                      <option value="CHEQUE">Cheque</option>
+                      <option value="UPI">UPI / QR Code</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* ── UPI fields ── */}
+                {method === 'UPI' && (
+                  <div className="rounded-2xl border border-violet-200 bg-violet-50/50 p-4 space-y-4">
+                    <p className="text-[10px] font-extrabold text-violet-500 uppercase tracking-widest">UPI / QR Payment Details</p>
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1 block">
+                        UTR Reference Number
+                        {(user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN')
+                          ? <span className="ml-2 text-emerald-500 normal-case tracking-normal font-semibold">(Optional for Admin)</span>
+                          : <span className="ml-1 text-red-500">*</span>
+                        }
+                      </label>
+                      <input
+                        type="text"
+                        required={!(user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN')}
+                        placeholder="e.g. 12-digit transaction number"
+                        value={utrNumber}
+                        onChange={(e) => setUtrNumber(e.target.value)}
+                        className="w-full px-3 py-2.5 text-xs border border-violet-200 rounded-xl bg-white outline-none focus:ring-2 focus:ring-violet-400 font-semibold text-slate-900"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1 block">Upload Payment Receipt <span className="normal-case tracking-normal font-medium text-slate-400">(optional)</span></label>
+                      <input
+                        type="file"
+                        accept="image/*,application/pdf"
+                        onChange={handleFileChange}
+                        className="w-full text-xs text-gray-500 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-violet-100 file:text-violet-700 hover:file:bg-violet-200 cursor-pointer"
+                      />
+                      {isUploading && (
+                        <span className="text-[10px] text-violet-500 block mt-1 animate-pulse">Uploading receipt...</span>
+                      )}
+                      {receiptUrl && (
+                        <span className="text-[10px] text-emerald-600 font-bold block mt-1">✓ Receipt uploaded successfully</span>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* ── Remarks ── */}
+                <div>
+                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1 block">Remarks</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Cleared full balance"
+                    value={remarks}
+                    onChange={(e) => setRemarks(e.target.value)}
+                    className="w-full px-3 py-2.5 text-xs border border-slate-200 rounded-xl bg-slate-50 outline-none focus:ring-2 focus:ring-indigo-400 font-medium text-slate-900"
+                  />
+                </div>
+
+                {/* ── Action buttons ── */}
+                <div className="flex gap-3 justify-end pt-4 border-t border-slate-100 mt-2">
+                  {user?.role !== 'TEACHER' && (
+                    <button
+                      type="button"
+                      onClick={() => setShowModal(false)}
+                      className="hidden sm:block px-6 py-3 rounded-xl text-sm font-bold text-slate-500 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                  )}
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="flex-1 sm:flex-initial sm:w-auto px-8 py-3 text-sm font-bold bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 hover:from-pink-600 hover:via-purple-600 hover:to-indigo-600 text-white shadow-xl shadow-purple-500/25 transform transition-all hover:-translate-y-0.5 rounded-xl disabled:opacity-70"
+                  >
+                    {isSubmitting ? 'Recording...' : 'Confirm & Record'}
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
         </div>
-      </div>
       )}
       </div>
 
