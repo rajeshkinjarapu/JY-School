@@ -532,6 +532,7 @@ export const FeePaymentsPage: React.FC = () => {
                             >
                               <Trash2 className="w-4 h-4" /> Delete
                             </button>
+                          )}
                         </div>
                       </td>
                     </tr>
