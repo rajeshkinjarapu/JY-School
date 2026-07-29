@@ -145,8 +145,8 @@ export const SubjectPage: React.FC = () => {
       ) : (
         <div className="md:bg-white/40 md:dark:bg-white/5 md:border md:border-white/60 md:dark:border-white/10 md:rounded-3xl md:shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden md:backdrop-blur-2xl">
           
-          {/* Mobile View */}
-          <div className="md:hidden flex flex-col gap-4 p-4 bg-transparent">
+          {/* Grid View for All Devices */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4 bg-transparent">
             {subjects.map((sub, idx) => (
               <div key={sub.id} className="bg-gradient-to-br from-white to-indigo-50/30 p-4 rounded-3xl shadow-sm hover:shadow-glow-primary hover:-translate-y-1 transition-all duration-300 border border-indigo-50 flex items-center gap-4 relative overflow-visible mt-2 backdrop-blur-md animate-fade-in-up" style={{ animationDelay: `${idx * 40}ms` }}>
                  <div className="absolute -top-2.5 -left-2.5 w-7 h-7 bg-indigo-500 rounded-full flex items-center justify-center text-white font-black text-[10px] shadow-lg border-2 border-white z-10">
@@ -183,83 +183,7 @@ export const SubjectPage: React.FC = () => {
               <div className="py-12 text-center text-gray-400 font-semibold">
                 No subjects found.
               </div>
-            )}
           </div>
-
-          {/* Desktop Table View */}
-          <div className="hidden md:block overflow-x-auto w-full max-w-full"><table className="w-full text-sm text-left border-collapse">
-            <thead className="bg-indigo-50/50 text-indigo-900 font-semibold border-b border-indigo-100">
-              <tr>
-                <th className="px-6 py-4">Subject Name</th>
-                <th className="px-6 py-4">Code</th>
-                <th className="px-6 py-4">Class</th>
-                <th className="px-6 py-4">Assigned Teacher</th>
-                <th className="px-6 py-4 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100 dark:divide-gray-800/50">
-              {subjects.map((sub, idx) => (
-                <tr key={sub.id} className="hover:bg-white bg-transparent transition-all duration-300 group border-b border-indigo-50/50 hover:shadow-glow-primary animate-fade-in-up" style={{ animationDelay: `${idx * 30}ms` }}>
-                  <td className="px-6 py-4 font-semibold text-gray-950 dark:text-white">{sub.name}</td>
-                  <td className="px-6 py-4 font-mono text-xs text-gray-500">{sub.code}</td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-950/40 text-indigo-500 border border-indigo-100 dark:border-indigo-900 flex items-center justify-center shadow-sm">
-                        <School className="w-4.5 h-4.5" />
-                      </div>
-                      <span className="font-semibold text-gray-900 dark:text-white">
-                        {sub.class ? `${sub.class.name}-${sub.class.section}` : 'N/A'}
-                      </span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    {sub.classSubjectTeachers?.[0]?.teacher ? (
-                      <div className="flex items-center gap-2.5">
-                        <Avatar
-                          name={sub.classSubjectTeachers[0].teacher.user.name}
-                          src={getPhotoUrl(sub.classSubjectTeachers[0].teacher.user.photoUrl)}
-                          size="sm"
-                          className="w-6 h-6 border-2 border-white ring-1 ring-slate-100"
-                        />
-                        <span className="font-semibold text-gray-900 dark:text-white">
-                          {sub.classSubjectTeachers[0].teacher.user.name}
-                        </span>
-                      </div>
-                    ) : (
-                      <span className="text-gray-450 italic text-xs">Unassigned</span>
-                    )}
-                  </td>
-                  <td className="px-6 py-4 text-right">
-                    <div className="flex justify-end gap-2">
-                      <button
-                        onClick={() => handleEditClick(sub)}
-                        className="p-2 rounded-lg text-gray-400 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-950/20 transition-all cursor-pointer"
-                        title="Edit Subject"
-                      >
-                        <Edit className="w-4.5 h-4.5" />
-                      </button>
-                      {isSuperAdmin && (
-                        <button
-                          onClick={() => handleDelete(sub.id)}
-                          className="p-2 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 transition-all cursor-pointer"
-                          title="Delete Subject"
-                        >
-                          <Trash2 className="w-4.5 h-4.5" />
-                        </button>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-              {subjects.length === 0 && (
-                <tr>
-                  <td colSpan={5} className="py-8 text-center text-gray-400">
-                    No subjects configured yet.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table></div>
         </div>
       )}
 
