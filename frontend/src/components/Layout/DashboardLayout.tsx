@@ -2,11 +2,20 @@ import React, { useState, useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
+import { useAuth } from '../../hooks/useAuth';
 
 export const DashboardLayout: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [dynamicTitle, setDynamicTitle] = useState('');
+  const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' && window.innerWidth < 1024);
   const location = useLocation();
+  const { user } = useAuth();
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 1024);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     setDynamicTitle('');
@@ -83,6 +92,19 @@ export const DashboardLayout: React.FC = () => {
     
     return 'Dashboard';
   };
+
+  // Student on mobile: full-screen app — no header/sidebar
+  const isStudentMobile = user?.role === 'STUDENT' && isMobile;
+
+  if (isStudentMobile) {
+    return (
+      <div className="h-screen overflow-hidden">
+        <main className="h-full overflow-y-auto">
+          <Outlet context={{ setDynamicTitle }} />
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-screen overflow-hidden bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 dark:from-[#1e1b4b] dark:via-[#2e1065] dark:to-[#312e81]">

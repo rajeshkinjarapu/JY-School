@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { Link, useNavigate } from 'react-router-dom';
@@ -6,6 +6,7 @@ import { Avatar } from '../../components/UI/Avatar';
 import api from '../../api/axios';
 import { LoadingSpinner } from '../../components/UI/LoadingSpinner';
 import { AccountantDashboard } from './AccountantDashboard';
+import { StudentMobileDashboard } from './StudentMobileDashboard';
 import { useQuery } from '@tanstack/react-query';
 import {
   Users, GraduationCap, School, Wallet, CalendarDays,
@@ -53,6 +54,11 @@ export const DashboardPage: React.FC = () => {
   if (!data)
     return <p className="text-center py-12 text-gray-400">Failed to load. Please refresh.</p>;
 
+  // Student on mobile → WhatsApp-style mobile dashboard
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 1024;
+  if (user?.role === 'STUDENT' && isMobile) {
+    return <StudentMobileDashboard data={data} />;
+  }
 
   return (
     <div className="space-y-4 sm:space-y-6 md:space-y-8 p-1 sm:p-2 md:p-2 bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 min-h-screen animate-fade-in-up pb-10">
