@@ -117,8 +117,6 @@ export const TeacherStudentsPage: React.FC = () => {
             <ArrowLeft className="w-4 h-4" /> Back
           </Link>
         </div>
-      </div>
-
       {loading ? (
         <LoadingSpinner size="lg" className="py-24" />
       ) : (
