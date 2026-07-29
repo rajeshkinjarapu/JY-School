@@ -310,10 +310,7 @@ export const FinancePage: React.FC = () => {
       {/* ══ HOME GRID VIEW ══ */}
       {activeTab === 'home' && (
         <div className="w-full animate-fade-in">
-          <div className="mb-6">
-            <h2 className="text-2xl font-black text-gray-900 dark:text-white">Finance Dashboard</h2>
-            <p className="text-sm text-gray-400 mt-1">Manage fees, payments, and financial reports</p>
-          </div>
+          <div className="mb-2"></div>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 gap-4 sm:gap-5">
             {FINANCE_MENU.map((item, idx) => {
               const Icon = item.icon;

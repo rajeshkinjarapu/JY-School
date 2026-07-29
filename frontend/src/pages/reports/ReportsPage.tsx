@@ -52,8 +52,7 @@ export const ReportsPage: React.FC = () => {
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto animate-fade-in">
-      <div className="bg-white dark:bg-gray-900 p-6 rounded-3xl border border-gray-150 dark:border-gray-800 space-y-2">
-        <h2 className="text-xl font-bold text-gray-900 dark:text-white">Reports Central</h2>
+      <div className="mb-2">
         <p className="text-sm text-gray-500">
           Generate and download complete data directories in both Microsoft Excel (.xlsx) and Adobe PDF (.pdf) formats.
         </p>

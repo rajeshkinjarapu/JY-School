@@ -145,37 +145,14 @@ const HomeworkPage: React.FC = () => {
 
   return (
     <div className="space-y-6 animate-fade-in-up pb-10">
-      {/* Header */}
-      <div className="relative overflow-hidden rounded-none sm:rounded-[2rem] hidden md:block" style={{
-        background: 'linear-gradient(120deg, #0f172a 0%, #1e1b4b 50%, #15803d 100%)',
-        boxShadow: '0 25px 50px -12px rgba(21, 128, 61, 0.3)',
-      }}>
-        <div className="absolute -top-20 -right-10 w-64 h-64 rounded-full opacity-30 animate-pulse"
-          style={{ background: 'radial-gradient(circle, #4ade80 0%, transparent 70%)' }} />
-        <div className="relative z-10 p-6 sm:p-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-2xl flex items-center justify-center"
-              style={{ background: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(16px)' }}>
-              <BookOpen className="w-7 h-7 text-green-300" />
-            </div>
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
-                {isStudent ? 'My Homework' : 'Homework Manager'}
-              </h1>
-              <p className="text-green-200/80 text-sm font-medium mt-0.5">
-                {isStudent ? 'View assignments from your teachers' : 'Assign and manage homework for your classes'}
-              </p>
-            </div>
-          </div>
-          {canEdit && (
-            <button onClick={openCreate}
-              className="flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-sm transition-all hover:scale-105 cursor-pointer"
-              style={{ background: 'rgba(255,255,255,0.15)', color: 'white', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.2)' }}>
-              <Plus className="w-4 h-4" /> Assign Homework
-            </button>
-          )}
+      {canEdit && (
+        <div className="flex justify-end mb-4">
+          <button onClick={openCreate}
+            className="flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-sm transition-all hover:scale-105 cursor-pointer bg-green-600 text-white shadow-md hover:bg-green-700">
+            <Plus className="w-4 h-4" /> Assign Homework
+          </button>
         </div>
-      </div>
+      )}
 
       {/* Filters */}
       {canEdit && (

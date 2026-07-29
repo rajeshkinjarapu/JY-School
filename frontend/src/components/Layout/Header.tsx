@@ -13,16 +13,23 @@ export const Header: React.FC<HeaderProps> = ({ onMenuClick, title }) => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Show back button only when:
-  // 1. Not on dashboard/root
-  // 2. There's actual browser history to go back to
+  // Show back button only when not on dashboard/root
   const isDashboard = location.pathname === '/dashboard' || location.pathname === '/';
-  const hasHistory = window.history.length > 1;
-  const showBackButton = !isDashboard && hasHistory;
+  const showBackButton = !isDashboard;
 
   const handleBack = () => {
-    // Go back in react-router history
-    navigate(-1);
+    // If we have history state indicating we navigated within the app, go back
+    if (window.history.state && window.history.state.idx > 0) {
+      navigate(-1);
+    } else {
+      // Fallback: navigate to parent route
+      const segments = location.pathname.split('/').filter(Boolean);
+      if (segments.length > 1) {
+        navigate('/' + segments.slice(0, -1).join('/'));
+      } else {
+        navigate('/dashboard');
+      }
+    }
   };
 
   return (

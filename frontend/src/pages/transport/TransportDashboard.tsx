@@ -56,14 +56,8 @@ export const TransportDashboard = () => {
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="flex justify-between items-center bg-white dark:bg-gray-900 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-gray-800">
-        <div>
-          <h2 className="text-2xl font-black text-slate-800 dark:text-white uppercase tracking-tight">TRANSPORT DASHBOARD</h2>
-          <p className="text-slate-500 dark:text-gray-400 font-medium mt-1">Manage school transportation, routes, and vehicles.</p>
-        </div>
-        <div className="hidden md:flex w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white items-center justify-center shadow-lg shadow-indigo-500/30 transform hover:scale-110 transition-transform">
-          <Bus className="w-8 h-8" strokeWidth={2.5} />
-        </div>
+      <div className="flex justify-between items-center mb-2">
+        <p className="text-slate-500 dark:text-gray-400 font-medium">Manage school transportation, routes, and vehicles.</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">

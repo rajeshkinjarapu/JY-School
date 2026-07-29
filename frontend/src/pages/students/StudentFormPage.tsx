@@ -103,15 +103,8 @@ export const StudentFormPage: React.FC = () => {
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
-      <Link to="/students" className="inline-flex items-center gap-1.5 text-sm font-semibold text-gray-500 hover:text-black dark:hover:text-white">
-        <ArrowLeft className="w-4 h-4" /> Back to List
-      </Link>
-
       <div className="card p-6 space-y-6">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-            {id ? 'Edit Student Profile' : 'Add New Student'}
-          </h2>
           <p className="text-sm text-gray-500">
             {id ? 'Modify student and guardian information details.' : 'Create a new student profile and link academic metadata.'}
           </p>

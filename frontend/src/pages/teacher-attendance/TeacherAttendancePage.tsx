@@ -139,44 +139,22 @@ const TeacherAttendancePage: React.FC = () => {
 
   return (
     <div className="space-y-4 sm:space-y-6 md:space-y-8 p-0 sm:p-4 md:p-8 bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 min-h-screen animate-fade-in-up pb-10 overflow-x-hidden">
-      {/* Header */}
-      <div className="relative overflow-hidden rounded-none sm:rounded-[2rem] hidden md:block" style={{
-        background: 'linear-gradient(120deg, #0f172a 0%, #1e1b4b 50%, #7c3aed 100%)',
-        boxShadow: '0 25px 50px -12px rgba(124,58,237,0.3)',
-      }}>
-        <div className="absolute -top-20 -right-10 w-64 h-64 rounded-full opacity-30 animate-pulse"
-          style={{ background: 'radial-gradient(circle, #a78bfa 0%, transparent 70%)' }} />
-        <div className="relative z-10 p-6 sm:p-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-2xl flex items-center justify-center"
-              style={{ background: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(16px)' }}>
-              <CalendarCheck className="w-7 h-7 text-violet-300" />
-            </div>
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
-                {isAdmin ? 'Staff Attendance' : 'My Attendance'}
-              </h1>
-              <p className="text-violet-200/80 text-sm font-medium mt-0.5">
-                {isAdmin ? 'Mark and manage teacher attendance' : 'View your monthly attendance record'}
-              </p>
-            </div>
+      <div className="flex justify-end mb-4">
+        {/* Month Navigator */}
+        <div className="flex items-center gap-3 bg-white p-2 rounded-xl shadow-sm border border-gray-100">
+          <button onClick={() => navigateMonth(-1)}
+            className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 transition-all cursor-pointer">
+            <ChevronLeft className="w-5 h-5" />
+          </button>
+          <div className="flex flex-col items-center min-w-[120px]">
+            <span className="text-sm font-black text-gray-900">{MONTHS[selectedMonth]}</span>
+            <span className="text-xs font-bold text-gray-500">{selectedYear}</span>
           </div>
-
-          {/* Month Navigator */}
-          <div className="flex items-center gap-3">
-            <button onClick={() => navigateMonth(-1)}
-              className="p-2 rounded-xl text-white hover:bg-white/10 transition-all cursor-pointer">
-              <ChevronLeft className="w-5 h-5" />
-            </button>
-            <span className="text-white font-black text-lg min-w-[140px] text-center">
-              {MONTHS[selectedMonth]} {selectedYear}
-            </span>
-            <button onClick={() => navigateMonth(1)}
-              className="p-2 rounded-xl text-white hover:bg-white/10 transition-all cursor-pointer"
-              disabled={selectedMonth === today.getMonth() && selectedYear === today.getFullYear()}>
-              <ChevronRight className="w-5 h-5" />
-            </button>
-          </div>
+          <button onClick={() => navigateMonth(1)}
+            className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 transition-all cursor-pointer"
+            disabled={selectedMonth === today.getMonth() && selectedYear === today.getFullYear()}>
+            <ChevronRight className="w-5 h-5" />
+          </button>
         </div>
       </div>
 

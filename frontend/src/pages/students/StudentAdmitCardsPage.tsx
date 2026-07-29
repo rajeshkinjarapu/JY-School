@@ -30,13 +30,8 @@ export const StudentAdmitCardsPage: React.FC = () => {
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto p-4 sm:p-6 pb-24">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600 rounded-3xl p-6 sm:p-8 text-white shadow-2xl relative overflow-hidden">
-        <div className="relative z-10">
-          <h1 className="text-2xl sm:text-3xl font-black tracking-tight mb-2">My Admit Cards</h1>
-          <p className="text-indigo-100 font-medium">View and download your admit cards for upcoming and past examinations.</p>
-        </div>
-        <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+      <div className="mb-2">
+        <p className="text-gray-500 font-medium text-sm">View and download your admit cards for upcoming and past examinations.</p>
       </div>
 
       {exams.length > 0 ? (

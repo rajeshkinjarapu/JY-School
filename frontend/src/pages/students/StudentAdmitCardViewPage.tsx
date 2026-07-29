@@ -51,8 +51,7 @@ export const StudentAdmitCardViewPage: React.FC = () => {
 
   return (
     <div className="bg-gradient-to-br from-indigo-50 via-purple-50 to-blue-50 min-h-screen p-4 sm:p-8 flex flex-col items-center">
-      <div className="w-full max-w-4xl flex justify-between items-center mb-6 print:hidden">
-        <h1 className="text-2xl font-black text-slate-800">My Admit Card</h1>
+      <div className="w-full max-w-4xl flex justify-end items-center mb-6 print:hidden">
         <button onClick={() => window.print()} className="btn-primary flex items-center gap-2">
           <Printer className="w-4 h-4" /> Print / Download PDF
         </button>

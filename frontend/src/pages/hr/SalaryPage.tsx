@@ -125,37 +125,14 @@ const SalaryPage: React.FC = () => {
 
   return (
     <div className="space-y-4 sm:space-y-6 md:space-y-8 p-0 sm:p-4 md:p-8 bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 min-h-screen animate-fade-in-up pb-10 overflow-x-hidden">
-      {/* Header */}
-      <div className="relative overflow-hidden rounded-none sm:rounded-[2rem]" style={{
-        background: 'linear-gradient(120deg, #0f172a 0%, #1e1b4b 50%, #7c3aed 100%)',
-        boxShadow: '0 25px 50px -12px rgba(124,58,237,0.3)',
-      }}>
-        <div className="absolute -top-20 -right-10 w-64 h-64 rounded-full opacity-30 animate-pulse"
-          style={{ background: 'radial-gradient(circle, #c4b5fd 0%, transparent 70%)' }} />
-        <div className="relative z-10 p-6 sm:p-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-2xl flex items-center justify-center"
-              style={{ background: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(16px)' }}>
-              {isAdmin ? <Shield className="w-7 h-7 text-violet-300" /> : <CreditCard className="w-7 h-7 text-violet-300" />}
-            </div>
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
-                {isAdmin ? 'HR & Payroll' : 'My Salary Slips'}
-              </h1>
-              <p className="text-violet-200/80 text-sm font-medium mt-0.5">
-                {isAdmin ? 'Manage staff salaries and generate payslips' : 'View your monthly salary and payment history'}
-              </p>
-            </div>
-          </div>
-          {isAdmin && (
-            <button onClick={openCreate}
-              className="flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-sm transition-all hover:scale-105 cursor-pointer"
-              style={{ background: 'rgba(255,255,255,0.15)', color: 'white', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.2)' }}>
-              <Plus className="w-4 h-4" /> Add Record
-            </button>
-          )}
+      {isAdmin && (
+        <div className="flex justify-end mb-4">
+          <button onClick={openCreate}
+            className="flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-sm transition-all hover:scale-105 cursor-pointer bg-violet-600 text-white shadow-md hover:bg-violet-700">
+            <Plus className="w-4 h-4" /> Add Record
+          </button>
         </div>
-      </div>
+      )}
 
       {/* Filters */}
       <div className="flex flex-wrap gap-3 px-3 sm:px-0">

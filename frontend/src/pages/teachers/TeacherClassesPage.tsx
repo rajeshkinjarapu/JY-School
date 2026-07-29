@@ -32,12 +32,8 @@ export const TeacherClassesPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h2 className="text-2xl font-black text-slate-900">Assigned Classes</h2>
-          <p className="text-sm text-slate-500 mt-1">Subject-wise class assignments you teach.</p>
-        </div>
-        <button type="button" onClick={() => window.history.back()} className="inline-flex items-center gap-2 text-sm font-bold text-indigo-700 hover:text-indigo-900"><ArrowLeft className="w-4 h-4" /> Back</button>
+      <div className="mb-4">
+        <p className="text-sm text-slate-500">Subject-wise class assignments you teach.</p>
       </div>
 
       {loading ? (
