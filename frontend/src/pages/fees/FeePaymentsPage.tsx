@@ -541,15 +541,15 @@ export const FeePaymentsPage: React.FC = () => {
 
       {/* Record Payment Modal / Inline Form for Teachers */}
       {(showModal || user?.role === 'TEACHER') && (
-        <div className={user?.role === 'TEACHER' ? "w-full max-w-4xl mx-auto mt-2" : "fixed inset-0 z-[100] flex flex-col items-center justify-center bg-indigo-900/40 backdrop-blur-md p-4"}>
+        <div className={user?.role === 'TEACHER' ? "w-full max-w-4xl mx-auto mt-2" : "fixed inset-0 z-[100] flex flex-col items-center justify-center bg-indigo-900/40 backdrop-blur-sm sm:backdrop-blur-md sm:p-4"}>
           {user?.role !== 'TEACHER' && <div className="fixed inset-0" onClick={() => setShowModal(false)} />}
 
           {/* ── Desktop-optimised modal shell ── */}
-          <div className={`relative w-full ${
+          <div className={`relative w-full h-full sm:h-auto ${
             user?.role === 'TEACHER'
               ? 'sm:rounded-[2rem] shadow-2xl'
               : 'sm:max-w-3xl sm:rounded-[2rem] shadow-[0_32px_80px_rgba(80,0,200,0.22)]'
-          } bg-white overflow-hidden flex flex-col sm:flex-row z-10 animate-scale-in max-h-[92vh] sm:max-h-[85vh]`}>
+          } bg-white overflow-hidden flex flex-col sm:flex-row z-10 animate-scale-in max-h-[100dvh] sm:max-h-[85vh]`}>
 
             {/* LEFT sidebar – gradient brand panel (hidden on mobile) */}
             <div className="hidden sm:flex flex-col justify-between w-64 flex-shrink-0 bg-gradient-to-b from-purple-600 via-indigo-600 to-pink-600 p-7 text-white">
@@ -588,12 +588,12 @@ export const FeePaymentsPage: React.FC = () => {
             </div>
 
             {/* RIGHT – scrollable form */}
-            <div className="flex-1 overflow-y-auto bg-gradient-to-b from-slate-50/60 to-white">
+            <div className="flex-1 overflow-y-auto bg-gradient-to-b from-slate-50/60 to-white pb-6 sm:pb-0">
               {/* Mobile header */}
-              <div className="sm:hidden flex items-center justify-between px-5 py-4 bg-gradient-to-r from-purple-600 to-indigo-600 text-white">
-                <h2 className="text-base font-extrabold">Collect Payment</h2>
-                <button type="button" onClick={() => setShowModal(false)} className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center">
-                  <X className="w-4 h-4" />
+              <div className="sm:hidden flex items-center justify-between px-4 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-sm sticky top-0 z-20">
+                <h2 className="text-sm font-extrabold">Collect Payment</h2>
+                <button type="button" onClick={() => setShowModal(false)} className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center hover:bg-white/30 transition-colors">
+                  <X className="w-3.5 h-3.5" />
                 </button>
               </div>
 
@@ -608,20 +608,20 @@ export const FeePaymentsPage: React.FC = () => {
                 </button>
               )}
 
-              <form onSubmit={handleSubmit} className="p-5 sm:p-7 space-y-5">
+              <form onSubmit={handleSubmit} className="p-4 sm:p-7 space-y-3 sm:space-y-5">
 
                 {/* ── Smart Student Selector ── */}
-                <div className="space-y-3">
-                  <p className="text-xs font-extrabold text-slate-500 uppercase tracking-widest">Select Student</p>
+                <div className="space-y-2 sm:space-y-3">
+                  <p className="text-[10px] sm:text-xs font-extrabold text-slate-500 uppercase tracking-widest hidden sm:block">Select Student</p>
 
                   {/* Row 1: Class + Section */}
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-2 gap-2 sm:gap-3">
                     <div>
-                      <label className="text-[10px] font-bold text-purple-500 uppercase tracking-wider mb-1 block">Class</label>
+                      <label className="text-[9px] sm:text-[10px] font-bold text-purple-500 uppercase tracking-wider mb-0.5 sm:mb-1 block">Class</label>
                       <select
                         value={filterClass}
                         onChange={(e) => { setFilterClass(e.target.value); setFilterSection(''); setSelectedStudent(null); setStudentId(''); setSelectedFees([]); }}
-                        className="w-full px-3 py-2.5 text-xs border border-purple-100 rounded-xl bg-purple-50/50 outline-none focus:ring-2 focus:ring-purple-400 font-semibold text-purple-900"
+                        className="w-full px-2 py-1.5 sm:px-3 sm:py-2.5 text-xs border border-purple-100 rounded-lg sm:rounded-xl bg-purple-50/50 outline-none focus:ring-2 focus:ring-purple-400 font-semibold text-purple-900"
                       >
                         <option value="">All Classes</option>
                         {uniqueClassNames.map((name) => (
@@ -630,11 +630,11 @@ export const FeePaymentsPage: React.FC = () => {
                       </select>
                     </div>
                     <div>
-                      <label className="text-[10px] font-bold text-purple-500 uppercase tracking-wider mb-1 block">Section</label>
+                      <label className="text-[9px] sm:text-[10px] font-bold text-purple-500 uppercase tracking-wider mb-0.5 sm:mb-1 block">Section</label>
                       <select
                         value={filterSection}
                         onChange={(e) => { setFilterSection(e.target.value); setSelectedStudent(null); setStudentId(''); setSelectedFees([]); }}
-                        className="w-full px-3 py-2.5 text-xs border border-purple-100 rounded-xl bg-purple-50/50 outline-none focus:ring-2 focus:ring-purple-400 font-semibold text-purple-900"
+                        className="w-full px-2 py-1.5 sm:px-3 sm:py-2.5 text-xs border border-purple-100 rounded-lg sm:rounded-xl bg-purple-50/50 outline-none focus:ring-2 focus:ring-purple-400 font-semibold text-purple-900"
                       >
                         <option value="">All Sections</option>
                         {uniqueSections.map(sec => (
@@ -646,20 +646,20 @@ export const FeePaymentsPage: React.FC = () => {
 
                   {/* Row 2: Search box with live dropdown */}
                   <div className="relative">
-                    <label className="text-[10px] font-bold text-pink-500 uppercase tracking-wider mb-1 block">Search by Name or Roll No</label>
+                    <label className="text-[9px] sm:text-[10px] font-bold text-pink-500 uppercase tracking-wider mb-0.5 sm:mb-1 block">Search by Name or Roll No</label>
                     <div className="relative">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-pink-400" />
+                      <Search className="absolute left-2.5 sm:left-3 top-1/2 -translate-y-1/2 w-3 h-3 sm:w-3.5 sm:h-3.5 text-pink-400" />
                       <input
                         type="text"
                         placeholder="Type student name..."
                         value={searchName}
                         onFocus={() => setShowStudentDropdown(true)}
                         onChange={(e) => { setSearchName(e.target.value); setShowStudentDropdown(true); }}
-                        className="w-full pl-8 pr-8 py-2.5 text-xs border border-pink-100 rounded-xl bg-pink-50/50 outline-none focus:ring-2 focus:ring-pink-400 font-medium text-pink-900"
+                        className="w-full pl-7 sm:pl-8 pr-7 sm:pr-8 py-1.5 sm:py-2.5 text-xs border border-pink-100 rounded-lg sm:rounded-xl bg-pink-50/50 outline-none focus:ring-2 focus:ring-pink-400 font-medium text-pink-900"
                       />
                       {searchName && (
-                        <button type="button" onClick={() => { setSearchName(''); setSelectedStudent(null); setStudentId(''); setSelectedFees([]); }} className="absolute right-3 top-1/2 -translate-y-1/2 text-pink-400 hover:text-pink-600">
-                          <X className="w-3.5 h-3.5" />
+                        <button type="button" onClick={() => { setSearchName(''); setSelectedStudent(null); setStudentId(''); setSelectedFees([]); }} className="absolute right-2.5 sm:right-3 top-1/2 -translate-y-1/2 text-pink-400 hover:text-pink-600">
+                          <X className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                         </button>
                       )}
                     </div>
@@ -699,7 +699,7 @@ export const FeePaymentsPage: React.FC = () => {
 
                   {/* Selected student badge */}
                   {selectedStudent && (
-                    <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-200 rounded-xl shadow-sm">
+                    <div className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-200 rounded-lg sm:rounded-xl shadow-sm mt-2">
                       <div className="w-9 h-9 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center flex-shrink-0 shadow-md">
                         <span className="text-sm font-black text-white">{selectedStudent.user.name?.[0]?.toUpperCase()}</span>
                       </div>
@@ -789,23 +789,23 @@ export const FeePaymentsPage: React.FC = () => {
                 )}
 
                 {/* ── Two-column row: Date + Method (desktop) ── */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-2 sm:gap-4 mt-2">
                   <div>
-                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1 block">Payment Date</label>
+                    <label className="text-[9px] sm:text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-0.5 sm:mb-1 block">Payment Date</label>
                     <input
                       type="date"
                       value={paymentDate}
                       onChange={(e) => setPaymentDate(e.target.value)}
-                      className="w-full px-3 py-2.5 text-xs border border-slate-200 rounded-xl bg-slate-50 outline-none focus:ring-2 focus:ring-indigo-400 font-semibold text-slate-900"
+                      className="w-full px-2 py-1.5 sm:px-3 sm:py-2.5 text-xs border border-slate-200 rounded-lg sm:rounded-xl bg-slate-50 outline-none focus:ring-2 focus:ring-indigo-400 font-semibold text-slate-900"
                       required
                     />
                   </div>
                   <div>
-                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1 block">Payment Method</label>
+                    <label className="text-[9px] sm:text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-0.5 sm:mb-1 block">Payment Method</label>
                     <select
                       value={method}
                       onChange={(e) => setMethod(e.target.value)}
-                      className="w-full px-3 py-2.5 text-xs border border-slate-200 rounded-xl bg-slate-50 outline-none focus:ring-2 focus:ring-indigo-400 font-semibold text-slate-900"
+                      className="w-full px-2 py-1.5 sm:px-3 sm:py-2.5 text-xs border border-slate-200 rounded-lg sm:rounded-xl bg-slate-50 outline-none focus:ring-2 focus:ring-indigo-400 font-semibold text-slate-900"
                     >
                       <option value="CASH">Cash</option>
                       <option value="ONLINE">Online Transfer</option>
@@ -857,23 +857,23 @@ export const FeePaymentsPage: React.FC = () => {
 
                 {/* ── Remarks ── */}
                 <div>
-                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1 block">Remarks</label>
+                  <label className="text-[9px] sm:text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-0.5 sm:mb-1 block">Remarks</label>
                   <input
                     type="text"
                     placeholder="e.g. Cleared full balance"
                     value={remarks}
                     onChange={(e) => setRemarks(e.target.value)}
-                    className="w-full px-3 py-2.5 text-xs border border-slate-200 rounded-xl bg-slate-50 outline-none focus:ring-2 focus:ring-indigo-400 font-medium text-slate-900"
+                    className="w-full px-2 py-1.5 sm:px-3 sm:py-2.5 text-xs border border-slate-200 rounded-lg sm:rounded-xl bg-slate-50 outline-none focus:ring-2 focus:ring-indigo-400 font-medium text-slate-900"
                   />
                 </div>
 
                 {/* ── Action buttons ── */}
-                <div className="flex gap-3 justify-end pt-4 border-t border-slate-100 mt-2">
+                <div className="flex gap-2 sm:gap-3 justify-end pt-2 sm:pt-4 border-t border-slate-100 mt-2 pb-4 sm:pb-0">
                   {user?.role !== 'TEACHER' && (
                     <button
                       type="button"
                       onClick={() => setShowModal(false)}
-                      className="hidden sm:block px-6 py-3 rounded-xl text-sm font-bold text-slate-500 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+                      className="hidden sm:block px-6 py-2 sm:py-3 rounded-lg sm:rounded-xl text-sm font-bold text-slate-500 hover:text-slate-700 hover:bg-slate-100 transition-colors"
                     >
                       Cancel
                     </button>
@@ -881,7 +881,7 @@ export const FeePaymentsPage: React.FC = () => {
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="flex-1 sm:flex-initial sm:w-auto px-8 py-3 text-sm font-bold bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 hover:from-pink-600 hover:via-purple-600 hover:to-indigo-600 text-white shadow-xl shadow-purple-500/25 transform transition-all hover:-translate-y-0.5 rounded-xl disabled:opacity-70"
+                    className="flex-1 sm:flex-initial sm:w-auto px-4 py-2.5 sm:px-8 sm:py-3 text-sm font-bold bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 hover:from-pink-600 hover:via-purple-600 hover:to-indigo-600 text-white shadow-xl shadow-purple-500/25 transform transition-all hover:-translate-y-0.5 rounded-lg sm:rounded-xl disabled:opacity-70"
                   >
                     {isSubmitting ? 'Recording...' : 'Confirm & Record'}
                   </button>
