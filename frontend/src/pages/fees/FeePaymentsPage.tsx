@@ -2,7 +2,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import api from '../../api/axios';
 import { LoadingSpinner } from '../../components/UI/LoadingSpinner';
 import { Badge } from '../../components/UI/Badge';
-import { Plus, FileDown, Trash2, Search, X, ChevronDown, FileText, Upload, CheckCircle2, AlertCircle, MinusCircle } from 'lucide-react';
+import { Plus, FileDown, Trash2, Search, X, ChevronDown, FileText, Upload, CheckCircle2, AlertCircle, MinusCircle, Calendar, SlidersHorizontal } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import toast from 'react-hot-toast';
 import { Link, useSearchParams } from 'react-router-dom';
@@ -38,6 +38,20 @@ export const FeePaymentsPage: React.FC = () => {
   const [importLoading, setImportLoading] = useState(false);
   const [importResult, setImportResult] = useState<any>(null);
   const [dragOver, setDragOver] = useState(false);
+
+  // Date range filter
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
+
+  // Filtered payments based on date range
+  const filteredPayments = useMemo(() => {
+    return payments.filter(p => {
+      const d = new Date(p.paymentDate);
+      if (dateFrom && d < new Date(dateFrom)) return false;
+      if (dateTo && d > new Date(dateTo + 'T23:59:59')) return false;
+      return true;
+    });
+  }, [payments, dateFrom, dateTo]);
 
   const toggleRow = (id: string) => setExpandedRow(prev => prev === id ? null : id);
 
@@ -331,40 +345,44 @@ export const FeePaymentsPage: React.FC = () => {
             <h3 className="text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight whitespace-nowrap overflow-hidden text-ellipsis">Fee Transaction Ledger</h3>
             <p className="text-indigo-100 mt-1 sm:mt-2 font-medium text-sm sm:text-lg opacity-90 leading-snug">Track paid, pending and overdue tuition invoices.</p>
           </div>
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap gap-2">
             {(user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN' || user?.role === 'ACCOUNTANT') && (
               <>
+                {/* Ghost-style buttons — no colour boxes */}
                 <button
                   onClick={exportPaymentsExcel}
-                  className="btn-secondary flex items-center gap-2 text-sm text-emerald-600 border border-emerald-100/50 hover:bg-emerald-50 dark:hover:bg-emerald-950/10 cursor-pointer"
+                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold text-white/90 border border-white/25 hover:bg-white/15 transition-all"
                 >
-                  <FileDown className="w-4.5 h-4.5" />
-                  <span>Export Excel</span>
+                  <FileDown className="w-4 h-4" /> Export Excel
                 </button>
                 <button
                   onClick={exportPaymentsPdf}
-                  className="btn-secondary flex items-center gap-2 text-sm text-indigo-600 border border-indigo-100/50 hover:bg-indigo-50 dark:hover:bg-indigo-950/10 cursor-pointer"
+                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold text-white/90 border border-white/25 hover:bg-white/15 transition-all"
                 >
-                  <FileDown className="w-4.5 h-4.5" />
-                  <span>Export PDF</span>
+                  <FileDown className="w-4 h-4" /> Export PDF
+                </button>
+                <button
+                  onClick={downloadTemplate}
+                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold text-white/90 border border-white/25 hover:bg-white/15 transition-all"
+                >
+                  <FileText className="w-4 h-4" /> Sample Excel
                 </button>
                 {(user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN') && (
-                  <Link to="/fees/structures" className="btn-secondary text-sm">
-                    Structure Settings
+                  <Link to="/fees/structures" className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold text-white/90 border border-white/25 hover:bg-white/15 transition-all">
+                    <SlidersHorizontal className="w-4 h-4" /> Structure Settings
                   </Link>
                 )}
-                {(user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN' || user?.role === 'ACCOUNTANT') && (
-                  <button
-                    onClick={() => { setShowImportModal(true); setImportResult(null); setImportFile(null); }}
-                    className="btn-secondary flex items-center gap-2 text-sm text-emerald-700 border border-emerald-200/60 hover:bg-emerald-50 cursor-pointer"
-                  >
-                    <Upload className="w-4 h-4" />
-                    <span>Import Excel</span>
-                  </button>
-                )}
-                <button onClick={() => setShowModal(true)} className="btn-primary flex items-center gap-2">
-                  <Plus className="w-4.5 h-4.5" />
-                  <span>Collect Payment</span>
+                <button
+                  onClick={() => { setShowImportModal(true); setImportResult(null); setImportFile(null); }}
+                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold text-white/90 border border-white/25 hover:bg-white/15 transition-all"
+                >
+                  <Upload className="w-4 h-4" /> Import Excel
+                </button>
+                <button
+                  onClick={() => setShowModal(true)}
+                  className="flex items-center gap-1.5 px-5 py-2 rounded-xl text-sm font-bold bg-white text-indigo-600 hover:bg-white/90 shadow-md transition-all"
+                >
+                  <Plus className="w-4 h-4" /> Collect Payment
                 </button>
               </>
             )}
@@ -374,6 +392,43 @@ export const FeePaymentsPage: React.FC = () => {
 
       {user?.role !== 'TEACHER' && (
         <div className="px-0 sm:px-0">
+
+        {/* ── Date Range Filter Bar ── */}
+        <div className="hidden md:flex items-center gap-3 px-1 pb-2">
+          <div className="flex items-center gap-2 bg-white/80 backdrop-blur border border-slate-200 rounded-xl px-3 py-2 shadow-sm">
+            <Calendar className="w-4 h-4 text-indigo-400 flex-shrink-0" />
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">From</span>
+            <input
+              type="date"
+              value={dateFrom}
+              onChange={e => setDateFrom(e.target.value)}
+              className="text-xs font-semibold text-slate-700 outline-none bg-transparent"
+            />
+          </div>
+          <div className="flex items-center gap-2 bg-white/80 backdrop-blur border border-slate-200 rounded-xl px-3 py-2 shadow-sm">
+            <Calendar className="w-4 h-4 text-pink-400 flex-shrink-0" />
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">To</span>
+            <input
+              type="date"
+              value={dateTo}
+              onChange={e => setDateTo(e.target.value)}
+              className="text-xs font-semibold text-slate-700 outline-none bg-transparent"
+            />
+          </div>
+          {(dateFrom || dateTo) && (
+            <button
+              onClick={() => { setDateFrom(''); setDateTo(''); }}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-500 border border-slate-200 bg-white/80 hover:bg-red-50 hover:text-red-500 hover:border-red-200 transition-colors shadow-sm"
+            >
+              <X className="w-3.5 h-3.5" /> Clear Filter
+            </button>
+          )}
+          <span className="ml-auto text-xs font-semibold text-slate-400">
+            {filteredPayments.length} record{filteredPayments.length !== 1 ? 's' : ''}
+            {(dateFrom || dateTo) ? ' (filtered)' : ''}
+          </span>
+        </div>
+
         {loading ? (
           <LoadingSpinner size="lg" className="py-12" />
         ) : (
@@ -391,7 +446,7 @@ export const FeePaymentsPage: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y">
-                {payments.map((p) => (
+                {filteredPayments.map((p) => (
                   <React.Fragment key={p.id}>
                   <tr onClick={() => toggleRow(p.id)} className="hover:bg-indigo-50/30 transition-colors cursor-pointer md:cursor-default">
                     <td className="px-2 sm:px-6 py-3 sm:py-4 font-bold text-slate-800 leading-tight text-xs sm:text-sm">{p.student?.user?.name || 'Unknown student'}</td>
