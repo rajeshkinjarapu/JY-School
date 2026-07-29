@@ -90,16 +90,16 @@ export const FinancePage: React.FC = () => {
         isStudent ? Promise.resolve({ data: [] }) : api.get('/api/classes?limit=5000'),
       ]);
 
-      const paymentData = Array.isArray(payRes.data)
+      const paymentData = Array.isArray(payRes?.data)
         ? payRes.data
         : Array.isArray(payRes)
           ? payRes
           : [];
       const uniquePayments = [...new Map(paymentData.map((p: any) => [p.id, p])).values()];
       setPayments(uniquePayments);
-      setStudents(studRes.data.data || studRes.data || []);
-      setStructures(structRes.data || structRes || []);
-      setClasses(classRes.data || classRes || []);
+      setStudents(Array.isArray(studRes) ? studRes : studRes?.data?.data || studRes?.data || []);
+      setStructures(Array.isArray(structRes) ? structRes : structRes?.data || []);
+      setClasses(Array.isArray(classRes) ? classRes : classRes?.data || []);
     } catch (e) {
       toast.error('Failed to load financial records');
     } finally {
