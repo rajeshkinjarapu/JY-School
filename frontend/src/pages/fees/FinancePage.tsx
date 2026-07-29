@@ -5,7 +5,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { LoadingSpinner } from '../../components/UI/LoadingSpinner';
 import { Badge } from '../../components/UI/Badge';
 import {
-  CreditCard, Plus, FileDown, ShieldCheck, Printer, ArrowRight,
+  CreditCard, Plus, FileDown, ShieldCheck, Printer, ArrowRight, ArrowLeft,
   TrendingUp, Wallet, Award, Briefcase, DollarSign, Layers,
   Receipt, FileText, Search, Filter, Trash2, Edit3, Calendar,
   Clock, CheckCircle, AlertTriangle, Users
@@ -18,7 +18,7 @@ export const FinancePage: React.FC = () => {
   const isAdmin = user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN' || user?.role === 'ACCOUNTANT';
 
   const [searchParams, setSearchParams] = useSearchParams();
-  const activeTab = searchParams.get('tab') || 'payment-method';
+  const activeTab = searchParams.get('tab') || 'dashboard';
 
   const [loading, setLoading] = useState(true);
 
@@ -293,52 +293,73 @@ export const FinancePage: React.FC = () => {
     return matchesSearch && matchesStatus;
   });
 
+  const tabs = [
+    { key: 'payment-method', label: 'Payment Method', icon: CreditCard, color: 'from-violet-500 to-purple-600', desc: 'Configure modes of payments available' },
+    { key: 'fee-group', label: 'Fee Group', icon: Layers, color: 'from-blue-500 to-cyan-600', desc: 'Manage categories of fees like Tuition' },
+    { key: 'fee-head', label: 'Fee Head', icon: DollarSign, color: 'from-emerald-500 to-teal-600', desc: 'Define specific fee components' },
+    { key: 'fee-concession', label: 'Fee Concession', icon: Award, color: 'from-orange-500 to-amber-600', desc: 'Set up discounts and fee waivers' },
+    { key: 'fee-structure', label: 'Fee Structure', icon: Briefcase, color: 'from-rose-500 to-pink-600', desc: 'Map fee components to specific classes' },
+    { key: 'student-fee-details', label: 'Student Fee Details', icon: Users, color: 'from-indigo-500 to-blue-600', desc: 'View and manage fee particulars' },
+    { key: 'transaction', label: 'Transaction', icon: Receipt, color: 'from-teal-500 to-green-600', desc: 'Record and track fee payments' },
+    { key: 'receipt', label: 'Receipt', icon: FileText, color: 'from-fuchsia-500 to-purple-600', desc: 'Generate and print official receipts' },
+    { key: 'report', label: 'Report', icon: TrendingUp, color: 'from-sky-500 to-indigo-600', desc: 'Analyze fee collections and dues' },
+  ];
+
   return (
-    <div className="flex flex-col lg:flex-row gap-6">
-      {/* ══ LEFT SIDEBAR TABS ══ */}
-      <div className={`print:hidden w-full lg:w-64 shrink-0 px-4 md:px-0 md:bg-white md:dark:bg-gray-900 md:border md:border-gray-150 md:dark:border-gray-800 md:rounded-3xl md:p-4 flex flex-col gap-1.5 md:shadow-sm ${activeTab === 'transaction' ? 'hidden' : ''}`}>
-        <div className="px-3 py-2 text-xs font-black uppercase text-gray-400 tracking-wider flex items-center gap-1.5 border-b border-gray-100 dark:border-gray-800 mb-2">
-          <Wallet className="w-4 h-4 text-indigo-500" />
-          Finance Submenu
-        </div>
-
-        {[
-          { key: 'payment-method', label: 'Payment Method', icon: CreditCard, color: 'from-violet-500 to-purple-600' },
-          { key: 'fee-group', label: 'Fee Group', icon: Layers, color: 'from-blue-500 to-cyan-600' },
-          { key: 'fee-head', label: 'Fee Head', icon: DollarSign, color: 'from-emerald-500 to-teal-600' },
-          { key: 'fee-concession', label: 'Fee Concession', icon: Award, color: 'from-orange-500 to-amber-600' },
-          { key: 'fee-structure', label: 'Fee Structure', icon: Briefcase, color: 'from-rose-500 to-pink-600' },
-          { key: 'student-fee-details', label: 'Student Fee Details', icon: Users, color: 'from-indigo-500 to-blue-600' },
-          { key: 'transaction', label: 'Transaction', icon: Receipt, color: 'from-teal-500 to-green-600' },
-          { key: 'receipt', label: 'Receipt', icon: FileText, color: 'from-fuchsia-500 to-purple-600' },
-          { key: 'report', label: 'Report', icon: TrendingUp, color: 'from-sky-500 to-indigo-600' },
-        ].map(tab => {
-          const Icon = tab.icon;
-          const isActive = activeTab === tab.key;
-          return (
-            <button
-              key={tab.key}
-              onClick={() => setTab(tab.key)}
-              className={`flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold transition-all text-left cursor-pointer ${
-                isActive
-                  ? `bg-gradient-to-r ${tab.color} text-white shadow-md scale-[1.01]`
-                  : 'text-gray-500 dark:text-gray-450 hover:bg-gray-50 dark:hover:bg-gray-800/40 hover:text-gray-900 dark:hover:text-white'
-              }`}
-            >
-              <Icon className="w-4.5 h-4.5" />
-              <span>{tab.label}</span>
-              <ArrowRight className={`w-3.5 h-3.5 ml-auto opacity-0 transition-opacity ${isActive ? 'opacity-100' : ''}`} />
-            </button>
-          );
-        })}
-      </div>
-
+    <div className="flex flex-col gap-6">
       {/* ══ RIGHT CONTENT PANEL ══ */}
       <div className="flex-1 p-0">
         {loading ? (
           <LoadingSpinner size="lg" className="py-24" />
         ) : (
           <>
+            {activeTab === 'dashboard' && (
+              <div className="space-y-6 animate-fade-in">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="p-3 bg-indigo-100 dark:bg-indigo-900/30 rounded-xl text-indigo-600 dark:text-indigo-400">
+                    <Wallet className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-black text-gray-900 dark:text-white">Finance Dashboard</h2>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Manage all financial modules from here.</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {tabs.map(tab => {
+                    const Icon = tab.icon;
+                    return (
+                      <button
+                        key={tab.key}
+                        onClick={() => setTab(tab.key)}
+                        className="group relative overflow-hidden bg-white dark:bg-gray-900 rounded-3xl p-6 text-left shadow-sm border border-gray-150 dark:border-gray-800 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-pointer"
+                      >
+                        <div className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br ${tab.color} opacity-10 rounded-full blur-3xl -mr-10 -mt-10 group-hover:opacity-20 transition-opacity`} />
+                        <div className={`w-12 h-12 rounded-2xl mb-4 flex items-center justify-center bg-gradient-to-br ${tab.color} text-white shadow-md group-hover:scale-110 transition-transform`}>
+                          <Icon className="w-6 h-6" />
+                        </div>
+                        <h3 className="text-lg font-black text-gray-900 dark:text-white mb-2">{tab.label}</h3>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">{tab.desc}</p>
+                        <div className="mt-4 flex items-center text-xs font-bold text-indigo-600 dark:text-indigo-400 opacity-0 group-hover:opacity-100 transition-opacity translate-y-2 group-hover:translate-y-0">
+                          Open Module <ArrowRight className="w-3 h-3 ml-1" />
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {activeTab !== 'dashboard' && (
+              <div className="mb-4">
+                <button
+                  onClick={() => setTab('dashboard')}
+                  className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl text-sm font-bold text-gray-600 hover:text-indigo-600 hover:border-indigo-200 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-all cursor-pointer shadow-sm"
+                >
+                  <ArrowLeft className="w-4 h-4" /> Back to Finance Dashboard
+                </button>
+              </div>
+            )}
             {/* ── 1. PAYMENT METHOD TAB ── */}
             {activeTab === 'student-fee-details' && (
               <StudentFeeDetailsTab 

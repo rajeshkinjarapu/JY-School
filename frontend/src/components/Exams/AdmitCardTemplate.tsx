@@ -27,8 +27,8 @@ export const AdmitCardTemplate: React.FC<AdmitCardTemplateProps> = ({ student, e
   const logoUrl = resolveUrl(settings.logoUrl || '');
 
   return (
-    <div className="admit-card-wrapper bg-white p-4 sm:p-8" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
-      <div className="w-full h-full border-2 border-black rounded-xl relative flex flex-col bg-white overflow-hidden">
+    <div className="admit-card-wrapper bg-white p-4 sm:p-6 w-[210mm] min-h-[297mm] mx-auto flex flex-col" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+      <div className="w-full flex-1 border-2 border-black rounded-xl relative flex flex-col bg-white overflow-hidden">
         
         {/* Header - Plain for Printing */}
         <div className="p-4 sm:p-6 flex flex-col sm:flex-row items-center justify-center sm:justify-between border-b-2 border-black gap-4 sm:gap-0">
@@ -87,6 +87,12 @@ export const AdmitCardTemplate: React.FC<AdmitCardTemplateProps> = ({ student, e
                     </td>
                   </tr>
                   <tr className="border-b border-gray-300">
+                    <td className="p-2 px-4 font-bold text-gray-800 uppercase text-xs tracking-wider border-r border-gray-300 bg-gray-50">Father Name</td>
+                    <td className="p-2 px-4 font-black text-black text-base uppercase">
+                      {student?.parent?.fatherName || student?.fatherName || '-'}
+                    </td>
+                  </tr>
+                  <tr className="border-b border-gray-300">
                     <td className="p-2 px-4 font-bold text-gray-800 uppercase text-xs tracking-wider border-r border-gray-300 bg-gray-50">Roll Number</td>
                     <td className="p-2 px-4 font-black text-black text-base">
                       {student?.rollNo || 'N/A'}
@@ -127,7 +133,7 @@ export const AdmitCardTemplate: React.FC<AdmitCardTemplateProps> = ({ student, e
             </div>
 
             {/* Photo Area */}
-            <div className="w-[110px] sm:w-[130px] mx-auto sm:mx-0 shrink-0 flex flex-col gap-2">
+            <div className="w-[90px] sm:w-[110px] mx-auto sm:mx-0 shrink-0 flex flex-col gap-2">
               <div className="w-full aspect-[3/4] border border-black flex flex-col items-center justify-center text-gray-600 relative p-1 bg-white">
                 {student?.user?.photoUrl ? (
                   <img src={getPhotoUrl(student.user.photoUrl)} alt="Student" className="w-full h-full object-cover" />
@@ -184,7 +190,7 @@ export const AdmitCardTemplate: React.FC<AdmitCardTemplateProps> = ({ student, e
         </div>
 
         {/* Footer Notes & Signatures */}
-        <div className="mt-2 mx-4 mb-4 p-4 border border-black flex flex-col sm:flex-row justify-between gap-6 px-4">
+        <div className="mt-auto mx-4 mb-4 p-4 border border-black flex flex-col sm:flex-row justify-between gap-6 px-4">
           <div className="flex-1">
             <h5 className="text-[11px] font-bold uppercase tracking-wider text-black mb-2 flex items-center gap-1">
               <span className="bg-black w-1.5 h-1.5 rounded-full"></span> Important Instructions
