@@ -16,8 +16,15 @@ export const FeePaymentsPage: React.FC = () => {
   const [structures, setStructures] = useState<any[]>([]);
   const [classes, setClasses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchParams] = useSearchParams();
-  const [showModal, setShowModal] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [showModal, setShowModal] = useState(searchParams.get('action') === 'collect');
+
+  useEffect(() => {
+    if (searchParams.get('action') === 'collect') {
+      setShowModal(true);
+    }
+  }, [searchParams]);
+
   const [printPayment, setPrintPayment] = useState<any>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
