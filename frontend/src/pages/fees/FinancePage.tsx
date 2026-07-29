@@ -169,6 +169,10 @@ export const FinancePage: React.FC = () => {
 
   /* ── Tab Change Helper ── */
   const setTab = (tab: string) => {
+    if (tab === 'transaction') {
+      window.location.href = '/fee-payment?action=collect';
+      return;
+    }
     setSearchParams({ tab });
   };
 

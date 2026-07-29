@@ -87,7 +87,7 @@ export const ExamListPage: React.FC = () => {
   const [boardExamType, setBoardExamType] = useState('');
   const [examClassIds, setExamClassIds] = useState<string[]>([]);
   const [examDate, setExamDate] = useState(new Date().toISOString().split('T')[0]);
-  const [selectedExamSubjects, setSelectedExamSubjects] = useState<{id: string, name: string, maxMarks: number}[]>([]);
+  const [selectedExamSubjects, setSelectedExamSubjects] = useState<{id: string, name: string, maxMarks: number, date?: string}[]>([]);
   
   // Auto calculate total marks
   const totalMarks = selectedExamSubjects.reduce((sum, sub) => sum + (Number(sub.maxMarks) || 0), 0);
@@ -122,6 +122,7 @@ export const ExamListPage: React.FC = () => {
   const [showExcelModal, setShowExcelModal] = useState(false);
   const [excelFile, setExcelFile] = useState<File | null>(null);
   const [excelExamId, setExcelExamId] = useState('');
+  const [expandedExam, setExpandedExam] = useState<string | null>(null);
 
   const fetchExams = async () => {
     try {
@@ -989,7 +990,7 @@ export const ExamListPage: React.FC = () => {
                   <label className="block text-xs font-black text-indigo-900 uppercase tracking-wide">Subjects & Max Marks</label>
                   <button 
                     type="button" 
-                    onClick={() => setSelectedExamSubjects([...selectedExamSubjects, { id: Date.now().toString() + Math.random(), name: '', maxMarks: 100 }])}
+                    onClick={() => setSelectedExamSubjects([...selectedExamSubjects, { id: Date.now().toString() + Math.random(), name: '', maxMarks: 100, date: examDate }])}
                     className="text-xs bg-indigo-100 text-indigo-700 hover:bg-indigo-200 px-3 py-1.5 rounded-lg font-bold flex items-center gap-1 transition-colors shadow-sm"
                   >
                     <Plus className="w-3 h-3" /> Add Subject
@@ -998,41 +999,55 @@ export const ExamListPage: React.FC = () => {
                 
                 <div className="space-y-3">
                   {selectedExamSubjects.map((sub, i) => (
-                    <div key={sub.id} className="flex gap-2 items-center bg-indigo-50/50 p-2 rounded-xl border border-indigo-100 shadow-sm">
-                      <input 
-                        type="text" 
-                        required 
-                        placeholder="Subject Name" 
-                        value={sub.name}
-                        onChange={(e) => {
-                          const newSubs = [...selectedExamSubjects];
-                          newSubs[i].name = e.target.value;
-                          setSelectedExamSubjects(newSubs);
-                        }}
-                        className="flex-1 min-w-0 px-3 py-2 bg-white border-2 border-indigo-100 rounded-lg text-sm font-bold text-slate-800 outline-none focus:border-indigo-400"
-                      />
-                      <div className="flex items-center gap-2 bg-white px-2 py-1.5 rounded-lg border-2 border-indigo-100 shrink-0">
-                        <span className="text-[10px] font-black text-slate-400 uppercase">Max:</span>
+                    <div key={sub.id} className="flex flex-col gap-2 bg-indigo-50/50 p-3 rounded-xl border border-indigo-100 shadow-sm">
+                      <div className="flex gap-2 items-center">
                         <input 
-                          type="number" 
-                          required
-                          min={1}
-                          value={sub.maxMarks}
+                          type="text" 
+                          required 
+                          placeholder="Subject Name" 
+                          value={sub.name}
                           onChange={(e) => {
                             const newSubs = [...selectedExamSubjects];
-                            newSubs[i].maxMarks = Number(e.target.value);
+                            newSubs[i].name = e.target.value;
                             setSelectedExamSubjects(newSubs);
                           }}
-                          className="w-14 text-sm font-bold text-indigo-900 outline-none text-center bg-transparent"
+                          className="flex-1 min-w-0 px-3 py-2 bg-white border-2 border-indigo-100 rounded-lg text-sm font-bold text-slate-800 outline-none focus:border-indigo-400"
                         />
+                        <button 
+                          type="button"
+                          onClick={() => setSelectedExamSubjects(selectedExamSubjects.filter((_, idx) => idx !== i))}
+                          className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors shrink-0"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
                       </div>
-                      <button 
-                        type="button"
-                        onClick={() => setSelectedExamSubjects(selectedExamSubjects.filter((_, idx) => idx !== i))}
-                        className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors shrink-0"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
+                      <div className="flex gap-2 items-center">
+                        <input 
+                          type="date"
+                          value={sub.date || ''}
+                          onChange={(e) => {
+                            const newSubs = [...selectedExamSubjects];
+                            newSubs[i].date = e.target.value;
+                            setSelectedExamSubjects(newSubs);
+                          }}
+                          className="flex-1 px-3 py-1.5 bg-white border-2 border-indigo-100 rounded-lg text-xs font-bold text-slate-800 outline-none focus:border-indigo-400"
+                        />
+                        <div className="flex items-center gap-2 bg-white px-2 py-1.5 rounded-lg border-2 border-indigo-100 shrink-0">
+                          <span className="text-[10px] font-black text-slate-400 uppercase">Max:</span>
+                          <input 
+                            type="number" 
+                            required
+                            min={1}
+                            value={sub.maxMarks}
+                            onChange={(e) => {
+                              const newSubs = [...selectedExamSubjects];
+                              newSubs[i].maxMarks = Number(e.target.value);
+                              setSelectedExamSubjects(newSubs);
+                            }}
+                            className="w-14 text-sm font-bold text-indigo-900 outline-none text-center bg-transparent"
+                          />
+                        </div>
+                      </div>
                     </div>
                   ))}
                   {selectedExamSubjects.length === 0 && (
@@ -1732,53 +1747,72 @@ export const ExamListPage: React.FC = () => {
             )}
           </div>
 
-          <div className="bg-white/80 backdrop-blur-md rounded-2xl p-2 sm:p-4 overflow-hidden shadow-sm border border-indigo-50">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse text-sm">
-                <thead>
-                  <tr className="border-b border-indigo-100 bg-indigo-50/50">
-                    <th className="p-4 font-extrabold text-indigo-900 text-xs uppercase tracking-wider rounded-tl-xl">Exam Title</th>
-                    <th className="p-4 font-extrabold text-indigo-900 text-xs uppercase tracking-wider">Target Classes</th>
-                    <th className="p-4 font-extrabold text-indigo-900 text-xs uppercase tracking-wider">Term</th>
-                    <th className="p-4 font-extrabold text-indigo-900 text-xs uppercase tracking-wider">Date</th>
-                    <th className="p-4 font-extrabold text-indigo-900 text-xs uppercase tracking-wider text-right rounded-tr-xl">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-indigo-50">
-                  {exams.map(e => (
-                    <tr key={e.id} className="hover:bg-indigo-50/30 transition-colors">
-                      <td className="p-4 font-black text-slate-800">{e.name}</td>
-                      <td className="p-4 text-xs font-bold text-slate-600">
-                        <div className="flex flex-wrap gap-1.5">
-                          {(e.classes || []).map((c: any) => (
-                            <span key={c.id} className="bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-md border border-indigo-200">
-                              {c.name}-{c.section}
-                            </span>
-                          ))}
-                        </div>
-                      </td>
-                      <td className="p-4 text-xs text-slate-500 font-bold">{e.term}</td>
-                      <td className="p-4 text-xs text-slate-600 font-extrabold">{new Date(e.examDate).toLocaleDateString()}</td>
-                      <td className="p-4 text-right flex justify-end gap-2">
-                        {isAdmin && (
-                          <button onClick={() => openEditModal(e)} className="bg-white hover:bg-slate-50 text-indigo-600 border border-indigo-100 text-[11px] font-bold px-3 py-1.5 flex items-center gap-1 rounded-lg shadow-sm transition-all">
-                            <Edit3 className="w-3 h-3" /> Edit
-                          </button>
-                        )}
-                        {user?.role === 'SUPER_ADMIN' && (
-                          <button onClick={() => handleDeleteExam(e.id)} className="bg-red-50 hover:bg-red-100 text-red-600 border border-red-100 text-[11px] font-bold px-3 py-1.5 flex items-center gap-1 rounded-lg shadow-sm transition-all">
-                            <Trash2 className="w-3 h-3" /> Delete
-                          </button>
-                        )}
-                        <button onClick={() => setActiveTab('written-exam')} className="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white text-[11px] font-bold px-4 py-1.5 rounded-lg shadow-md transition-all transform hover:-translate-y-0.5">
-                          Enter Grades
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 mt-4">
+            {exams.map(e => {
+              const isExpanded = expandedExam === e.id;
+              return (
+                <div key={e.id} className="bg-white dark:bg-gray-900 rounded-3xl p-5 md:p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 dark:border-gray-800 hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-all flex flex-col gap-4 relative overflow-hidden group cursor-pointer" onClick={() => setExpandedExam(isExpanded ? null : e.id)}>
+                  
+                  {/* Decorative background accent */}
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50 dark:bg-indigo-900/10 rounded-full blur-3xl -mr-10 -mt-10 transition-transform group-hover:scale-150 duration-700 pointer-events-none" />
+                  
+                  <div className="flex justify-between items-start z-10 relative">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-lg font-black text-slate-800 dark:text-white leading-tight">{e.name}</h3>
+                        {e.term && <span className="bg-indigo-100 text-indigo-700 text-[10px] font-black uppercase px-2 py-0.5 rounded-full">{e.term}</span>}
+                      </div>
+                      <p className="text-xs font-bold text-slate-400 flex items-center gap-1 mt-1">
+                        <Calendar className="w-3.5 h-3.5" />
+                        {new Date(e.examDate).toLocaleDateString(undefined, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="z-10 relative mt-2">
+                    <div className="text-[10px] font-extrabold uppercase text-slate-400 mb-2 tracking-wider">Target Classes</div>
+                    <div className="flex flex-wrap gap-2">
+                      {(e.classes || []).slice(0, isExpanded ? undefined : 3).map((c: any) => (
+                        <span key={c.id} className="bg-slate-50 dark:bg-gray-800 text-slate-600 dark:text-slate-300 px-2.5 py-1 rounded-lg text-xs font-bold border border-slate-100 dark:border-gray-700 shadow-sm">
+                          {c.name}-{c.section}
+                        </span>
+                      ))}
+                      {!isExpanded && (e.classes || []).length > 3 && (
+                        <span className="bg-slate-50 dark:bg-gray-800 text-slate-400 dark:text-slate-500 px-2.5 py-1 rounded-lg text-xs font-bold border border-slate-100 dark:border-gray-700 shadow-sm">
+                          +{(e.classes.length - 3)} more
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {isExpanded && (
+                    <div className="z-10 relative pt-4 border-t border-gray-100 dark:border-gray-800 mt-2 flex flex-wrap gap-2 animate-fade-in" onClick={ev => ev.stopPropagation()}>
+                      {isAdmin && (
+                        <button onClick={() => openEditModal(e)} className="flex-1 bg-white hover:bg-slate-50 text-indigo-600 border-2 border-indigo-50 text-xs font-bold px-4 py-2 flex justify-center items-center gap-1.5 rounded-xl transition-all">
+                          <Edit3 className="w-4 h-4" /> Edit
                         </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                      )}
+                      {user?.role === 'SUPER_ADMIN' && (
+                        <button onClick={() => handleDeleteExam(e.id)} className="bg-red-50 hover:bg-red-100 text-red-600 border border-red-100 text-xs font-bold px-3 py-2 flex justify-center items-center gap-1.5 rounded-xl transition-all">
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
+                      <button onClick={() => setActiveTab('written-exam')} className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold px-4 py-2 flex justify-center items-center rounded-xl shadow-md transition-all shadow-indigo-500/20">
+                        Enter Grades
+                      </button>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+            
+            {exams.length === 0 && (
+              <div className="col-span-full py-16 flex flex-col items-center justify-center bg-white/50 backdrop-blur-md rounded-3xl border-2 border-dashed border-gray-200">
+                <Layers className="w-12 h-12 text-gray-300 mb-3" />
+                <h3 className="text-lg font-bold text-gray-500">No Examinations Found</h3>
+                <p className="text-sm text-gray-400">Click "Create Exam" to schedule a new examination.</p>
+              </div>
+            )}
           </div>
         </div>
       )}
