@@ -125,7 +125,7 @@ export const ExamListPage: React.FC = () => {
 
   const fetchExams = async () => {
     try {
-      const res: any = await api.get('/api/exams?limit=5000');
+      const res: any = await api.get('/api/exams?limit=500');
       const list = res.data || res || [];
       setExams(list);
       if (list.length > 0 && !selectedExamId) {
@@ -531,7 +531,7 @@ export const ExamListPage: React.FC = () => {
   // -------------------------------------------------------------
   const fetchBaseFilters = async () => {
     try {
-      const classRes: any = await api.get('/api/classes?limit=5000');
+      const classRes: any = await api.get('/api/classes?limit=500');
       const classList = classRes.data || classRes || [];
       setClasses(classList);
 
@@ -542,7 +542,7 @@ export const ExamListPage: React.FC = () => {
 
       if (isAdmin) {
         try {
-          const teachRes: any = await api.get('/api/teachers?limit=5000');
+          const teachRes: any = await api.get('/api/teachers?limit=500');
           const teacherList = teachRes.data?.data || teachRes.data || [];
           setTeachers(teacherList);
         } catch (e) {

@@ -4,7 +4,7 @@ import {
   getStructures, createStructure, updateStructure, deleteStructure,
   getPayments, createPayment, updateFeePayment, getStudentFeeStatus, getOverdue,
   downloadInvoice, deleteFeePayment, applyFeeDiscount,
-  bulkImportFees, bulkImportPayments
+  bulkImportFees, bulkImportPayments, getPendingBalances
 } from '../controllers/fees.controller';
 import { upload } from '../utils/upload';
 
@@ -32,5 +32,6 @@ router.post('/discounts', authorize('SUPER_ADMIN', 'ADMIN', 'ACCOUNTANT', 'TEACH
 // Student fee status
 router.get('/student/:studentId', getStudentFeeStatus);
 router.get('/overdue', authorize('SUPER_ADMIN', 'ADMIN', 'ACCOUNTANT', 'TEACHER'), getOverdue);
+router.get('/pending-balances', authorize('SUPER_ADMIN', 'ADMIN', 'ACCOUNTANT'), getPendingBalances);
 
 export default router;

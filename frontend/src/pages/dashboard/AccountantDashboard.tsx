@@ -52,8 +52,8 @@ export const AccountantDashboard: React.FC = () => {
   const fetchFormDetails = async () => {
     try {
       const [studRes, structRes]: any = await Promise.all([
-        api.get('/api/students?limit=5000'),
-        api.get('/api/fees/structures?limit=5000'),
+        api.get('/api/students?limit=500'),
+        api.get('/api/fees/structures?limit=500'),
       ]);
       setStudents(studRes.data.data || studRes.data || []);
       setStructures(structRes.data || structRes || []);

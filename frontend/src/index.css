@@ -161,3 +161,23 @@
   .h-screen, .min-h-screen { height: auto !important; min-height: 0 !important; }
   .overflow-hidden, .overflow-y-auto, .overflow-x-hidden { overflow: visible !important; }
 }
+
+/* ── Desktop Padding Reduction ───────────────── */
+@media (min-width: 1024px) {
+  /* Reduce padding classes */
+  .p-6, .md\:p-6, .lg\:p-6 { padding: 1rem !important; }
+  .p-8, .md\:p-8, .lg\:p-8, .xl\:p-8 { padding: 1.25rem !important; }
+  .p-10, .md\:p-10, .lg\:p-10, .xl\:p-10 { padding: 1.5rem !important; }
+  
+  /* Reduce horizontal/vertical padding */
+  .px-6, .md\:px-6, .lg\:px-6 { padding-left: 1rem !important; padding-right: 1rem !important; }
+  .px-8, .md\:px-8, .lg\:px-8 { padding-left: 1.25rem !important; padding-right: 1.25rem !important; }
+  .py-6, .md\:py-6, .lg\:py-6 { padding-top: 1rem !important; padding-bottom: 1rem !important; }
+  .py-8, .md\:py-8, .lg\:py-8 { padding-top: 1.25rem !important; padding-bottom: 1.25rem !important; }
+  
+  /* Reduce gap and space utilities */
+  .gap-6, .md\:gap-6, .lg\:gap-6 { gap: 1rem !important; }
+  .gap-8, .md\:gap-8, .lg\:gap-8 { gap: 1.25rem !important; }
+  .space-y-6 > :not([hidden]) ~ :not([hidden]), .md\:space-y-6 > :not([hidden]) ~ :not([hidden]) { margin-top: 1rem !important; }
+  .space-y-8 > :not([hidden]) ~ :not([hidden]), .md\:space-y-8 > :not([hidden]) ~ :not([hidden]) { margin-top: 1.25rem !important; }
+}

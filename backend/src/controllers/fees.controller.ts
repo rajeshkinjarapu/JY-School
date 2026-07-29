@@ -605,3 +605,82 @@ export const downloadInvoice = async (req: AuthRequest, res: Response, next: Nex
 
   doc.end();
 };
+
+export const getPendingBalances = async (req: AuthRequest, res: Response): Promise<void> => {
+  const page = parseInt(req.query.page as string) || 1;
+  const limit = parseInt(req.query.limit as string) || 10;
+  const classId = (req.query.classId as string) || '';
+  const search = (req.query.search as string) || '';
+
+  const where: any = {};
+  if (classId && classId !== 'ALL') where.classId = classId;
+  if (search) {
+    where.OR = [
+      { user: { name: { contains: search, mode: 'insensitive' } } },
+      { rollNo: { contains: search, mode: 'insensitive' } },
+    ];
+  }
+
+  const allStudents = await prisma.student.findMany({
+    where,
+    select: {
+      id: true,
+      rollNo: true,
+      classId: true,
+      user: { select: { name: true, phone: true } },
+      class: { select: { name: true, section: true } },
+      feePayments: { 
+        where: { status: 'PAID' },
+        select: { feeStructureId: true, amountPaid: true }
+      }
+    }
+  });
+
+  const classIds = [...new Set(allStudents.map((s: any) => s.classId).filter(Boolean))] as string[];
+  const studentIds = allStudents.map((s: any) => s.id);
+  
+  const structures = await prisma.feeStructure.findMany({
+    where: {
+      OR: [
+        { classId: { in: classIds } },
+        { studentId: { in: studentIds } }
+      ]
+    },
+    select: { id: true, name: true, amount: true, classId: true, studentId: true }
+  });
+
+  const pendingStudents = [];
+  for (const student of allStudents) {
+    const studentStructures = structures.filter((st: any) => 
+      st.studentId === student.id || (st.classId === student.classId && !st.studentId)
+    );
+    const tuitionStructure = studentStructures.find((st: any) => st.name?.toLowerCase().includes('tuition')) || studentStructures[0];
+    const tuitionFeeAmount = tuitionStructure?.amount || 0;
+
+    let paidAmount = 0;
+    if (tuitionStructure) {
+      paidAmount = student.feePayments
+        .filter((p: any) => p.feeStructureId === tuitionStructure.id)
+        .reduce((sum: number, p: any) => sum + (p.amountPaid || 0), 0);
+    }
+
+    const balance = tuitionFeeAmount - paidAmount;
+    if (balance > 0) {
+      pendingStudents.push({
+        id: student.rollNo || '-',
+        name: student.user?.name || '-',
+        className: student.class ? `${student.class.name}-${student.class.section}` : '-',
+        tuitionFee: tuitionFeeAmount,
+        paidAmount,
+        balance,
+        phone: student.user?.phone || '',
+      });
+    }
+  }
+
+  const total = pendingStudents.length;
+  const skip = (page - 1) * limit;
+  const paginatedData = pendingStudents.slice(skip, skip + limit);
+
+  paginatedResponse(res, paginatedData, total, page, limit, 'Pending balances fetched');
+};

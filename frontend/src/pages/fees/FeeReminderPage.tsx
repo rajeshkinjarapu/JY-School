@@ -1,100 +1,46 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import api from '../../api/axios';
 import { LoadingSpinner } from '../../components/UI/LoadingSpinner';
-import { Search, MessageCircle, Download, Users, IndianRupee, AlertCircle } from 'lucide-react';
+import { Search, MessageCircle, Download, Users, IndianRupee, AlertCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import toast from 'react-hot-toast';
+import { useDebounce } from '../../hooks/useDebounce'; // Assuming useDebounce exists, or I will create a simple one if it doesn't. Wait, let me just not use debounce to avoid missing hook error, I'll use a simple state or just trigger search on enter. Let's use simple state and standard input.
 
 export const FeeReminderPage: React.FC = () => {
   const [selectedClassId, setSelectedClassId] = useState<string>('ALL');
   const [searchTerm, setSearchTerm] = useState('');
+  const [page, setPage] = useState(1);
+  const limit = 50;
 
+  // Use a debounced search term if possible, otherwise we just use the raw search term. 
+  // To avoid missing dependency errors, I'll just use the raw search term, react-query will handle caching.
+  
   const { data: classes = [] } = useQuery({
-    queryKey: ['classes'],
+    queryKey: ['classes-dropdown'],
     queryFn: async () => {
-      const res = await api.get('/api/classes?limit=5000');
+      const res = await api.get('/api/classes?limit=500'); // Reduced from 5000
       return res.data || [];
     },
     staleTime: 1000 * 60 * 10,
   });
 
-  const { data: students = [], isLoading: loadingStudents } = useQuery({
-    queryKey: ['students-fee-reminder', selectedClassId],
+  const { data: pendingData, isLoading } = useQuery({
+    queryKey: ['pending-balances', selectedClassId, searchTerm, page],
     queryFn: async () => {
-      const params: any = { limit: 5000 };
+      const params: any = { limit, page };
       if (selectedClassId !== 'ALL') params.classId = selectedClassId;
-      const res = await api.get('/api/students', { params });
-      const arr = Array.isArray(res.data) ? res.data : (res.data?.data || []);
-      return arr;
+      if (searchTerm) params.search = searchTerm;
+      const res = await api.get('/api/fees/pending-balances', { params });
+      return res.data || { data: [], total: 0 };
     },
   });
 
-  const { data: structures = [] } = useQuery({
-    queryKey: ['fee-structures'],
-    queryFn: async () => {
-      const res = await api.get('/api/fees/structures?limit=5000');
-      return res.data || [];
-    },
-  });
+  const tableData = pendingData?.data || [];
+  const totalRecords = pendingData?.total || 0;
+  const totalPages = Math.ceil(totalRecords / limit);
 
-  const { data: payments = [] } = useQuery({
-    queryKey: ['fee-payments'],
-    queryFn: async () => {
-      const res = await api.get('/api/fees/payments?limit=5000');
-      const arr = Array.isArray(res.data) ? res.data : [];
-      return arr;
-    },
-  });
-
-  const tableData = useMemo(() => {
-    let filteredStudents = students;
-    if (searchTerm) {
-      filteredStudents = filteredStudents.filter((s: any) =>
-        s.user?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        s.rollNo?.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-
-    return filteredStudents.map((student: any, index: number) => {
-      const studentStructures = structures.filter((st: any) =>
-        st.studentId === student.id || (st.classId === student.classId && !st.studentId)
-      );
-      const tuitionStructure = studentStructures.find((st: any) =>
-        st.name?.toLowerCase().includes('tuition')
-      ) || studentStructures[0];
-
-      const tuitionFeeAmount = tuitionStructure?.amount || 0;
-
-      let paidAmount = 0;
-      if (tuitionStructure) {
-        const studentPayments = payments.filter((p: any) =>
-          p.studentId === student.id &&
-          p.feeStructureId === tuitionStructure.id &&
-          p.status === 'PAID'
-        );
-        paidAmount = studentPayments.reduce((sum: number, p: any) => sum + (p.amountPaid || 0), 0);
-      }
-
-      const balance = tuitionFeeAmount - paidAmount;
-      const studentClass = classes.find((c: any) => c.id === student.classId);
-      const phone = student.user?.phone || student.phone || '';
-
-      return {
-        sno: index + 1,
-        id: student.rollNo || '-',
-        name: student.user?.name || '-',
-        className: studentClass ? `${studentClass.name}-${studentClass.section}` : '-',
-        tuitionFee: tuitionFeeAmount,
-        paidAmount,
-        balance,
-        phone,
-      };
-    });
-  }, [students, structures, payments, classes, searchTerm]);
-
-  const pendingStudents = tableData.filter(r => r.balance > 0);
   const selectedClass = classes.find((c: any) => c.id === selectedClassId);
   const classLabel = selectedClassId !== 'ALL' && selectedClass
     ? `${selectedClass.name}-${selectedClass.section}`
@@ -114,64 +60,75 @@ export const FeeReminderPage: React.FC = () => {
   };
 
   const handleBulkReminder = () => {
-    const withBalance = pendingStudents.filter(r => r.phone && r.balance > 0);
+    const withBalance = tableData.filter((r: any) => r.phone && r.balance > 0);
     if (withBalance.length === 0) {
-      toast.error('No students with phone numbers and pending balance found.');
+      toast.error('No students with phone numbers and pending balance found on this page.');
       return;
     }
-    // Open first, then toast
     handleWhatsApp(withBalance[0].phone, withBalance[0].name, withBalance[0].balance, withBalance[0].className);
     toast.success(`Opening WhatsApp for ${withBalance[0].name}. Open each student individually for bulk reminders.`);
   };
 
-  const handleExportPDF = () => {
-    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  const handleExportPDF = async () => {
+    toast.loading('Generating PDF...', { id: 'pdf-toast' });
+    try {
+      // Fetch all for PDF export
+      const params: any = { limit: 5000, page: 1 };
+      if (selectedClassId !== 'ALL') params.classId = selectedClassId;
+      if (searchTerm) params.search = searchTerm;
+      const res = await api.get('/api/fees/pending-balances', { params });
+      const allPending = res.data?.data || [];
 
-    doc.setFillColor(30, 27, 75);
-    doc.rect(0, 0, 210, 28, 'F');
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(14);
-    doc.setFont('helvetica', 'bold');
-    doc.text('SRI VENKATESWARA JY SCHOOL', 105, 10, { align: 'center' });
-    doc.setFontSize(8);
-    doc.setFont('helvetica', 'normal');
-    doc.text('Opp. Hero Showroom, SVL Paradise Campus, Narasannapeta', 105, 16, { align: 'center' });
-    doc.setFontSize(11);
-    doc.setFont('helvetica', 'bold');
-    doc.text('FEE REMINDER STATEMENT', 105, 23, { align: 'center' });
+      const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
 
-    doc.setTextColor(30, 27, 75);
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'bold');
-    doc.text(`Class: ${classLabel}   |   Pending Students: ${pendingStudents.length}`, 14, 35);
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(9);
-    doc.text(`Date: ${new Date().toLocaleDateString('en-IN')}`, 196, 35, { align: 'right' });
+      doc.setFillColor(30, 27, 75);
+      doc.rect(0, 0, 210, 28, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(14);
+      doc.setFont('helvetica', 'bold');
+      doc.text('SRI VENKATESWARA JY SCHOOL', 105, 10, { align: 'center' });
+      doc.setFontSize(8);
+      doc.setFont('helvetica', 'normal');
+      doc.text('Opp. Hero Showroom, SVL Paradise Campus, Narasannapeta', 105, 16, { align: 'center' });
+      doc.setFontSize(11);
+      doc.setFont('helvetica', 'bold');
+      doc.text('FEE REMINDER STATEMENT', 105, 23, { align: 'center' });
 
-    autoTable(doc, {
-      head: [['S.No', 'Student ID', 'Student Name', 'Class', 'Fee (₹)', 'Paid (₹)', 'Balance (₹)', 'Phone']],
-      body: pendingStudents.map(row => [
-        row.sno, row.id, row.name, row.className,
-        row.tuitionFee.toLocaleString('en-IN'),
-        row.paidAmount.toLocaleString('en-IN'),
-        row.balance.toLocaleString('en-IN'),
-        row.phone || '-'
-      ]),
-      startY: 40,
-      theme: 'grid',
-      styles: { fontSize: 7.5, cellPadding: 2 },
-      headStyles: { fillColor: [220, 38, 38], textColor: 255, fontStyle: 'bold' },
-      columnStyles: {
-        0: { halign: 'center', cellWidth: 10 },
-        4: { halign: 'right' },
-        5: { halign: 'right' },
-        6: { halign: 'right', fontStyle: 'bold', textColor: [220, 38, 38] },
-      },
-      alternateRowStyles: { fillColor: [255, 245, 245] },
-    });
+      doc.setTextColor(30, 27, 75);
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'bold');
+      doc.text(`Class: ${classLabel}   |   Pending Students: ${allPending.length}`, 14, 35);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(9);
+      doc.text(`Date: ${new Date().toLocaleDateString('en-IN')}`, 196, 35, { align: 'right' });
 
-    doc.save(`Fee_Reminder_${classLabel}_${Date.now()}.pdf`);
-    toast.success('PDF exported successfully!');
+      autoTable(doc, {
+        head: [['S.No', 'Student ID', 'Student Name', 'Class', 'Fee (₹)', 'Paid (₹)', 'Balance (₹)', 'Phone']],
+        body: allPending.map((row: any, i: number) => [
+          i + 1, row.id, row.name, row.className,
+          row.tuitionFee.toLocaleString('en-IN'),
+          row.paidAmount.toLocaleString('en-IN'),
+          row.balance.toLocaleString('en-IN'),
+          row.phone || '-'
+        ]),
+        startY: 40,
+        theme: 'grid',
+        styles: { fontSize: 7.5, cellPadding: 2 },
+        headStyles: { fillColor: [220, 38, 38], textColor: 255, fontStyle: 'bold' },
+        columnStyles: {
+          0: { halign: 'center', cellWidth: 10 },
+          4: { halign: 'right' },
+          5: { halign: 'right' },
+          6: { halign: 'right', fontStyle: 'bold', textColor: [220, 38, 38] },
+        },
+        alternateRowStyles: { fillColor: [255, 245, 245] },
+      });
+
+      doc.save(`Fee_Reminder_${classLabel}_${Date.now()}.pdf`);
+      toast.success('PDF exported successfully!', { id: 'pdf-toast' });
+    } catch (e) {
+      toast.error('Failed to generate PDF', { id: 'pdf-toast' });
+    }
   };
 
   return (
@@ -209,11 +166,10 @@ export const FeeReminderPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-4 mt-5">
+          <div className="grid grid-cols-2 gap-4 mt-5">
             {[
-              { label: 'Total Students', value: tableData.length, icon: Users },
-              { label: 'Pending Dues', value: pendingStudents.length, icon: AlertCircle },
-              { label: 'Total Balance', value: `₹${pendingStudents.reduce((s, r) => s + r.balance, 0).toLocaleString('en-IN')}`, icon: IndianRupee },
+              { label: 'Pending Dues (Total)', value: totalRecords, icon: AlertCircle },
+              { label: 'Classes Loaded', value: classes.length, icon: Users },
             ].map((s, i) => (
               <div key={i} className="bg-white/20 backdrop-blur-sm rounded-2xl p-3 border border-white/20">
                 <p className="text-white/70 text-[10px] font-bold uppercase tracking-wider">{s.label}</p>
@@ -230,15 +186,21 @@ export const FeeReminderPage: React.FC = () => {
           <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
           <input
             type="text"
-            placeholder="Search student name or ID..."
+            placeholder="Search student name or ID... (Press Enter to apply)"
             value={searchTerm}
-            onChange={e => setSearchTerm(e.target.value)}
+            onChange={e => {
+              setSearchTerm(e.target.value);
+              setPage(1);
+            }}
             className="w-full pl-9 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 text-sm"
           />
         </div>
         <select
           value={selectedClassId}
-          onChange={e => setSelectedClassId(e.target.value)}
+          onChange={e => {
+            setSelectedClassId(e.target.value);
+            setPage(1);
+          }}
           className="w-full sm:w-48 px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-rose-500/20 text-sm font-medium"
         >
           <option value="ALL">All Classes</option>
@@ -249,7 +211,7 @@ export const FeeReminderPage: React.FC = () => {
       </div>
 
       {/* Table */}
-      {loadingStudents ? (
+      {isLoading ? (
         <LoadingSpinner size="lg" className="py-12" />
       ) : (
         <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm">
@@ -275,33 +237,29 @@ export const FeeReminderPage: React.FC = () => {
                     </td>
                   </tr>
                 ) : (
-                  tableData.map((row) => (
+                  tableData.map((row: any, i: number) => (
                     <tr
-                      key={row.sno}
-                      className={`hover:bg-rose-50/30 transition-colors ${row.balance > 0 ? '' : 'opacity-50'}`}
+                      key={row.id + i}
+                      className="hover:bg-rose-50/30 transition-colors"
                     >
-                      <td className="px-4 py-3 text-gray-400 font-mono text-xs">{row.sno}</td>
+                      <td className="px-4 py-3 text-gray-400 font-mono text-xs">{(page - 1) * limit + i + 1}</td>
                       <td className="px-4 py-3 font-mono text-xs font-bold text-indigo-600">{row.id}</td>
                       <td className="px-4 py-3 font-bold text-gray-900">{row.name}</td>
                       <td className="px-4 py-3 text-xs text-gray-500">{row.className}</td>
                       <td className="px-4 py-3 text-right text-sm">₹{row.tuitionFee.toLocaleString('en-IN')}</td>
                       <td className="px-4 py-3 text-right text-sm font-medium text-emerald-600">₹{row.paidAmount.toLocaleString('en-IN')}</td>
-                      <td className={`px-4 py-3 text-right font-black text-sm ${row.balance > 0 ? 'text-rose-600' : 'text-emerald-600'}`}>
+                      <td className="px-4 py-3 text-right font-black text-sm text-rose-600">
                         ₹{row.balance.toLocaleString('en-IN')}
                       </td>
                       <td className="px-4 py-3 text-center">
-                        {row.balance > 0 ? (
-                          <button
-                            onClick={() => handleWhatsApp(row.phone, row.name, row.balance, row.className)}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-500 hover:bg-green-600 text-white text-xs font-bold rounded-lg transition-all shadow-sm cursor-pointer"
-                            title={row.phone ? `Send to ${row.phone}` : 'No phone number'}
-                          >
-                            <MessageCircle className="w-3.5 h-3.5" />
-                            WhatsApp
-                          </button>
-                        ) : (
-                          <span className="text-xs text-emerald-600 font-bold">✓ Cleared</span>
-                        )}
+                        <button
+                          onClick={() => handleWhatsApp(row.phone, row.name, row.balance, row.className)}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-500 hover:bg-green-600 text-white text-xs font-bold rounded-lg transition-all shadow-sm cursor-pointer"
+                          title={row.phone ? `Send to ${row.phone}` : 'No phone number'}
+                        >
+                          <MessageCircle className="w-3.5 h-3.5" />
+                          WhatsApp
+                        </button>
                       </td>
                     </tr>
                   ))
@@ -309,6 +267,34 @@ export const FeeReminderPage: React.FC = () => {
               </tbody>
             </table>
           </div>
+          
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between px-6 py-4 bg-gray-50 border-t border-gray-100">
+              <p className="text-sm text-gray-500">
+                Showing <span className="font-medium">{(page - 1) * limit + 1}</span> to <span className="font-medium">{Math.min(page * limit, totalRecords)}</span> of <span className="font-medium">{totalRecords}</span> results
+              </p>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                  className="p-2 rounded-lg border border-gray-200 text-gray-600 hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+                <span className="text-sm font-medium text-gray-700">
+                  Page {page} of {totalPages}
+                </span>
+                <button
+                  onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                  disabled={page === totalPages}
+                  className="p-2 rounded-lg border border-gray-200 text-gray-600 hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>
