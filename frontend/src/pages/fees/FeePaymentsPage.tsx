@@ -2,7 +2,8 @@ import React, { useEffect, useState, useMemo } from 'react';
 import api from '../../api/axios';
 import { LoadingSpinner } from '../../components/UI/LoadingSpinner';
 import { Badge } from '../../components/UI/Badge';
-import { Plus, FileDown, Trash2, Search, X, ChevronDown, FileText } from 'lucide-react';
+import { Plus, FileDown, Trash2, Search, X, ChevronDown, FileText, Upload, CheckCircle2, AlertCircle, MinusCircle } from 'lucide-react';
+import * as XLSX from 'xlsx';
 import toast from 'react-hot-toast';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
@@ -30,6 +31,13 @@ export const FeePaymentsPage: React.FC = () => {
   const [receiptUrl, setReceiptUrl] = useState('');
   const [isUploading, setIsUploading] = useState(false);
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
+
+  // Excel bulk import states
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [importFile, setImportFile] = useState<File | null>(null);
+  const [importLoading, setImportLoading] = useState(false);
+  const [importResult, setImportResult] = useState<any>(null);
+  const [dragOver, setDragOver] = useState(false);
 
   const toggleRow = (id: string) => setExpandedRow(prev => prev === id ? null : id);
 
@@ -227,6 +235,41 @@ export const FeePaymentsPage: React.FC = () => {
     }
   };
 
+  // ── Download blank Excel template ────────────────────────────────────────
+  const downloadTemplate = () => {
+    const ws = XLSX.utils.aoa_to_sheet([
+      ['Student ID', 'Amount Paid', 'Payment Mode', 'Payment Date'],
+      ['ST001', 5000, 'CASH', '2026-07-29'],
+      ['ST002', 3000, 'UPI', '2026-07-29'],
+    ]);
+    ws['!cols'] = [{ wch: 16 }, { wch: 14 }, { wch: 16 }, { wch: 14 }];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Fee Payments');
+    XLSX.writeFile(wb, 'Fee_Payment_Import_Template.xlsx');
+  };
+
+  // ── Handle bulk payment import ────────────────────────────────────────────
+  const handleBulkImport = async () => {
+    if (!importFile) { toast.error('Please select an Excel file first.'); return; }
+    setImportLoading(true);
+    const t = toast.loading('Importing payments...');
+    try {
+      const formData = new FormData();
+      formData.append('file', importFile);
+      const res: any = await api.post('/api/fees/payments/bulk-import', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      const data = res.data?.data || res.data;
+      setImportResult(data);
+      toast.success(`Import done! ✓ ${data.summary.success} success, ✗ ${data.summary.errors} errors`, { id: t, duration: 5000 });
+      fetchData();
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Import failed', { id: t });
+    } finally {
+      setImportLoading(false);
+    }
+  };
+
   const exportPaymentsExcel = async () => {
     const importToast = toast.loading('Generating Excel sheet...');
     try {
@@ -309,6 +352,15 @@ export const FeePaymentsPage: React.FC = () => {
                   <Link to="/fees/structures" className="btn-secondary text-sm">
                     Structure Settings
                   </Link>
+                )}
+                {(user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN' || user?.role === 'ACCOUNTANT') && (
+                  <button
+                    onClick={() => { setShowImportModal(true); setImportResult(null); setImportFile(null); }}
+                    className="btn-secondary flex items-center gap-2 text-sm text-emerald-700 border border-emerald-200/60 hover:bg-emerald-50 cursor-pointer"
+                  >
+                    <Upload className="w-4 h-4" />
+                    <span>Import Excel</span>
+                  </button>
                 )}
                 <button onClick={() => setShowModal(true)} className="btn-primary flex items-center gap-2">
                   <Plus className="w-4.5 h-4.5" />
@@ -786,6 +838,197 @@ export const FeePaymentsPage: React.FC = () => {
         </div>
       )}
       </div>
+
+      {/* ── Excel Bulk Import Modal ── */}
+      {showImportModal && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center bg-slate-900/50 backdrop-blur-md p-4">
+          <div className="fixed inset-0" onClick={() => { if (!importLoading) setShowImportModal(false); }} />
+          <div className="relative w-full sm:max-w-2xl bg-white rounded-[2rem] shadow-[0_32px_80px_rgba(0,0,0,0.22)] overflow-hidden z-10 animate-scale-in flex flex-col max-h-[90vh]">
+
+            {/* Modal header */}
+            <div className="bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 px-7 py-6 flex items-center justify-between flex-shrink-0">
+              <div className="flex items-center gap-4">
+                <div className="w-11 h-11 rounded-2xl bg-white/20 flex items-center justify-center shadow-lg">
+                  <Upload className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-extrabold text-white">Import Fee Payments</h2>
+                  <p className="text-emerald-200 text-xs mt-0.5">Upload Excel to bulk-record past payments</p>
+                </div>
+              </div>
+              <button
+                onClick={() => { if (!importLoading) setShowImportModal(false); }}
+                className="w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center text-white transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="overflow-y-auto flex-1 p-6 space-y-5">
+              {!importResult ? (
+                <>
+                  {/* Instructions */}
+                  <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 text-xs text-amber-800 space-y-1">
+                    <p className="font-bold text-amber-900">📋 Required Excel Columns:</p>
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-0.5 mt-2">
+                      <span>• <strong>Student ID</strong> — Roll No (e.g. ST001)</span>
+                      <span>• <strong>Amount Paid</strong> — Number (e.g. 5000)</span>
+                      <span>• <strong>Payment Mode</strong> — CASH / UPI / ONLINE / CHEQUE</span>
+                      <span>• <strong>Payment Date</strong> — YYYY-MM-DD (e.g. 2026-07-29)</span>
+                    </div>
+                    <p className="text-amber-700 mt-2">Amount is automatically distributed across pending fee structures (oldest due date first). Receipt numbers are auto-generated.</p>
+                  </div>
+
+                  {/* Template download */}
+                  <button
+                    onClick={downloadTemplate}
+                    className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border-2 border-dashed border-emerald-300 bg-emerald-50 text-emerald-700 font-bold text-sm hover:bg-emerald-100 transition-colors"
+                  >
+                    <FileDown className="w-4 h-4" />
+                    Download Sample Template (.xlsx)
+                  </button>
+
+                  {/* Drag & Drop upload area */}
+                  <div
+                    onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+                    onDragLeave={() => setDragOver(false)}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      setDragOver(false);
+                      const file = e.dataTransfer.files?.[0];
+                      if (file && (file.name.endsWith('.xlsx') || file.name.endsWith('.xls') || file.name.endsWith('.csv'))) {
+                        setImportFile(file);
+                      } else {
+                        toast.error('Please drop a valid Excel file (.xlsx / .xls / .csv)');
+                      }
+                    }}
+                    className={`relative border-2 border-dashed rounded-2xl p-8 text-center transition-all cursor-pointer ${dragOver ? 'border-emerald-500 bg-emerald-50 scale-[1.01]' : 'border-slate-200 bg-slate-50 hover:border-emerald-300 hover:bg-emerald-50/40'}`}
+                    onClick={() => document.getElementById('fee-import-file-input')?.click()}
+                  >
+                    <input
+                      id="fee-import-file-input"
+                      type="file"
+                      accept=".xlsx,.xls,.csv"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) setImportFile(file);
+                      }}
+                    />
+                    {importFile ? (
+                      <div className="space-y-2">
+                        <div className="w-12 h-12 rounded-2xl bg-emerald-100 flex items-center justify-center mx-auto">
+                          <FileText className="w-6 h-6 text-emerald-600" />
+                        </div>
+                        <p className="font-bold text-emerald-800 text-sm">{importFile.name}</p>
+                        <p className="text-xs text-emerald-600">{(importFile.size / 1024).toFixed(1)} KB — Click to change</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        <div className="w-12 h-12 rounded-2xl bg-slate-200 flex items-center justify-center mx-auto">
+                          <Upload className="w-6 h-6 text-slate-400" />
+                        </div>
+                        <p className="font-semibold text-slate-600 text-sm">Drag & drop your Excel file here</p>
+                        <p className="text-xs text-slate-400">or click to browse — .xlsx, .xls, .csv supported</p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Import button */}
+                  <button
+                    onClick={handleBulkImport}
+                    disabled={!importFile || importLoading}
+                    className="w-full py-3.5 rounded-xl font-bold text-sm bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white shadow-lg shadow-emerald-500/25 transition-all hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 flex items-center justify-center gap-2"
+                  >
+                    {importLoading ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                        Importing payments...
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="w-4 h-4" />
+                        Start Import
+                      </>
+                    )}
+                  </button>
+                </>
+              ) : (
+                /* ── Results View ── */
+                <div className="space-y-4">
+                  {/* Summary cards */}
+                  <div className="grid grid-cols-3 gap-3">
+                    <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 text-center">
+                      <CheckCircle2 className="w-6 h-6 text-emerald-500 mx-auto mb-1" />
+                      <p className="text-2xl font-black text-emerald-700">{importResult.summary.success}</p>
+                      <p className="text-xs font-bold text-emerald-600 mt-0.5">Success</p>
+                    </div>
+                    <div className="bg-red-50 border border-red-200 rounded-2xl p-4 text-center">
+                      <AlertCircle className="w-6 h-6 text-red-500 mx-auto mb-1" />
+                      <p className="text-2xl font-black text-red-700">{importResult.summary.errors}</p>
+                      <p className="text-xs font-bold text-red-600 mt-0.5">Errors</p>
+                    </div>
+                    <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 text-center">
+                      <MinusCircle className="w-6 h-6 text-amber-500 mx-auto mb-1" />
+                      <p className="text-2xl font-black text-amber-700">{importResult.summary.skipped}</p>
+                      <p className="text-xs font-bold text-amber-600 mt-0.5">Skipped</p>
+                    </div>
+                  </div>
+
+                  {/* Row-by-row result table */}
+                  <div className="border border-slate-200 rounded-2xl overflow-hidden">
+                    <div className="bg-slate-50 px-4 py-2.5 border-b border-slate-200">
+                      <p className="text-xs font-bold text-slate-600 uppercase tracking-widest">Import Results — {importResult.summary.total} Rows Processed</p>
+                    </div>
+                    <div className="max-h-56 overflow-y-auto">
+                      <table className="w-full text-xs">
+                        <thead className="bg-slate-50/80 sticky top-0">
+                          <tr>
+                            <th className="text-left px-4 py-2 text-slate-500 font-bold">Row</th>
+                            <th className="text-left px-4 py-2 text-slate-500 font-bold">Student ID</th>
+                            <th className="text-left px-4 py-2 text-slate-500 font-bold">Status</th>
+                            <th className="text-left px-4 py-2 text-slate-500 font-bold">Receipt No / Note</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                          {importResult.results.map((r: any, i: number) => (
+                            <tr key={i} className={r.status === 'SUCCESS' ? 'bg-emerald-50/40' : r.status === 'ERROR' ? 'bg-red-50/40' : 'bg-amber-50/30'}>
+                              <td className="px-4 py-2 font-mono text-slate-500">{r.row}</td>
+                              <td className="px-4 py-2 font-bold text-slate-800">{r.rollNo}</td>
+                              <td className="px-4 py-2">
+                                {r.status === 'SUCCESS' && <span className="inline-flex items-center gap-1 text-emerald-700 font-bold"><CheckCircle2 className="w-3 h-3" /> Success</span>}
+                                {r.status === 'ERROR' && <span className="inline-flex items-center gap-1 text-red-600 font-bold"><AlertCircle className="w-3 h-3" /> Error</span>}
+                                {r.status === 'SKIPPED' && <span className="inline-flex items-center gap-1 text-amber-600 font-bold"><MinusCircle className="w-3 h-3" /> Skipped</span>}
+                              </td>
+                              <td className="px-4 py-2 font-mono text-slate-500 text-[10px]">{r.receiptNo || r.error || '-'}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  {/* Action buttons after import */}
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => { setImportResult(null); setImportFile(null); }}
+                      className="flex-1 py-3 rounded-xl font-bold text-sm border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors"
+                    >
+                      Import Another File
+                    </button>
+                    <button
+                      onClick={() => setShowImportModal(false)}
+                      className="flex-1 py-3 rounded-xl font-bold text-sm bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-md transition-all hover:-translate-y-0.5"
+                    >
+                      Done
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Hidden Print Component */}
       <FeeReceiptPrint payment={printPayment} />
