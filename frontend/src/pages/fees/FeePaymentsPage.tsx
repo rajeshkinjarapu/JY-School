@@ -473,24 +473,25 @@ export const FeePaymentsPage: React.FC = () => {
                         >
                           <FileDown className="w-4 h-4" />
                         </button>
-                        {(user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN' || user?.role === 'ACCOUNTANT') && (
-                          <button
-                            onClick={(e) => { e.stopPropagation(); handleGenerateStatement(p.student); }}
-                            className="p-1.5 rounded-lg text-gray-500 hover:text-purple-600 hover:bg-purple-50 cursor-pointer"
-                            title="Download Fee Statement PDF"
-                          >
-                            <FileText className="w-4 h-4" />
-                          </button>
-                        )}
-                        {(user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN' || user?.role === 'ACCOUNTANT') && (
-                          <button
-                            onClick={(e) => { e.stopPropagation(); handleDeletePayment(p.id); }}
-                            className="p-1.5 rounded-lg text-gray-500 hover:text-red-600 hover:bg-red-50 cursor-pointer"
-                            title="Delete Payment"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        )}
+                        
+                        {(user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN' || user?.role === 'ACCOUNTANT') ? (
+                          <>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); handleGenerateStatement(p.student); }}
+                              className="p-1.5 rounded-lg text-gray-500 hover:text-purple-600 hover:bg-purple-50 cursor-pointer"
+                              title="Download Fee Statement PDF"
+                            >
+                              <FileText className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); handleDeletePayment(p.id); }}
+                              className="p-1.5 rounded-lg text-gray-500 hover:text-red-600 hover:bg-red-50 cursor-pointer"
+                              title="Delete Payment"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </>
+                        ) : null}
                       </div>
                     </td>
                   </tr>
@@ -516,23 +517,23 @@ export const FeePaymentsPage: React.FC = () => {
                           >
                             <FileDown className="w-4 h-4" /> Receipt
                           </button>
-                          {/* Fee Statement — Mobile */}
-                          {(user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN' || user?.role === 'ACCOUNTANT') && (
-                            <button
-                              onClick={(e) => { e.stopPropagation(); handleGenerateStatement(p.student); }}
-                              className="flex-1 py-2 px-3 flex items-center justify-center gap-2 rounded-lg text-purple-600 bg-purple-100 hover:bg-purple-200 font-bold text-xs active:scale-95 transition-transform"
-                            >
-                              <FileText className="w-4 h-4" /> Statement
-                            </button>
-                          )}
-                          {(user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN' || user?.role === 'ACCOUNTANT') && (
-                            <button
-                              onClick={(e) => { e.stopPropagation(); handleDeletePayment(p.id); }}
-                              className="flex-1 py-2 px-3 flex items-center justify-center gap-2 rounded-lg text-red-600 bg-red-100 hover:bg-red-200 font-bold text-xs active:scale-95 transition-transform"
-                            >
-                              <Trash2 className="w-4 h-4" /> Delete
-                            </button>
-                          )}
+                          
+                          {(user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN' || user?.role === 'ACCOUNTANT') ? (
+                            <>
+                              <button
+                                onClick={(e) => { e.stopPropagation(); handleGenerateStatement(p.student); }}
+                                className="flex-1 py-2 px-3 flex items-center justify-center gap-2 rounded-lg text-purple-600 bg-purple-100 hover:bg-purple-200 font-bold text-xs active:scale-95 transition-transform"
+                              >
+                                <FileText className="w-4 h-4" /> Statement
+                              </button>
+                              <button
+                                onClick={(e) => { e.stopPropagation(); handleDeletePayment(p.id); }}
+                                className="flex-1 py-2 px-3 flex items-center justify-center gap-2 rounded-lg text-red-600 bg-red-100 hover:bg-red-200 font-bold text-xs active:scale-95 transition-transform"
+                              >
+                                <Trash2 className="w-4 h-4" /> Delete
+                              </button>
+                            </>
+                          ) : null}
                         </div>
                       </td>
                     </tr>
