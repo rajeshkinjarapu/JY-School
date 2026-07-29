@@ -28,6 +28,7 @@ export const routeImports: Record<string, () => Promise<any>> = {
   '/leave/type': () => import('../pages/leave/LeaveTypePage'),
   '/finance': () => import('../pages/fees/FinancePage'),
   '/fee-payment': () => import('../pages/fees/FeePaymentsPage'),
+  '/collect-payment': () => import('../pages/fees/CollectPaymentPage'),
   '/announcements': () => import('../pages/announcements/AnnouncementsPage'),
   '/messages': () => import('../pages/messages/MessagesPage'),
   '/reports': () => import('../pages/reports/ReportsPage'),
@@ -74,6 +75,7 @@ const PaperDetailPage = lazy(() => import('../pages/paper-generator/PaperDetail'
 const TimetablePage = lazy(routeImports['/timetable']);
 const FinancePage = lazy(routeImports['/finance']);
 const FeePaymentsPage = lazy(routeImports['/fee-payment']);
+const CollectPaymentPage = lazy(routeImports['/collect-payment']);
 const AnnouncementsPage = lazy(routeImports['/announcements']);
 const MessagesPage = lazy(routeImports['/messages']);
 const ReportsPage = lazy(routeImports['/reports']);
@@ -340,6 +342,14 @@ export const router = createBrowserRouter([
         element: withSuspense(
           <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN', 'ACCOUNTANT']}>
             <FeePaymentsPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'collect-payment',
+        element: withSuspense(
+          <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN', 'TEACHER']}>
+            <CollectPaymentPage />
           </ProtectedRoute>
         ),
       },

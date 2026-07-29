@@ -213,7 +213,7 @@ export const AccountantDashboard: React.FC = () => {
               <span>Export Ledger</span>
             </button>
             <button
-              onClick={() => window.location.href = '/fee-payment?action=collect'}
+              onClick={() => window.location.href = '/collect-payment'}
               className="bg-white hover:bg-teal-50 text-indigo-700 px-4 py-2.5 rounded-xl text-xs font-black shadow-lg shadow-black/10 transition-all duration-200 flex items-center gap-2 hover:scale-102 active:scale-[0.98] cursor-pointer"
             >
               <Plus className="w-4.5 h-4.5 text-teal-650" />
