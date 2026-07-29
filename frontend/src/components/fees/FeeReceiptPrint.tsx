@@ -13,6 +13,21 @@ export const FeeReceiptPrint: React.FC<FeeReceiptPrintProps> = ({ payment, schoo
   const formatReceiptNumber = (rNo: string) => {
     if (!rNo) return '';
     if (rNo.includes('-')) {
+import React from 'react';
+import { format } from 'date-fns';
+import { Scissors } from 'lucide-react';
+
+interface FeeReceiptPrintProps {
+  payment: any;
+  schoolName?: string;
+}
+
+export const FeeReceiptPrint: React.FC<FeeReceiptPrintProps> = ({ payment, schoolName = 'JY SCHOOL' }) => {
+  if (!payment) return null;
+
+  const formatReceiptNumber = (rNo: string) => {
+    if (!rNo) return '';
+    if (rNo.includes('-')) {
       const clean = rNo.replace(/[^a-zA-Z0-9]/g, '');
       return 'JY' + clean.substring(0, 8).toUpperCase();
     }
@@ -28,10 +43,10 @@ export const FeeReceiptPrint: React.FC<FeeReceiptPrintProps> = ({ payment, schoo
     : 0;
 
   return (
-    <div className="hidden print:flex print:flex-col w-full text-slate-900 bg-white print:h-[297mm] print:overflow-hidden print:justify-center">
+    <div className="hidden print:flex print:flex-col w-full text-slate-900 bg-white print:h-[297mm] print:w-[210mm] m-0 p-0 overflow-hidden box-border">
       {/* 2 Copies (Office Copy & Parent Copy) */}
       {[ 'OFFICE COPY', 'PARENT COPY' ].map((copyType, idx) => (
-        <div key={copyType} className={`relative ${idx === 1 ? 'mt-4 border-t-2 border-dashed border-slate-300 pt-4' : ''}`}>
+        <div key={copyType} className={`relative flex-1 flex flex-col justify-center px-4 ${idx === 1 ? 'border-t-2 border-dashed border-slate-300' : ''}`}>
           
           {idx === 1 && (
              <div className="absolute top-[-10px] left-1/2 -translate-x-1/2 flex items-center justify-center bg-white px-4 text-slate-500 text-[10px] uppercase tracking-[0.24em]">
@@ -39,13 +54,13 @@ export const FeeReceiptPrint: React.FC<FeeReceiptPrintProps> = ({ payment, schoo
              </div>
           )}
 
-          <div className="max-w-[800px] mx-auto border-2 border-slate-900 p-4 rounded-lg relative overflow-hidden">
+          <div className="w-full max-w-[800px] mx-auto border-2 border-slate-900 p-5 rounded-lg relative overflow-hidden box-border">
             
             {/* Header */}
-            <div className="flex justify-between items-center border-b-2 border-slate-900 pb-3 mb-3">
+            <div className="flex justify-between items-center border-b-2 border-slate-900 pb-3 mb-4">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full border-2 border-slate-900 flex items-center justify-center overflow-hidden">
-                  <img src="/logo.png" alt="Logo" className="w-8 h-8 object-contain" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                <div className="w-14 h-14 rounded-full border-2 border-slate-900 flex items-center justify-center overflow-hidden">
+                  <img src="/logo.png" alt="Logo" className="w-10 h-10 object-contain" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
                 </div>
                 <div>
                   <h1 className="text-xl font-black uppercase tracking-wider">{schoolName}</h1>
@@ -53,49 +68,49 @@ export const FeeReceiptPrint: React.FC<FeeReceiptPrintProps> = ({ payment, schoo
                 </div>
               </div>
               <div className="text-right">
-                <div className="inline-block bg-slate-900 text-white px-2 py-0.5 font-black text-[9px] tracking-widest uppercase rounded">
+                <div className="inline-block bg-slate-900 text-white px-3 py-1 font-black text-[10px] tracking-widest uppercase rounded">
                   {copyType}
                 </div>
-                <div className="mt-1.5 text-xs font-bold uppercase tracking-wider">
+                <div className="mt-2 text-xs font-bold uppercase tracking-wider">
                   Receipt No: {receiptNumber}
                 </div>
-                <div className="text-[10px] font-semibold text-slate-600">
-                  Date: {format(new Date(payment.createdAt || new Date()), 'dd MMM yyyy')}
+                <div className="text-[10px] font-semibold text-slate-600 mt-0.5">
+                  Date: {format(new Date(payment.paymentDate || payment.createdAt || new Date()), 'dd MMM yyyy')}
                 </div>
               </div>
             </div>
 
             {/* Content Grid */}
-            <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-5">
               
               {/* Top Details */}
-              <div className="grid grid-cols-2 gap-y-4 gap-x-8 text-sm">
+              <div className="grid grid-cols-2 gap-y-5 gap-x-8 text-sm">
                 <div>
-                  <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-0.5">Student Name</div>
-                  <div className="font-bold border-b border-slate-300 pb-1">{payment.student?.user?.name || 'N/A'}</div>
+                  <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Student Name</div>
+                  <div className="font-bold border-b-2 border-slate-300 pb-1.5">{payment.student?.user?.name || 'N/A'}</div>
                 </div>
                 <div>
-                  <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-0.5">ID No</div>
-                  <div className="font-bold border-b border-slate-300 pb-1">{payment.student?.rollNo || 'N/A'}</div>
+                  <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">ID No</div>
+                  <div className="font-bold border-b-2 border-slate-300 pb-1.5">{payment.student?.rollNo || 'N/A'}</div>
                 </div>
                 <div>
-                  <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-0.5">Class / Sec</div>
-                  <div className="font-bold border-b border-slate-300 pb-1">{payment.student?.class ? `${payment.student.class.name} - ${payment.student.class.section}` : 'N/A'}</div>
+                  <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Class / Sec</div>
+                  <div className="font-bold border-b-2 border-slate-300 pb-1.5">{payment.student?.class ? `${payment.student.class.name} - ${payment.student.class.section}` : 'N/A'}</div>
                 </div>
                 <div>
-                  <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-0.5">Father's Name</div>
-                  <div className="font-bold border-b border-slate-300 pb-1">{payment.student?.fatherName || 'N/A'}</div>
+                  <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Father's Name</div>
+                  <div className="font-bold border-b-2 border-slate-300 pb-1.5">{payment.student?.fatherName || 'N/A'}</div>
                 </div>
               </div>
 
               {/* Payment Details Table */}
-              <div className="border-2 border-slate-900 rounded-lg overflow-hidden">
+              <div className="border-2 border-slate-900 rounded-lg overflow-hidden mt-2">
                  <div className="overflow-x-auto w-full max-w-full block"><table className="w-full text-sm">
                    <thead className="bg-slate-100 border-b-2 border-slate-900 text-[10px] font-black text-slate-600 uppercase tracking-widest text-left">
                      <tr>
-                       <th className="py-2 px-4 border-r-2 border-slate-900">Description</th>
-                       <th className="py-2 px-4 border-r-2 border-slate-900 text-center">Payment Mode</th>
-                       <th className="py-2 px-4 text-right">Amount</th>
+                       <th className="py-2.5 px-4 border-r-2 border-slate-900">Description</th>
+                       <th className="py-2.5 px-4 border-r-2 border-slate-900 text-center">Payment Mode</th>
+                       <th className="py-2.5 px-4 text-right">Amount</th>
                      </tr>
                    </thead>
                    <tbody>
@@ -106,32 +121,32 @@ export const FeeReceiptPrint: React.FC<FeeReceiptPrintProps> = ({ payment, schoo
                      </tr>
                      {payment.remarks && (
                        <tr className="border-b border-slate-300 font-semibold text-slate-600 text-xs">
-                         <td colSpan={3} className="py-2 px-4">Remarks: {payment.remarks}</td>
+                         <td colSpan={3} className="py-2 px-4 bg-yellow-50/50">Remarks: {payment.remarks}</td>
                        </tr>
                      )}
-                     <tr className="font-black text-base bg-slate-50">
-                       <td colSpan={2} className="py-3 px-4 border-r-2 border-slate-900 text-right uppercase tracking-widest">Total Paid</td>
-                       <td className="py-3 px-4 text-right">₹{payment.amountPaid}</td>
+                     <tr className="font-black text-base bg-slate-100">
+                       <td colSpan={2} className="py-3 px-4 border-r-2 border-slate-900 text-right uppercase tracking-widest text-[11px]">Total Paid</td>
+                       <td className="py-3 px-4 text-right text-lg">₹{payment.amountPaid}</td>
                      </tr>
                    </tbody>
                  </table></div>
               </div>
               
-              <div className="flex justify-between items-center text-sm font-bold bg-slate-100 p-3 rounded-lg border-2 border-slate-300">
-                <span className="text-[10px] uppercase tracking-widest text-slate-600">Pending Balance:</span>
-                <span className="text-red-600">₹{pendingBalance > 0 ? pendingBalance : 0}</span>
+              <div className="flex justify-between items-center text-sm font-bold bg-slate-100 p-3.5 rounded-lg border-2 border-slate-300">
+                <span className="text-[11px] uppercase tracking-widest text-slate-600">Pending Balance for {payment.feeStructure?.name || 'this fee'}:</span>
+                <span className="text-red-600 text-base">₹{pendingBalance > 0 ? pendingBalance : 0}</span>
               </div>
 
             </div>
 
             {/* Signatures */}
-            <div className="flex justify-between items-end mt-12 px-4">
+            <div className="flex justify-between items-end mt-14 px-8">
               <div className="text-center">
-                <div className="w-40 border-b-2 border-slate-400 mb-2"></div>
+                <div className="w-48 border-b-2 border-slate-400 mb-2"></div>
                 <div className="text-[10px] font-black text-slate-600 uppercase tracking-widest">Collected By</div>
               </div>
               <div className="text-center">
-                <div className="w-40 border-b-2 border-slate-400 mb-2"></div>
+                <div className="w-48 border-b-2 border-slate-400 mb-2"></div>
                 <div className="text-[10px] font-black text-slate-600 uppercase tracking-widest">Received By</div>
               </div>
             </div>
@@ -142,7 +157,6 @@ export const FeeReceiptPrint: React.FC<FeeReceiptPrintProps> = ({ payment, schoo
     </div>
   );
 };
-
 // ─────────────────────────────────────────────────────────────────────────────
 // Fee Statement PDF Generator (jsPDF — A4 professional)
 // Usage: generateFeeStatementPDF({ studentName, ... })
@@ -190,26 +204,25 @@ export const generateFeeStatementPDF = async (data: FeeStatementData): Promise<v
   const margin = 14;
   const contentW = pageW - margin * 2;
 
-  // Vibrant Colorful Palette
-  const primary: [number, number, number]   = [139, 92, 246]; // Violet-500
-  const accent: [number, number, number]    = [236, 72, 153]; // Pink-500
-  const dark: [number, number, number]      = [30, 41, 59];   // Slate-800
+  // Professional Monochrome / Dark Blue Palette
+  const primary: [number, number, number]   = [15, 23, 42];   // Slate-900 (Dark Navy)
+  const accent: [number, number, number]    = [51, 65, 85];   // Slate-700
+  const dark: [number, number, number]      = [15, 23, 42];   // Slate-900
   const muted: [number, number, number]     = [100, 116, 139]; // Slate-500
-  const green: [number, number, number]     = [16, 185, 129];  // Emerald-500
-  const red: [number, number, number]       = [239, 68, 68];   // Red-500
-  const lightBg: [number, number, number]   = [245, 243, 255]; // Violet-50
-  const border: [number, number, number]    = [221, 214, 254]; // Violet-200
+  const green: [number, number, number]     = [22, 163, 74];   // Green-600
+  const red: [number, number, number]       = [220, 38, 38];   // Red-600
+  const lightBg: [number, number, number]   = [248, 250, 252]; // Slate-50
+  const border: [number, number, number]    = [203, 213, 225]; // Slate-300
 
   let y = margin;
 
   // ── HEADER BANNER ─────────────────────────────────────────────────────────
   doc.setFillColor(...primary);
-  doc.roundedRect(margin, y, contentW, 36, 4, 4, 'F');
+  doc.roundedRect(margin, y, contentW, 36, 3, 3, 'F');
   
-  // Decorative left stripe
-  doc.setFillColor(...accent);
-  doc.roundedRect(margin, y, 6, 36, 4, 4, 'F');
-  doc.rect(margin + 3, y, 3, 36, 'F');
+  // Decorative left stripe (Subtle accent)
+  doc.setFillColor(255, 255, 255);
+  doc.rect(margin, y, 4, 36, 'F');
 
   // Logo circle
   doc.setFillColor(255, 255, 255);
@@ -221,20 +234,20 @@ export const generateFeeStatementPDF = async (data: FeeStatementData): Promise<v
 
   // School info
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(14);
+  doc.setFontSize(15);
   doc.setTextColor(255, 255, 255);
-  doc.text(schoolName.toUpperCase(), margin + 40, y + 15);
+  doc.text(schoolName.toUpperCase(), margin + 40, y + 16);
   doc.setFont('helvetica', 'normal');
-  doc.setFontSize(7.5);
-  doc.setTextColor(233, 213, 255);
-  doc.text(schoolAddress, margin + 40, y + 22);
+  doc.setFontSize(8);
+  doc.setTextColor(203, 213, 225); // Light slate
+  doc.text(schoolAddress, margin + 40, y + 24);
 
   // Statement label (right side pill)
   doc.setFillColor(255, 255, 255);
-  doc.roundedRect(pageW - margin - 55, y + 9, 52, 18, 9, 9, 'F');
+  doc.roundedRect(pageW - margin - 55, y + 9, 52, 18, 3, 3, 'F');
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(8.5);
-  doc.setTextColor(...accent);
+  doc.setTextColor(...primary);
   doc.text('FEE STATEMENT', pageW - margin - 29, y + 16.5, { align: 'center' });
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(6.5);

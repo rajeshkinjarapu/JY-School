@@ -93,10 +93,10 @@ export const FeePaymentsPage: React.FC = () => {
     try {
       const isStudent = user?.role === 'STUDENT';
       const [payRes, studRes, structRes, classRes]: any = await Promise.all([
-        api.get('/api/fees/payments'),
-        isStudent ? Promise.resolve({ data: [] }) : api.get('/api/students?limit=1000'),
-        isStudent ? Promise.resolve({ data: [] }) : api.get('/api/fees/structures'),
-        isStudent ? Promise.resolve({ data: [] }) : api.get('/api/classes?page=1&limit=100'),
+        api.get('/api/fees/payments?limit=5000'),
+        isStudent ? Promise.resolve({ data: [] }) : api.get('/api/students?limit=5000'),
+        isStudent ? Promise.resolve({ data: [] }) : api.get('/api/fees/structures?limit=5000'),
+        isStudent ? Promise.resolve({ data: [] }) : api.get('/api/classes?limit=5000'),
       ]);
       setPayments(payRes.data || payRes || []);
       setStudents(studRes.data.data || studRes.data || []);
@@ -431,60 +431,67 @@ export const FeePaymentsPage: React.FC = () => {
         {loading ? (
           <LoadingSpinner size="lg" className="py-12" />
         ) : (
-          <div className="rounded-none sm:rounded-3xl border-y sm:border border-white/50 bg-white/80 backdrop-blur-lg overflow-hidden shadow-2xl">
-            <div className="overflow-x-auto w-full max-w-full block"><table className="w-full text-sm text-left">
-              <thead className="bg-indigo-50/50 text-indigo-900 font-bold border-b border-indigo-100">
+          <div className="border border-slate-300 bg-white overflow-hidden shadow-sm">
+            <div className="overflow-x-auto w-full max-w-full block"><table className="w-full text-sm text-left border-collapse">
+              <thead className="bg-slate-100 text-slate-700 font-bold border-b-2 border-slate-300">
                 <tr>
-                  <th className="px-2 sm:px-6 py-3 sm:py-4 text-[10px] sm:text-sm uppercase sm:normal-case">Student</th>
-                  <th className="px-2 sm:px-6 py-3 sm:py-4 text-[10px] sm:text-sm uppercase sm:normal-case">Fee Structure</th>
-                  <th className="px-2 sm:px-6 py-3 sm:py-4 text-[10px] sm:text-sm uppercase sm:normal-case">Amount Paid</th>
-                  <th className="px-6 py-4 hidden md:table-cell">Date</th>
-                  <th className="px-6 py-4 hidden md:table-cell">Method</th>
-                  <th className="px-6 py-4 hidden md:table-cell">Receipt No</th>
-                  <th className="px-6 py-4 text-right hidden md:table-cell">Invoice</th>
+                  <th className="border border-slate-300 px-3 py-3 text-xs uppercase tracking-wider text-center">S.No</th>
+                  <th className="border border-slate-300 px-3 py-3 text-xs uppercase tracking-wider">Student</th>
+                  <th className="border border-slate-300 px-3 py-3 text-xs uppercase tracking-wider">Fee Structure</th>
+                  <th className="border border-slate-300 px-3 py-3 text-xs uppercase tracking-wider">Amount Paid</th>
+                  <th className="border border-slate-300 px-3 py-3 text-xs uppercase tracking-wider hidden md:table-cell">Date</th>
+                  <th className="border border-slate-300 px-3 py-3 text-xs uppercase tracking-wider hidden md:table-cell text-center">Method</th>
+                  <th className="border border-slate-300 px-3 py-3 text-xs uppercase tracking-wider hidden md:table-cell">Receipt No</th>
+                  <th className="border border-slate-300 px-3 py-3 text-xs uppercase tracking-wider text-center hidden md:table-cell">Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y">
-                {filteredPayments.map((p) => (
+              <tbody>
+                {filteredPayments.map((p, idx) => {
+                  let d = new Date(p.paymentDate || p.createdAt);
+                  if (d.getFullYear() < 2000) d = new Date(p.createdAt); // Fallback for bad excel dates
+
+                  return (
                   <React.Fragment key={p.id}>
-                  <tr onClick={() => toggleRow(p.id)} className="hover:bg-indigo-50/30 transition-colors cursor-pointer md:cursor-default">
-                    <td className="px-2 sm:px-6 py-3 sm:py-4 font-bold text-slate-800 leading-tight text-xs sm:text-sm">{p.student?.user?.name || 'Unknown student'}</td>
-                    <td className="px-2 sm:px-6 py-3 sm:py-4 text-slate-500 whitespace-normal break-words text-xs sm:text-sm">{p.feeStructure?.name || 'Deleted structure'}</td>
-                    <td className="px-2 sm:px-6 py-3 sm:py-4 font-bold text-xs sm:text-sm whitespace-nowrap">₹{p.amountPaid.toLocaleString()}</td>
-                    <td className="px-6 py-4 hidden md:table-cell text-slate-500 font-medium">
-                      {new Date(p.paymentDate || p.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                  <tr onClick={() => toggleRow(p.id)} className="hover:bg-slate-50 transition-colors cursor-pointer md:cursor-default">
+                    <td className="border border-slate-300 px-3 py-3 font-semibold text-slate-800 text-xs sm:text-sm text-center">{idx + 1}</td>
+                    <td className="border border-slate-300 px-3 py-3 font-semibold text-slate-800 text-xs sm:text-sm">{p.student?.user?.name || 'Unknown student'}</td>
+                    <td className="border border-slate-300 px-3 py-3 text-slate-600 text-xs sm:text-sm">{p.feeStructure?.name || 'Deleted structure'}</td>
+                    <td className="border border-slate-300 px-3 py-3 font-bold text-slate-800 text-xs sm:text-sm whitespace-nowrap">₹{p.amountPaid.toLocaleString()}</td>
+                    <td className="border border-slate-300 px-3 py-3 hidden md:table-cell text-slate-600 font-medium">
+                      {d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
                     </td>
-                    <td className="px-6 py-4 hidden md:table-cell">
+                    <td className="border border-slate-300 px-3 py-3 hidden md:table-cell text-center">
                       <Badge variant={p.method === 'UPI' ? 'danger' : 'info'}>{p.method}</Badge>
                     </td>
-                    <td className="px-6 py-4 font-mono text-xs text-gray-400 opacity-70 truncate max-w-[120px] hidden md:table-cell">{p.receiptNo}</td>
-                    <td className="px-6 py-4 text-right hidden md:flex items-center justify-end gap-2 h-full">
-                      <button
-                        onClick={(e) => { e.stopPropagation(); handlePrintReceipt(p.id); }}
-                        className="p-1.5 rounded-lg text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950/20 cursor-pointer"
-                        title="Print Dual Receipt"
-                      >
-                        <FileDown className="w-4 h-4" />
-                      </button>
-                      {/* Fee Statement Button */}
-                      {(user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN' || user?.role === 'ACCOUNTANT') && (
+                    <td className="border border-slate-300 px-3 py-3 font-mono text-xs text-slate-500 truncate max-w-[120px] hidden md:table-cell">{p.receiptNo}</td>
+                    <td className="border border-slate-300 px-3 py-3 hidden md:table-cell text-center align-middle">
+                      <div className="flex items-center justify-center gap-2">
                         <button
-                          onClick={(e) => { e.stopPropagation(); handleGenerateStatement(p.student); }}
-                          className="p-1.5 rounded-lg text-gray-400 hover:text-purple-600 hover:bg-purple-50 cursor-pointer"
-                          title="Download Fee Statement PDF"
+                          onClick={(e) => { e.stopPropagation(); handlePrintReceipt(p.id); }}
+                          className="p-1.5 rounded-lg text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 cursor-pointer"
+                          title="Print Dual Receipt"
                         >
-                          <FileText className="w-4 h-4" />
+                          <FileDown className="w-4 h-4" />
                         </button>
-                      )}
-                      {(user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN' || user?.role === 'ACCOUNTANT') && (
-                        <button
-                          onClick={(e) => { e.stopPropagation(); handleDeletePayment(p.id); }}
-                          className="p-1.5 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 cursor-pointer"
-                          title="Delete Payment"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      )}
+                        {(user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN' || user?.role === 'ACCOUNTANT') && (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleGenerateStatement(p.student); }}
+                            className="p-1.5 rounded-lg text-gray-500 hover:text-purple-600 hover:bg-purple-50 cursor-pointer"
+                            title="Download Fee Statement PDF"
+                          >
+                            <FileText className="w-4 h-4" />
+                          </button>
+                        )}
+                        {(user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN' || user?.role === 'ACCOUNTANT') && (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleDeletePayment(p.id); }}
+                            className="p-1.5 rounded-lg text-gray-500 hover:text-red-600 hover:bg-red-50 cursor-pointer"
+                            title="Delete Payment"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                   {expandedRow === p.id && (
