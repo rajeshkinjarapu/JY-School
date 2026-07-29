@@ -315,16 +315,6 @@ export const FinancePage: React.FC = () => {
           <>
             {activeTab === 'dashboard' && (
               <div className="space-y-6 animate-fade-in">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="p-3 bg-indigo-100 dark:bg-indigo-900/30 rounded-xl text-indigo-600 dark:text-indigo-400">
-                    <Wallet className="w-6 h-6" />
-                  </div>
-                  <div>
-                    <h2 className="text-2xl font-black text-gray-900 dark:text-white">Finance Dashboard</h2>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Manage all financial modules from here.</p>
-                  </div>
-                </div>
-
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {tabs.map(tab => {
                     const Icon = tab.icon;

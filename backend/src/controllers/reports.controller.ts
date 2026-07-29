@@ -513,12 +513,13 @@ export const getFeeReportPdf = async (req: Request, res: Response, next: NextFun
     const tableY = 150;
     doc.rect(40, tableY, 515, 20).fill('#f1f5f9');
     doc.fontSize(8).font('Helvetica-Bold').fillColor('#475569');
-    doc.text('S.NO', 45, tableY + 6, { width: 25 });
-    doc.text('STUDENT ID', 70, tableY + 6, { width: 60 });
-    doc.text('STUDENT NAME', 135, tableY + 6, { width: 125 });
-    doc.text('CLASS', 265, tableY + 6, { width: 50 });
-    doc.text('FEE COMPONENT', 320, tableY + 6, { width: 90 });
-    doc.text('METHOD', 415, tableY + 6, { width: 50 });
+    doc.text('S.NO', 45, tableY + 6, { width: 20 });
+    doc.text('STUDENT ID', 65, tableY + 6, { width: 55 });
+    doc.text('STUDENT NAME', 120, tableY + 6, { width: 110 });
+    doc.text('CLASS', 230, tableY + 6, { width: 45 });
+    doc.text('FEE COMPONENT', 275, tableY + 6, { width: 80 });
+    doc.text('METHOD', 355, tableY + 6, { width: 45 });
+    doc.text('PAYMENT DATE', 400, tableY + 6, { width: 65 });
     doc.text('AMOUNT', 470, tableY + 6, { width: 75, align: 'right' });
 
     let currentY = tableY + 20;
@@ -531,22 +532,26 @@ export const getFeeReportPdf = async (req: Request, res: Response, next: NextFun
         doc.rect(40, currentY, 515, 20).fill('#f1f5f9');
         doc.fontSize(8).font('Helvetica-Bold').fillColor('#475569');
         doc.text('S.NO', 45, currentY + 6);
-        doc.text('STUDENT ID', 70, currentY + 6);
-        doc.text('STUDENT NAME', 135, currentY + 6);
-        doc.text('CLASS', 265, currentY + 6);
-        doc.text('FEE COMPONENT', 320, currentY + 6);
-        doc.text('METHOD', 415, currentY + 6);
+        doc.text('STUDENT ID', 65, currentY + 6);
+        doc.text('STUDENT NAME', 120, currentY + 6);
+        doc.text('CLASS', 230, currentY + 6);
+        doc.text('FEE COMPONENT', 275, currentY + 6);
+        doc.text('METHOD', 355, currentY + 6);
+        doc.text('PAYMENT DATE', 400, currentY + 6);
         doc.text('AMOUNT', 470, currentY + 6, { align: 'right', width: 75 });
         currentY += 20;
       }
 
+      const formattedDate = p.paymentDate ? new Date(p.paymentDate).toLocaleDateString() : '-';
+
       doc.fontSize(8).font('Helvetica').fillColor('#334155');
-      doc.text(index.toString(), 45, currentY + 5, { width: 25 });
-      doc.text(p.student.rollNo || '-', 70, currentY + 5, { width: 60 });
-      doc.font('Helvetica-Bold').text(p.student.user.name, 135, currentY + 5, { width: 125 });
-      doc.font('Helvetica').text(p.student.class ? `${p.student.class.name}-${p.student.class.section}` : 'N/A', 265, currentY + 5, { width: 50 });
-      doc.text(p.feeStructure.name, 320, currentY + 5, { width: 90 });
-      doc.text(p.method, 415, currentY + 5, { width: 50 });
+      doc.text(index.toString(), 45, currentY + 5, { width: 20 });
+      doc.text(p.student.rollNo || '-', 65, currentY + 5, { width: 55 });
+      doc.font('Helvetica-Bold').text(p.student.user.name, 120, currentY + 5, { width: 110 });
+      doc.font('Helvetica').text(p.student.class ? `${p.student.class.name}-${p.student.class.section}` : 'N/A', 230, currentY + 5, { width: 45 });
+      doc.text(p.feeStructure.name, 275, currentY + 5, { width: 80 });
+      doc.text(p.method, 355, currentY + 5, { width: 45 });
+      doc.text(formattedDate, 400, currentY + 5, { width: 65 });
       doc.font('Helvetica-Bold').text(`Rs. ${p.amountPaid.toLocaleString()}`, 470, currentY + 5, { width: 75, align: 'right' });
 
       doc.moveTo(40, currentY + 18).lineTo(555, currentY + 18).stroke('#f1f5f9');
