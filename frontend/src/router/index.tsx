@@ -26,7 +26,7 @@ export const routeImports: Record<string, () => Promise<any>> = {
   '/timetable': () => import('../pages/timetable/TimetablePage'),
   '/leave/gate-pass': () => import('../pages/gate-pass/GatePassPage'),
   '/leave/type': () => import('../pages/leave/LeaveTypePage'),
-  '/finance': () => import('../pages/fees/FinancePage'),
+  '/finance': () => import('../pages/fees/FeePaymentsPage'),
   '/fee-payment': () => import('../pages/fees/FeePaymentsPage'),
   '/announcements': () => import('../pages/announcements/AnnouncementsPage'),
   '/messages': () => import('../pages/messages/MessagesPage'),
