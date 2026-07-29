@@ -183,6 +183,7 @@ export const SubjectPage: React.FC = () => {
               <div className="py-12 text-center text-gray-400 font-semibold">
                 No subjects found.
               </div>
+            )}
           </div>
         </div>
       )}
