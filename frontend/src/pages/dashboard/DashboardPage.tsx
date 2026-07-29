@@ -648,72 +648,22 @@ const StudentView: React.FC<{ data: any }> = ({ data }) => {
 
   return (
     <div className="space-y-7">
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+      {/* Student Quick Stats Grid (Matching Teacher Style) */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-5">
         {[
-          { label: 'Attendance Rate', value: `${attPct}%`, icon: CalendarDays, gradient: `linear-gradient(90deg,${attColor},${attColor}99)`, glow: attColor + '15', sub: 'Last 30 days', badge: attPct >= 80 ? '✓ Good' : 'At Risk', badgeColor: attPct >= 80 ? '#10b981' : '#f59e0b' },
-          { label: 'Latest Score', value: data.recentMarks?.length > 0 ? `${data.recentMarks[0].marksObtained}/${data.recentMarks[0].maxMarks}` : 'N/A', icon: Award, gradient: 'linear-gradient(90deg,#6366f1,#818cf8)', glow: 'rgba(99,102,241,0.08)', sub: data.recentMarks?.[0]?.examName || 'No results yet', badge: data.recentMarks?.[0]?.grade, badgeColor: '#6366f1' },
-          { label: 'Fee Status', value: feeStatus === 'PAID' ? 'Paid ✓' : feeStatus === 'PARTIAL' ? 'Partial' : 'Pending', icon: FileText, gradient: feeStatus === 'PAID' ? 'linear-gradient(90deg,#10b981,#34d399)' : 'linear-gradient(90deg,#f59e0b,#fbbf24)', glow: feeStatus === 'PAID' ? 'rgba(16,185,129,0.08)' : 'rgba(245,158,11,0.08)', sub: feeStatus === 'PAID' ? 'All dues cleared' : 'Payment pending', link: '/finance' },
-          { label: 'Admit Cards', value: 'View', icon: BookMarked, gradient: 'linear-gradient(90deg,#8b5cf6,#a78bfa)', glow: 'rgba(139,92,246,0.08)', sub: 'Download admit cards', link: '/student/admit-cards' },
-        ].map((s, i) => <StatCard key={i} {...(s as StatCardProps)} />)}
+          { label: 'Attendance', value: `${attPct}%`, icon: UserCheck, gradient: 'linear-gradient(135deg,#0ea5e9 0%,#2563eb 100%)', glow: 'rgba(255,255,255,0.2)', sub: 'Last 30 days', link: '/student/attendance' },
+          { label: 'Latest Score', value: data.recentMarks?.length > 0 ? `${Math.round((data.recentMarks[0].marksObtained / data.recentMarks[0].maxMarks) * 100)}%` : 'N/A', icon: Award, gradient: 'linear-gradient(135deg,#8b5cf6 0%,#6d28d9 100%)', glow: 'rgba(255,255,255,0.2)', sub: data.recentMarks?.[0]?.examName || 'No results yet', link: '/exams' },
+          { label: 'Fee Status', value: feeStatus === 'PAID' ? 'Paid' : feeStatus === 'PARTIAL' ? 'Partial' : 'Pending', icon: CreditCard, gradient: feeStatus === 'PAID' ? 'linear-gradient(135deg,#10b981 0%,#059669 100%)' : 'linear-gradient(135deg,#f59e0b 0%,#d97706 100%)', glow: 'rgba(255,255,255,0.2)', sub: feeStatus === 'PAID' ? 'All dues cleared' : 'Payment pending', link: '/finance' },
+          { label: 'My Timetable', value: 'View', icon: School, gradient: 'linear-gradient(135deg,#ec4899 0%,#e11d48 100%)', glow: 'rgba(255,255,255,0.2)', sub: 'Weekly Schedule', link: '/timetable' },
+          { label: 'Admit Cards', value: 'View', icon: BookMarked, gradient: 'linear-gradient(135deg,#14b8a6 0%,#0f766e 100%)', glow: 'rgba(255,255,255,0.2)', sub: 'Download admit cards', link: '/student/admit-cards' },
+        ].map((stat, i) => <StatCard key={i} {...(stat as StatCardProps)} />)}
       </div>
 
-      <div className="rounded-2xl p-5 relative overflow-hidden"
-        style={{ background: `linear-gradient(135deg,${attColor}15,${attColor}05)`, border: `1px solid ${attColor}25` }}>
-        <div className="flex items-center justify-between mb-3">
-          <span className="text-sm font-black text-slate-700">Attendance Progress (Last 30 Days)</span>
-          <span className="text-lg font-black" style={{ color: attColor }}>{attPct}%</span>
-        </div>
-        <div className="h-3 rounded-full bg-slate-100 overflow-hidden">
-          <div className="h-full rounded-full transition-all duration-700" style={{ width: `${attPct}%`, background: `linear-gradient(90deg,${attColor},${attColor}bb)` }} />
-        </div>
-        <p className="text-xs font-semibold mt-2" style={{ color: attColor }}>
-          {attPct >= 80 ? '✓ Good standing' : attPct >= 60 ? '⚠ Attendance at risk' : '✗ Low attendance — action needed'}
-        </p>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
-        <ChartCard className="lg:col-span-3">
-          <SectionHeader title="Academic Performance" subtitle="Recent examination results" icon={Award} iconColor="#6366f1"
-            action={<Link to="/exams" className="text-xs font-bold text-indigo-600 hover:text-indigo-700 flex items-center gap-1">Full Report <ChevronRight className="w-3.5 h-3.5" /></Link>} />
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="text-[10px] text-slate-400 uppercase font-black tracking-wider">
-                  <th className="text-left py-2 px-2">Subject</th>
-                  <th className="text-left py-2 px-2">Exam</th>
-                  <th className="text-left py-2 px-2">Score</th>
-                  <th className="text-right py-2 px-2">Grade</th>
-                </tr>
-              </thead>
-              <tbody>
-                {data.recentMarks?.map((m: any, i: number) => {
-                  const pct = Math.round((m.marksObtained / m.maxMarks) * 100);
-                  const gc = pct >= 80 ? '#10b981' : pct >= 60 ? '#f59e0b' : '#f43f5e';
-                  return (
-                    <tr key={i} className="border-t border-slate-50 hover:bg-slate-50/50 transition-colors">
-                      <td className="py-3 px-2 font-bold text-slate-800">{m.subjectName}</td>
-                      <td className="py-3 px-2 text-slate-500 font-medium text-xs">{m.examName}</td>
-                      <td className="py-3 px-2">
-                        <span className="font-black" style={{ color: '#6366f1' }}>{m.marksObtained}/{m.maxMarks}</span>
-                        <span className="text-[10px] text-slate-400 font-medium ml-1">({pct}%)</span>
-                      </td>
-                      <td className="py-3 px-2 text-right">
-                        <span className="text-xs font-black px-2 py-0.5 rounded-lg" style={{ background: gc + '18', color: gc }}>{m.grade}</span>
-                      </td>
-                    </tr>
-                  );
-                })}
-                {(!data.recentMarks || data.recentMarks.length === 0) && (
-                  <tr><td colSpan={4} className="py-8 text-center text-slate-400 text-xs">No grades recorded yet.</td></tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </ChartCard>
-
-        <ChartCard className="lg:col-span-2">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        {/* Today's Classes (Timetable) - Matches Teacher's Timetable position */}
+        <ChartCard className="border border-slate-100">
           <SectionHeader title="Today's Classes" subtitle={new Date().toLocaleDateString('en-IN', { weekday: 'long' })} icon={CalendarDays} iconColor="#06b6d4" />
-          <div className="space-y-3 max-h-[260px] overflow-y-auto pr-1">
+          <div className="space-y-3 max-h-[240px] overflow-y-auto pr-1">
             {data.timetableToday?.length > 0 ? data.timetableToday.map((slot: any, idx: number) => (
               <div key={idx} className="relative flex gap-3">
                 {idx < data.timetableToday.length - 1 && <div className="absolute left-[18px] top-10 bottom-[-12px] w-px bg-slate-100" />}
@@ -723,59 +673,91 @@ const StudentView: React.FC<{ data: any }> = ({ data }) => {
                 <div className="pb-3 pt-1 flex-1">
                   <div className="flex items-start justify-between gap-2">
                     <p className="text-sm font-bold text-slate-800 leading-tight">{slot.subject.name}</p>
-                    <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-cyan-50 text-cyan-700">{slot.startTime}</span>
+                    <span className="shrink-0 text-[10px] font-black px-2 py-0.5 rounded-full bg-cyan-50 text-cyan-700">{slot.startTime}</span>
                   </div>
-                  <p className="text-xs text-slate-400 font-medium mt-0.5">{slot.teacher?.user?.name || 'N/A'}</p>
+                  <p className="text-xs text-slate-400 font-medium mt-0.5">{slot.teacher?.user?.name || 'N/A'} · ends {slot.endTime}</p>
                 </div>
               </div>
-            )) : <p className="text-sm text-slate-400 text-center py-8">No classes today.</p>}
+            )) : <p className="text-sm text-slate-400 text-center py-8">No classes scheduled today.</p>}
+          </div>
+        </ChartCard>
+
+        {/* Academic Performance - Matches Teacher's Recent Homework position */}
+        <ChartCard className="lg:col-span-2">
+          <SectionHeader title="Recent Results" subtitle="Latest examination scores" icon={Award} iconColor="#8b5cf6"
+            action={<Link to="/exams" className="flex items-center gap-1 text-xs font-bold text-purple-600 hover:text-purple-700">Full Report <ChevronRight className="w-3.5 h-3.5" /></Link>} />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {data.recentMarks?.length > 0 ? data.recentMarks.slice(0, 4).map((m: any, i: number) => {
+              const pct = Math.round((m.marksObtained / m.maxMarks) * 100);
+              const gc = pct >= 80 ? '#10b981' : pct >= 60 ? '#f59e0b' : '#f43f5e';
+              return (
+                <div key={i} className="p-4 rounded-[1.2rem] border border-slate-100 bg-slate-50/50 hover:bg-white transition-colors hover:shadow-lg">
+                  <div className="flex justify-between items-start mb-2">
+                    <span className="text-[10px] font-black px-2.5 py-1 rounded-full bg-indigo-100 text-indigo-700">{m.examName}</span>
+                    <span className="text-[10px] font-black px-2.5 py-1 rounded-full" style={{ background: gc + '20', color: gc }}>{m.grade}</span>
+                  </div>
+                  <h4 className="text-sm font-bold text-slate-800 line-clamp-1">{m.subjectName}</h4>
+                  <div className="flex justify-between items-center mt-3">
+                    <span className="text-xs font-semibold text-slate-500">Score</span>
+                    <span className="text-[14px] font-black" style={{ color: gc }}>
+                      {m.marksObtained}/{m.maxMarks} <span className="text-[10px] text-slate-400 font-medium ml-0.5">({pct}%)</span>
+                    </span>
+                  </div>
+                </div>
+              );
+            }) : <div className="col-span-2 text-center py-10 text-slate-400 text-sm">No grades recorded yet.</div>}
           </div>
         </ChartCard>
       </div>
 
-      {data.admitCards?.length > 0 && (
-        <ChartCard>
-          <SectionHeader title="My Admit Cards" subtitle="Available to download" icon={BookMarked} iconColor="#ec4899" />
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-            {data.admitCards.map((exam: any) => (
-              <div key={exam.id} className="p-4 rounded-xl border border-pink-100 bg-pink-50 hover:bg-pink-100 transition-colors cursor-pointer group" onClick={() => navigate(`/admit-card-view/${exam.id}`)}>
-                <div className="flex justify-between items-start mb-2">
-                  <span className="text-xs font-black uppercase tracking-wider text-pink-600">Admit Card</span>
-                  <BookMarked className="w-4 h-4 text-pink-500" />
-                </div>
-                <h4 className="text-sm font-bold text-slate-800 group-hover:text-pink-700 transition-colors">{exam.name}</h4>
-                <p className="text-xs font-semibold text-slate-500 mt-1">Tap to View & Download</p>
-              </div>
-            ))}
-          </div>
-        </ChartCard>
-      )}
-
-      {data.upcomingExams?.length > 0 && (
-        <ChartCard>
-          <SectionHeader title="Upcoming Exams" subtitle="Scheduled examinations" icon={BookMarked} iconColor="#f43f5e" />
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-            {data.upcomingExams.slice(0, 6).map((ex: any) => {
-              const daysLeft = Math.ceil((new Date(ex.examDate).getTime() - Date.now()) / 86400000);
-              const urgency = daysLeft <= 3 ? '#f43f5e' : daysLeft <= 7 ? '#f59e0b' : '#6366f1';
-              return (
-                <div key={ex.id} className="p-4 rounded-xl" style={{ background: urgency + '08', border: `1px solid ${urgency}20` }}>
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-[10px] font-black uppercase tracking-wider" style={{ color: urgency }}>
-                      {daysLeft <= 0 ? 'Today' : `${daysLeft} day${daysLeft > 1 ? 's' : ''} left`}
-                    </span>
-                    <Target className="w-3.5 h-3.5" style={{ color: urgency }} />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        {data.admitCards?.length > 0 && (
+          <ChartCard>
+            <SectionHeader title="Admit Cards" subtitle="Available to download" icon={BookMarked} iconColor="#ec4899" />
+            <div className="space-y-3">
+              {data.admitCards.slice(0, 3).map((exam: any) => (
+                <div key={exam.id} className="flex gap-3.5 p-3 rounded-xl hover:bg-slate-50 group cursor-pointer transition-colors border border-transparent hover:border-slate-100" onClick={() => navigate(`/admit-card-view/${exam.id}`)}>
+                  <div className="shrink-0 w-10 h-10 rounded-xl flex items-center justify-center bg-pink-50 text-pink-500">
+                    <FileText className="w-5 h-5" />
                   </div>
-                  <h4 className="text-sm font-bold text-slate-800 line-clamp-1">{ex.name}</h4>
-                  <p className="text-xs text-slate-400 font-medium mt-1">
-                    {new Date(ex.examDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
-                  </p>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="text-sm font-bold text-slate-800 group-hover:text-pink-600 transition-colors line-clamp-1">{exam.name}</h4>
+                    <p className="text-xs text-slate-400 mt-0.5 font-medium">Tap to View & Download</p>
+                  </div>
                 </div>
-              );
-            })}
-          </div>
-        </ChartCard>
-      )}
+              ))}
+            </div>
+          </ChartCard>
+        )}
+
+        {data.upcomingExams?.length > 0 && (
+          <ChartCard>
+            <SectionHeader title="Upcoming Exams" subtitle="Scheduled examinations" icon={Target} iconColor="#f43f5e" />
+            <div className="space-y-3">
+              {data.upcomingExams.slice(0, 3).map((ex: any) => {
+                const daysLeft = Math.ceil((new Date(ex.examDate).getTime() - Date.now()) / 86400000);
+                const urgency = daysLeft <= 3 ? '#f43f5e' : daysLeft <= 7 ? '#f59e0b' : '#6366f1';
+                return (
+                  <div key={ex.id} className="flex gap-3.5 p-3 rounded-xl hover:bg-slate-50 group cursor-pointer transition-colors border border-transparent hover:border-slate-100">
+                    <div className="shrink-0 w-10 h-10 rounded-xl flex flex-col items-center justify-center" style={{ background: urgency + '18' }}>
+                      <span className="text-[9px] font-black uppercase" style={{ color: urgency }}>
+                        {new Date(ex.examDate).toLocaleDateString('en-IN', { month: 'short' })}
+                      </span>
+                      <span className="text-sm font-black" style={{ color: urgency }}>{new Date(ex.examDate).getDate()}</span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="text-sm font-bold text-slate-800 line-clamp-1">{ex.name}</h4>
+                      <p className="text-xs text-slate-400 mt-0.5 font-medium">
+                        {daysLeft <= 0 ? 'Today' : `${daysLeft} day${daysLeft > 1 ? 's' : ''} left`}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </ChartCard>
+        )}
+      </div>
     </div>
   );
 };

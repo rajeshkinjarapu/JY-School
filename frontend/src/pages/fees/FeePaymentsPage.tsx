@@ -45,12 +45,15 @@ export const FeePaymentsPage: React.FC = () => {
 
   // Filtered payments based on date range
   const filteredPayments = useMemo(() => {
-    return payments.filter(p => {
-      const d = new Date(p.paymentDate);
+    const list = payments.filter(p => {
+      const pDate = p.paymentDate || p.createdAt;
+      if (!pDate) return false;
+      const d = new Date(pDate);
       if (dateFrom && d < new Date(dateFrom)) return false;
       if (dateTo && d > new Date(dateTo + 'T23:59:59')) return false;
       return true;
     });
+    return list.sort((a, b) => new Date(b.paymentDate || b.createdAt).getTime() - new Date(a.paymentDate || a.createdAt).getTime());
   }, [payments, dateFrom, dateTo]);
 
   const toggleRow = (id: string) => setExpandedRow(prev => prev === id ? null : id);
@@ -287,7 +290,11 @@ export const FeePaymentsPage: React.FC = () => {
   const exportPaymentsExcel = async () => {
     const importToast = toast.loading('Generating Excel sheet...');
     try {
-      const response: any = await api.get('/api/reports/fees', {
+      const q = new URLSearchParams();
+      if (dateFrom) q.append('startDate', dateFrom);
+      if (dateTo) q.append('endDate', dateTo);
+      const urlPath = `/api/reports/fees${q.toString() ? '?' + q.toString() : ''}`;
+      const response: any = await api.get(urlPath, {
         responseType: 'blob',
       });
       const url = window.URL.createObjectURL(new Blob([response.data || response]));
@@ -306,7 +313,11 @@ export const FeePaymentsPage: React.FC = () => {
   const exportPaymentsPdf = async () => {
     const importToast = toast.loading('Generating PDF report...');
     try {
-      const response: any = await api.get('/api/reports/fees/pdf', {
+      const q = new URLSearchParams();
+      if (dateFrom) q.append('startDate', dateFrom);
+      if (dateTo) q.append('endDate', dateTo);
+      const urlPath = `/api/reports/fees/pdf${q.toString() ? '?' + q.toString() : ''}`;
+      const response: any = await api.get(urlPath, {
         responseType: 'blob',
       });
       const url = window.URL.createObjectURL(new Blob([response.data || response], { type: 'application/pdf' }));
@@ -323,32 +334,14 @@ export const FeePaymentsPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-4 sm:space-y-6 md:space-y-8 p-0 sm:p-4 md:p-8 bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 min-h-screen animate-fade-in-up pb-24 overflow-x-hidden">
+    <div className="space-y-4 animate-fade-in-up pb-24 overflow-x-hidden">
       
-      {/* Mobile Header Title */}
-      <div className="md:hidden bg-white px-4 py-3 border-b border-gray-100 shadow-sm sticky top-0 z-20 flex items-center justify-between">
-        <h1 className="text-sm font-extrabold text-slate-800 uppercase tracking-wider">Transaction History</h1>
-        {(user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN' || user?.role === 'ACCOUNTANT') && (
-          <button
-            onClick={exportPaymentsPdf}
-            className="text-indigo-600 font-bold text-xs bg-indigo-50 px-3 py-1.5 rounded-lg border border-indigo-100"
-          >
-            Export PDF
-          </button>
-        )}
-      </div>
-
-      <div className="print:hidden space-y-4 sm:space-y-6 md:space-y-8">
+      <div className="print:hidden space-y-4">
       {user?.role !== 'TEACHER' && (
-        <div className="hidden md:flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 p-5 sm:p-6 md:p-8 rounded-none sm:rounded-3xl shadow-xl text-white transform transition-all sm:hover:scale-[1.01]">
-          <div>
-            <h3 className="text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight whitespace-nowrap overflow-hidden text-ellipsis">Fee Transaction Ledger</h3>
-            <p className="text-indigo-100 mt-1 sm:mt-2 font-medium text-sm sm:text-lg opacity-90 leading-snug">Track paid, pending and overdue tuition invoices.</p>
-          </div>
-          <div className="flex flex-wrap gap-2">
+        <div className="hidden md:flex flex-col sm:flex-row sm:items-center justify-end gap-4 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 p-2 sm:p-3 rounded-none sm:rounded-3xl shadow-xl text-white transform transition-all sm:hover:scale-[1.01]">
+          <div className="flex flex-wrap gap-2 w-full justify-end">
             {(user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN' || user?.role === 'ACCOUNTANT') && (
               <>
-                {/* Ghost-style buttons — no colour boxes */}
                 <button
                   onClick={exportPaymentsExcel}
                   className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold text-white/90 border border-white/25 hover:bg-white/15 transition-all"
@@ -452,8 +445,8 @@ export const FeePaymentsPage: React.FC = () => {
                     <td className="px-2 sm:px-6 py-3 sm:py-4 font-bold text-slate-800 leading-tight text-xs sm:text-sm">{p.student?.user?.name || 'Unknown student'}</td>
                     <td className="px-2 sm:px-6 py-3 sm:py-4 text-slate-500 whitespace-normal break-words text-xs sm:text-sm">{p.feeStructure?.name || 'Deleted structure'}</td>
                     <td className="px-2 sm:px-6 py-3 sm:py-4 font-bold text-xs sm:text-sm whitespace-nowrap">₹{p.amountPaid.toLocaleString()}</td>
-                    <td className="px-6 py-4 text-gray-500 hidden md:table-cell">
-                      {new Date(p.paymentDate).toLocaleDateString()}
+                    <td className="px-6 py-4 hidden md:table-cell text-slate-500 font-medium">
+                      {new Date(p.paymentDate || p.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
                     </td>
                     <td className="px-6 py-4 hidden md:table-cell">
                       <Badge variant={p.method === 'UPI' ? 'danger' : 'info'}>{p.method}</Badge>

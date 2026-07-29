@@ -152,13 +152,17 @@ export const getFeeReport = async (req: Request, res: Response, next: NextFuncti
   try {
     const { startDate, endDate } = req.query;
 
-    const start = startDate ? new Date(startDate as string) : new Date(new Date().getFullYear(), 0, 1);
-    const end = endDate ? new Date(endDate as string) : new Date();
+    const start = startDate ? new Date(startDate as string) : undefined;
+    const end = endDate ? new Date(endDate as string) : undefined;
+    if (end) end.setHours(23, 59, 59, 999);
+
+    const dateFilter = start || end ? {
+      ...(start && { gte: start }),
+      ...(end && { lte: end })
+    } : undefined;
 
     const payments = await prisma.feePayment.findMany({
-      where: {
-        paymentDate: { gte: start, lte: end }
-      },
+      where: dateFilter ? { paymentDate: dateFilter } : {},
       include: {
         student: {
           include: {
@@ -469,11 +473,17 @@ export const getMarksReportPdf = async (req: Request, res: Response, next: NextF
 export const getFeeReportPdf = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const { startDate, endDate } = req.query;
-    const start = startDate ? new Date(startDate as string) : new Date(new Date().getFullYear(), 0, 1);
-    const end = endDate ? new Date(endDate as string) : new Date();
+    const start = startDate ? new Date(startDate as string) : undefined;
+    const end = endDate ? new Date(endDate as string) : undefined;
+    if (end) end.setHours(23, 59, 59, 999);
+
+    const dateFilter = start || end ? {
+      ...(start && { gte: start }),
+      ...(end && { lte: end })
+    } : undefined;
 
     const payments = await prisma.feePayment.findMany({
-      where: { paymentDate: { gte: start, lte: end } },
+      where: dateFilter ? { paymentDate: dateFilter } : {},
       include: {
         student: { include: { user: { select: { name: true } }, class: true } },
         feeStructure: true
@@ -496,7 +506,7 @@ export const getFeeReportPdf = async (req: Request, res: Response, next: NextFun
     doc.fontSize(9).font('Helvetica').fillColor('#93c5fd').text('OFFICIAL ACADEMIC SYSTEM REPORT', 55, 68);
     doc.fontSize(12).font('Helvetica-Bold').fillColor('#ffffff').text('FEES REVENUE LEDGER', 320, 48, { align: 'right', width: 220 });
 
-    doc.fillColor('#334155').fontSize(9).font('Helvetica-Bold').text(`Transaction Period: ${start.toLocaleDateString()} to ${end.toLocaleDateString()}`, 40, 110);
+    doc.fillColor('#334155').fontSize(9).font('Helvetica-Bold').text(`Transaction Period: ${start ? start.toLocaleDateString() : 'All Time'} to ${end ? end.toLocaleDateString() : 'All Time'}`, 40, 110);
     doc.font('Helvetica').text(`Print Date: ${new Date().toLocaleDateString()}`, 40, 125);
 
     // Table Headers
