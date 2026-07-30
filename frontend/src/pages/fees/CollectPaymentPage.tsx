@@ -77,6 +77,12 @@ export const CollectPaymentPage: React.FC = () => {
   // Dynamic student search
   useEffect(() => {
     if (user?.role === 'STUDENT') return;
+    
+    // Prevent refetching when a student is selected and their name populates the search bar
+    if (selectedStudent && searchName === selectedStudent.user.name) {
+      return;
+    }
+
     const fetchStudents = async () => {
       try {
         const params = new URLSearchParams();
@@ -100,7 +106,7 @@ export const CollectPaymentPage: React.FC = () => {
     };
     const timeout = setTimeout(fetchStudents, 300);
     return () => clearTimeout(timeout);
-  }, [filterClass, filterSection, searchName, classes, user]);
+  }, [filterClass, filterSection, searchName, classes, user, selectedStudent]);
 
   const fetchStudentPayments = async (id: string) => {
     try {
