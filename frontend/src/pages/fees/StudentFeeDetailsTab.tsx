@@ -31,23 +31,16 @@ export const StudentFeeDetailsTab: React.FC<StudentFeeDetailsProps> = ({ student
       const studentStructures = structures.filter(st =>
         st.studentId === student.id || (st.classId === student.classId && !st.studentId)
       );
-      const tuitionStructure = studentStructures.find(st =>
-        st.name?.toLowerCase().includes('tuition')
-      ) || studentStructures[0];
+      
+      const totalFeeAmount = studentStructures.reduce((sum, st) => sum + (Number(st.amount) || 0), 0);
 
-      const tuitionFeeAmount = tuitionStructure?.amount || 0;
+      const studentPayments = payments.filter(p =>
+        p.studentId === student.id &&
+        (p.status === 'PAID' || p.status === 'PARTIAL')
+      );
+      const paidAmount = studentPayments.reduce((sum, p) => sum + (Number(p.amountPaid) || 0), 0);
 
-      let paidAmount = 0;
-      if (tuitionStructure) {
-        const studentPayments = payments.filter(p =>
-          p.studentId === student.id &&
-          p.feeStructureId === tuitionStructure.id &&
-          p.status === 'PAID'
-        );
-        paidAmount = studentPayments.reduce((sum, p) => sum + (p.amountPaid || 0), 0);
-      }
-
-      const balance = tuitionFeeAmount - paidAmount;
+      const balance = totalFeeAmount - paidAmount;
       const studentClass = classes.find(c => c.id === student.classId);
       const phone = student.user?.phone || student.phone || '';
 
@@ -56,7 +49,7 @@ export const StudentFeeDetailsTab: React.FC<StudentFeeDetailsProps> = ({ student
         id: student.rollNo || '-',
         name: student.user?.name || student.name || '-',
         className: studentClass ? `${studentClass.name} - ${studentClass.section}` : '-',
-        tuitionFee: tuitionFeeAmount,
+        totalFee: totalFeeAmount,
         paidAmount,
         balance,
         phone,
@@ -100,13 +93,13 @@ export const StudentFeeDetailsTab: React.FC<StudentFeeDetailsProps> = ({ student
     doc.setFontSize(9);
     doc.text(`Date: ${new Date().toLocaleDateString('en-IN')}`, 196, 35, { align: 'right' });
 
-    const tableColumn = ['S.No', 'Student ID', 'Student Name', 'Class', 'Tuition Fee (₹)', 'Paid (₹)', 'Balance (₹)'];
+    const tableColumn = ['S.No', 'Student ID', 'Student Name', 'Class', 'Total Fee (₹)', 'Paid (₹)', 'Balance (₹)'];
     const tableRows = tableData.map(row => [
       row.sno,
       row.id,
       row.name,
       row.className,
-      row.tuitionFee.toLocaleString('en-IN'),
+      row.totalFee.toLocaleString('en-IN'),
       row.paidAmount.toLocaleString('en-IN'),
       row.balance.toLocaleString('en-IN')
     ]);
@@ -167,7 +160,7 @@ export const StudentFeeDetailsTab: React.FC<StudentFeeDetailsProps> = ({ student
     window.open(`https://wa.me/${fullPhone}?text=${message}`, '_blank');
   };
 
-  const totalFee = tableData.reduce((s, r) => s + r.tuitionFee, 0);
+  const totalFee = tableData.reduce((s, r) => s + r.totalFee, 0);
   const totalPaid = tableData.reduce((s, r) => s + r.paidAmount, 0);
   const totalBalance = tableData.reduce((s, r) => s + r.balance, 0);
 
@@ -180,7 +173,7 @@ export const StudentFeeDetailsTab: React.FC<StudentFeeDetailsProps> = ({ student
             <Users className="w-5 h-5 text-indigo-500" />
             Student Fee Details
           </h3>
-          <p className="text-xs text-gray-400">View tuition fee, paid amount, and balances class-wise.</p>
+          <p className="text-xs text-gray-400">View total fee, paid amount, and balances class-wise.</p>
         </div>
         <div className="flex items-center gap-3 flex-wrap">
           <button onClick={handlePrint} className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-700 font-medium text-sm transition-colors">
@@ -252,7 +245,7 @@ export const StudentFeeDetailsTab: React.FC<StudentFeeDetailsProps> = ({ student
                 <th className="px-4 py-3 text-xs font-bold uppercase">Student ID</th>
                 <th className="px-4 py-3 text-xs font-bold uppercase">Student Name</th>
                 <th className="px-4 py-3 text-xs font-bold uppercase">Class</th>
-                <th className="px-4 py-3 text-xs font-bold uppercase text-right">Tuition Fee</th>
+                <th className="px-4 py-3 text-xs font-bold uppercase text-right">Total Fee</th>
                 <th className="px-4 py-3 text-xs font-bold uppercase text-right">Paid</th>
                 <th className="px-4 py-3 text-xs font-bold uppercase text-right">Balance</th>
                 <th className="px-4 py-3 text-xs font-bold uppercase text-center print:hidden">WhatsApp</th>
@@ -270,7 +263,7 @@ export const StudentFeeDetailsTab: React.FC<StudentFeeDetailsProps> = ({ student
                     <td className="px-4 py-3 font-mono text-xs font-bold text-indigo-600">{row.id}</td>
                     <td className="px-4 py-3 font-bold text-gray-900 dark:text-white">{row.name}</td>
                     <td className="px-4 py-3 text-gray-600 dark:text-gray-400 text-xs">{row.className}</td>
-                    <td className="px-4 py-3 text-right font-medium text-gray-900 dark:text-gray-100">₹{row.tuitionFee.toLocaleString('en-IN')}</td>
+                    <td className="px-4 py-3 text-right font-medium text-gray-900 dark:text-gray-100">₹{row.totalFee.toLocaleString('en-IN')}</td>
                     <td className="px-4 py-3 text-right font-medium text-emerald-600">₹{row.paidAmount.toLocaleString('en-IN')}</td>
                     <td className={`px-4 py-3 text-right font-black text-sm ${row.balance > 0 ? 'text-rose-600' : 'text-emerald-600'}`}>
                       ₹{row.balance.toLocaleString('en-IN')}
