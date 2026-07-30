@@ -96,8 +96,6 @@ const QuestionPaperGeneratorPage = lazy(() => import('../pages/question-bank/Que
 const SavedPapersPage = lazy(() => import('../pages/question-bank/SavedPapersPage'));
 const TransportDashboard = lazy(routeImports['/transport']);
 
-const PublicFormPage = lazy(() => import('../pages/public/PublicFormPage').then((mod) => ({ default: mod.PublicFormPage })));
-
 const AttendanceWrapper = () => {
   const { user } = useAuth();
   if (user?.role === 'STUDENT') {
