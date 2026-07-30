@@ -177,17 +177,11 @@ export const CollectPaymentPage: React.FC = () => {
       });
       toast.success('Payment transaction recorded!');
       
-      // Clear form for next payment but keep student selected
-      setSelectedFees([]);
-      setRemarks('');
-      setUtrNumber('');
-      setReceiptUrl('');
+      // Auto refresh the page after a brief delay
+      setTimeout(() => {
+        window.location.reload();
+      }, 1500);
       
-      // Refresh pending amounts
-      if (studentId) {
-        await fetchStudentPayments(studentId);
-      }
-      setIsSubmitting(false);
     } catch (error: any) {
       toast.error(error.message || 'Error recording payment');
       setIsSubmitting(false);
