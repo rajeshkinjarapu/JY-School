@@ -108,9 +108,18 @@ app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// 404 handler
-app.use((_req, res) => {
+// Serve Static frontend files
+const frontendPath = path.join(__dirname, '../../frontend/dist');
+app.use(express.static(frontendPath));
+
+// 404 handler for API routes
+app.use('/api/*', (_req, res) => {
   res.status(404).json({ success: false, message: 'Route not found' });
+});
+
+// React SPA fallback for all other routes
+app.get('*', (req, res) => {
+  res.sendFile(path.join(frontendPath, 'index.html'));
 });
 
 // Global error handler
