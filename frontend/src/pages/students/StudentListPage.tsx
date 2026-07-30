@@ -391,7 +391,7 @@ export const StudentListPage: React.FC = () => {
                           <img
                             src={getPhotoUrl(photoUrl)}
                             alt={name}
-                            className="w-11 h-11 rounded-full object-cover border-2 border-white dark:border-gray-800 shadow-sm"
+                            className="w-12 h-16 rounded-xl object-cover object-top border-2 border-white dark:border-gray-800 shadow-lg ring-2 ring-indigo-100 dark:ring-indigo-900/30 transform group-hover:scale-105 transition-transform"
                             onError={(e) => {
                               e.currentTarget.onerror = null;
                               e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`;
@@ -399,7 +399,7 @@ export const StudentListPage: React.FC = () => {
                           />
                         ) : (
                           <div
-                            className={`w-11 h-11 rounded-full bg-gradient-to-br ${getColor(name)} flex items-center justify-center text-white font-bold text-sm shadow-sm`}
+                            className={`w-12 h-16 rounded-xl bg-gradient-to-br ${getColor(name)} flex items-center justify-center text-white font-black text-xl shadow-lg shadow-${getColor(name).split("-")[1]}-500/30 transform group-hover:scale-105 transition-transform`}
                           >
                             {getInitials(name)}
                           </div>
