@@ -308,7 +308,8 @@ export const OMRScannerPage: React.FC = () => {
           status: r.error ? 'error' : 'done',
         };
       } catch (err: any) {
-        allDone[i] = { ...allDone[i], status: 'error', error: err.message || 'Scan failed' };
+        const exactError = err.response?.data?.error || err.message || 'Scan failed';
+        allDone[i] = { ...allDone[i], status: 'error', error: exactError };
       }
 
       setFileQueue([...allDone]);
