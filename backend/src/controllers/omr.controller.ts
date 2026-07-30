@@ -68,7 +68,7 @@ You must return a valid JSON object matching this exact structure, with all 75 k
 Respond STRICTLY with valid JSON only.`;
 
   const response = await ai.models.generateContent({
-    model: 'gemini-1.5-pro',
+    model: 'gemini-2.0-flash',
     contents: [
       prompt,
       { inlineData: { data: base64Data, mimeType } },
@@ -127,7 +127,9 @@ export const scanOmrSheet = async (req: Request, res: Response) => {
     console.error('OMR scan error:', error);
     let msg = error.message || 'Internal Server Error';
     if (msg.includes('Quota exceeded') || msg.includes('RESOURCE_EXHAUSTED')) {
-      msg = 'API Quota Exceeded or Model not available on Free Tier. Please wait a minute and try again, or check your API key billing.';
+      msg = 'API Quota Exceeded. Please try again later or upgrade your API key.';
+    } else if (msg.includes('404') || msg.includes('not found')) {
+      msg = `Model not available on your API key. Error: ${msg}`;
     }
     res.status(500).json({ error: msg });
   }
