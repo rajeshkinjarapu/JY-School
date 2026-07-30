@@ -1,317 +1,224 @@
-import React, { useState, useEffect } from 'react';
-import api from '../../api/axios';
-import {
-  Search,
-  Plus,
-  Upload,
-  Download,
-  Image as ImageIcon,
-  Filter,
-  Eye,
-  Edit2,
-  Trash2,
-  Phone,
-  User,
-  Users,
-  GraduationCap,
-  ChevronLeft,
-  ChevronRight,
-  Loader2
-} from 'lucide-react';
+import React, { useEffect, useState, useRef } from "react";
+import api from "../../api/axios";
+import { LoadingSpinner } from "../../components/UI/LoadingSpinner";
+import { Search, UserPlus, Trash2, Edit, FileDown, Eye } from "lucide-react";
+import toast from "react-hot-toast";
+import { Link } from "react-router-dom";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+import { useAuth } from "../../hooks/useAuth";
+import { getPhotoUrl } from "../../utils/photo";
 
-interface Student {
-  id: string;
-  rollNo: string;
-  fatherName: string;
-  user: {
-    id: string;
-    name: string;
-    phone: string;
-    photoUrl: string | null;
-    isActive: boolean;
-  };
-  class: {
-    name: string;
-    section: string;
-  };
-}
+export const StudentListPage: React.FC = () => {
+  const { user } = useAuth();
+  const isSuperAdmin = user?.role === "SUPER_ADMIN";
 
-export default function StudentListPage() {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedClass, setSelectedClass] = useState('ALL');
-  const [students, setStudents] = useState<Student[]>([]);
+  const [students, setStudents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [total, setTotal] = useState(0);
+  const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
 
   const fetchStudents = async () => {
+    setLoading(true);
     try {
-      setLoading(true);
-      const res: any = await api.get(`/api/students?page=${page}&limit=10&search=${searchTerm}`);
-      const studentsData = res.data.data || res.data || [];
-      setStudents(studentsData);
-      setTotal(res.data.meta?.total || studentsData.length);
+      const response: any = await api.get("/api/students", {
+        params: { search, limit: 50, page },
+      });
+      const data = response.data.data || response.data || [];
+      setStudents(data);
+      setTotal(response.data.meta?.total || data.length);
     } catch (error) {
-      console.error('Error fetching students:', error);
+      console.error("Error fetching students:", error);
+      toast.error("Failed to load students list");
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    const delayDebounceFn = setTimeout(() => {
+    const timer = setTimeout(() => {
       fetchStudents();
-    }, 500);
-    return () => clearTimeout(delayDebounceFn);
-  }, [searchTerm, page, selectedClass]);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [search, page]);
+
+  const handleDelete = async (id: string) => {
+    if (!window.confirm("Are you sure you want to delete this student?"))
+      return;
+    try {
+      await api.delete(`/api/students/${id}`);
+      toast.success("Student deleted successfully");
+      fetchStudents();
+    } catch (error: any) {
+      toast.error(error.message || "Failed to delete student");
+    }
+  };
+
+  const exportStudents = () => {
+    const doc = new jsPDF();
+    doc.setFontSize(18);
+    doc.text("Student List", 14, 22);
+
+    const tableColumn = ["S.No", "Roll No", "Name", "Class", "Phone", "Father Name"];
+    const tableRows: any[] = [];
+
+    students.forEach((student: any, index: number) => {
+      const row = [
+        (page - 1) * 50 + index + 1,
+        student.rollNo || "-",
+        student.user?.name || "-",
+        `${student.class?.name || ""} ${student.class?.section || ""}`,
+        student.user?.phone || "-",
+        student.fatherName || "-",
+      ];
+      tableRows.push(row);
+    });
+
+    autoTable(doc, {
+      head: [tableColumn],
+      body: tableRows,
+      startY: 30,
+      theme: "grid",
+      styles: { fontSize: 10, cellPadding: 3 },
+      headStyles: { fillColor: [79, 70, 229], textColor: 255, fontStyle: "bold" },
+    });
+
+    doc.save("Student_List.pdf");
+    toast.success("PDF generated successfully!");
+  };
 
   return (
-    <div className="p-6 space-y-6 bg-slate-50/50 min-h-screen">
-      {/* Page Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Student Directory</h1>
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200">
-              {total} Records
-            </span>
-          </div>
-          <p className="text-sm text-slate-500 mt-1">
-            Manage student records, view profiles, and update details.
-          </p>
-        </div>
-
-        {/* Action Buttons */}
-        <div className="flex items-center gap-2 flex-wrap">
-          <button className="inline-flex items-center gap-2 px-3.5 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-xl hover:bg-slate-50 shadow-sm transition-all">
-            <ImageIcon className="w-4 h-4 text-slate-500" />
-            <span>Bulk Photos</span>
-          </button>
-          <button className="inline-flex items-center gap-2 px-3.5 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-xl hover:bg-slate-50 shadow-sm transition-all">
-            <Upload className="w-4 h-4 text-slate-500" />
-            <span>Upload</span>
-          </button>
-          <button className="inline-flex items-center gap-2 px-3.5 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-xl hover:bg-slate-50 shadow-sm transition-all">
-            <Download className="w-4 h-4 text-slate-500" />
-            <span>Export</span>
-          </button>
-          <button className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-sm transition-all">
-            <Plus className="w-4 h-4" />
-            <span>Add Student</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Summary Stat Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm flex items-center gap-4">
-          <div className="p-3 bg-indigo-50 text-indigo-600 rounded-xl">
-            <Users className="w-6 h-6" />
-          </div>
-          <div>
-            <p className="text-xs font-medium text-slate-500">Total Enrolled</p>
-            <p className="text-xl font-bold text-slate-900">{total}</p>
-          </div>
-        </div>
-        <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm flex items-center gap-4">
-          <div className="p-3 bg-emerald-50 text-emerald-600 rounded-xl">
-            <GraduationCap className="w-6 h-6" />
-          </div>
-          <div>
-            <p className="text-xs font-medium text-slate-500">Active Classes</p>
-            <p className="text-xl font-bold text-slate-900">14</p>
-          </div>
-        </div>
-        <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm flex items-center gap-4">
-          <div className="p-3 bg-blue-50 text-blue-600 rounded-xl">
-            <User className="w-6 h-6" />
-          </div>
-          <div>
-            <p className="text-xs font-medium text-slate-500">New Admissions</p>
-            <p className="text-xl font-bold text-slate-900">28</p>
-          </div>
-        </div>
-        <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm flex items-center gap-4">
-          <div className="p-3 bg-amber-50 text-amber-600 rounded-xl">
-            <Filter className="w-6 h-6" />
-          </div>
-          <div>
-            <p className="text-xs font-medium text-slate-500">Pre-Primary (PP1)</p>
-            <p className="text-xl font-bold text-slate-900">42</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Main Table Container */}
-      <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
-        {/* Filter Bar */}
-        <div className="p-4 border-b border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <div className="relative w-full sm:w-80">
-            <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white/80 dark:bg-white/5 p-4 rounded-2xl border border-gray-150 dark:border-white/10 shadow-sm backdrop-blur-xl">
+        <div className="flex-1 relative flex items-center gap-3">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-3 w-4 h-4 text-indigo-500" />
             <input
               type="text"
-              placeholder="Search by name or Student ID..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all placeholder:text-slate-400"
+              placeholder="Search students by name or roll number..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full pl-9 pr-4 py-2.5 text-sm bg-indigo-50/30 dark:bg-white/5 border border-indigo-100 dark:border-white/10 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500/50 font-medium transition-all text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-300"
             />
           </div>
-
-          <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
-            <div className="flex items-center gap-2">
-              <label className="text-xs font-medium text-slate-500">Class:</label>
-              <select
-                value={selectedClass}
-                onChange={(e) => setSelectedClass(e.target.value)}
-                className="py-2 px-3 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none text-slate-700 font-medium"
-              >
-                <option value="ALL">All Classes</option>
-                <option value="PP1">PP1</option>
-                <option value="PP2">PP2</option>
-                <option value="Class 1">Class 1</option>
-              </select>
-            </div>
-          </div>
+          <span className="hidden sm:inline-flex items-center justify-center px-3 py-2 text-xs font-black text-indigo-600 bg-indigo-100 rounded-lg whitespace-nowrap">
+            {total} Records
+          </span>
         </div>
-
-        {/* Table */}
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-slate-50/80 text-slate-500 text-xs font-semibold uppercase tracking-wider border-b border-slate-100">
-                <th className="py-3.5 px-4 w-12 text-center">#</th>
-                <th className="py-3.5 px-4">Student Info</th>
-                <th className="py-3.5 px-4">Student ID</th>
-                <th className="py-3.5 px-4">Class & Sec</th>
-                <th className="py-3.5 px-4">Father Name</th>
-                <th className="py-3.5 px-4">Contact</th>
-                <th className="py-3.5 px-4">Status</th>
-                <th className="py-3.5 px-4 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 text-sm text-slate-700">
-              {loading ? (
-                <tr>
-                  <td colSpan={8} className="py-8 text-center text-slate-500">
-                    <div className="flex items-center justify-center gap-2">
-                      <Loader2 className="w-5 h-5 animate-spin text-indigo-600" />
-                      <span>Loading students...</span>
-                    </div>
-                  </td>
-                </tr>
-              ) : students.length === 0 ? (
-                <tr>
-                  <td colSpan={8} className="py-8 text-center text-slate-500">
-                    No students found.
-                  </td>
-                </tr>
-              ) : students.map((student, index) => (
-                <tr key={student.id} className="hover:bg-slate-50/60 transition-colors group">
-                  <td className="py-3.5 px-4 text-center font-medium text-slate-400">
-                    {(page - 1) * 10 + index + 1}
-                  </td>
-                  <td className="py-3.5 px-4">
-                    <div className="flex items-center gap-3">
-                      {student.user.photoUrl ? (
-                        <img
-                          src={student.user.photoUrl}
-                          alt={student.user.name}
-                          className="w-10 h-10 rounded-full object-cover ring-2 ring-slate-100 shadow-sm"
-                        />
-                      ) : (
-                        <div className="w-10 h-10 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-semibold text-xs ring-2 ring-slate-100">
-                          {student.user.name.split(' ').map(n => n[0]).slice(0, 2).join('')}
-                        </div>
-                      )}
-                      <div>
-                        <p className="font-semibold text-slate-900 group-hover:text-indigo-600 transition-colors">
-                          {student.user.name}
-                        </p>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="py-3.5 px-4">
-                    <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-mono font-medium bg-slate-100 text-slate-700 border border-slate-200">
-                      {student.rollNo}
-                    </span>
-                  </td>
-                  <td className="py-3.5 px-4">
-                    <div className="flex items-center gap-1.5">
-                      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-indigo-50 text-indigo-700">
-                        {student.class?.name || 'N/A'}
-                      </span>
-                      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-slate-100 text-slate-600">
-                        {student.class?.section || 'N/A'}
-                      </span>
-                    </div>
-                  </td>
-                  <td className="py-3.5 px-4 text-slate-600">
-                    {student.fatherName || '—'}
-                  </td>
-                  <td className="py-3.5 px-4 text-slate-600">
-                    <div className="flex items-center gap-1.5 font-mono text-xs text-slate-600">
-                      <Phone className="w-3.5 h-3.5 text-slate-400" />
-                      <span>{student.user.phone || '—'}</span>
-                    </div>
-                  </td>
-                  <td className="py-3.5 px-4">
-                    {student.user.isActive ? (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200/60">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                        Active
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-rose-50 text-rose-700 border border-rose-200/60">
-                        <span className="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
-                        Inactive
-                      </span>
-                    )}
-                  </td>
-                  <td className="py-3.5 px-4 text-right">
-                    <div className="flex items-center justify-end gap-1">
-                      <button className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all" title="View Profile">
-                        <Eye className="w-4 h-4" />
-                      </button>
-                      <button className="p-1.5 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-all" title="Edit">
-                        <Edit2 className="w-4 h-4" />
-                      </button>
-                      <button className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-all" title="Delete">
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Pagination Footer */}
-        <div className="p-4 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
-          <div>
-            Showing <span className="font-semibold text-slate-700">{(page - 1) * 10 + 1}</span> to{' '}
-            <span className="font-semibold text-slate-700">{Math.min(page * 10, total)}</span> of{' '}
-            <span className="font-semibold text-slate-700">{total}</span> entries
-          </div>
-          <div className="flex items-center gap-1">
-            <button 
-              onClick={() => setPage(p => Math.max(1, p - 1))}
-              disabled={page === 1}
-              className="p-2 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-600 disabled:opacity-50">
-              <ChevronLeft className="w-4 h-4" />
+        <div className="flex gap-2 flex-wrap">
+          {isSuperAdmin && (
+            <button
+              onClick={exportStudents}
+              className="flex items-center gap-1.5 px-3.5 py-2.5 text-sm font-bold text-gray-600 dark:text-white bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl hover:bg-gray-100 dark:hover:bg-white/10 transition-all cursor-pointer"
+            >
+              <FileDown className="w-4 h-4" /> Export
             </button>
-            <button className="px-3 py-1.5 rounded-lg bg-indigo-600 text-white font-semibold shadow-sm">
-              {page}
-            </button>
-            <button 
-              onClick={() => setPage(p => p + 1)}
-              disabled={page * 10 >= total}
-              className="p-2 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-600 disabled:opacity-50">
-              <ChevronRight className="w-4 h-4" />
-            </button>
-          </div>
+          )}
+          <Link
+            to="/students/new"
+            className="flex items-center gap-1.5 px-4 py-2.5 text-sm font-extrabold text-white bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 rounded-xl shadow-md shadow-indigo-500/25 transition-all cursor-pointer"
+          >
+            <UserPlus className="w-4 h-4" /> Add Student
+          </Link>
         </div>
       </div>
+
+      {loading ? (
+        <LoadingSpinner size="lg" className="py-12" />
+      ) : (
+        <div className="bg-white/40 dark:bg-white/5 border border-white/60 dark:border-white/10 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden backdrop-blur-2xl">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm text-left border-collapse">
+              <thead>
+                <tr className="bg-indigo-50/50 text-indigo-900 font-semibold border-b border-indigo-100">
+                  <th className="px-6 py-4 font-extrabold text-xs uppercase tracking-wider text-gray-400">Student</th>
+                  <th className="px-6 py-4 font-extrabold text-xs uppercase tracking-wider text-gray-400">Roll No</th>
+                  <th className="px-6 py-4 font-extrabold text-xs uppercase tracking-wider text-gray-400">Class</th>
+                  <th className="px-6 py-4 font-extrabold text-xs uppercase tracking-wider text-gray-400">Father Name</th>
+                  <th className="px-6 py-4 font-extrabold text-xs uppercase tracking-wider text-gray-400 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-150 dark:divide-white/5">
+                {students.map((student, idx) => {
+                  const avatarColors = ["from-indigo-500 to-purple-600", "from-teal-400 to-emerald-600", "from-rose-400 to-pink-600"];
+                  const name = student.user?.name || "Student";
+                  const colorIdx = name.charCodeAt(0) % avatarColors.length;
+                  const colorClass = avatarColors[colorIdx];
+                  const getInitials = (n: string) => n.trim().split(" ").map(p=>p[0]).slice(0,2).join("").toUpperCase();
+
+                  return (
+                    <tr key={student.id} className="hover:bg-white bg-transparent transition-all duration-300 group border-b border-indigo-50/50 hover:shadow-glow-primary">
+                      <td className="px-6 py-4 flex items-center gap-3">
+                        <div className="relative">
+                          {getPhotoUrl(student.user?.photoUrl) ? (
+                            <img src={getPhotoUrl(student.user?.photoUrl)} alt={name} className="w-12 h-12 rounded-2xl object-cover shadow-sm border border-gray-100" />
+                          ) : (
+                            <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${colorClass} flex items-center justify-center text-white font-black text-lg shadow-sm border-2 border-white`}>
+                              {getInitials(name)}
+                            </div>
+                          )}
+                        </div>
+                        <div>
+                          <h4 className="font-extrabold text-gray-900 dark:text-white leading-tight group-hover:text-indigo-600 transition-colors">
+                            {name}
+                          </h4>
+                          <span className="text-[11px] font-bold text-gray-400">{student.user?.email || student.user?.phone}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="font-mono text-xs font-bold text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded-lg border border-indigo-100">
+                          {student.rollNo}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="text-[11px] font-extrabold uppercase tracking-wide text-teal-700 bg-teal-50 px-2.5 py-1 rounded-lg border border-teal-100">
+                          {student.class?.name} {student.class?.section}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="text-xs font-bold text-gray-600 bg-gray-50 px-2.5 py-1 rounded-lg border border-gray-200">
+                          {student.fatherName || "-"}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <div className="flex justify-end gap-2">
+                          <Link to={`/students/${student.id}`} className="flex items-center justify-center w-8 h-8 bg-gray-50 hover:bg-indigo-50 text-gray-400 hover:text-indigo-600 rounded-lg transition-all shadow-sm border border-gray-200 cursor-pointer" title="View Profile">
+                            <Eye className="w-4 h-4" />
+                          </Link>
+                          {isSuperAdmin && (
+                            <>
+                              <Link to={`/students/${student.id}/edit`} className="flex items-center justify-center w-8 h-8 bg-gray-50 hover:bg-amber-50 text-gray-400 hover:text-amber-600 rounded-lg transition-all shadow-sm border border-gray-200 cursor-pointer" title="Edit">
+                                <Edit className="w-3.5 h-3.5" />
+                              </Link>
+                              <button onClick={() => handleDelete(student.id)} className="flex items-center justify-center w-8 h-8 bg-gray-50 hover:bg-red-50 text-gray-400 hover:text-red-600 rounded-lg transition-all shadow-sm border border-gray-200 cursor-pointer" title="Delete">
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+                {students.length === 0 && (
+                  <tr><td colSpan={5} className="py-12 text-center text-gray-400 font-semibold">No student records found.</td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+          <div className="p-4 border-t border-indigo-50 flex items-center justify-between">
+             <div className="text-xs font-bold text-gray-500">
+               Showing Page {page}
+             </div>
+             <div className="flex gap-2">
+               <button onClick={() => setPage(p=>Math.max(1, p-1))} disabled={page===1} className="px-3 py-1.5 text-xs font-bold bg-white border border-gray-200 rounded-lg disabled:opacity-50">Prev</button>
+               <button onClick={() => setPage(p=>p+1)} disabled={students.length < 50} className="px-3 py-1.5 text-xs font-bold bg-white border border-gray-200 rounded-lg disabled:opacity-50">Next</button>
+             </div>
+          </div>
+        </div>
+      )}
     </div>
   );
-}
+};
+export default StudentListPage;
