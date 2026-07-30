@@ -554,6 +554,39 @@ export const CollectPaymentPage: React.FC = () => {
             </div>
 
           </form>
+
+          {/* 4. Recent Transactions */}
+          {studentId && payments.length > 0 && (
+            <div className="mt-8 space-y-4 pt-6 border-t-2 border-dashed border-slate-200 animate-fade-in-up">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-6 h-6 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 font-black text-xs">✓</div>
+                <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest">Recent Transactions</h3>
+              </div>
+              <div className="bg-white rounded-xl overflow-hidden border border-slate-200 shadow-sm">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-slate-50 border-b border-slate-200 text-xs uppercase tracking-wider text-slate-500">
+                      <th className="p-3 font-bold">Date</th>
+                      <th className="p-3 font-bold">Fee Name</th>
+                      <th className="p-3 font-bold">Amount</th>
+                      <th className="p-3 font-bold">Receipt No</th>
+                    </tr>
+                  </thead>
+                  <tbody className="text-sm">
+                    {payments.slice(0, 5).map((p, i) => (
+                      <tr key={i} className="border-b border-slate-100 last:border-0 hover:bg-slate-50 transition-colors">
+                        <td className="p-3 text-slate-600 font-semibold">{new Date(p.paymentDate || p.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
+                        <td className="p-3 text-slate-800 font-bold">{p.feeStructure?.name || 'Fee'}</td>
+                        <td className="p-3 text-emerald-600 font-black">₹{p.amountPaid?.toLocaleString()}</td>
+                        <td className="p-3 text-slate-500 font-mono text-xs">{p.receiptNo}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
         </div>
       </div>
     </div>
