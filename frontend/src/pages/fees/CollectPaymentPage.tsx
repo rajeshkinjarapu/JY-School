@@ -145,21 +145,12 @@ export const CollectPaymentPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 sm:p-6 lg:p-8">
-      {/* Page Header */}
-      <div className="max-w-6xl mx-auto mb-6 flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Link to="/fee-payment" className="p-2 bg-white rounded-xl shadow-sm border border-slate-200 text-slate-500 hover:text-indigo-600 transition-colors">
-            <ChevronLeft className="w-5 h-5" />
-          </Link>
-          <div>
-            <h1 className="text-2xl font-black text-slate-900 tracking-tight">Collect Payment</h1>
-            <p className="text-xs font-semibold text-slate-500 mt-0.5">Process new fee payments quickly and securely.</p>
-          </div>
-        </div>
+    <div className="min-h-screen bg-slate-50">
+      <div className="bg-white px-6 py-4 border-b border-slate-200">
+        <h1 className="text-2xl font-bold text-slate-900">Collect Payment</h1>
       </div>
 
-      <div className="max-w-6xl mx-auto bg-white rounded-[2rem] shadow-2xl overflow-hidden flex flex-col lg:flex-row border border-slate-100">
+      <div className="w-full bg-white flex flex-col lg:flex-row">
         
         {/* Left Side: Summary & Brand Panel */}
         <div className="lg:w-[400px] flex-shrink-0 bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 p-8 lg:p-10 text-white relative overflow-hidden flex flex-col justify-between">
