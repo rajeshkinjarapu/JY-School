@@ -33,8 +33,7 @@ model User {
   announcements    Announcement[]
   attendanceMarked Attendance[] @relation("MarkedBy")
   auditLogs        AuditLog[]
-  customForms      CustomForm[]
-  formSubmissions  FormSubmission[]
+
 
   // JEE Paper Generator Relations
   latexQuestions   Question[]
@@ -526,30 +525,7 @@ model SlipTestMark {
   @@unique([slipTestId, studentId])
 }
 
-model CustomForm {
-  id          String   @id @default(uuid())
-  title       String
-  description String?
-  fields      String   // JSON string representing fields
-  targetRoles String   // comma-separated roles, e.g. "STUDENT,TEACHER" or "ALL"
-  createdById String
-  createdBy   User     @relation(fields: [createdById], references: [id])
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
 
-  submissions FormSubmission[]
-}
-
-model FormSubmission {
-  id           String     @id @default(uuid())
-  formId       String
-  form         CustomForm @relation(fields: [formId], references: [id], onDelete: Cascade)
-  submittedById String?
-  submittedBy  User?      @relation(fields: [submittedById], references: [id])
-  answers      String     // JSON string mapping field names to user inputs
-  submittedAt  DateTime   @default(now())
-}
 
 // ----------------------------------------------------------------------
 // JEE Mains Paper Generator Models

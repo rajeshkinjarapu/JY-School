@@ -35,7 +35,7 @@ import uploadRoutes from './routes/uploads';
 import userRoutes from './routes/users';
 import eventRoutes from './routes/events';
 import examsExtendedRoutes from './routes/examsExtended';
-import formRoutes from './routes/forms';
+
 import latexRoutes from './routes/latex';
 import gatePassRoutes from './routes/gatePass';
 import homeworkRoutes from './routes/homework';
@@ -94,7 +94,7 @@ app.use('/api/settings', settingsRoutes);
 app.use('/api/uploads', uploadRoutes);
 app.use('/api/events', eventRoutes);
 app.use('/api/exams-extended', examsExtendedRoutes);
-app.use('/api/forms', formRoutes);
+
 app.use('/api/latex', latexRoutes);
 app.use('/api/gate-pass', gatePassRoutes);
 app.use('/api/homework', homeworkRoutes);
