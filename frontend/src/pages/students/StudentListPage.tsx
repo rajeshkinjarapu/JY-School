@@ -417,7 +417,7 @@ export const StudentListPage: React.FC = () => {
                       </td>
 
                       {/* Student ID */}
-                      <td className="hidden md:table-cell px-5 py-4">
+                      <td className="hidden md:table-cell px-5 py-4 whitespace-nowrap">
                         <span className="font-mono text-xs font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/20 px-2.5 py-1 rounded-lg">
                           {student.rollNo || "—"}
                         </span>
