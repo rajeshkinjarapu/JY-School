@@ -15,7 +15,7 @@ import {
 interface BottomNavItem {
   id: string;
   label: string;
-  icon: React.FC<{ className?: string; strokeWidth?: number }>;
+  icon: React.FC<{ className?: string; strokeWidth?: number; color?: string; style?: React.CSSProperties }>;
   color: string;
 }
 
