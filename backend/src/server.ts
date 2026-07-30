@@ -55,7 +55,10 @@ if (!process.env.VERCEL) {
 }
 
 // Core Middleware
-app.use(helmet({ crossOriginResourcePolicy: false }));
+app.use(helmet({ 
+  crossOriginResourcePolicy: false,
+  contentSecurityPolicy: false
+}));
 app.use(cors({
   origin: function (origin, callback) {
     // Allow all origins
