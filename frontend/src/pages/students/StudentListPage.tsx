@@ -47,11 +47,10 @@ export default function StudentListPage() {
   const fetchStudents = async () => {
     try {
       setLoading(true);
-      const res = await api.get(`/api/students?page=${page}&limit=10&search=${searchTerm}`);
-      if (res.data.success) {
-        setStudents(res.data.data);
-        setTotal(res.data.pagination.total);
-      }
+      const res: any = await api.get(`/api/students?page=${page}&limit=10&search=${searchTerm}`);
+      const studentsData = res.data.data || res.data || [];
+      setStudents(studentsData);
+      setTotal(res.data.meta?.total || studentsData.length);
     } catch (error) {
       console.error('Error fetching students:', error);
     } finally {
