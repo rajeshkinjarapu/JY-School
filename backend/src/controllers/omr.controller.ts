@@ -41,33 +41,34 @@ function calculateScore(answers: Record<string, string>, answerKey: Record<strin
 async function extractAnswersFromImage(base64Data: string, mimeType: string, apiKey: string) {
   const ai = new GoogleGenAI({ apiKey });
 
-  const prompt = `You are an expert OMR (Optical Mark Recognition) reading AI for JEE Mains style answer sheets.
+  const prompt = `You are a highly accurate Optical Mark Recognition (OMR) system for JEE Mains answer sheets. 
+CRITICAL RULES:
+1. You must meticulously scan all 75 questions sequentially. Do not skip or hallucinate any question.
+2. The sheet is divided into 3 distinct sections (columns/blocks):
+   - Block 1: Maths (Q1 to Q25)
+   - Block 2: Physics (Q26 to Q50)
+   - Block 3: Chemistry (Q51 to Q75)
+3. For each question, look horizontally at the 4 bubbles (A, B, C, D). 
+   - A bubble is considered filled if it is shaded dark/black.
+   - Return the letter (A, B, C, or D) of the filled bubble.
+   - If no bubble is shaded, return "UNATTEMPTED".
+   - If multiple bubbles are shaded in the same row, return "INVALID".
+4. Also extract the Student ID written at the top or represented in the ID bubbles.
 
-I have provided an image of a student's OMR answer sheet. The sheet has 75 questions (Q1-Q75), divided into 3 sections: Maths (1-25), Physics (26-50), Chemistry (51-75). Each question has 4 bubble options: 1/A, 2/B, 3/C, 4/D.
-
-Your tasks:
-1. Identify the "Student ID" — look at any handwritten ID at the top, or ID bubbles, return as string (e.g. "JY267063").
-2. For each question 1 to 75, identify which bubble option is darkened/filled.
-   - Return as: "A", "B", "C", or "D"
-   - If no bubble is filled → "UNATTEMPTED"
-   - If multiple bubbles filled → "INVALID"
-
-Respond STRICTLY with valid JSON only. No markdown. No explanation.
-
-Format:
+You must return a valid JSON object matching this exact structure, with all 75 keys present in the 'answers' object:
 {
-  "student_id": "JY267063",
+  "student_id": "string",
   "answers": {
-    "1": "B",
-    "2": "A",
-    "3": "UNATTEMPTED",
-    "4": "C",
-    ...up to 75...
+    "1": "A",
+    "2": "UNATTEMPTED",
+    "3": "B",
+    ... (continue for all 75 questions)
   }
-}`;
+}
+Respond STRICTLY with valid JSON only.`;
 
   const response = await ai.models.generateContent({
-    model: 'gemini-2.5-flash',
+    model: 'gemini-2.5-pro',
     contents: [
       prompt,
       { inlineData: { data: base64Data, mimeType } },
