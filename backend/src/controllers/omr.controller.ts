@@ -68,7 +68,7 @@ You must return a valid JSON object matching this exact structure, with all 75 k
 Respond STRICTLY with valid JSON only.`;
 
   const response = await ai.models.generateContent({
-    model: 'gemini-2.5-pro',
+    model: 'gemini-1.5-pro',
     contents: [
       prompt,
       { inlineData: { data: base64Data, mimeType } },
@@ -125,7 +125,11 @@ export const scanOmrSheet = async (req: Request, res: Response) => {
     });
   } catch (error: any) {
     console.error('OMR scan error:', error);
-    res.status(500).json({ error: error.message || 'Internal Server Error' });
+    let msg = error.message || 'Internal Server Error';
+    if (msg.includes('Quota exceeded') || msg.includes('RESOURCE_EXHAUSTED')) {
+      msg = 'API Quota Exceeded or Model not available on Free Tier. Please wait a minute and try again, or check your API key billing.';
+    }
+    res.status(500).json({ error: msg });
   }
 };
 
@@ -177,7 +181,11 @@ export const bulkScanOmrSheets = async (req: Request, res: Response) => {
           error: null,
         });
       } catch (err: any) {
-        results.push({ name: imgObj.name, error: err.message || 'Scan failed', student_id: null });
+        let msg = err.message || 'Scan failed';
+        if (msg.includes('Quota exceeded') || msg.includes('RESOURCE_EXHAUSTED')) {
+          msg = 'API Quota Exceeded or Model not available on Free Tier. Please wait a minute and try again.';
+        }
+        results.push({ name: imgObj.name, error: msg, student_id: null });
       }
     }
 
