@@ -81,7 +81,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
       { to: '/attendance',    label: 'Attendance',    icon: CalendarCheck },
       
       { to: '/exams',         label: 'Examination',         icon: ClipboardList },
-      ...(role === 'SUPER_ADMIN' ? [{ to: '/exams/omr-scanner', label: 'OMR Scanner', icon: Target }] : []),
       { to: '/timetable',     label: 'Timetable',     icon: Calendar      },
       { to: '/leave/gate-pass', label: 'Gate Pass',    icon: MapPin       },
       { to: '/leave/type',    label: 'Leave',         icon: UserCheck     },

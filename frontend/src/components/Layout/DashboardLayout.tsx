@@ -51,7 +51,6 @@ export const DashboardLayout: React.FC = () => {
     
     // Exams
     if (pathname === '/exams') return 'Examinations & Grades';
-    if (pathname === '/exams/omr-scanner') return 'OMR Scanner';
     if (pathname.match(/^\/exams\/[^\/]+\/entry$/)) return 'Marks Entry';
     if (pathname.match(/^\/exams\/[^\/]+\/report-card\/[^\/]+$/)) return 'Report Card';
     

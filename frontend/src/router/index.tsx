@@ -67,7 +67,6 @@ const AttendanceDailyReportPage = lazy(() => import('../pages/attendance/Attenda
 const ExamListPage = lazy(routeImports['/exams']);
 const MarksEntryPage = lazy(() => import('../pages/exams/MarksEntryPage'));
 const ReportCardPage = lazy(() => import('../pages/exams/ReportCardPage'));
-const OMRScannerPage = lazy(() => import('../pages/exams/OMRScannerPage').then((mod) => ({ default: mod.OMRScannerPage })));
 const PaperGeneratorDashboard = lazy(() => import('../pages/paper-generator/Dashboard').then((mod) => ({ default: mod.Dashboard })));
 const QuestionBankPage = lazy(() => import('../pages/paper-generator/QuestionBank').then((mod) => ({ default: mod.QuestionBank })));
 const PaperBuilderPage = lazy(() => import('../pages/paper-generator/PaperBuilder').then((mod) => ({ default: mod.PaperBuilder })));
@@ -260,14 +259,6 @@ export const router = createBrowserRouter([
       {
         path: 'exams',
         element: withSuspense(<ExamListPage />),
-      },
-      {
-        path: 'exams/omr-scanner',
-        element: withSuspense(
-          <ProtectedRoute allowedRoles={['SUPER_ADMIN']}>
-            <OMRScannerPage />
-          </ProtectedRoute>
-        ),
       },
       {
         path: 'exams/:id/entry',
