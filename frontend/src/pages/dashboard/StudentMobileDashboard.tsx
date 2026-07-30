@@ -467,7 +467,7 @@ export const StudentMobileDashboard: React.FC<{ data: any }> = ({ data }) => {
                 style={isActive ? { background: tab.color + '15' } : {}}>
                 <div className={`relative flex items-center justify-center w-7 h-7 rounded-xl transition-all ${isActive ? 'scale-110' : ''}`}>
                   <Icon className="w-5 h-5" strokeWidth={isActive ? 2.5 : 2}
-                    style={{ color: isActive ? tab.color : '#94a3b8' }} />
+                    color={isActive ? tab.color : '#94a3b8'} />
                   {tab.id === 'more' && showMoreMenu && (
                     <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-indigo-500 rounded-full" />
                   )}

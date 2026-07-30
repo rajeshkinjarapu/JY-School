@@ -286,7 +286,7 @@ export const StudentProfilePage: React.FC = () => {
               <span>Back to Roster</span>
             </Link>
             <div className="flex items-center gap-3 w-full sm:w-auto">
-              {(isAdmin || (user?.role === 'TEACHER' && user?.teacher?.canEditStudents)) && (
+              {(isAdmin || (user?.role === 'TEACHER' && (user?.teacher as any)?.canEditStudents)) && (
                 <Link
                   to={`/students/${student.id}/edit`}
                   className="flex-1 sm:flex-none bg-white dark:bg-gray-800 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-900 flex items-center justify-center gap-2 px-6 py-3 rounded-2xl text-sm font-bold shadow-sm hover:shadow-md hover:bg-indigo-50 dark:hover:bg-indigo-900/30 hover:-translate-y-0.5 transition-all"

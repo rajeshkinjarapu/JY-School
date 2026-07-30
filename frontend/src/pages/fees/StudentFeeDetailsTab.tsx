@@ -141,7 +141,7 @@ export const StudentFeeDetailsTab: React.FC<StudentFeeDetailsProps> = ({ student
     const finalY = (doc as any).lastAutoTable.finalY || 40;
 
     // Summary footer
-    const totalFee = tableData.reduce((s, r) => s + r.tuitionFee, 0);
+    const totalFee = tableData.reduce((s, r) => s + (r.totalFee || 0), 0);
     const totalPaid = tableData.reduce((s, r) => s + r.paidAmount, 0);
     const totalBalance = tableData.reduce((s, r) => s + r.balance, 0);
 
