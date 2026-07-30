@@ -685,3 +685,41 @@ model LeaveRequest {
   @@index([userId])
   @@index([status])
 }
+
+// ============================================================
+// OMR Scanner Models
+// ============================================================
+
+model OmrExam {
+  id          String   @id @default(uuid())
+  examName    String
+  className   String
+  examDate    DateTime @default(now())
+  answerKey   Json     // { "1": "A", "2": "B", ... }
+  createdAt   DateTime @default(now())
+
+  results     OmrStudentResult[]
+
+  @@index([className])
+}
+
+model OmrStudentResult {
+  id           String   @id @default(uuid())
+  omrExamId    String
+  omrExam      OmrExam  @relation(fields: [omrExamId], references: [id], onDelete: Cascade)
+  studentId    String   // auto-detected from OMR sheet
+  studentDbId  String?  // matched Student.id from students table (optional)
+  mathsScore   Float    @default(0)
+  physicsScore Float    @default(0)
+  chemScore    Float    @default(0)
+  totalScore   Float    @default(0)
+  correctCount Int      @default(0)
+  wrongCount   Int      @default(0)
+  blankCount   Int      @default(0)
+  answers      Json     // { "1": "A", "2": "B", ... }
+  imageUrl     String?
+  createdAt    DateTime @default(now())
+
+  @@index([omrExamId])
+  @@index([studentId])
+}
