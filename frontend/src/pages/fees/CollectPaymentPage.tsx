@@ -102,21 +102,22 @@ export const CollectPaymentPage: React.FC = () => {
     return () => clearTimeout(timeout);
   }, [filterClass, filterSection, searchName, classes, user]);
 
+  const fetchStudentPayments = async (id: string) => {
+    try {
+      const res = await api.get(`/api/fees/payments?studentId=${id}&limit=200`);
+      setPayments(res.data?.data || res.data || []);
+    } catch (e) {
+      console.error('Failed to fetch student payments', e);
+    }
+  };
+
   // Fetch payments for selected student
   useEffect(() => {
     if (!studentId) {
       setPayments([]);
       return;
     }
-    const fetchStudentPayments = async () => {
-      try {
-        const res = await api.get(`/api/fees/payments?studentId=${studentId}&limit=200`);
-        setPayments(res.data?.data || res.data || []);
-      } catch (e) {
-        console.error('Failed to fetch student payments', e);
-      }
-    };
-    fetchStudentPayments();
+    fetchStudentPayments(studentId);
   }, [studentId]);
 
   useEffect(() => {
@@ -169,8 +170,18 @@ export const CollectPaymentPage: React.FC = () => {
         paymentDate,
       });
       toast.success('Payment transaction recorded!');
-      // Navigate back to fees listing after successful payment
-      navigate('/fee-payment');
+      
+      // Clear form for next payment but keep student selected
+      setSelectedFees([]);
+      setRemarks('');
+      setUtrNumber('');
+      setReceiptUrl('');
+      
+      // Refresh pending amounts
+      if (studentId) {
+        await fetchStudentPayments(studentId);
+      }
+      setIsSubmitting(false);
     } catch (error: any) {
       toast.error(error.message || 'Error recording payment');
       setIsSubmitting(false);
