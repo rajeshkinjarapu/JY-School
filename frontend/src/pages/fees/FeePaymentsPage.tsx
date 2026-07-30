@@ -19,6 +19,7 @@ export const FeePaymentsPage: React.FC = () => {
   const [searchParams] = useSearchParams();
 
   const [printPayment, setPrintPayment] = useState<any>(null);
+  const [expandedRow, setExpandedRow] = useState<string | null>(null);
   // Excel bulk import states
   const [showImportModal, setShowImportModal] = useState(false);
   const [importFile, setImportFile] = useState<File | null>(null);
