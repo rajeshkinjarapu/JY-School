@@ -1,542 +1,326 @@
-import React, { useState, useRef } from "react";
-import api from "../../api/axios";
-import { LoadingSpinner } from "../../components/UI/LoadingSpinner";
+import React, { useState } from 'react';
 import {
   Search,
-  UserPlus,
-  FileDown,
-  Trash2,
-  Eye,
+  Plus,
   Upload,
+  Download,
+  Image as ImageIcon,
+  Filter,
+  Eye,
+  Edit2,
+  Trash2,
+  Phone,
+  User,
   Users,
-} from "lucide-react";
-import toast from "react-hot-toast";
-import { Link } from "react-router-dom";
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useAuth } from "../../hooks/useAuth";
-import { getPhotoUrl } from "../../utils/photo";
+  GraduationCap,
+  ChevronLeft,
+  ChevronRight
+} from 'lucide-react';
 
-export const StudentListPage: React.FC = () => {
-  const { user } = useAuth();
-  const isSuperAdmin = user?.role === "SUPER_ADMIN";
-  const isAdmin = user?.role === "SUPER_ADMIN" || user?.role === "ADMIN";
+interface Student {
+  id: string;
+  studentId: string;
+  name: string;
+  photoUrl?: string;
+  className: string;
+  section: string;
+  fatherName: string;
+  mobileNo: string;
+  status: 'Active' | 'Inactive';
+}
 
-  const [search, setSearch] = useState("");
-  const [classId, setClassId] = useState("");
-  const [page, setPage] = useState(1);
-  const queryClient = useQueryClient();
+const mockStudents: Student[] = [
+  {
+    id: '1',
+    studentId: 'JY26-0001',
+    name: 'BOTU SUHASH KUMAR',
+    className: 'PP1',
+    section: 'A',
+    fatherName: 'B. Appala Naidu',
+    mobileNo: '9052308483',
+    status: 'Active'
+  },
+  {
+    id: '2',
+    studentId: 'JY26-0002',
+    name: 'VANJARAPU ARVINDH',
+    className: 'PP1',
+    section: 'A',
+    fatherName: 'V. Ramana',
+    mobileNo: '9597429747',
+    status: 'Active'
+  },
+  {
+    id: '3',
+    studentId: 'JY26-0003',
+    name: 'RAVADA CHARANTEJ',
+    className: 'PP1',
+    section: 'A',
+    fatherName: 'R. Srinivasa Rao',
+    mobileNo: '9908787688',
+    status: 'Active'
+  },
+  {
+    id: '4',
+    studentId: 'JY26-0004',
+    name: 'MENDA KOMALI DEVI',
+    className: 'PP1',
+    section: 'A',
+    fatherName: 'M. Jagadeesh',
+    mobileNo: '9000640962',
+    status: 'Active'
+  },
+  {
+    id: '5',
+    studentId: 'JY26-0005',
+    name: 'REGATI MIHIRA',
+    className: 'PP1',
+    section: 'A',
+    fatherName: 'R. Satyam',
+    mobileNo: '9502222501',
+    status: 'Active'
+  },
+  {
+    id: '6',
+    studentId: 'JY26-0006',
+    name: 'GEDDI BHARATH',
+    className: 'PP1',
+    section: 'A',
+    fatherName: 'G. Venkatesh',
+    mobileNo: '8106625180',
+    status: 'Active'
+  }
+];
 
-  React.useEffect(() => {
-    setPage(1);
-  }, [search, classId]);
-
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const photoInputRef = useRef<HTMLInputElement>(null);
-
-  const { data: classes = [] } = useQuery({
-    queryKey: ["classes"],
-    queryFn: async () => {
-      const res = await api.get("/api/classes");
-      return res.data || [];
-    },
-    staleTime: 1000 * 60 * 10,
-  });
-
-  const {
-    data: studentsData,
-    isLoading: loading,
-    refetch: fetchStudents,
-  } = useQuery({
-    queryKey: ["students", search, classId, page],
-    queryFn: async () => {
-      const res = await api.get("/api/students", {
-        params: { search, classId, limit: 50, page },
-      });
-      // Extract data and meta before React Query deep clones and strips non-enumerable properties
-      const arr = Array.isArray(res.data) ? res.data : (res.data?.data || []);
-      const meta = (res.data as any)?.meta || { total: 0, totalPages: 1 };
-      return { data: arr, meta };
-    },
-    staleTime: 0,
-  });
-
-  const students = studentsData?.data || [];
-  const meta = studentsData?.meta || { total: 0, totalPages: 1 };
-
-  const exportStudents = async () => {
-    const toastId = toast.loading("Preparing PDF...");
-    try {
-      const res = await api.get("/api/students", {
-        params: { search, classId, limit: 5000 },
-      });
-      const exportData = res.data?.data || [];
-
-      const doc = new jsPDF();
-
-      doc.setFontSize(18);
-      doc.text("Student List", 14, 22);
-
-      const tableColumn = ["S.No", "Student ID", "Student Name", "Mobile No"];
-      const tableRows: any[] = [];
-
-      exportData.forEach((student: any, index: number) => {
-        const studentData = [
-          index + 1,
-          student.rollNo || "-",
-          student.user?.name || "-",
-          student.user?.phone || "-",
-        ];
-        tableRows.push(studentData);
-      });
-
-      autoTable(doc, {
-        head: [tableColumn],
-        body: tableRows,
-        startY: 30,
-        theme: "grid",
-        styles: { fontSize: 10, cellPadding: 3 },
-        headStyles: {
-          fillColor: [79, 70, 229],
-          textColor: 255,
-          fontStyle: "bold",
-        },
-      });
-
-      doc.save("Student_List.pdf");
-      toast.success("PDF generated successfully!", { id: toastId });
-    } catch (error) {
-      toast.error("Failed to generate PDF", { id: toastId });
-    }
-  };
-
-  // Initials avatar fallback
-  const getInitials = (name: string) => {
-    if (!name) return "?";
-    const parts = name.trim().split(" ");
-    return parts.length >= 2
-      ? `${parts[0][0]}${parts[1][0]}`.toUpperCase()
-      : name[0].toUpperCase();
-  };
-
-  const avatarColors = [
-    "from-indigo-500 to-purple-600",
-    "from-teal-400 to-emerald-600",
-    "from-rose-400 to-pink-600",
-    "from-amber-400 to-orange-500",
-    "from-blue-400 to-cyan-500",
-    "from-violet-500 to-fuchsia-600",
-  ];
-
-  const getColor = (name: string) => {
-    const idx = name ? name.charCodeAt(0) % avatarColors.length : 0;
-    return avatarColors[idx];
-  };
-
-  const handleDelete = async (id: string) => {
-    if (!window.confirm("Are you sure you want to delete this student?")) return;
-    try {
-      await api.delete(`/api/students/${id}`);
-      toast.success("Student deleted successfully!");
-      fetchStudents();
-    } catch (e: any) {
-      toast.error(e.response?.data?.message || "Failed to delete student");
-    }
-  };
-
-  const handleBulkPhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const formData = new FormData();
-    formData.append("file", file);
-
-    const uploadToast = toast.loading("Uploading photos from ZIP...");
-    try {
-      const res = await api.post("/api/students/bulk-photos", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-      toast.success(res.data.message || "Photos uploaded successfully!", { id: uploadToast });
-      fetchStudents();
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || "Failed to upload photos", { id: uploadToast });
-    }
-    if (photoInputRef.current) photoInputRef.current.value = "";
-  };
-
-  const handleBulkStudentUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const formData = new FormData();
-    formData.append("file", file);
-
-    const uploadToast = toast.loading("Uploading students from file...");
-    try {
-      const res = await api.post("/api/students/bulk-import", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-      toast.success(res.data.message || "Students uploaded successfully!", { id: uploadToast });
-      fetchStudents();
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || "Failed to upload students", { id: uploadToast });
-    }
-    if (fileInputRef.current) fileInputRef.current.value = "";
-  };
+export default function StudentListPage() {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedClass, setSelectedClass] = useState('ALL');
 
   return (
-    <div className="space-y-6">
-      <input type="file" accept=".zip" className="hidden" ref={photoInputRef} onChange={handleBulkPhotoUpload} />
-      <input type="file" accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" className="hidden" ref={fileInputRef} onChange={handleBulkStudentUpload} />
-      {/* No Duplicate Page Header */}
-      {/* Search & Action Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 md:bg-white/80 md:dark:bg-white/5 md:p-4 md:rounded-2xl md:border md:border-gray-150 md:dark:border-white/10 md:shadow-sm md:backdrop-blur-xl">
-        <div className="flex-1 relative flex items-center gap-3">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-3 w-4 h-4 text-indigo-500" />
-            <input
-              type="text"
-              placeholder="Search by name or Student ID..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-9 pr-4 py-2.5 text-sm bg-indigo-50/30 dark:bg-white/5 border border-indigo-100 dark:border-white/10 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500/50 font-medium transition-all text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-300"
-            />
+    <div className="p-6 space-y-6 bg-slate-50/50 min-h-screen">
+      {/* Page Header */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Student Directory</h1>
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200">
+              532 Records
+            </span>
           </div>
-          <span className="hidden sm:inline-flex items-center justify-center px-3 py-2 text-xs font-black text-indigo-600 bg-indigo-100 rounded-lg whitespace-nowrap">
-            {meta.total} Records
-          </span>
+          <p className="text-sm text-slate-500 mt-1">
+            Manage student records, view profiles, and update details.
+          </p>
         </div>
-        <div className="flex gap-2 flex-wrap">
-          <select
-            value={classId}
-            onChange={(e) => setClassId(e.target.value)}
-            className="bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl px-3 py-2.5 text-sm font-semibold outline-none cursor-pointer text-gray-900 dark:text-white"
-          >
-            <option value="">All Classes</option>
-            {classes.map((c: any) => (
-              <option key={c.id} value={c.id}>
-                {c.name}-{c.section}
-              </option>
-            ))}
-          </select>
 
-          {isSuperAdmin && (
-            <>
-              <button
-                onClick={() => photoInputRef.current?.click()}
-                className="hidden md:flex items-center gap-1.5 px-3.5 py-2.5 text-sm font-bold text-gray-600 dark:text-white bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl hover:bg-gray-100 dark:hover:bg-white/10 transition-all cursor-pointer"
-              >
-                <Upload className="w-4 h-4" /> Bulk Photos
-              </button>
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                className="hidden md:flex items-center gap-1.5 px-3.5 py-2.5 text-sm font-bold text-gray-600 dark:text-white bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl hover:bg-gray-100 dark:hover:bg-white/10 transition-all cursor-pointer"
-              >
-                <Upload className="w-4 h-4" /> Upload Students
-              </button>
-              <button
-                onClick={exportStudents}
-                className="hidden md:flex items-center gap-1.5 px-3.5 py-2.5 text-sm font-bold text-gray-600 dark:text-white bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl hover:bg-gray-100 dark:hover:bg-white/10 transition-all cursor-pointer"
-              >
-                <FileDown className="w-4 h-4" /> Export
-              </button>
-              <Link
-                to="/students/new"
-                className="hidden md:flex items-center gap-1.5 px-4 py-2.5 text-sm font-extrabold text-white bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 rounded-xl shadow-md shadow-indigo-500/25 transition-all cursor-pointer"
-              >
-                <UserPlus className="w-4 h-4" /> Add Student
-              </Link>
-            </>
-          )}
+        {/* Action Buttons */}
+        <div className="flex items-center gap-2 flex-wrap">
+          <button className="inline-flex items-center gap-2 px-3.5 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-xl hover:bg-slate-50 shadow-sm transition-all">
+            <ImageIcon className="w-4 h-4 text-slate-500" />
+            <span>Bulk Photos</span>
+          </button>
+          <button className="inline-flex items-center gap-2 px-3.5 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-xl hover:bg-slate-50 shadow-sm transition-all">
+            <Upload className="w-4 h-4 text-slate-500" />
+            <span>Upload</span>
+          </button>
+          <button className="inline-flex items-center gap-2 px-3.5 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-xl hover:bg-slate-50 shadow-sm transition-all">
+            <Download className="w-4 h-4 text-slate-500" />
+            <span>Export</span>
+          </button>
+          <button className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-sm transition-all">
+            <Plus className="w-4 h-4" />
+            <span>Add Student</span>
+          </button>
         </div>
       </div>
 
-      {/* Main Table */}
-      {loading ? (
-        <LoadingSpinner size="lg" className="py-12" />
-      ) : (
-        <div className="md:bg-white/40 md:dark:bg-white/5 md:border md:border-white/60 md:dark:border-white/10 md:rounded-3xl md:shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden md:backdrop-blur-2xl">
-          {/* Mobile View */}
-          <div className="md:hidden flex flex-col gap-4 p-4 bg-transparent">
-            {students.map((student: any, idx: number) => {
-              const name = student.user?.name || "Student";
-              const photoUrl = student.user?.photoUrl;
-              const className = student.class?.name || "—";
-              const section = student.class?.section || "—";
-              return (
-                <div
-                  key={student.id}
-                  className="bg-gradient-to-br from-white to-indigo-50/30 p-4 rounded-3xl shadow-sm hover:shadow-glow-primary hover:-translate-y-1 transition-all duration-300 border border-indigo-50 flex items-center gap-4 relative overflow-visible mt-2 backdrop-blur-md animate-fade-in-up"
-                  style={{ animationDelay: `${idx * 40}ms` }}
-                >
-                  <div className="absolute -top-2.5 -left-2.5 w-7 h-7 bg-indigo-500 rounded-full flex items-center justify-center text-white font-black text-[10px] shadow-lg border-2 border-white dark:border-indigo-500 z-10">
-                    {idx + 1}
-                  </div>
+      {/* Summary Stat Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm flex items-center gap-4">
+          <div className="p-3 bg-indigo-50 text-indigo-600 rounded-xl">
+            <Users className="w-6 h-6" />
+          </div>
+          <div>
+            <p className="text-xs font-medium text-slate-500">Total Enrolled</p>
+            <p className="text-xl font-bold text-slate-900">532</p>
+          </div>
+        </div>
+        <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm flex items-center gap-4">
+          <div className="p-3 bg-emerald-50 text-emerald-600 rounded-xl">
+            <GraduationCap className="w-6 h-6" />
+          </div>
+          <div>
+            <p className="text-xs font-medium text-slate-500">Active Classes</p>
+            <p className="text-xl font-bold text-slate-900">14</p>
+          </div>
+        </div>
+        <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm flex items-center gap-4">
+          <div className="p-3 bg-blue-50 text-blue-600 rounded-xl">
+            <User className="w-6 h-6" />
+          </div>
+          <div>
+            <p className="text-xs font-medium text-slate-500">New Admissions</p>
+            <p className="text-xl font-bold text-slate-900">28</p>
+          </div>
+        </div>
+        <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm flex items-center gap-4">
+          <div className="p-3 bg-amber-50 text-amber-600 rounded-xl">
+            <Filter className="w-6 h-6" />
+          </div>
+          <div>
+            <p className="text-xs font-medium text-slate-500">Pre-Primary (PP1)</p>
+            <p className="text-xl font-bold text-slate-900">42</p>
+          </div>
+        </div>
+      </div>
 
-                  <div className="shrink-0 pl-2">
-                    {photoUrl ? (
+      {/* Main Table Container */}
+      <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
+        {/* Filter Bar */}
+        <div className="p-4 border-b border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div className="relative w-full sm:w-80">
+            <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Search by name or Student ID..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all placeholder:text-slate-400"
+            />
+          </div>
+
+          <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
+            <div className="flex items-center gap-2">
+              <label className="text-xs font-medium text-slate-500">Class:</label>
+              <select
+                value={selectedClass}
+                onChange={(e) => setSelectedClass(e.target.value)}
+                className="py-2 px-3 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none text-slate-700 font-medium"
+              >
+                <option value="ALL">All Classes</option>
+                <option value="PP1">PP1</option>
+                <option value="PP2">PP2</option>
+                <option value="Class 1">Class 1</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        {/* Table */}
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-slate-50/80 text-slate-500 text-xs font-semibold uppercase tracking-wider border-b border-slate-100">
+                <th className="py-3.5 px-4 w-12 text-center">#</th>
+                <th className="py-3.5 px-4">Student Info</th>
+                <th className="py-3.5 px-4">Student ID</th>
+                <th className="py-3.5 px-4">Class & Sec</th>
+                <th className="py-3.5 px-4">Father Name</th>
+                <th className="py-3.5 px-4">Contact</th>
+                <th className="py-3.5 px-4">Status</th>
+                <th className="py-3.5 px-4 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100 text-sm text-slate-700">
+              {mockStudents.map((student, index) => (
+                <tr key={student.id} className="hover:bg-slate-50/60 transition-colors group">
+                  <td className="py-3.5 px-4 text-center font-medium text-slate-400">
+                    {index + 1}
+                  </td>
+                  <td className="py-3.5 px-4">
+                    <div className="flex items-center gap-3">
+                      {student.photoUrl ? (
                         <img
-                          src={getPhotoUrl(photoUrl)}
-                          alt={name}
-                          className="w-14 h-14 rounded-2xl object-cover object-top shadow-md border-2 border-white dark:border-white/10"
-                          onError={(e) => {
-                            e.currentTarget.onerror = null;
-                            e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`;
-                          }}
+                          src={student.photoUrl}
+                          alt={student.name}
+                          className="w-10 h-10 rounded-full object-cover ring-2 ring-slate-100 shadow-sm"
                         />
-                    ) : (
-                      <div
-                        className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${getColor(name)} flex items-center justify-center text-white font-black text-xl shadow-md border-2 border-white dark:border-white/10`}
-                      >
-                        {getInitials(name)}
+                      ) : (
+                        <div className="w-10 h-10 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-semibold text-xs ring-2 ring-slate-100">
+                          {student.name.split(' ').map(n => n[0]).slice(0, 2).join('')}
+                        </div>
+                      )}
+                      <div>
+                        <p className="font-semibold text-slate-900 group-hover:text-indigo-600 transition-colors">
+                          {student.name}
+                        </p>
                       </div>
-                    )}
-                  </div>
-
-                  <div className="flex-1 min-w-0">
-                    <Link
-                      to={`/students/${student.id}`}
-                      className="font-extrabold text-[15px] text-indigo-950 truncate block hover:text-indigo-600 transition-colors mb-2"
-                    >
-                      {name}
-                    </Link>
-                    <div className="flex flex-wrap gap-1.5">
-                      <span className="font-mono text-[10px] font-bold text-indigo-700 dark:text-indigo-200 bg-indigo-50 dark:bg-indigo-500/20 px-2 py-0.5 rounded-md border border-indigo-100 dark:border-indigo-500/30">
-                        {student.rollNo || "—"}
+                    </div>
+                  </td>
+                  <td className="py-3.5 px-4">
+                    <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-mono font-medium bg-slate-100 text-slate-700 border border-slate-200">
+                      {student.studentId}
+                    </span>
+                  </td>
+                  <td className="py-3.5 px-4">
+                    <div className="flex items-center gap-1.5">
+                      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-indigo-50 text-indigo-700">
+                        {student.className}
                       </span>
-                      <span className="text-[10px] font-bold text-teal-700 dark:text-teal-200 bg-teal-50 dark:bg-teal-500/20 px-2 py-0.5 rounded-md border border-teal-100 dark:border-teal-500/30">
-                        {className}-{section}
+                      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-slate-100 text-slate-600">
+                        {student.section}
                       </span>
                     </div>
-                  </div>
-
-                  <div className="shrink-0">
-                    <Link
-                      to={`/students/${student.id}`}
-                      className="flex items-center justify-center w-10 h-10 bg-indigo-50 text-indigo-500 hover:bg-indigo-600 hover:text-white hover:shadow-lg hover:shadow-indigo-500/30 rounded-xl transition-all border border-indigo-100 cursor-pointer"
-                    >
-                      <Eye className="w-4 h-4" />
-                    </Link>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Desktop Table View */}
-          <div className="hidden md:block overflow-x-auto bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-800 mb-6">
-            <table className="w-full text-sm text-left">
-              <thead>
-                <tr className="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-800/80 border-b border-gray-200 dark:border-gray-700">
-                  <th className="px-5 py-4 text-[11px] font-black uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                    #
-                  </th>
-                  <th className="px-5 py-4 text-[11px] font-black uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                    Photo
-                  </th>
-                  <th className="px-5 py-4 text-[11px] font-black uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                    Student Name
-                  </th>
-                  <th className="hidden md:table-cell px-5 py-4 text-[11px] font-black uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                    Student ID
-                  </th>
-                  <th className="hidden sm:table-cell px-5 py-4 text-[11px] font-black uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                    Class
-                  </th>
-                  <th className="hidden sm:table-cell px-5 py-4 text-[11px] font-black uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                    Section
-                  </th>
-                  <th className="hidden lg:table-cell px-5 py-4 text-[11px] font-black uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                    Father Name
-                  </th>
-                  <th className="hidden lg:table-cell px-5 py-4 text-[11px] font-black uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                    Mobile No
-                  </th>
-                  <th className="hidden sm:table-cell px-5 py-4 text-[11px] font-black uppercase tracking-wider text-gray-500 dark:text-gray-400 text-right">
-                    Actions
-                  </th>
+                  </td>
+                  <td className="py-3.5 px-4 text-slate-600">
+                    {student.fatherName || '—'}
+                  </td>
+                  <td className="py-3.5 px-4 text-slate-600">
+                    <div className="flex items-center gap-1.5 font-mono text-xs text-slate-600">
+                      <Phone className="w-3.5 h-3.5 text-slate-400" />
+                      <span>{student.mobileNo}</span>
+                    </div>
+                  </td>
+                  <td className="py-3.5 px-4">
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200/60">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                      {student.status}
+                    </span>
+                  </td>
+                  <td className="py-3.5 px-4 text-right">
+                    <div className="flex items-center justify-end gap-1">
+                      <button className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all" title="View Profile">
+                        <Eye className="w-4 h-4" />
+                      </button>
+                      <button className="p-1.5 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-all" title="Edit">
+                        <Edit2 className="w-4 h-4" />
+                      </button>
+                      <button className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-all" title="Delete">
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </td>
                 </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-                {students.map((student: any, idx: number) => {
-                  const name = student.user?.name || "Student";
-                  const photoUrl = student.user?.photoUrl;
-                  const className = student.class?.name || "—";
-                  const section = student.class?.section || "—";
-                  const fatherName =
-                    student.fatherName || student.parentName || "—";
-                  const mobile = student.user?.phone || student.phone || "—";
-                  const admissionDate = student.admissionDate
-                    ? new Date(student.admissionDate).toLocaleDateString(
-                        "en-IN",
-                        { day: "2-digit", month: "short", year: "numeric" },
-                      )
-                    : "—";
-
-                  return (
-                    <tr
-                      key={student.id}
-                      className="hover:bg-gray-50 dark:hover:bg-gray-800/50 bg-white dark:bg-gray-900 transition-colors group animate-fade-in-up"
-                      style={{ animationDelay: `${idx * 30}ms` }}
-                    >
-                      {/* Sr No */}
-                      <td className="px-5 py-4 text-indigo-400 font-black text-xs">
-                        {idx + 1}
-                      </td>
-
-                      {/* Photo */}
-                      <td className="px-5 py-3">
-                        {photoUrl ? (
-                          <img
-                            src={getPhotoUrl(photoUrl)}
-                            alt={name}
-                            className="w-12 h-16 rounded-xl object-cover object-top border-2 border-white dark:border-gray-800 shadow-lg ring-2 ring-indigo-100 dark:ring-indigo-900/30 transform group-hover:scale-105 transition-transform"
-                            onError={(e) => {
-                              e.currentTarget.onerror = null;
-                              e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`;
-                            }}
-                          />
-                        ) : (
-                          <div
-                            className={`w-12 h-16 rounded-xl bg-gradient-to-br ${getColor(name)} flex items-center justify-center text-white font-black text-xl shadow-lg shadow-${getColor(name).split("-")[1]}-500/30 transform group-hover:scale-105 transition-transform`}
-                          >
-                            {getInitials(name)}
-                          </div>
-                        )}
-                      </td>
-
-                      {/* Student Name */}
-                      <td className="px-5 py-4 whitespace-nowrap">
-                        <Link
-                          to={`/students/${student.id}`}
-                          className="font-extrabold text-gray-900 dark:text-white hover:text-transparent hover:bg-clip-text hover:bg-gradient-to-r hover:from-indigo-600 hover:to-purple-600 transition-all underline decoration-indigo-200 dark:decoration-indigo-900/50 underline-offset-4 group-hover:decoration-indigo-500"
-                        >
-                          {name}
-                        </Link>
-                      </td>
-
-                      {/* Student ID */}
-                      <td className="hidden md:table-cell px-5 py-4 whitespace-nowrap">
-                        <span className="font-mono text-xs font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/20 px-2.5 py-1 rounded-lg">
-                          {student.rollNo || "—"}
-                        </span>
-                      </td>
-
-                      {/* Class */}
-                      <td className="hidden sm:table-cell px-5 py-4">
-                        <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold bg-teal-50 dark:bg-teal-950/20 text-teal-700 dark:text-teal-400">
-                          {className}
-                        </span>
-                      </td>
-
-                      {/* Section */}
-                      <td className="hidden sm:table-cell px-5 py-4">
-                        <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold bg-amber-50 dark:bg-amber-950/20 text-amber-700 dark:text-amber-400">
-                          {section}
-                        </span>
-                      </td>
-
-                      {/* Father Name */}
-                      <td className="hidden lg:table-cell px-5 py-4 text-gray-700 dark:text-gray-300 font-semibold text-xs">
-                        {fatherName}
-                      </td>
-
-                      {/* Mobile No */}
-                      <td className="hidden lg:table-cell px-5 py-4 text-gray-600 dark:text-gray-300 font-mono text-xs">
-                        {mobile}
-                      </td>
-
-                      {/* Actions */}
-                      <td className="hidden sm:table-cell px-5 py-4 text-right">
-                        <div className="flex justify-end items-center gap-1.5">
-                          <Link
-                            to={`/students/${student.id}`}
-                            className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 transition-colors"
-                            title="View Profile"
-                          >
-                            <Eye className="w-4 h-4" />
-                          </Link>
-                          <button
-                            onClick={() => handleDelete(student.id)}
-                            className="p-1.5 rounded-lg text-gray-400 dark:text-gray-300 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/20 transition-all cursor-pointer"
-                            title="Delete"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-                {students.length === 0 && (
-                  <tr>
-                    <td colSpan={10} className="py-16 text-center">
-                      <div className="flex flex-col items-center gap-3 text-gray-400">
-                        <Users className="w-12 h-12 opacity-30" />
-                        <p className="font-semibold text-sm">
-                          No student records found.
-                        </p>
-                        <Link
-                          to="/students/new"
-                          className="text-indigo-500 hover:text-indigo-600 text-xs font-bold underline"
-                        >
-                          Add your first student →
-                        </Link>
-                      </div>
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Table Footer */}
-          {students.length > 0 && (
-            <div className="px-5 py-3 border-t border-gray-100 dark:border-white/10 bg-slate-50/50 dark:bg-white/5 flex flex-col sm:flex-row items-center justify-between gap-4">
-              <span className="text-xs text-gray-400 font-semibold">
-                Showing{" "}
-                <span className="text-gray-700 dark:text-gray-200 font-bold">
-                  {Math.min((page - 1) * 50 + 1, meta.total)}
-                </span>{" "}
-                to{" "}
-                <span className="text-gray-700 dark:text-gray-200 font-bold">
-                  {Math.min(page * 50, meta.total)}
-                </span>{" "}
-                of{" "}
-                <span className="text-gray-700 dark:text-gray-200 font-bold">
-                  {meta.total}
-                </span>{" "}
-                student{meta.total !== 1 ? "s" : ""}
-              </span>
-              
-              {meta.totalPages > 1 && (
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => setPage(p => Math.max(1, p - 1))}
-                    disabled={page === 1}
-                    className="px-3 py-1.5 text-xs font-bold text-gray-600 bg-white border border-gray-200 rounded-lg disabled:opacity-50 hover:bg-gray-50 transition-colors cursor-pointer"
-                  >
-                    Previous
-                  </button>
-                  <span className="text-xs font-bold text-gray-600 dark:text-gray-300">
-                    Page {page} of {meta.totalPages}
-                  </span>
-                  <button
-                    onClick={() => setPage(p => Math.min(meta.totalPages, p + 1))}
-                    disabled={page === meta.totalPages}
-                    className="px-3 py-1.5 text-xs font-bold text-gray-600 bg-white border border-gray-200 rounded-lg disabled:opacity-50 hover:bg-gray-50 transition-colors cursor-pointer"
-                  >
-                    Next
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
+              ))}
+            </tbody>
+          </table>
         </div>
-      )}
+
+        {/* Pagination Footer */}
+        <div className="p-4 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
+          <div>
+            Showing <span className="font-semibold text-slate-700">1</span> to{' '}
+            <span className="font-semibold text-slate-700">6</span> of{' '}
+            <span className="font-semibold text-slate-700">532</span> entries
+          </div>
+          <div className="flex items-center gap-1">
+            <button className="p-2 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-600 disabled:opacity-50">
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            <button className="px-3 py-1.5 rounded-lg bg-indigo-600 text-white font-semibold shadow-sm">
+              1
+            </button>
+            <button className="px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-600">
+              2
+            </button>
+            <button className="px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-600">
+              3
+            </button>
+            <button className="p-2 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-600">
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   );
-};
-export default StudentListPage;
-
+}
