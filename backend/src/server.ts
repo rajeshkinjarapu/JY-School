@@ -44,6 +44,7 @@ import salaryRoutes from './routes/salary';
 import leaveRoutes from './routes/leave';
 import questionBankRoutes from './routes/questionBank';
 import generatedPapersRoutes from './routes/generatedPapers';
+import omrRoutes from './routes/omr';
 
 const app = express();
 app.set('trust proxy', 1);
@@ -98,6 +99,7 @@ app.use('/api/latex', latexRoutes);
 app.use('/api/gate-pass', gatePassRoutes);
 app.use('/api/homework', homeworkRoutes);
 app.use('/api/teacher-attendance', teacherAttendanceRoutes);
+app.use('/api/omr', omrRoutes);
 app.use('/api/salary', salaryRoutes);
 app.use('/api/leave', leaveRoutes);
 app.use('/api', questionBankRoutes);
