@@ -42,10 +42,12 @@ export const FeePaymentsPage: React.FC = () => {
       return true;
     });
     return list.sort((a, b) => {
-      const dateA = new Date(a.paymentDate || a.createdAt);
+      let dateA = new Date(a.paymentDate || a.createdAt);
+      if (dateA.getFullYear() < 2000) dateA = new Date(a.createdAt);
       dateA.setHours(0, 0, 0, 0); // Normalize to just the date
       
-      const dateB = new Date(b.paymentDate || b.createdAt);
+      let dateB = new Date(b.paymentDate || b.createdAt);
+      if (dateB.getFullYear() < 2000) dateB = new Date(b.createdAt);
       dateB.setHours(0, 0, 0, 0); // Normalize to just the date
       
       const timeDiff = dateB.getTime() - dateA.getTime();
