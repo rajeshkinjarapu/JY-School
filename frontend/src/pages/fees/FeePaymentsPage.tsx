@@ -334,10 +334,11 @@ export const FeePaymentsPage: React.FC = () => {
               <thead className="bg-slate-100 text-slate-700 font-bold border-b-2 border-slate-300">
                 <tr>
                   <th className="border border-slate-300 px-3 py-3 text-xs uppercase tracking-wider text-center">S.No</th>
-                  <th className="border border-slate-300 px-3 py-3 text-xs uppercase tracking-wider">Student</th>
+                  <th className="border border-slate-300 px-3 py-3 text-xs uppercase tracking-wider">Date</th>
+                  <th className="border border-slate-300 px-3 py-3 text-xs uppercase tracking-wider">Student ID</th>
+                  <th className="border border-slate-300 px-3 py-3 text-xs uppercase tracking-wider">Student Name</th>
                   <th className="border border-slate-300 px-3 py-3 text-xs uppercase tracking-wider">Fee Structure</th>
                   <th className="border border-slate-300 px-3 py-3 text-xs uppercase tracking-wider">Amount Paid</th>
-                  <th className="border border-slate-300 px-3 py-3 text-xs uppercase tracking-wider hidden md:table-cell">Date</th>
                   <th className="border border-slate-300 px-3 py-3 text-xs uppercase tracking-wider hidden md:table-cell text-center">Method</th>
                   <th className="border border-slate-300 px-3 py-3 text-xs uppercase tracking-wider hidden md:table-cell">Receipt No</th>
                   <th className="border border-slate-300 px-3 py-3 text-xs uppercase tracking-wider text-center hidden md:table-cell">Action</th>
@@ -352,12 +353,13 @@ export const FeePaymentsPage: React.FC = () => {
                   <React.Fragment key={p.id}>
                   <tr onClick={() => toggleRow(p.id)} className="hover:bg-slate-50 transition-colors cursor-pointer md:cursor-default">
                     <td className="border border-slate-300 px-3 py-3 font-semibold text-slate-800 text-xs sm:text-sm text-center">{idx + 1}</td>
+                    <td className="border border-slate-300 px-3 py-3 text-slate-700 font-bold text-xs sm:text-sm whitespace-nowrap">
+                      {d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                    </td>
+                    <td className="border border-slate-300 px-3 py-3 font-mono text-slate-600 text-xs sm:text-sm">{p.student?.rollNo || '-'}</td>
                     <td className="border border-slate-300 px-3 py-3 font-semibold text-slate-800 text-xs sm:text-sm">{p.student?.user?.name || 'Unknown student'}</td>
                     <td className="border border-slate-300 px-3 py-3 text-slate-600 text-xs sm:text-sm">{p.feeStructure?.name || 'Deleted structure'}</td>
                     <td className="border border-slate-300 px-3 py-3 font-bold text-slate-800 text-xs sm:text-sm whitespace-nowrap">₹{p.amountPaid.toLocaleString()}</td>
-                    <td className="border border-slate-300 px-3 py-3 hidden md:table-cell text-slate-600 font-medium">
-                      {d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
-                    </td>
                     <td className="border border-slate-300 px-3 py-3 hidden md:table-cell text-center">
                       <Badge variant={p.method === 'UPI' ? 'danger' : 'info'}>{p.method}</Badge>
                     </td>
