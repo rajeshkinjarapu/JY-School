@@ -1,7 +1,9 @@
 import React, { useState, useMemo } from 'react';
-import { Search, Printer, Download, Users, MessageCircle } from 'lucide-react';
+import { Search, Printer, Download, Users, MessageCircle, X, Share2, Copy } from 'lucide-react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { toBlob } from 'html-to-image';
+import toast from 'react-hot-toast';
 
 interface StudentFeeDetailsProps {
   students: any[];
@@ -13,6 +15,10 @@ interface StudentFeeDetailsProps {
 export const StudentFeeDetailsTab: React.FC<StudentFeeDetailsProps> = ({ students, structures, payments, classes }) => {
   const [selectedClassId, setSelectedClassId] = useState<string>('ALL');
   const [searchTerm, setSearchTerm] = useState('');
+  
+  // Fee Reminder Modal State
+  const [reminderStudent, setReminderStudent] = useState<any>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
 
   // Process data for the table
   const tableData = useMemo(() => {
@@ -147,17 +153,61 @@ export const StudentFeeDetailsTab: React.FC<StudentFeeDetailsProps> = ({ student
     doc.save(`Fee_Statement_${classLabel.replace(/\s+/g, '_')}_${new Date().getTime()}.pdf`);
   };
 
-  const handleWhatsApp = (phone: string, name: string, balance: number) => {
-    if (!phone) {
-      alert('No phone number available for this student.');
+  const handleWhatsAppClick = (row: any) => {
+    if (!row.phone) {
+      toast.error('No phone number available for this student.');
       return;
     }
-    const cleanPhone = phone.replace(/\D/g, '');
-    const fullPhone = cleanPhone.length === 10 ? `91${cleanPhone}` : cleanPhone;
-    const message = encodeURIComponent(
-      `Dear Parent of *${name}*,\n\nThis is a reminder from *SRI VENKATESWARA JY SCHOOL*.\n\nYour child's outstanding fee balance is *₹${balance.toLocaleString('en-IN')}*.\n\nKindly clear the dues at the earliest.\n\nThank you,\nJY School Administration`
-    );
-    window.open(`https://wa.me/${fullPhone}?text=${message}`, '_blank');
+    setReminderStudent(row);
+  };
+
+  const handleShareReminder = async () => {
+    if (!reminderStudent) return;
+    setIsGenerating(true);
+    const node = document.getElementById('fee-reminder-card');
+    
+    try {
+      if (node) {
+        const blob = await toBlob(node, { quality: 1, backgroundColor: '#ffffff' });
+        if (!blob) throw new Error('Failed to generate image');
+
+        const cleanPhone = reminderStudent.phone.replace(/\D/g, '');
+        const fullPhone = cleanPhone.length === 10 ? `91${cleanPhone}` : cleanPhone;
+        const textMessage = encodeURIComponent(
+          `Dear Parent of *${reminderStudent.name}*,\nThis is a reminder from *SRI VENKATESWARA JY SCHOOL*.\nPlease find the fee reminder attached.\nKindly clear the dues at the earliest.`
+        );
+        const waUrl = `https://wa.me/${fullPhone}?text=${textMessage}`;
+
+        const file = new File([blob], `Fee_Reminder_${reminderStudent.id}.png`, { type: 'image/png' });
+
+        // Try Native Share (Works on Mobile)
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          await navigator.share({
+            files: [file],
+            title: 'Fee Reminder',
+            text: 'Please find your fee reminder attached.',
+          });
+          toast.success('Shared successfully!');
+        } else {
+          // Fallback for Desktop: Copy to clipboard and open WA Web
+          try {
+            await navigator.clipboard.write([
+              new ClipboardItem({ 'image/png': blob })
+            ]);
+            toast.success('Photo copied to clipboard! Paste it in the WhatsApp chat.', { duration: 5000 });
+          } catch (e) {
+            toast.error('Could not copy image automatically. Please screenshot the card.');
+          }
+          window.open(waUrl, '_blank');
+        }
+      }
+    } catch (err) {
+      toast.error('Error generating fee reminder photo.');
+      console.error(err);
+    } finally {
+      setIsGenerating(false);
+      setReminderStudent(null);
+    }
   };
 
   const totalFee = tableData.reduce((s, r) => s + r.totalFee, 0);
@@ -271,9 +321,9 @@ export const StudentFeeDetailsTab: React.FC<StudentFeeDetailsProps> = ({ student
                     <td className="px-4 py-3 text-center print:hidden">
                       {row.balance > 0 && row.phone && (
                         <button
-                          onClick={() => handleWhatsApp(row.phone, row.name, row.balance)}
+                          onClick={() => handleWhatsAppClick(row)}
                           className="inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-green-500 hover:bg-green-600 text-white text-xs font-bold rounded-lg transition-colors shadow-sm cursor-pointer"
-                          title={`Send fee reminder to ${row.phone}`}
+                          title={`Generate fee reminder for ${row.phone}`}
                         >
                           <MessageCircle className="w-3.5 h-3.5" />
                           Remind
@@ -287,6 +337,86 @@ export const StudentFeeDetailsTab: React.FC<StudentFeeDetailsProps> = ({ student
           </table>
         </div>
       </div>
+      {/* Fata Reminder Modal */}
+      {reminderStudent && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-gray-900/60 backdrop-blur-sm p-4 print:hidden">
+          <div className="bg-white rounded-3xl overflow-hidden shadow-2xl max-w-sm w-full animate-scale-in relative">
+            <button 
+              onClick={() => setReminderStudent(null)}
+              className="absolute top-4 right-4 z-10 w-8 h-8 flex items-center justify-center bg-white/20 hover:bg-white/40 text-white rounded-full transition-colors cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            
+            {/* The actual Card to be captured */}
+            <div id="fee-reminder-card" className="bg-white">
+              {/* Header */}
+              <div className="bg-gradient-to-br from-indigo-900 via-indigo-800 to-indigo-950 p-6 text-center relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full blur-2xl -mr-10 -mt-10"></div>
+                <div className="absolute bottom-0 left-0 w-32 h-32 bg-white/5 rounded-full blur-2xl -ml-10 -mb-10"></div>
+                <div className="relative z-10">
+                  <h1 className="text-xl font-black text-white leading-tight">SRI VENKATESWARA<br/>JY SCHOOL</h1>
+                  <p className="text-indigo-200 text-[10px] mt-1.5 max-w-[250px] mx-auto font-medium">Opp. Hero Showroom, SVL Paradise Campus, Narasannapeta</p>
+                  <div className="mt-4 inline-block bg-white/20 backdrop-blur-md px-4 py-1.5 rounded-full border border-white/20">
+                    <span className="text-white text-xs font-bold tracking-widest uppercase">Fee Reminder</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Body */}
+              <div className="p-6">
+                <div className="text-center mb-6">
+                  <p className="text-xs text-gray-500 font-bold uppercase tracking-wider mb-1">Student Details</p>
+                  <h2 className="text-xl font-black text-gray-900 leading-tight">{reminderStudent.name}</h2>
+                  <p className="text-sm font-bold text-indigo-600 mt-1">{reminderStudent.id} • Class: {reminderStudent.className}</p>
+                </div>
+
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center p-3 bg-gray-50 rounded-xl border border-gray-100">
+                    <span className="text-xs font-bold text-gray-500 uppercase">Total Fee</span>
+                    <span className="text-sm font-black text-gray-800">₹{reminderStudent.totalFee.toLocaleString('en-IN')}</span>
+                  </div>
+                  <div className="flex justify-between items-center p-3 bg-emerald-50 rounded-xl border border-emerald-100">
+                    <span className="text-xs font-bold text-emerald-600 uppercase">Amount Paid</span>
+                    <span className="text-sm font-black text-emerald-700">₹{reminderStudent.paidAmount.toLocaleString('en-IN')}</span>
+                  </div>
+                  <div className="flex justify-between items-center p-4 bg-rose-50 rounded-xl border border-rose-100 shadow-sm relative overflow-hidden">
+                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-rose-500"></div>
+                    <span className="text-xs font-black text-rose-600 uppercase tracking-wider">Balance Due</span>
+                    <span className="text-2xl font-black text-rose-600">₹{reminderStudent.balance.toLocaleString('en-IN')}</span>
+                  </div>
+                </div>
+
+                <div className="mt-6 text-center">
+                  <p className="text-[11px] font-bold text-gray-400">Please clear the pending dues at the earliest.</p>
+                  <p className="text-[10px] text-gray-400 mt-1">Generated on: {new Date().toLocaleDateString('en-IN')}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="p-4 bg-gray-50 border-t border-gray-100 flex flex-col gap-2">
+              <button
+                onClick={handleShareReminder}
+                disabled={isGenerating}
+                className="w-full py-3 bg-green-500 hover:bg-green-600 text-white font-bold rounded-xl flex justify-center items-center gap-2 transition-colors cursor-pointer shadow-md shadow-green-500/25 disabled:opacity-70"
+              >
+                {isGenerating ? (
+                  <span className="animate-pulse">Generating Photo...</span>
+                ) : (
+                  <>
+                    <Share2 className="w-5 h-5" /> 
+                    <span>Share Photo on WhatsApp</span>
+                  </>
+                )}
+              </button>
+              <p className="text-[10px] text-center text-gray-500 font-medium px-4">
+                On mobile, this opens WhatsApp directly. On PC, it copies the photo so you can paste it into WhatsApp.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
