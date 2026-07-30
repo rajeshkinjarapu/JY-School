@@ -325,40 +325,40 @@ export const StudentListPage: React.FC = () => {
           </div>
 
           {/* Desktop Table View */}
-          <div className="hidden md:block overflow-x-auto">
+          <div className="hidden md:block overflow-x-auto bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-800 mb-6">
             <table className="w-full text-sm text-left">
               <thead>
-                <tr className="bg-indigo-50/50 border-b border-indigo-100">
-                  <th className="px-5 py-4 text-[11px] font-extrabold uppercase tracking-wider text-gray-400 dark:text-gray-300">
+                <tr className="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-800/80 border-b border-gray-200 dark:border-gray-700">
+                  <th className="px-5 py-4 text-[11px] font-black uppercase tracking-wider text-gray-500 dark:text-gray-400">
                     #
                   </th>
-                  <th className="px-5 py-4 text-[11px] font-extrabold uppercase tracking-wider text-gray-400">
+                  <th className="px-5 py-4 text-[11px] font-black uppercase tracking-wider text-gray-500 dark:text-gray-400">
                     Photo
                   </th>
-                  <th className="px-5 py-4 text-[11px] font-extrabold uppercase tracking-wider text-gray-400">
+                  <th className="px-5 py-4 text-[11px] font-black uppercase tracking-wider text-gray-500 dark:text-gray-400">
                     Student Name
                   </th>
-                  <th className="hidden md:table-cell px-5 py-4 text-[11px] font-extrabold uppercase tracking-wider text-gray-400">
+                  <th className="hidden md:table-cell px-5 py-4 text-[11px] font-black uppercase tracking-wider text-gray-500 dark:text-gray-400">
                     Student ID
                   </th>
-                  <th className="hidden sm:table-cell px-5 py-4 text-[11px] font-extrabold uppercase tracking-wider text-gray-400">
+                  <th className="hidden sm:table-cell px-5 py-4 text-[11px] font-black uppercase tracking-wider text-gray-500 dark:text-gray-400">
                     Class
                   </th>
-                  <th className="hidden sm:table-cell px-5 py-4 text-[11px] font-extrabold uppercase tracking-wider text-gray-400">
+                  <th className="hidden sm:table-cell px-5 py-4 text-[11px] font-black uppercase tracking-wider text-gray-500 dark:text-gray-400">
                     Section
                   </th>
-                  <th className="hidden lg:table-cell px-5 py-4 text-[11px] font-extrabold uppercase tracking-wider text-gray-400">
+                  <th className="hidden lg:table-cell px-5 py-4 text-[11px] font-black uppercase tracking-wider text-gray-500 dark:text-gray-400">
                     Father Name
                   </th>
-                  <th className="hidden lg:table-cell px-5 py-4 text-[11px] font-extrabold uppercase tracking-wider text-gray-400">
+                  <th className="hidden lg:table-cell px-5 py-4 text-[11px] font-black uppercase tracking-wider text-gray-500 dark:text-gray-400">
                     Mobile No
                   </th>
-                  <th className="hidden sm:table-cell px-5 py-4 text-[11px] font-extrabold uppercase tracking-wider text-gray-400 text-right">
+                  <th className="hidden sm:table-cell px-5 py-4 text-[11px] font-black uppercase tracking-wider text-gray-500 dark:text-gray-400 text-right">
                     Actions
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-50 dark:divide-gray-800/50">
+              <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
                 {students.map((student: any, idx: number) => {
                   const name = student.user?.name || "Student";
                   const photoUrl = student.user?.photoUrl;
@@ -377,7 +377,7 @@ export const StudentListPage: React.FC = () => {
                   return (
                     <tr
                       key={student.id}
-                      className="hover:bg-white bg-transparent transition-all duration-300 group border-b border-indigo-50/50 hover:shadow-glow-primary animate-fade-in-up"
+                      className="hover:bg-gray-50 dark:hover:bg-gray-800/50 bg-white dark:bg-gray-900 transition-colors group animate-fade-in-up"
                       style={{ animationDelay: `${idx * 30}ms` }}
                     >
                       {/* Sr No */}
@@ -391,7 +391,7 @@ export const StudentListPage: React.FC = () => {
                           <img
                             src={getPhotoUrl(photoUrl)}
                             alt={name}
-                            className="w-12 h-16 rounded-xl object-cover object-top border-2 border-white dark:border-gray-800 shadow-lg ring-2 ring-indigo-100 dark:ring-indigo-900/30 transform group-hover:scale-105 transition-transform"
+                            className="w-11 h-11 rounded-full object-cover border-2 border-white dark:border-gray-800 shadow-sm"
                             onError={(e) => {
                               e.currentTarget.onerror = null;
                               e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`;
@@ -399,7 +399,7 @@ export const StudentListPage: React.FC = () => {
                           />
                         ) : (
                           <div
-                            className={`w-12 h-16 rounded-xl bg-gradient-to-br ${getColor(name)} flex items-center justify-center text-white font-black text-xl shadow-lg shadow-${getColor(name).split("-")[1]}-500/30 transform group-hover:scale-105 transition-transform`}
+                            className={`w-11 h-11 rounded-full bg-gradient-to-br ${getColor(name)} flex items-center justify-center text-white font-bold text-sm shadow-sm`}
                           >
                             {getInitials(name)}
                           </div>
@@ -452,10 +452,10 @@ export const StudentListPage: React.FC = () => {
                         <div className="flex justify-end items-center gap-1.5">
                           <Link
                             to={`/students/${student.id}`}
-                            className="inline-flex items-center gap-1 px-3 py-1.5 text-[11px] font-extrabold text-indigo-600 dark:text-white bg-indigo-50 hover:bg-indigo-100 dark:bg-white/10 dark:hover:bg-white/20 rounded-lg transition-all"
+                            className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 transition-colors"
                             title="View Profile"
                           >
-                            <Eye className="w-3.5 h-3.5" /> View
+                            <Eye className="w-4 h-4" />
                           </Link>
                           <button
                             onClick={() => handleDelete(student.id)}

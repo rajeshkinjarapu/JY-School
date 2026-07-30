@@ -1,502 +1,798 @@
-import React, { useState } from 'react';
-import { Upload, FileType, CheckCircle, AlertCircle, RefreshCw, FileText, Download } from 'lucide-react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
+import {
+  Upload, FileText, CheckCircle, AlertCircle, RefreshCw,
+  Download, Save, Trash2, Eye, ChevronDown, BookOpen,
+  FlaskConical, Calculator, Atom, Search, X
+} from 'lucide-react';
+import api from '../../api/axios';
+import toast from 'react-hot-toast';
 
-interface OMRResult {
-  student_id?: string;
-  answers: Record<string, string | null>;
+// ─── Types ───────────────────────────────────────────────────────────────────
+interface ScannedResult {
+  name: string;
+  student_id: string | null;
+  answers: Record<string, string>;
   total_questions: number;
   filled_count: number;
   blank_count: number;
-  score?: number | null;
-  correct_count?: number | null;
-  wrong_count?: number | null;
-  max_score?: number;
-  vision_preview?: string;
+  score: number | null;
+  correct_count: number | null;
+  wrong_count: number | null;
+  max_score: number;
+  maths_score: number | null;
+  physics_score: number | null;
+  chem_score: number | null;
+  error: string | null;
+  imagePreview?: string;
+  status: 'pending' | 'scanning' | 'done' | 'error';
 }
 
+interface SavedExam {
+  id: string;
+  examName: string;
+  className: string;
+  examDate: string;
+  answerKey: Record<string, string>;
+}
+
+const OPTIONS = ['A', 'B', 'C', 'D'];
+const SUBJECTS = [
+  { label: '📘 Maths', start: 1, end: 25, color: 'blue' },
+  { label: '🔴 Physics', start: 26, end: 50, color: 'purple' },
+  { label: '🟡 Chemistry', start: 51, end: 75, color: 'amber' },
+];
+
+// ─── Main Component ───────────────────────────────────────────────────────────
 export const OMRScannerPage: React.FC = () => {
-  const [files, setFiles] = useState<File[]>([]);
-  const [isUploading, setIsUploading] = useState(false);
-  const [results, setResults] = useState<OMRResult | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [showKeyModal, setShowKeyModal] = useState(false);
-  const [keyTab, setKeyTab] = useState<'manual' | 'excel'>('manual');
+  // Config
+  const [examName, setExamName] = useState('');
+  const [className, setClassName] = useState('');
+  const [examDate, setExamDate] = useState(new Date().toISOString().split('T')[0]);
+  const [answerKey, setAnswerKey] = useState<Record<string, string>>({});
+  const [keyTab, setKeyTab] = useState<'manual' | 'csv'>('manual');
+  const [savedExams, setSavedExams] = useState<SavedExam[]>([]);
+  const [selectedExamId, setSelectedExamId] = useState('');
+  const [savingKey, setSavingKey] = useState(false);
 
-  const [manualGridKey, setManualGridKey] = useState<Record<string, string>>({});
-  const [parsedAnswerKey, setParsedAnswerKey] = useState<Record<string, string> | null>(null);
+  // Upload
+  const [fileQueue, setFileQueue] = useState<ScannedResult[]>([]);
+  const [isScanning, setIsScanning] = useState(false);
+  const [autoSave, setAutoSave] = useState(false);
+  const dropRef = useRef<HTMLDivElement>(null);
 
-  const OPTIONS = ['A', 'B', 'C', 'D'];
+  // Results view
+  const [activeResult, setActiveResult] = useState<ScannedResult | null>(null);
+  const [savedToDb, setSavedToDb] = useState(false);
 
-  const handleGridSelect = (qNum: string, option: string) => {
-    setManualGridKey((prev) => {
+  // Load saved exams on mount
+  useEffect(() => {
+    loadSavedExams();
+  }, []);
+
+  const loadSavedExams = async () => {
+    try {
+      const res = await api.get('/api/omr/answer-keys');
+      setSavedExams(res.data || []);
+    } catch {}
+  };
+
+  const loadExamKey = (examId: string) => {
+    const exam = savedExams.find(e => e.id === examId);
+    if (exam) {
+      setAnswerKey(exam.answerKey);
+      setExamName(exam.examName);
+      setClassName(exam.className);
+      setSelectedExamId(examId);
+      toast.success(`"${exam.examName}" answer key loaded!`);
+    }
+  };
+
+  // ─── Answer Key Grid ──────────────────────────────────────────────────────
+  const toggleKey = (qNum: string, opt: string) => {
+    setAnswerKey(prev => {
       const updated = { ...prev };
-      if (updated[qNum] === option) {
-        delete updated[qNum];
-      } else {
-        updated[qNum] = option;
-      }
-      setParsedAnswerKey(Object.keys(updated).length > 0 ? updated : null);
+      if (updated[qNum] === opt) delete updated[qNum];
+      else updated[qNum] = opt;
       return updated;
     });
   };
 
-  const downloadSampleCsv = () => {
-    let csvContent = 'QNo,Subject,Answer\n';
-    for (let i = 1; i <= 75; i++) {
-      let subject = 'Maths';
-      if (i > 25 && i <= 50) subject = 'Physics';
-      if (i > 50) subject = 'Chemistry';
-      
-      const sampleOpts = ['A', 'B', 'C', 'D'];
-      const sampleAns = sampleOpts[(i - 1) % 4];
-      csvContent += `${i},${subject},${sampleAns}\n`;
-    }
-
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', 'JY_School_OMR_Answer_Key_Template.csv');
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
-  const handleExcelUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files || e.target.files.length === 0) return;
-    const file = e.target.files[0];
+  const handleCsvKeyUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
     const reader = new FileReader();
-
-    reader.onload = (evt) => {
-      try {
-        const text = evt.target?.result as string;
-        const keyObj: Record<string, string> = {};
-        const lines = text.split(/\r?\n/);
-        let qCount = 1;
-        
-        lines.forEach((line) => {
-          const parts = line.split(/[,;\t\s]+/).filter(Boolean);
-          parts.forEach((part) => {
-            const clean = part.toUpperCase().trim();
-            if (clean.includes(':')) {
-              const [q, a] = clean.split(':');
-              if (q && ['A','B','C','D'].includes(a)) keyObj[q] = a;
-            } else if (['A','B','C','D'].includes(clean)) {
-              keyObj[qCount.toString()] = clean;
-              qCount++;
-            }
-          });
+    reader.onload = (ev) => {
+      const text = ev.target?.result as string;
+      const keyObj: Record<string, string> = {};
+      let qCount = 1;
+      text.split(/\r?\n/).forEach(line => {
+        line.split(/[,;\t\s]+/).filter(Boolean).forEach(part => {
+          const clean = part.toUpperCase().trim();
+          if (clean.includes(':')) {
+            const [q, a] = clean.split(':');
+            if (q && OPTIONS.includes(a)) keyObj[q] = a;
+          } else if (OPTIONS.includes(clean)) {
+            keyObj[qCount.toString()] = clean;
+            qCount++;
+          }
         });
-
-        if (Object.keys(keyObj).length > 0) {
-          setParsedAnswerKey(keyObj);
-          setManualGridKey(keyObj);
-          alert(`Loaded Answer Key with ${Object.keys(keyObj).length} questions!`);
-          setShowKeyModal(false);
-        }
-      } catch (err) {
-        alert('Failed to parse file.');
+      });
+      if (Object.keys(keyObj).length > 0) {
+        setAnswerKey(keyObj);
+        toast.success(`Answer key loaded: ${Object.keys(keyObj).length} questions`);
+      } else {
+        toast.error('Could not parse answer key from file');
       }
     };
     reader.readAsText(file);
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      setFiles(Array.from(e.target.files));
-      setResults(null);
-      setError(null);
+  const downloadSampleCsv = () => {
+    let csv = 'QNo,Subject,Answer\n';
+    for (let i = 1; i <= 75; i++) {
+      const sub = i <= 25 ? 'Maths' : i <= 50 ? 'Physics' : 'Chemistry';
+      csv += `${i},${sub},${OPTIONS[(i - 1) % 4]}\n`;
+    }
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+    a.download = 'OMR_AnswerKey_Template.csv';
+    a.click();
+  };
+
+  const handleSaveKey = async () => {
+    if (!examName.trim() || !className.trim()) {
+      toast.error('Please enter Exam Name and Class Name first');
+      return;
+    }
+    if (Object.keys(answerKey).length === 0) {
+      toast.error('Please set the answer key first');
+      return;
+    }
+    setSavingKey(true);
+    try {
+      await api.post('/api/omr/answer-key', { examName, className, examDate, answerKey });
+      toast.success('Answer key saved successfully!');
+      await loadSavedExams();
+    } catch {
+      toast.error('Failed to save answer key');
+    } finally {
+      setSavingKey(false);
     }
   };
 
-  const processOmrAPI = (file: File): Promise<OMRResult> => {
-    return new Promise((resolve, reject) => {
+  // ─── File Upload & Scanning ───────────────────────────────────────────────
+  const fileToBase64 = (file: File): Promise<string> =>
+    new Promise((resolve, reject) => {
       const reader = new FileReader();
-      reader.onload = async (e) => {
-        const base64Img = e.target?.result as string;
-        try {
-          const response = await fetch('/api/omr', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              image: base64Img,
-              answer_key: parsedAnswerKey
-            })
-          });
-          
-          const data = await response.json();
-          if (!response.ok) {
-            reject(data.error || 'OMR Engine Error');
-            return;
-          }
-          resolve(data as OMRResult);
-        } catch (err: any) {
-          reject(`API Connection Failed: ${err.message || err.toString()}`);
-        }
-      };
-      reader.onerror = () => reject('Failed to read image file');
+      reader.onload = e => resolve(e.target?.result as string);
+      reader.onerror = reject;
       reader.readAsDataURL(file);
     });
+
+  // Convert PDF pages to images using PDF.js
+  const pdfToImages = async (file: File): Promise<Array<{ data: string; name: string; preview: string }>> => {
+    const pdfjsLib = await import('pdfjs-dist');
+    pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+
+    const arrayBuffer = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+    const images: Array<{ data: string; name: string; preview: string }> = [];
+
+    for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+      const page = await pdf.getPage(pageNum);
+      const viewport = page.getViewport({ scale: 2.0 });
+      const canvas = document.createElement('canvas');
+      canvas.width = viewport.width;
+      canvas.height = viewport.height;
+      const ctx = canvas.getContext('2d')!;
+      await page.render({ canvasContext: ctx, viewport }).promise;
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
+      images.push({
+        data: dataUrl,
+        name: `${file.name} - Page ${pageNum}`,
+        preview: dataUrl,
+      });
+    }
+    return images;
   };
 
-  const handleUpload = async () => {
-    if (files.length === 0) return;
-    setIsUploading(true);
-    setError(null);
+  const addFilesToQueue = async (files: FileList | File[]) => {
+    const arr = Array.from(files);
+    const newItems: ScannedResult[] = [];
 
-    try {
-      const res = await processOmrAPI(files[0]);
-      setResults(res);
-    } catch (err: any) {
-      setError(err?.toString() || 'Error in OMR Processing');
-    } finally {
-      setIsUploading(false);
+    for (const file of arr) {
+      if (file.type === 'application/pdf') {
+        try {
+          toast.loading(`Converting PDF: ${file.name}...`, { id: 'pdf-convert' });
+          const pages = await pdfToImages(file);
+          toast.dismiss('pdf-convert');
+          for (const page of pages) {
+            newItems.push({
+              name: page.name,
+              student_id: null,
+              answers: {},
+              total_questions: 75,
+              filled_count: 0,
+              blank_count: 0,
+              score: null,
+              correct_count: null,
+              wrong_count: null,
+              max_score: 300,
+              maths_score: null,
+              physics_score: null,
+              chem_score: null,
+              error: null,
+              imagePreview: page.preview,
+              status: 'pending',
+            });
+          }
+          toast.success(`PDF converted: ${pages.length} pages added to queue`);
+        } catch (err) {
+          toast.error(`Failed to convert PDF: ${file.name}`);
+        }
+      } else {
+        const preview = await fileToBase64(file);
+        newItems.push({
+          name: file.name,
+          student_id: null,
+          answers: {},
+          total_questions: 75,
+          filled_count: 0,
+          blank_count: 0,
+          score: null,
+          correct_count: null,
+          wrong_count: null,
+          max_score: 300,
+          maths_score: null,
+          physics_score: null,
+          chem_score: null,
+          error: null,
+          imagePreview: preview,
+          status: 'pending',
+        });
+      }
+    }
+
+    setFileQueue(prev => [...prev, ...newItems]);
+  };
+
+  const handleFileDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    if (e.dataTransfer.files.length > 0) addFilesToQueue(e.dataTransfer.files);
+  }, [answerKey]);
+
+  const handleBulkScan = async () => {
+    const pending = fileQueue.filter(f => f.status === 'pending');
+    if (pending.length === 0) { toast.error('No pending files to scan'); return; }
+    if (Object.keys(answerKey).length === 0) {
+      toast.error('Please set the answer key before scanning');
+      return;
+    }
+
+    setIsScanning(true);
+    setSavedToDb(false);
+    let allDone: ScannedResult[] = [...fileQueue];
+
+    // Process one-by-one with progress
+    for (let i = 0; i < allDone.length; i++) {
+      if (allDone[i].status !== 'pending') continue;
+      allDone[i] = { ...allDone[i], status: 'scanning' };
+      setFileQueue([...allDone]);
+
+      try {
+        const imageData = allDone[i].imagePreview!;
+        const res = await api.post('/api/omr/bulk-scan', {
+          images: [{ data: imageData, name: allDone[i].name }],
+          answer_key: answerKey,
+        });
+        const r = res.data.results[0];
+        allDone[i] = {
+          ...allDone[i],
+          ...r,
+          imagePreview: allDone[i].imagePreview,
+          status: r.error ? 'error' : 'done',
+        };
+      } catch (err: any) {
+        allDone[i] = { ...allDone[i], status: 'error', error: err.message || 'Scan failed' };
+      }
+
+      setFileQueue([...allDone]);
+      // Auto-select first successful result
+      if (allDone[i].status === 'done' && !activeResult) {
+        setActiveResult(allDone[i]);
+      }
+    }
+
+    setIsScanning(false);
+    const doneCount = allDone.filter(f => f.status === 'done').length;
+    toast.success(`Scanning complete! ${doneCount} sheets processed.`);
+
+    // Auto-save if enabled
+    if (autoSave && selectedExamId && doneCount > 0) {
+      await doSaveResults(selectedExamId, allDone.filter(f => f.status === 'done'));
     }
   };
 
+  const doSaveResults = async (examId: string, results: ScannedResult[]) => {
+    try {
+      await api.post('/api/omr/results', { omrExamId: examId, results });
+      setSavedToDb(true);
+      toast.success('Results saved to database!');
+    } catch {
+      toast.error('Failed to save results');
+    }
+  };
+
+  const handleSaveResults = async () => {
+    if (!selectedExamId) {
+      toast.error('Please save the answer key first to get an exam ID');
+      return;
+    }
+    const doneResults = fileQueue.filter(f => f.status === 'done');
+    if (doneResults.length === 0) { toast.error('No scanned results to save'); return; }
+    await doSaveResults(selectedExamId, doneResults);
+  };
+
+  const doneResults = fileQueue.filter(f => f.status === 'done');
+  const keyCount = Object.keys(answerKey).length;
+
+  // ─── Render ───────────────────────────────────────────────────────────────
   return (
-    <div className="space-y-6 animate-in fade-in duration-500">
-      <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <div className="space-y-5">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">OMR Scanner</h1>
-          <p className="text-gray-500">Upload scanned OMR sheets for 100% automated evaluation</p>
+          <h1 className="text-2xl font-black text-gray-900 dark:text-white flex items-center gap-2">
+            <Search className="w-6 h-6 text-indigo-600" /> AI OMR Scanner
+          </h1>
+          <p className="text-sm text-gray-500 mt-0.5">Powered by Google Gemini Vision AI • Bulk scan images & PDFs</p>
         </div>
-        <button 
-          onClick={() => setShowKeyModal(true)}
-          className="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-lg text-sm font-semibold flex items-center gap-2 shadow-sm transition-all"
-        >
-          <FileText className="w-4 h-4" />
-          {parsedAnswerKey ? `Answer Key Set (${Object.keys(parsedAnswerKey).length} Qs)` : 'Set Answer Key'}
-        </button>
+        {doneResults.length > 0 && (
+          <div className="flex items-center gap-3">
+            {savedToDb && (
+              <span className="text-xs font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-lg flex items-center gap-1.5">
+                <CheckCircle className="w-3.5 h-3.5" /> Saved to DB
+              </span>
+            )}
+            <button
+              onClick={handleSaveResults}
+              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-sm flex items-center gap-2 transition-colors shadow-sm"
+            >
+              <Save className="w-4 h-4" /> Save All Results
+            </button>
+          </div>
+        )}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-6">
-          <div className="bg-white rounded-xl shadow-sm p-8 border-dashed border-2 border-indigo-200 bg-indigo-50/50 hover:bg-indigo-50 transition-colors text-center relative group">
-            <input 
-              type="file" 
-              accept="image/*" 
-              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-              onChange={handleFileChange}
-            />
-            <div className="flex flex-col items-center justify-center space-y-4">
-              <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
-                <Upload className="w-8 h-8 text-indigo-500" />
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-slate-800">Drag & Drop or Click to Upload OMR Image</h3>
-                <p className="text-sm text-slate-500 mt-1">Supports scanned JPG / PNG images of JY High School OMR sheets</p>
-              </div>
+      {/* ═══════════════════════════════════════════════════════════════════ */}
+      {/* BOX 1: EXAM CONFIG + ANSWER KEY                                    */}
+      {/* ═══════════════════════════════════════════════════════════════════ */}
+      <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm overflow-hidden">
+        <div className="bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-3">
+          <h2 className="text-white font-bold text-sm uppercase tracking-wider flex items-center gap-2">
+            <BookOpen className="w-4 h-4" /> Step 1: Exam Configuration & Answer Key
+          </h2>
+        </div>
+
+        <div className="p-5 space-y-5">
+          {/* Exam Details Row */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-1.5 uppercase tracking-wider">Exam Name *</label>
+              <input
+                type="text"
+                value={examName}
+                onChange={e => setExamName(e.target.value)}
+                placeholder="JEE Mains Cumulative Test"
+                className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-medium text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-1.5 uppercase tracking-wider">Class Name *</label>
+              <input
+                type="text"
+                value={className}
+                onChange={e => setClassName(e.target.value)}
+                placeholder="7th B"
+                className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-medium text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-1.5 uppercase tracking-wider">Exam Date</label>
+              <input
+                type="date"
+                value={examDate}
+                onChange={e => setExamDate(e.target.value)}
+                className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-medium text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
+              />
             </div>
           </div>
 
-          {error && (
-            <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 flex items-center gap-3">
-              <AlertCircle className="w-5 h-5 flex-shrink-0" />
-              <p className="text-sm font-medium">{error}</p>
-            </div>
-          )}
-
-          {files.length > 0 && (
-            <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-              <h3 className="text-sm font-bold text-slate-800 mb-4 border-b pb-2 flex justify-between">
-                Selected File
-                <button onClick={() => { setFiles([]); setResults(null); }} className="text-xs text-red-500 hover:underline">Clear</button>
-              </h3>
-              <div className="space-y-3">
-                {files.map((f, i) => (
-                  <div key={i} className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg border border-slate-100">
-                    <FileType className="w-5 h-5 text-indigo-500" />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-slate-700 truncate">{f.name}</p>
-                      <p className="text-xs text-slate-500">{(f.size / 1024 / 1024).toFixed(2)} MB</p>
-                    </div>
-                    <CheckCircle className="w-5 h-5 text-emerald-500" />
-                  </div>
-                ))}
-              </div>
-              <button 
-                onClick={handleUpload}
-                disabled={isUploading}
-                className="w-full mt-6 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+          {/* Load saved exam */}
+          {savedExams.length > 0 && (
+            <div className="flex items-center gap-3 p-3 bg-indigo-50 dark:bg-indigo-900/20 rounded-xl border border-indigo-100 dark:border-indigo-800">
+              <ChevronDown className="w-4 h-4 text-indigo-600 flex-shrink-0" />
+              <span className="text-xs font-bold text-indigo-800 dark:text-indigo-300 whitespace-nowrap">Load Saved:</span>
+              <select
+                value={selectedExamId}
+                onChange={e => loadExamKey(e.target.value)}
+                className="flex-1 text-xs bg-white dark:bg-gray-800 border border-indigo-200 dark:border-indigo-700 rounded-lg px-2 py-1.5 font-medium text-gray-800 dark:text-white"
               >
-                {isUploading ? (
-                  <>
-                    <RefreshCw className="w-5 h-5 animate-spin" />
-                    Processing OMR Sheet...
-                  </>
-                ) : 'Start 100% OMR Scan'}
-              </button>
+                <option value="">-- Select saved exam --</option>
+                {savedExams.map(e => (
+                  <option key={e.id} value={e.id}>{e.examName} ({e.className})</option>
+                ))}
+              </select>
             </div>
           )}
 
-          {/* RESULTS DISPLAY */}
-          {results && (
-            <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100 space-y-6">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b pb-4 gap-4">
-                <div className="flex items-center gap-3">
-                  <FileText className="w-6 h-6 text-indigo-600" />
-                  <div>
-                    <h2 className="text-lg font-bold text-gray-800">OMR Scan Results</h2>
-                    {results.student_id && (
-                      <span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-100">
-                        Student ID: {results.student_id}
-                      </span>
-                    )}
-                  </div>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  <span className="px-3 py-1 bg-emerald-100 text-emerald-800 rounded-full text-xs font-semibold">
-                    Attempted: {results.filled_count} / {results.total_questions}
-                  </span>
-                  <span className="px-3 py-1 bg-amber-100 text-amber-800 rounded-full text-xs font-semibold">
-                    Blank: {results.blank_count}
-                  </span>
-                </div>
+          {/* Answer Key Tabs */}
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-xl gap-1">
+                <button
+                  onClick={() => setKeyTab('manual')}
+                  className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-all ${keyTab === 'manual' ? 'bg-white dark:bg-gray-700 shadow text-indigo-600' : 'text-gray-500'}`}
+                >
+                  📝 Manual Grid
+                </button>
+                <button
+                  onClick={() => setKeyTab('csv')}
+                  className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-all ${keyTab === 'csv' ? 'bg-white dark:bg-gray-700 shadow text-indigo-600' : 'text-gray-500'}`}
+                >
+                  📊 Upload CSV
+                </button>
               </div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold text-gray-500">{keyCount}/75 set</span>
+                {keyCount > 0 && (
+                  <button onClick={() => setAnswerKey({})} className="text-xs text-red-500 hover:underline font-bold">Clear</button>
+                )}
+                <button
+                  onClick={handleSaveKey}
+                  disabled={savingKey}
+                  className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-xs font-bold rounded-lg flex items-center gap-1.5 transition-colors"
+                >
+                  {savingKey ? <RefreshCw className="w-3 h-3 animate-spin" /> : <Save className="w-3 h-3" />}
+                  Save Key
+                </button>
+              </div>
+            </div>
 
-              {/* SCORE CARD DISPLAY */}
-              {results.score !== null && results.score !== undefined && (
-                <div className="space-y-3">
-                  <div className="p-4 bg-indigo-950 text-white rounded-xl flex items-center justify-between shadow-sm">
-                    <div>
-                      <p className="text-xs text-indigo-200 font-semibold uppercase tracking-wider">Total Score (No Negative Marking)</p>
-                      <div className="flex items-baseline gap-2 mt-1">
-                        <span className="text-3xl font-extrabold text-white">{results.score}</span>
-                        <span className="text-sm text-indigo-300">/ {results.max_score} Marks</span>
-                      </div>
-                    </div>
-                    <div className="flex gap-4 text-center">
-                      <div className="bg-emerald-900/50 border border-emerald-500/30 px-3 py-1.5 rounded-lg">
-                        <p className="text-xs text-emerald-300">Correct (+4)</p>
-                        <p className="text-lg font-bold text-emerald-400">{results.correct_count}</p>
-                      </div>
-                      <div className="bg-rose-900/50 border border-rose-500/30 px-3 py-1.5 rounded-lg">
-                        <p className="text-xs text-rose-300">Wrong (0)</p>
-                        <p className="text-lg font-bold text-rose-400">{results.wrong_count}</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* SUBJECT BREAKDOWN CARDS */}
-                  {parsedAnswerKey && (
-                    <div className="grid grid-cols-3 gap-3 text-center">
-                      {[
-                        { title: '📘 Maths', start: 1, end: 25, color: 'bg-blue-50 border-blue-200 text-blue-900' },
-                        { title: '🟣 Physics', start: 26, end: 50, color: 'bg-purple-50 border-purple-200 text-purple-900' },
-                        { title: '🟡 Chemistry', start: 51, end: 75, color: 'bg-amber-50 border-amber-200 text-amber-900' },
-                      ].map((sub, idx) => {
-                        let subCorrect = 0;
-                        for (let q = sub.start; q <= sub.end; q++) {
-                          const qKey = q.toString();
-                          if (parsedAnswerKey[qKey] && results.answers[qKey] === parsedAnswerKey[qKey]) {
-                            subCorrect++;
-                          }
-                        }
+            {keyTab === 'manual' ? (
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                {SUBJECTS.map((sub) => (
+                  <div key={sub.label} className={`rounded-xl border p-3 bg-${sub.color}-50 dark:bg-${sub.color}-900/10 border-${sub.color}-200 dark:border-${sub.color}-800`}>
+                    <h4 className={`text-xs font-black text-${sub.color}-800 dark:text-${sub.color}-300 mb-3 uppercase tracking-wider`}>
+                      {sub.label} (Q{sub.start.toString().padStart(2,'0')}–Q{sub.end.toString().padStart(2,'0')})
+                    </h4>
+                    <div className="space-y-1 max-h-64 overflow-y-auto pr-1">
+                      {Array.from({ length: sub.end - sub.start + 1 }, (_, i) => {
+                        const qNum = (sub.start + i).toString();
                         return (
-                          <div key={idx} className={`p-3 rounded-xl border ${sub.color}`}>
-                            <p className="text-xs font-bold">{sub.title}</p>
-                            <p className="text-lg font-extrabold mt-1">{subCorrect * 4} <span className="text-xs font-normal opacity-70">/ 100</span></p>
+                          <div key={qNum} className="flex items-center gap-1.5 bg-white dark:bg-gray-900 rounded-lg px-2 py-1 border border-gray-100 dark:border-gray-800">
+                            <span className="text-xs font-black text-gray-500 w-7 shrink-0">Q{qNum.padStart(2,'0')}</span>
+                            {OPTIONS.map(opt => (
+                              <button
+                                key={opt}
+                                onClick={() => toggleKey(qNum, opt)}
+                                className={`w-7 h-7 rounded-lg text-xs font-black transition-all ${
+                                  answerKey[qNum] === opt
+                                    ? 'bg-indigo-600 text-white shadow-sm scale-105'
+                                    : 'bg-gray-100 dark:bg-gray-800 text-gray-500 hover:bg-gray-200'
+                                }`}
+                              >
+                                {opt}
+                              </button>
+                            ))}
                           </div>
                         );
                       })}
                     </div>
-                  )}
-                </div>
-              )}
-
-              {/* COMPUTER VISION HIGH CONTRAST PREVIEW IMAGE */}
-              {results.vision_preview && (
-                <div className="p-4 bg-slate-900 rounded-xl space-y-2 text-white">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-emerald-400 flex items-center gap-1.5 uppercase tracking-wider">
-                      👁️ Computer Vision Inspection View (Negative Contrast Mode)
-                    </span>
-                    <span className="text-[10px] text-slate-400">Red Dots = Filled Bubbles</span>
                   </div>
-                  <div className="overflow-x-auto max-h-[350px] border border-slate-800 rounded-lg bg-black flex justify-center p-2">
-                    <img 
-                      src={results.vision_preview} 
-                      alt="Computer Vision OMR Inspection" 
-                      className="max-h-[330px] object-contain rounded"
-                    />
-                  </div>
-                </div>
-              )}
-
-              <div className="grid grid-cols-5 gap-3 max-h-[400px] overflow-y-auto p-2 bg-slate-50 rounded-xl">
-                {Object.entries(results.answers).map(([qNum, ans]) => {
-                  const keyAns = parsedAnswerKey?.[qNum];
-                  const isCorrect = keyAns && ans === keyAns;
-
-                  let cardStyle = 'bg-gray-100 border-gray-200 text-gray-400';
-                  if (ans) {
-                    if (parsedAnswerKey) {
-                      cardStyle = isCorrect ? 'bg-emerald-50 border-emerald-300 text-emerald-900' : 'bg-rose-50 border-rose-300 text-rose-900';
-                    } else {
-                      cardStyle = 'bg-indigo-50 border-indigo-200 text-indigo-900';
-                    }
-                  }
-
-                  return (
-                    <div key={qNum} className={`p-2 rounded-lg border text-center text-xs font-bold ${cardStyle}`}>
-                      <span>Q{qNum.padStart(2, '0')}: </span>
-                      <span className={ans ? 'text-sm font-extrabold' : ''}>{ans || '-'}</span>
-                      {keyAns && (
-                        <div className="text-[10px] opacity-75 font-normal">Key: {keyAns}</div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-        </div>
-
-        <div className="space-y-6">
-          <div className="bg-white rounded-xl shadow-sm p-6 bg-amber-50 border border-amber-100">
-            <h3 className="text-sm font-bold text-amber-800 flex items-center gap-2 mb-3">
-              <AlertCircle className="w-4 h-4" />
-              Instructions for Best Accuracy
-            </h3>
-            <ul className="text-xs text-amber-700 space-y-2 list-disc pl-4">
-              <li>Use high-resolution flat-bed scanner images for 100% accuracy.</li>
-              <li>Ensure the sheet image includes full boundaries.</li>
-              <li>Bubble markings must be clear with dark blue/black ink.</li>
-              <li>Results display recognized responses for Q01 to Q75.</li>
-            </ul>
-          </div>
-        </div>
-      </div>
-
-      {/* ANSWER KEY MODAL */}
-      {showKeyModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl p-6 max-w-lg w-full shadow-2xl space-y-4">
-            <div className="flex justify-between items-center border-b pb-3">
-              <h3 className="text-lg font-bold text-gray-900">Set Answer Key</h3>
-              <button onClick={() => setShowKeyModal(false)} className="text-gray-400 hover:text-gray-600 font-bold">✕</button>
-            </div>
-
-            {/* TAB SELECTOR */}
-            <div className="flex bg-slate-100 p-1 rounded-xl">
-              <button
-                type="button"
-                onClick={() => setKeyTab('manual')}
-                className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${keyTab === 'manual' ? 'bg-white shadow text-indigo-600' : 'text-slate-500'}`}
-              >
-                📝 Manual Grid Entry
-              </button>
-              <button
-                type="button"
-                onClick={() => setKeyTab('excel')}
-                className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${keyTab === 'excel' ? 'bg-white shadow text-indigo-600' : 'text-slate-500'}`}
-              >
-                📊 Excel / CSV Upload
-              </button>
-            </div>
-
-            {keyTab === 'manual' ? (
-              <div className="space-y-4">
-                <div className="flex items-center justify-between bg-indigo-50/70 p-3 rounded-xl border border-indigo-100">
-                  <span className="text-xs font-bold text-indigo-900">
-                    Quick Key Selection (75 Questions)
-                  </span>
-                  <button 
-                    type="button"
-                    onClick={() => { setManualGridKey({}); setParsedAnswerKey(null); }} 
-                    className="text-[11px] text-red-500 font-semibold hover:underline"
-                  >
-                    Clear All
-                  </button>
-                </div>
-
-                {/* TABULAR GRID FOR 75 QUESTIONS */}
-                <div className="max-h-[380px] overflow-y-auto pr-1 space-y-4">
-                  {[
-                    { title: '📘 Maths (Q01 - Q25)', start: 1, count: 25, color: 'border-blue-200 bg-blue-50/30' },
-                    { title: '🟣 Physics (Q26 - Q50)', start: 26, count: 25, color: 'border-purple-200 bg-purple-50/30' },
-                    { title: '🟡 Chemistry (Q51 - Q75)', start: 51, count: 25, color: 'border-amber-200 bg-amber-50/30' },
-                  ].map((section, sIdx) => (
-                    <div key={sIdx} className={`rounded-xl border p-3 ${section.color}`}>
-                      <h4 className="text-xs font-bold text-slate-800 mb-2.5 uppercase tracking-wider">{section.title}</h4>
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                        {Array.from({ length: section.count }).map((_, i) => {
-                          const qNum = (section.start + i).toString();
-                          const currentVal = (parsedAnswerKey || {})[qNum] || (manualGridKey[qNum] || '');
-
-                          return (
-                            <div key={qNum} className="flex items-center justify-between p-1.5 bg-white rounded-lg border border-slate-200 shadow-2xs">
-                              <span className="text-xs font-bold text-slate-700 w-8">
-                                Q{qNum.padStart(2, '0')}
-                              </span>
-                              <div className="flex gap-1">
-                                {['A', 'B', 'C', 'D'].map((opt) => (
-                                  <button
-                                    key={opt}
-                                    type="button"
-                                    onClick={() => handleGridSelect(qNum, opt)}
-                                    className={`w-6 h-6 rounded text-xs font-bold transition-all ${
-                                      currentVal === opt
-                                        ? 'bg-indigo-600 text-white shadow-xs scale-105'
-                                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                                    }`}
-                                  >
-                                    {opt}
-                                  </button>
-                                ))}
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                ))}
               </div>
             ) : (
-              <div className="space-y-4 text-center border-2 border-dashed border-slate-200 p-6 rounded-xl bg-slate-50">
-                <FileType className="w-10 h-10 text-emerald-600 mx-auto" />
+              <div className="border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-xl p-6 text-center space-y-4">
+                <FileText className="w-10 h-10 text-gray-400 mx-auto" />
                 <div>
-                  <p className="text-sm font-bold text-slate-800">Upload Answer Key Excel / CSV File</p>
-                  <p className="text-xs text-slate-500 mt-1">
-                    Columns: <span className="font-semibold text-slate-700">QNo</span>, <span className="font-semibold text-slate-700">Subject</span>, <span className="font-semibold text-slate-700">Answer</span> (A, B, C, or D)
-                  </p>
+                  <p className="text-sm font-bold text-gray-700 dark:text-gray-300">Upload CSV Answer Key</p>
+                  <p className="text-xs text-gray-500 mt-1">Format: <code className="bg-gray-100 dark:bg-gray-800 px-1 py-0.5 rounded">QNo,Subject,Answer</code> or just <code className="bg-gray-100 dark:bg-gray-800 px-1 py-0.5 rounded">1:A, 2:B, ...</code></p>
                 </div>
-                
-                <div className="flex flex-col items-center gap-3">
-                  <input
-                    type="file"
-                    accept=".csv,.txt"
-                    onChange={handleExcelUpload}
-                    className="block w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 cursor-pointer"
-                  />
-                  
-                  <button
-                    type="button"
-                    onClick={downloadSampleCsv}
-                    className="text-xs font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1.5 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-lg border border-indigo-200 transition-colors"
-                  >
-                    <Download className="w-3.5 h-3.5" />
-                    Download Sample Answer Key CSV Template
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+                  <input type="file" accept=".csv,.txt" onChange={handleCsvKeyUpload} className="text-xs text-gray-500 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:font-bold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 cursor-pointer" />
+                  <button onClick={downloadSampleCsv} className="text-xs font-bold text-indigo-600 flex items-center gap-1.5 hover:underline">
+                    <Download className="w-3.5 h-3.5" /> Download Template
                   </button>
                 </div>
               </div>
             )}
+          </div>
+        </div>
+      </div>
 
-            <div className="flex justify-end gap-3 pt-3 border-t">
-              <button 
-                type="button"
-                onClick={() => setShowKeyModal(false)}
-                className="px-4 py-2 text-xs font-semibold text-gray-600 hover:bg-gray-100 rounded-xl"
-              >
-                Close
-              </button>
+      {/* ═══════════════════════════════════════════════════════════════════ */}
+      {/* BOX 2 + BOX 3: UPLOAD + RESULTS (side by side)                     */}
+      {/* ═══════════════════════════════════════════════════════════════════ */}
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
+
+        {/* BOX 2: UPLOAD + QUEUE */}
+        <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm overflow-hidden">
+          <div className="bg-gradient-to-r from-sky-600 to-cyan-600 px-6 py-3">
+            <h2 className="text-white font-bold text-sm uppercase tracking-wider flex items-center gap-2">
+              <Upload className="w-4 h-4" /> Step 2: Upload OMR Sheets
+            </h2>
+          </div>
+
+          <div className="p-5 space-y-4">
+            {/* Drop Zone */}
+            <div
+              ref={dropRef}
+              onDragOver={e => e.preventDefault()}
+              onDrop={handleFileDrop}
+              className="relative border-2 border-dashed border-indigo-200 dark:border-indigo-800 rounded-2xl p-8 text-center bg-indigo-50/50 dark:bg-indigo-900/10 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-colors group"
+            >
+              <input
+                type="file"
+                accept="image/*,.pdf"
+                multiple
+                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                onChange={e => e.target.files && addFilesToQueue(e.target.files)}
+              />
+              <div className="flex flex-col items-center gap-3">
+                <div className="w-14 h-14 bg-white dark:bg-gray-800 rounded-2xl flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
+                  <Upload className="w-7 h-7 text-indigo-500" />
+                </div>
+                <div>
+                  <p className="font-bold text-gray-700 dark:text-gray-300">Drop images or PDFs here</p>
+                  <p className="text-xs text-gray-500 mt-1">JPG, PNG, WEBP, PDF • Multi-file supported</p>
+                </div>
+              </div>
             </div>
+
+            {/* Auto-save toggle */}
+            {savedExams.length > 0 && (
+              <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
+                <span className="text-xs font-bold text-gray-600 dark:text-gray-400">Auto-save results after scan</span>
+                <button
+                  onClick={() => setAutoSave(prev => !prev)}
+                  className={`relative w-10 h-5 rounded-full transition-colors ${autoSave ? 'bg-indigo-600' : 'bg-gray-300 dark:bg-gray-600'}`}
+                >
+                  <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-all ${autoSave ? 'left-5' : 'left-0.5'}`} />
+                </button>
+              </div>
+            )}
+
+            {/* File Queue */}
+            {fileQueue.length > 0 && (
+              <div className="space-y-2 max-h-72 overflow-y-auto">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider">{fileQueue.length} Files Queued</span>
+                  <button onClick={() => { setFileQueue([]); setActiveResult(null); setSavedToDb(false); }} className="text-xs text-red-500 hover:underline font-bold flex items-center gap-1">
+                    <Trash2 className="w-3 h-3" /> Clear All
+                  </button>
+                </div>
+                {fileQueue.map((f, idx) => (
+                  <div
+                    key={idx}
+                    onClick={() => f.status === 'done' && setActiveResult(f)}
+                    className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${
+                      f.status === 'done' && activeResult?.name === f.name
+                        ? 'border-indigo-400 bg-indigo-50 dark:bg-indigo-900/30'
+                        : 'border-gray-100 dark:border-gray-800 hover:border-gray-200'
+                    } ${f.status === 'done' ? 'bg-white dark:bg-gray-900' : f.status === 'error' ? 'bg-red-50 dark:bg-red-900/20' : 'bg-gray-50 dark:bg-gray-800'}`}
+                  >
+                    {f.imagePreview && (
+                      <img src={f.imagePreview} alt="" className="w-10 h-12 object-cover rounded-lg border border-gray-200 shrink-0" />
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-bold text-gray-700 dark:text-gray-300 truncate">{f.name}</p>
+                      {f.student_id && <p className="text-[10px] font-mono text-indigo-600 mt-0.5">{f.student_id}</p>}
+                      {f.error && <p className="text-[10px] text-red-500 mt-0.5">{f.error}</p>}
+                    </div>
+                    <div className="shrink-0 flex flex-col items-end gap-1">
+                      {f.status === 'pending' && <span className="text-[10px] text-gray-400 font-bold">PENDING</span>}
+                      {f.status === 'scanning' && <RefreshCw className="w-4 h-4 text-indigo-500 animate-spin" />}
+                      {f.status === 'done' && (
+                        <>
+                          <CheckCircle className="w-4 h-4 text-emerald-500" />
+                          <span className="text-xs font-black text-emerald-700">{f.score}/{f.max_score}</span>
+                        </>
+                      )}
+                      {f.status === 'error' && <AlertCircle className="w-4 h-4 text-red-500" />}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Scan Button */}
+            <button
+              onClick={handleBulkScan}
+              disabled={isScanning || fileQueue.filter(f => f.status === 'pending').length === 0}
+              className="w-full py-3.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 disabled:opacity-50 text-white font-black rounded-xl flex items-center justify-center gap-2 transition-all shadow-sm text-sm"
+            >
+              {isScanning ? (
+                <><RefreshCw className="w-5 h-5 animate-spin" /> Scanning with AI...</>
+              ) : (
+                <><Search className="w-5 h-5" /> Start Bulk AI Scan ({fileQueue.filter(f => f.status === 'pending').length} pending)</>
+              )}
+            </button>
+          </div>
+        </div>
+
+        {/* BOX 3: RESULTS VIEW */}
+        <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm overflow-hidden">
+          <div className="bg-gradient-to-r from-emerald-600 to-teal-600 px-6 py-3">
+            <h2 className="text-white font-bold text-sm uppercase tracking-wider flex items-center gap-2">
+              <Eye className="w-4 h-4" /> Step 3: Scan Results
+              {activeResult && <span className="ml-auto text-emerald-100 font-normal text-xs normal-case">{activeResult.name}</span>}
+            </h2>
+          </div>
+
+          {activeResult ? (
+            <div className="p-5 space-y-4">
+              {/* Split View */}
+              <div className="grid grid-cols-2 gap-4">
+                {/* OMR Image Preview */}
+                <div className="space-y-2">
+                  <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">OMR Sheet</p>
+                  {activeResult.imagePreview ? (
+                    <img
+                      src={activeResult.imagePreview}
+                      alt="OMR Sheet"
+                      className="w-full rounded-xl border border-gray-200 dark:border-gray-700 object-cover max-h-64"
+                    />
+                  ) : (
+                    <div className="w-full h-40 bg-gray-100 dark:bg-gray-800 rounded-xl flex items-center justify-center text-gray-400 text-xs">No Preview</div>
+                  )}
+                </div>
+
+                {/* Score Panel */}
+                <div className="space-y-3">
+                  <div>
+                    <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Student ID</p>
+                    <p className="text-lg font-black text-indigo-600 font-mono">{activeResult.student_id || '—'}</p>
+                  </div>
+                  <div className="bg-gray-900 dark:bg-gray-950 rounded-xl p-3 text-center">
+                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Total Score</p>
+                    <p className="text-3xl font-black text-white mt-1">{activeResult.score ?? '—'}</p>
+                    <p className="text-xs text-gray-500">out of {activeResult.max_score}</p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-2 text-center">
+                      <p className="text-lg font-black text-emerald-700 dark:text-emerald-400">{activeResult.correct_count ?? 0}</p>
+                      <p className="text-[10px] text-emerald-600 font-bold">Correct +4</p>
+                    </div>
+                    <div className="bg-rose-50 dark:bg-rose-900/20 border border-rose-200 dark:border-rose-800 rounded-lg p-2 text-center">
+                      <p className="text-lg font-black text-rose-700 dark:text-rose-400">{activeResult.wrong_count ?? 0}</p>
+                      <p className="text-[10px] text-rose-600 font-bold">Wrong -1</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Subject Breakdown */}
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  { icon: <Calculator className="w-3.5 h-3.5" />, label: 'Maths', score: activeResult.maths_score, color: 'blue' },
+                  { icon: <Atom className="w-3.5 h-3.5" />, label: 'Physics', score: activeResult.physics_score, color: 'purple' },
+                  { icon: <FlaskConical className="w-3.5 h-3.5" />, label: 'Chemistry', score: activeResult.chem_score, color: 'amber' },
+                ].map((sub) => (
+                  <div key={sub.label} className={`bg-${sub.color}-50 dark:bg-${sub.color}-900/20 border border-${sub.color}-200 dark:border-${sub.color}-800 rounded-xl p-3 text-center`}>
+                    <div className={`flex items-center justify-center gap-1 text-${sub.color}-600 dark:text-${sub.color}-400 mb-1`}>
+                      {sub.icon}
+                      <span className="text-[10px] font-bold">{sub.label}</span>
+                    </div>
+                    <p className={`text-xl font-black text-${sub.color}-700 dark:text-${sub.color}-300`}>{sub.score ?? '—'}</p>
+                    <p className="text-[10px] text-gray-400">/ 100</p>
+                  </div>
+                ))}
+              </div>
+
+              {/* Answer Grid */}
+              <div>
+                <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">Question-wise Answers</p>
+                <div className="grid grid-cols-5 sm:grid-cols-8 gap-1.5 max-h-52 overflow-y-auto p-1">
+                  {Array.from({ length: 75 }, (_, i) => {
+                    const qNum = (i + 1).toString();
+                    const studentAns = activeResult.answers[qNum];
+                    const keyAns = answerKey[qNum];
+                    const isCorrect = keyAns && studentAns === keyAns;
+                    const isWrong = keyAns && studentAns && studentAns !== keyAns && studentAns !== 'UNATTEMPTED';
+
+                    return (
+                      <div
+                        key={qNum}
+                        title={keyAns ? `Key: ${keyAns}` : ''}
+                        className={`rounded-lg border text-center py-1.5 px-1 text-[10px] font-bold ${
+                          !studentAns || studentAns === 'UNATTEMPTED'
+                            ? 'bg-gray-100 dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-400'
+                            : isCorrect
+                            ? 'bg-emerald-100 dark:bg-emerald-900/40 border-emerald-300 text-emerald-800 dark:text-emerald-400'
+                            : isWrong
+                            ? 'bg-rose-100 dark:bg-rose-900/40 border-rose-300 text-rose-800 dark:text-rose-400'
+                            : 'bg-indigo-50 border-indigo-200 text-indigo-700'
+                        }`}
+                      >
+                        <div className="text-gray-400">Q{qNum.padStart(2,'0')}</div>
+                        <div className="text-base">{studentAns || '–'}</div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="h-full min-h-80 flex flex-col items-center justify-center text-center p-8">
+              <Eye className="w-12 h-12 text-gray-200 dark:text-gray-700 mb-4" />
+              <p className="font-bold text-gray-400 dark:text-gray-600">No Result Selected</p>
+              <p className="text-xs text-gray-400 dark:text-gray-600 mt-1 max-w-xs">Upload OMR sheets and start scanning. Click on any completed result to view here.</p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* ═══════════════════════════════════════════════════════════════════ */}
+      {/* SUMMARY TABLE (all scanned results)                                */}
+      {/* ═══════════════════════════════════════════════════════════════════ */}
+      {doneResults.length > 0 && (
+        <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm overflow-hidden">
+          <div className="bg-gradient-to-r from-gray-800 to-gray-900 px-6 py-3 flex items-center justify-between">
+            <h2 className="text-white font-bold text-sm uppercase tracking-wider flex items-center gap-2">
+              <CheckCircle className="w-4 h-4 text-emerald-400" /> All Scanned Results ({doneResults.length} students)
+            </h2>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-gray-50 dark:bg-gray-800">
+                  <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">#</th>
+                  <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Student ID</th>
+                  <th className="px-4 py-3 text-center text-xs font-bold text-blue-600 uppercase tracking-wider">Maths</th>
+                  <th className="px-4 py-3 text-center text-xs font-bold text-purple-600 uppercase tracking-wider">Physics</th>
+                  <th className="px-4 py-3 text-center text-xs font-bold text-amber-600 uppercase tracking-wider">Chemistry</th>
+                  <th className="px-4 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">Correct</th>
+                  <th className="px-4 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">Wrong</th>
+                  <th className="px-4 py-3 text-center text-xs font-bold text-gray-900 dark:text-white uppercase tracking-wider">Total</th>
+                  <th className="px-4 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">View</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+                {[...doneResults]
+                  .sort((a, b) => (b.score ?? 0) - (a.score ?? 0))
+                  .map((r, idx) => (
+                    <tr key={idx} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+                      <td className="px-4 py-3 text-xs font-bold text-gray-400">{idx + 1}</td>
+                      <td className="px-4 py-3">
+                        <span className="font-mono text-xs font-bold text-indigo-600 bg-indigo-50 dark:bg-indigo-900/30 px-2 py-1 rounded-lg">
+                          {r.student_id || '—'}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-center text-sm font-black text-blue-700 dark:text-blue-400">{r.maths_score ?? '—'}</td>
+                      <td className="px-4 py-3 text-center text-sm font-black text-purple-700 dark:text-purple-400">{r.physics_score ?? '—'}</td>
+                      <td className="px-4 py-3 text-center text-sm font-black text-amber-700 dark:text-amber-400">{r.chem_score ?? '—'}</td>
+                      <td className="px-4 py-3 text-center text-xs font-bold text-emerald-600">{r.correct_count ?? '—'}</td>
+                      <td className="px-4 py-3 text-center text-xs font-bold text-rose-600">{r.wrong_count ?? '—'}</td>
+                      <td className="px-4 py-3 text-center">
+                        <span className="text-base font-black text-gray-900 dark:text-white">{r.score ?? '—'}</span>
+                        <span className="text-xs text-gray-400">/{r.max_score}</span>
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <button
+                          onClick={() => setActiveResult(r)}
+                          className="p-1.5 bg-indigo-50 dark:bg-indigo-900/30 hover:bg-indigo-100 rounded-lg text-indigo-600 transition-colors"
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+              </tbody>
+            </table>
           </div>
         </div>
       )}
     </div>
   );
 };
-
