@@ -41,7 +41,19 @@ export const FeePaymentsPage: React.FC = () => {
       if (dateTo && d > new Date(dateTo + 'T23:59:59')) return false;
       return true;
     });
-    return list.sort((a, b) => new Date(b.paymentDate || b.createdAt).getTime() - new Date(a.paymentDate || a.createdAt).getTime());
+    return list.sort((a, b) => {
+      const dateA = new Date(a.paymentDate || a.createdAt);
+      dateA.setHours(0, 0, 0, 0); // Normalize to just the date
+      
+      const dateB = new Date(b.paymentDate || b.createdAt);
+      dateB.setHours(0, 0, 0, 0); // Normalize to just the date
+      
+      const timeDiff = dateB.getTime() - dateA.getTime();
+      if (timeDiff !== 0) return timeDiff; // Primary sort: Date descending
+      
+      // Secondary sort: Creation time descending (most recently entered on top)
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
   }, [payments, dateFrom, dateTo]);
 
   const toggleRow = (id: string) => setExpandedRow(prev => prev === id ? null : id);
