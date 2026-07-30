@@ -333,7 +333,7 @@ export const FeePaymentsPage: React.FC = () => {
             <div className="overflow-x-auto w-full max-w-full block"><table className="w-full text-sm text-left border-collapse">
               <thead className="bg-slate-100 text-slate-700 font-bold border-b-2 border-slate-300">
                 <tr>
-                  <th className="border border-slate-300 px-3 py-3 text-xs uppercase tracking-wider text-center">S.No</th>
+                  <th className="border border-slate-300 px-2 py-3 text-xs uppercase tracking-wider text-center w-12">S.No</th>
                   <th className="border border-slate-300 px-3 py-3 text-xs uppercase tracking-wider">Date</th>
                   <th className="border border-slate-300 px-3 py-3 text-xs uppercase tracking-wider">Student ID</th>
                   <th className="border border-slate-300 px-3 py-3 text-xs uppercase tracking-wider">Student Name</th>
@@ -352,11 +352,11 @@ export const FeePaymentsPage: React.FC = () => {
                   return (
                   <React.Fragment key={p.id}>
                   <tr onClick={() => toggleRow(p.id)} className="hover:bg-slate-50 transition-colors cursor-pointer md:cursor-default">
-                    <td className="border border-slate-300 px-3 py-3 font-semibold text-slate-800 text-xs sm:text-sm text-center">{idx + 1}</td>
+                    <td className="border border-slate-300 px-2 py-3 font-semibold text-slate-800 text-xs sm:text-sm text-center w-12">{idx + 1}</td>
                     <td className="border border-slate-300 px-3 py-3 text-slate-700 font-bold text-xs sm:text-sm whitespace-nowrap">
                       {d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
                     </td>
-                    <td className="border border-slate-300 px-3 py-3 font-mono text-slate-600 text-xs sm:text-sm">{p.student?.rollNo || '-'}</td>
+                    <td className="border border-slate-300 px-3 py-3 font-mono text-slate-600 text-xs sm:text-sm whitespace-nowrap">{p.student?.rollNo || '-'}</td>
                     <td className="border border-slate-300 px-3 py-3 font-semibold text-slate-800 text-xs sm:text-sm">{p.student?.user?.name || 'Unknown student'}</td>
                     <td className="border border-slate-300 px-3 py-3 text-slate-600 text-xs sm:text-sm">{p.feeStructure?.name || 'Deleted structure'}</td>
                     <td className="border border-slate-300 px-3 py-3 font-bold text-slate-800 text-xs sm:text-sm whitespace-nowrap">₹{p.amountPaid.toLocaleString()}</td>
