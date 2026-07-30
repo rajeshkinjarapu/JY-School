@@ -61,14 +61,10 @@ export const CollectPaymentPage: React.FC = () => {
   const fetchData = async () => {
     try {
       const isStudent = user?.role === 'STUDENT';
-      const [payRes, studRes, structRes, classRes]: any = await Promise.all([
-        api.get('/api/fees/payments?limit=500'),
-        isStudent ? Promise.resolve({ data: [] }) : api.get('/api/students?limit=1000'),
+      const [structRes, classRes]: any = await Promise.all([
         isStudent ? Promise.resolve({ data: [] }) : api.get('/api/fees/structures?limit=500'),
         isStudent ? Promise.resolve({ data: [] }) : api.get('/api/classes?limit=500'),
       ]);
-      setPayments(payRes.data || payRes || []);
-      setStudents(studRes.data?.data || studRes.data || []);
       setStructures(structRes.data || structRes || []);
       setClasses(classRes.data?.data || classRes.data || classRes || []);
     } catch (e) {
@@ -77,6 +73,51 @@ export const CollectPaymentPage: React.FC = () => {
       setLoading(false);
     }
   };
+
+  // Dynamic student search
+  useEffect(() => {
+    if (user?.role === 'STUDENT') return;
+    const fetchStudents = async () => {
+      try {
+        const params = new URLSearchParams();
+        params.append('limit', '50');
+        if (filterClass) {
+          const selectedClass = classes.find(c => c.name === filterClass && (!filterSection || c.section === filterSection));
+          if (selectedClass) params.append('classId', selectedClass.id);
+          else {
+            const firstMatch = classes.find(c => c.name === filterClass);
+            if (firstMatch) params.append('classId', firstMatch.id);
+          }
+        }
+        if (searchName) {
+          params.append('search', searchName);
+        }
+        const res = await api.get(`/api/students?${params.toString()}`);
+        setStudents(res.data?.data || res.data || []);
+      } catch (e) {
+        console.error('Failed to search students', e);
+      }
+    };
+    const timeout = setTimeout(fetchStudents, 300);
+    return () => clearTimeout(timeout);
+  }, [filterClass, filterSection, searchName, classes, user]);
+
+  // Fetch payments for selected student
+  useEffect(() => {
+    if (!studentId) {
+      setPayments([]);
+      return;
+    }
+    const fetchStudentPayments = async () => {
+      try {
+        const res = await api.get(`/api/fees/payments?studentId=${studentId}&limit=200`);
+        setPayments(res.data?.data || res.data || []);
+      } catch (e) {
+        console.error('Failed to fetch student payments', e);
+      }
+    };
+    fetchStudentPayments();
+  }, [studentId]);
 
   useEffect(() => {
     fetchData();
