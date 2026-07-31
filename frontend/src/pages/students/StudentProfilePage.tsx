@@ -296,13 +296,13 @@ export const StudentProfilePage: React.FC = () => {
                 </Link>
               )}
               {(isAdmin || user?.role === 'ACCOUNTANT') && (
-                <button
-                  onClick={() => setShowModal(true)}
+                <Link
+                  to={`/students/${student.id}/pay-fee`}
                   className="flex-1 sm:flex-none bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white flex items-center justify-center gap-2 px-6 py-3 rounded-2xl text-sm font-bold shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 hover:-translate-y-0.5 transition-all"
                 >
                   <CreditCard className="w-4 h-4" />
                   <span>Pay Fee</span>
-                </button>
+                </Link>
               )}
               <button
                 onClick={() => window.print()}
@@ -326,15 +326,20 @@ export const StudentProfilePage: React.FC = () => {
               <div className="relative flex-shrink-0">
                 <div className="absolute inset-0 bg-gradient-to-tr from-indigo-500 to-fuchsia-500 rounded-3xl blur-xl opacity-40 group-hover:opacity-60 transition-opacity duration-500" />
                 <div className="relative p-1.5 bg-white dark:bg-gray-800 rounded-3xl shadow-2xl">
-                  <Avatar 
-                    src={getPhotoUrl(student.user.photoUrl)} 
-                    name={student.user.name} 
-                    size="lg" 
-                    variant="rectangular" 
-                    className="w-32 h-32 md:w-40 md:h-40 rounded-2xl object-cover" 
-                  />
+                  {getPhotoUrl(student.user?.photoUrl) ? (
+                    <img 
+                      src={getPhotoUrl(student.user.photoUrl)} 
+                      alt={student.user.name} 
+                      className="w-32 h-32 md:w-40 md:h-40 rounded-2xl object-cover border-4 border-white dark:border-gray-800" 
+                    />
+                  ) : (
+                    <div className="w-32 h-32 md:w-40 md:h-40 rounded-2xl bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-gray-800 dark:to-gray-700 border-4 border-white dark:border-gray-800 flex flex-col items-center justify-center text-gray-400 dark:text-gray-500 shadow-inner">
+                      <User2 className="w-12 h-12 mb-2 opacity-50" />
+                      <span className="text-[10px] font-black uppercase tracking-widest opacity-60">No Photo</span>
+                    </div>
+                  )}
                   {(isAdmin || user?.role === 'TEACHER') && (
-                    <label className="absolute -bottom-4 left-1/2 -translate-x-1/2 cursor-pointer flex items-center justify-center gap-2 px-4 py-2 bg-gray-900 hover:bg-black text-white rounded-full text-xs font-bold shadow-lg transition-transform hover:scale-105 select-none whitespace-nowrap">
+                    <label className="absolute -bottom-4 left-1/2 -translate-x-1/2 cursor-pointer flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full text-xs font-bold shadow-lg shadow-indigo-500/30 transition-all hover:scale-105 select-none whitespace-nowrap">
                       <Camera className="w-3.5 h-3.5" />
                       <span>{uploading ? '...' : 'Update'}</span>
                       <input type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} disabled={uploading} />

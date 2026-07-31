@@ -169,22 +169,22 @@ export const StudentListPage: React.FC = () => {
       {loading ? (
         <LoadingSpinner size="lg" className="py-12" />
       ) : (
-        <div className="bg-white/40 border border-white/60 rounded-3xl shadow-sm overflow-hidden backdrop-blur-2xl">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm text-left border-collapse">
+        <div className="bg-transparent overflow-hidden">
+          <div className="overflow-x-auto pb-4">
+            <table className="w-full text-sm text-left border-separate border-spacing-y-3">
               <thead>
-                <tr className="bg-indigo-50/50 text-indigo-900 font-semibold border-b border-indigo-100">
+                <tr className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-xl shadow-md">
                   <th className="px-6 py-4 font-extrabold text-xs uppercase tracking-wider text-gray-500 w-16">S.No</th>
                   <th className="px-6 py-4 font-extrabold text-xs uppercase tracking-wider text-gray-500">Student Info</th>
                   <th className="px-6 py-4 font-extrabold text-xs uppercase tracking-wider text-gray-500">Student ID</th>
                   <th className="px-6 py-4 font-extrabold text-xs uppercase tracking-wider text-gray-500">Class & Sec</th>
                   <th className="px-6 py-4 font-extrabold text-xs uppercase tracking-wider text-gray-500">Mobile No</th>
                   <th className="px-6 py-4 font-extrabold text-xs uppercase tracking-wider text-gray-500">Father Name</th>
-                  <th className="px-6 py-4 font-extrabold text-xs uppercase tracking-wider text-gray-500">Status</th>
-                  <th className="px-6 py-4 font-extrabold text-xs uppercase tracking-wider text-gray-500 text-right">Actions</th>
+                  <th className="px-6 py-4 font-black text-xs uppercase tracking-wider text-white">Status</th>
+                  <th className="px-6 py-4 font-black text-xs uppercase tracking-wider text-white text-right rounded-r-xl">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-150">
+              <tbody className="">
                 {students.map((student, idx) => {
                   const avatarColors = ["from-indigo-500 to-purple-600", "from-teal-400 to-emerald-600", "from-rose-400 to-pink-600"];
                   const name = student.user?.name || "Student";
@@ -193,11 +193,11 @@ export const StudentListPage: React.FC = () => {
                   const getInitials = (n: string) => n.trim().split(" ").map(p=>p[0]).slice(0,2).join("").toUpperCase();
 
                   return (
-                    <tr key={student.id} className="hover:bg-white bg-transparent transition-all duration-300 group border-b border-indigo-50/50 hover:shadow-glow-primary">
-                      <td className="px-6 py-4 text-gray-500 font-medium">
+                    <tr key={student.id} className="bg-white hover:bg-indigo-50/30 transition-all duration-300 group shadow-sm hover:shadow-md hover:-translate-y-0.5 rounded-xl border border-gray-100">
+                      <td className="px-6 py-4 text-gray-500 font-bold rounded-l-xl border-y border-l border-gray-100 group-hover:border-indigo-100">
                         {(page - 1) * 50 + idx + 1}
                       </td>
-                      <td className="px-6 py-4 flex items-center gap-3">
+                      <td className="px-6 py-4 flex items-center gap-3 border-y border-gray-100 group-hover:border-indigo-100">
                         <div className="relative">
                           {getPhotoUrl(student.user?.photoUrl) ? (
                             <img src={getPhotoUrl(student.user?.photoUrl)} alt={name} className="w-10 h-10 rounded-full object-cover shadow-sm border border-gray-100" />
@@ -216,27 +216,27 @@ export const StudentListPage: React.FC = () => {
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="px-6 py-4 border-y border-gray-100 group-hover:border-indigo-100">
                         <span className="font-mono text-xs font-bold text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded-md border border-indigo-100">
                           {student.rollNo || "-"}
                         </span>
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="px-6 py-4 border-y border-gray-100 group-hover:border-indigo-100">
                         <span className="text-[11px] font-extrabold uppercase tracking-wide text-teal-700 bg-teal-50 px-2.5 py-1 rounded-md border border-teal-100">
                           {student.class?.name || "-"} {student.class?.section || ""}
                         </span>
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="px-6 py-4 border-y border-gray-100 group-hover:border-indigo-100">
                         <span className="text-xs font-bold text-gray-600">
                           {student.user?.phone || "-"}
                         </span>
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="px-6 py-4 border-y border-gray-100 group-hover:border-indigo-100">
                         <span className="text-xs font-bold text-gray-600">
                           {student.fatherName || "-"}
                         </span>
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="px-6 py-4 border-y border-gray-100 group-hover:border-indigo-100">
                         {student.user?.isActive ? (
                           <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Active
@@ -247,7 +247,7 @@ export const StudentListPage: React.FC = () => {
                           </span>
                         )}
                       </td>
-                      <td className="px-6 py-4 text-right">
+                      <td className="px-6 py-4 text-right rounded-r-xl border-y border-r border-gray-100 group-hover:border-indigo-100">
                         <div className="flex justify-end gap-2">
                           <Link to={`/students/${student.id}`} className="flex items-center justify-center w-8 h-8 bg-gray-50 hover:bg-indigo-50 text-gray-400 hover:text-indigo-600 rounded-lg transition-all shadow-sm border border-gray-200 cursor-pointer" title="View Profile">
                             <Eye className="w-4 h-4" />

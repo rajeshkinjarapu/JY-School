@@ -51,6 +51,7 @@ const StudentFormPage = lazy(() => import('../pages/students/StudentFormPage'));
 const StudentProfilePage = lazy(() => import('../pages/students/StudentProfilePage'));
 const StudentAdmitCardViewPage = lazy(() => import('../pages/students/StudentAdmitCardViewPage').then((mod) => ({ default: mod.StudentAdmitCardViewPage })));
 const StudentAdmitCardsPage = lazy(() => import('../pages/students/StudentAdmitCardsPage').then((mod) => ({ default: mod.StudentAdmitCardsPage })));
+const RecordFeePaymentPage = lazy(() => import('../pages/fees/RecordFeePaymentPage').then((mod) => ({ default: mod.RecordFeePaymentPage })));
 const TeacherListPage = lazy(routeImports['/teachers']);
 const TeacherFormPage = lazy(() => import('../pages/teachers/TeacherFormPage'));
 const TeacherProfilePage = lazy(() => import('../pages/teachers/TeacherProfilePage'));
@@ -159,6 +160,14 @@ export const router = createBrowserRouter([
         element: withSuspense(
           <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN', 'TEACHER']}>
             <StudentFormPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'students/:id/pay-fee',
+        element: withSuspense(
+          <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN', 'ACCOUNTANT']}>
+            <RecordFeePaymentPage />
           </ProtectedRoute>
         ),
       },
