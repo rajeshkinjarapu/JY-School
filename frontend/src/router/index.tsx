@@ -23,6 +23,7 @@ export const routeImports: Record<string, () => Promise<any>> = {
   '/subjects': () => import('../pages/subjects/SubjectPage'),
   '/attendance': () => import('../pages/attendance/AttendanceDashboard'),
   '/exams': () => import('../pages/exams/ExamListPage'),
+  '/exams/create': () => import('../pages/exams/CreateExamPage'),
   '/timetable': () => import('../pages/timetable/TimetablePage'),
   '/leave/gate-pass': () => import('../pages/gate-pass/GatePassPage'),
   '/leave/type': () => import('../pages/leave/LeaveTypePage'),
@@ -65,6 +66,7 @@ const MyAttendancePage = lazy(() => import('../pages/attendance/MyAttendancePage
 const AttendanceReportPage = lazy(() => import('../pages/attendance/AttendanceReportPage'));
 const AttendanceDailyReportPage = lazy(() => import('../pages/attendance/AttendanceDailyReportPage'));
 const ExamListPage = lazy(routeImports['/exams']);
+const CreateExamPage = lazy(routeImports['/exams/create']);
 const MarksEntryPage = lazy(() => import('../pages/exams/MarksEntryPage'));
 const ReportCardPage = lazy(() => import('../pages/exams/ReportCardPage'));
 const PaperGeneratorDashboard = lazy(() => import('../pages/paper-generator/Dashboard').then((mod) => ({ default: mod.Dashboard })));
@@ -259,6 +261,10 @@ export const router = createBrowserRouter([
       {
         path: 'exams',
         element: withSuspense(<ExamListPage />),
+      },
+      {
+        path: 'exams/create',
+        element: withSuspense(<CreateExamPage />),
       },
       {
         path: 'exams/:id/entry',

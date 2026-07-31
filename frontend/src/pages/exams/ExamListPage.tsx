@@ -9,7 +9,7 @@ import {
   MapPin, FileSpreadsheet, Download, Printer, CheckCircle
 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { Link, useSearchParams, useOutletContext } from 'react-router-dom';
+import { Link, useSearchParams, useOutletContext, useNavigate } from 'react-router-dom';
 import * as XLSX from 'xlsx';
 import { SlipTestsTab } from './SlipTestsTab';
 import { AdmitCardTab } from './AdmitCardTab';
@@ -24,6 +24,8 @@ export const ExamListPage: React.FC = () => {
   const isAdmin = user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN';
   const isTeacher = user?.role === 'TEACHER';
   const isStudent = user?.role === 'STUDENT';
+
+  const navigate = useNavigate();
 
   // Search parameters for linking tabs from sidebar
   const [searchParams, setSearchParams] = useSearchParams();
@@ -80,39 +82,12 @@ export const ExamListPage: React.FC = () => {
   // -------------------------------------------------------------
   // EXAMINATION Tab States & Logic
   // -------------------------------------------------------------
-  const [showExamModal, setShowExamModal] = useState(false);
-  const [editExamId, setEditExamId] = useState<string | null>(null);
-  const [examName, setExamName] = useState('');
-  const [examCategory, setExamCategory] = useState<'JEE' | 'BOARD' | ''>('');
-  const [boardExamType, setBoardExamType] = useState('');
-  const [examClassIds, setExamClassIds] = useState<string[]>([]);
-  const [examDate, setExamDate] = useState(new Date().toISOString().split('T')[0]);
-  const [selectedExamSubjects, setSelectedExamSubjects] = useState<{id: string, name: string, maxMarks: number, date?: string}[]>([]);
-  
-  // Auto calculate total marks
-  const totalMarks = selectedExamSubjects.reduce((sum, sub) => sum + (Number(sub.maxMarks) || 0), 0);
-
   const openCreateModal = () => {
-    setEditExamId(null);
-    setExamName('');
-    setExamCategory('');
-    setBoardExamType('');
-    setExamClassIds([]);
-    setExamDate(new Date().toISOString().split('T')[0]);
-    setSelectedExamSubjects([]);
-    setShowExamModal(true);
+    navigate('/exams/create');
   };
 
   const openEditModal = (exam: any) => {
-    setEditExamId(exam.id);
-    setExamName(exam.name);
-    if (exam.name.includes('JEE')) setExamCategory('JEE');
-    else if (['FA-1', 'FA-2', 'FA-3', 'FA-4', 'SA-1', 'SA-2', 'Pre-Final'].some(t => exam.name.includes(t))) setExamCategory('BOARD');
-    else setExamCategory('');
-    setExamClassIds((exam.classes || []).map((c: any) => c.id));
-    setExamDate(new Date(exam.examDate).toISOString().split('T')[0]);
-    setSelectedExamSubjects(exam.subjects || []);
-    setShowExamModal(true);
+    navigate('/exams/create', { state: { exam } });
   };
 
   // Written Exam State
@@ -134,43 +109,6 @@ export const ExamListPage: React.FC = () => {
       }
     } catch (e) {
       toast.error('Failed to load exams');
-    }
-  };
-
-  const handleCreateExam = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (examClassIds.length === 0) {
-      toast.error('Please select at least one class');
-      return;
-    }
-    if (selectedExamSubjects.length === 0) {
-      toast.error('Please select at least one subject');
-      return;
-    }
-    try {
-      if (editExamId) {
-        await api.put(`/api/exams/${editExamId}`, {
-          name: examName,
-          classIds: examClassIds,
-          examDate: new Date(examDate),
-          maxMarks: totalMarks,
-          subjects: selectedExamSubjects
-        });
-        toast.success('Exam updated successfully!');
-      } else {
-        await api.post('/api/exams', {
-          name: examName,
-          classIds: examClassIds,
-          examDate: new Date(examDate),
-          maxMarks: totalMarks,
-          subjects: selectedExamSubjects
-        });
-        toast.success('Exam created successfully!');
-      }
-      setShowExamModal(false);
-      fetchExams();
-    } catch (err: any) {
-      toast.error(err.message || 'Error saving exam');
     }
   };
 
@@ -902,169 +840,6 @@ export const ExamListPage: React.FC = () => {
           </div>
         )}
 
-      {/* Create Exam Modal */}
-      {showExamModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-indigo-900/40 backdrop-blur-md p-2 sm:p-4 animate-fade-in">
-          <div className="bg-white/95 backdrop-blur-xl w-full max-w-lg p-5 rounded-[2rem] shadow-2xl border border-indigo-100 flex flex-col max-h-[95vh]">
-            <div className="flex justify-between items-center mb-6 border-b border-indigo-100 pb-4 shrink-0">
-              <h3 className="text-xl font-black text-indigo-900 tracking-tight flex items-center gap-2">
-                <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500 text-white flex items-center justify-center shadow-md">
-                  <Edit3 className="w-4 h-4" />
-                </div>
-                Configure Exam
-              </h3>
-              <button onClick={() => setShowExamModal(false)} className="w-8 h-8 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-500 flex items-center justify-center transition-colors">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            
-            <form onSubmit={handleCreateExam} className="space-y-4 overflow-y-auto pr-2 custom-scrollbar flex-1 pb-2">
-              <div className="space-y-3">
-                <label className="block text-[10px] font-black text-indigo-900 uppercase tracking-wide">Exam Category</label>
-                <div className="flex gap-4">
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="radio" name="examCategory" value="JEE" checked={examCategory === 'JEE'} onChange={() => { setExamCategory('JEE'); setBoardExamType(''); setExamName('JEE Mains Model Examination'); }} className="w-4 h-4 text-indigo-600 focus:ring-indigo-500" />
-                    <span className="text-sm font-bold text-slate-700">JEE Mains Exams</span>
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="radio" name="examCategory" value="BOARD" checked={examCategory === 'BOARD'} onChange={() => { setExamCategory('BOARD'); setExamName(''); }} className="w-4 h-4 text-indigo-600 focus:ring-indigo-500" />
-                    <span className="text-sm font-bold text-slate-700">Board Exams</span>
-                  </label>
-                </div>
-              </div>
-
-              {examCategory === 'BOARD' && (
-                <div>
-                  <label className="block text-[10px] font-black text-indigo-900 mb-1.5 uppercase tracking-wide">Board Exam Type</label>
-                  <select value={boardExamType} onChange={(e) => { setBoardExamType(e.target.value); setExamName(e.target.value + ' Examination'); }} className="w-full px-3 py-2.5 bg-white border-2 border-indigo-50 rounded-xl text-sm font-bold text-slate-800 outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-50 transition-all shadow-sm">
-                    <option value="">Select Board Exam Type...</option>
-                    {['FA-1', 'FA-2', 'FA-3', 'FA-4', 'SA-1', 'SA-2', 'Pre-Final'].map(t => (
-                      <option key={t} value={t}>{t}</option>
-                    ))}
-                  </select>
-                </div>
-              )}
-
-              <div>
-                <label className="block text-[10px] font-black text-indigo-900 mb-1.5 uppercase tracking-wide">Exam Name / Title</label>
-                <input type="text" required placeholder="e.g. Mid-Term 1" value={examName} onChange={e => setExamName(e.target.value)} className="w-full px-3 py-2.5 bg-white border-2 border-indigo-50 rounded-xl text-sm font-bold text-slate-800 outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-50 transition-all shadow-sm" />
-              </div>
-              <div>
-                <label className="block text-[10px] font-black text-indigo-900 mb-1.5 uppercase tracking-wide">Select Classes</label>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-40 overflow-y-auto p-3 border-2 border-indigo-100 bg-white rounded-xl shadow-inner">
-                  {classes.map(c => {
-                    const isSelected = examClassIds.includes(c.id);
-                    return (
-                      <label key={c.id} className={`flex items-center gap-2 text-sm cursor-pointer select-none px-3 py-2 rounded-lg font-bold transition-all border ${isSelected ? 'bg-indigo-50 border-indigo-200 text-indigo-700' : 'bg-slate-50 border-transparent text-slate-600 hover:bg-indigo-50/50 hover:border-indigo-100'}`}>
-                        <input 
-                          type="checkbox" 
-                          checked={isSelected}
-                          onChange={(e) => {
-                            if (e.target.checked) {
-                              setExamClassIds([...examClassIds, c.id]);
-                            } else {
-                              setExamClassIds(examClassIds.filter(id => id !== c.id));
-                            }
-                          }}
-                          className="w-4 h-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500"
-                        />
-                        {c.name}-{c.section} <span className="text-xs font-normal text-gray-500 ml-1">({c._count?.students || 0} students)</span>
-                      </label>
-                    );
-                  })}
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-black text-indigo-900 mb-2 uppercase tracking-wide">Exam Date</label>
-                  <input type="date" value={examDate} onChange={e => setExamDate(e.target.value)} className="w-full px-4 py-3 bg-white border-2 border-indigo-100 rounded-xl text-sm font-bold text-slate-800 outline-none focus:border-indigo-400 shadow-sm" />
-                </div>
-                <div>
-                  <label className="block text-xs font-black text-indigo-900 mb-2 uppercase tracking-wide">Total Marks</label>
-                  <input type="number" readOnly value={totalMarks} className="w-full px-4 py-3 bg-indigo-50 border-2 border-indigo-100 rounded-xl text-sm font-bold text-indigo-900 outline-none shadow-sm cursor-not-allowed" />
-                </div>
-              </div>
-
-              <div className="pt-2">
-                <div className="flex justify-between items-center mb-3">
-                  <label className="block text-xs font-black text-indigo-900 uppercase tracking-wide">Subjects & Max Marks</label>
-                  <button 
-                    type="button" 
-                    onClick={() => setSelectedExamSubjects([...selectedExamSubjects, { id: Date.now().toString() + Math.random(), name: '', maxMarks: 100, date: examDate }])}
-                    className="text-xs bg-indigo-100 text-indigo-700 hover:bg-indigo-200 px-3 py-1.5 rounded-lg font-bold flex items-center gap-1 transition-colors shadow-sm"
-                  >
-                    <Plus className="w-3 h-3" /> Add Subject
-                  </button>
-                </div>
-                
-                <div className="space-y-3">
-                  {selectedExamSubjects.map((sub, i) => (
-                    <div key={sub.id} className="flex flex-col gap-2 bg-indigo-50/50 p-3 rounded-xl border border-indigo-100 shadow-sm">
-                      <div className="flex gap-2 items-center">
-                        <input 
-                          type="text" 
-                          required 
-                          placeholder="Subject Name" 
-                          value={sub.name}
-                          onChange={(e) => {
-                            const newSubs = [...selectedExamSubjects];
-                            newSubs[i].name = e.target.value;
-                            setSelectedExamSubjects(newSubs);
-                          }}
-                          className="flex-1 min-w-0 px-3 py-2 bg-white border-2 border-indigo-100 rounded-lg text-sm font-bold text-slate-800 outline-none focus:border-indigo-400"
-                        />
-                        <button 
-                          type="button"
-                          onClick={() => setSelectedExamSubjects(selectedExamSubjects.filter((_, idx) => idx !== i))}
-                          className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors shrink-0"
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
-                      </div>
-                      <div className="flex gap-2 items-center">
-                        <input 
-                          type="date"
-                          value={sub.date || ''}
-                          onChange={(e) => {
-                            const newSubs = [...selectedExamSubjects];
-                            newSubs[i].date = e.target.value;
-                            setSelectedExamSubjects(newSubs);
-                          }}
-                          className="flex-1 px-3 py-1.5 bg-white border-2 border-indigo-100 rounded-lg text-xs font-bold text-slate-800 outline-none focus:border-indigo-400"
-                        />
-                        <div className="flex items-center gap-2 bg-white px-2 py-1.5 rounded-lg border-2 border-indigo-100 shrink-0">
-                          <span className="text-[10px] font-black text-slate-400 uppercase">Max:</span>
-                          <input 
-                            type="number" 
-                            required
-                            min={1}
-                            value={sub.maxMarks}
-                            onChange={(e) => {
-                              const newSubs = [...selectedExamSubjects];
-                              newSubs[i].maxMarks = Number(e.target.value);
-                              setSelectedExamSubjects(newSubs);
-                            }}
-                            className="w-14 text-sm font-bold text-indigo-900 outline-none text-center bg-transparent"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                  {selectedExamSubjects.length === 0 && (
-                    <div className="py-6 text-center text-gray-400 text-sm">
-                      No subjects added yet. Click "+ Add Subject" to start.
-                    </div>
-                  )}
-                </div>
-              </div>
-              <div className="flex gap-3 justify-end pt-2">
-                <button type="button" onClick={() => setShowExamModal(false)} className="btn-secondary text-sm">Cancel</button>
-                <button type="submit" className="btn-primary text-sm">{editExamId ? 'Update Exam' : 'Create Exam'}</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
 
       {/* ══ TAB 2: EXAM PLAN ══ */}
       {activeTab === 'exam-plan' && (
