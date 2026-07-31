@@ -343,7 +343,7 @@ export const StudentFeeDetailsTab: React.FC<StudentFeeDetailsProps> = ({ student
           <div className="bg-white rounded-3xl overflow-hidden shadow-2xl max-w-sm w-full animate-scale-in relative">
             <button 
               onClick={() => setReminderStudent(null)}
-              className="absolute top-4 right-4 z-10 w-8 h-8 flex items-center justify-center bg-white/20 hover:bg-white/40 text-white rounded-full transition-colors cursor-pointer"
+              className="absolute top-4 right-4 z-50 w-8 h-8 flex items-center justify-center bg-white/20 hover:bg-white/40 text-white rounded-full transition-colors cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
