@@ -22,82 +22,25 @@ const avatarColors = [
 const getInitials = (n: string) =>
   n.trim().split(" ").map((p) => p[0]).slice(0, 2).join("").toUpperCase();
 
-/* ── Skeleton Row ── */
-const SkeletonCard = () => (
-  <div className="mobile-card flex items-center gap-3 animate-pulse">
-    <div className="w-11 h-11 rounded-full bg-gray-200 shrink-0" />
-    <div className="flex-1 space-y-2">
-      <div className="h-3.5 bg-gray-200 rounded-full w-2/3" />
-      <div className="h-3 bg-gray-100 rounded-full w-1/2" />
-    </div>
-    <div className="w-8 h-8 rounded-lg bg-gray-100 shrink-0" />
-  </div>
-);
-
-/* ── Mobile Student Card ── */
-const StudentCard = React.memo(({ student, idx, page, isSuperAdmin, onDelete, navigate }: any) => {
-  const name = student.user?.name || "Student";
-  const colorClass = avatarColors[name.charCodeAt(0) % avatarColors.length];
-  const photoUrl = getPhotoUrl(student.user?.photoUrl);
+// Helper for table avatars
+const StudentAvatar = ({ name, photoUrl, isActive }: { name: string, photoUrl?: string, isActive?: boolean }) => {
+  const safeName = name || "Student";
+  const colorClass = avatarColors[safeName.charCodeAt(0) % avatarColors.length];
+  const url = getPhotoUrl(photoUrl);
 
   return (
-    <div className="mobile-card flex items-center gap-3 cursor-pointer" onClick={() => navigate(`/students/${student.id}`)}>
-      {/* Avatar */}
-      <div className="relative shrink-0">
-        {photoUrl ? (
-          <img src={photoUrl} alt={name} className="w-11 h-11 rounded-full object-cover border-2 border-white shadow" />
-        ) : (
-          <div className={`w-11 h-11 rounded-full bg-gradient-to-br ${colorClass} flex items-center justify-center text-white font-bold text-sm shadow`}>
-            {getInitials(name)}
-          </div>
-        )}
-        <span className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white ${student.user?.isActive ? 'bg-emerald-500' : 'bg-gray-400'}`} />
-      </div>
-
-      {/* Info */}
-      <div className="flex-1 min-w-0">
-        <p className="font-extrabold text-gray-900 text-sm truncate">{name}</p>
-        <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-          <span className="text-[11px] font-bold text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded font-mono">
-            {student.rollNo || "–"}
-          </span>
-          <span className="text-[11px] font-bold text-teal-700 bg-teal-50 px-1.5 py-0.5 rounded uppercase">
-            {student.class?.name || "–"} {student.class?.section || ""}
-          </span>
+    <div className="relative shrink-0 inline-block">
+      {url ? (
+        <img src={url} alt={safeName} className="w-9 h-9 rounded-full object-cover border border-gray-200" />
+      ) : (
+        <div className={`w-9 h-9 rounded-full bg-gradient-to-br ${colorClass} flex items-center justify-center text-white font-bold text-xs shadow-sm`}>
+          {getInitials(safeName)}
         </div>
-      </div>
-
-      {/* Actions */}
-      <div className="flex gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
-        <Link
-          to={`/students/${student.id}`}
-          className="p-2 rounded-xl bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition-colors"
-          title="View"
-        >
-          <Eye className="w-4 h-4" />
-        </Link>
-        {isSuperAdmin && (
-          <>
-            <Link
-              to={`/students/${student.id}/edit`}
-              className="p-2 rounded-xl bg-amber-50 text-amber-600 hover:bg-amber-100 transition-colors"
-              title="Edit"
-            >
-              <Edit className="w-4 h-4" />
-            </Link>
-            <button
-              onClick={() => onDelete(student.id)}
-              className="p-2 rounded-xl bg-red-50 text-red-500 hover:bg-red-100 transition-colors cursor-pointer"
-              title="Delete"
-            >
-              <Trash2 className="w-4 h-4" />
-            </button>
-          </>
-        )}
-      </div>
+      )}
+      <span className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-white ${isActive ? 'bg-emerald-500' : 'bg-gray-400'}`} />
     </div>
   );
-});
+};
 
 export const StudentListPage: React.FC = () => {
   const { user } = useAuth();
@@ -239,35 +182,95 @@ export const StudentListPage: React.FC = () => {
         </div>
       </div>
 
-      {/* ── Student List ── */}
-      <div className="flex-1 overflow-y-auto" style={{ overscrollBehavior: 'contain' }}>
-        <div className="p-3 space-y-2">
-          {loading ? (
-            Array.from({ length: 8 }).map((_, i) => <SkeletonCard key={i} />)
-          ) : students.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16 text-gray-400">
-              <div className="w-16 h-16 rounded-full bg-indigo-50 flex items-center justify-center mb-3">
-                <Search className="w-7 h-7 text-indigo-300" />
-              </div>
-              <p className="font-bold text-gray-500">No students found</p>
-              <p className="text-sm text-gray-400 mt-1">Try adjusting your search or filter</p>
-            </div>
-          ) : (
-            <>
-              {students.map((student, idx) => (
-                <StudentCard
-                  key={student.id}
-                  student={student}
-                  idx={idx}
-                  page={page}
-                  isSuperAdmin={isSuperAdmin}
-                  onDelete={handleDelete}
-                  navigate={navigate}
-                />
-              ))}
-            </>
-          )}
+      {/* ── Student List (Tabular) ── */}
+      <div className="flex-1 overflow-auto bg-gray-50/50">
+        <div className="min-w-[800px] w-full bg-white">
+          <table className="w-full text-sm text-left">
+            <thead>
+              <tr className="bg-gray-100/80 text-gray-500 border-b border-gray-200/60 font-bold uppercase tracking-wider text-[10px]">
+                <th className="px-4 py-3 text-center w-12">#</th>
+                <th className="px-4 py-3">Student</th>
+                <th className="px-4 py-3">Roll No / ID</th>
+                <th className="px-4 py-3">Class</th>
+                <th className="px-4 py-3">Parent Info</th>
+                <th className="px-4 py-3 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {loading ? (
+                <tr>
+                  <td colSpan={6} className="py-12 text-center">
+                    <div className="animate-pulse flex flex-col items-center gap-2">
+                      <div className="w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
+                      <p className="text-gray-400 text-xs font-bold uppercase tracking-wider">Loading Students...</p>
+                    </div>
+                  </td>
+                </tr>
+              ) : students.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="py-16 text-center text-gray-400">
+                    <div className="w-16 h-16 rounded-full bg-indigo-50 flex items-center justify-center mx-auto mb-3">
+                      <Search className="w-7 h-7 text-indigo-300" />
+                    </div>
+                    <p className="font-bold text-gray-500">No students found</p>
+                    <p className="text-sm text-gray-400 mt-1">Try adjusting your search or filter</p>
+                  </td>
+                </tr>
+              ) : (
+                students.map((student, idx) => (
+                  <tr key={student.id} className="hover:bg-indigo-50/40 transition-colors group">
+                    <td className="px-4 py-3 text-center text-xs font-bold text-gray-400">
+                      {(page - 1) * LIMIT + idx + 1}
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-3">
+                        <StudentAvatar name={student.user?.name} photoUrl={student.user?.photoUrl} isActive={student.user?.isActive} />
+                        <div>
+                          <p className="font-extrabold text-gray-900 text-sm group-hover:text-indigo-700 transition-colors">
+                            {student.user?.name || "Unknown"}
+                          </p>
+                          <p className="text-[11px] text-gray-500 font-medium mt-0.5">{student.user?.email || "No email"}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className="text-xs font-bold text-indigo-700 bg-indigo-50 border border-indigo-100 px-2 py-1 rounded font-mono">
+                        {student.rollNo || "–"}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className="text-[11px] font-bold text-teal-700 bg-teal-50 border border-teal-100 px-2 py-1 rounded uppercase">
+                        {student.class?.name || "–"} {student.class?.section || ""}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <p className="font-bold text-gray-700 text-xs">{student.fatherName || "–"}</p>
+                      <p className="text-gray-500 text-[11px] mt-0.5 font-medium">{student.user?.phone || "–"}</p>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center justify-end gap-1.5 opacity-70 group-hover:opacity-100 transition-opacity">
+                        <Link to={`/students/${student.id}`} className="p-1.5 rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition-colors" title="View">
+                          <Eye className="w-4 h-4" />
+                        </Link>
+                        {isSuperAdmin && (
+                          <>
+                            <Link to={`/students/${student.id}/edit`} className="p-1.5 rounded-lg bg-amber-50 text-amber-600 hover:bg-amber-100 transition-colors" title="Edit">
+                              <Edit className="w-4 h-4" />
+                            </Link>
+                            <button onClick={() => handleDelete(student.id)} className="p-1.5 rounded-lg bg-red-50 text-red-500 hover:bg-red-100 transition-colors cursor-pointer" title="Delete">
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
+      </div>
 
         {/* Pagination */}
         {totalPages > 1 && (

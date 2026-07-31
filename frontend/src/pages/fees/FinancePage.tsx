@@ -322,24 +322,25 @@ export const FinancePage: React.FC = () => {
                 <button
                   key={item.key}
                   onClick={() => setTab(item.key)}
-                  className="group relative overflow-hidden rounded-3xl p-5 text-left shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 cursor-pointer border-0"
+                  className="group relative overflow-hidden rounded-3xl p-5 text-left bg-white dark:bg-gray-800/50 border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer"
                   style={{ animationDelay: `${idx * 50}ms` }}
                 >
-                  <div className={`absolute inset-0 bg-gradient-to-br ${item.gradient} opacity-100`} />
-                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300" />
-                  {/* Decorative circles */}
-                  <div className="absolute -top-4 -right-4 w-20 h-20 rounded-full bg-white/10" />
-                  <div className="absolute -bottom-6 -left-3 w-16 h-16 rounded-full bg-white/10" />
-                  <div className="relative z-10">
-                    <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center mb-4 border border-white/30 shadow-inner">
-                      <Icon className="w-6 h-6 text-white" />
+                  <div className="relative z-10 flex flex-col h-full">
+                    <div className="flex items-start justify-between mb-4">
+                      <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${item.gradient} flex items-center justify-center shadow-inner`}>
+                        <Icon className="w-6 h-6 text-white" />
+                      </div>
+                      <div className="w-8 h-8 rounded-full bg-gray-50 dark:bg-gray-900/50 flex items-center justify-center group-hover:bg-indigo-50 dark:group-hover:bg-indigo-500/20 transition-colors">
+                        <ArrowRight className="w-4 h-4 text-gray-400 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 -rotate-45 group-hover:rotate-0 transition-all" />
+                      </div>
                     </div>
-                    <h3 className="text-white font-black text-base leading-tight mb-1">{item.label}</h3>
-                    <p className="text-white/70 text-xs font-medium">{item.desc}</p>
-                    <div className="mt-3 flex items-center gap-1 text-white/80 text-xs font-bold">
-                      Open <ArrowRight className="w-3.5 h-3.5" />
+                    <div className="mt-auto">
+                      <h3 className="text-gray-900 dark:text-white font-black text-lg leading-tight mb-1">{item.label}</h3>
+                      <p className="text-gray-500 dark:text-gray-400 text-xs font-medium">{item.desc}</p>
                     </div>
                   </div>
+                  {/* Subtle hover gradient overlay */}
+                  <div className={`absolute inset-0 bg-gradient-to-br ${item.gradient} opacity-0 group-hover:opacity-[0.03] transition-opacity duration-300 pointer-events-none`} />
                 </button>
               );
             })}
