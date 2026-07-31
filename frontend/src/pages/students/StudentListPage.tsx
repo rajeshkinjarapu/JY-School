@@ -1,13 +1,103 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import api from "../../api/axios";
-import { LoadingSpinner } from "../../components/UI/LoadingSpinner";
-import { Search, UserPlus, Trash2, Edit, FileDown, Eye, Filter } from "lucide-react";
+import { Search, UserPlus, Trash2, Edit, FileDown, Eye, Filter, ChevronLeft, ChevronRight } from "lucide-react";
 import toast from "react-hot-toast";
 import { Link, useNavigate } from "react-router-dom";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { useAuth } from "../../hooks/useAuth";
 import { getPhotoUrl } from "../../utils/photo";
+
+const LIMIT = 30;
+
+const avatarColors = [
+  "from-indigo-500 to-purple-600",
+  "from-teal-400 to-emerald-500",
+  "from-rose-400 to-pink-600",
+  "from-amber-400 to-orange-500",
+  "from-cyan-400 to-blue-500",
+  "from-violet-400 to-purple-600",
+];
+
+const getInitials = (n: string) =>
+  n.trim().split(" ").map((p) => p[0]).slice(0, 2).join("").toUpperCase();
+
+/* ── Skeleton Row ── */
+const SkeletonCard = () => (
+  <div className="mobile-card flex items-center gap-3 animate-pulse">
+    <div className="w-11 h-11 rounded-full bg-gray-200 shrink-0" />
+    <div className="flex-1 space-y-2">
+      <div className="h-3.5 bg-gray-200 rounded-full w-2/3" />
+      <div className="h-3 bg-gray-100 rounded-full w-1/2" />
+    </div>
+    <div className="w-8 h-8 rounded-lg bg-gray-100 shrink-0" />
+  </div>
+);
+
+/* ── Mobile Student Card ── */
+const StudentCard = React.memo(({ student, idx, page, isSuperAdmin, onDelete, navigate }: any) => {
+  const name = student.user?.name || "Student";
+  const colorClass = avatarColors[name.charCodeAt(0) % avatarColors.length];
+  const photoUrl = getPhotoUrl(student.user?.photoUrl);
+
+  return (
+    <div className="mobile-card flex items-center gap-3 cursor-pointer" onClick={() => navigate(`/students/${student.id}`)}>
+      {/* Avatar */}
+      <div className="relative shrink-0">
+        {photoUrl ? (
+          <img src={photoUrl} alt={name} className="w-11 h-11 rounded-full object-cover border-2 border-white shadow" />
+        ) : (
+          <div className={`w-11 h-11 rounded-full bg-gradient-to-br ${colorClass} flex items-center justify-center text-white font-bold text-sm shadow`}>
+            {getInitials(name)}
+          </div>
+        )}
+        <span className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white ${student.user?.isActive ? 'bg-emerald-500' : 'bg-gray-400'}`} />
+      </div>
+
+      {/* Info */}
+      <div className="flex-1 min-w-0">
+        <p className="font-extrabold text-gray-900 text-sm truncate">{name}</p>
+        <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+          <span className="text-[11px] font-bold text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded font-mono">
+            {student.rollNo || "–"}
+          </span>
+          <span className="text-[11px] font-bold text-teal-700 bg-teal-50 px-1.5 py-0.5 rounded uppercase">
+            {student.class?.name || "–"} {student.class?.section || ""}
+          </span>
+        </div>
+      </div>
+
+      {/* Actions */}
+      <div className="flex gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
+        <Link
+          to={`/students/${student.id}`}
+          className="p-2 rounded-xl bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition-colors"
+          title="View"
+        >
+          <Eye className="w-4 h-4" />
+        </Link>
+        {isSuperAdmin && (
+          <>
+            <Link
+              to={`/students/${student.id}/edit`}
+              className="p-2 rounded-xl bg-amber-50 text-amber-600 hover:bg-amber-100 transition-colors"
+              title="Edit"
+            >
+              <Edit className="w-4 h-4" />
+            </Link>
+            <button
+              onClick={() => onDelete(student.id)}
+              className="p-2 rounded-xl bg-red-50 text-red-500 hover:bg-red-100 transition-colors cursor-pointer"
+              title="Delete"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </>
+        )}
+      </div>
+    </div>
+  );
+});
 
 export const StudentListPage: React.FC = () => {
   const { user } = useAuth();
@@ -17,57 +107,50 @@ export const StudentListPage: React.FC = () => {
   const [students, setStudents] = useState<any[]>([]);
   const [classes, setClasses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  
+
   const [search, setSearch] = useState("");
   const [classId, setClassId] = useState("");
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
 
-  const fetchClasses = async () => {
+  const fetchClasses = useCallback(async () => {
     try {
-      const res: any = await api.get('/api/classes');
+      const res: any = await api.get("/api/classes");
       setClasses(res.data.data || res.data || []);
-    } catch (error) {
-      console.error("Error fetching classes:", error);
-    }
-  };
+    } catch {}
+  }, []);
 
-  const fetchStudents = async () => {
+  const fetchStudents = useCallback(async () => {
     setLoading(true);
     try {
       const response: any = await api.get("/api/students", {
-        params: { search, classId, limit: 50, page },
+        params: { search, classId, limit: LIMIT, page },
       });
       const data = response.data.data || response.data || [];
       setStudents(data);
       setTotal(response.data.meta?.total || data.length);
-    } catch (error) {
-      console.error("Error fetching students:", error);
-      toast.error("Failed to load students list");
+    } catch {
+      toast.error("Failed to load students");
     } finally {
       setLoading(false);
     }
-  };
-
-  useEffect(() => {
-    fetchClasses();
-  }, []);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      fetchStudents();
-    }, 300);
-    return () => clearTimeout(timer);
   }, [search, classId, page]);
 
+  useEffect(() => { fetchClasses(); }, [fetchClasses]);
+
+  useEffect(() => {
+    const timer = setTimeout(fetchStudents, 250);
+    return () => clearTimeout(timer);
+  }, [fetchStudents]);
+
   const handleDelete = async (id: string) => {
-    if (!window.confirm("Are you sure you want to delete this student?")) return;
+    if (!window.confirm("Delete this student?")) return;
     try {
       await api.delete(`/api/students/${id}`);
-      toast.success("Student deleted successfully");
+      toast.success("Student deleted");
       fetchStudents();
-    } catch (error: any) {
-      toast.error(error.message || "Failed to delete student");
+    } catch (e: any) {
+      toast.error(e.message || "Failed to delete");
     }
   };
 
@@ -75,218 +158,145 @@ export const StudentListPage: React.FC = () => {
     const doc = new jsPDF();
     doc.setFontSize(18);
     doc.text("Student List", 14, 22);
-
-    const tableColumn = ["S.No", "Student ID", "Name", "Class", "Mobile No", "Father Name", "Status"];
-    const tableRows: any[] = [];
-
-    students.forEach((student: any, index: number) => {
-      const row = [
-        (page - 1) * 50 + index + 1,
-        student.rollNo || "-",
-        student.user?.name || "-",
-        `${student.class?.name || ""} ${student.class?.section || ""}`,
-        student.user?.phone || "-",
-        student.fatherName || "-",
-        student.user?.isActive ? "Active" : "Inactive"
-      ];
-      tableRows.push(row);
-    });
-
     autoTable(doc, {
-      head: [tableColumn],
-      body: tableRows,
+      head: [["S.No", "Student ID", "Name", "Class", "Mobile", "Father Name", "Status"]],
+      body: students.map((s: any, i: number) => [
+        (page - 1) * LIMIT + i + 1,
+        s.rollNo || "–",
+        s.user?.name || "–",
+        `${s.class?.name || ""} ${s.class?.section || ""}`,
+        s.user?.phone || "–",
+        s.fatherName || "–",
+        s.user?.isActive ? "Active" : "Inactive",
+      ]),
       startY: 30,
       theme: "grid",
       styles: { fontSize: 9, cellPadding: 3 },
       headStyles: { fillColor: [79, 70, 229], textColor: 255, fontStyle: "bold" },
     });
-
     doc.save("Student_List.pdf");
-    toast.success("PDF generated successfully!");
+    toast.success("PDF exported!");
   };
 
+  const totalPages = Math.ceil(total / LIMIT);
+
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-white/80 dark:bg-white/5 p-4 rounded-2xl border border-gray-150 dark:border-white/10 shadow-sm backdrop-blur-xl">
-        
-        <div className="flex-1 flex flex-col sm:flex-row items-center gap-3">
-          <div className="relative flex-1 w-full">
-            <Search className="absolute left-3 top-3 w-4 h-4 text-indigo-500" />
+    <div className="flex flex-col h-full">
+      {/* ── Colorful Hero Header ── */}
+      <div className="px-3 pt-3 pb-4 bg-gradient-to-br from-indigo-600 via-violet-600 to-purple-700 shadow-lg">
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <p className="text-white/70 text-xs font-semibold uppercase tracking-wider">Total</p>
+            <p className="text-2xl font-black text-white">{total} Students</p>
+          </div>
+          <div className="flex gap-2">
+            {isSuperAdmin && (
+              <button
+                onClick={exportStudents}
+                className="p-2.5 rounded-xl bg-white/15 text-white hover:bg-white/25 transition-colors cursor-pointer"
+                title="Export PDF"
+              >
+                <FileDown className="w-5 h-5" />
+              </button>
+            )}
+            <Link
+              to="/students/new"
+              className="flex items-center gap-1.5 px-3.5 py-2.5 text-sm font-extrabold text-indigo-700 bg-white rounded-xl shadow hover:bg-indigo-50 transition-colors"
+            >
+              <UserPlus className="w-4 h-4" /> Add
+            </Link>
+          </div>
+        </div>
+
+        {/* Search + Filter */}
+        <div className="flex gap-2">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/60" />
             <input
               type="text"
-              placeholder="Search by name or Student ID..."
+              placeholder="Search students..."
               value={search}
-              onChange={(e) => {
-                setSearch(e.target.value);
-                setPage(1);
-              }}
-              className="w-full pl-9 pr-4 py-2.5 text-sm bg-indigo-50/30 border border-indigo-100 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500/50 font-medium transition-all"
+              onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+              className="w-full pl-9 pr-3 py-2.5 text-sm bg-white/15 border border-white/25 rounded-xl text-white placeholder:text-white/50 font-medium focus:outline-none focus:bg-white/25 transition-all"
             />
           </div>
-          
-          <div className="relative w-full sm:w-auto">
-            <Filter className="absolute left-3 top-3 w-4 h-4 text-indigo-500" />
+          <div className="relative">
+            <Filter className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/60 pointer-events-none" />
             <select
               value={classId}
-              onChange={(e) => {
-                setClassId(e.target.value);
-                setPage(1);
-              }}
-              className="w-full sm:w-48 pl-9 pr-8 py-2.5 text-sm bg-indigo-50/30 border border-indigo-100 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500/50 font-medium appearance-none cursor-pointer"
+              onChange={(e) => { setClassId(e.target.value); setPage(1); }}
+              className="pl-8 pr-3 py-2.5 text-sm bg-white/15 border border-white/25 rounded-xl text-white font-semibold focus:outline-none appearance-none cursor-pointer"
+              style={{ colorScheme: 'dark' }}
             >
-              <option value="">All Classes</option>
+              <option value="" className="text-gray-900 bg-white">All Classes</option>
               {classes.map((cls) => (
-                <option key={cls.id} value={cls.id}>
+                <option key={cls.id} value={cls.id} className="text-gray-900 bg-white">
                   {cls.name} {cls.section}
                 </option>
               ))}
             </select>
           </div>
-          
-          <span className="hidden sm:inline-flex items-center justify-center px-3 py-2 text-xs font-black text-indigo-600 bg-indigo-100 rounded-lg whitespace-nowrap">
-            {total} Records
-          </span>
-        </div>
-
-        <div className="flex gap-2 flex-wrap justify-end">
-          {isSuperAdmin && (
-            <button
-              onClick={exportStudents}
-              className="flex items-center gap-1.5 px-3.5 py-2.5 text-sm font-bold text-gray-600 bg-gray-50 border border-gray-200 rounded-xl hover:bg-gray-100 transition-all cursor-pointer"
-            >
-              <FileDown className="w-4 h-4" /> Export
-            </button>
-          )}
-          <Link
-            to="/students/new"
-            className="flex items-center gap-1.5 px-4 py-2.5 text-sm font-extrabold text-white bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 rounded-xl shadow-md transition-all cursor-pointer"
-          >
-            <UserPlus className="w-4 h-4" /> Add Student
-          </Link>
         </div>
       </div>
 
-      {loading ? (
-        <LoadingSpinner size="lg" className="py-12" />
-      ) : (
-        <div className="bg-transparent overflow-hidden">
-          <div className="overflow-x-auto pb-4">
-            <table className="w-full text-sm text-left border-separate border-spacing-y-3">
-              <thead>
-                <tr className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-xl shadow-md">
-                  <th className="px-6 py-4 font-extrabold text-xs uppercase tracking-wider text-gray-500 w-16">S.No</th>
-                  <th className="px-6 py-4 font-extrabold text-xs uppercase tracking-wider text-gray-500">Student Info</th>
-                  <th className="px-6 py-4 font-extrabold text-xs uppercase tracking-wider text-gray-500">Student ID</th>
-                  <th className="px-6 py-4 font-extrabold text-xs uppercase tracking-wider text-gray-500">Class & Sec</th>
-                  <th className="px-6 py-4 font-extrabold text-xs uppercase tracking-wider text-gray-500">Mobile No</th>
-                  <th className="px-6 py-4 font-extrabold text-xs uppercase tracking-wider text-gray-500">Father Name</th>
-                  <th className="px-6 py-4 font-black text-xs uppercase tracking-wider text-white">Status</th>
-                  <th className="px-6 py-4 font-black text-xs uppercase tracking-wider text-white text-right rounded-r-xl">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="">
-                {students.map((student, idx) => {
-                  const avatarColors = ["from-indigo-500 to-purple-600", "from-teal-400 to-emerald-600", "from-rose-400 to-pink-600"];
-                  const name = student.user?.name || "Student";
-                  const colorIdx = name.charCodeAt(0) % avatarColors.length;
-                  const colorClass = avatarColors[colorIdx];
-                  const getInitials = (n: string) => n.trim().split(" ").map(p=>p[0]).slice(0,2).join("").toUpperCase();
-
-                  return (
-                    <tr key={student.id} className="bg-white hover:bg-indigo-50/30 transition-all duration-300 group shadow-sm hover:shadow-md hover:-translate-y-0.5 rounded-xl border border-gray-100">
-                      <td className="px-6 py-4 text-gray-500 font-bold rounded-l-xl border-y border-l border-gray-100 group-hover:border-indigo-100">
-                        {(page - 1) * 50 + idx + 1}
-                      </td>
-                      <td className="px-6 py-4 flex items-center gap-3 border-y border-gray-100 group-hover:border-indigo-100">
-                        <div className="relative">
-                          {getPhotoUrl(student.user?.photoUrl) ? (
-                            <img src={getPhotoUrl(student.user?.photoUrl)} alt={name} className="w-10 h-10 rounded-full object-cover shadow-sm border border-gray-100" />
-                          ) : (
-                            <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${colorClass} flex items-center justify-center text-white font-bold text-sm shadow-sm border border-white`}>
-                              {getInitials(name)}
-                            </div>
-                          )}
-                        </div>
-                        <div>
-                          <div 
-                            onClick={() => navigate(`/students/${student.id}`)}
-                            className="font-extrabold text-gray-900 leading-tight hover:text-indigo-600 transition-colors cursor-pointer"
-                          >
-                            {name}
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 border-y border-gray-100 group-hover:border-indigo-100">
-                        <span className="font-mono text-xs font-bold text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded-md border border-indigo-100">
-                          {student.rollNo || "-"}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 border-y border-gray-100 group-hover:border-indigo-100">
-                        <span className="text-[11px] font-extrabold uppercase tracking-wide text-teal-700 bg-teal-50 px-2.5 py-1 rounded-md border border-teal-100">
-                          {student.class?.name || "-"} {student.class?.section || ""}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 border-y border-gray-100 group-hover:border-indigo-100">
-                        <span className="text-xs font-bold text-gray-600">
-                          {student.user?.phone || "-"}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 border-y border-gray-100 group-hover:border-indigo-100">
-                        <span className="text-xs font-bold text-gray-600">
-                          {student.fatherName || "-"}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 border-y border-gray-100 group-hover:border-indigo-100">
-                        {student.user?.isActive ? (
-                          <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Active
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200">
-                            <span className="w-1.5 h-1.5 rounded-full bg-rose-500"></span> Inactive
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 text-right rounded-r-xl border-y border-r border-gray-100 group-hover:border-indigo-100">
-                        <div className="flex justify-end gap-2">
-                          <Link to={`/students/${student.id}`} className="flex items-center justify-center w-8 h-8 bg-gray-50 hover:bg-indigo-50 text-gray-400 hover:text-indigo-600 rounded-lg transition-all shadow-sm border border-gray-200 cursor-pointer" title="View Profile">
-                            <Eye className="w-4 h-4" />
-                          </Link>
-                          {isSuperAdmin && (
-                            <>
-                              <Link to={`/students/${student.id}/edit`} className="flex items-center justify-center w-8 h-8 bg-gray-50 hover:bg-amber-50 text-gray-400 hover:text-amber-600 rounded-lg transition-all shadow-sm border border-gray-200 cursor-pointer" title="Edit">
-                                <Edit className="w-3.5 h-3.5" />
-                              </Link>
-                              <button onClick={() => handleDelete(student.id)} className="flex items-center justify-center w-8 h-8 bg-gray-50 hover:bg-red-50 text-gray-400 hover:text-red-600 rounded-lg transition-all shadow-sm border border-gray-200 cursor-pointer" title="Delete">
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </button>
-                            </>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-                {students.length === 0 && (
-                  <tr><td colSpan={8} className="py-12 text-center text-gray-400 font-semibold">No student records found.</td></tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-          
-          {total > 0 && (
-            <div className="p-4 border-t border-indigo-50 flex items-center justify-between">
-              <div className="text-xs font-bold text-gray-500">
-                Showing {(page - 1) * 50 + 1} to {Math.min(page * 50, total)} of {total}
+      {/* ── Student List ── */}
+      <div className="flex-1 overflow-y-auto" style={{ overscrollBehavior: 'contain' }}>
+        <div className="p-3 space-y-2">
+          {loading ? (
+            Array.from({ length: 8 }).map((_, i) => <SkeletonCard key={i} />)
+          ) : students.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-16 text-gray-400">
+              <div className="w-16 h-16 rounded-full bg-indigo-50 flex items-center justify-center mb-3">
+                <Search className="w-7 h-7 text-indigo-300" />
               </div>
-              <div className="flex gap-2">
-                <button onClick={() => setPage(p=>Math.max(1, p-1))} disabled={page===1} className="px-3 py-1.5 text-xs font-bold bg-white hover:bg-gray-50 border border-gray-200 rounded-lg disabled:opacity-50 transition-colors">Prev</button>
-                <button onClick={() => setPage(p=>p+1)} disabled={page * 50 >= total} className="px-3 py-1.5 text-xs font-bold bg-white hover:bg-gray-50 border border-gray-200 rounded-lg disabled:opacity-50 transition-colors">Next</button>
-              </div>
+              <p className="font-bold text-gray-500">No students found</p>
+              <p className="text-sm text-gray-400 mt-1">Try adjusting your search or filter</p>
             </div>
+          ) : (
+            <>
+              {students.map((student, idx) => (
+                <StudentCard
+                  key={student.id}
+                  student={student}
+                  idx={idx}
+                  page={page}
+                  isSuperAdmin={isSuperAdmin}
+                  onDelete={handleDelete}
+                  navigate={navigate}
+                />
+              ))}
+            </>
           )}
         </div>
-      )}
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="px-3 pb-4 flex items-center justify-between">
+            <p className="text-xs font-bold text-gray-500">
+              {(page - 1) * LIMIT + 1}–{Math.min(page * LIMIT, total)} of {total}
+            </p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={page === 1}
+                className="p-2 rounded-xl bg-white border border-gray-200 text-gray-500 hover:bg-indigo-50 hover:text-indigo-600 disabled:opacity-40 transition-colors cursor-pointer shadow-sm"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              <span className="flex items-center px-3 text-xs font-black text-indigo-600 bg-indigo-50 rounded-xl">
+                {page} / {totalPages}
+              </span>
+              <button
+                onClick={() => setPage((p) => p + 1)}
+                disabled={page >= totalPages}
+                className="p-2 rounded-xl bg-white border border-gray-200 text-gray-500 hover:bg-indigo-50 hover:text-indigo-600 disabled:opacity-40 transition-colors cursor-pointer shadow-sm"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

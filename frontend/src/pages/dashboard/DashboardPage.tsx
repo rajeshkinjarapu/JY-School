@@ -61,9 +61,9 @@ export const DashboardPage: React.FC = () => {
   }
 
   return (
-    <div className="space-y-4 sm:space-y-6 md:space-y-8 p-1 sm:p-2 md:p-2 bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 min-h-screen animate-fade-in-up pb-10">
+    <div className="space-y-4 sm:space-y-5 p-2 sm:p-3 bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 animate-fade-in-up pb-6">
       <WelcomeBanner name={user?.name || ''} role={user?.role || ''} photoUrl={data?.teacherProfile?.photoUrl || data?.studentProfile?.photoUrl || user?.photoUrl} />
-      <div className="px-1 sm:px-0">
+      <div>
         {(user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN') && <AdminView data={data} />}
         {user?.role === 'TEACHER' && <TeacherView data={data} />}
         {user?.role === 'STUDENT' && <StudentView data={data} />}

@@ -51,6 +51,7 @@ export const DashboardLayout: React.FC = () => {
     
     // Exams
     if (pathname === '/exams') return 'Examinations & Grades';
+    if (pathname === '/exams/new') return 'Create Exam';
     if (pathname.match(/^\/exams\/[^\/]+\/entry$/)) return 'Marks Entry';
     if (pathname.match(/^\/exams\/[^\/]+\/report-card\/[^\/]+$/)) return 'Report Card';
     
@@ -65,6 +66,7 @@ export const DashboardLayout: React.FC = () => {
     if (pathname === '/finance') return 'Finance Dashboard';
     if (pathname === '/fee-payment') return 'Fee Payment';
     if (pathname.startsWith('/fees/collect')) return 'Collect Payment';
+    if (pathname.startsWith('/fees/record')) return 'Record Payment';
     
     if (pathname === '/announcements') return 'Notice Board';
     if (pathname === '/messages') return 'Real-time Messaging';
@@ -89,6 +91,8 @@ export const DashboardLayout: React.FC = () => {
     if (pathname.startsWith('/student/admit-cards')) return 'Student Admit Cards';
     if (pathname.startsWith('/admit-card-view')) return 'Admit Card';
     
+    if (pathname === '/transport') return 'Transport';
+    
     return 'Dashboard';
   };
 
@@ -97,8 +101,8 @@ export const DashboardLayout: React.FC = () => {
 
   if (isStudentMobile) {
     return (
-      <div className="h-screen overflow-hidden">
-        <main className="h-full overflow-y-auto">
+      <div style={{ height: '100dvh', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+        <main style={{ flex: 1, overflowY: 'auto', overscrollBehavior: 'contain' }}>
           <Outlet context={{ setDynamicTitle }} />
         </main>
       </div>
@@ -106,11 +110,17 @@ export const DashboardLayout: React.FC = () => {
   }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 dark:from-[#1e1b4b] dark:via-[#2e1065] dark:to-[#312e81]">
+    <div
+      className="flex overflow-hidden bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 dark:from-[#1e1b4b] dark:via-[#2e1065] dark:to-[#312e81]"
+      style={{ height: '100dvh' }}
+    >
       <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
       <div className="flex flex-col flex-1 overflow-hidden min-w-0">
         <Header onMenuClick={() => setSidebarOpen(true)} title={getPageTitle(location.pathname)} />
-        <main className="flex-1 overflow-y-auto p-1 md:p-2 lg:p-3 animate-fade-in-up">
+        <main
+          className="flex-1 overflow-y-auto animate-fade-in-up"
+          style={{ overscrollBehavior: 'contain' }}
+        >
           <Outlet context={{ setDynamicTitle }} />
         </main>
       </div>

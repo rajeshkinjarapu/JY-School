@@ -99,49 +99,53 @@ export const TeacherListPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Search & Action Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white/80 dark:bg-white/5 p-4 rounded-2xl border border-gray-150 dark:border-white/10 shadow-sm backdrop-blur-xl">
-        <div className="flex-1 relative flex items-center gap-3">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-3 w-4 h-4 text-indigo-500" />
-            <input
-              type="text"
-              placeholder="Search teachers by name or employee ID..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-9 pr-4 py-2.5 text-sm bg-indigo-50/30 dark:bg-white/5 border border-indigo-100 dark:border-white/10 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500/50 font-medium transition-all text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-300"
-            />
+    <div className="flex flex-col h-full">
+      {/* Colorful Hero Header */}
+      <div className="px-3 pt-3 pb-4 bg-gradient-to-br from-emerald-500 via-teal-500 to-cyan-600 shadow-lg">
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <p className="text-white/70 text-xs font-semibold uppercase tracking-wider">Total</p>
+            <p className="text-2xl font-black text-white">{teachers.length} Teachers</p>
           </div>
-          <span className="hidden sm:inline-flex items-center justify-center px-3 py-2 text-xs font-black text-indigo-600 bg-indigo-100 rounded-lg whitespace-nowrap">
-            {teachers.length} Records
-          </span>
-        </div>
-        <div className="flex gap-2 flex-wrap">
-          {isSuperAdmin && (
-            <>
+          <div className="flex gap-2">
+            {isSuperAdmin && (
               <button
                 onClick={exportTeachers}
-                className="flex items-center gap-1.5 px-3.5 py-2.5 text-sm font-bold text-gray-600 dark:text-white bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl hover:bg-gray-100 dark:hover:bg-white/10 transition-all cursor-pointer"
+                className="p-2.5 rounded-xl bg-white/15 text-white hover:bg-white/25 transition-colors cursor-pointer"
+                title="Export PDF"
               >
-                <FileDown className="w-4 h-4" /> Export
+                <FileDown className="w-5 h-5" />
               </button>
-            </>
-          )}
-          <Link
-            to="/teachers/new"
-            className="flex items-center gap-1.5 px-4 py-2.5 text-sm font-extrabold text-white bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 rounded-xl shadow-md shadow-indigo-500/25 transition-all cursor-pointer"
-          >
-            <UserPlus className="w-4 h-4" /> Add Teacher
-          </Link>
+            )}
+            <Link
+              to="/teachers/new"
+              className="flex items-center gap-1.5 px-3.5 py-2.5 text-sm font-extrabold text-emerald-700 bg-white rounded-xl shadow hover:bg-emerald-50 transition-colors"
+            >
+              <UserPlus className="w-4 h-4" /> Add
+            </Link>
+          </div>
+        </div>
+        {/* Search */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/60" />
+          <input
+            type="text"
+            placeholder="Search teachers..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full pl-9 pr-3 py-2.5 text-sm bg-white/15 border border-white/25 rounded-xl text-white placeholder:text-white/50 font-medium focus:outline-none focus:bg-white/25 transition-all"
+          />
         </div>
       </div>
 
+      {/* Main Content */}
+      <div className="flex-1 overflow-y-auto" style={{ overscrollBehavior: 'contain' }}>
+      <div className="p-3">
       {/* Main Table */}
       {loading ? (
         <LoadingSpinner size="lg" className="py-12" />
       ) : (
-        <div className="bg-white/40 dark:bg-white/5 border border-white/60 dark:border-white/10 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden backdrop-blur-2xl">
+        <div className="bg-white/40 dark:bg-white/5 border border-white/60 dark:border-white/10 rounded-2xl shadow overflow-hidden backdrop-blur-2xl">
           <div className="overflow-x-auto hidden md:block">
             <table className="w-full text-sm text-left border-collapse">
               <thead>
@@ -391,6 +395,8 @@ export const TeacherListPage: React.FC = () => {
           </div>
         </div>
       )}
+      </div>
+      </div>
     </div>
   );
 };

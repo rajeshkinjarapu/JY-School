@@ -44,23 +44,28 @@ export default function AttendanceDashboard() {
   const maxPercent = Math.max(...stats.weeklyTrend.map((w: any) => w.percentage), 100);
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto">
+    <div className="animate-fade-in-up">
+      {/* ── Colorful Hero ── */}
+      <div className="px-4 pt-4 pb-5 bg-gradient-to-br from-amber-500 via-orange-500 to-rose-500 shadow-lg">
+        <p className="text-white font-black text-lg">Attendance Dashboard</p>
+        <p className="text-white/70 text-xs mt-0.5">Today's overview & weekly trends</p>
+      </div>
+
+      <div className="p-3 space-y-3">
       
       {/* ── TOP SUMMARY CARDS ── */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
         {[
-          { label: 'Total Students', value: stats.totalStudents, icon: Users, color: 'text-blue-600', bg: 'bg-blue-50' },
-          { label: 'Present Today', value: stats.todayPresent, icon: CheckCircle, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-          { label: 'Absent Today', value: stats.todayAbsent, icon: XCircle, color: 'text-rose-600', bg: 'bg-rose-50' },
-          { label: 'Attendance %', value: `${stats.attendancePercentage}%`, icon: Percent, color: 'text-purple-600', bg: 'bg-purple-50' }
+          { label: 'Total Students', value: stats.totalStudents, icon: Users, from: 'from-blue-500', to: 'to-cyan-500' },
+          { label: 'Present Today', value: stats.todayPresent, icon: CheckCircle, from: 'from-emerald-500', to: 'to-teal-500' },
+          { label: 'Absent Today', value: stats.todayAbsent, icon: XCircle, from: 'from-rose-500', to: 'to-pink-500' },
+          { label: 'Attendance %', value: `${stats.attendancePercentage}%`, icon: Percent, from: 'from-purple-500', to: 'to-violet-500' }
         ].map((c, i) => (
-          <div key={i} className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 flex items-center gap-4 hover:shadow-md transition-shadow">
-            <div className={`p-4 rounded-xl ${c.bg}`}>
-              <c.icon className={`w-6 h-6 ${c.color}`} />
-            </div>
+          <div key={i} className={`bg-gradient-to-br ${c.from} ${c.to} rounded-2xl p-3.5 flex flex-col gap-1.5 shadow`}>
+            <c.icon className="w-5 h-5 text-white/80" />
             <div>
-              <p className="text-sm font-semibold text-slate-500">{c.label}</p>
-              <p className="text-2xl font-black text-slate-800">{c.value}</p>
+              <p className="text-[11px] font-semibold text-white/70">{c.label}</p>
+              <p className="text-xl font-black text-white">{c.value}</p>
             </div>
           </div>
         ))}
@@ -252,6 +257,7 @@ export default function AttendanceDashboard() {
           </div>
 
         </div>
+      </div>
       </div>
     </div>
   );

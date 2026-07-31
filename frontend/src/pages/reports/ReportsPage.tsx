@@ -51,22 +51,24 @@ export const ReportsPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto animate-fade-in">
-      <div className="mb-2">
-        <p className="text-sm text-gray-500">
-          Generate and download complete data directories in both Microsoft Excel (.xlsx) and Adobe PDF (.pdf) formats.
-        </p>
+    <div className="animate-fade-in">
+      {/* Colorful Hero Header */}
+      <div className="px-4 pt-4 pb-5 bg-gradient-to-br from-rose-500 via-pink-600 to-fuchsia-600 shadow-lg">
+        <p className="text-white font-black text-lg">Reports Generator</p>
+        <p className="text-white/70 text-xs mt-0.5">Download Excel & PDF reports</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="p-3 space-y-3 max-w-2xl mx-auto">
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         {/* Attendance Report Card */}
-        <div className="card p-6 flex flex-col justify-between space-y-4">
-          <div className="space-y-3">
-            <div className="p-3 rounded-2xl bg-teal-50 dark:bg-teal-950/20 text-teal-500 inline-block">
-              <CalendarDays className="w-6 h-6" />
+        <div className="card p-4 flex flex-col justify-between space-y-3">
+          <div className="space-y-2">
+            <div className="p-2.5 rounded-xl bg-teal-50 text-teal-500 inline-block">
+              <CalendarDays className="w-5 h-5" />
             </div>
             <div>
-              <h4 className="font-bold text-base text-gray-900 dark:text-white">Attendance Ledger</h4>
+              <h4 className="font-bold text-sm text-gray-900 dark:text-white">Attendance Ledger</h4>
               <p className="text-xs text-gray-400">Class aggregate present, absent and late rates.</p>
             </div>
             <select
@@ -274,6 +276,7 @@ export const ReportsPage: React.FC = () => {
             </a>
           </div>
         </div>
+      </div>
       </div>
     </div>
   );
