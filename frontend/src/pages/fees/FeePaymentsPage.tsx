@@ -236,7 +236,16 @@ export const FeePaymentsPage: React.FC = () => {
       const link = document.createElement('a');
       link.href = url;
       link.setAttribute('download', 'Fee_Report.pdf');
-      document.body.appendC  return (
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode?.removeChild(link);
+      toast.success('PDF report downloaded successfully!', { id: importToast });
+    } catch (e: any) {
+      toast.error('Failed to export fees ledger PDF.', { id: importToast });
+    }
+  };
+
+  return (
     <div className="-mt-4 sm:-mt-6 animate-fade-in-up pb-24 overflow-x-hidden space-y-6">
       
       <div className="print:hidden">
