@@ -396,7 +396,6 @@ export const TeacherListPage: React.FC = () => {
         </div>
       )}
       </div>
-      </div>
     </div>
   );
 };
