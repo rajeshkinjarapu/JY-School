@@ -9,6 +9,7 @@ import crypto from 'crypto';
 import { successResponse } from '../utils/response';
 import { generateRollNo, generateEmployeeId, generateOtp } from '../utils/helpers';
 import { Role } from '../types/enums';
+import { sendSMS } from '../utils/sms';
 
 export const register = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   const { name, email, password, role, phone, photoUrl, ...profileData } = req.body;
@@ -112,6 +113,64 @@ export const login = async (req: AuthRequest, res: Response, next: NextFunction)
 
   const isMatch = await bcrypt.compare(password, user.password);
   if (!isMatch) return next(createError('Invalid credentials', 401));
+
+  if (user.role === 'SUPER_ADMIN') {
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const resetOtpExp = new Date(Date.now() + 5 * 60 * 1000); // 5 mins expiry
+    
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { resetOtp: otp, resetOtpExp }
+    });
+
+    if (user.phone) {
+      // DLT template for OTP needs to be replaced with the actual approved template ID.
+      // Assuming a generic template or the user provided one. We'll use a placeholder if not.
+      const otpMessage = `Dear Admin, Your OTP for login is ${otp}. Valid for 5 mins. SVJY SCHOOL`;
+      await sendSMS(user.phone, otpMessage, '1707175316314375479'); // Template ID is a placeholder, user should update
+    }
+
+    return res.status(200).json({
+      success: true,
+      requiresOtp: true,
+      message: 'OTP sent to your registered mobile number'
+    });
+  }
+
+  const tokenPayload = { id: user.id, email: user.email, role: user.role as Role, name: user.name };
+  const accessToken = generateAccessToken(tokenPayload);
+  const refreshToken = generateRefreshToken(tokenPayload);
+
+  await prisma.user.update({ where: { id: user.id }, data: { refreshToken } });
+
+  const { password: _p, refreshToken: _rt, resetOtp: _o, resetOtpExp: _e, ...safeUser } = user as any;
+  successResponse(res, { accessToken, refreshToken, user: safeUser }, 'Login successful');
+};
+
+export const verifyOtp = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  const { emailOrId, otp } = req.body;
+  if (!emailOrId || !otp) return next(createError('Email/ID and OTP are required', 400));
+
+  const searchTerm = emailOrId.trim();
+  let user = await prisma.user.findFirst({
+    where: {
+      OR: [
+        { email: searchTerm },
+        { phone: searchTerm }
+      ],
+      role: 'SUPER_ADMIN'
+    }
+  });
+
+  if (!user || !user.isActive) return next(createError('Invalid request', 401));
+  if (!user.resetOtp || user.resetOtp !== otp) return next(createError('Invalid OTP', 401));
+  if (!user.resetOtpExp || user.resetOtpExp < new Date()) return next(createError('OTP has expired', 401));
+
+  // Clear OTP
+  await prisma.user.update({
+    where: { id: user.id },
+    data: { resetOtp: null, resetOtpExp: null }
+  });
 
   const tokenPayload = { id: user.id, email: user.email, role: user.role as Role, name: user.name };
   const accessToken = generateAccessToken(tokenPayload);

@@ -7,6 +7,7 @@ import PDFDocument from 'pdfkit';
 import * as XLSX from 'xlsx';
 import { clearDashboardCache } from './dashboard.controller';
 import { Role } from '../types/enums';
+import { sendSMS } from '../utils/sms';
 
 export const bulkImportFees = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   if (!req.file) return next(createError('No file uploaded', 400));
@@ -163,7 +164,7 @@ export const getPayments = async (req: AuthRequest, res: Response): Promise<void
 export const createPayment = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   const { studentId, feeStructureId, amountPaid, method, remarks, utrNumber, receiptUrl, payments, paymentDate } = req.body;
 
-  const student = await prisma.student.findUnique({ where: { id: studentId } });
+  const student = await prisma.student.findUnique({ where: { id: studentId }, include: { user: true } });
   if (!student) return next(createError('Student not found', 404));
 
   const baseReceiptNo = 'JY' + Math.floor(10000000 + Math.random() * 90000000).toString();
@@ -229,6 +230,17 @@ export const createPayment = async (req: AuthRequest, res: Response, next: NextF
 
   if (createdPayments.length === 0) {
     return next(createError('All selected fees are already fully paid', 400));
+  }
+
+  try {
+    if (student.user && student.user.phone) {
+      const totalAmount = createdPayments.reduce((sum, p) => sum + p.amountPaid, 0);
+      const smsMessage = `Dear parent, We have received fee payment of Rs.${totalAmount} for your child ${student.user.name}. Thanking you, SVJY SCHOOL`;
+      // User requested template ID: 1707175316314375479
+      await sendSMS(student.user.phone, smsMessage, '1707175316314375479');
+    }
+  } catch (error) {
+    console.error('Failed to send fee SMS:', error);
   }
 
   clearDashboardCache();
