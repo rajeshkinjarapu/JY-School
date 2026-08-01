@@ -135,7 +135,7 @@ const GatePassPage: React.FC = () => {
   });
 
   return (
-    <div className="flex flex-col h-full bg-gray-50/50 -m-6" style={{ minHeight: 'calc(100vh - 64px)' }}>
+    <div className="flex flex-col h-full bg-gray-50/50" style={{ minHeight: 'calc(100vh - 64px)' }}>
       {/* Printable Area - Hidden normally */}
       <div className="hidden print:block absolute inset-0 bg-white z-[9999]">
         {printGatePass && <GatePassPrint gatePass={printGatePass} schoolName={schoolName} />}

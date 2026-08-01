@@ -310,7 +310,7 @@ export const FinancePage: React.FC = () => {
   ];
 
   return (
-    <div className="flex flex-col h-full bg-gray-50/50 -m-6" style={{ minHeight: 'calc(100vh - 64px)' }}>
+    <div className="flex flex-col h-full bg-gray-50/50" style={{ minHeight: 'calc(100vh - 64px)' }}>
       {/* Header */}
       <div className="px-6 py-6 bg-gradient-to-br from-emerald-600 via-teal-600 to-cyan-700 shadow-lg flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div className="flex items-center gap-4">
