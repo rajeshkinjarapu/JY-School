@@ -1,19 +1,19 @@
 import React, { useEffect, useState } from 'react';
 import api from '../../api/axios';
 import { LoadingSpinner } from '../../components/UI/LoadingSpinner';
-import { Plus, Edit, Trash2, BookOpen, ChevronRight, School } from 'lucide-react';
+import { Plus, Edit, Trash2, School, BookOpen, Users, ChevronDown, ChevronUp } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../hooks/useAuth';
 
 const SUBJECT_COLORS = [
-  { bg: 'from-violet-500 to-purple-600', light: 'bg-violet-50', text: 'text-violet-700', border: 'border-violet-100', dot: 'bg-violet-500' },
-  { bg: 'from-blue-500 to-indigo-600', light: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-100', dot: 'bg-blue-500' },
-  { bg: 'from-emerald-500 to-teal-600', light: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-100', dot: 'bg-emerald-500' },
-  { bg: 'from-rose-500 to-pink-600', light: 'bg-rose-50', text: 'text-rose-700', border: 'border-rose-100', dot: 'bg-rose-500' },
-  { bg: 'from-amber-500 to-orange-500', light: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-100', dot: 'bg-amber-500' },
-  { bg: 'from-cyan-500 to-sky-600', light: 'bg-cyan-50', text: 'text-cyan-700', border: 'border-cyan-100', dot: 'bg-cyan-500' },
-  { bg: 'from-fuchsia-500 to-purple-600', light: 'bg-fuchsia-50', text: 'text-fuchsia-700', border: 'border-fuchsia-100', dot: 'bg-fuchsia-500' },
-  { bg: 'from-lime-500 to-green-600', light: 'bg-lime-50', text: 'text-lime-700', border: 'border-lime-100', dot: 'bg-lime-500' },
+  { bg: 'from-violet-500 to-purple-600', light: 'bg-violet-50', text: 'text-violet-700', border: 'border-violet-200', badge: 'bg-violet-100 text-violet-700' },
+  { bg: 'from-blue-500 to-indigo-600', light: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200', badge: 'bg-blue-100 text-blue-700' },
+  { bg: 'from-emerald-500 to-teal-600', light: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200', badge: 'bg-emerald-100 text-emerald-700' },
+  { bg: 'from-rose-500 to-pink-600', light: 'bg-rose-50', text: 'text-rose-700', border: 'border-rose-200', badge: 'bg-rose-100 text-rose-700' },
+  { bg: 'from-amber-500 to-orange-500', light: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200', badge: 'bg-amber-100 text-amber-700' },
+  { bg: 'from-cyan-500 to-sky-600', light: 'bg-cyan-50', text: 'text-cyan-700', border: 'border-cyan-200', badge: 'bg-cyan-100 text-cyan-700' },
+  { bg: 'from-fuchsia-500 to-purple-600', light: 'bg-fuchsia-50', text: 'text-fuchsia-700', border: 'border-fuchsia-200', badge: 'bg-fuchsia-100 text-fuchsia-700' },
+  { bg: 'from-lime-500 to-green-600', light: 'bg-lime-50', text: 'text-lime-700', border: 'border-lime-200', badge: 'bg-lime-100 text-lime-700' },
 ];
 
 export const SubjectPage: React.FC = () => {
@@ -26,11 +26,10 @@ export const SubjectPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingSubject, setEditingSubject] = useState<any>(null);
-  const [expandedSubject, setExpandedSubject] = useState<string | null>(null);
+  const [expandedSubjects, setExpandedSubjects] = useState<Record<string, boolean>>({});
 
   // Form states
   const [name, setName] = useState('');
-  const [code, setCode] = useState('');
   const [classId, setClassId] = useState('');
   const [teacherId, setTeacherId] = useState('');
 
@@ -68,7 +67,6 @@ export const SubjectPage: React.FC = () => {
   const handleEditClick = (sub: any) => {
     setEditingSubject(sub);
     setName(sub.name);
-    setCode(sub.code);
     setClassId(sub.classId);
     setTeacherId(sub.classSubjectTeachers?.[0]?.teacherId || '');
     setShowModal(true);
@@ -89,17 +87,17 @@ export const SubjectPage: React.FC = () => {
     e.preventDefault();
     try {
       if (editingSubject) {
-        await api.put(`/api/subjects/${editingSubject.id}`, { name, code });
+        await api.put(`/api/subjects/${editingSubject.id}`, { name });
         if (teacherId) {
           await api.post('/api/subjects/assign-teacher', {
-            classId,
+            classId: editingSubject.classId,
             subjectId: editingSubject.id,
             teacherId,
           });
         }
         toast.success('Subject updated successfully!');
       } else {
-        const subRes: any = await api.post('/api/subjects', { name, code, classId });
+        const subRes: any = await api.post('/api/subjects', { name, classId });
         const subject = subRes.data;
         if (teacherId) {
           await api.post('/api/subjects/assign-teacher', {
@@ -113,7 +111,6 @@ export const SubjectPage: React.FC = () => {
 
       setShowModal(false);
       setName('');
-      setCode('');
       setClassId('');
       setTeacherId('');
       setEditingSubject(null);
@@ -123,8 +120,12 @@ export const SubjectPage: React.FC = () => {
     }
   };
 
+  const toggleExpand = (subjectName: string) => {
+    setExpandedSubjects(prev => ({ ...prev, [subjectName]: !prev[subjectName] }));
+  };
+
   return (
-    <div className="flex flex-col h-full bg-gray-50/50 -m-6 h-[calc(100vh-64px)]">
+    <div className="flex flex-col h-full bg-gray-50/50 -m-6" style={{ minHeight: 'calc(100vh - 64px)' }}>
       {/* Colorful Header */}
       <div className="px-6 py-6 bg-gradient-to-br from-violet-600 via-purple-600 to-indigo-700 shadow-lg flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
@@ -137,7 +138,6 @@ export const SubjectPage: React.FC = () => {
             onClick={() => {
               setEditingSubject(null);
               setName('');
-              setCode('');
               setClassId('');
               setTeacherId('');
               setShowModal(true);
@@ -150,158 +150,188 @@ export const SubjectPage: React.FC = () => {
         </div>
       </div>
 
-      <div className="flex-1 overflow-auto p-4">
-        <div className="min-w-[800px] w-full bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-          <table className="w-full text-sm text-left">
-            <thead>
-              <tr className="bg-gray-50 text-gray-600 border-b border-gray-200 font-bold uppercase tracking-wider text-xs">
-                <th className="px-5 py-4 text-center w-12 border-r border-gray-100">#</th>
-                <th className="px-5 py-4 border-r border-gray-100">Subject Info</th>
-                <th className="px-5 py-4 border-r border-gray-100">Code</th>
-                <th className="px-5 py-4 border-r border-gray-100">Class</th>
-                <th className="px-5 py-4 border-r border-gray-100">Teacher</th>
-                <th className="px-5 py-4 text-center">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {loading ? (
-                <tr>
-                  <td colSpan={6} className="py-12 text-center">
-                    <LoadingSpinner size="lg" />
-                  </td>
-                </tr>
-              ) : subjects.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="py-12 text-center text-gray-400 font-bold">
-                    No subjects configured yet.
-                  </td>
-                </tr>
-              ) : (
-                subjects.map((sub, idx) => {
-                  const teacherName = sub.classSubjectTeachers?.[0]?.teacher?.user?.name;
-                  return (
-                    <tr key={sub.id} className="hover:bg-indigo-50/50 transition-colors bg-white">
-                      <td className="px-5 py-4 text-center text-sm font-bold text-gray-500 border-r border-gray-100">
-                        {idx + 1}
-                      </td>
-                      <td className="px-5 py-4 border-r border-gray-100">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded flex items-center justify-center text-white font-black text-sm shadow-sm shrink-0">
-                            {sub.name?.substring(0, 2).toUpperCase() || 'SB'}
+      <div className="flex-1 overflow-auto p-4 md:p-6">
+        {loading ? (
+          <div className="flex items-center justify-center py-24">
+            <LoadingSpinner size="lg" />
+          </div>
+        ) : uniqueSubjectNames.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-24 text-gray-400">
+            <BookOpen className="w-16 h-16 mb-4 opacity-30" />
+            <p className="text-lg font-bold">No subjects configured yet.</p>
+            <p className="text-sm mt-1">Click "New Subject" to get started.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+            {uniqueSubjectNames.map((subjectName, idx) => {
+              const entries = groupedSubjects[subjectName];
+              const color = SUBJECT_COLORS[idx % SUBJECT_COLORS.length];
+              const isExpanded = expandedSubjects[subjectName];
+              const abbr = subjectName.substring(0, 2).toUpperCase();
+              const displayEntries = isExpanded ? entries : entries.slice(0, 4);
+
+              return (
+                <div
+                  key={subjectName}
+                  className={`bg-white rounded-2xl shadow-sm border ${color.border} overflow-hidden hover:shadow-lg transition-all duration-300`}
+                >
+                  {/* Card Header */}
+                  <div className={`bg-gradient-to-br ${color.bg} p-5 relative overflow-hidden`}>
+                    <div className="absolute -top-4 -right-4 w-20 h-20 rounded-full bg-white/10" />
+                    <div className="absolute -bottom-6 -left-3 w-16 h-16 rounded-full bg-white/10" />
+                    <div className="flex items-center justify-between relative z-10">
+                      <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center text-white font-black text-xl shadow-inner border border-white/30">
+                        {abbr}
+                      </div>
+                      <div className="flex items-center gap-1.5 text-white/90 text-xs font-bold bg-white/20 px-2.5 py-1 rounded-full">
+                        <Users className="w-3.5 h-3.5" />
+                        {entries.length} {entries.length === 1 ? 'Class' : 'Classes'}
+                      </div>
+                    </div>
+                    <div className="mt-3 relative z-10">
+                      <h3 className="text-white font-black text-lg leading-tight drop-shadow-sm">{subjectName}</h3>
+                    </div>
+                  </div>
+
+                  {/* Class List */}
+                  <div className="p-4 space-y-2">
+                    {displayEntries.map((sub: any) => {
+                      const teacherName = sub.classSubjectTeachers?.[0]?.teacher?.user?.name;
+                      const className = sub.class ? `${sub.class.name}-${sub.class.section}` : 'N/A';
+                      return (
+                        <div key={sub.id} className={`flex items-center justify-between px-3 py-2 rounded-xl ${color.light} group/item`}>
+                          <div className="flex items-center gap-2 min-w-0">
+                            <School className={`w-3.5 h-3.5 shrink-0 ${color.text}`} />
+                            <div className="min-w-0">
+                              <span className={`text-xs font-bold ${color.text} block truncate`}>{className}</span>
+                              {teacherName && (
+                                <span className="text-[10px] text-gray-500 truncate block">{teacherName}</span>
+                              )}
+                            </div>
                           </div>
-                          <div>
-                            <h4 className="font-bold text-gray-900 text-sm">
-                              {sub.name}
-                            </h4>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-5 py-4 border-r border-gray-100">
-                        <span className="text-xs font-bold text-indigo-700 bg-indigo-50 border border-indigo-100 px-3 py-1.5 rounded font-mono uppercase shadow-sm">
-                          {sub.code || 'N/A'}
-                        </span>
-                      </td>
-                      <td className="px-5 py-4 border-r border-gray-100">
-                        <div className="flex items-center gap-2 text-gray-700 font-medium text-sm">
-                          <School className="w-4 h-4 text-gray-400 shrink-0" />
-                          <span>{sub.class ? `${sub.class.name}-${sub.class.section}` : 'N/A'}</span>
-                        </div>
-                      </td>
-                      <td className="px-5 py-4 border-r border-gray-100">
-                        <div className="flex items-center gap-2 text-gray-700 font-medium text-sm">
-                          <span className="truncate">
-                            {teacherName || 'No Teacher'}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="px-5 py-4">
-                        <div className="flex items-center justify-center gap-2">
-                          <button
-                            onClick={() => handleEditClick(sub)}
-                            className="p-2 rounded-lg text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 transition-colors cursor-pointer"
-                            title="Edit"
-                          >
-                            <Edit className="w-4 h-4" />
-                          </button>
-                          {isSuperAdmin && (
+                          <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover/item:opacity-100 transition-opacity">
                             <button
-                              onClick={() => handleDelete(sub.id)}
-                              className="p-2 rounded-lg text-gray-500 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
-                              title="Delete"
+                              onClick={() => handleEditClick(sub)}
+                              className="p-1 rounded-lg hover:bg-white text-gray-400 hover:text-indigo-600 transition-colors cursor-pointer"
+                              title="Edit"
                             >
-                              <Trash2 className="w-4 h-4" />
+                              <Edit className="w-3.5 h-3.5" />
                             </button>
-                          )}
+                            {isSuperAdmin && (
+                              <button
+                                onClick={() => handleDelete(sub.id)}
+                                className="p-1 rounded-lg hover:bg-white text-gray-400 hover:text-red-500 transition-colors cursor-pointer"
+                                title="Delete"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            )}
+                          </div>
                         </div>
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
+                      );
+                    })}
+
+                    {entries.length > 4 && (
+                      <button
+                        onClick={() => toggleExpand(subjectName)}
+                        className={`w-full flex items-center justify-center gap-1 text-xs font-bold py-2 rounded-xl border ${color.border} ${color.light} ${color.text} hover:opacity-80 transition-opacity cursor-pointer`}
+                      >
+                        {isExpanded ? (
+                          <><ChevronUp className="w-3.5 h-3.5" /> Show Less</>
+                        ) : (
+                          <><ChevronDown className="w-3.5 h-3.5" /> +{entries.length - 4} more classes</>
+                        )}
+                      </button>
+                    )}
+
+                    {/* Add to another class button */}
+                    <button
+                      onClick={() => {
+                        setEditingSubject(null);
+                        setName(subjectName);
+                        setClassId('');
+                        setTeacherId('');
+                        setShowModal(true);
+                      }}
+                      className={`w-full flex items-center justify-center gap-1.5 text-xs font-bold py-2 rounded-xl border-dashed border-2 ${color.border} ${color.text} hover:${color.light} transition-colors cursor-pointer mt-1`}
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      Add to another class
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* Modal */}
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/50 backdrop-blur-sm p-4 animate-fade-in">
-          <div className="card w-full max-w-md p-6 space-y-6">
-            <div>
-              <h3 className="text-xl font-bold">{editingSubject ? 'Edit Subject' : 'Add New Subject'}</h3>
-              <p className="text-xs text-gray-400">
-                {editingSubject ? 'Modify classroom details and assigned teacher.' : 'Configure a new subject and assign teaching staff.'}
-              </p>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/60 backdrop-blur-sm p-4 animate-fade-in">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 space-y-5 border border-gray-100">
+            <div className="flex items-center gap-3 pb-4 border-b border-gray-100">
+              <div className="p-2.5 bg-indigo-50 rounded-xl text-indigo-600">
+                <BookOpen className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-lg font-black text-gray-900">{editingSubject ? 'Edit Subject' : 'Add New Subject'}</h3>
+                <p className="text-xs text-gray-400">
+                  {editingSubject ? 'Update subject name and assigned teacher.' : 'Configure a new subject and assign it to a class.'}
+                </p>
+              </div>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="label">Subject Name</label>
+                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">Subject Name</label>
                 <input
                   type="text"
                   required
                   placeholder="e.g. Mathematics"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="input"
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition"
                 />
               </div>
 
-              <div>
-                <label className="label">Subject Code (optional)</label>
-                <input
-                  type="text"
-                  placeholder="e.g. MATH"
-                  value={code}
-                  onChange={(e) => setCode(e.target.value)}
-                  className="input"
-                />
-              </div>
+              {!editingSubject && (
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">Class Room</label>
+                  <select
+                    required
+                    value={classId}
+                    onChange={(e) => setClassId(e.target.value)}
+                    className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition"
+                  >
+                    <option value="">Select Class</option>
+                    {classes.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name}-{c.section}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {editingSubject && (
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">Class Room</label>
+                  <input
+                    type="text"
+                    disabled
+                    value={editingSubject.class ? `${editingSubject.class.name}-${editingSubject.class.section}` : 'N/A'}
+                    className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm bg-gray-50 text-gray-500 cursor-not-allowed"
+                  />
+                </div>
+              )}
 
               <div>
-                <label className="label">Class Room</label>
-                <select
-                  required
-                  value={classId}
-                  onChange={(e) => setClassId(e.target.value)}
-                  className="input"
-                  disabled={!!editingSubject}
-                >
-                  <option value="">Select Class</option>
-                  {classes.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name}-{c.section}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="label">Assign Teacher (Optional)</label>
+                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">Assign Teacher (Optional)</label>
                 <select
                   value={teacherId}
                   onChange={(e) => setTeacherId(e.target.value)}
-                  className="input"
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition"
                 >
                   <option value="">Select Teacher</option>
                   {teachers.map((t) => (
@@ -316,11 +346,14 @@ export const SubjectPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="btn-secondary text-sm"
+                  className="px-4 py-2 text-sm font-bold text-gray-600 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>
-                <button type="submit" className="btn-primary text-sm">
+                <button
+                  type="submit"
+                  className="px-5 py-2 text-sm font-bold text-white bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl hover:from-indigo-700 hover:to-purple-700 transition-colors cursor-pointer shadow-md"
+                >
                   {editingSubject ? 'Save Changes' : 'Create Subject'}
                 </button>
               </div>

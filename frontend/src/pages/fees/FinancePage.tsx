@@ -310,43 +310,62 @@ export const FinancePage: React.FC = () => {
   ];
 
   return (
-    <div className="flex flex-col lg:flex-row gap-6">
+    <div className="flex flex-col h-full bg-gray-50/50 -m-6" style={{ minHeight: 'calc(100vh - 64px)' }}>
+      {/* Header */}
+      <div className="px-6 py-6 bg-gradient-to-br from-emerald-600 via-teal-600 to-cyan-700 shadow-lg flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div className="flex items-center gap-4">
+          <div className="p-3 bg-white/20 rounded-2xl">
+            <CreditCard className="w-7 h-7 text-white" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-black uppercase tracking-tight text-white drop-shadow-sm">Finance</h1>
+            <p className="text-white/80 text-sm font-medium mt-0.5">Manage fees, payments, and financial records.</p>
+          </div>
+        </div>
+        {activeTab !== 'home' && (
+          <button
+            onClick={() => setTab('home')}
+            className="flex items-center gap-1.5 px-4 py-2.5 text-sm font-extrabold text-teal-700 bg-white rounded-xl shadow hover:bg-teal-50 transition-colors cursor-pointer"
+          >
+            ← Back to Finance Home
+          </button>
+        )}
+      </div>
+
+      <div className="flex-1 overflow-auto p-4 md:p-6">
       {/* ══ HOME GRID VIEW ══ */}
       {activeTab === 'home' && (
         <div className="w-full animate-fade-in">
-          <div className="mb-2"></div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 gap-4 sm:gap-5">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 sm:gap-5">
             {FINANCE_MENU.map((item, idx) => {
               const Icon = item.icon;
               return (
                 <button
                   key={item.key}
                   onClick={() => setTab(item.key)}
-                  className="group relative overflow-hidden rounded-3xl p-5 text-left bg-white dark:bg-gray-800/50 border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer"
+                  className="group relative overflow-hidden rounded-2xl p-5 text-left bg-white border border-gray-100 shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5 cursor-pointer"
                   style={{ animationDelay: `${idx * 50}ms` }}
                 >
                   <div className="relative z-10 flex flex-col h-full">
-                    <div className="flex items-start justify-between mb-4">
-                      <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${item.gradient} flex items-center justify-center shadow-inner`}>
-                        <Icon className="w-6 h-6 text-white" />
+                    <div className="flex items-start justify-between mb-3">
+                      <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${item.gradient} flex items-center justify-center shadow-sm`}>
+                        <Icon className="w-5 h-5 text-white" />
                       </div>
-                      <div className="w-8 h-8 rounded-full bg-gray-50 dark:bg-gray-900/50 flex items-center justify-center group-hover:bg-indigo-50 dark:group-hover:bg-indigo-500/20 transition-colors">
-                        <ArrowRight className="w-4 h-4 text-gray-400 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 -rotate-45 group-hover:rotate-0 transition-all" />
-                      </div>
+                      <ArrowRight className="w-4 h-4 text-gray-300 group-hover:text-emerald-500 -rotate-45 group-hover:rotate-0 transition-all" />
                     </div>
                     <div className="mt-auto">
-                      <h3 className="text-gray-900 dark:text-white font-black text-lg leading-tight mb-1">{item.label}</h3>
-                      <p className="text-gray-500 dark:text-gray-400 text-xs font-medium">{item.desc}</p>
+                      <h3 className="text-gray-900 font-black text-sm leading-tight mb-1">{item.label}</h3>
+                      <p className="text-gray-400 text-xs font-medium leading-tight">{item.desc}</p>
                     </div>
                   </div>
-                  {/* Subtle hover gradient overlay */}
-                  <div className={`absolute inset-0 bg-gradient-to-br ${item.gradient} opacity-0 group-hover:opacity-[0.03] transition-opacity duration-300 pointer-events-none`} />
+                  <div className={`absolute inset-0 bg-gradient-to-br ${item.gradient} opacity-0 group-hover:opacity-[0.04] transition-opacity duration-300 pointer-events-none`} />
                 </button>
               );
             })}
           </div>
         </div>
       )}
+
 
       {/* ══ SIDEBAR + CONTENT (when not on home) ══ */}
       {activeTab !== 'home' && (
@@ -1220,6 +1239,7 @@ export const FinancePage: React.FC = () => {
       </div>
         </>
       )}
+      </div>
     </div>
   );
 
