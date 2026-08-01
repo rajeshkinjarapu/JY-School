@@ -1,2 +1,2 @@
 @echo off
-echo cJkg_-jnt-xoUxVB
+echo 6wFSxEYv6g17Syb7

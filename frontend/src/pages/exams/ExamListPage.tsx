@@ -18,6 +18,53 @@ import { ResultsTab } from './ResultsTab';
 import { JEEProgressCardTab } from './JEEProgressCardTab';
 import { ExamStatusTab } from './ExamStatusTab';
 
+const ExamCard: React.FC<{
+  label: string;
+  icon: React.ElementType;
+  gradient: string;
+  glow: string;
+  onClick: () => void;
+  sub?: string;
+}> = ({ label, icon: Icon, gradient, glow, onClick, sub }) => {
+  const iconColor = gradient.includes('#6366f1') ? '#6366f1'
+    : gradient.includes('#10b981') ? '#10b981'
+    : gradient.includes('#f59e0b') ? '#d97706'
+    : gradient.includes('#f43f5e') ? '#e11d48'
+    : gradient.includes('#d946ef') ? '#c026d3'
+    : gradient.includes('#0ea5e9') ? '#0284c7'
+    : gradient.includes('#06b6d4') ? '#0891b2' : '#8b5cf6';
+    
+  return (
+    <div onClick={onClick} className="group relative overflow-hidden rounded-[1.5rem] p-5 md:p-6 transition-all duration-500 hover:-translate-y-1 cursor-pointer shadow-lg border border-white/20"
+      style={{ background: gradient, boxShadow: '0 10px 30px -10px rgba(0,0,0,0.15)' }}>
+      {/* Background ambient glow */}
+      <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl opacity-10 group-hover:opacity-20 transition-opacity duration-500 rounded-bl-full"
+        style={{ backgroundImage: `linear-gradient(to bottom left, ${iconColor}, transparent)` }} />
+        
+      {/* Top gradient border */}
+      <div className="absolute top-0 left-0 right-0 h-1.5 opacity-80 group-hover:opacity-100 transition-opacity bg-white/30" />
+      
+      <div className="relative z-10 flex flex-col h-full justify-between gap-4">
+        <div className="flex items-start justify-between">
+          <div className="p-3 md:p-3.5 rounded-xl md:rounded-[1rem] bg-white/20 shadow-inner backdrop-blur-md border border-white/30"
+            style={{ boxShadow: `0 8px 16px ${glow}` }}>
+            <Icon className="w-5 h-5 md:w-6 md:h-6 text-white drop-shadow-md group-hover:scale-110 transition-transform duration-300" />
+          </div>
+          <div className="p-1.5 md:p-2 rounded-full bg-white/10 group-hover:bg-white/30 transition-colors border border-white/20">
+            <svg className="w-3 h-3 md:w-4 md:h-4 text-white opacity-70 group-hover:opacity-100" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+            </svg>
+          </div>
+        </div>
+        <div>
+          <h3 className="text-[14px] md:text-[15px] font-black text-white tracking-wide mb-1 drop-shadow-md leading-tight">{label}</h3>
+          {sub && <p className="text-[10px] md:text-[11px] text-white/80 font-bold flex items-center gap-1.5 opacity-90"><span className="w-1 h-1 rounded-full bg-white/80 shrink-0"/>{sub}</p>}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export const ExamListPage: React.FC = () => {
   const { user } = useAuth();
   const isAdminOrTeacher = user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN' || user?.role === 'TEACHER';
@@ -754,88 +801,40 @@ export const ExamListPage: React.FC = () => {
       <div className="space-y-4 sm:space-y-6 md:space-y-8">
         {!activeTab && (
           <div className="pt-2 sm:pt-4">
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+            <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
               {/* Examinations List - Visible only for Admin */}
               {isAdmin && (
                 <>
-                <button onClick={() => setActiveTab('examination')} className="group flex flex-col items-center justify-center p-6 rounded-[1.5rem] bg-gradient-to-br from-indigo-500 to-indigo-600 text-white transition-all gap-3 sm:gap-4 hover:shadow-xl hover:shadow-indigo-500/30 hover:-translate-y-1 shadow-md">
-                  <div className="w-14 h-14 rounded-2xl bg-white/20 flex items-center justify-center group-hover:scale-110 transition-transform">
-                    <ClipboardList className="w-7 h-7" />
-                  </div>
-                  <span className="text-[11px] sm:text-xs font-black uppercase tracking-wider text-white text-center leading-tight">Examinations List</span>
-                </button>
-                <button onClick={() => setActiveTab('status-overview')} className="group flex flex-col items-center justify-center p-6 rounded-[1.5rem] bg-gradient-to-br from-purple-500 to-fuchsia-600 text-white transition-all gap-3 sm:gap-4 hover:shadow-xl hover:shadow-purple-500/30 hover:-translate-y-1 shadow-md">
-                  <div className="w-14 h-14 rounded-2xl bg-white/20 flex items-center justify-center group-hover:scale-110 transition-transform">
-                    <ShieldAlert className="w-7 h-7" />
-                  </div>
-                  <span className="text-[11px] sm:text-xs font-black uppercase tracking-wider text-white text-center leading-tight">Status Overview</span>
-                </button>
+                  <ExamCard label="Examinations List" sub="Manage all exams" icon={ClipboardList} gradient="linear-gradient(135deg, #6366f1, #4f46e5)" glow="rgba(99,102,241,0.4)" onClick={() => setActiveTab('examination')} />
+                  <ExamCard label="Status Overview" sub="Track progress" icon={ShieldAlert} gradient="linear-gradient(135deg, #d946ef, #c026d3)" glow="rgba(217,70,239,0.4)" onClick={() => setActiveTab('status-overview')} />
                 </>
               )}
 
               {isAdminOrTeacher && (
                 <>
-                  <button onClick={() => setActiveTab('admit-card')} className="group flex flex-col items-center justify-center p-6 rounded-[1.5rem] bg-gradient-to-br from-amber-500 to-orange-500 text-white transition-all gap-3 sm:gap-4 hover:shadow-xl hover:shadow-amber-500/30 hover:-translate-y-1 shadow-md">
-                    <div className="w-14 h-14 rounded-2xl bg-white/20 flex items-center justify-center group-hover:scale-110 transition-transform">
-                      <FileText className="w-7 h-7" />
-                    </div>
-                    <span className="text-[11px] sm:text-xs font-black uppercase tracking-wider text-white text-center leading-tight">Admit Card</span>
-                  </button>
+                  <ExamCard label="Admit Card" sub="Generate hall tickets" icon={FileText} gradient="linear-gradient(135deg, #f59e0b, #ea580c)" glow="rgba(245,158,11,0.4)" onClick={() => setActiveTab('admit-card')} />
                 </>
               )}
 
               {/* Common: Marks Upload, Results, Progress Card, Question Papers */}
-              <button onClick={() => setActiveTab('written-exam')} className="group flex flex-col items-center justify-center p-6 rounded-[1.5rem] bg-gradient-to-br from-emerald-500 to-teal-500 text-white transition-all gap-3 sm:gap-4 hover:shadow-xl hover:shadow-emerald-500/30 hover:-translate-y-1 shadow-md">
-                <div className="w-14 h-14 rounded-2xl bg-white/20 flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <Edit3 className="w-7 h-7" />
-                </div>
-                <span className="text-[11px] sm:text-xs font-black uppercase tracking-wider text-white text-center leading-tight">Marks Upload</span>
-              </button>
-
-              <button onClick={() => setActiveTab('results')} className="group flex flex-col items-center justify-center p-6 rounded-[1.5rem] bg-gradient-to-br from-blue-500 to-cyan-500 text-white transition-all gap-3 sm:gap-4 hover:shadow-xl hover:shadow-blue-500/30 hover:-translate-y-1 shadow-md">
-                <div className="w-14 h-14 rounded-2xl bg-white/20 flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <Award className="w-7 h-7" />
-                </div>
-                <span className="text-[11px] sm:text-xs font-black uppercase tracking-wider text-white text-center leading-tight">Results</span>
-              </button>
-
-              <button onClick={() => setActiveTab('jee-progress-card')} className="group flex flex-col items-center justify-center p-6 rounded-[1.5rem] bg-gradient-to-br from-rose-500 to-pink-500 text-white transition-all gap-3 sm:gap-4 hover:shadow-xl hover:shadow-rose-500/30 hover:-translate-y-1 shadow-md">
-                <div className="w-14 h-14 rounded-2xl bg-white/20 flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <Award className="w-7 h-7" />
-                </div>
-                <span className="text-[11px] sm:text-xs font-black uppercase tracking-wider text-white text-center leading-tight">Progress Card</span>
-              </button>
+              <ExamCard label="Marks Upload" sub="Upload student marks" icon={Edit3} gradient="linear-gradient(135deg, #10b981, #059669)" glow="rgba(16,185,129,0.4)" onClick={() => setActiveTab('written-exam')} />
+              
+              <ExamCard label="Results" sub="View grade sheets" icon={Award} gradient="linear-gradient(135deg, #0ea5e9, #0284c7)" glow="rgba(14,165,233,0.4)" onClick={() => setActiveTab('results')} />
+              
+              <ExamCard label="Progress Card" sub="Detailed progress" icon={FileSpreadsheet} gradient="linear-gradient(135deg, #f43f5e, #e11d48)" glow="rgba(244,63,94,0.4)" onClick={() => setActiveTab('jee-progress-card')} />
 
               {isAdminOrTeacher && (
                 <>
-                  <button onClick={() => setActiveTab('question-bank')} className="group flex flex-col items-center justify-center p-6 rounded-[1.5rem] bg-gradient-to-br from-slate-600 to-slate-700 text-white transition-all gap-3 sm:gap-4 hover:shadow-xl hover:shadow-slate-500/30 hover:-translate-y-1 shadow-md">
-                    <div className="w-14 h-14 rounded-2xl bg-white/20 flex items-center justify-center group-hover:scale-110 transition-transform">
-                      <Layers className="w-7 h-7" />
-                    </div>
-                    <span className="text-[11px] sm:text-xs font-black uppercase tracking-wider text-white text-center leading-tight">Question Papers</span>
-                  </button>
-              </>
-            )}
-
-              {isAdmin && (
-                <>
-                  <button onClick={() => setActiveTab('slip-tests')} className="group flex flex-col items-center justify-center p-6 rounded-[1.5rem] bg-gradient-to-br from-cyan-500 to-blue-500 text-white transition-all gap-3 sm:gap-4 hover:shadow-xl hover:shadow-cyan-500/30 hover:-translate-y-1 shadow-md">
-                    <div className="w-14 h-14 rounded-2xl bg-white/20 flex items-center justify-center group-hover:scale-110 transition-transform">
-                      <Clock className="w-7 h-7" />
-                    </div>
-                    <span className="text-[11px] sm:text-xs font-black uppercase tracking-wider text-white text-center leading-tight">Slip Tests</span>
-                  </button>
-
-                  <button onClick={() => setActiveTab('settings')} className="group flex flex-col items-center justify-center p-6 rounded-[1.5rem] bg-gradient-to-br from-gray-600 to-gray-700 text-white transition-all gap-3 sm:gap-4 hover:shadow-xl hover:shadow-gray-500/30 hover:-translate-y-1 shadow-md">
-                    <div className="w-14 h-14 rounded-2xl bg-white/20 flex items-center justify-center group-hover:scale-110 transition-transform">
-                      <Settings className="w-7 h-7" />
-                    </div>
-                    <span className="text-[11px] sm:text-xs font-black uppercase tracking-wider text-white text-center leading-tight">Settings</span>
-                  </button>
+                  <ExamCard label="Question Papers" sub="Manage papers" icon={Layers} gradient="linear-gradient(135deg, #475569, #334155)" glow="rgba(71,85,105,0.4)" onClick={() => setActiveTab('question-bank')} />
                 </>
               )}
 
-
+              {isAdmin && (
+                <>
+                  <ExamCard label="Slip Tests" sub="Weekly tests" icon={Clock} gradient="linear-gradient(135deg, #06b6d4, #0891b2)" glow="rgba(6,182,212,0.4)" onClick={() => setActiveTab('slip-tests')} />
+                  <ExamCard label="Settings" sub="Exam configurations" icon={Settings} gradient="linear-gradient(135deg, #64748b, #475569)" glow="rgba(100,116,139,0.4)" onClick={() => setActiveTab('settings')} />
+                </>
+              )}
             </div>
           </div>
         )}
