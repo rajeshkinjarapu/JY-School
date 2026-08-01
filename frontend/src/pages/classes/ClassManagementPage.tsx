@@ -116,81 +116,112 @@ export const ClassManagementPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col h-full bg-gray-50/50 -m-6 h-[calc(100vh-64px)]">
       {/* Colorful Header */}
-      <div className="bg-gradient-to-r from-violet-600 via-purple-600 to-indigo-700 p-6 md:rounded-2xl shadow-md text-white flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <div className="px-3 pt-3 pb-4 bg-gradient-to-br from-violet-600 via-purple-600 to-indigo-700 shadow-lg flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-2xl font-black uppercase tracking-tight text-white drop-shadow-sm">Classes Directory</h1>
           <p className="text-white/80 text-sm font-medium mt-1">Manage all grades, sections, and class teacher assignments.</p>
         </div>
         <div className="flex gap-3 w-full md:w-auto">
-          <button onClick={openCreateModal} className="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-xl font-bold transition-colors flex items-center justify-center gap-2 w-full md:w-auto cursor-pointer shadow-sm">
-            <Plus className="w-5 h-5" />
+          <button onClick={openCreateModal} className="flex items-center gap-1.5 px-3.5 py-2.5 text-sm font-extrabold text-indigo-700 bg-white rounded-xl shadow hover:bg-indigo-50 transition-colors w-full md:w-auto cursor-pointer">
+            <Plus className="w-4 h-4" />
             <span>New Class</span>
           </button>
         </div>
       </div>
 
-      {loading ? (
-        <LoadingSpinner size="lg" className="py-12" />
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 px-4 md:px-0">
-          {classes.map((cls) => (
-            <div key={cls.id} className="bg-gradient-to-br from-white to-indigo-50/30 p-6 space-y-4 hover:shadow-glow-primary transition-all duration-300 relative group rounded-3xl border border-indigo-50 backdrop-blur-md animate-fade-in-up hover:-translate-y-1">
-              <div className="absolute top-4 right-4 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button
-                  onClick={() => openEditModal(cls)}
-                  className="p-1.5 rounded-lg text-gray-400 hover:text-primary-500 hover:bg-primary-50 dark:hover:bg-primary-950/20 cursor-pointer"
-                  title="Edit class"
-                >
-                  <Edit3 className="w-4 h-4" />
-                </button>
-                {isSuperAdmin && (
-                  <button
-                    onClick={() => handleDelete(cls.id)}
-                    className="p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 cursor-pointer"
-                    title="Delete class"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                )}
-              </div>
-              
-              <div className="flex items-center gap-4">
-                <div className="w-14 h-14 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-indigo-500/30 transform group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300">
-                  <School className="w-7 h-7" />
-                </div>
-                <div>
-                  <h4 className="font-extrabold text-2xl text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400">{cls.name}-{cls.section}</h4>
-                  <span className="text-[11px] font-bold text-fuchsia-600 bg-fuchsia-50 px-2 py-0.5 rounded-full border border-fuchsia-100">Academic Year: {cls.academicYear}</span>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4 text-xs">
-                <div className="flex items-center gap-2 text-gray-500">
-                  <Users className="w-4 h-4" />
-                  <span>{cls._count?.students || 0} Students</span>
-                </div>
-                <div className="flex items-center gap-2 text-gray-500">
-                  <User className="w-4 h-4" />
-                  <span className="truncate">
-                    {cls.classTeacher?.user?.name || 'No Teacher'}
-                  </span>
-                </div>
-              </div>
-
-              <Link to={`/classes/${cls.id}`} className="btn-secondary w-full text-center block text-sm">
-                Manage Class Details
-              </Link>
-            </div>
-          ))}
-          {classes.length === 0 && (
-            <div className="col-span-full py-12 text-center text-gray-400">
-              No classes configured yet. Create your first class!
-            </div>
-          )}
+      <div className="flex-1 overflow-auto p-4">
+        <div className="min-w-[800px] w-full bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+          <table className="w-full text-sm text-left">
+            <thead>
+              <tr className="bg-gray-50 text-gray-600 border-b border-gray-200 font-bold uppercase tracking-wider text-xs">
+                <th className="px-5 py-4 text-center w-12 border-r border-gray-100">#</th>
+                <th className="px-5 py-4 border-r border-gray-100">Class Info</th>
+                <th className="px-5 py-4 border-r border-gray-100">Academic Year</th>
+                <th className="px-5 py-4 border-r border-gray-100">Students</th>
+                <th className="px-5 py-4 border-r border-gray-100">Class Teacher</th>
+                <th className="px-5 py-4 text-center">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-200">
+              {loading ? (
+                <tr>
+                  <td colSpan={6} className="py-12 text-center">
+                    <LoadingSpinner size="lg" />
+                  </td>
+                </tr>
+              ) : classes.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="py-12 text-center text-gray-400 font-bold">
+                    No classes configured yet. Create your first class!
+                  </td>
+                </tr>
+              ) : (
+                classes.map((cls, idx) => (
+                  <tr key={cls.id} className="hover:bg-indigo-50/50 transition-colors bg-white">
+                    <td className="px-5 py-4 text-center text-sm font-bold text-gray-500 border-r border-gray-100">
+                      {idx + 1}
+                    </td>
+                    <td className="px-5 py-4 border-r border-gray-100">
+                      <Link to={`/classes/${cls.id}`} className="flex items-center gap-3 group">
+                        <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded flex items-center justify-center text-white shadow-sm shrink-0">
+                          <School className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <h4 className="font-bold text-gray-900 text-sm group-hover:text-indigo-600 transition-colors">
+                            {cls.name}-{cls.section}
+                          </h4>
+                          <span className="text-xs text-gray-500">View details</span>
+                        </div>
+                      </Link>
+                    </td>
+                    <td className="px-5 py-4 border-r border-gray-100">
+                      <span className="text-xs font-bold text-fuchsia-700 bg-fuchsia-50 border border-fuchsia-100 px-3 py-1.5 rounded uppercase shadow-sm">
+                        {cls.academicYear}
+                      </span>
+                    </td>
+                    <td className="px-5 py-4 border-r border-gray-100">
+                      <div className="flex items-center gap-2 text-gray-700 font-medium text-sm">
+                        <Users className="w-4 h-4 text-gray-400" />
+                        {cls._count?.students || 0} Students
+                      </div>
+                    </td>
+                    <td className="px-5 py-4 border-r border-gray-100">
+                      <div className="flex items-center gap-2 text-gray-700 font-medium text-sm">
+                        <User className="w-4 h-4 text-gray-400" />
+                        <span className="truncate">
+                          {cls.classTeacher?.user?.name || 'No Teacher'}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-5 py-4">
+                      <div className="flex items-center justify-center gap-2">
+                        <button
+                          onClick={() => openEditModal(cls)}
+                          className="p-2 rounded-lg text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 transition-colors cursor-pointer"
+                          title="Edit class"
+                        >
+                          <Edit3 className="w-4 h-4" />
+                        </button>
+                        {isSuperAdmin && (
+                          <button
+                            onClick={() => handleDelete(cls.id)}
+                            className="p-2 rounded-lg text-gray-500 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
+                            title="Delete class"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
-      )}
+      </div>
 
       {/* Modal */}
       {showModal && (
