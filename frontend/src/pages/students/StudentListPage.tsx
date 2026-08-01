@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from "react";
 import api from "../../api/axios";
-import { Search, UserPlus, Trash2, Edit, FileDown, Eye, Filter, ChevronLeft, ChevronRight } from "lucide-react";
+import { Search, UserPlus, Trash2, Edit, FileDown, Eye, Filter, ChevronLeft, ChevronRight, Upload, Image as ImageIcon } from "lucide-react";
 import toast from "react-hot-toast";
 import { Link, useNavigate } from "react-router-dom";
 import jsPDF from "jspdf";
@@ -31,13 +31,13 @@ const StudentAvatar = ({ name, photoUrl, isActive }: { name: string, photoUrl?: 
   return (
     <div className="relative shrink-0 inline-block">
       {url ? (
-        <img src={url} alt={safeName} className="w-9 h-9 rounded-full object-cover border border-gray-200" />
+        <img src={url} alt={safeName} className="w-11 h-11 rounded object-cover border border-gray-300 shadow-sm" />
       ) : (
-        <div className={`w-9 h-9 rounded-full bg-gradient-to-br ${colorClass} flex items-center justify-center text-white font-bold text-xs shadow-sm`}>
+        <div className={`w-11 h-11 rounded bg-gradient-to-br ${colorClass} flex items-center justify-center text-white font-bold text-sm shadow-sm border border-gray-200`}>
           {getInitials(safeName)}
         </div>
       )}
-      <span className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-white ${isActive ? 'bg-emerald-500' : 'bg-gray-400'}`} />
+      <span className={`absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-white ${isActive ? 'bg-emerald-500' : 'bg-gray-400'}`} />
     </div>
   );
 };
@@ -134,13 +134,27 @@ export const StudentListPage: React.FC = () => {
           </div>
           <div className="flex gap-2">
             {isSuperAdmin && (
-              <button
-                onClick={exportStudents}
-                className="p-2.5 rounded-xl bg-white/15 text-white hover:bg-white/25 transition-colors cursor-pointer"
-                title="Export PDF"
-              >
-                <FileDown className="w-5 h-5" />
-              </button>
+              <>
+                <button
+                  className="flex items-center gap-1.5 px-3.5 py-2.5 text-sm font-extrabold text-white bg-white/15 rounded-xl shadow hover:bg-white/25 transition-colors cursor-pointer"
+                  title="Upload Students"
+                >
+                  <Upload className="w-4 h-4" /> Upload Students
+                </button>
+                <button
+                  className="flex items-center gap-1.5 px-3.5 py-2.5 text-sm font-extrabold text-white bg-white/15 rounded-xl shadow hover:bg-white/25 transition-colors cursor-pointer"
+                  title="Upload Photos"
+                >
+                  <ImageIcon className="w-4 h-4" /> Upload Photos
+                </button>
+                <button
+                  onClick={exportStudents}
+                  className="p-2.5 rounded-xl bg-white/15 text-white hover:bg-white/25 transition-colors cursor-pointer"
+                  title="Export PDF"
+                >
+                  <FileDown className="w-5 h-5" />
+                </button>
+              </>
             )}
             <Link
               to="/students/new"
@@ -183,20 +197,20 @@ export const StudentListPage: React.FC = () => {
       </div>
 
       {/* ── Student List (Tabular) ── */}
-      <div className="flex-1 overflow-auto bg-gray-50/50">
-        <div className="min-w-[800px] w-full bg-white">
+      <div className="flex-1 overflow-auto bg-gray-50/50 p-4">
+        <div className="min-w-[800px] w-full bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
           <table className="w-full text-sm text-left">
             <thead>
-              <tr className="bg-gray-100/80 text-gray-500 border-b border-gray-200/60 font-bold uppercase tracking-wider text-[10px]">
-                <th className="px-4 py-3 text-center w-12">#</th>
-                <th className="px-4 py-3">Student</th>
-                <th className="px-4 py-3">Roll No / ID</th>
-                <th className="px-4 py-3">Class</th>
-                <th className="px-4 py-3">Parent Info</th>
-                <th className="px-4 py-3 text-right">Actions</th>
+              <tr className="bg-gray-50 text-gray-600 border-b border-gray-200 font-bold uppercase tracking-wider text-xs">
+                <th className="px-5 py-4 text-center w-12 border-r border-gray-100">#</th>
+                <th className="px-5 py-4 border-r border-gray-100">Student</th>
+                <th className="px-5 py-4 border-r border-gray-100">Roll No / ID</th>
+                <th className="px-5 py-4 border-r border-gray-100">Class</th>
+                <th className="px-5 py-4 border-r border-gray-100">Parent Info</th>
+                <th className="px-5 py-4 text-center">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-gray-200">
               {loading ? (
                 <tr>
                   <td colSpan={6} className="py-12 text-center">
@@ -218,46 +232,46 @@ export const StudentListPage: React.FC = () => {
                 </tr>
               ) : (
                 students.map((student, idx) => (
-                  <tr key={student.id} className="hover:bg-indigo-50/40 transition-colors group">
-                    <td className="px-4 py-3 text-center text-xs font-bold text-gray-400">
+                  <tr key={student.id} className="hover:bg-indigo-50/50 transition-colors bg-white">
+                    <td className="px-5 py-4 text-center text-sm font-bold text-gray-500 border-r border-gray-100">
                       {(page - 1) * LIMIT + idx + 1}
                     </td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-3">
+                    <td className="px-5 py-4 border-r border-gray-100">
+                      <div className="flex items-center gap-4">
                         <StudentAvatar name={student.user?.name} photoUrl={student.user?.photoUrl} isActive={student.user?.isActive} />
                         <div>
-                          <p className="font-extrabold text-gray-900 text-sm group-hover:text-indigo-700 transition-colors">
+                          <p className="font-bold text-gray-900 text-sm hover:text-indigo-600 transition-colors">
                             {student.user?.name || "Unknown"}
                           </p>
-                          <p className="text-[11px] text-gray-500 font-medium mt-0.5">{student.user?.email || "No email"}</p>
+                          <p className="text-xs text-gray-500 font-medium mt-1">{student.user?.email || "No email"}</p>
                         </div>
                       </div>
                     </td>
-                    <td className="px-4 py-3">
-                      <span className="text-xs font-bold text-indigo-700 bg-indigo-50 border border-indigo-100 px-2 py-1 rounded font-mono">
+                    <td className="px-5 py-4 border-r border-gray-100">
+                      <span className="text-sm font-bold text-indigo-700 bg-indigo-50 border border-indigo-100 px-3 py-1.5 rounded font-mono shadow-sm">
                         {student.rollNo || "–"}
                       </span>
                     </td>
-                    <td className="px-4 py-3">
-                      <span className="text-[11px] font-bold text-teal-700 bg-teal-50 border border-teal-100 px-2 py-1 rounded uppercase">
+                    <td className="px-5 py-4 border-r border-gray-100">
+                      <span className="text-xs font-bold text-teal-700 bg-teal-50 border border-teal-100 px-3 py-1.5 rounded uppercase shadow-sm">
                         {student.class?.name || "–"} {student.class?.section || ""}
                       </span>
                     </td>
-                    <td className="px-4 py-3">
-                      <p className="font-bold text-gray-700 text-xs">{student.fatherName || "–"}</p>
-                      <p className="text-gray-500 text-[11px] mt-0.5 font-medium">{student.user?.phone || "–"}</p>
+                    <td className="px-5 py-4 border-r border-gray-100">
+                      <p className="font-bold text-gray-800 text-sm">{student.fatherName || "–"}</p>
+                      <p className="text-gray-500 text-xs mt-1 font-medium">{student.user?.phone || "–"}</p>
                     </td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center justify-end gap-1.5 opacity-70 group-hover:opacity-100 transition-opacity">
-                        <Link to={`/students/${student.id}`} className="p-1.5 rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition-colors" title="View">
+                    <td className="px-5 py-4">
+                      <div className="flex items-center justify-center gap-2">
+                        <Link to={`/students/${student.id}`} className="p-2 rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-100 hover:shadow-sm transition-all" title="View">
                           <Eye className="w-4 h-4" />
                         </Link>
                         {isSuperAdmin && (
                           <>
-                            <Link to={`/students/${student.id}/edit`} className="p-1.5 rounded-lg bg-amber-50 text-amber-600 hover:bg-amber-100 transition-colors" title="Edit">
+                            <Link to={`/students/${student.id}/edit`} className="p-2 rounded-lg bg-amber-50 text-amber-600 hover:bg-amber-100 hover:shadow-sm transition-all" title="Edit">
                               <Edit className="w-4 h-4" />
                             </Link>
-                            <button onClick={() => handleDelete(student.id)} className="p-1.5 rounded-lg bg-red-50 text-red-500 hover:bg-red-100 transition-colors cursor-pointer" title="Delete">
+                            <button onClick={() => handleDelete(student.id)} className="p-2 rounded-lg bg-red-50 text-red-500 hover:bg-red-100 hover:shadow-sm transition-all cursor-pointer" title="Delete">
                               <Trash2 className="w-4 h-4" />
                             </button>
                           </>
