@@ -326,7 +326,7 @@ export const SettingsPage: React.FC = () => {
             </button>
           </form>
         </div>
-      ) : (
+      ) : activeTab === 'users' ? (
         <div className="space-y-6">
           {/* Action Header */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-gray-900 p-4 rounded-2xl border border-gray-150 dark:border-gray-800">
