@@ -2,7 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   LayoutDashboard, HelpCircle, BookOpen, FolderTree, List, BarChart, Type, 
-  FileUp, FileText, Key, CheckCircle, PieChart, Settings, ChevronRight, Sparkles 
+  FileUp, FileText, Key, CheckCircle, PieChart, Settings, ChevronRight, Sparkles, Database
 } from 'lucide-react';
 
 export const QuestionBankDashboard = () => {
@@ -26,9 +26,18 @@ export const QuestionBankDashboard = () => {
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-7xl mx-auto p-4 md:p-8">
-
-
-      {/* Grid of Tools */}
+      {/* ══ HEADER ══ */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white/60 dark:bg-slate-900/50 backdrop-blur-md p-6 rounded-3xl border border-white/20 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
+        <div className="flex items-center gap-4">
+          <div className="bg-gradient-to-br from-indigo-500 to-purple-600 p-3.5 rounded-2xl shadow-lg shadow-indigo-500/30 text-white">
+            <Database className="w-6 h-6" />
+          </div>
+          <div>
+            <h1 className="text-xl sm:text-2xl font-black bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent drop-shadow-sm">Question Bank Hub</h1>
+            <p className="text-sm font-semibold text-slate-500 mt-0.5">Manage questions, papers, and assessments</p>
+          </div>
+        </div>
+      </div>      {/* Grid of Tools */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {tools.map((tool, index) => {
           const Icon = tool.icon;

@@ -564,9 +564,9 @@ export const TimetablePage: React.FC = () => {
 
   /* ─── RENDER ─── */
   return (
-    <div className="flex flex-col h-full bg-gray-50/50" style={{ minHeight: 'calc(100vh - 64px)' }}>
+    <div className="flex flex-col h-full bg-gray-50/50 print-landscape" style={{ minHeight: 'calc(100vh - 64px)' }}>
       {/* ══ HEADER ══ */}
-      <div className="px-6 py-6 bg-gradient-to-br from-indigo-600 via-blue-600 to-cyan-600 shadow-lg flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shrink-0">
+      <div className="px-6 py-6 bg-gradient-to-br from-indigo-600 via-blue-600 to-cyan-600 shadow-lg flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shrink-0 no-print">
         <div className="flex items-center gap-4">
           <div className="p-3 bg-white/20 rounded-2xl">
             <Calendar className="w-7 h-7 text-white" />
@@ -593,11 +593,11 @@ export const TimetablePage: React.FC = () => {
         </div>
       </div>
 
-      <div className="flex-1 overflow-auto p-4 md:p-6">
-        <div className="space-y-5 max-w-7xl mx-auto">
+      <div className="flex-1 overflow-auto p-4 md:p-6 print:p-0">
+        <div className="space-y-5 max-w-7xl mx-auto print:max-w-none print:w-[297mm] print:h-auto">
       {/* ══ FILTER BAR ══ */}
       {(activeTab === "class" || activeTab === "teacher") && (
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white p-4 rounded-2xl shadow-sm border border-gray-100 no-print">
           <div className="flex items-center gap-3 flex-wrap">
             <span className="text-[10px] font-extrabold uppercase text-gray-400 tracking-widest">
               Filter:

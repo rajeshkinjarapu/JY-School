@@ -28,117 +28,127 @@ export const FeeReceiptPrint: React.FC<FeeReceiptPrintProps> = ({ payment, schoo
     : 0;
 
   return (
-    <div className="hidden print:flex print:flex-col w-full text-slate-900 bg-white print:h-[296mm] print:w-[210mm] m-0 p-0 overflow-hidden box-border">
+    <div 
+      className="hidden print:flex print:flex-col w-full text-slate-900 bg-white print:h-[296mm] print:w-[210mm] m-0 p-0 overflow-hidden box-border"
+      style={{ WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }}
+    >
       {/* 2 Copies (Office Copy & Parent Copy) */}
       {[ 'OFFICE COPY', 'PARENT COPY' ].map((copyType, idx) => (
-        <div key={copyType} className={`relative print:h-[148mm] w-full flex flex-col justify-center px-6 ${idx === 1 ? 'border-t-[2px] border-dashed border-slate-400' : ''}`}>
+        <div key={copyType} className={`relative print:h-[148mm] w-full flex flex-col justify-center px-8 ${idx === 1 ? 'border-t-[2px] border-dashed border-indigo-300' : ''}`}>
           
           {idx === 1 && (
-             <div className="absolute top-[-10px] left-1/2 -translate-x-1/2 flex items-center justify-center bg-white px-4 text-slate-500 text-[11px] uppercase tracking-[0.2em] font-black">
+             <div className="absolute top-[-10px] left-1/2 -translate-x-1/2 flex items-center justify-center bg-white px-4 text-indigo-400 text-[10px] uppercase tracking-[0.2em] font-black">
                <Scissors className="w-4 h-4 mr-2" /> CUT HERE <Scissors className="w-4 h-4 ml-2 rotate-180" />
              </div>
           )}
 
-          <div className="w-full h-[135mm] max-w-[850px] mx-auto border-[3px] border-slate-800 p-4 rounded-xl relative overflow-hidden box-border flex flex-col bg-slate-50/30 shadow-sm">
+          <div className="w-full h-[135mm] max-w-[850px] mx-auto border border-indigo-100 rounded-2xl relative overflow-hidden box-border flex flex-col bg-white shadow-2xl shadow-indigo-900/5">
             
-            {/* Header */}
-            <div className="flex justify-between items-center border-b-[3px] border-slate-800 pb-3 mb-3">
-              <div className="flex items-center gap-4">
-                <div className="w-16 h-16 rounded-full border-[3px] border-slate-800 flex items-center justify-center overflow-hidden bg-white shadow-sm">
-                  <img src="/logo.png" alt="Logo" className="w-12 h-12 object-contain" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+            {/* Background Watermark */}
+            <div className="absolute inset-0 flex items-center justify-center opacity-[0.03] pointer-events-none">
+              <img src="/logo.png" alt="" className="w-64 h-64 object-contain grayscale" />
+            </div>
+
+            {/* Header Banner */}
+            <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 p-4 flex justify-between items-center text-white relative z-10 border-b-4 border-indigo-900/10">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-xl bg-white p-1 shadow-lg transform rotate-[-2deg]">
+                  <img src="/logo.png" alt="Logo" className="w-full h-full object-contain" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
                 </div>
                 <div>
-                  <h1 className="text-2xl font-black uppercase tracking-widest text-slate-900 drop-shadow-sm">{schoolName}</h1>
-                  <p className="text-[11px] font-black uppercase tracking-[0.2em] text-indigo-700 mt-0.5">Fee Payment Receipt</p>
+                  <h1 className="text-xl font-black uppercase tracking-widest drop-shadow-md whitespace-nowrap">{schoolName}</h1>
+                  <p className="text-[9px] font-black uppercase tracking-[0.3em] text-indigo-100 mt-0.5">Fee Payment Receipt</p>
                 </div>
               </div>
-              <div className="text-right">
-                <div className="inline-block bg-slate-900 text-white px-4 py-1.5 font-black text-[11px] tracking-widest uppercase rounded-md shadow-sm mb-1.5">
+              <div className="text-right pl-2">
+                <div className="inline-block bg-white/20 backdrop-blur-md px-3 py-1.5 font-black text-[10px] tracking-widest uppercase rounded-lg shadow-sm mb-1.5 border border-white/20">
                   {copyType}
                 </div>
-                <div className="text-[13px] font-black uppercase tracking-wider text-slate-800 mt-1">
-                  Receipt No: <span className="text-indigo-700">{receiptNumber}</span>
+                <div className="text-[11px] font-bold mt-1 text-indigo-50">
+                  Receipt No: <span className="font-black text-white text-[13px]">{receiptNumber}</span>
                 </div>
-                <div className="text-[11px] font-extrabold text-slate-500 mt-1 uppercase tracking-wider">
-                  Date: <span className="text-slate-800">{format(new Date(payment.paymentDate || payment.createdAt || new Date()), 'dd MMM yyyy')}</span>
+                <div className="text-[10px] font-bold text-indigo-100 mt-0.5 uppercase tracking-widest">
+                  Date: <span className="text-white font-black">{format(new Date(payment.paymentDate || payment.createdAt || new Date()), 'dd MMM yyyy')}</span>
                 </div>
               </div>
             </div>
 
-            {/* Student Details Grid */}
-            <div className="grid grid-cols-2 gap-y-3 gap-x-6 text-sm mb-4 bg-white p-3 rounded-lg border-2 border-slate-200 shadow-inner">
-              <div>
-                <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Student Name</div>
-                <div className="font-black text-slate-800 text-[13px] border-b-2 border-slate-100 pb-1">{payment.student?.user?.name || 'N/A'}</div>
+            <div className="p-5 flex flex-col flex-1 relative z-10">
+              {/* Student Details Grid */}
+              <div className="grid grid-cols-2 gap-y-3 gap-x-8 text-sm mb-5 bg-indigo-50/50 p-4 rounded-xl border border-indigo-100/50 backdrop-blur-sm">
+                <div>
+                  <div className="text-[9px] font-black text-indigo-400 uppercase tracking-widest mb-1">Student Name</div>
+                  <div className="font-black text-slate-800 text-[13px] border-b border-indigo-100/50 pb-1">{payment.student?.user?.name || 'N/A'}</div>
+                </div>
+                <div>
+                  <div className="text-[9px] font-black text-indigo-400 uppercase tracking-widest mb-1">Student ID No</div>
+                  <div className="font-black text-slate-800 text-[13px] border-b border-indigo-100/50 pb-1">{payment.student?.rollNo || 'N/A'}</div>
+                </div>
+                <div>
+                  <div className="text-[9px] font-black text-indigo-400 uppercase tracking-widest mb-1">Class / Section</div>
+                  <div className="font-black text-slate-800 text-[13px] border-b border-indigo-100/50 pb-1">{payment.student?.class ? `${payment.student.class.name} - ${payment.student.class.section}` : 'N/A'}</div>
+                </div>
+                <div>
+                  <div className="text-[9px] font-black text-indigo-400 uppercase tracking-widest mb-1">Father's Name</div>
+                  <div className="font-black text-slate-800 text-[13px] border-b border-indigo-100/50 pb-1">{payment.student?.fatherName || 'N/A'}</div>
+                </div>
+                <div>
+                  <div className="text-[9px] font-black text-indigo-400 uppercase tracking-widest mb-1">Mobile Number</div>
+                  <div className="font-black text-slate-800 text-[13px] border-b border-indigo-100/50 pb-1">{payment.student?.mobile || 'N/A'}</div>
+                </div>
+                <div>
+                  <div className="text-[9px] font-black text-indigo-400 uppercase tracking-widest mb-1">Payment Status</div>
+                  <div className="font-black text-emerald-600 text-[13px] border-b border-indigo-100/50 pb-1 flex items-center gap-1">SUCCESS ✓</div>
+                </div>
               </div>
-              <div>
-                <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Student ID No</div>
-                <div className="font-black text-slate-800 text-[13px] border-b-2 border-slate-100 pb-1">{payment.student?.rollNo || 'N/A'}</div>
-              </div>
-              <div>
-                <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Class / Section</div>
-                <div className="font-black text-slate-800 text-[13px] border-b-2 border-slate-100 pb-1">{payment.student?.class ? `${payment.student.class.name} - ${payment.student.class.section}` : 'N/A'}</div>
-              </div>
-              <div>
-                <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Father's Name</div>
-                <div className="font-black text-slate-800 text-[13px] border-b-2 border-slate-100 pb-1">{payment.student?.fatherName || 'N/A'}</div>
-              </div>
-              <div>
-                <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Mobile Number</div>
-                <div className="font-black text-slate-800 text-[13px] border-b-2 border-slate-100 pb-1">{payment.student?.mobile || 'N/A'}</div>
-              </div>
-              <div>
-                <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Payment Status</div>
-                <div className="font-black text-emerald-600 text-[13px] border-b-2 border-slate-100 pb-1 flex items-center gap-1">SUCCESS</div>
-              </div>
-            </div>
 
-            {/* Payment Details Table */}
-            <div className="border-[3px] border-slate-800 rounded-lg overflow-hidden flex-1 bg-white flex flex-col shadow-sm">
-               <table className="w-full text-sm">
-                 <thead className="bg-slate-100 border-b-[3px] border-slate-800 text-[11px] font-black text-slate-700 uppercase tracking-widest text-left">
-                   <tr>
-                     <th className="py-2.5 px-4 border-r-[3px] border-slate-800">Description</th>
-                     <th className="py-2.5 px-4 border-r-[3px] border-slate-800 text-center">Payment Mode</th>
-                     <th className="py-2.5 px-4 text-right">Amount</th>
-                   </tr>
-                 </thead>
-                 <tbody>
-                   <tr className="border-b-2 border-slate-200 font-bold">
-                     <td className="py-3.5 px-4 border-r-[3px] border-slate-800 text-slate-800">{payment.feeStructure?.name || 'Tuition Fee'}</td>
-                     <td className="py-3.5 px-4 border-r-[3px] border-slate-800 text-center text-slate-800 uppercase font-black">{payment.method}</td>
-                     <td className="py-3.5 px-4 text-right text-slate-800 text-[15px]">₹{payment.amountPaid.toLocaleString('en-IN')}</td>
-                   </tr>
-                   {payment.remarks && (
-                     <tr className="border-b-2 border-slate-200 font-semibold text-slate-600 text-xs bg-amber-50">
-                       <td colSpan={3} className="py-2 px-4">Remarks: <span className="font-bold text-slate-800">{payment.remarks}</span></td>
+              {/* Payment Details Table */}
+              <div className="border border-slate-200 rounded-xl overflow-hidden flex-1 bg-white flex flex-col shadow-sm">
+                 <table className="w-full text-sm">
+                   <thead className="bg-slate-100 border-b border-slate-200 text-[10px] font-black text-slate-500 uppercase tracking-widest text-left">
+                     <tr>
+                       <th className="py-2.5 px-4 border-r border-slate-200">Description</th>
+                       <th className="py-2.5 px-4 border-r border-slate-200 text-center">Payment Mode</th>
+                       <th className="py-2.5 px-4 text-right">Amount</th>
                      </tr>
-                   )}
-                   <tr className="font-black text-base bg-indigo-50 border-b-[3px] border-slate-800">
-                     <td colSpan={2} className="py-3 px-4 border-r-[3px] border-slate-800 text-right uppercase tracking-widest text-[11px] text-indigo-900">Total Paid</td>
-                     <td className="py-3 px-4 text-right text-[18px] text-indigo-700">₹{payment.amountPaid.toLocaleString('en-IN')}</td>
-                   </tr>
-                 </tbody>
-               </table>
-               
-               {/* Spacer to push signatures to bottom */}
-               <div className="flex-1"></div>
+                   </thead>
+                   <tbody>
+                     <tr className="border-b border-slate-100 font-bold">
+                       <td className="py-4 px-4 border-r border-slate-100 text-slate-800">{payment.feeStructure?.name || 'Tuition Fee'}</td>
+                       <td className="py-4 px-4 border-r border-slate-100 text-center text-slate-600 uppercase font-black text-xs">{payment.method}</td>
+                       <td className="py-4 px-4 text-right text-slate-800 text-[15px]">₹{payment.amountPaid.toLocaleString('en-IN')}</td>
+                     </tr>
+                     {payment.remarks && (
+                       <tr className="border-b border-slate-100 font-semibold text-slate-600 text-xs bg-amber-50/50">
+                         <td colSpan={3} className="py-2 px-4">Remarks: <span className="font-bold text-slate-800">{payment.remarks}</span></td>
+                       </tr>
+                     )}
+                     <tr className="font-black text-base bg-gradient-to-r from-indigo-50 to-purple-50 border-t border-slate-200">
+                       <td colSpan={2} className="py-3.5 px-4 border-r border-slate-200 text-right uppercase tracking-widest text-[11px] text-indigo-900">Total Paid</td>
+                       <td className="py-3.5 px-4 text-right text-[18px] text-indigo-700">₹{payment.amountPaid.toLocaleString('en-IN')}</td>
+                     </tr>
+                   </tbody>
+                 </table>
+                 
+                 {/* Spacer to push signatures to bottom */}
+                 <div className="flex-1"></div>
 
-               <div className="flex justify-between items-center text-sm font-black bg-slate-100 p-3">
-                 <span className="text-[11px] uppercase tracking-widest text-slate-500">Pending Balance for {payment.feeStructure?.name || 'this fee'}:</span>
-                 <span className={`text-[15px] ${pendingBalance > 0 ? 'text-rose-600' : 'text-emerald-600'}`}>₹{pendingBalance > 0 ? pendingBalance.toLocaleString('en-IN') : 0}</span>
-               </div>
-            </div>
-
-            {/* Signatures */}
-            <div className="flex justify-between items-end mt-8 mb-2 px-8">
-              <div className="text-center">
-                <div className="w-56 border-b-2 border-dashed border-slate-400 mb-2"></div>
-                <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Authorized Signatory</div>
+                 <div className="flex justify-between items-center text-sm font-black bg-slate-50 p-3 border-t border-slate-200">
+                   <span className="text-[10px] uppercase tracking-widest text-slate-500">Pending Balance for {payment.feeStructure?.name || 'this fee'}:</span>
+                   <span className={`text-[15px] ${pendingBalance > 0 ? 'text-rose-500' : 'text-emerald-500'}`}>₹{pendingBalance > 0 ? pendingBalance.toLocaleString('en-IN') : 0}</span>
+                 </div>
               </div>
-              <div className="text-center">
-                <div className="w-56 border-b-2 border-dashed border-slate-400 mb-2"></div>
-                <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Cashier / Office</div>
+
+              {/* Signatures */}
+              <div className="flex justify-between items-end mt-6 mb-2 px-8">
+                <div className="text-center">
+                  <div className="w-48 border-b-2 border-dashed border-slate-300 mb-2"></div>
+                  <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Authorized Signatory</div>
+                </div>
+                <div className="text-center">
+                  <div className="w-48 border-b-2 border-dashed border-slate-300 mb-2"></div>
+                  <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Cashier / Office</div>
+                </div>
               </div>
             </div>
 

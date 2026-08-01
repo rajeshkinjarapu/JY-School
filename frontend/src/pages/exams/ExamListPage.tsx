@@ -831,7 +831,7 @@ export const ExamListPage: React.FC = () => {
 
               {isAdmin && (
                 <>
-                  <ExamCard label="Slip Tests" sub="Weekly tests" icon={Clock} gradient="linear-gradient(135deg, #06b6d4, #0891b2)" glow="rgba(6,182,212,0.4)" onClick={() => setActiveTab('slip-tests')} />
+                  <ExamCard label="Slip Test Rank Card" sub="Generate manual rank cards" icon={Award} gradient="linear-gradient(135deg, #06b6d4, #0891b2)" glow="rgba(6,182,212,0.4)" onClick={() => navigate('/office-tools/slip-test')} />
                   <ExamCard label="Settings" sub="Exam configurations" icon={Settings} gradient="linear-gradient(135deg, #64748b, #475569)" glow="rgba(100,116,139,0.4)" onClick={() => setActiveTab('settings')} />
                 </>
               )}
@@ -1154,15 +1154,29 @@ export const ExamListPage: React.FC = () => {
       {/* ══ TAB 4: QUESTION BANK ══ */}
       {activeTab === 'question-bank' && (
         <div className="space-y-6">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white dark:bg-gray-900 p-4 rounded-xl border border-gray-150 dark:border-gray-800">
-            <div className="flex items-center gap-3">
-              <span className="text-xs font-extrabold uppercase text-gray-400">Select Group:</span>
-              <select value={selectedGroupId} onChange={e => setSelectedGroupId(e.target.value)} className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm font-bold">
-                {questionGroups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
-              </select>
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white/60 dark:bg-slate-900/50 backdrop-blur-md p-6 rounded-3xl border border-white/20 shadow-[0_8px_30px_rgb(0,0,0,0.04)] animate-fade-in-up">
+            <div className="flex items-center gap-4 w-full sm:w-auto">
+              <div className="bg-gradient-to-br from-indigo-500 to-purple-600 p-3.5 rounded-2xl shadow-lg shadow-purple-500/30 text-white shrink-0 hidden sm:block">
+                <Layers className="w-6 h-6" />
+              </div>
+              <div className="flex flex-col sm:flex-row w-full gap-3 items-center">
+                <span className="text-xs font-black uppercase text-indigo-500 tracking-wider shrink-0 w-full sm:w-auto">Select Group:</span>
+                <select 
+                  value={selectedGroupId} 
+                  onChange={e => setSelectedGroupId(e.target.value)} 
+                  className="appearance-none bg-white dark:bg-slate-800 border-2 border-indigo-100 dark:border-indigo-900/30 rounded-xl px-4 py-3 text-sm font-extrabold text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all shadow-sm cursor-pointer w-full sm:min-w-[220px]"
+                >
+                  <option value="">-- Select Question Group --</option>
+                  {questionGroups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
+                </select>
+              </div>
             </div>
+            
             {selectedGroupId && (
-              <button onClick={() => setShowQuestionModal(true)} className="btn-primary flex items-center gap-2 text-xs font-bold">
+              <button 
+                onClick={() => setShowQuestionModal(true)} 
+                className="w-full sm:w-auto bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white shadow-md shadow-indigo-500/20 hover:-translate-y-0.5 px-5 py-3 rounded-xl text-xs uppercase tracking-widest font-black transition-all duration-300 flex items-center justify-center gap-2"
+              >
                 <Plus className="w-4 h-4" /> Create Question
               </button>
             )}
@@ -1172,27 +1186,42 @@ export const ExamListPage: React.FC = () => {
             {questions.map((q, index) => {
               const opts = q.options ? JSON.parse(q.options) : [];
               return (
-                <div key={q.id} className="card p-6 space-y-4 relative group border-l-4 border-indigo-500">
-                  <div className="flex justify-between items-start gap-4">
+                <div key={q.id} className="bg-white/60 dark:bg-slate-900/40 backdrop-blur-md p-6 rounded-3xl border border-white/20 shadow-lg relative group transition-all duration-300 hover:shadow-xl hover:bg-white/80 dark:hover:bg-slate-900/60 flex flex-col gap-4 overflow-hidden">
+                  <div className="absolute top-0 left-0 w-2 h-full bg-gradient-to-b from-indigo-500 to-purple-500 rounded-l-3xl"></div>
+                  <div className="flex justify-between items-start gap-4 pl-4">
                     <div>
-                      <h4 className="font-bold text-sm text-gray-950 dark:text-white">Q{index + 1}. {q.questionText}</h4>
-                      <div className="flex items-center gap-2.5 mt-2">
-                        <span className="text-[10px] font-extrabold uppercase bg-gray-100 dark:bg-gray-800 text-gray-600 px-2 py-0.5 rounded-md">{q.questionType}</span>
-                        <span className="text-[10px] font-semibold text-gray-400">Marks: {q.marks}</span>
+                      <h4 className="font-extrabold text-base text-slate-900 dark:text-white leading-relaxed">
+                        <span className="text-indigo-500 mr-2">Q{index + 1}.</span> 
+                        {q.questionText}
+                      </h4>
+                      <div className="flex items-center gap-3 mt-3">
+                        <span className="text-[10px] font-black uppercase tracking-widest bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 px-3 py-1 rounded-lg border border-indigo-200 dark:border-indigo-800/50">
+                          {q.questionType}
+                        </span>
+                        <span className="text-[10px] font-black uppercase tracking-widest bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 px-3 py-1 rounded-lg border border-emerald-200 dark:border-emerald-800/50">
+                          {q.marks} Marks
+                        </span>
                       </div>
                     </div>
-                    <button onClick={() => handleDeleteQuestion(q.id)} className="p-1.5 rounded-lg hover:bg-red-50 text-gray-405 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
-                      <Trash2 className="w-4.5 h-4.5" />
+                    <button 
+                      onClick={() => handleDeleteQuestion(q.id)} 
+                      className="p-2.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 text-slate-400 hover:text-red-500 hover:bg-red-50 hover:border-red-100 dark:hover:bg-red-900/20 dark:hover:border-red-900/30 opacity-0 group-hover:opacity-100 transition-all duration-300 cursor-pointer shadow-sm"
+                    >
+                      <Trash2 className="w-5 h-5" />
                     </button>
                   </div>
 
                   {q.questionType === 'MCQ' && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs pt-1.5">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pl-4 pt-2">
                       {opts.map((opt: string, optIdx: number) => {
                         const correct = q.correctAnswer === String(optIdx);
                         return (
-                          <div key={optIdx} className={`p-3 rounded-xl border font-semibold ${correct ? 'bg-emerald-50 border-emerald-500 text-emerald-800' : 'border-gray-150 dark:border-gray-800 text-gray-600'}`}>
-                            {optIdx + 1}. {opt} {correct && ' (Correct Answer)'}
+                          <div key={optIdx} className={`p-4 rounded-xl border-2 font-bold text-sm transition-all flex items-center gap-3 ${correct ? 'bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 border-emerald-400 text-emerald-800 dark:text-emerald-300 shadow-sm' : 'bg-white/50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-indigo-300 dark:hover:border-indigo-700/50'}`}>
+                            <span className={`flex items-center justify-center w-6 h-6 rounded-full text-xs ${correct ? 'bg-emerald-500 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400'}`}>
+                              {String.fromCharCode(65 + optIdx)}
+                            </span>
+                            {opt} 
+                            {correct && <CheckCircle className="w-4 h-4 ml-auto text-emerald-500" />}
                           </div>
                         );
                       })}
@@ -1200,17 +1229,21 @@ export const ExamListPage: React.FC = () => {
                   )}
 
                   {q.questionType === 'SUBJECTIVE' && (
-                    <div className="text-xs bg-gray-50 dark:bg-gray-800/40 p-3.5 rounded-xl border border-gray-150 dark:border-gray-800">
-                      <span className="text-[10px] font-bold text-gray-405 block uppercase tracking-wider mb-1">Expected Key Phrases/Answers:</span>
-                      <p className="font-semibold text-gray-700 dark:text-gray-300">{q.correctAnswer}</p>
+                    <div className="text-sm bg-indigo-50/50 dark:bg-indigo-900/10 p-5 rounded-xl border border-indigo-100 dark:border-indigo-900/30 pl-4 ml-4">
+                      <span className="text-xs font-black text-indigo-500 block uppercase tracking-widest mb-2 flex items-center gap-2">
+                        <CheckCircle className="w-4 h-4" /> Expected Key Phrases/Answers:
+                      </span>
+                      <p className="font-bold text-slate-700 dark:text-slate-300 leading-relaxed">{q.correctAnswer}</p>
                     </div>
                   )}
                 </div>
               );
             })}
             {questions.length === 0 && (
-              <div className="card p-12 text-center text-gray-400">
-                No questions defined inside this group. Add question elements to populate the exam staged database bank.
+              <div className="bg-white/60 dark:bg-slate-900/40 backdrop-blur-md rounded-3xl p-16 flex flex-col items-center justify-center text-center shadow-sm border border-slate-200/60 dark:border-slate-800">
+                <Layers className="w-16 h-16 text-slate-300 mb-4" />
+                <h3 className="text-xl font-black text-slate-700 dark:text-slate-200">No Questions Found</h3>
+                <p className="text-sm font-semibold text-slate-500 mt-2 max-w-md">No questions defined inside this group. Add question elements to populate the exam staged database bank.</p>
               </div>
             )}
           </div>
@@ -1593,35 +1626,101 @@ export const ExamListPage: React.FC = () => {
 
       {/* ══ TAB 8: SETTINGS ══ */}
       {activeTab === 'settings' && (
-        <div className="bg-white dark:bg-gray-900 p-6 rounded-xl border border-gray-150 dark:border-gray-800 space-y-6">
-          <div>
-            <h3 className="text-lg font-bold">General Examinations & Grading Setup</h3>
-            <p className="text-xs text-gray-400 mt-1">Configure conversion scales, grade keys, and CCE settings.</p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-4">
-              <span className="text-xs font-extrabold uppercase text-gray-400 tracking-wider">Grading Standards</span>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="label">Evaluation Mode</label>
-                  <select className="input" defaultValue="PERCENTAGE">
-                    <option value="CCE">CCE Grading System</option>
-                    <option value="GPA">GPA Conversion Scale</option>
-                    <option value="PERCENTAGE">Direct Percentage</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="label">Default Pass Percentage</label>
-                  <input type="number" defaultValue="40" className="input" />
-                </div>
+        <div className="space-y-6 animate-fade-in-up">
+          <div className="bg-white/60 dark:bg-slate-900/50 backdrop-blur-md p-6 rounded-3xl border border-white/20 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
+            <div className="flex items-center gap-4 mb-8">
+              <div className="bg-gradient-to-br from-slate-600 to-slate-800 p-3.5 rounded-2xl shadow-lg shadow-slate-500/30 text-white">
+                <Settings className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="text-xl sm:text-2xl font-black bg-gradient-to-r from-slate-700 to-slate-900 dark:from-slate-100 dark:to-slate-300 bg-clip-text text-transparent drop-shadow-sm">Global Exam Settings</h3>
+                <p className="text-sm font-semibold text-slate-500 mt-0.5">Configure grading scales, publishing rules, and security controls</p>
               </div>
             </div>
-            <div className="space-y-4">
-              <span className="text-xs font-extrabold uppercase text-gray-400 tracking-wider">Audit Security Log</span>
-              <p className="text-xs text-gray-500 font-semibold leading-relaxed">
-                Security logging is active. Grade entries, online test attempts, and exam schedules are tracked for student auditing automatically.
-              </p>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Grading Configuration */}
+              <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700">
+                <h4 className="text-sm font-extrabold text-slate-800 dark:text-slate-200 uppercase tracking-widest mb-6 flex items-center gap-2">
+                  <Award className="w-4 h-4 text-purple-500" /> Grading Standards
+                </h4>
+                <div className="space-y-5">
+                  <div>
+                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 block">Primary Evaluation Mode</label>
+                    <select className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none transition-all cursor-pointer">
+                      <option value="CCE">CCE Grading System (A1, A2, B1...)</option>
+                      <option value="GPA">10 Point GPA Scale</option>
+                      <option value="PERCENTAGE">Direct Percentage (Max 100%)</option>
+                      <option value="CUSTOM">Custom Range Scale</option>
+                    </select>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 block">Default Pass Marks (%)</label>
+                      <input type="number" defaultValue="40" className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none transition-all" />
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 block">Grace Marks Limit</label>
+                      <input type="number" defaultValue="5" className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none transition-all" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Result Publishing Rules */}
+              <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700">
+                <h4 className="text-sm font-extrabold text-slate-800 dark:text-slate-200 uppercase tracking-widest mb-6 flex items-center gap-2">
+                  <CheckSquare className="w-4 h-4 text-emerald-500" /> Result & Marks Rules
+                </h4>
+                <div className="space-y-4">
+                  <label className="flex items-center justify-between p-3 border border-slate-100 dark:border-slate-700 rounded-xl cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+                    <div className="pr-4">
+                      <span className="text-sm font-bold text-slate-700 dark:text-slate-200 block">Auto-Publish Results</span>
+                      <span className="text-xs font-medium text-slate-500">Publish immediately after teacher submission</span>
+                    </div>
+                    <div className="relative inline-block w-12 h-6 rounded-full bg-emerald-500">
+                      <span className="absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform transform translate-x-6"></span>
+                    </div>
+                  </label>
+                  
+                  <label className="flex items-center justify-between p-3 border border-slate-100 dark:border-slate-700 rounded-xl cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+                    <div className="pr-4">
+                      <span className="text-sm font-bold text-slate-700 dark:text-slate-200 block">Show Rank to Students</span>
+                      <span className="text-xs font-medium text-slate-500">Display class rank in student portal</span>
+                    </div>
+                    <div className="relative inline-block w-12 h-6 rounded-full bg-emerald-500">
+                      <span className="absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform transform translate-x-6"></span>
+                    </div>
+                  </label>
+
+                  <label className="flex items-center justify-between p-3 border border-slate-100 dark:border-slate-700 rounded-xl cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+                    <div className="pr-4">
+                      <span className="text-sm font-bold text-slate-700 dark:text-slate-200 block">Strict Moderation</span>
+                      <span className="text-xs font-medium text-slate-500">Require principal approval before publish</span>
+                    </div>
+                    <div className="relative inline-block w-12 h-6 rounded-full bg-slate-300 dark:bg-slate-600">
+                      <span className="absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform transform translate-x-0"></span>
+                    </div>
+                  </label>
+                </div>
+              </div>
+
+              {/* Security & Freeze Controls */}
+              <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 lg:col-span-2">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                  <div>
+                    <h4 className="text-sm font-extrabold text-slate-800 dark:text-slate-200 uppercase tracking-widest mb-1 flex items-center gap-2">
+                      <ShieldAlert className="w-4 h-4 text-rose-500" /> Security & Freeze Controls
+                    </h4>
+                    <p className="text-xs text-slate-500 font-semibold leading-relaxed">
+                      Security logging is active. Grade entries, overrides, and exam schedules are tracked for student auditing automatically.
+                    </p>
+                  </div>
+                  <button className="btn-primary whitespace-nowrap bg-gradient-to-r from-slate-800 to-slate-900 text-white border-0 shadow-lg shadow-slate-900/20">
+                    <Save className="w-4 h-4 mr-2 inline" /> Save Settings
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>

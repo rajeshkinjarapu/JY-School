@@ -321,18 +321,18 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-center bg-gradient-to-r from-indigo-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 p-4 sm:p-5 rounded-2xl border border-indigo-100 dark:border-gray-800 shadow-sm print:hidden gap-4">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 w-full sm:w-auto">
-          <span className="text-xs font-black uppercase text-indigo-500 tracking-wider shrink-0 ml-1 sm:ml-0">
-            Select Details:
-          </span>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white/60 dark:bg-slate-900/50 backdrop-blur-md p-6 rounded-3xl border border-white/20 shadow-[0_8px_30px_rgb(0,0,0,0.04)] print:hidden gap-4 animate-fade-in-up">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full sm:w-auto">
+          <div className="bg-gradient-to-br from-amber-500 to-orange-600 p-3.5 rounded-2xl shadow-lg shadow-orange-500/30 text-white shrink-0 hidden sm:block">
+            <FileText className="w-6 h-6" />
+          </div>
           <div className="flex flex-col sm:flex-row w-full gap-3">
             <select
               value={selectedExamId}
               onChange={(e) => setSelectedExamId(e.target.value)}
-              className="input !py-2.5 sm:!py-2 w-full sm:min-w-[200px] border-indigo-200 focus:border-indigo-500 focus:ring-indigo-500/20 bg-white shadow-sm font-semibold text-gray-700"
+              className="appearance-none bg-white dark:bg-slate-800 border-2 border-orange-100 dark:border-orange-900/30 rounded-xl px-4 py-3 text-sm font-extrabold text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-4 focus:ring-orange-500/20 focus:border-orange-400 transition-all shadow-sm cursor-pointer w-full sm:min-w-[220px]"
             >
-              <option value="">-- Choose Exam --</option>
+              <option value="">-- Select Exam --</option>
               {exams.map((e) => (
                 <option key={e.id} value={e.id}>
                   {e.name} ({e.term})
@@ -344,9 +344,9 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
               <select
                 value={selectedClassId}
                 onChange={(e) => setSelectedClassId(e.target.value)}
-                className="input !py-2.5 sm:!py-2 w-full sm:min-w-[150px] border-indigo-200 focus:border-indigo-500 focus:ring-indigo-500/20 bg-white shadow-sm font-semibold text-gray-700"
+                className="appearance-none bg-white dark:bg-slate-800 border-2 border-orange-100 dark:border-orange-900/30 rounded-xl px-4 py-3 text-sm font-extrabold text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-4 focus:ring-orange-500/20 focus:border-orange-400 transition-all shadow-sm cursor-pointer w-full sm:min-w-[180px]"
               >
-                <option value="">-- Choose Class --</option>
+                <option value="">-- Select Class --</option>
                 {(selectedExam.classes || []).map((c: any) => (
                   <option key={c.id} value={c.id}>
                     {c.name}-{c.section}
@@ -356,7 +356,7 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
             )}
           </div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {isSuperAdmin && selectedExam && (
             <>
               {!published ? (
@@ -381,15 +381,14 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
                       setPublished(false);
                     }
                   }}
-                  className="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded-lg text-sm font-bold flex items-center gap-2"
+                  className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white shadow-md shadow-emerald-500/20 hover:-translate-y-0.5 px-4 py-2 rounded-xl text-xs uppercase tracking-widest font-black transition-all duration-300 flex items-center gap-2"
                 >
-                  <CheckCircle className="w-4 h-4" /> Send to Teachers, Students
-                  & Admins
+                  <CheckCircle className="w-4 h-4" /> Publish Cards
                 </button>
               ) : (
                 <div className="flex items-center gap-2">
-                  <span className="bg-green-100 text-green-700 px-3 py-1.5 rounded-lg text-sm font-bold flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4" /> Admit Cards Sent
+                  <span className="bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/50 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest flex items-center gap-2 shadow-sm">
+                    <CheckCircle className="w-4 h-4" /> Published
                   </span>
                   <button
                     onClick={async () => {
@@ -411,7 +410,7 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
                         setPublished(true);
                       }
                     }}
-                    className="bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1.5 rounded-lg text-sm font-bold flex items-center gap-2"
+                    className="bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-rose-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 shadow-sm px-4 py-2 rounded-xl text-xs uppercase tracking-widest font-black transition-all duration-300"
                   >
                     Unpublish
                   </button>
@@ -419,7 +418,7 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
               )}
               <button
                 onClick={() => setShowSettings(!showSettings)}
-                className="btn-secondary flex items-center gap-2"
+                className="bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-indigo-400 hover:text-indigo-500 hover:bg-indigo-50 shadow-sm px-4 py-2 rounded-xl text-xs uppercase tracking-widest font-black transition-all duration-300 flex items-center gap-2"
               >
                 <Settings className="w-4 h-4" /> Settings
               </button>
@@ -430,7 +429,7 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
               <button
                 onClick={handleDownloadAll}
                 disabled={isDownloading}
-                className="btn-secondary flex items-center gap-2 font-bold bg-white text-indigo-700"
+                className="bg-white dark:bg-slate-800 border-2 border-orange-200 dark:border-orange-900/50 text-orange-600 dark:text-orange-400 hover:border-orange-400 hover:bg-orange-50 shadow-sm px-4 py-2 rounded-xl text-xs uppercase tracking-widest font-black transition-all duration-300 flex items-center gap-2 disabled:opacity-50"
               >
                 {isDownloading ? (
                   <span className="animate-pulse">Processing...</span>
@@ -441,7 +440,7 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
               </button>
               <button
                 onClick={handlePrint}
-                className="btn-primary flex items-center gap-2"
+                className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white shadow-md shadow-orange-500/20 hover:-translate-y-0.5 px-4 py-2 rounded-xl text-xs uppercase tracking-widest font-black transition-all duration-300 flex items-center gap-2"
               >
                 <Printer className="w-4 h-4" /> Print All
               </button>
@@ -451,39 +450,41 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
       </div>
 
       {showSettings && selectedExamId && isSuperAdmin && (
-        <div className="bg-white dark:bg-gray-900 border border-indigo-100 dark:border-gray-800 p-6 rounded-xl shadow-sm mb-6 print:hidden flex flex-col gap-6">
-          <div className="flex justify-between items-center border-b border-gray-100 dark:border-gray-800 pb-4">
-            <h3 className="font-bold text-lg">Admit Card Configuration</h3>
+        <div className="bg-white dark:bg-slate-900 border border-indigo-100 dark:border-slate-800 p-6 rounded-2xl shadow-sm mb-6 print:hidden flex flex-col gap-6 animate-fade-in-up">
+          <div className="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-4">
+            <h3 className="font-black text-lg text-slate-800 dark:text-slate-200 flex items-center gap-2">
+               <Settings className="w-5 h-5 text-indigo-500" /> Admit Card Configuration
+            </h3>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="space-y-4">
-              <label className="block text-sm font-bold text-gray-700 dark:text-gray-300">
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500">
                 Important Instructions (One per line)
               </label>
               <textarea
-                className="input h-32 text-sm"
+                className="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm font-semibold text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none h-32 resize-none"
                 value={instructions}
                 onChange={(e) => setInstructions(e.target.value)}
               />
 
-              <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mt-4">
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mt-4">
                 Exam Title Override
               </label>
               <input
                 type="text"
-                className="input"
+                className="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm font-semibold text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none"
                 placeholder="e.g. JEE EXAM - 5 (2026 - 2027)"
                 value={examTitleOverride}
                 onChange={(e) => setExamTitleOverride(e.target.value)}
               />
 
-              <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mt-4">
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mt-4">
                 Examination Center
               </label>
               <input
                 type="text"
-                className="input"
+                className="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm font-semibold text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none"
                 placeholder="e.g. JY School Main Campus, Hall A"
                 value={examCenterOverride}
                 onChange={(e) => setExamCenterOverride(e.target.value)}
@@ -491,7 +492,7 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
             </div>
 
             <div className="space-y-4">
-              <label className="block text-sm font-bold text-gray-700 dark:text-gray-300">
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500">
                 Principal Signature Image
               </label>
               <div className="flex items-center gap-4">
@@ -499,14 +500,14 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
                   <img
                     src={signatureUrl}
                     alt="Signature"
-                    className="h-16 object-contain border border-gray-200 rounded p-1"
+                    className="h-16 object-contain border border-slate-200 dark:border-slate-700 rounded-lg p-1 bg-white"
                   />
                 ) : (
-                  <div className="h-16 w-32 border-2 border-dashed border-gray-300 rounded flex items-center justify-center text-xs text-gray-400">
+                  <div className="h-16 w-32 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-lg flex items-center justify-center text-xs font-bold text-slate-400">
                     No Image
                   </div>
                 )}
-                <label className="btn-secondary cursor-pointer flex items-center gap-2">
+                <label className="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest cursor-pointer transition-colors flex items-center gap-2">
                   <Upload className="w-4 h-4" /> Upload
                   <input
                     type="file"
@@ -517,7 +518,7 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
                 </label>
               </div>
 
-              <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mt-4">
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mt-4">
                 Teacher Signature Image
               </label>
               <div className="flex items-center gap-4">
@@ -525,14 +526,14 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
                   <img
                     src={teacherSignatureUrl}
                     alt="Teacher Signature"
-                    className="h-16 object-contain border border-gray-200 rounded p-1"
+                    className="h-16 object-contain border border-slate-200 dark:border-slate-700 rounded-lg p-1 bg-white"
                   />
                 ) : (
-                  <div className="h-16 w-32 border-2 border-dashed border-gray-300 rounded flex items-center justify-center text-xs text-gray-400">
+                  <div className="h-16 w-32 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-lg flex items-center justify-center text-xs font-bold text-slate-400">
                     No Image
                   </div>
                 )}
-                <label className="btn-secondary cursor-pointer flex items-center gap-2">
+                <label className="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest cursor-pointer transition-colors flex items-center gap-2">
                   <Upload className="w-4 h-4" /> Upload
                   <input
                     type="file"
@@ -543,7 +544,7 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
                 </label>
               </div>
 
-              <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mt-4">
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mt-4">
                 School Logo Image
               </label>
               <div className="flex items-center gap-4">
@@ -551,14 +552,14 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
                   <img
                     src={logoUrl}
                     alt="Logo"
-                    className="h-16 object-contain border border-gray-200 rounded p-1"
+                    className="h-16 object-contain border border-slate-200 dark:border-slate-700 rounded-lg p-1 bg-white"
                   />
                 ) : (
-                  <div className="h-16 w-16 border-2 border-dashed border-gray-300 rounded flex items-center justify-center text-xs text-gray-400">
+                  <div className="h-16 w-16 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-lg flex items-center justify-center text-xs font-bold text-slate-400">
                     No Logo
                   </div>
                 )}
-                <label className="btn-secondary cursor-pointer flex items-center gap-2">
+                <label className="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest cursor-pointer transition-colors flex items-center gap-2">
                   <Upload className="w-4 h-4" /> Upload
                   <input
                     type="file"
@@ -572,9 +573,9 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
           </div>
 
           {/* Schedule Editor */}
-          <div className="mt-4 border-t border-gray-100 dark:border-gray-800 pt-6">
+          <div className="mt-4 border-t border-slate-100 dark:border-slate-800 pt-6">
             <div className="flex justify-between items-center mb-4">
-              <h4 className="font-bold text-gray-700 dark:text-gray-300">
+              <h4 className="font-black text-slate-700 dark:text-slate-300 text-sm uppercase tracking-wider">
                 Examination Schedule
               </h4>
               <button
@@ -584,14 +585,14 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
                     { date: "", timing: "", subject: "", room: "" },
                   ])
                 }
-                className="btn-secondary text-xs"
+                className="bg-indigo-50 text-indigo-600 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1"
               >
                 + Add Row
               </button>
             </div>
 
             {schedule.length > 0 && (
-              <div className="grid grid-cols-5 gap-2 mb-2 font-semibold text-xs text-gray-500">
+              <div className="grid grid-cols-5 gap-2 mb-2 font-black text-xs text-slate-400 uppercase tracking-wider px-2">
                 <div>Date</div>
                 <div>Timing</div>
                 <div>Subject</div>
@@ -602,10 +603,10 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
 
             <div className="space-y-2">
               {schedule.map((row, idx) => (
-                <div key={idx} className="grid grid-cols-5 gap-2">
+                <div key={idx} className="grid grid-cols-5 gap-2 items-center">
                   <input
                     type="date"
-                    className="input !py-1 text-sm"
+                    className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm font-semibold text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none"
                     value={row.date}
                     onChange={(e) => {
                       const newSch = [...schedule];
@@ -615,7 +616,7 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
                   />
                   <input
                     type="text"
-                    className="input !py-1 text-sm"
+                    className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm font-semibold text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none"
                     placeholder="10:00 AM - 01:00 PM"
                     value={row.timing}
                     onChange={(e) => {
@@ -626,7 +627,7 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
                   />
                   <input
                     type="text"
-                    className="input !py-1 text-sm"
+                    className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm font-semibold text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none"
                     placeholder="Subject"
                     value={row.subject}
                     onChange={(e) => {
@@ -637,7 +638,7 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
                   />
                   <input
                     type="text"
-                    className="input !py-1 text-sm"
+                    className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm font-semibold text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none"
                     placeholder="Room"
                     value={row.room}
                     onChange={(e) => {
@@ -650,14 +651,14 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
                     onClick={() => {
                       setSchedule(schedule.filter((_, i) => i !== idx));
                     }}
-                    className="btn-secondary !text-red-500 !bg-red-50 !py-1 text-sm"
+                    className="bg-rose-50 text-rose-500 px-3 py-2 rounded-lg text-xs font-bold hover:bg-rose-100 transition-colors"
                   >
                     Remove
                   </button>
                 </div>
               ))}
               {schedule.length === 0 && (
-                <div className="text-sm text-gray-400 italic">
+                <div className="text-sm font-medium text-slate-400 italic p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-100 dark:border-slate-700/50">
                   No schedule added. Will fallback to default exam plans if
                   available.
                 </div>
@@ -665,10 +666,10 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
             </div>
           </div>
 
-          <div className="flex justify-end pt-4">
+          <div className="flex justify-end pt-6 border-t border-slate-100 dark:border-slate-800 mt-4">
             <button
               onClick={handleSaveSettings}
-              className="btn-primary flex items-center gap-2"
+              className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-md shadow-indigo-500/20 px-6 py-2.5 rounded-xl text-sm font-black uppercase tracking-widest transition-all duration-300 flex items-center gap-2"
             >
               <Save className="w-4 h-4" /> Save Configuration
             </button>
@@ -677,48 +678,48 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
       )}
 
       {loading && (
-        <div className="p-12 text-center text-gray-500 font-semibold animate-pulse">
-          Generating Admit Cards...
+        <div className="p-12 text-center text-slate-400 font-bold animate-pulse">
+          Loading Data...
         </div>
       )}
 
       {!loading &&
         students.length > 0 &&
         (!isSuperAdmin && !published ? (
-          <div className="card p-12 flex flex-col items-center justify-center text-center bg-gray-50 dark:bg-gray-800/50">
-            <CheckCircle className="w-12 h-12 text-gray-300 mb-3" />
-            <h3 className="text-lg font-bold text-gray-700 dark:text-gray-200">
+          <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-3xl p-16 flex flex-col items-center justify-center text-center shadow-sm border border-slate-200/60">
+            <CheckCircle className="w-16 h-16 text-slate-300 mb-4" />
+            <h3 className="text-xl font-black text-slate-700 dark:text-slate-200">
               Not Published Yet
             </h3>
-            <p className="text-sm text-gray-500 mt-2">
+            <p className="text-sm font-semibold text-slate-500 mt-2 max-w-md">
               The admit cards for this exam have not been published by the
-              administration.
+              administration. Please check back later.
             </p>
           </div>
         ) : (
           <>
-            <div className="card print:hidden overflow-hidden w-full">
+            <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-3xl shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-200/60 dark:border-slate-800 overflow-hidden print:hidden animate-fade-in-up">
               <div className="overflow-x-auto w-full">
                 <table className="w-full text-sm text-left whitespace-nowrap">
-                  <thead className="bg-gray-50 text-gray-600 font-bold uppercase text-xs">
+                  <thead className="bg-slate-50/80 dark:bg-slate-800/80 text-slate-500 dark:text-slate-400 text-xs uppercase tracking-widest">
                     <tr>
-                      <th className="py-3 px-4">S.No</th>
-                      <th className="py-3 px-4">Student Name</th>
-                      {!isTeacher && <th className="py-3 px-4">Roll Number</th>}
-                      <th className="py-3 px-4 text-right">Action</th>
+                      <th className="px-6 py-5 font-black border-b border-slate-100 dark:border-slate-700/50 w-20">S.No</th>
+                      <th className="px-6 py-5 font-black border-b border-slate-100 dark:border-slate-700/50">Student Name</th>
+                      {!isTeacher && <th className="px-6 py-5 font-black border-b border-slate-100 dark:border-slate-700/50">Roll Number</th>}
+                      <th className="px-6 py-5 font-black border-b border-slate-100 dark:border-slate-700/50 text-right">Action</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-100">
+                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800/50">
                     {students.map((student, idx) => (
                       <tr
                         key={student.id}
-                        className="hover:bg-gray-50 transition-colors"
+                        className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors group"
                       >
-                        <td className="py-3 px-4 font-bold text-gray-500">
-                          {idx + 1}
+                        <td className="px-6 py-4 font-bold text-slate-400">
+                          {(idx + 1).toString().padStart(2, '0')}
                         </td>
-                        <td className="py-3 px-4 font-bold text-gray-900 flex items-center gap-2 max-w-[150px] sm:max-w-[200px] overflow-hidden text-ellipsis">
-                          <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold shrink-0">
+                        <td className="px-6 py-4 font-bold text-slate-800 dark:text-slate-200 flex items-center gap-3 max-w-[250px] overflow-hidden text-ellipsis">
+                          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-orange-100 to-amber-50 dark:from-orange-900/30 dark:to-amber-900/30 flex items-center justify-center text-orange-600 dark:text-orange-400 font-black shrink-0 border border-orange-200/50 dark:border-orange-700/30">
                             {student.user?.name?.[0] || "S"}
                           </div>
                           <span className="truncate">
@@ -726,11 +727,11 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
                           </span>
                         </td>
                         {!isTeacher && (
-                          <td className="py-3 px-4 text-gray-600 font-medium">
+                          <td className="px-6 py-4 text-slate-500 font-semibold">
                             {student.rollNo || "-"}
                           </td>
                         )}
-                        <td className="py-3 px-4 text-right">
+                        <td className="px-6 py-4 text-right">
                           <button
                             onClick={() =>
                               handleDownloadSingle(
@@ -738,11 +739,10 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
                                 idx,
                               )
                             }
-                            className="btn-secondary text-xs flex items-center gap-1 ml-auto"
+                            className="bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-orange-400 hover:text-orange-500 hover:bg-orange-50 shadow-sm px-4 py-2 rounded-xl text-[11px] uppercase tracking-widest font-black transition-all duration-300 flex items-center gap-2 ml-auto"
                           >
                             <Download className="w-3.5 h-3.5" />{" "}
-                            <span className="hidden sm:inline">Download</span>{" "}
-                            PDF
+                            <span className="hidden sm:inline">Download PDF</span>
                           </button>
                         </td>
                       </tr>

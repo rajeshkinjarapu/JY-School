@@ -131,51 +131,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
   };
 
   const links = getLinks();
-
-  // Memoized NavItem — prevents sidebar flicker/jump when location changes
-  const NavItem = memo(({ to, label, icon: Icon }: { to: string; label: string; icon: any }) => {
-    const isActive = to === '/dashboard'
-      ? location.pathname === '/dashboard' || location.pathname.startsWith('/dashboard/')
-      : location.pathname.startsWith(to);
-    const c = NAV_COLORS[label] || NAV_COLORS['Settings'];
-    const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-    return (
-      <NavLink
-        to={to}
-        onClick={() => setIsOpen(false)}
-        onMouseEnter={() => {
-          if (window.innerWidth > 1024 || user?.role === 'SUPER_ADMIN') {
-            hoverTimeoutRef.current = setTimeout(() => {
-              import('../../router').then(module => {
-                const loader = module.routeImports[to];
-                if (loader) loader();
-              }).catch(() => {});
-            }, 150);
-          }
-        }}
-        onMouseLeave={() => {
-          if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
-        }}
-        style={isActive ? { background: c.bg, boxShadow: c.glow } : {}}
-        className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-150 cursor-pointer select-none group will-change-transform
-          ${isActive ? 'text-white' : 'text-slate-400 hover:text-white hover:bg-white/6'}`}
-      >
-        <span
-          style={isActive ? { color: c.text } : {}}
-          className={`flex items-center justify-center w-7 h-7 rounded-lg shrink-0 transition-colors duration-150
-            ${isActive ? '' : 'group-hover:opacity-100 opacity-60'}`}
-        >
-          <Icon className="w-[17px] h-[17px]" strokeWidth={isActive ? 2.5 : 2} />
-        </span>
-        <span className="flex-1 truncate">{label}</span>
-        <span
-          className="w-1.5 h-1.5 rounded-full shrink-0 transition-opacity duration-150"
-          style={{ background: c.text, opacity: isActive ? 1 : 0 }}
-        />
-      </NavLink>
-    );
-  });
+  const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const renderContent = () => (
     <div className="flex flex-col h-full">
@@ -194,7 +150,50 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
 
       {/* Nav */}
       <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-0.5">
-        {links.map(l => <NavItem key={l.to} {...l} />)}
+        {links.map(l => {
+          const { to, label, icon: Icon } = l;
+          const isActive = to === '/dashboard'
+            ? location.pathname === '/dashboard' || location.pathname.startsWith('/dashboard/')
+            : location.pathname.startsWith(to);
+          const c = NAV_COLORS[label] || NAV_COLORS['Settings'];
+          
+          return (
+            <NavLink
+              key={to}
+              to={to}
+              onClick={() => setIsOpen(false)}
+              onMouseEnter={() => {
+                if (window.innerWidth > 1024 || user?.role === 'SUPER_ADMIN') {
+                  hoverTimeoutRef.current = setTimeout(() => {
+                    import('../../router').then(module => {
+                      const loader = module.routeImports[to];
+                      if (loader) loader();
+                    }).catch(() => {});
+                  }, 150);
+                }
+              }}
+              onMouseLeave={() => {
+                if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
+              }}
+              style={isActive ? { background: c.bg, boxShadow: c.glow } : {}}
+              className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 ease-out cursor-pointer select-none group will-change-transform border border-transparent
+                ${isActive ? 'text-white border-white/10' : 'text-slate-400 hover:text-white hover:bg-white/5 hover:border-white/5 hover:shadow-lg'}`}
+            >
+              <span
+                style={isActive ? { color: c.text } : {}}
+                className={`flex items-center justify-center w-7 h-7 rounded-lg shrink-0 transition-all duration-300
+                  ${isActive ? 'scale-110' : 'group-hover:opacity-100 opacity-60 group-hover:scale-110'}`}
+              >
+                <Icon className="w-[18px] h-[18px]" strokeWidth={isActive ? 2.5 : 2} />
+              </span>
+              <span className="flex-1 truncate tracking-wide">{label}</span>
+              <span
+                className="w-1.5 h-1.5 rounded-full shrink-0 transition-all duration-300 shadow-sm"
+                style={{ background: c.text, opacity: isActive ? 1 : 0, transform: isActive ? 'scale(1)' : 'scale(0)' }}
+              />
+            </NavLink>
+          );
+        })}
       </nav>
 
       {/* User */}

@@ -346,14 +346,16 @@ export const ProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-center bg-gradient-to-r from-indigo-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 p-4 sm:p-5 rounded-2xl border border-indigo-100 dark:border-gray-800 shadow-sm print:hidden gap-4">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 w-full sm:w-auto">
-          <span className="text-xs font-black uppercase text-indigo-500 tracking-wider shrink-0 ml-1 sm:ml-0">Select Details:</span>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white/60 dark:bg-slate-900/50 backdrop-blur-md p-6 rounded-3xl border border-white/20 shadow-[0_8px_30px_rgb(0,0,0,0.04)] print:hidden gap-4 animate-fade-in-up">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full sm:w-auto">
+          <div className="bg-gradient-to-br from-rose-500 to-pink-600 p-3.5 rounded-2xl shadow-lg shadow-pink-500/30 text-white shrink-0 hidden sm:block">
+            <FileText className="w-6 h-6" />
+          </div>
           <div className="flex flex-col sm:flex-row w-full gap-3">
             <select 
               value={selectedExamId} 
               onChange={e => { setSelectedExamId(e.target.value); setSelectedClassId(''); }} 
-              className="input !py-2.5 sm:!py-2 w-full sm:min-w-[200px] border-indigo-200 focus:border-indigo-500 focus:ring-indigo-500/20 bg-white shadow-sm font-semibold text-gray-700"
+              className="appearance-none bg-white dark:bg-slate-800 border-2 border-pink-100 dark:border-pink-900/30 rounded-xl px-4 py-3 text-sm font-extrabold text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-4 focus:ring-pink-500/20 focus:border-pink-400 transition-all shadow-sm cursor-pointer w-full sm:min-w-[220px]"
             >
               <option value="">-- Choose Exam --</option>
               {exams.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
@@ -363,7 +365,7 @@ export const ProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
               <select 
                 value={selectedClassId} 
                 onChange={e => setSelectedClassId(e.target.value)} 
-                className="input !py-2.5 sm:!py-2 w-full sm:min-w-[150px] border-indigo-200 focus:border-indigo-500 focus:ring-indigo-500/20 bg-white shadow-sm font-semibold text-gray-700"
+                className="appearance-none bg-white dark:bg-slate-800 border-2 border-pink-100 dark:border-pink-900/30 rounded-xl px-4 py-3 text-sm font-extrabold text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-4 focus:ring-pink-500/20 focus:border-pink-400 transition-all shadow-sm cursor-pointer w-full sm:min-w-[180px]"
               >
                 <option value="">-- Choose Class --</option>
                 {(selectedExam.classes || []).map((c: any) => (
@@ -396,29 +398,39 @@ export const ProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
                       }
                     }
                   }}
-                  className="bg-emerald-500 hover:bg-emerald-600 text-white px-3 py-1.5 rounded-lg text-sm font-bold flex items-center gap-2 flex-1 md:flex-none justify-center shadow-md shadow-emerald-500/20"
+                  className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white shadow-md shadow-emerald-500/20 hover:-translate-y-0.5 px-4 py-2 rounded-xl text-xs uppercase tracking-widest font-black transition-all duration-300 flex items-center gap-2"
                 >
                   <CheckCircle className="w-4 h-4" /> Publish Cards
                 </button>
               ) : (
                 <div className="flex items-center gap-2 flex-1 md:flex-none">
-                  <span className="bg-emerald-100 text-emerald-700 px-4 py-1.5 rounded-lg text-sm font-bold flex items-center gap-2 border border-emerald-200 justify-center w-full md:w-auto shadow-sm">
+                  <span className="bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/50 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest flex items-center gap-2 shadow-sm">
                     <CheckCircle className="w-4 h-4" /> Published
                   </span>
                 </div>
               )}
-              <button onClick={() => setShowSettings(!showSettings)} className="btn-secondary flex items-center gap-2 flex-1 md:flex-none justify-center">
+              <button 
+                onClick={() => setShowSettings(!showSettings)} 
+                className="bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-pink-400 hover:text-pink-500 hover:bg-pink-50 shadow-sm px-4 py-2 rounded-xl text-xs uppercase tracking-widest font-black transition-all duration-300 flex items-center gap-2"
+              >
                 <Settings className="w-4 h-4" /> Settings
               </button>
             </>
           )}
           {studentsData.length > 0 && (
             <>
-              <button onClick={handleDownloadAll} disabled={isDownloading} className="btn-secondary flex items-center gap-2 flex-1 md:flex-none justify-center">
+              <button 
+                onClick={handleDownloadAll} 
+                disabled={isDownloading} 
+                className="bg-white dark:bg-slate-800 border-2 border-pink-200 dark:border-pink-900/50 text-pink-600 dark:text-pink-400 hover:border-pink-400 hover:bg-pink-50 shadow-sm px-4 py-2 rounded-xl text-xs uppercase tracking-widest font-black transition-all duration-300 flex items-center gap-2 disabled:opacity-50"
+              >
                 {isDownloading ? <LoadingSpinner size="sm" /> : <Download className="w-4 h-4" />} 
                 {isDownloading ? 'Generating...' : 'Download ZIP'}
               </button>
-              <button onClick={handlePrint} className="btn-primary flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 border-none shadow-lg shadow-blue-500/30 flex-1 md:flex-none justify-center">
+              <button 
+                onClick={handlePrint} 
+                className="bg-gradient-to-r from-pink-500 to-rose-600 hover:from-pink-600 hover:to-rose-700 text-white shadow-md shadow-pink-500/20 hover:-translate-y-0.5 px-4 py-2 rounded-xl text-xs uppercase tracking-widest font-black transition-all duration-300 flex items-center gap-2"
+              >
                 <Printer className="w-4 h-4" /> Print All Cards
               </button>
             </>
@@ -427,32 +439,34 @@ export const ProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
       </div>
 
       {showSettings && selectedExamId && isSuperAdmin && (
-        <div className="bg-white dark:bg-gray-900 border border-indigo-100 dark:border-gray-800 p-6 rounded-xl shadow-sm mb-6 print:hidden">
-          <div className="flex justify-between items-center border-b border-gray-100 dark:border-gray-800 pb-4 mb-6">
-            <h3 className="font-bold text-lg text-indigo-900">Progress Card Settings</h3>
+        <div className="bg-white dark:bg-slate-900 border border-indigo-100 dark:border-slate-800 p-6 rounded-2xl shadow-sm mb-6 print:hidden flex flex-col gap-6 animate-fade-in-up">
+          <div className="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-4 mb-2">
+            <h3 className="font-black text-lg text-slate-800 dark:text-slate-200 flex items-center gap-2">
+              <Settings className="w-5 h-5 text-indigo-500" /> Progress Card Settings
+            </h3>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="space-y-4">
-              <label className="block text-sm font-bold text-gray-700 dark:text-gray-300">Custom Exam Name (Optional)</label>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500">Custom Exam Name (Optional)</label>
               <input
                 type="text"
                 value={examNameOverride}
                 onChange={(e) => setExamNameOverride(e.target.value)}
                 placeholder={`Default: ${selectedExam?.name || 'EXAMINATION RESULT CARD'}`}
-                className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 text-gray-800"
+                className="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm font-semibold text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none"
               />
             </div>
             
             <div className="space-y-4">
-              <label className="block text-sm font-bold text-gray-700 dark:text-gray-300">School Logo Image</label>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500">School Logo Image</label>
               <div className="flex items-center gap-4">
                 {logoUrl ? (
-                  <img src={resolveUrl(logoUrl)} alt="Logo" className="h-16 object-contain border border-gray-200 rounded p-1" />
+                  <img src={resolveUrl(logoUrl)} alt="Logo" className="h-16 object-contain border border-slate-200 dark:border-slate-700 rounded-lg p-1 bg-white" />
                 ) : (
-                  <div className="h-16 w-16 border-2 border-dashed border-gray-300 rounded flex items-center justify-center text-xs text-gray-400 bg-gray-50">No Logo</div>
+                  <div className="h-16 w-16 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-lg flex items-center justify-center text-xs font-bold text-slate-400">No Logo</div>
                 )}
-                <label className="btn-secondary cursor-pointer flex items-center gap-2">
+                <label className="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest cursor-pointer transition-colors flex items-center gap-2">
                   <Upload className="w-4 h-4" /> Upload Logo
                   <input type="file" accept="image/*" className="hidden" onChange={(e) => handleFileUpload(e, 'logo')} />
                 </label>
@@ -460,27 +474,27 @@ export const ProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
             </div>
             
             <div className="space-y-4">
-              <label className="block text-sm font-bold text-gray-700 dark:text-gray-300">Principal Signature Image</label>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500">Principal Signature Image</label>
               <div className="flex items-center gap-4">
                 {signatureUrl ? (
-                  <img src={resolveUrl(signatureUrl)} alt="Signature" className="h-16 object-contain border border-gray-200 rounded p-1" />
+                  <img src={resolveUrl(signatureUrl)} alt="Signature" className="h-16 object-contain border border-slate-200 dark:border-slate-700 rounded-lg p-1 bg-white" />
                 ) : (
-                  <div className="h-16 w-32 border-2 border-dashed border-gray-300 rounded flex items-center justify-center text-xs text-gray-400 bg-gray-50">No Signature</div>
+                  <div className="h-16 w-32 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-lg flex items-center justify-center text-xs font-bold text-slate-400">No Signature</div>
                 )}
-                <label className="btn-secondary cursor-pointer flex items-center gap-2">
+                <label className="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest cursor-pointer transition-colors flex items-center gap-2">
                   <Upload className="w-4 h-4" /> Upload Signature
                   <input type="file" accept="image/*" className="hidden" onChange={(e) => handleFileUpload(e, 'signature')} />
                 </label>
               </div>
 
-              <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mt-4">Teacher Signature Image</label>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mt-4">Teacher Signature Image</label>
               <div className="flex items-center gap-4">
                 {teacherSignatureUrl ? (
-                  <img src={resolveUrl(teacherSignatureUrl)} alt="Teacher Signature" className="h-16 object-contain border border-gray-200 rounded p-1" />
+                  <img src={resolveUrl(teacherSignatureUrl)} alt="Teacher Signature" className="h-16 object-contain border border-slate-200 dark:border-slate-700 rounded-lg p-1 bg-white" />
                 ) : (
-                  <div className="h-16 w-32 border-2 border-dashed border-gray-300 rounded flex items-center justify-center text-xs text-gray-400 bg-gray-50">No Signature</div>
+                  <div className="h-16 w-32 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-lg flex items-center justify-center text-xs font-bold text-slate-400">No Signature</div>
                 )}
-                <label className="btn-secondary cursor-pointer flex items-center gap-2">
+                <label className="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest cursor-pointer transition-colors flex items-center gap-2">
                   <Upload className="w-4 h-4" /> Upload Signature
                   <input type="file" accept="image/*" className="hidden" onChange={(e) => handleFileUpload(e, 'teacherSignature')} />
                 </label>
@@ -488,8 +502,8 @@ export const ProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
             </div>
           </div>
           
-          <div className="flex justify-end pt-6 mt-4 border-t border-gray-100">
-            <button onClick={handleSaveSettings} className="btn-primary flex items-center gap-2">
+          <div className="flex justify-end pt-6 mt-4 border-t border-slate-100 dark:border-slate-800">
+            <button onClick={handleSaveSettings} className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-md shadow-indigo-500/20 px-6 py-2.5 rounded-xl text-sm font-black uppercase tracking-widest transition-all duration-300 flex items-center gap-2">
               <Save className="w-4 h-4" /> Save Configuration
             </button>
           </div>
@@ -497,34 +511,34 @@ export const ProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
       )}
 
 
-      {loading && <div className="p-12 flex justify-center"><LoadingSpinner size="lg" /></div>}
+      {loading && <div className="p-12 text-center text-slate-400 font-bold animate-pulse"><LoadingSpinner size="lg" /></div>}
 
       {!loading && studentsData.length > 0 && (
         !isSuperAdmin && !published ? (
-          <div className="card p-12 flex flex-col items-center justify-center text-center bg-gray-50 dark:bg-gray-800/50">
-            <CheckCircle className="w-12 h-12 text-gray-300 mb-3" />
-            <h3 className="text-lg font-bold text-gray-700 dark:text-gray-200">Not Published Yet</h3>
-            <p className="text-sm text-gray-500 mt-2">The progress cards for this exam have not been published by the administration.</p>
+          <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-3xl p-16 flex flex-col items-center justify-center text-center shadow-sm border border-slate-200/60">
+            <CheckCircle className="w-16 h-16 text-slate-300 mb-4" />
+            <h3 className="text-xl font-black text-slate-700 dark:text-slate-200">Not Published Yet</h3>
+            <p className="text-sm font-semibold text-slate-500 mt-2 max-w-md">The progress cards for this exam have not been published by the administration. Please check back later.</p>
           </div>
         ) : (
         <>
           {/* Table View of Students for Progress Cards */}
-          <div className="card print:hidden overflow-hidden w-full">
-            <div className="p-4 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
+          <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-3xl shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-200/60 dark:border-slate-800 overflow-hidden print:hidden animate-fade-in-up w-full">
+            <div className="p-6 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50 flex justify-between items-center">
               <div>
-                <h3 className="font-bold text-gray-800">Class Progress Cards</h3>
-                <p className="text-xs text-gray-500">Generated {studentsData.length} cards based on exam results.</p>
+                <h3 className="font-black text-slate-800 dark:text-slate-200">Class Progress Cards</h3>
+                <p className="text-xs font-semibold text-slate-500">Generated {studentsData.length} cards based on exam results.</p>
               </div>
             </div>
             <div className="overflow-x-auto w-full">
               <table className="w-full text-sm text-left whitespace-nowrap">
-                <thead className="bg-gray-50 text-gray-600 font-bold uppercase text-xs">
+                <thead className="bg-slate-50/80 dark:bg-slate-800/80 text-slate-500 dark:text-slate-400 text-xs uppercase tracking-widest">
                   <tr>
-                    <th className="py-3 px-4 w-16">Rank</th>
-                    <th className="py-3 px-4">Student Name</th>
-                    {!isTeacher && <th className="py-3 px-4 hidden md:table-cell">Student ID</th>}
-                    <th className="py-3 px-4 text-center">Score</th>
-                    <th className="py-3 px-4 text-right">Action</th>
+                    <th className="px-6 py-5 font-black border-b border-slate-100 dark:border-slate-700/50 w-20">Rank</th>
+                    <th className="px-6 py-5 font-black border-b border-slate-100 dark:border-slate-700/50">Student Name</th>
+                    {!isTeacher && <th className="px-6 py-5 font-black border-b border-slate-100 dark:border-slate-700/50 hidden md:table-cell">Roll No</th>}
+                    <th className="px-6 py-5 font-black border-b border-slate-100 dark:border-slate-700/50 text-center">Score</th>
+                    <th className="px-6 py-5 font-black border-b border-slate-100 dark:border-slate-700/50 text-right">Action</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
