@@ -118,7 +118,7 @@ export const ClassManagementPage: React.FC = () => {
   return (
     <div className="flex flex-col h-full bg-gray-50/50 -m-6 h-[calc(100vh-64px)]">
       {/* Colorful Header */}
-      <div className="px-3 pt-3 pb-4 bg-gradient-to-br from-violet-600 via-purple-600 to-indigo-700 shadow-lg flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <div className="px-6 py-6 bg-gradient-to-br from-violet-600 via-purple-600 to-indigo-700 shadow-lg flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-2xl font-black uppercase tracking-tight text-white drop-shadow-sm">Classes Directory</h1>
           <p className="text-white/80 text-sm font-medium mt-1">Manage all grades, sections, and class teacher assignments.</p>

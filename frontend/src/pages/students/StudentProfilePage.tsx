@@ -275,45 +275,6 @@ export const StudentProfilePage: React.FC = () => {
         
         {/* ================= SCREEN-ONLY VIEW ================= */}
         <div className="space-y-8 print:hidden">
-          
-          {/* Top Actions Row */}
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white/60 dark:bg-gray-900/60 backdrop-blur-xl p-4 sm:px-6 rounded-3xl border border-gray-100 dark:border-gray-800 shadow-sm">
-            <Link 
-              to="/students" 
-              className="inline-flex items-center gap-2 text-sm font-bold text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-all hover:-translate-x-1"
-            >
-              <div className="p-2 bg-gray-100 dark:bg-gray-800 rounded-full"><ArrowLeft className="w-4 h-4" /></div>
-              <span>Back to Roster</span>
-            </Link>
-            <div className="flex items-center gap-3 w-full sm:w-auto">
-              {(isAdmin || (user?.role === 'TEACHER' && (user?.teacher as any)?.canEditStudents)) && (
-                <Link
-                  to={`/students/${student.id}/edit`}
-                  className="flex-1 sm:flex-none bg-white dark:bg-gray-800 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-900 flex items-center justify-center gap-2 px-6 py-3 rounded-2xl text-sm font-bold shadow-sm hover:shadow-md hover:bg-indigo-50 dark:hover:bg-indigo-900/30 hover:-translate-y-0.5 transition-all"
-                >
-                  <Edit2 className="w-4 h-4" />
-                  <span>Edit Profile</span>
-                </Link>
-              )}
-              {(isAdmin || user?.role === 'ACCOUNTANT') && (
-                <Link
-                  to={`/students/${student.id}/pay-fee`}
-                  className="flex-1 sm:flex-none bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white flex items-center justify-center gap-2 px-6 py-3 rounded-2xl text-sm font-bold shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 hover:-translate-y-0.5 transition-all"
-                >
-                  <CreditCard className="w-4 h-4" />
-                  <span>Pay Fee</span>
-                </Link>
-              )}
-              <button
-                onClick={() => window.print()}
-                className="flex-1 sm:flex-none bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700 flex items-center justify-center gap-2 px-6 py-3 rounded-2xl text-sm font-bold shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all"
-              >
-                <Printer className="w-4 h-4" />
-                <span>Print Profile</span>
-              </button>
-            </div>
-          </div>
-
           {/* Hero Profile Banner */}
           <div className="relative overflow-hidden rounded-[2.5rem] bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 shadow-xl shadow-indigo-100/20 dark:shadow-none group">
             {/* Background Effects */}
@@ -349,27 +310,58 @@ export const StudentProfilePage: React.FC = () => {
               </div>
 
               {/* Core Info */}
-              <div className="flex-1 text-center md:text-left space-y-4">
-                <div className="flex flex-col md:flex-row items-center gap-3 justify-center md:justify-start">
-                  <h2 className="text-3xl lg:text-4xl font-black text-gray-900 dark:text-white tracking-tight flex items-center">
-                    {student.user.name}
-                    {isAdmin && (
-                      <button 
-                        onClick={() => {
-                          setNewStudentName(student.user.name);
-                          setShowNameModal(true);
-                        }}
-                        className="ml-3 p-1.5 text-gray-400 hover:text-indigo-600 transition-colors bg-white/50 dark:bg-gray-800/50 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700"
-                        title="Edit Name"
+              <div className="flex-1 text-center md:text-left space-y-5">
+                <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+                  <div className="flex flex-col md:flex-row items-center gap-3">
+                    <h2 className="text-3xl lg:text-4xl font-black text-gray-900 dark:text-white tracking-tight flex items-center">
+                      {student.user.name}
+                      {isAdmin && (
+                        <button 
+                          onClick={() => {
+                            setNewStudentName(student.user.name);
+                            setShowNameModal(true);
+                          }}
+                          className="ml-3 p-1.5 text-gray-400 hover:text-indigo-600 transition-colors bg-white/50 dark:bg-gray-800/50 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700"
+                          title="Edit Name"
+                        >
+                          <Edit2 className="w-5 h-5" />
+                        </button>
+                      )}
+                    </h2>
+                    <div className="flex items-center gap-2 mt-2 md:mt-0">
+                      <Badge variant="info" className="px-3 py-1 text-xs font-black uppercase tracking-widest rounded-full bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400 border-none">
+                        #{student.rollNo}
+                      </Badge>
+                    </div>
+                  </div>
+                  
+                  {/* Action Buttons Integrated */}
+                  <div className="flex flex-wrap items-center justify-center gap-2">
+                    {(isAdmin || (user?.role === 'TEACHER' && (user?.teacher as any)?.canEditStudents)) && (
+                      <Link
+                        to={`/students/${student.id}/edit`}
+                        className="bg-white/80 dark:bg-gray-800 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-900/50 flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold shadow-sm hover:shadow-md hover:bg-white transition-all backdrop-blur-sm"
                       >
-                        <Edit2 className="w-5 h-5" />
-                      </button>
+                        <Edit2 className="w-3.5 h-3.5" />
+                        <span>Edit</span>
+                      </Link>
                     )}
-                  </h2>
-                  <div className="flex items-center gap-2 mt-2 md:mt-0">
-                    <Badge variant="info" className="px-3 py-1 text-xs font-black uppercase tracking-widest rounded-full bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400 border-none">
-                      #{student.rollNo}
-                    </Badge>
+                    {(isAdmin || user?.role === 'ACCOUNTANT') && (
+                      <Link
+                        to={`/students/${student.id}/pay-fee`}
+                        className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold shadow-md shadow-emerald-500/20 hover:shadow-emerald-500/40 hover:-translate-y-0.5 transition-all"
+                      >
+                        <CreditCard className="w-3.5 h-3.5" />
+                        <span>Pay Fee</span>
+                      </Link>
+                    )}
+                    <button
+                      onClick={() => window.print()}
+                      className="bg-white/80 dark:bg-gray-800 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-700 flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold shadow-sm hover:shadow-md hover:bg-white transition-all backdrop-blur-sm"
+                    >
+                      <Printer className="w-3.5 h-3.5" />
+                      <span>Print</span>
+                    </button>
                   </div>
                 </div>
                 
