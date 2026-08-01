@@ -125,28 +125,29 @@ export const SubjectPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-end px-4 md:px-0">
-        <button
-          type="button"
-          onClick={() => {
-            setEditingSubject(null);
-            setName('');
-            setCode('');
-            setClassId('');
-            setTeacherId('');
-            setShowModal(true);
-          }}
-          className="group relative flex w-full sm:w-auto items-center justify-center gap-3 overflow-hidden rounded-2xl bg-gradient-to-r from-indigo-600 via-violet-600 to-purple-600 px-5 py-3.5 text-sm font-bold text-white shadow-lg shadow-violet-500/25 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-violet-500/35 active:translate-y-0 active:scale-[0.98] cursor-pointer"
-        >
-          <span
-            aria-hidden
-            className="pointer-events-none absolute inset-0 bg-gradient-to-r from-transparent via-white/25 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-out"
-          />
-          <span className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/30 bg-white/20 backdrop-blur-sm">
-            <Plus className="h-4.5 w-4.5" strokeWidth={2.5} />
-          </span>
-          <span className="relative tracking-wide">New Subject</span>
-        </button>
+      {/* Colorful Header */}
+      <div className="bg-gradient-to-r from-violet-600 via-purple-600 to-indigo-700 p-6 md:rounded-2xl shadow-md text-white flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <h1 className="text-2xl font-black uppercase tracking-tight text-white drop-shadow-sm">Subjects & Curriculum</h1>
+          <p className="text-white/80 text-sm font-medium mt-1">Manage subjects and assign them to specific classes and teachers.</p>
+        </div>
+        <div className="flex gap-3 w-full md:w-auto">
+          <button
+            type="button"
+            onClick={() => {
+              setEditingSubject(null);
+              setName('');
+              setCode('');
+              setClassId('');
+              setTeacherId('');
+              setShowModal(true);
+            }}
+            className="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-xl font-bold transition-colors flex items-center justify-center gap-2 w-full md:w-auto cursor-pointer shadow-sm"
+          >
+            <Plus className="w-5 h-5" />
+            <span>New Subject</span>
+          </button>
+        </div>
       </div>
 
       {loading ? (

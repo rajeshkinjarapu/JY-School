@@ -448,7 +448,8 @@ export const SettingsPage: React.FC = () => {
                   >
                     Next
                   </button>
-              </div>
+                </div>
+              )}
             </div>
           )}
         </div>

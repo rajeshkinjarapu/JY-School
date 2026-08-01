@@ -117,14 +117,15 @@ export const ClassManagementPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-end px-4 md:px-0 md:justify-between items-center md:bg-white md:dark:bg-gray-900 md:p-4 md:rounded-2xl md:border md:border-gray-150 md:dark:border-gray-800">
-        <div className="hidden md:block">
-          <h3 className="font-bold text-gray-900 dark:text-white">Classes Directory</h3>
-          <p className="text-xs text-gray-400">Manage all grades, sections, and class teacher assignments.</p>
+      {/* Colorful Header */}
+      <div className="bg-gradient-to-r from-violet-600 via-purple-600 to-indigo-700 p-6 md:rounded-2xl shadow-md text-white flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <h1 className="text-2xl font-black uppercase tracking-tight text-white drop-shadow-sm">Classes Directory</h1>
+          <p className="text-white/80 text-sm font-medium mt-1">Manage all grades, sections, and class teacher assignments.</p>
         </div>
         <div className="flex gap-3 w-full md:w-auto">
-          <button onClick={openCreateModal} className="btn-primary flex items-center justify-center gap-2 w-full md:w-auto">
-            <Plus className="w-4.5 h-4.5" />
+          <button onClick={openCreateModal} className="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-xl font-bold transition-colors flex items-center justify-center gap-2 w-full md:w-auto cursor-pointer shadow-sm">
+            <Plus className="w-5 h-5" />
             <span>New Class</span>
           </button>
         </div>

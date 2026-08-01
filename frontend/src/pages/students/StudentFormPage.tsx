@@ -102,13 +102,26 @@ export const StudentFormPage: React.FC = () => {
   if (loading) return <div className="text-center py-12">Loading details...</div>;
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6">
-      <div className="card p-6 space-y-6">
-        <div>
-          <p className="text-sm text-gray-500">
-            {id ? 'Modify student and guardian information details.' : 'Create a new student profile and link academic metadata.'}
-          </p>
+    <div className="flex flex-col h-full bg-gray-50/50 -m-6 h-[calc(100vh-64px)]">
+      {/* Colorful Header */}
+      <div className="bg-gradient-to-r from-violet-600 via-purple-600 to-indigo-700 p-6 shrink-0 shadow-md flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <Link to="/students" className="p-2 bg-white/10 hover:bg-white/20 rounded-xl transition-colors">
+            <ArrowLeft className="w-5 h-5 text-white" />
+          </Link>
+          <div>
+            <h1 className="text-2xl font-black uppercase tracking-tight text-white drop-shadow-sm">
+              {id ? 'Edit Student Profile' : 'Register New Student'}
+            </h1>
+            <p className="text-white/80 text-sm font-medium mt-1">
+              {id ? 'Modify student and guardian information details.' : 'Create a new student profile and link academic metadata.'}
+            </p>
+          </div>
         </div>
+      </div>
+
+      <div className="flex-1 overflow-y-auto p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 w-full max-w-full">
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -221,11 +234,12 @@ export const StudentFormPage: React.FC = () => {
             <textarea className="input" rows={3} {...register('address')}></textarea>
           </div>
 
-          <button type="submit" className="btn-primary w-full py-3 flex items-center justify-center gap-2">
+          <button type="submit" className="w-full py-4 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white font-bold rounded-xl shadow-md transition-all flex items-center justify-center gap-2">
             <Save className="w-5 h-5" />
-            <span>Save Profile</span>
+            <span className="uppercase tracking-wider">Save Profile</span>
           </button>
         </form>
+        </div>
       </div>
     </div>
   );

@@ -163,6 +163,9 @@ export const TeacherListPage: React.FC = () => {
             <table className="w-full text-sm text-left">
               <thead>
                 <tr className="bg-gray-50 text-gray-600 border-b border-gray-200 font-bold uppercase tracking-wider text-xs">
+                  <th className="px-5 py-4 text-center w-12 border-r border-gray-100">
+                    #
+                  </th>
                   <th className="px-5 py-4 border-r border-gray-100">
                     Teacher
                   </th>
@@ -204,6 +207,9 @@ export const TeacherListPage: React.FC = () => {
                       key={teacher.id}
                       className="hover:bg-indigo-50/50 transition-colors bg-white group"
                     >
+                      <td className="px-5 py-4 text-center text-sm font-bold text-gray-500 border-r border-gray-100">
+                        {idx + 1}
+                      </td>
                       <td className="px-5 py-4 flex items-center gap-4 border-r border-gray-100">
                         <div className="relative shrink-0 inline-block">
                           {getPhotoUrl(teacher.user?.photoUrl) ? (
