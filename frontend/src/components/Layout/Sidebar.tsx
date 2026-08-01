@@ -83,7 +83,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
       { to: '/exams',         label: 'Examination',         icon: ClipboardList },
       { to: '/timetable',     label: 'Timetable',     icon: Calendar      },
       { to: '/leave/gate-pass', label: 'Gate Pass',    icon: MapPin       },
-      { to: '/leave/type',    label: 'Leave',         icon: UserCheck     },
+      { to: '/leave',    label: 'Leave',         icon: UserCheck     },
       { to: '/finance',       label: 'Finance',       icon: CreditCard    },
       { to: '/announcements', label: 'Announcements', icon: Megaphone     },
       { to: '/messages',      label: 'Messages',      icon: MessageSquare },
@@ -106,7 +106,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
       { to: '/exams',             label: 'Examination',    icon: PenTool       },
       { to: '/timetable',         label: 'Timetable',      icon: Calendar      },
       
-      { to: '/leave/request-log', label: 'Leave',          icon: UserCheck     },
+      { to: '/leave', label: 'Leave',          icon: UserCheck     },
       { to: '/salary',            label: 'My Salary',      icon: CreditCard    },
       { to: '/announcements',     label: 'Announcements',  icon: Megaphone     },
       { to: '/messages',          label: 'Messages',       icon: MessageSquare },

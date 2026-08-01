@@ -84,8 +84,7 @@ const ReportsPage = lazy(routeImports['/reports']);
 const SettingsPage = lazy(routeImports['/settings']);
 const RolesPage = lazy(() => import('../pages/settings/RolesPage'));
 const ProfilePage = lazy(() => import('../pages/profile/ProfilePage'));
-const LeaveTypePage = lazy(routeImports['/leave/type']);
-const LeaveRequestLogPage = lazy(() => import('../pages/leave/LeaveRequestLogPage'));
+const LeaveDashboardPage = lazy(() => import('../pages/leave/LeaveDashboardPage'));
 const GatePassPage = lazy(routeImports['/leave/gate-pass']);
 const HomeworkPage = lazy(routeImports['/homework']);
 const TeacherAttendancePage = lazy(routeImports['/teacher-attendance']);
@@ -440,16 +439,12 @@ export const router = createBrowserRouter([
         element: withSuspense(<GatePassPage />),
       },
       {
-        path: 'leave/type',
+        path: 'leave',
         element: withSuspense(
-          <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN']}>
-            <LeaveTypePage />
+          <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN', 'TEACHER', 'STUDENT']}>
+            <LeaveDashboardPage />
           </ProtectedRoute>
         ),
-      },
-      {
-        path: 'leave/request-log',
-        element: withSuspense(<LeaveRequestLogPage />),
       },
       {
         path: 'gate-pass',

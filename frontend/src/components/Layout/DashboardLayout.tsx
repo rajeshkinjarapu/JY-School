@@ -79,9 +79,7 @@ export const DashboardLayout: React.FC = () => {
     if (pathname === '/profile') return 'My Profile';
     
     if (pathname === '/gate-pass' || pathname === '/leave/gate-pass') return 'Gate Pass';
-    if (pathname === '/leave/type') return 'Leave Types';
-    if (pathname === '/leave/request-log') return 'Leave Request Log';
-    if (pathname.startsWith('/leave')) return 'Leave Management';
+    if (pathname === '/leave') return 'Leave Management';
     
     if (pathname === '/homework') return 'Homework Manager';
     if (pathname === '/teacher-attendance') return 'Staff Attendance';
