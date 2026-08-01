@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import api from '../../api/axios';
 import { LoadingSpinner } from '../../components/UI/LoadingSpinner';
 import { Badge } from '../../components/UI/Badge';
-import { Save, School, CalendarDays, Users, Edit, Trash2, Plus, Search, Shield, Key } from 'lucide-react';
+import { Save, School, CalendarDays, Users, Edit, Trash2, Plus, Search, Shield, Key, Settings as SettingsIcon } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useOutletContext } from 'react-router-dom';
 import { DeleteRecordsTab } from './DeleteRecordsTab';
@@ -195,333 +195,365 @@ export const SettingsPage: React.FC = () => {
   if (loadingSettings) return <LoadingSpinner size="lg" className="h-[50vh]" />;
 
   return (
-    <div className="w-full max-w-7xl mx-auto space-y-6">
+    <div className="w-full max-w-7xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      {/* Header Area */}
+      <div className="bg-gradient-to-br from-indigo-900 via-purple-900 to-indigo-800 rounded-3xl p-8 shadow-2xl relative overflow-hidden">
+        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10 mix-blend-overlay"></div>
+        <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 rounded-full bg-gradient-to-br from-pink-500/20 to-purple-500/20 blur-3xl"></div>
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div>
+            <h1 className="text-3xl font-black text-white tracking-tight flex items-center gap-3">
+              <Shield className="w-8 h-8 text-pink-400" /> Settings & Administration
+            </h1>
+            <p className="text-indigo-200 mt-2 font-medium">Manage system configurations, users, and security.</p>
+          </div>
+        </div>
+      </div>
+
       {/* Navigation Tabs */}
-      <div className="flex border-b border-gray-200 dark:border-gray-800">
+      <div className="flex flex-wrap gap-3 bg-white/50 dark:bg-gray-900/50 backdrop-blur-md p-2 rounded-2xl border border-white/20 shadow-sm">
         <button
           onClick={() => setActiveTab('system')}
-          className={`py-3 px-6 text-sm font-bold border-b-2 transition-all cursor-pointer ${
+          className={`flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold transition-all duration-300 ${
             activeTab === 'system'
-              ? 'border-primary-600 text-primary-600 dark:text-primary-400'
-              : 'border-transparent text-gray-500 hover:text-gray-900 dark:hover:text-white'
+              ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-md shadow-indigo-500/30'
+              : 'text-gray-600 hover:bg-white/60 dark:text-gray-300 dark:hover:bg-gray-800'
           }`}
         >
-          System Configurations
+          <SettingsIcon className="w-4 h-4" /> System Config
         </button>
         <button
           onClick={() => setActiveTab('users')}
-          className={`py-3 px-6 text-sm font-bold border-b-2 transition-all cursor-pointer ${
+          className={`flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold transition-all duration-300 ${
             activeTab === 'users'
-              ? 'border-primary-600 text-primary-600 dark:text-primary-400'
-              : 'border-transparent text-gray-500 hover:text-gray-900 dark:hover:text-white'
+              ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow-md shadow-blue-500/30'
+              : 'text-gray-600 hover:bg-white/60 dark:text-gray-300 dark:hover:bg-gray-800'
           }`}
         >
-          Roles & Users Control
+          <Users className="w-4 h-4" /> Roles & Users
         </button>
         <button
           onClick={() => setActiveTab('delete')}
-          className={`py-3 px-6 text-sm font-bold border-b-2 transition-all cursor-pointer ${
+          className={`flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold transition-all duration-300 ${
             activeTab === 'delete'
-              ? 'border-red-600 text-red-600 dark:text-red-400'
-              : 'border-transparent text-gray-500 hover:text-red-600 dark:hover:text-red-400'
+              ? 'bg-gradient-to-r from-rose-500 to-pink-500 text-white shadow-md shadow-rose-500/30'
+              : 'text-gray-600 hover:bg-rose-50 dark:text-gray-300 dark:hover:bg-rose-950/30 hover:text-rose-600'
           }`}
         >
-          Delete Records
+          <Trash2 className="w-4 h-4" /> Danger Zone
         </button>
       </div>
 
-      {activeTab === 'system' ? (
-        <div className="card p-6 space-y-6 max-w-2xl mx-auto">
-          <div>
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white">Branding & System Configuration</h2>
-            <p className="text-xs text-gray-400">Configure global metadata tags and default academic session years.</p>
-          </div>
+      <div className="mt-6">
+        {activeTab === 'system' ? (
+          <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border border-white/40 dark:border-gray-800 rounded-3xl p-8 shadow-xl max-w-3xl mx-auto transform transition-all duration-500">
+            <div className="mb-8">
+              <h2 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400">Branding & System Info</h2>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Configure global metadata tags and default academic session years.</p>
+            </div>
 
-          <form onSubmit={handleSystemSubmit} className="space-y-5">
-            <div className="space-y-4">
-              <div>
-                <label className="label">School Branding Name</label>
-                <div className="relative">
-                  <School className="absolute left-3.5 top-3.5 w-5 h-5 text-gray-400" />
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. Springfield High"
-                    value={schoolName}
-                    onChange={(e) => setSchoolName(e.target.value)}
-                    className="input pl-11"
-                  />
+            <form onSubmit={handleSystemSubmit} className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="md:col-span-2">
+                  <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-2">School Branding Name</label>
+                  <div className="relative group">
+                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400 group-focus-within:text-indigo-500 transition-colors">
+                      <School className="w-5 h-5" />
+                    </div>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. Springfield High"
+                      value={schoolName}
+                      onChange={(e) => setSchoolName(e.target.value)}
+                      className="w-full pl-12 pr-4 py-3 bg-gray-50/50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all outline-none"
+                    />
+                  </div>
                 </div>
-              </div>
 
-              <div>
-                <label className="label">Default Academic Session Year</label>
-                <div className="relative">
-                  <CalendarDays className="absolute left-3.5 top-3.5 w-5 h-5 text-gray-400" />
-                  <select
-                    value={currentYear}
-                    onChange={(e) => setCurrentYear(e.target.value)}
-                    className="input pl-11"
-                  >
-                    <option value="2024-2025">2024-2025</option>
-                    <option value="2025-2026">2025-2026</option>
-                    <option value="2026-2027">2026-2027</option>
-                    <option value="2027-2028">2027-2028</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="label">Office Telephone</label>
+                  <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-2">Academic Session</label>
+                  <div className="relative group">
+                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400 group-focus-within:text-indigo-500 transition-colors">
+                      <CalendarDays className="w-5 h-5" />
+                    </div>
+                    <select
+                      value={currentYear}
+                      onChange={(e) => setCurrentYear(e.target.value)}
+                      className="w-full pl-12 pr-4 py-3 bg-gray-50/50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all outline-none appearance-none"
+                    >
+                      <option value="2024-2025">2024-2025</option>
+                      <option value="2025-2026">2025-2026</option>
+                      <option value="2026-2027">2026-2027</option>
+                      <option value="2027-2028">2027-2028</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-2">Office Telephone</label>
                   <input
                     type="text"
                     placeholder="+91-9876543210"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
-                    className="input"
+                    className="w-full px-4 py-3 bg-gray-50/50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all outline-none"
                   />
                 </div>
+                
                 <div>
-                  <label className="label">Office Email</label>
+                  <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-2">Office Email</label>
                   <input
                     type="email"
                     placeholder="admin@school.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="input"
+                    className="w-full px-4 py-3 bg-gray-50/50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all outline-none"
                   />
                 </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-2">Website URL</label>
+                  <input
+                    type="text"
+                    placeholder="https://school.com"
+                    value={website}
+                    onChange={(e) => setWebsite(e.target.value)}
+                    className="w-full px-4 py-3 bg-gray-50/50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all outline-none"
+                  />
+                </div>
+
+                <div className="md:col-span-2">
+                  <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-2">Physical Address</label>
+                  <textarea
+                    rows={3}
+                    placeholder="Location details..."
+                    value={address}
+                    onChange={(e) => setAddress(e.target.value)}
+                    className="w-full px-4 py-3 bg-gray-50/50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all outline-none resize-none"
+                  ></textarea>
+                </div>
               </div>
 
-              <div>
-                <label className="label">Branding Website URL</label>
+              <div className="pt-4 border-t border-gray-100 dark:border-gray-800 flex justify-end">
+                <button
+                  type="submit"
+                  disabled={isSaving}
+                  className="bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-bold py-3 px-8 rounded-xl shadow-lg shadow-indigo-500/30 transition-all flex items-center justify-center gap-2 hover:-translate-y-0.5 active:translate-y-0 w-full md:w-auto"
+                >
+                  <Save className="w-5 h-5" />
+                  <span>{isSaving ? 'Saving Configurations...' : 'Save Configurations'}</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        ) : activeTab === 'users' ? (
+          <div className="space-y-6 animate-in fade-in zoom-in-95 duration-300">
+            {/* Action Header */}
+            <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl p-4 rounded-2xl border border-white/40 dark:border-gray-800 shadow-sm flex flex-col md:flex-row gap-4 justify-between items-center">
+              <div className="relative w-full md:w-96 group">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400 group-focus-within:text-blue-500 transition-colors">
+                  <Search className="w-5 h-5" />
+                </div>
                 <input
                   type="text"
-                  placeholder="https://school.com"
-                  value={website}
-                  onChange={(e) => setWebsite(e.target.value)}
-                  className="input"
+                  placeholder="Search users..."
+                  value={userSearch}
+                  onChange={(e) => setUserSearch(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-gray-800 border-none rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                 />
               </div>
-
-              <div>
-                <label className="label">Physical Address</label>
-                <textarea
-                  rows={3}
-                  placeholder="Location details..."
-                  value={address}
-                  onChange={(e) => setAddress(e.target.value)}
-                  className="input"
-                ></textarea>
+              
+              <div className="flex gap-3 w-full md:w-auto">
+                <select
+                  value={userRoleFilter}
+                  onChange={(e) => setUserRoleFilter(e.target.value)}
+                  className="bg-gray-50 dark:bg-gray-800 border-none rounded-xl px-4 py-2.5 text-sm font-semibold text-gray-700 dark:text-gray-200 outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                >
+                  <option value="">All Roles</option>
+                  <option value="SUPER_ADMIN">Super Admin</option>
+                  <option value="ADMIN">Admin</option>
+                  <option value="TEACHER">Teacher</option>
+                  <option value="STUDENT">Student</option>
+                </select>
+                <button
+                  onClick={handleOpenCreateModal}
+                  className="bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white font-bold py-2.5 px-5 rounded-xl shadow-md shadow-blue-500/20 transition-all flex items-center gap-2 hover:-translate-y-0.5 active:translate-y-0 whitespace-nowrap"
+                >
+                  <Plus className="w-5 h-5" /> Create User
+                </button>
               </div>
             </div>
 
-            <button
-              type="submit"
-              disabled={isSaving}
-              className="btn-primary w-full py-3 flex items-center justify-center gap-2"
-            >
-              <Save className="w-5 h-5" />
-              <span>{isSaving ? 'Saving Configurations...' : 'Save Configuration'}</span>
-            </button>
-          </form>
-        </div>
-      ) : activeTab === 'users' ? (
-        <div className="space-y-6">
-          {/* Action Header */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-gray-900 p-4 rounded-2xl border border-gray-150 dark:border-gray-800">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-3.5 w-4.5 h-4.5 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search users by name or Email ID..."
-                value={userSearch}
-                onChange={(e) => setUserSearch(e.target.value)}
-                className="input pl-10 py-3"
-              />
-            </div>
-            <div className="flex gap-3">
-              <select
-                value={userRoleFilter}
-                onChange={(e) => setUserRoleFilter(e.target.value)}
-                className="bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-xl px-4 py-2.5 text-sm"
-              >
-                <option value="">All Roles</option>
-                <option value="SUPER_ADMIN">Super Admin</option>
-                <option value="ADMIN">Admin</option>
-                <option value="TEACHER">Teacher</option>
-                <option value="STUDENT">Student</option>
-              </select>
-              <button
-                onClick={handleOpenCreateModal}
-                className="btn-primary flex items-center gap-2"
-              >
-                <Plus className="w-4.5 h-4.5" />
-                <span>Create User</span>
-              </button>
-            </div>
-          </div>
-
-          {/* User Table list */}
-          {loadingUsers ? (
-            <LoadingSpinner size="lg" className="py-12" />
-          ) : (
-            <div className="card overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm text-left border-collapse">
-                  <thead>
-                    <tr className="bg-gray-50 dark:bg-gray-800/40 text-gray-500 font-semibold border-b border-gray-100 dark:border-gray-800">
-                      <th className="px-6 py-4">Name</th>
-                      <th className="px-6 py-4">User Login ID (Email/StudentID)</th>
-                      <th className="px-6 py-4">Role</th>
-                      <th className="px-6 py-4">Status</th>
-                      <th className="px-6 py-4 text-right">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-100 dark:divide-gray-800/50">
-                    {users.map((user) => (
-                      <tr key={user.id} className="hover:bg-gray-50/50 dark:hover:bg-gray-800/10">
-                        <td className="px-6 py-4 font-semibold text-gray-900 dark:text-white">
-                          {user.name}
-                        </td>
-                        <td className="px-6 py-4 font-mono text-xs text-gray-500 dark:text-gray-400">
-                          {user.email}
-                        </td>
-                        <td className="px-6 py-4">
-                          <Badge variant={user.role === 'SUPER_ADMIN' || user.role === 'ADMIN' ? 'danger' : 'info'}>
-                            {user.role}
-                          </Badge>
-                        </td>
-                        <td className="px-6 py-4">
-                          <span
-                            className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${
-                              user.isActive
-                                ? 'bg-green-50 text-green-700 dark:bg-green-950/20 dark:text-green-400'
-                                : 'bg-red-50 text-red-700 dark:bg-red-950/20 dark:text-red-400'
-                            }`}
-                          >
-                            {user.isActive ? 'Active' : 'Deactivated'}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 text-right">
-                          <div className="flex justify-end gap-2">
-                            <button
-                              onClick={() => handleOpenEditModal(user)}
-                              className="p-1.5 rounded-lg text-gray-400 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-950/20 cursor-pointer"
-                              title="Edit Credentials"
-                            >
-                              <Edit className="w-4 h-4" />
-                            </button>
-                            <button
-                              onClick={() => handleDeleteUser(user.id)}
-                              disabled={!user.isActive}
-                              className="p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 cursor-pointer disabled:opacity-30"
-                              title="Deactivate Account"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          </div>
-                        </td>
+            {/* User Table list */}
+            {loadingUsers ? (
+              <div className="flex justify-center items-center h-64 bg-white/50 dark:bg-gray-900/50 rounded-3xl backdrop-blur-sm border border-white/20">
+                <LoadingSpinner size="lg" />
+              </div>
+            ) : (
+              <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border border-white/40 dark:border-gray-800 rounded-3xl shadow-xl overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm text-left">
+                    <thead>
+                      <tr className="bg-gray-50/50 dark:bg-gray-800/30 text-gray-500 dark:text-gray-400 font-extrabold text-[11px] uppercase tracking-wider border-b border-gray-100 dark:border-gray-800">
+                        <th className="px-6 py-4">User</th>
+                        <th className="px-6 py-4">Role</th>
+                        <th className="px-6 py-4">Status</th>
+                        <th className="px-6 py-4 text-right">Actions</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-
-              {/* Pagination */}
-              {totalUsers > 6 && (
-                <div className="flex items-center justify-between px-6 py-4 bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800">
-                  <button
-                    disabled={usersPage === 1}
-                    onClick={() => setUsersPage(p => Math.max(1, p - 1))}
-                    className="btn-secondary !py-1.5 !px-3 text-xs cursor-pointer"
-                  >
-                    Previous
-                  </button>
-                  <span className="text-xs text-gray-500">
-                    Page {usersPage} of {Math.ceil(totalUsers / 6)}
-                  </span>
-                  <button
-                    disabled={usersPage * 6 >= totalUsers}
-                    onClick={() => setUsersPage(p => p + 1)}
-                    className="btn-secondary !py-1.5 !px-3 text-xs cursor-pointer"
-                  >
-                    Next
-                  </button>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100 dark:divide-gray-800/50">
+                      {users.map((user) => (
+                        <tr key={user.id} className="hover:bg-blue-50/30 dark:hover:bg-blue-900/10 transition-colors group">
+                          <td className="px-6 py-4">
+                            <div className="font-bold text-gray-900 dark:text-white text-base">{user.name}</div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400 font-medium mt-0.5">{user.email}</div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <span className={`px-3 py-1 rounded-full text-xs font-bold border ${
+                              user.role === 'SUPER_ADMIN' ? 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-900/30 dark:text-purple-400 dark:border-purple-800/50' :
+                              user.role === 'ADMIN' ? 'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-900/30 dark:text-indigo-400 dark:border-indigo-800/50' :
+                              user.role === 'TEACHER' ? 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-800/50' :
+                              'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800/50'
+                            }`}>
+                              {user.role}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="flex items-center gap-2">
+                              <div className={`w-2 h-2 rounded-full ${user.isActive ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]' : 'bg-red-500'}`}></div>
+                              <span className={`text-xs font-bold ${user.isActive ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                                {user.isActive ? 'Active' : 'Inactive'}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 text-right">
+                            <div className="flex justify-end gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                              <button
+                                onClick={() => handleOpenEditModal(user)}
+                                className="p-2 rounded-xl text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-all cursor-pointer"
+                                title="Edit"
+                              >
+                                <Edit className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => handleDeleteUser(user.id)}
+                                disabled={!user.isActive}
+                                className="p-2 rounded-xl text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 transition-all cursor-pointer disabled:opacity-30 disabled:hover:bg-transparent"
+                                title="Deactivate"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
-              )}
-            </div>
-          )}
-        </div>
-      ) : activeTab === 'delete' ? (
-        <DeleteRecordsTab />
-      ) : null}
+
+                {/* Pagination */}
+                {totalUsers > 6 && (
+                  <div className="flex items-center justify-between px-6 py-4 bg-gray-50/50 dark:bg-gray-800/30 border-t border-gray-100 dark:border-gray-800">
+                    <button
+                      disabled={usersPage === 1}
+                      onClick={() => setUsersPage(p => Math.max(1, p - 1))}
+                      className="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-bold text-gray-600 dark:text-gray-300 disabled:opacity-50 hover:bg-gray-50 transition-colors cursor-pointer"
+                    >
+                      Previous
+                    </button>
+                    <span className="text-xs font-bold text-gray-500 dark:text-gray-400 bg-white/60 dark:bg-gray-800/60 px-3 py-1.5 rounded-lg border border-gray-100 dark:border-gray-700">
+                      Page {usersPage} of {Math.ceil(totalUsers / 6)}
+                    </span>
+                    <button
+                      disabled={usersPage * 6 >= totalUsers}
+                      onClick={() => setUsersPage(p => p + 1)}
+                      className="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-bold text-gray-600 dark:text-gray-300 disabled:opacity-50 hover:bg-gray-50 transition-colors cursor-pointer"
+                    >
+                      Next
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        ) : activeTab === 'delete' ? (
+          <div className="animate-in fade-in zoom-in-95 duration-300">
+             <DeleteRecordsTab />
+          </div>
+        ) : null}
+      </div>
 
       {/* User Form Modal */}
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-950/40 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="fixed inset-0" onClick={() => setShowModal(false)} />
-          <div className="relative card w-full max-w-md p-6 space-y-6 animate-scale-in z-10 bg-white dark:bg-gray-900">
-            <div>
-              <h3 className="text-lg font-bold text-gray-900 dark:text-white">
-                {selectedUser ? 'Edit User Credentials & Role' : 'Create Staff/User Account'}
+          <div className="relative w-full max-w-md bg-white dark:bg-gray-900 rounded-3xl shadow-2xl p-8 animate-in zoom-in-95 duration-300 border border-white/20">
+            
+            <div className="mb-6">
+              <h3 className="text-2xl font-black text-gray-900 dark:text-white flex items-center gap-2">
+                <Shield className="w-6 h-6 text-indigo-500" />
+                {selectedUser ? 'Edit User' : 'Create User'}
               </h3>
-              <p className="text-xs text-gray-500 mt-1">
-                Configure profile data, roles, login credentials, and passcode keys.
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 font-medium">
+                Configure profile data, roles, and login credentials.
               </p>
             </div>
 
-            <form onSubmit={handleSaveUserSubmit} className="space-y-4">
+            <form onSubmit={handleSaveUserSubmit} className="space-y-5">
               <div>
-                <label className="label">Full Name</label>
+                <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-2">Full Name</label>
                 <input
                   type="text"
                   required
                   value={formName}
                   onChange={(e) => setFormName(e.target.value)}
-                  className="input text-sm"
+                  className="w-full px-4 py-3 bg-gray-50/50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
                   placeholder="e.g. Principal John Doe"
                 />
               </div>
 
               <div>
-                <label className="label">User Login ID (Email or Student ID)</label>
+                <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-2">Login ID (Email/Student ID)</label>
                 <input
                   type="text"
                   required
                   value={formEmail}
                   onChange={(e) => setFormEmail(e.target.value)}
-                  className="input text-sm"
-                  placeholder="e.g. principal@school.com or JY26-0001"
+                  className="w-full px-4 py-3 bg-gray-50/50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+                  placeholder="e.g. principal@school.com"
                 />
               </div>
 
               <div>
-                <label className="label">
-                  Password {selectedUser && '(Leave blank to keep unchanged)'}
+                <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-2">
+                  Password {selectedUser && <span className="text-gray-400 font-normal normal-case">(Leave blank to keep)</span>}
                 </label>
-                <div className="relative">
-                  <Key className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
+                <div className="relative group">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400 group-focus-within:text-indigo-500 transition-colors">
+                    <Key className="w-4 h-4" />
+                  </div>
                   <input
                     type="password"
                     required={!selectedUser}
                     value={formPassword}
                     onChange={(e) => setFormPassword(e.target.value)}
-                    className="input pl-10 text-sm"
+                    className="w-full pl-11 pr-4 py-3 bg-gray-50/50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
                     placeholder="••••••••"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="label">Security Role Group</label>
-                <div className="relative">
-                  <Shield className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
+                <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-2">Security Role</label>
+                <div className="relative group">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400 group-focus-within:text-indigo-500 transition-colors">
+                    <Shield className="w-4 h-4" />
+                  </div>
                   <select
                     value={formRole}
                     onChange={(e) => setFormRole(e.target.value)}
-                    className="input pl-10 text-sm"
+                    className="w-full pl-11 pr-4 py-3 bg-gray-50/50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all appearance-none"
                   >
                     <option value="SUPER_ADMIN">Super Admin</option>
                     <option value="ADMIN">Admin</option>
@@ -532,28 +564,28 @@ export const SettingsPage: React.FC = () => {
               </div>
 
               <div>
-                <label className="label">Phone (Optional)</label>
+                <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-2">Phone (Optional)</label>
                 <input
                   type="text"
                   value={formPhone}
                   onChange={(e) => setFormPhone(e.target.value)}
-                  className="input text-sm"
+                  className="w-full px-4 py-3 bg-gray-50/50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
                   placeholder="+91-XXXXXXXXXX"
                 />
               </div>
 
-              <div className="flex gap-3 pt-2">
+              <div className="flex gap-4 pt-4 border-t border-gray-100 dark:border-gray-800">
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="btn-secondary flex-1 py-2.5 text-xs font-semibold"
+                  className="flex-1 py-3 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 font-bold rounded-xl transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSavingUser}
-                  className="btn-primary flex-1 py-2.5 text-xs font-semibold flex items-center justify-center gap-2"
+                  className="flex-1 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-bold rounded-xl shadow-lg shadow-indigo-500/30 transition-all flex items-center justify-center gap-2"
                 >
                   <Save className="w-4 h-4" />
                   <span>{isSavingUser ? 'Saving...' : 'Save User'}</span>

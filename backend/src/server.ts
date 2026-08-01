@@ -44,6 +44,7 @@ import salaryRoutes from './routes/salary';
 import leaveRoutes from './routes/leave';
 import questionBankRoutes from './routes/questionBank';
 import generatedPapersRoutes from './routes/generatedPapers';
+import transportRoutes from './routes/transport.routes';
 
 const app = express();
 app.set('trust proxy', 1);
@@ -105,6 +106,7 @@ app.use('/api/salary', salaryRoutes);
 app.use('/api/leave', leaveRoutes);
 app.use('/api', questionBankRoutes);
 app.use('/api/generated-papers', generatedPapersRoutes);
+app.use('/api/transport', transportRoutes);
 
 // Health check
 app.get('/api/health', (_req, res) => {

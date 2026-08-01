@@ -1,5 +1,6 @@
 import React from 'react';
 import { Bus, Map, Users, Settings, Activity, Calendar, ShieldCheck, ChevronRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 export const TransportDashboard = () => {
   const tools = [
@@ -8,49 +9,56 @@ export const TransportDashboard = () => {
       description: 'Manage bus routes and stops', 
       icon: Map, 
       gradient: 'from-blue-500 to-cyan-400',
-      shadow: 'shadow-blue-500/30'
+      shadow: 'shadow-blue-500/30',
+      to: '/transport/routes'
     },
     { 
       title: 'VEHICLES', 
       description: 'Track fleet and maintenance', 
       icon: Bus, 
       gradient: 'from-indigo-500 to-purple-500',
-      shadow: 'shadow-indigo-500/30'
+      shadow: 'shadow-indigo-500/30',
+      to: '/transport/vehicles'
     },
     { 
-      title: 'DRIVERS & STAFF', 
-      description: 'Manage transport personnel', 
+      title: 'STUDENT TRANSPORT', 
+      description: 'Map students to bus routes', 
       icon: Users, 
       gradient: 'from-fuchsia-500 to-pink-500',
-      shadow: 'shadow-fuchsia-500/30'
+      shadow: 'shadow-fuchsia-500/30',
+      to: '/transport/students'
     },
     { 
       title: 'LIVE TRACKING', 
       description: 'Real-time GPS tracking', 
       icon: Activity, 
       gradient: 'from-rose-500 to-orange-400',
-      shadow: 'shadow-rose-500/30'
+      shadow: 'shadow-rose-500/30',
+      to: '#'
     },
     { 
       title: 'TRANSPORT FEE', 
       description: 'Manage fees and payments', 
       icon: Settings, 
       gradient: 'from-emerald-500 to-teal-400',
-      shadow: 'shadow-emerald-500/30'
+      shadow: 'shadow-emerald-500/30',
+      to: '#'
     },
     { 
       title: 'SCHEDULES', 
       description: 'View and update timings', 
       icon: Calendar, 
       gradient: 'from-amber-500 to-yellow-400',
-      shadow: 'shadow-amber-500/30'
+      shadow: 'shadow-amber-500/30',
+      to: '#'
     },
     { 
       title: 'SAFETY COMPLIANCE', 
       description: 'Insurance and safety checks', 
       icon: ShieldCheck, 
       gradient: 'from-violet-500 to-indigo-500',
-      shadow: 'shadow-violet-500/30'
+      shadow: 'shadow-violet-500/30',
+      to: '#'
     }
   ];
 
@@ -64,9 +72,10 @@ export const TransportDashboard = () => {
         {tools.map((tool, index) => {
           const Icon = tool.icon;
           return (
-            <div 
+            <Link 
+              to={tool.to}
               key={index} 
-              className="group relative bg-white border border-slate-100 p-6 rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer overflow-hidden flex flex-col items-start gap-4"
+              className="group relative bg-white border border-slate-100 p-6 rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer overflow-hidden flex flex-col items-start gap-4 block"
             >
               <div className={`absolute inset-0 opacity-0 group-hover:opacity-5 transition-opacity duration-300 bg-gradient-to-br ${tool.gradient}`}></div>
               
@@ -81,7 +90,7 @@ export const TransportDashboard = () => {
                 </div>
                 <p className="text-slate-500 text-sm mt-1.5 font-medium leading-relaxed">{tool.description}</p>
               </div>
-            </div>
+            </Link>
           );
         })}
       </div>

@@ -96,6 +96,9 @@ const QuestionBankDashboard = lazy(routeImports['/question-bank']);
 const QuestionPaperGeneratorPage = lazy(() => import('../pages/question-bank/QuestionPaperGeneratorPage'));
 const SavedPapersPage = lazy(() => import('../pages/question-bank/SavedPapersPage'));
 const TransportDashboard = lazy(routeImports['/transport']);
+const TransportRoutesPage = lazy(() => import('../pages/transport/RoutesPage'));
+const TransportVehiclesPage = lazy(() => import('../pages/transport/VehiclesPage'));
+const TransportStudentsPage = lazy(() => import('../pages/transport/StudentTransportPage'));
 
 const AttendanceWrapper = () => {
   const { user } = useAuth();
@@ -411,6 +414,30 @@ export const router = createBrowserRouter([
         element: withSuspense(
           <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN']}>
             <TransportDashboard />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'transport/routes',
+        element: withSuspense(
+          <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN']}>
+            <TransportRoutesPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'transport/vehicles',
+        element: withSuspense(
+          <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN']}>
+            <TransportVehiclesPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'transport/students',
+        element: withSuspense(
+          <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN']}>
+            <TransportStudentsPage />
           </ProtectedRoute>
         ),
       },

@@ -4,6 +4,7 @@ import { createError } from '../middlewares/errorHandler';
 import { prisma } from '../utils/prisma';
 import { successResponse, paginatedResponse } from '../utils/response';
 import * as XLSX from 'xlsx';
+import { sortClasses } from '../utils/sortClasses';
 
 export const getAll = async (req: AuthRequest, res: Response): Promise<void> => {
   const page = parseInt(req.query.page as string) || 1;
@@ -16,19 +17,18 @@ export const getAll = async (req: AuthRequest, res: Response): Promise<void> => 
   if (search) where.name = { contains: search };
   if (academicYear) where.academicYear = academicYear;
 
-  const [classes, total] = await Promise.all([
-    prisma.class.findMany({
-      where,
-      skip,
-      take: limit,
-      orderBy: [{ name: 'asc' }, { section: 'asc' }],
-      include: {
-        _count: { select: { students: true } },
-        classTeacher: { include: { user: { select: { name: true } } } },
-      },
-    }),
-    prisma.class.count({ where }),
-  ]);
+  const allMatchedClasses = await prisma.class.findMany({
+    where,
+    include: {
+      _count: { select: { students: true } },
+      classTeacher: { include: { user: { select: { name: true } } } },
+    },
+  });
+
+  const sortedClasses = sortClasses(allMatchedClasses);
+  
+  const total = sortedClasses.length;
+  const classes = sortedClasses.slice(skip, skip + limit);
 
   paginatedResponse(res, classes, total, page, limit, 'Classes fetched');
 };
