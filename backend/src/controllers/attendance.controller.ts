@@ -152,13 +152,6 @@ export const getSummary = async (req: AuthRequest, res: Response, next: NextFunc
   for (const r of records) {
     const dateStr = r.date.toISOString().split('T')[0];
     if (!dayMap.has(dateStr)) {
-      dayMap.set(dateStr, { date: dateStr, present: 0, absent: 0, late: 0, excused: 0, total: 0 });
-    }
-    const entry = dayMap.get(dateStr)!;
-    entry.total++;
-    if (r.status === 'PRESENT') entry.present++;
-    else if (r.status === 'ABSENT') entry.absent++;
-    else if (r.status === 'LATE') entry.late++;
 import { sortClasses } from '../utils/sortClasses';
 
 export const getByClass = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {

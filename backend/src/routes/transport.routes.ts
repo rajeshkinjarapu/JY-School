@@ -1,14 +1,13 @@
 import { Router } from 'express';
 import { getVehicles, createVehicle, getRoutes, createRoute, getStudentTransports, assignStudentTransport } from '../controllers/transport.controller';
-import { authenticate } from '../middlewares/auth';
-import { requireRoles } from '../middlewares/requireRoles';
+import { authenticate, authorize } from '../middlewares/auth';
 
 const router = Router();
 
 router.use(authenticate);
 
 // Super admin & admin only
-router.use(requireRoles('SUPER_ADMIN', 'ADMIN'));
+router.use(authorize('SUPER_ADMIN', 'ADMIN'));
 
 router.get('/vehicles', getVehicles);
 router.post('/vehicles', createVehicle);
