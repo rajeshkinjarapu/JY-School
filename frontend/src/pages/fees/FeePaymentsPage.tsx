@@ -236,62 +236,53 @@ export const FeePaymentsPage: React.FC = () => {
       const link = document.createElement('a');
       link.href = url;
       link.setAttribute('download', 'Fee_Report.pdf');
-      document.body.appendChild(link);
-      link.click();
-      link.parentNode?.removeChild(link);
-      toast.success('PDF report downloaded successfully!', { id: importToast });
-    } catch (e: any) {
-      toast.error('Failed to export fees ledger PDF.', { id: importToast });
-    }
-  };
-
-  return (
-    <div className="space-y-4 animate-fade-in-up pb-24 overflow-x-hidden">
+      document.body.appendC  return (
+    <div className="-mt-4 sm:-mt-6 animate-fade-in-up pb-24 overflow-x-hidden space-y-6">
       
-      <div className="print:hidden space-y-4">
+      <div className="print:hidden">
       {user?.role !== 'TEACHER' && (
-        <div className="hidden md:flex flex-col sm:flex-row sm:items-center justify-end gap-4 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 p-2 sm:p-3 rounded-none sm:rounded-3xl shadow-xl text-white transform transition-all sm:hover:scale-[1.01]">
-          <div className="flex flex-wrap gap-2 w-full justify-end">
+        <div className="hidden md:flex flex-col sm:flex-row sm:items-center justify-end gap-4 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 p-3 sm:p-4 rounded-none sm:rounded-[2rem] shadow-2xl shadow-purple-500/20 text-white transform transition-all sm:hover:scale-[1.01]">
+          <div className="flex flex-wrap gap-2.5 w-full justify-end">
             {(user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN' || user?.role === 'ACCOUNTANT') && (
               <>
                 <button
                   onClick={() => window.print()}
-                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold text-white/90 border border-white/25 hover:bg-white/15 transition-all"
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 transition-all shadow-sm"
                 >
                   <Printer className="w-4 h-4" /> Print
                 </button>
                 <button
                   onClick={exportPaymentsExcel}
-                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold text-white/90 border border-white/25 hover:bg-white/15 transition-all"
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 transition-all shadow-sm"
                 >
                   <FileDown className="w-4 h-4" /> Export Excel
                 </button>
                 <button
                   onClick={exportPaymentsPdf}
-                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold text-white/90 border border-white/25 hover:bg-white/15 transition-all"
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 transition-all shadow-sm"
                 >
                   <FileDown className="w-4 h-4" /> Export PDF
                 </button>
                 <button
                   onClick={downloadTemplate}
-                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold text-white/90 border border-white/25 hover:bg-white/15 transition-all"
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 transition-all shadow-sm"
                 >
                   <FileText className="w-4 h-4" /> Sample Excel
                 </button>
                 {(user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN') && (
-                  <Link to="/fees/structures" className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold text-white/90 border border-white/25 hover:bg-white/15 transition-all">
+                  <Link to="/fees/structures" className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 transition-all shadow-sm">
                     <SlidersHorizontal className="w-4 h-4" /> Structure Settings
                   </Link>
                 )}
                 <button
                   onClick={() => { setShowImportModal(true); setImportResult(null); setImportFile(null); }}
-                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold text-white/90 border border-white/25 hover:bg-white/15 transition-all"
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 transition-all shadow-sm"
                 >
                   <Upload className="w-4 h-4" /> Import Excel
                 </button>
                 <Link
                   to="/collect-payment"
-                  className="flex items-center gap-1.5 px-5 py-2 rounded-xl text-sm font-bold bg-white text-indigo-600 hover:bg-white/90 shadow-md transition-all"
+                  className="flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-black bg-white text-indigo-600 hover:bg-indigo-50 shadow-lg shadow-white/10 transition-all ml-2"
                 >
                   <Plus className="w-4 h-4" /> Collect Payment
                 </Link>
@@ -302,161 +293,184 @@ export const FeePaymentsPage: React.FC = () => {
       )}
 
       {user?.role !== 'TEACHER' && (
-        <div className="px-0 sm:px-0">
+        <div className="px-0 sm:px-0 mt-6">
 
         {/* ── Date Range Filter Bar ── */}
-        <div className="hidden md:flex items-center gap-3 px-1 pb-2">
-          <div className="flex items-center gap-2 bg-white/80 backdrop-blur border border-slate-200 rounded-xl px-3 py-2 shadow-sm">
-            <Calendar className="w-4 h-4 text-indigo-400 flex-shrink-0" />
-            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">From</span>
+        <div className="hidden md:flex items-center gap-4 px-2 pb-6">
+          <div className="flex items-center gap-3 bg-white/90 backdrop-blur-xl border border-indigo-100 rounded-2xl px-4 py-3 shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all hover:shadow-[0_8px_30px_rgb(99,102,241,0.1)]">
+            <div className="p-1.5 rounded-lg bg-indigo-50">
+              <Calendar className="w-4 h-4 text-indigo-500 flex-shrink-0" />
+            </div>
+            <span className="text-xs font-black text-slate-400 uppercase tracking-widest">From</span>
             <input
               type="date"
               value={dateFrom}
               onChange={e => setDateFrom(e.target.value)}
-              className="text-xs font-semibold text-slate-700 outline-none bg-transparent"
+              className="text-sm font-bold text-slate-700 outline-none bg-transparent cursor-pointer"
             />
           </div>
-          <div className="flex items-center gap-2 bg-white/80 backdrop-blur border border-slate-200 rounded-xl px-3 py-2 shadow-sm">
-            <Calendar className="w-4 h-4 text-pink-400 flex-shrink-0" />
-            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">To</span>
+          <div className="flex items-center gap-3 bg-white/90 backdrop-blur-xl border border-pink-100 rounded-2xl px-4 py-3 shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all hover:shadow-[0_8px_30px_rgb(236,72,153,0.1)]">
+            <div className="p-1.5 rounded-lg bg-pink-50">
+              <Calendar className="w-4 h-4 text-pink-500 flex-shrink-0" />
+            </div>
+            <span className="text-xs font-black text-slate-400 uppercase tracking-widest">To</span>
             <input
               type="date"
               value={dateTo}
               onChange={e => setDateTo(e.target.value)}
-              className="text-xs font-semibold text-slate-700 outline-none bg-transparent"
+              className="text-sm font-bold text-slate-700 outline-none bg-transparent cursor-pointer"
             />
           </div>
           {(dateFrom || dateTo) && (
             <button
               onClick={() => { setDateFrom(''); setDateTo(''); }}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-500 border border-slate-200 bg-white/80 hover:bg-red-50 hover:text-red-500 hover:border-red-200 transition-colors shadow-sm"
+              className="flex items-center gap-2 px-4 py-3 rounded-2xl text-xs font-bold text-rose-500 border border-rose-200 bg-rose-50 hover:bg-rose-100 transition-colors shadow-sm"
             >
-              <X className="w-3.5 h-3.5" /> Clear Filter
+              <X className="w-4 h-4" /> Clear Filter
             </button>
           )}
-          <span className="ml-auto text-xs font-semibold text-slate-400">
-            {filteredPayments.length} record{filteredPayments.length !== 1 ? 's' : ''}
-            {(dateFrom || dateTo) ? ' (filtered)' : ''}
-          </span>
+          <div className="ml-auto flex items-center gap-2 bg-slate-900 text-white px-4 py-3 rounded-2xl shadow-lg shadow-slate-900/20">
+            <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="text-xs font-black tracking-widest">
+              {filteredPayments.length} RECORD{filteredPayments.length !== 1 ? 'S' : ''}
+            </span>
+          </div>
         </div>
 
         {loading ? (
           <LoadingSpinner size="lg" className="py-12" />
         ) : (
-          <div className="border border-slate-300 bg-white overflow-hidden shadow-sm">
-            <div className="overflow-x-auto w-full max-w-full block"><table className="w-full text-sm text-left border-collapse">
-              <thead className="bg-slate-100 text-slate-700 font-bold border-b-2 border-slate-300">
-                <tr>
-                  <th className="border border-slate-300 px-2 py-3 text-xs uppercase tracking-wider text-center w-12">S.No</th>
-                  <th className="border border-slate-300 px-3 py-3 text-xs uppercase tracking-wider">Date</th>
-                  <th className="border border-slate-300 px-3 py-3 text-xs uppercase tracking-wider">Student ID</th>
-                  <th className="border border-slate-300 px-3 py-3 text-xs uppercase tracking-wider">Student Name</th>
-                  <th className="border border-slate-300 px-3 py-3 text-xs uppercase tracking-wider">Fee Structure</th>
-                  <th className="border border-slate-300 px-3 py-3 text-xs uppercase tracking-wider">Amount Paid</th>
-                  <th className="border border-slate-300 px-3 py-3 text-xs uppercase tracking-wider hidden md:table-cell text-center">Method</th>
-                  <th className="border border-slate-300 px-3 py-3 text-xs uppercase tracking-wider hidden md:table-cell">Receipt No</th>
-                  <th className="border border-slate-300 px-3 py-3 text-xs uppercase tracking-wider text-center hidden md:table-cell">Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredPayments.map((p, idx) => {
-                  let d = new Date(p.paymentDate || p.createdAt);
-                  if (d.getFullYear() < 2000) d = new Date(p.createdAt); // Fallback for bad excel dates
-
-                  return (
-                  <React.Fragment key={p.id}>
-                  <tr onClick={() => toggleRow(p.id)} className="hover:bg-slate-50 transition-colors cursor-pointer md:cursor-default">
-                    <td className="border border-slate-300 px-2 py-3 font-semibold text-slate-800 text-xs sm:text-sm text-center w-12">{idx + 1}</td>
-                    <td className="border border-slate-300 px-3 py-3 text-slate-700 font-bold text-xs sm:text-sm whitespace-nowrap">
-                      {d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
-                    </td>
-                    <td className="border border-slate-300 px-3 py-3 font-mono text-slate-600 text-xs sm:text-sm whitespace-nowrap">{p.student?.rollNo || '-'}</td>
-                    <td className="border border-slate-300 px-3 py-3 font-semibold text-slate-800 text-xs sm:text-sm">{p.student?.user?.name || 'Unknown student'}</td>
-                    <td className="border border-slate-300 px-3 py-3 text-slate-600 text-xs sm:text-sm">{p.feeStructure?.name || 'Deleted structure'}</td>
-                    <td className="border border-slate-300 px-3 py-3 font-bold text-slate-800 text-xs sm:text-sm whitespace-nowrap">₹{p.amountPaid.toLocaleString()}</td>
-                    <td className="border border-slate-300 px-3 py-3 hidden md:table-cell text-center">
-                      <Badge variant={p.method === 'UPI' ? 'danger' : 'info'}>{p.method}</Badge>
-                    </td>
-                    <td className="border border-slate-300 px-3 py-3 font-mono text-xs text-slate-500 truncate max-w-[120px] hidden md:table-cell">{p.receiptNo}</td>
-                    <td className="border border-slate-300 px-3 py-3 hidden md:table-cell text-center align-middle">
-                      <div className="flex items-center justify-center gap-2">
-                        <button
-                          onClick={(e) => { e.stopPropagation(); handlePrintReceipt(p.id); }}
-                          className="p-1.5 rounded-lg text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 cursor-pointer"
-                          title="Print Dual Receipt"
-                        >
-                          <FileDown className="w-4 h-4" />
-                        </button>
-                        
-                        {(user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN' || user?.role === 'ACCOUNTANT') ? (
-                          <>
-                            <button
-                              onClick={(e) => { e.stopPropagation(); handleGenerateStatement(p.student); }}
-                              className="p-1.5 rounded-lg text-gray-500 hover:text-purple-600 hover:bg-purple-50 cursor-pointer"
-                              title="Download Fee Statement PDF"
-                            >
-                              <FileText className="w-4 h-4" />
-                            </button>
-                            <button
-                              onClick={(e) => { e.stopPropagation(); handleDeletePayment(p.id); }}
-                              className="p-1.5 rounded-lg text-gray-500 hover:text-red-600 hover:bg-red-50 cursor-pointer"
-                              title="Delete Payment"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          </>
-                        ) : null}
-                      </div>
-                    </td>
+          <div className="bg-white/70 backdrop-blur-xl border border-white/40 rounded-[2rem] overflow-hidden shadow-[0_20px_40px_-15px_rgba(0,0,0,0.05)] ring-1 ring-slate-200/50">
+            <div className="overflow-x-auto w-full max-w-full block">
+              <table className="w-full text-sm text-left border-collapse">
+                <thead className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white font-black text-[11px] uppercase tracking-widest relative z-10">
+                  <tr>
+                    <th className="px-5 py-5 text-center w-12 rounded-tl-[2rem]">S.No</th>
+                    <th className="px-5 py-5">Date</th>
+                    <th className="px-5 py-5">Student ID</th>
+                    <th className="px-5 py-5">Student Name</th>
+                    <th className="px-5 py-5">Fee Structure</th>
+                    <th className="px-5 py-5">Amount Paid</th>
+                    <th className="px-5 py-5 hidden md:table-cell text-center">Method</th>
+                    <th className="px-5 py-5 hidden md:table-cell">Receipt No</th>
+                    <th className="px-5 py-5 text-center hidden md:table-cell rounded-tr-[2rem]">Action</th>
                   </tr>
-                  {expandedRow === p.id && (
-                    <tr className="md:hidden bg-indigo-50/20 border-b border-indigo-100/50 animate-scale-in origin-top">
-                      <td colSpan={3} className="px-4 py-4 space-y-3">
-                        <div className="flex justify-between text-xs items-center">
-                          <span className="font-semibold text-slate-600">Date:</span>
-                          <span className="text-slate-800">{new Date(p.paymentDate).toLocaleDateString()}</span>
+                </thead>
+                <tbody className="divide-y divide-slate-100/80 bg-white/50">
+                  {filteredPayments.map((p, idx) => {
+                    let d = new Date(p.paymentDate || p.createdAt);
+                    if (d.getFullYear() < 2000) d = new Date(p.createdAt); // Fallback for bad excel dates
+
+                    return (
+                    <React.Fragment key={p.id}>
+                    <tr onClick={() => toggleRow(p.id)} className="group hover:bg-gradient-to-r hover:from-indigo-50/50 hover:to-purple-50/50 transition-all duration-300 cursor-pointer md:cursor-default">
+                      <td className="px-5 py-4 font-black text-slate-300 text-xs sm:text-sm text-center w-12 group-hover:text-indigo-400">{idx + 1}</td>
+                      <td className="px-5 py-4">
+                        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-100 text-slate-600 font-bold text-xs whitespace-nowrap group-hover:bg-indigo-100 group-hover:text-indigo-700 transition-colors">
+                          <Calendar className="w-3.5 h-3.5" />
+                          {d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
                         </div>
-                        <div className="flex justify-between text-xs items-center">
-                          <span className="font-semibold text-slate-600">Method:</span>
-                          <span><Badge variant={p.method === 'UPI' ? 'danger' : 'info'}>{p.method}</Badge></span>
+                      </td>
+                      <td className="px-5 py-4">
+                        <span className="font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-600 text-xs sm:text-sm whitespace-nowrap">{p.student?.rollNo || '-'}</span>
+                      </td>
+                      <td className="px-5 py-4 font-extrabold text-slate-700 text-xs sm:text-sm group-hover:text-indigo-700 transition-colors">{p.student?.user?.name || 'Unknown student'}</td>
+                      <td className="px-5 py-4">
+                        <span className="inline-flex px-3 py-1.5 rounded-xl bg-pink-50 text-pink-600 font-bold text-xs border border-pink-100/50 whitespace-nowrap">{p.feeStructure?.name || 'Deleted structure'}</span>
+                      </td>
+                      <td className="px-5 py-4">
+                        <div className="font-black text-emerald-500 text-sm sm:text-base whitespace-nowrap drop-shadow-sm group-hover:scale-105 transition-transform origin-left">₹{p.amountPaid.toLocaleString()}</div>
+                      </td>
+                      <td className="px-5 py-4 hidden md:table-cell text-center">
+                        <div className={`inline-flex px-3 py-1.5 rounded-xl font-bold text-xs whitespace-nowrap border ${
+                          p.method === 'UPI' ? 'bg-orange-50 text-orange-600 border-orange-200/50' : 
+                          p.method === 'CASH' ? 'bg-emerald-50 text-emerald-600 border-emerald-200/50' : 
+                          'bg-blue-50 text-blue-600 border-blue-200/50'
+                        }`}>
+                          {p.method}
                         </div>
-                        <div className="flex justify-between text-xs items-center">
-                          <span className="font-semibold text-slate-600">Receipt No:</span>
-                          <span className="font-mono text-[10px] text-slate-500 truncate max-w-[150px]">{p.receiptNo || '-'}</span>
-                        </div>
-                        <div className="flex justify-end gap-2 mt-4 pt-3 border-t border-indigo-100/60">
+                      </td>
+                      <td className="px-5 py-4 font-mono font-bold text-[11px] text-slate-400 truncate max-w-[120px] hidden md:table-cell group-hover:text-slate-600">{p.receiptNo}</td>
+                      <td className="px-5 py-4 hidden md:table-cell text-center align-middle">
+                        <div className="flex items-center justify-center gap-1.5 opacity-60 group-hover:opacity-100 transition-opacity">
                           <button
                             onClick={(e) => { e.stopPropagation(); handlePrintReceipt(p.id); }}
-                            className="flex-1 py-2 px-3 flex items-center justify-center gap-2 rounded-lg text-indigo-600 bg-indigo-100 hover:bg-indigo-200 font-bold text-xs active:scale-95 transition-transform"
+                            className="p-2 rounded-xl text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 hover:shadow-sm cursor-pointer transition-all active:scale-95"
+                            title="Print Dual Receipt"
                           >
-                            <FileDown className="w-4 h-4" /> Receipt
+                            <FileDown className="w-4 h-4" />
                           </button>
                           
                           {(user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN' || user?.role === 'ACCOUNTANT') ? (
                             <>
                               <button
                                 onClick={(e) => { e.stopPropagation(); handleGenerateStatement(p.student); }}
-                                className="flex-1 py-2 px-3 flex items-center justify-center gap-2 rounded-lg text-purple-600 bg-purple-100 hover:bg-purple-200 font-bold text-xs active:scale-95 transition-transform"
+                                className="p-2 rounded-xl text-slate-400 hover:text-purple-600 hover:bg-purple-50 hover:shadow-sm cursor-pointer transition-all active:scale-95"
+                                title="Download Fee Statement PDF"
                               >
-                                <FileText className="w-4 h-4" /> Statement
+                                <FileText className="w-4 h-4" />
                               </button>
                               <button
                                 onClick={(e) => { e.stopPropagation(); handleDeletePayment(p.id); }}
-                                className="flex-1 py-2 px-3 flex items-center justify-center gap-2 rounded-lg text-red-600 bg-red-100 hover:bg-red-200 font-bold text-xs active:scale-95 transition-transform"
+                                className="p-2 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 hover:shadow-sm cursor-pointer transition-all active:scale-95"
+                                title="Delete Payment"
                               >
-                                <Trash2 className="w-4 h-4" /> Delete
+                                <Trash2 className="w-4 h-4" />
                               </button>
                             </>
                           ) : null}
                         </div>
                       </td>
                     </tr>
-                  )}
-                  </React.Fragment>
-                  );
-                })}
-              </tbody>
-            </table></div>
+                    {expandedRow === p.id && (
+                      <tr className="md:hidden bg-gradient-to-r from-indigo-50/80 to-purple-50/80 border-b border-indigo-100/50 animate-scale-in origin-top">
+                        <td colSpan={3} className="px-5 py-5 space-y-3">
+                          <div className="flex justify-between text-xs items-center bg-white/50 p-2.5 rounded-xl">
+                            <span className="font-extrabold text-indigo-900/40 uppercase tracking-wider">Date</span>
+                            <span className="font-bold text-indigo-900">{new Date(p.paymentDate).toLocaleDateString()}</span>
+                          </div>
+                          <div className="flex justify-between text-xs items-center bg-white/50 p-2.5 rounded-xl">
+                            <span className="font-extrabold text-indigo-900/40 uppercase tracking-wider">Method</span>
+                            <span className={`inline-flex px-2 py-1 rounded-lg font-bold text-[10px] ${p.method === 'UPI' ? 'bg-orange-100 text-orange-700' : 'bg-blue-100 text-blue-700'}`}>{p.method}</span>
+                          </div>
+                          <div className="flex justify-between text-xs items-center bg-white/50 p-2.5 rounded-xl">
+                            <span className="font-extrabold text-indigo-900/40 uppercase tracking-wider">Receipt No</span>
+                            <span className="font-mono font-bold text-[11px] text-indigo-900 truncate max-w-[150px]">{p.receiptNo || '-'}</span>
+                          </div>
+                          <div className="flex justify-end gap-2 mt-5">
+                            <button
+                              onClick={(e) => { e.stopPropagation(); handlePrintReceipt(p.id); }}
+                              className="flex-1 py-2.5 px-3 flex items-center justify-center gap-2 rounded-xl text-indigo-700 bg-indigo-100 hover:bg-indigo-200 font-bold text-xs active:scale-95 transition-transform shadow-sm"
+                            >
+                              <FileDown className="w-4 h-4" /> Receipt
+                            </button>
+                            
+                            {(user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN' || user?.role === 'ACCOUNTANT') ? (
+                              <>
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); handleGenerateStatement(p.student); }}
+                                  className="flex-1 py-2.5 px-3 flex items-center justify-center gap-2 rounded-xl text-purple-700 bg-purple-100 hover:bg-purple-200 font-bold text-xs active:scale-95 transition-transform shadow-sm"
+                                >
+                                  <FileText className="w-4 h-4" /> Statement
+                                </button>
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); handleDeletePayment(p.id); }}
+                                  className="flex-1 py-2.5 px-3 flex items-center justify-center gap-2 rounded-xl text-rose-700 bg-rose-100 hover:bg-rose-200 font-bold text-xs active:scale-95 transition-transform shadow-sm"
+                                >
+                                  <Trash2 className="w-4 h-4" /> Delete
+                                </button>
+                              </>
+                            ) : null}
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                    </React.Fragment>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
         </div>
