@@ -564,40 +564,40 @@ export const TimetablePage: React.FC = () => {
 
   /* ─── RENDER ─── */
   return (
-    <div className="space-y-5">
+    <div className="flex flex-col h-full bg-gray-50/50 -m-6" style={{ minHeight: 'calc(100vh - 64px)' }}>
       {/* ══ HEADER ══ */}
-      <div className="px-4 py-4 md:bg-white md:dark:bg-gray-900 md:p-5 md:rounded-2xl md:border md:border-gray-150 md:dark:border-gray-800 md:shadow-sm">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+      <div className="px-6 py-6 bg-gradient-to-br from-indigo-600 via-blue-600 to-cyan-600 shadow-lg flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shrink-0">
+        <div className="flex items-center gap-4">
+          <div className="p-3 bg-white/20 rounded-2xl">
+            <Calendar className="w-7 h-7 text-white" />
+          </div>
           <div>
-            <h2 className="text-xl font-extrabold text-gray-900 dark:text-white flex items-center gap-2">
-              <Calendar className="w-5 h-5 text-primary-500" /> Interactive
-              Timetable Manager
-            </h2>
-            <p className="text-xs text-gray-400 mt-1">
-              Monday – Saturday · Primary & Higher schedules · Teacher workloads
-            </p>
+            <h1 className="text-2xl font-black uppercase tracking-tight text-white drop-shadow-sm">Timetable Manager</h1>
+            <p className="text-white/80 text-sm font-medium mt-0.5">Manage schedules, teachers, and workloads.</p>
           </div>
-          <div className="flex flex-wrap bg-gray-100 dark:bg-gray-800 p-1 rounded-xl border border-gray-200 dark:border-gray-700 gap-0.5">
-            {tabs.map((t) => (
-              <button
-                key={t.key}
-                onClick={() => setActiveTab(t.key as any)}
-                className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-bold transition-all ${
-                  activeTab === t.key
-                    ? "bg-white dark:bg-gray-900 text-gray-950 dark:text-white shadow-sm"
-                    : "text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
-                }`}
-              >
-                {t.icon} {t.label}
-              </button>
-            ))}
-          </div>
+        </div>
+        <div className="flex flex-wrap bg-white/10 backdrop-blur p-1 rounded-xl border border-white/20 gap-1 w-full md:w-auto">
+          {tabs.map((t) => (
+            <button
+              key={t.key}
+              onClick={() => setActiveTab(t.key as any)}
+              className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-bold transition-all cursor-pointer flex-1 md:flex-none justify-center ${
+                activeTab === t.key
+                  ? "bg-white text-indigo-700 shadow-sm"
+                  : "text-white/70 hover:text-white hover:bg-white/10"
+              }`}
+            >
+              {t.icon} <span className="hidden sm:inline">{t.label}</span>
+            </button>
+          ))}
         </div>
       </div>
 
+      <div className="flex-1 overflow-auto p-4 md:p-6">
+        <div className="space-y-5 max-w-7xl mx-auto">
       {/* ══ FILTER BAR ══ */}
       {(activeTab === "class" || activeTab === "teacher") && (
-        <div className="px-4 md:px-0 flex flex-col sm:flex-row items-center justify-between gap-3 md:bg-white md:dark:bg-gray-900 py-3 md:rounded-xl md:border md:border-gray-150 md:dark:border-gray-800">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
           <div className="flex items-center gap-3 flex-wrap">
             <span className="text-[10px] font-extrabold uppercase text-gray-400 tracking-widest">
               Filter:
@@ -1415,6 +1415,8 @@ export const TimetablePage: React.FC = () => {
           </div>
         </div>
       )}
+    </div>
+    </div>
     </div>
   );
 };
