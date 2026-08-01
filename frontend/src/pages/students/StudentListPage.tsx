@@ -240,9 +240,9 @@ export const StudentListPage: React.FC = () => {
                       <div className="flex items-center gap-4">
                         <StudentAvatar name={student.user?.name} photoUrl={student.user?.photoUrl} isActive={student.user?.isActive} />
                         <div>
-                          <p className="font-bold text-gray-900 text-sm hover:text-indigo-600 transition-colors">
+                          <Link to={`/students/${student.id}`} className="font-bold text-gray-900 text-sm hover:text-indigo-600 transition-colors cursor-pointer">
                             {student.user?.name || "Unknown"}
-                          </p>
+                          </Link>
                           <p className="text-xs text-gray-500 font-medium mt-1">{student.user?.email || "No email"}</p>
                         </div>
                       </div>
