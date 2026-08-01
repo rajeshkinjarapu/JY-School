@@ -14,7 +14,7 @@ echo  PASSWORD: cJkg_-jnt-xoUxVB
 echo  (If asked for password, RIGHT-CLICK to paste, then ENTER)
 echo.
 echo  =====================================================
-ssh -o StrictHostKeyChecking=no root@148.113.8.82 -p 20048 "cd /root/JY-School && git pull origin main && cd backend && npm install && npm run build && cd ../frontend && npm install && npm run build && pm2 restart all"
+ssh -o StrictHostKeyChecking=no root@148.113.8.82 -p 20046 "cd /root/JY-School && git pull origin main && cd backend && npm install && npm run build && cd ../frontend && npm install && npm run build && pm2 restart all"
 echo.
 if %errorlevel% == 0 (
     echo  =====================================================
