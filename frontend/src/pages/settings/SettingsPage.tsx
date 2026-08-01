@@ -7,7 +7,7 @@ import toast from 'react-hot-toast';
 import { useOutletContext } from 'react-router-dom';
 
 export const SettingsPage: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'system' | 'users'>('system');
+  const [activeTab, setActiveTab] = useState<'system' | 'users' | 'delete'>('system');
   const [loadingSettings, setLoadingSettings] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -216,6 +216,16 @@ export const SettingsPage: React.FC = () => {
           }`}
         >
           Roles & Users Control
+        </button>
+        <button
+          onClick={() => setActiveTab('delete')}
+          className={`py-3 px-6 text-sm font-bold border-b-2 transition-all cursor-pointer ${
+            activeTab === 'delete'
+              ? 'border-red-600 text-red-600 dark:text-red-400'
+              : 'border-transparent text-gray-500 hover:text-red-600 dark:hover:text-red-400'
+          }`}
+        >
+          Bulk Delete
         </button>
       </div>
 
@@ -438,12 +448,57 @@ export const SettingsPage: React.FC = () => {
                   >
                     Next
                   </button>
-                </div>
-              )}
+              </div>
             </div>
           )}
         </div>
-      )}
+      ) : activeTab === 'delete' ? (
+        <div className="card p-6 space-y-6 max-w-2xl mx-auto border border-red-100 dark:border-red-900/30">
+          <div>
+            <h2 className="text-xl font-bold text-red-600 dark:text-red-500">Bulk Delete Operations</h2>
+            <p className="text-xs text-gray-500 mt-1">Warning: Actions performed here are irreversible. All associated data will be deleted.</p>
+          </div>
+          
+          <div className="space-y-6">
+            <div className="bg-red-50 dark:bg-red-500/10 p-5 rounded-xl border border-red-100 dark:border-red-500/20">
+              <h3 className="font-bold text-red-800 dark:text-red-300 mb-2">Delete Students Class-wise</h3>
+              <p className="text-sm text-red-600 dark:text-red-400 mb-4">Select a class to delete all its students completely from the system.</p>
+              <div className="flex gap-3 items-center">
+                <select className="input flex-1 bg-white" defaultValue="">
+                  <option value="" disabled>Select Class...</option>
+                  <option value="ALL">All Classes (Dangerous)</option>
+                  {/* Options will be populated via API */}
+                </select>
+                <button 
+                  onClick={() => {
+                    if (window.confirm("Are you ABSOLUTELY sure you want to delete students? This cannot be undone.")) {
+                      toast.error("Bulk delete functionality is being implemented on backend.");
+                    }
+                  }}
+                  className="px-4 py-2 bg-red-600 text-white font-bold rounded-lg hover:bg-red-700 transition-colors shrink-0"
+                >
+                  Delete Students
+                </button>
+              </div>
+            </div>
+
+            <div className="bg-red-50 dark:bg-red-500/10 p-5 rounded-xl border border-red-100 dark:border-red-500/20">
+              <h3 className="font-bold text-red-800 dark:text-red-300 mb-2">Delete All Teachers</h3>
+              <p className="text-sm text-red-600 dark:text-red-400 mb-4">Delete all teacher records from the system.</p>
+              <button 
+                onClick={() => {
+                  if (window.confirm("Are you ABSOLUTELY sure you want to delete ALL teachers? This cannot be undone.")) {
+                    toast.error("Bulk delete functionality is being implemented on backend.");
+                  }
+                }}
+                className="px-4 py-2 bg-red-600 text-white font-bold rounded-lg hover:bg-red-700 transition-colors w-full"
+              >
+                Delete All Teachers
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       {/* User Form Modal */}
       {showModal && (

@@ -206,14 +206,14 @@ export const StudentListPage: React.FC = () => {
                 <th className="px-5 py-4 border-r border-gray-100">Student</th>
                 <th className="px-5 py-4 border-r border-gray-100">Roll No / ID</th>
                 <th className="px-5 py-4 border-r border-gray-100">Class</th>
-                <th className="px-5 py-4 border-r border-gray-100">Parent Info</th>
-                <th className="px-5 py-4 text-center">Actions</th>
+                <th className="px-5 py-4 border-r border-gray-100">Father Name</th>
+                <th className="px-5 py-4">Mobile No</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
               {loading ? (
                 <tr>
-                  <td colSpan={6} className="py-12 text-center">
+                  <td colSpan={5} className="py-12 text-center">
                     <div className="animate-pulse flex flex-col items-center gap-2">
                       <div className="w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
                       <p className="text-gray-400 text-xs font-bold uppercase tracking-wider">Loading Students...</p>
@@ -222,7 +222,7 @@ export const StudentListPage: React.FC = () => {
                 </tr>
               ) : students.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="py-16 text-center text-gray-400">
+                  <td colSpan={5} className="py-16 text-center text-gray-400">
                     <div className="w-16 h-16 rounded-full bg-indigo-50 flex items-center justify-center mx-auto mb-3">
                       <Search className="w-7 h-7 text-indigo-300" />
                     </div>
@@ -243,7 +243,6 @@ export const StudentListPage: React.FC = () => {
                           <Link to={`/students/${student.id}`} className="font-bold text-gray-900 text-sm hover:text-indigo-600 transition-colors cursor-pointer">
                             {student.user?.name || "Unknown"}
                           </Link>
-                          <p className="text-xs text-gray-500 font-medium mt-1">{student.user?.email || "No email"}</p>
                         </div>
                       </div>
                     </td>
@@ -259,24 +258,9 @@ export const StudentListPage: React.FC = () => {
                     </td>
                     <td className="px-5 py-4 border-r border-gray-100">
                       <p className="font-bold text-gray-800 text-sm">{student.fatherName || "–"}</p>
-                      <p className="text-gray-500 text-xs mt-1 font-medium">{student.user?.phone || "–"}</p>
                     </td>
                     <td className="px-5 py-4">
-                      <div className="flex items-center justify-center gap-2">
-                        <Link to={`/students/${student.id}`} className="p-2 rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-100 hover:shadow-sm transition-all" title="View">
-                          <Eye className="w-4 h-4" />
-                        </Link>
-                        {isSuperAdmin && (
-                          <>
-                            <Link to={`/students/${student.id}/edit`} className="p-2 rounded-lg bg-amber-50 text-amber-600 hover:bg-amber-100 hover:shadow-sm transition-all" title="Edit">
-                              <Edit className="w-4 h-4" />
-                            </Link>
-                            <button onClick={() => handleDelete(student.id)} className="p-2 rounded-lg bg-red-50 text-red-500 hover:bg-red-100 hover:shadow-sm transition-all cursor-pointer" title="Delete">
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          </>
-                        )}
-                      </div>
+                      <p className="text-gray-700 text-sm font-medium">{student.user?.phone || "–"}</p>
                     </td>
                   </tr>
                 ))

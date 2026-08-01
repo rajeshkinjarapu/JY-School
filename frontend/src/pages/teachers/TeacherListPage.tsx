@@ -175,8 +175,8 @@ export const TeacherListPage: React.FC = () => {
                   <th className="px-5 py-4 border-r border-gray-100">
                     Qualification
                   </th>
-                  <th className="px-5 py-4 text-center">
-                    Actions
+                  <th className="px-5 py-4">
+                    Mobile No
                   </th>
                 </tr>
               </thead>
@@ -225,9 +225,6 @@ export const TeacherListPage: React.FC = () => {
                           <Link to={`/teachers/${teacher.id}`} className="font-bold text-gray-900 text-sm hover:text-indigo-600 transition-colors cursor-pointer">
                             {name}
                           </Link>
-                          <p className="text-xs text-gray-500 font-medium mt-1">
-                            {teacher.user?.email || "No email"}
-                          </p>
                         </div>
                       </td>
                       <td className="px-5 py-4 border-r border-gray-100">
@@ -246,33 +243,9 @@ export const TeacherListPage: React.FC = () => {
                         </span>
                       </td>
                       <td className="px-5 py-4">
-                        <div className="flex items-center justify-center gap-2">
-                          <Link
-                            to={`/teachers/${teacher.id}`}
-                            className="p-2 rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-100 hover:shadow-sm transition-all"
-                            title="View Profile"
-                          >
-                            <Eye className="w-4 h-4" />
-                          </Link>
-                          {isSuperAdmin && (
-                            <>
-                              <Link
-                                to={`/teachers/${teacher.id}/edit`}
-                                className="p-2 rounded-lg bg-amber-50 text-amber-600 hover:bg-amber-100 hover:shadow-sm transition-all"
-                                title="Edit"
-                              >
-                                <Edit className="w-4 h-4" />
-                              </Link>
-                              <button
-                                onClick={() => handleDelete(teacher.id)}
-                                className="p-2 rounded-lg bg-red-50 text-red-500 hover:bg-red-100 hover:shadow-sm transition-all cursor-pointer"
-                                title="Delete"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </button>
-                            </>
-                          )}
-                        </div>
+                        <p className="text-gray-700 text-sm font-medium">
+                          {teacher.user?.phone || "–"}
+                        </p>
                       </td>
                     </tr>
                   );
