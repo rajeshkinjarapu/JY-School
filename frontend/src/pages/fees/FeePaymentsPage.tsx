@@ -246,12 +246,12 @@ export const FeePaymentsPage: React.FC = () => {
   };
 
   return (
-    <div className="-mt-4 sm:-mt-6 animate-fade-in-up pb-24 overflow-x-hidden space-y-6">
+    <div className="animate-fade-in-up pb-24 overflow-x-hidden space-y-6">
       
       <div className="print:hidden">
       {user?.role !== 'TEACHER' && (
-        <div className="hidden md:flex flex-col sm:flex-row sm:items-center justify-end gap-4 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 p-3 sm:p-4 rounded-none sm:rounded-[2rem] shadow-2xl shadow-purple-500/20 text-white transform transition-all sm:hover:scale-[1.01]">
-          <div className="flex flex-wrap gap-2.5 w-full justify-end">
+        <div className="hidden md:flex flex-col sm:flex-row sm:items-center justify-end gap-4 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 p-3 sm:p-4 shadow-xl text-white">
+          <div className="flex flex-wrap gap-2.5 w-full justify-end px-2 sm:px-4">
             {(user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN' || user?.role === 'ACCOUNTANT') && (
               <>
                 <button
