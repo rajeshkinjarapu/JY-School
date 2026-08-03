@@ -1,10 +1,11 @@
 import React, { useEffect, useState, useCallback } from "react";
 import api from "../../api/axios";
-import { Search, UserPlus, Trash2, Edit, FileDown, Eye, Filter, ChevronLeft, ChevronRight, Upload, Image as ImageIcon } from "lucide-react";
+import { Search, UserPlus, Trash2, Edit, FileDown, Eye, Filter, ChevronLeft, ChevronRight, Upload, Image as ImageIcon, X, CheckCircle2, AlertCircle, FileText } from "lucide-react";
 import toast from "react-hot-toast";
 import { Link, useNavigate } from "react-router-dom";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import * as XLSX from "xlsx";
 import { useAuth } from "../../hooks/useAuth";
 import { getPhotoUrl } from "../../utils/photo";
 
@@ -55,6 +56,13 @@ export const StudentListPage: React.FC = () => {
   const [classId, setClassId] = useState("");
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
+
+  // Bulk import states
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [importFile, setImportFile] = useState<File | null>(null);
+  const [importLoading, setImportLoading] = useState(false);
+  const [importResult, setImportResult] = useState<any>(null);
+  const [dragOver, setDragOver] = useState(false);
 
   const fetchClasses = useCallback(async () => {
     try {
@@ -121,6 +129,39 @@ export const StudentListPage: React.FC = () => {
     toast.success("PDF exported!");
   };
 
+  const downloadTemplate = () => {
+    const ws = XLSX.utils.aoa_to_sheet([
+      ['Student Name', 'Mobile No', 'Class', 'Section', 'Father Name', 'Date of Birth', 'Address'],
+      ['Suhash Kumar', '9052308483', 'PP1', 'A', 'Botu', '2019-05-12', 'Visakhapatnam'],
+      ['Arvindh', '9597429747', 'PP1', 'A', 'Vanjarapu', '2019-08-22', 'Hyderabad'],
+    ]);
+    ws['!cols'] = [{ wch: 20 }, { wch: 15 }, { wch: 10 }, { wch: 10 }, { wch: 20 }, { wch: 15 }, { wch: 30 }];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Students');
+    XLSX.writeFile(wb, 'Student_Import_Template.xlsx');
+  };
+
+  const handleBulkImport = async () => {
+    if (!importFile) { toast.error('Please select an Excel file first.'); return; }
+    setImportLoading(true);
+    const t = toast.loading('Importing students...');
+    try {
+      const formData = new FormData();
+      formData.append('file', importFile);
+      const res: any = await api.post('/api/students/bulk-import', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      const data = res.data?.data || res.data;
+      setImportResult(data);
+      toast.success(`Import done! ✓ ${data.summary.success} success, ✗ ${data.summary.errors} errors`, { id: t, duration: 5000 });
+      fetchStudents();
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Import failed', { id: t });
+    } finally {
+      setImportLoading(false);
+    }
+  };
+
   const totalPages = Math.ceil(total / LIMIT);
 
   return (
@@ -136,6 +177,7 @@ export const StudentListPage: React.FC = () => {
             {isSuperAdmin && (
               <>
                 <button
+                  onClick={() => setShowImportModal(true)}
                   className="flex items-center gap-1.5 px-3.5 py-2.5 text-sm font-extrabold text-white bg-white/15 rounded-xl shadow hover:bg-white/25 transition-colors cursor-pointer"
                   title="Upload Students"
                 >
@@ -297,6 +339,153 @@ export const StudentListPage: React.FC = () => {
             </div>
           </div>
         )}
+
+      {/* Bulk Import Modal */}
+      {showImportModal && (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
+          <div className="absolute inset-0" onClick={() => !importLoading && setShowImportModal(false)}></div>
+          <div className="relative w-full max-w-2xl bg-white rounded-3xl shadow-2xl overflow-hidden animate-scale-in">
+            <div className="bg-gradient-to-r from-indigo-600 to-purple-600 p-6 flex justify-between items-center text-white">
+              <div>
+                <h3 className="text-xl font-black">Import Students</h3>
+                <p className="text-white/70 text-sm font-medium mt-1">Upload multiple students via Excel</p>
+              </div>
+              <button 
+                onClick={() => !importLoading && setShowImportModal(false)}
+                className="p-2 bg-white/10 hover:bg-white/20 rounded-xl transition-colors cursor-pointer"
+                disabled={importLoading}
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="p-6">
+              {!importResult ? (
+                <div className="space-y-6">
+                  <div className="flex items-start gap-4 p-4 bg-indigo-50/50 rounded-2xl border border-indigo-100">
+                    <div className="p-3 bg-white rounded-xl shadow-sm text-indigo-600"><FileText className="w-6 h-6" /></div>
+                    <div>
+                      <h4 className="font-bold text-indigo-900">Step 1: Download Template</h4>
+                      <p className="text-sm text-indigo-700/70 mt-1">Use our standard format to ensure data imports correctly.</p>
+                      <button onClick={downloadTemplate} className="mt-3 px-4 py-2 bg-indigo-600 text-white text-sm font-bold rounded-xl shadow-sm hover:bg-indigo-700 transition-colors cursor-pointer">
+                        Download Excel Template
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-4 p-4 bg-purple-50/50 rounded-2xl border border-purple-100">
+                    <div className="p-3 bg-white rounded-xl shadow-sm text-purple-600"><Upload className="w-6 h-6" /></div>
+                    <div className="flex-1">
+                      <h4 className="font-bold text-purple-900">Step 2: Upload Data</h4>
+                      <p className="text-sm text-purple-700/70 mt-1">Upload your filled Excel file here.</p>
+                      
+                      <div 
+                        className={`mt-4 border-2 border-dashed rounded-2xl p-6 text-center transition-all cursor-pointer
+                          ${dragOver ? 'border-purple-500 bg-purple-50' : 'border-purple-200 bg-white hover:border-purple-400 hover:bg-purple-50/30'}`}
+                        onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+                        onDragLeave={() => setDragOver(false)}
+                        onDrop={(e) => {
+                          e.preventDefault();
+                          setDragOver(false);
+                          if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                            setImportFile(e.dataTransfer.files[0]);
+                          }
+                        }}
+                        onClick={() => document.getElementById('import-file-input')?.click()}
+                      >
+                        <input 
+                          id="import-file-input" 
+                          type="file" 
+                          accept=".xlsx,.xls,.csv"
+                          className="hidden" 
+                          onChange={(e) => setImportFile(e.target.files?.[0] || null)}
+                        />
+                        {importFile ? (
+                          <div className="flex flex-col items-center gap-2">
+                            <div className="p-3 bg-emerald-100 text-emerald-600 rounded-full"><CheckCircle2 className="w-8 h-8" /></div>
+                            <span className="font-bold text-slate-700">{importFile.name}</span>
+                            <span className="text-xs font-bold text-slate-400">Click to change file</span>
+                          </div>
+                        ) : (
+                          <div className="flex flex-col items-center gap-2 text-slate-400">
+                            <Upload className="w-8 h-8 text-purple-300" />
+                            <span className="font-bold text-slate-600">Click or drag file here</span>
+                            <span className="text-xs font-bold uppercase tracking-wider">.xlsx, .xls, .csv</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end pt-4 border-t border-slate-100">
+                    <button
+                      onClick={handleBulkImport}
+                      disabled={!importFile || importLoading}
+                      className="px-6 py-2.5 bg-indigo-600 text-white font-black rounded-xl shadow-lg shadow-indigo-200 hover:bg-indigo-700 hover:shadow-indigo-300 active:scale-95 transition-all disabled:opacity-50 cursor-pointer flex items-center gap-2"
+                    >
+                      {importLoading ? (
+                        <><div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"/> Importing...</>
+                      ) : (
+                        <>Import Students</>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-6 text-center py-6">
+                  <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-emerald-100 text-emerald-600 mb-2 shadow-inner">
+                    <CheckCircle2 className="w-10 h-10" />
+                  </div>
+                  <div>
+                    <h3 className="text-2xl font-black text-slate-800">Import Complete</h3>
+                    <p className="text-slate-500 font-medium mt-1">Your data has been processed.</p>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4 max-w-sm mx-auto mt-6">
+                    <div className="bg-emerald-50 border border-emerald-100 p-4 rounded-2xl flex flex-col items-center">
+                      <span className="text-3xl font-black text-emerald-600">{importResult?.summary?.success || 0}</span>
+                      <span className="text-xs font-bold uppercase tracking-wider text-emerald-600/70 mt-1">Success</span>
+                    </div>
+                    <div className={`${(importResult?.summary?.errors || 0) > 0 ? 'bg-rose-50 border-rose-100' : 'bg-slate-50 border-slate-100'} p-4 rounded-2xl flex flex-col items-center`}>
+                      <span className={`text-3xl font-black ${(importResult?.summary?.errors || 0) > 0 ? 'text-rose-600' : 'text-slate-400'}`}>{importResult?.summary?.errors || 0}</span>
+                      <span className={`text-xs font-bold uppercase tracking-wider mt-1 ${(importResult?.summary?.errors || 0) > 0 ? 'text-rose-600/70' : 'text-slate-400'}`}>Failed</span>
+                    </div>
+                  </div>
+
+                  {importResult?.errors && importResult.errors.length > 0 && (
+                    <div className="text-left mt-6 max-h-40 overflow-y-auto bg-rose-50/50 border border-rose-100 p-3 rounded-xl text-sm">
+                      <div className="flex items-center gap-2 text-rose-700 font-bold mb-2">
+                        <AlertCircle className="w-4 h-4" /> Error Details
+                      </div>
+                      <ul className="space-y-1 text-rose-600 text-xs">
+                        {importResult.errors.map((e: any, idx: number) => (
+                          <li key={idx} className="flex gap-2">
+                            <span className="font-mono bg-rose-100 px-1.5 rounded text-rose-700">Row {e.row}</span>
+                            <span>{e.error}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  <div className="flex justify-center pt-4 mt-6 border-t border-slate-100">
+                    <button
+                      onClick={() => {
+                        setImportResult(null);
+                        setImportFile(null);
+                        setShowImportModal(false);
+                      }}
+                      className="px-8 py-2.5 bg-slate-100 text-slate-700 hover:bg-slate-200 font-black rounded-xl transition-all cursor-pointer"
+                    >
+                      Close
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
