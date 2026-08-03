@@ -22,6 +22,30 @@ export const StudentFeeDetailsTab: React.FC<StudentFeeDetailsProps> = ({ student
 
   // Process data for the table
   const tableData = useMemo(() => {
+    // Build lookup dictionaries for O(1) access to avoid O(N*M) slow rendering
+    const classStructuresMap = new Map();
+    const studentStructuresMap = new Map();
+    
+    structures.forEach(st => {
+      if (st.studentId) {
+        if (!studentStructuresMap.has(st.studentId)) studentStructuresMap.set(st.studentId, []);
+        studentStructuresMap.get(st.studentId).push(st);
+      } else if (st.classId) {
+        if (!classStructuresMap.has(st.classId)) classStructuresMap.set(st.classId, []);
+        classStructuresMap.get(st.classId).push(st);
+      }
+    });
+
+    const studentPaymentsMap = new Map();
+    payments.forEach(p => {
+      if (p.studentId && (p.status === 'PAID' || p.status === 'PARTIAL')) {
+        const current = studentPaymentsMap.get(p.studentId) || 0;
+        studentPaymentsMap.set(p.studentId, current + (Number(p.amountPaid) || 0));
+      }
+    });
+
+    const classMap = new Map(classes.map(c => [c.id, c]));
+
     let filteredStudents = students;
     if (selectedClassId !== 'ALL') {
       filteredStudents = filteredStudents.filter(s => s.classId === selectedClassId);
@@ -34,20 +58,15 @@ export const StudentFeeDetailsTab: React.FC<StudentFeeDetailsProps> = ({ student
     }
 
     return filteredStudents.map((student, index) => {
-      const studentStructures = structures.filter(st =>
-        st.studentId === student.id || (st.classId === student.classId && !st.studentId)
-      );
+      const classStructs = classMap.get(student.classId) ? (classStructuresMap.get(student.classId) || []) : [];
+      const stdStructs = studentStructuresMap.get(student.id) || [];
+      const studentStructures = [...classStructs, ...stdStructs];
       
       const totalFeeAmount = studentStructures.reduce((sum, st) => sum + (Number(st.amount) || 0), 0);
-
-      const studentPayments = payments.filter(p =>
-        p.studentId === student.id &&
-        (p.status === 'PAID' || p.status === 'PARTIAL')
-      );
-      const paidAmount = studentPayments.reduce((sum, p) => sum + (Number(p.amountPaid) || 0), 0);
+      const paidAmount = studentPaymentsMap.get(student.id) || 0;
 
       const balance = totalFeeAmount - paidAmount;
-      const studentClass = classes.find(c => c.id === student.classId);
+      const studentClass = classMap.get(student.classId);
       const phone = student.user?.phone || student.phone || '';
 
       return {
@@ -59,6 +78,7 @@ export const StudentFeeDetailsTab: React.FC<StudentFeeDetailsProps> = ({ student
         paidAmount,
         balance,
         phone,
+        photo: student.user?.avatar || student.photo || '',
       };
     });
   }, [students, structures, payments, classes, selectedClassId, searchTerm]);
@@ -302,39 +322,39 @@ export const StudentFeeDetailsTab: React.FC<StudentFeeDetailsProps> = ({ student
       </div>
 
       {/* Table */}
-      <div className="bg-white dark:bg-gray-900 border border-gray-150 dark:border-gray-800 rounded-2xl overflow-hidden shadow-sm print:border-none print:shadow-none print:rounded-none">
+      <div className="bg-white dark:bg-gray-900 border-t border-b border-gray-200 dark:border-gray-800 -mx-4 sm:mx-0 sm:border-x shadow-sm print:border-none print:shadow-none print:mx-0">
         <div className="overflow-x-auto">
-          <table className="w-full text-sm text-left">
+          <table className="w-full text-sm text-left border-collapse border border-gray-200">
             <thead className="bg-indigo-600 text-white font-semibold">
               <tr>
-                <th className="px-4 py-3 text-xs font-bold uppercase">S.No</th>
-                <th className="px-4 py-3 text-xs font-bold uppercase">Student ID</th>
-                <th className="px-4 py-3 text-xs font-bold uppercase">Student Name</th>
-                <th className="px-4 py-3 text-xs font-bold uppercase">Class</th>
-                <th className="px-4 py-3 text-xs font-bold uppercase text-right">Total Fee</th>
-                <th className="px-4 py-3 text-xs font-bold uppercase text-right">Paid</th>
-                <th className="px-4 py-3 text-xs font-bold uppercase text-right">Balance</th>
-                <th className="px-4 py-3 text-xs font-bold uppercase text-center print:hidden">WhatsApp</th>
+                <th className="px-4 py-3 text-xs font-bold uppercase border border-indigo-500">S.No</th>
+                <th className="px-4 py-3 text-xs font-bold uppercase border border-indigo-500">Student ID</th>
+                <th className="px-4 py-3 text-xs font-bold uppercase border border-indigo-500">Student Name</th>
+                <th className="px-4 py-3 text-xs font-bold uppercase border border-indigo-500">Class</th>
+                <th className="px-4 py-3 text-xs font-bold uppercase text-right border border-indigo-500">Total Fee</th>
+                <th className="px-4 py-3 text-xs font-bold uppercase text-right border border-indigo-500">Paid</th>
+                <th className="px-4 py-3 text-xs font-bold uppercase text-right border border-indigo-500">Balance</th>
+                <th className="px-4 py-3 text-xs font-bold uppercase text-center border border-indigo-500 print:hidden">WhatsApp</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+            <tbody className="bg-white">
               {tableData.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-6 py-8 text-center text-gray-500">No students found.</td>
+                  <td colSpan={8} className="px-6 py-8 text-center text-gray-500 border border-gray-200">No students found.</td>
                 </tr>
               ) : (
                 tableData.map((row) => (
-                  <tr key={row.sno} className="hover:bg-indigo-50/30 dark:hover:bg-gray-800/20 transition-colors">
-                    <td className="px-4 py-3 text-gray-500 font-medium">{row.sno}</td>
-                    <td className="px-4 py-3 font-mono text-xs font-bold text-indigo-600">{row.id}</td>
-                    <td className="px-4 py-3 font-bold text-gray-900 dark:text-white">{row.name}</td>
-                    <td className="px-4 py-3 text-gray-600 dark:text-gray-400 text-xs">{row.className}</td>
-                    <td className="px-4 py-3 text-right font-medium text-gray-900 dark:text-gray-100">₹{row.totalFee.toLocaleString('en-IN')}</td>
-                    <td className="px-4 py-3 text-right font-medium text-emerald-600">₹{row.paidAmount.toLocaleString('en-IN')}</td>
-                    <td className={`px-4 py-3 text-right font-black text-sm ${row.balance > 0 ? 'text-rose-600' : 'text-emerald-600'}`}>
+                  <tr key={row.sno} className="hover:bg-indigo-50/50 transition-colors">
+                    <td className="px-4 py-3 text-gray-600 font-medium border border-gray-200">{row.sno}</td>
+                    <td className="px-4 py-3 font-mono text-xs font-bold text-indigo-600 border border-gray-200">{row.id}</td>
+                    <td className="px-4 py-3 font-bold text-gray-900 border border-gray-200">{row.name}</td>
+                    <td className="px-4 py-3 text-gray-600 text-xs border border-gray-200">{row.className}</td>
+                    <td className="px-4 py-3 text-right font-medium text-gray-900 border border-gray-200">₹{row.totalFee.toLocaleString('en-IN')}</td>
+                    <td className="px-4 py-3 text-right font-medium text-emerald-600 border border-gray-200">₹{row.paidAmount.toLocaleString('en-IN')}</td>
+                    <td className={`px-4 py-3 text-right font-black text-sm border border-gray-200 ${row.balance > 0 ? 'text-rose-600' : 'text-emerald-600'}`}>
                       ₹{row.balance.toLocaleString('en-IN')}
                     </td>
-                    <td className="px-4 py-3 text-center print:hidden">
+                    <td className="px-4 py-3 text-center border border-gray-200 print:hidden">
                       {row.balance > 0 && row.phone && (
                         <button
                           onClick={() => handleWhatsAppClick(row)}
@@ -367,24 +387,32 @@ export const StudentFeeDetailsTab: React.FC<StudentFeeDetailsProps> = ({ student
             {/* The actual Card to be captured */}
             <div id="fee-reminder-card" className="bg-white">
               {/* Header */}
-              <div className="bg-gradient-to-br from-indigo-900 via-indigo-800 to-indigo-950 p-6 text-center relative overflow-hidden">
+              <div className="bg-gradient-to-br from-indigo-900 via-indigo-800 to-indigo-950 p-6 text-center relative overflow-hidden flex flex-col items-center">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full blur-2xl -mr-10 -mt-10"></div>
                 <div className="absolute bottom-0 left-0 w-32 h-32 bg-white/5 rounded-full blur-2xl -ml-10 -mb-10"></div>
-                <div className="relative z-10">
-                  <h1 className="text-xl font-black text-white leading-tight">SRI VENKATESWARA<br/>JY SCHOOL</h1>
-                  <p className="text-indigo-200 text-[10px] mt-1.5 max-w-[250px] mx-auto font-medium">Opp. Hero Showroom, SVL Paradise Campus, Narasannapeta</p>
+                <div className="relative z-10 flex flex-col items-center w-full">
+                  <img src="/logo.png" alt="Logo" className="w-14 h-14 mb-3 object-contain drop-shadow-md bg-white rounded-full p-1" onError={(e) => e.currentTarget.style.display = 'none'} />
+                  <h1 className="text-lg sm:text-xl font-black text-white whitespace-nowrap">SRI VENKATESWARA JY SCHOOL</h1>
+                  <p className="text-indigo-200 text-[10px] mt-1.5 max-w-[280px] mx-auto font-medium leading-relaxed">Opp. Hero Showroom, SVL Paradise Campus, Narasannapeta</p>
                   <div className="mt-4 inline-block bg-white/20 backdrop-blur-md px-4 py-1.5 rounded-full border border-white/20">
-                    <span className="text-white text-xs font-bold tracking-widest uppercase">Fee Reminder</span>
+                    <span className="text-white text-xs font-bold tracking-widest uppercase shadow-sm">Fee Reminder</span>
                   </div>
                 </div>
               </div>
 
               {/* Body */}
               <div className="p-6">
-                <div className="text-center mb-6">
+                <div className="text-center mb-6 flex flex-col items-center">
+                  {reminderStudent.photo ? (
+                    <img src={reminderStudent.photo} alt="Student" className="w-16 h-16 rounded-full object-cover border-[3px] border-indigo-100 shadow-md mb-3" />
+                  ) : (
+                    <div className="w-16 h-16 rounded-full bg-gradient-to-br from-indigo-100 to-purple-100 text-indigo-600 flex items-center justify-center font-black text-2xl mb-3 shadow-md border-[3px] border-white">
+                      {reminderStudent.name.charAt(0)}
+                    </div>
+                  )}
                   <p className="text-xs text-gray-500 font-bold uppercase tracking-wider mb-1">Student Details</p>
                   <h2 className="text-xl font-black text-gray-900 leading-tight">{reminderStudent.name}</h2>
-                  <p className="text-sm font-bold text-indigo-600 mt-1">{reminderStudent.id} • Class: {reminderStudent.className}</p>
+                  <p className="text-sm font-bold text-indigo-600 mt-1.5 bg-indigo-50 px-3 py-1 rounded-lg inline-block">{reminderStudent.id} • Class: {reminderStudent.className}</p>
                 </div>
 
                 <div className="space-y-3">
