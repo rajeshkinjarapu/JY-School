@@ -17,6 +17,15 @@ export const FeePaymentsPage: React.FC = () => {
 
   const [printPayment, setPrintPayment] = useState<any>(null);
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
+  
+  // Settings Modal State (Edit & Delete)
+  const [settingsModalPayment, setSettingsModalPayment] = useState<any>(null);
+  const [settingsTab, setSettingsTab] = useState<'edit' | 'delete'>('edit');
+  const [editAmount, setEditAmount] = useState('');
+  const [editMethod, setEditMethod] = useState('CASH');
+  const [editRemarks, setEditRemarks] = useState('');
+  const [isSubmittingEdit, setIsSubmittingEdit] = useState(false);
+
   // Excel bulk import states
   const [showImportModal, setShowImportModal] = useState(false);
   const [importFile, setImportFile] = useState<File | null>(null);
@@ -41,16 +50,15 @@ export const FeePaymentsPage: React.FC = () => {
     return list.sort((a, b) => {
       let dateA = new Date(a.paymentDate || a.createdAt);
       if (dateA.getFullYear() < 2000) dateA = new Date(a.createdAt);
-      dateA.setHours(0, 0, 0, 0); // Normalize to just the date
+      dateA.setHours(0, 0, 0, 0);
       
       let dateB = new Date(b.paymentDate || b.createdAt);
       if (dateB.getFullYear() < 2000) dateB = new Date(b.createdAt);
-      dateB.setHours(0, 0, 0, 0); // Normalize to just the date
+      dateB.setHours(0, 0, 0, 0);
       
       const timeDiff = dateB.getTime() - dateA.getTime();
-      if (timeDiff !== 0) return timeDiff; // Primary sort: Date descending
+      if (timeDiff !== 0) return timeDiff;
       
-      // Secondary sort: Creation time descending (most recently entered on top)
       return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     });
   }, [payments, dateFrom, dateTo]);
@@ -72,18 +80,43 @@ export const FeePaymentsPage: React.FC = () => {
     fetchData();
   }, []);
 
-
-
   const handleDeletePayment = async (id: string) => {
-    if (!window.confirm('Are you sure you want to delete this payment record? This action cannot be undone.')) return;
-    const t = toast.loading('Deleting payment...');
     try {
       await api.delete(`/api/fees/payments/${id}`);
-      setPayments(payments.filter(p => p.id !== id));
-      toast.success('Payment deleted successfully', { id: t });
-    } catch {
-      toast.error('Failed to delete payment', { id: t });
+      toast.success('Fee payment deleted successfully');
+      setSettingsModalPayment(null);
+      fetchData();
+    } catch (e: any) {
+      toast.error('Failed to delete payment');
     }
+  };
+
+  const handleUpdatePayment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!settingsModalPayment) return;
+    setIsSubmittingEdit(true);
+    try {
+      await api.put(`/api/fees/payments/${settingsModalPayment.id}`, {
+        amountPaid: Number(editAmount),
+        method: editMethod,
+        remarks: editRemarks,
+      });
+      toast.success('Payment updated successfully');
+      setSettingsModalPayment(null);
+      fetchData();
+    } catch (e: any) {
+      toast.error(e.response?.data?.message || 'Failed to update payment');
+    } finally {
+      setIsSubmittingEdit(false);
+    }
+  };
+
+  const openSettingsModal = (payment: any) => {
+    setSettingsModalPayment(payment);
+    setSettingsTab('edit');
+    setEditAmount(payment.amountPaid.toString());
+    setEditMethod(payment.method || 'CASH');
+    setEditRemarks(payment.remarks || '');
   };
 
   const handlePrintReceipt = (paymentId: string) => {
@@ -96,11 +129,9 @@ export const FeePaymentsPage: React.FC = () => {
     }
   };
 
-  // ── Fee Statement PDF Generator ─────────────────────────────────────────
   const handleGenerateStatement = async (studentData: any) => {
     const statementToast = toast.loading('Generating fee statement...');
     try {
-      // Find full student from state to get classId, since payment.student might lack it
       const fullStudent = studentData;
       const classId = fullStudent?.classId || fullStudent?.class?.id || '';
       
@@ -118,7 +149,6 @@ export const FeePaymentsPage: React.FC = () => {
         (p: any) => p.studentId === studentData.id || p.student?.id === studentData.id
       );
 
-      // Build fee items
       const feeItems = structs.map((s: any) => {
         const paid = studentPayments
           .filter((p: any) => p.feeStructureId === s.id)
@@ -152,7 +182,6 @@ export const FeePaymentsPage: React.FC = () => {
     }
   };
 
-  // ── Download blank Excel template ────────────────────────────────────────
   const downloadTemplate = () => {
     const ws = XLSX.utils.aoa_to_sheet([
       ['Student ID', 'Amount Paid', 'Payment Mode', 'Payment Date'],
@@ -165,7 +194,6 @@ export const FeePaymentsPage: React.FC = () => {
     XLSX.writeFile(wb, 'Fee_Payment_Import_Template.xlsx');
   };
 
-  // ── Handle bulk payment import ────────────────────────────────────────────
   const handleBulkImport = async () => {
     if (!importFile) { toast.error('Please select an Excel file first.'); return; }
     setImportLoading(true);
@@ -235,54 +263,21 @@ export const FeePaymentsPage: React.FC = () => {
 
   return (
     <div className="animate-fade-in-up pb-24 overflow-x-hidden space-y-6">
-      
       <div className="print:hidden">
       {user?.role !== 'TEACHER' && (
         <div className="hidden md:flex flex-col sm:flex-row sm:items-center justify-end gap-4 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 p-3 sm:p-4 shadow-xl text-white">
           <div className="flex flex-nowrap overflow-x-auto hide-scrollbar gap-2.5 w-full justify-start md:justify-end px-2 sm:px-4 pb-2 -mb-2">
             {(user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN' || user?.role === 'ACCOUNTANT') && (
               <>
-                <button
-                  onClick={() => window.print()}
-                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 transition-all shadow-sm flex-shrink-0 whitespace-nowrap"
-                >
-                  <Printer className="w-4 h-4" /> Print
-                </button>
-                <button
-                  onClick={exportPaymentsExcel}
-                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 transition-all shadow-sm flex-shrink-0 whitespace-nowrap"
-                >
-                  <FileDown className="w-4 h-4" /> Export Excel
-                </button>
-                <button
-                  onClick={exportPaymentsPdf}
-                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 transition-all shadow-sm flex-shrink-0 whitespace-nowrap"
-                >
-                  <FileDown className="w-4 h-4" /> Export PDF
-                </button>
-                <button
-                  onClick={downloadTemplate}
-                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 transition-all shadow-sm flex-shrink-0 whitespace-nowrap"
-                >
-                  <FileText className="w-4 h-4" /> Sample Excel
-                </button>
+                <button onClick={() => window.print()} className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 transition-all shadow-sm flex-shrink-0 whitespace-nowrap"><Printer className="w-4 h-4" /> Print</button>
+                <button onClick={exportPaymentsExcel} className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 transition-all shadow-sm flex-shrink-0 whitespace-nowrap"><FileDown className="w-4 h-4" /> Export Excel</button>
+                <button onClick={exportPaymentsPdf} className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 transition-all shadow-sm flex-shrink-0 whitespace-nowrap"><FileDown className="w-4 h-4" /> Export PDF</button>
+                <button onClick={downloadTemplate} className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 transition-all shadow-sm flex-shrink-0 whitespace-nowrap"><FileText className="w-4 h-4" /> Sample Excel</button>
                 {(user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN') && (
-                  <Link to="/fees/structures" className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 transition-all shadow-sm flex-shrink-0 whitespace-nowrap">
-                    <SlidersHorizontal className="w-4 h-4" /> Structure Settings
-                  </Link>
+                  <Link to="/fees/structures" className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 transition-all shadow-sm flex-shrink-0 whitespace-nowrap"><SlidersHorizontal className="w-4 h-4" /> Structure Settings</Link>
                 )}
-                <button
-                  onClick={() => { setShowImportModal(true); setImportResult(null); setImportFile(null); }}
-                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 transition-all shadow-sm flex-shrink-0 whitespace-nowrap"
-                >
-                  <Upload className="w-4 h-4" /> Import Excel
-                </button>
-                <Link
-                  to="/collect-payment"
-                  className="flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-black bg-white text-indigo-600 hover:bg-indigo-50 shadow-lg shadow-white/10 transition-all ml-2 flex-shrink-0 whitespace-nowrap"
-                >
-                  <Plus className="w-4 h-4" /> Collect Payment
-                </Link>
+                <button onClick={() => { setShowImportModal(true); setImportResult(null); setImportFile(null); }} className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 transition-all shadow-sm flex-shrink-0 whitespace-nowrap"><Upload className="w-4 h-4" /> Import Excel</button>
+                <Link to="/collect-payment" className="flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-black bg-white text-indigo-600 hover:bg-indigo-50 shadow-lg shadow-white/10 transition-all ml-2 flex-shrink-0 whitespace-nowrap"><Plus className="w-4 h-4" /> Collect Payment</Link>
               </>
             )}
           </div>
@@ -291,56 +286,31 @@ export const FeePaymentsPage: React.FC = () => {
 
       {user?.role !== 'TEACHER' && (
         <div className="px-0 sm:px-0 mt-6">
-
-        {/* ── Date Range Filter Bar ── */}
         <div className="hidden md:flex items-center gap-4 px-2 pb-6">
-          <div className="flex items-center gap-3 bg-white/90 backdrop-blur-xl border border-indigo-100 rounded-2xl px-4 py-3 shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all hover:shadow-[0_8px_30px_rgb(99,102,241,0.1)]">
-            <div className="p-1.5 rounded-lg bg-indigo-50">
-              <Calendar className="w-4 h-4 text-indigo-500 flex-shrink-0" />
-            </div>
+          <div className="flex items-center gap-3 bg-white/90 backdrop-blur-xl border border-indigo-100 rounded-2xl px-4 py-3 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
+            <div className="p-1.5 rounded-lg bg-indigo-50"><Calendar className="w-4 h-4 text-indigo-500" /></div>
             <span className="text-xs font-black text-slate-400 uppercase tracking-widest">From</span>
-            <input
-              type="date"
-              value={dateFrom}
-              onChange={e => setDateFrom(e.target.value)}
-              className="text-sm font-bold text-slate-700 outline-none bg-transparent cursor-pointer"
-            />
+            <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} className="text-sm font-bold text-slate-700 outline-none bg-transparent cursor-pointer" />
           </div>
-          <div className="flex items-center gap-3 bg-white/90 backdrop-blur-xl border border-pink-100 rounded-2xl px-4 py-3 shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all hover:shadow-[0_8px_30px_rgb(236,72,153,0.1)]">
-            <div className="p-1.5 rounded-lg bg-pink-50">
-              <Calendar className="w-4 h-4 text-pink-500 flex-shrink-0" />
-            </div>
+          <div className="flex items-center gap-3 bg-white/90 backdrop-blur-xl border border-pink-100 rounded-2xl px-4 py-3 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
+            <div className="p-1.5 rounded-lg bg-pink-50"><Calendar className="w-4 h-4 text-pink-500" /></div>
             <span className="text-xs font-black text-slate-400 uppercase tracking-widest">To</span>
-            <input
-              type="date"
-              value={dateTo}
-              onChange={e => setDateTo(e.target.value)}
-              className="text-sm font-bold text-slate-700 outline-none bg-transparent cursor-pointer"
-            />
+            <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} className="text-sm font-bold text-slate-700 outline-none bg-transparent cursor-pointer" />
           </div>
           {(dateFrom || dateTo) && (
-            <button
-              onClick={() => { setDateFrom(''); setDateTo(''); }}
-              className="flex items-center gap-2 px-4 py-3 rounded-2xl text-xs font-bold text-rose-500 border border-rose-200 bg-rose-50 hover:bg-rose-100 transition-colors shadow-sm"
-            >
-              <X className="w-4 h-4" /> Clear Filter
-            </button>
+            <button onClick={() => { setDateFrom(''); setDateTo(''); }} className="flex items-center gap-2 px-4 py-3 rounded-2xl text-xs font-bold text-rose-500 border border-rose-200 bg-rose-50 hover:bg-rose-100 transition-colors shadow-sm"><X className="w-4 h-4" /> Clear Filter</button>
           )}
           <div className="ml-auto flex items-center gap-2 bg-slate-900 text-white px-4 py-3 rounded-2xl shadow-lg shadow-slate-900/20">
             <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            <span className="text-xs font-black tracking-widest">
-              {filteredPayments.length} RECORD{filteredPayments.length !== 1 ? 'S' : ''}
-            </span>
+            <span className="text-xs font-black tracking-widest">{filteredPayments.length} RECORD{filteredPayments.length !== 1 ? 'S' : ''}</span>
           </div>
         </div>
 
-        {loading ? (
-          <LoadingSpinner size="lg" className="py-12" />
-        ) : (
-          <div className="bg-white/70 backdrop-blur-xl border border-white/40 rounded-[2rem] overflow-hidden shadow-[0_20px_40px_-15px_rgba(0,0,0,0.05)] ring-1 ring-slate-200/50">
+        {loading ? <LoadingSpinner size="lg" className="py-12" /> : (
+          <div className="bg-white/70 backdrop-blur-xl border border-white/40 rounded-[2rem] overflow-hidden shadow-[0_20px_40px_-15px_rgba(0,0,0,0.05)]">
             <div className="overflow-x-auto w-full max-w-full block">
               <table className="w-full text-sm text-left border-collapse">
-                <thead className="bg-white text-slate-500 border-b border-slate-200 font-black text-[11px] uppercase tracking-widest relative z-10">
+                <thead className="bg-white text-slate-500 border-b border-slate-200 font-black text-[11px] uppercase tracking-widest">
                   <tr>
                     <th className="px-5 py-5 text-center w-12 rounded-tl-[2rem]">S.No</th>
                     <th className="px-5 py-5">Date</th>
@@ -356,64 +326,25 @@ export const FeePaymentsPage: React.FC = () => {
                 <tbody className="divide-y divide-slate-100/80 bg-white/50">
                   {filteredPayments.map((p, idx) => {
                     let d = new Date(p.paymentDate || p.createdAt);
-                    if (d.getFullYear() < 2000) d = new Date(p.createdAt); // Fallback for bad excel dates
-
+                    if (d.getFullYear() < 2000) d = new Date(p.createdAt);
                     return (
                     <React.Fragment key={p.id}>
-                    <tr onClick={() => toggleRow(p.id)} className="group hover:bg-gradient-to-r hover:from-indigo-50/50 hover:to-purple-50/50 transition-all duration-300 cursor-pointer md:cursor-default">
-                      <td className="px-5 py-4 font-black text-slate-300 text-xs sm:text-sm text-center w-12 group-hover:text-indigo-400">{idx + 1}</td>
-                      <td className="px-5 py-4">
-                        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-100 text-slate-600 font-bold text-xs whitespace-nowrap group-hover:bg-indigo-100 group-hover:text-indigo-700 transition-colors">
-                          <Calendar className="w-3.5 h-3.5" />
-                          {d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
-                        </div>
-                      </td>
-                      <td className="px-5 py-4">
-                        <span className="font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-600 text-xs sm:text-sm whitespace-nowrap">{p.student?.rollNo || '-'}</span>
-                      </td>
-                      <td className="px-5 py-4 font-extrabold text-slate-700 text-xs sm:text-sm group-hover:text-indigo-700 transition-colors">{p.student?.user?.name || 'Unknown student'}</td>
-                      <td className="px-5 py-4">
-                        <span className="inline-flex px-3 py-1.5 rounded-xl bg-pink-50 text-pink-600 font-bold text-xs border border-pink-100/50 whitespace-nowrap">{p.feeStructure?.name || 'Deleted structure'}</span>
-                      </td>
-                      <td className="px-5 py-4">
-                        <div className="font-black text-emerald-500 text-sm sm:text-base whitespace-nowrap drop-shadow-sm group-hover:scale-105 transition-transform origin-left">₹{p.amountPaid.toLocaleString()}</div>
-                      </td>
+                    <tr onClick={() => toggleRow(p.id)} className="group hover:bg-gradient-to-r hover:from-indigo-50/50 hover:to-purple-50/50 transition-all duration-300">
+                      <td className="px-5 py-4 font-black text-slate-300 text-xs text-center">{idx + 1}</td>
+                      <td className="px-5 py-4"><div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-100 text-slate-600 font-bold text-xs">{d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</div></td>
+                      <td className="px-5 py-4"><span className="font-black text-purple-600 text-xs">{p.student?.rollNo || '-'}</span></td>
+                      <td className="px-5 py-4 font-extrabold text-slate-700 text-xs">{p.student?.user?.name || 'Unknown student'}</td>
+                      <td className="px-5 py-4"><span className="inline-flex px-3 py-1.5 rounded-xl bg-pink-50 text-pink-600 font-bold text-xs">{p.feeStructure?.name || 'Deleted structure'}</span></td>
+                      <td className="px-5 py-4"><div className="font-black text-emerald-500 text-sm">₹{p.amountPaid.toLocaleString()}</div></td>
+                      <td className="px-5 py-4 hidden md:table-cell text-center"><div className="inline-flex px-3 py-1.5 rounded-xl bg-blue-50 text-blue-600 font-bold text-xs">{p.method}</div></td>
+                      <td className="px-5 py-4 font-mono font-bold text-[11px] text-slate-400 hidden md:table-cell">{p.receiptNo}</td>
                       <td className="px-5 py-4 hidden md:table-cell text-center">
-                        <div className={`inline-flex px-3 py-1.5 rounded-xl font-bold text-xs whitespace-nowrap border ${
-                          p.method === 'UPI' ? 'bg-orange-50 text-orange-600 border-orange-200/50' : 
-                          p.method === 'CASH' ? 'bg-emerald-50 text-emerald-600 border-emerald-200/50' : 
-                          'bg-blue-50 text-blue-600 border-blue-200/50'
-                        }`}>
-                          {p.method}
-                        </div>
-                      </td>
-                      <td className="px-5 py-4 font-mono font-bold text-[11px] text-slate-400 truncate max-w-[120px] hidden md:table-cell group-hover:text-slate-600">{p.receiptNo}</td>
-                      <td className="px-5 py-4 hidden md:table-cell text-center align-middle">
-                        <div className="flex items-center justify-center gap-1.5 opacity-60 group-hover:opacity-100 transition-opacity">
-                          <button
-                            onClick={(e) => { e.stopPropagation(); handlePrintReceipt(p.id); }}
-                            className="p-2 rounded-xl text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 hover:shadow-sm cursor-pointer transition-all active:scale-95"
-                            title="Print Dual Receipt"
-                          >
-                            <FileDown className="w-4 h-4" />
-                          </button>
-                          
+                        <div className="flex items-center justify-center gap-1.5">
+                          <button onClick={(e) => { e.stopPropagation(); handlePrintReceipt(p.id); }} className="p-2 rounded-xl text-slate-400 hover:text-indigo-600 hover:bg-indigo-50"><FileDown className="w-4 h-4" /></button>
                           {(user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN' || user?.role === 'ACCOUNTANT') ? (
                             <>
-                              <button
-                                onClick={(e) => { e.stopPropagation(); handleGenerateStatement(p.student); }}
-                                className="p-2 rounded-xl text-slate-400 hover:text-purple-600 hover:bg-purple-50 hover:shadow-sm cursor-pointer transition-all active:scale-95"
-                                title="Download Fee Statement PDF"
-                              >
-                                <FileText className="w-4 h-4" />
-                              </button>
-                              <button
-                                onClick={(e) => { e.stopPropagation(); handleDeletePayment(p.id); }}
-                                className="p-2 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 hover:shadow-sm cursor-pointer transition-all active:scale-95"
-                                title="Delete Payment"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </button>
+                              <button onClick={(e) => { e.stopPropagation(); handleGenerateStatement(p.student); }} className="p-2 rounded-xl text-slate-400 hover:text-purple-600 hover:bg-purple-50"><FileText className="w-4 h-4" /></button>
+                              <button onClick={(e) => { e.stopPropagation(); openSettingsModal(p); }} className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100"><Settings className="w-4 h-4" /></button>
                             </>
                           ) : null}
                         </div>
@@ -451,10 +382,10 @@ export const FeePaymentsPage: React.FC = () => {
                                   <FileText className="w-4 h-4" /> Statement
                                 </button>
                                 <button
-                                  onClick={(e) => { e.stopPropagation(); handleDeletePayment(p.id); }}
-                                  className="flex-1 py-2.5 px-3 flex items-center justify-center gap-2 rounded-xl text-rose-700 bg-rose-100 hover:bg-rose-200 font-bold text-xs active:scale-95 transition-transform shadow-sm"
+                                  onClick={(e) => { e.stopPropagation(); openSettingsModal(p); }}
+                                  className="flex-1 py-2.5 px-3 flex items-center justify-center gap-2 rounded-xl text-slate-700 bg-slate-100 hover:bg-slate-200 font-bold text-xs active:scale-95 transition-transform shadow-sm"
                                 >
-                                  <Trash2 className="w-4 h-4" /> Delete
+                                  <Settings className="w-4 h-4" /> Settings
                                 </button>
                               </>
                             ) : null}
@@ -657,6 +588,117 @@ export const FeePaymentsPage: React.FC = () => {
                       className="flex-1 py-3 rounded-xl font-bold text-sm bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-md transition-all hover:-translate-y-0.5"
                     >
                       Done
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Settings Modal (Edit/Delete) */}
+      {settingsModalPayment && (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
+          <div className="absolute inset-0" onClick={() => !isSubmittingEdit && setSettingsModalPayment(null)} />
+          <div className="relative bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden animate-scale-in">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+              <h3 className="font-black text-slate-800 text-lg flex items-center gap-2">
+                <Settings className="w-5 h-5 text-indigo-500" />
+                Payment Settings
+              </h3>
+              <button onClick={() => !isSubmittingEdit && setSettingsModalPayment(null)} className="p-2 rounded-xl hover:bg-slate-100 text-slate-400 transition-colors">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="flex border-b border-slate-100">
+              <button
+                onClick={() => setSettingsTab('edit')}
+                className={`flex-1 py-3 text-sm font-bold transition-colors ${settingsTab === 'edit' ? 'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50/50' : 'text-slate-500 hover:bg-slate-50'}`}
+              >
+                Edit Payment
+              </button>
+              <button
+                onClick={() => setSettingsTab('delete')}
+                className={`flex-1 py-3 text-sm font-bold transition-colors ${settingsTab === 'delete' ? 'text-red-600 border-b-2 border-red-600 bg-red-50/50' : 'text-slate-500 hover:bg-slate-50'}`}
+              >
+                Delete Payment
+              </button>
+            </div>
+
+            <div className="p-6">
+              {settingsTab === 'edit' ? (
+                <form onSubmit={handleUpdatePayment} className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">Amount Paid (₹)</label>
+                    <input
+                      type="number"
+                      required
+                      min="0"
+                      value={editAmount}
+                      onChange={(e) => setEditAmount(e.target.value)}
+                      className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all font-bold text-slate-700 bg-slate-50 focus:bg-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">Payment Method</label>
+                    <select
+                      value={editMethod}
+                      onChange={(e) => setEditMethod(e.target.value)}
+                      className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all font-bold text-slate-700 bg-slate-50 focus:bg-white appearance-none"
+                    >
+                      <option value="CASH">CASH</option>
+                      <option value="UPI">UPI</option>
+                      <option value="BANK_TRANSFER">BANK TRANSFER</option>
+                      <option value="CHEQUE">CHEQUE</option>
+                      <option value="ONLINE">ONLINE</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">Remarks (Optional)</label>
+                    <textarea
+                      value={editRemarks}
+                      onChange={(e) => setEditRemarks(e.target.value)}
+                      placeholder="Add any notes..."
+                      className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all font-medium text-slate-700 bg-slate-50 focus:bg-white resize-none"
+                      rows={2}
+                    />
+                  </div>
+                  <div className="pt-2">
+                    <button
+                      type="submit"
+                      disabled={isSubmittingEdit}
+                      className="w-full py-3.5 rounded-xl font-bold text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 transition-all flex items-center justify-center gap-2"
+                    >
+                      {isSubmittingEdit ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : null}
+                      Save Changes
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                <div className="text-center space-y-4 py-4">
+                  <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                    <Trash2 className="w-8 h-8 text-red-500" />
+                  </div>
+                  <div>
+                    <h4 className="text-lg font-black text-slate-800">Delete this payment?</h4>
+                    <p className="text-sm text-slate-500 mt-1">This action cannot be undone and will permanently remove this record.</p>
+                  </div>
+                  <div className="pt-4">
+                    <button
+                      onClick={() => {
+                        handleDeletePayment(settingsModalPayment.id);
+                      }}
+                      className="w-full py-3.5 rounded-xl font-bold text-white bg-red-500 hover:bg-red-600 transition-all"
+                    >
+                      Yes, Delete Payment
+                    </button>
+                    <button
+                      onClick={() => setSettingsTab('edit')}
+                      className="w-full py-3 mt-2 rounded-xl font-bold text-slate-500 hover:bg-slate-100 transition-all"
+                    >
+                      Cancel
                     </button>
                   </div>
                 </div>
