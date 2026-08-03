@@ -153,7 +153,7 @@ export const StudentListPage: React.FC = () => {
       });
       const data = res.data?.data || res.data;
       setImportResult(data);
-      toast.success(`Import done! ✓ ${data.summary.success} success, ✗ ${data.summary.errors} errors`, { id: t, duration: 5000 });
+      toast.success(`Import done! ✓ ${data.success || 0} success, ✗ ${data.failed?.length || 0} errors`, { id: t, duration: 5000 });
       fetchStudents();
     } catch (err: any) {
       toast.error(err.response?.data?.message || 'Import failed', { id: t });
@@ -443,25 +443,25 @@ export const StudentListPage: React.FC = () => {
                   
                   <div className="grid grid-cols-2 gap-4 max-w-sm mx-auto mt-6">
                     <div className="bg-emerald-50 border border-emerald-100 p-4 rounded-2xl flex flex-col items-center">
-                      <span className="text-3xl font-black text-emerald-600">{importResult?.summary?.success || 0}</span>
+                      <span className="text-3xl font-black text-emerald-600">{importResult?.success || 0}</span>
                       <span className="text-xs font-bold uppercase tracking-wider text-emerald-600/70 mt-1">Success</span>
                     </div>
-                    <div className={`${(importResult?.summary?.errors || 0) > 0 ? 'bg-rose-50 border-rose-100' : 'bg-slate-50 border-slate-100'} p-4 rounded-2xl flex flex-col items-center`}>
-                      <span className={`text-3xl font-black ${(importResult?.summary?.errors || 0) > 0 ? 'text-rose-600' : 'text-slate-400'}`}>{importResult?.summary?.errors || 0}</span>
-                      <span className={`text-xs font-bold uppercase tracking-wider mt-1 ${(importResult?.summary?.errors || 0) > 0 ? 'text-rose-600/70' : 'text-slate-400'}`}>Failed</span>
+                    <div className={`${(importResult?.failed?.length || 0) > 0 ? 'bg-rose-50 border-rose-100' : 'bg-slate-50 border-slate-100'} p-4 rounded-2xl flex flex-col items-center`}>
+                      <span className={`text-3xl font-black ${(importResult?.failed?.length || 0) > 0 ? 'text-rose-600' : 'text-slate-400'}`}>{importResult?.failed?.length || 0}</span>
+                      <span className={`text-xs font-bold uppercase tracking-wider mt-1 ${(importResult?.failed?.length || 0) > 0 ? 'text-rose-600/70' : 'text-slate-400'}`}>Failed</span>
                     </div>
                   </div>
 
-                  {importResult?.errors && importResult.errors.length > 0 && (
+                  {importResult?.failed && importResult.failed.length > 0 && (
                     <div className="text-left mt-6 max-h-40 overflow-y-auto bg-rose-50/50 border border-rose-100 p-3 rounded-xl text-sm">
                       <div className="flex items-center gap-2 text-rose-700 font-bold mb-2">
                         <AlertCircle className="w-4 h-4" /> Error Details
                       </div>
                       <ul className="space-y-1 text-rose-600 text-xs">
-                        {importResult.errors.map((e: any, idx: number) => (
+                        {importResult.failed.map((e: any, idx: number) => (
                           <li key={idx} className="flex gap-2">
-                            <span className="font-mono bg-rose-100 px-1.5 rounded text-rose-700">Row {e.row}</span>
-                            <span>{e.error}</span>
+                            <span className="font-mono bg-rose-100 px-1.5 rounded text-rose-700">Row {idx + 1} ({e.row?.name || e.row?.studentname || 'Unknown'})</span>
+                            <span>{e.reason}</span>
                           </li>
                         ))}
                       </ul>
