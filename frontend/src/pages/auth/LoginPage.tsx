@@ -42,7 +42,7 @@ export const LoginPage: React.FC = () => {
     setIsSubmitting(true);
     try {
       const response = await loginApi(values);
-      const { accessToken, refreshToken, user } = response.data.data; // auth endpoints return data inside data based on successResponse wrapper
+      const { accessToken, refreshToken, user } = response.data; 
       login(accessToken, refreshToken, user);
       toast.success(`Welcome back, ${user.name}!`);
       navigate('/dashboard', { replace: true });
