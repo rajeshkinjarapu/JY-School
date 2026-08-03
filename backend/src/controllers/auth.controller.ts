@@ -114,28 +114,7 @@ export const login = async (req: AuthRequest, res: Response, next: NextFunction)
   const isMatch = await bcrypt.compare(password, user.password);
   if (!isMatch) return next(createError('Invalid credentials', 401));
 
-  if (user.role === 'SUPER_ADMIN') {
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const resetOtpExp = new Date(Date.now() + 5 * 60 * 1000); // 5 mins expiry
-    
-    await prisma.user.update({
-      where: { id: user.id },
-      data: { resetOtp: otp, resetOtpExp }
-    });
-
-    if (user.phone) {
-      // DLT template for OTP needs to be replaced with the actual approved template ID.
-      // Assuming a generic template or the user provided one. We'll use a placeholder if not.
-      const otpMessage = `Dear Admin, Your OTP for login is ${otp}. Valid for 5 mins. SVJY SCHOOL`;
-      await sendSMS(user.phone, otpMessage, '1707175316314375479'); // Template ID is a placeholder, user should update
-    }
-
-    return res.status(200).json({
-      success: true,
-      requiresOtp: true,
-      message: 'OTP sent to your registered mobile number'
-    });
-  }
+  // OTP section for SUPER_ADMIN is removed based on request
 
   const tokenPayload = { id: user.id, email: user.email, role: user.role as Role, name: user.name };
   const accessToken = generateAccessToken(tokenPayload);

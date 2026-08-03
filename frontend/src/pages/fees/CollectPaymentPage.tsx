@@ -192,7 +192,6 @@ export const CollectPaymentPage: React.FC = () => {
   }
 
   return (
-  return (
     <div className="min-h-[calc(100vh-4rem)] bg-slate-50 p-4 lg:p-8 flex items-start justify-center">
       <div className="w-full max-w-7xl mx-auto">
         <div className="flex items-center gap-4 mb-8">
