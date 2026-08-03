@@ -78,9 +78,20 @@ export const FinancePage: React.FC = () => {
   // Bulk Upload Ref
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
-  // Load backend and configurations
   const fetchData = async () => {
-    setLoading(true);
+    // Stale-While-Revalidate cache mechanism for instant loading
+    try {
+      const cached = localStorage.getItem('fin_dashboard_cache');
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (parsed.payments) setPayments(parsed.payments);
+        if (parsed.students) setStudents(parsed.students);
+        if (parsed.structures) setStructures(parsed.structures);
+        if (parsed.classes) setClasses(parsed.classes);
+        setLoading(false); // Disable loading instantly if cache exists
+      }
+    } catch(e) {}
+
     try {
       const isStudent = user?.role === 'STUDENT';
       const [payRes, studRes, structRes, classRes]: any = await Promise.all([
@@ -96,12 +107,25 @@ export const FinancePage: React.FC = () => {
           ? payRes
           : [];
       const uniquePayments = [...new Map(paymentData.map((p: any) => [p.id, p])).values()];
+      
+      const newStudents = studRes.data?.data || studRes.data || [];
+      const newStructures = structRes.data || structRes || [];
+      const newClasses = classRes.data || classRes || [];
+
       setPayments(uniquePayments);
-      setStudents(studRes.data.data || studRes.data || []);
-      setStructures(structRes.data || structRes || []);
-      setClasses(classRes.data || classRes || []);
+      setStudents(newStudents);
+      setStructures(newStructures);
+      setClasses(newClasses);
+
+      // Save to cache
+      localStorage.setItem('fin_dashboard_cache', JSON.stringify({
+        payments: uniquePayments,
+        students: newStudents,
+        structures: newStructures,
+        classes: newClasses
+      }));
     } catch (e) {
-      toast.error('Failed to load financial records');
+      if (loading) toast.error('Failed to load financial records');
     } finally {
       setLoading(false);
     }
