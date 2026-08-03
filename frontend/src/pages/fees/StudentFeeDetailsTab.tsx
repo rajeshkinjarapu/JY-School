@@ -16,6 +16,10 @@ export const StudentFeeDetailsTab: React.FC<StudentFeeDetailsProps> = ({ student
   const [selectedClassId, setSelectedClassId] = useState<string>('ALL');
   const [searchTerm, setSearchTerm] = useState('');
   
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 50;
+
   // Fee Reminder Modal State
   const [reminderStudent, setReminderStudent] = useState<any>(null);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -271,27 +275,29 @@ export const StudentFeeDetailsTab: React.FC<StudentFeeDetailsProps> = ({ student
         </div>
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-4 print:hidden">
-        <div className="flex-1 relative">
-          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+      <div className="flex flex-col sm:flex-row gap-4 mb-6 print:hidden">
+        <div className="relative flex-1">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
           <input
             type="text"
             placeholder="Search by student name or ID..."
             value={searchTerm}
-            onChange={e => setSearchTerm(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-sm"
+            onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+            className="w-full pl-12 pr-4 py-3.5 bg-gray-50 dark:bg-gray-800 border-0 rounded-2xl focus:ring-2 focus:ring-indigo-500 text-sm font-medium transition-all"
           />
         </div>
-        <select
-          value={selectedClassId}
-          onChange={e => setSelectedClassId(e.target.value)}
-          className="w-full sm:w-48 px-4 py-2 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-sm font-medium"
-        >
+        <div className="sm:w-64">
+          <select
+            value={selectedClassId}
+            onChange={(e) => { setSelectedClassId(e.target.value); setCurrentPage(1); }}
+            className="w-full px-4 py-3.5 bg-gray-50 dark:bg-gray-800 border-0 rounded-2xl focus:ring-2 focus:ring-indigo-500 text-sm font-medium cursor-pointer transition-all appearance-none"
+          >
           <option value="ALL">All Classes</option>
           {classes.map(c => (
             <option key={c.id} value={c.id}>{c.name} - {c.section}</option>
           ))}
         </select>
+        </div>
       </div>
 
       {/* Summary Stats */}
@@ -343,7 +349,7 @@ export const StudentFeeDetailsTab: React.FC<StudentFeeDetailsProps> = ({ student
                   <td colSpan={8} className="px-6 py-8 text-center text-gray-500 border border-gray-200">No students found.</td>
                 </tr>
               ) : (
-                tableData.map((row) => (
+                tableData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((row) => (
                   <tr key={row.sno} className="hover:bg-indigo-50/50 transition-colors">
                     <td className="px-4 py-3 text-gray-600 font-medium border border-gray-200">{row.sno}</td>
                     <td className="px-4 py-3 font-mono text-xs font-bold text-indigo-600 border border-gray-200">{row.id}</td>
@@ -372,6 +378,31 @@ export const StudentFeeDetailsTab: React.FC<StudentFeeDetailsProps> = ({ student
             </tbody>
           </table>
         </div>
+        
+        {/* Pagination UI */}
+        {tableData.length > itemsPerPage && (
+          <div className="flex items-center justify-between p-4 border-t border-gray-200 print:hidden">
+            <span className="text-sm text-gray-600 font-medium">
+              Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, tableData.length)} of {tableData.length} entries
+            </span>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50 disabled:opacity-50 transition-colors"
+              >
+                Previous
+              </button>
+              <button
+                onClick={() => setCurrentPage(prev => Math.min(prev + 1, Math.ceil(tableData.length / itemsPerPage)))}
+                disabled={currentPage === Math.ceil(tableData.length / itemsPerPage)}
+                className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50 disabled:opacity-50 transition-colors"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
       </div>
       {/* Fata Reminder Modal */}
       {reminderStudent && (
