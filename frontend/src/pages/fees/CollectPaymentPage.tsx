@@ -62,8 +62,8 @@ export const CollectPaymentPage: React.FC = () => {
     try {
       const isStudent = user?.role === 'STUDENT';
       const [structRes, classRes]: any = await Promise.all([
-        isStudent ? Promise.resolve({ data: [] }) : api.get('/api/fees/structures?limit=500'),
-        isStudent ? Promise.resolve({ data: [] }) : api.get('/api/classes?limit=500'),
+        isStudent ? Promise.resolve({ data: [] }) : api.get('/api/fees/structures?limit=2000'),
+        isStudent ? Promise.resolve({ data: [] }) : api.get('/api/classes?limit=2000'),
       ]);
       setStructures(structRes.data || structRes || []);
       setClasses(classRes.data?.data || classRes.data || classRes || []);
@@ -110,7 +110,7 @@ export const CollectPaymentPage: React.FC = () => {
 
   const fetchStudentPayments = async (id: string) => {
     try {
-      const res = await api.get(`/api/fees/payments?studentId=${id}&limit=200`);
+      const res = await api.get(`/api/fees/payments?studentId=${id}&limit=2000`);
       setPayments(res.data?.data || res.data || []);
     } catch (e) {
       console.error('Failed to fetch student payments', e);

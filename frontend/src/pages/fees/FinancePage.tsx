@@ -84,10 +84,10 @@ export const FinancePage: React.FC = () => {
     try {
       const isStudent = user?.role === 'STUDENT';
       const [payRes, studRes, structRes, classRes]: any = await Promise.all([
-        api.get('/api/fees/payments?limit=200'),
-        isStudent ? Promise.resolve({ data: [] }) : api.get('/api/students?limit=200'),
-        isStudent ? Promise.resolve({ data: [] }) : api.get('/api/fees/structures?limit=200'),
-        isStudent ? Promise.resolve({ data: [] }) : api.get('/api/classes?limit=200'),
+        api.get('/api/fees/payments?limit=2000'),
+        isStudent ? Promise.resolve({ data: [] }) : api.get('/api/students?limit=2000'),
+        isStudent ? Promise.resolve({ data: [] }) : api.get('/api/fees/structures?limit=2000'),
+        isStudent ? Promise.resolve({ data: [] }) : api.get('/api/classes?limit=2000'),
       ]);
 
       const paymentData = Array.isArray(payRes.data)
