@@ -12,9 +12,6 @@ import { FeeReceiptPrint, generateFeeStatementPDF } from '../../components/fees/
 export const FeePaymentsPage: React.FC = () => {
   const { user } = useAuth();
   const [payments, setPayments] = useState<any[]>([]);
-  const [students, setStudents] = useState<any[]>([]);
-  const [structures, setStructures] = useState<any[]>([]);
-  const [classes, setClasses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchParams] = useSearchParams();
 
@@ -62,17 +59,8 @@ export const FeePaymentsPage: React.FC = () => {
 
   const fetchData = async () => {
     try {
-      const isStudent = user?.role === 'STUDENT';
-      const [payRes, studRes, structRes, classRes]: any = await Promise.all([
-        api.get('/api/fees/payments?limit=500'),
-        isStudent ? Promise.resolve({ data: [] }) : api.get('/api/students?limit=1000'),
-        isStudent ? Promise.resolve({ data: [] }) : api.get('/api/fees/structures?limit=500'),
-        isStudent ? Promise.resolve({ data: [] }) : api.get('/api/classes?limit=500'),
-      ]);
-      setPayments(payRes.data || payRes || []);
-      setStudents(studRes.data.data || studRes.data || []);
-      setStructures(structRes.data || structRes || []);
-      setClasses(classRes.data?.data || classRes.data || classRes || []);
+      const payRes: any = await api.get('/api/fees/payments?limit=5000');
+      setPayments(payRes.data?.data || payRes.data || payRes || []);
     } catch (e) {
       toast.error('Failed to load transaction records');
     } finally {
@@ -113,7 +101,7 @@ export const FeePaymentsPage: React.FC = () => {
     const statementToast = toast.loading('Generating fee statement...');
     try {
       // Find full student from state to get classId, since payment.student might lack it
-      const fullStudent = students.find(s => s.id === studentData.id) || studentData;
+      const fullStudent = studentData;
       const classId = fullStudent?.classId || fullStudent?.class?.id || '';
       
       const queryParams = new URLSearchParams();

@@ -151,7 +151,7 @@ export const getPayments = async (req: AuthRequest, res: Response): Promise<void
       take: limit,
       orderBy: { createdAt: 'desc' },
       include: {
-        student: { include: { user: { select: { name: true } } } },
+        student: { include: { user: { select: { name: true, phone: true } }, class: { select: { name: true, section: true } } } },
         feeStructure: { select: { name: true, term: true, amount: true } },
       },
     }),
@@ -267,7 +267,10 @@ export const bulkImportPayments = async (req: AuthRequest, res: Response, next: 
       const rawDate = row['Payment Date'] || row['paymentDate'] || row['Date'] || row['date'];
       let paymentDate = new Date();
       if (rawDate) {
-        if (rawDate instanceof Date && !isNaN(rawDate.getTime())) {
+        if (typeof rawDate === 'number') {
+          // Convert Excel serial date to JS Date
+          paymentDate = new Date(Math.round((rawDate - 25569) * 86400 * 1000));
+        } else if (rawDate instanceof Date && !isNaN(rawDate.getTime())) {
           paymentDate = rawDate;
         } else {
           const d = new Date(rawDate);
