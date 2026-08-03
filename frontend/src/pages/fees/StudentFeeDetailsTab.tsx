@@ -422,9 +422,13 @@ export const StudentFeeDetailsTab: React.FC<StudentFeeDetailsProps> = ({ student
                 <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full blur-2xl -mr-10 -mt-10"></div>
                 <div className="absolute bottom-0 left-0 w-32 h-32 bg-white/5 rounded-full blur-2xl -ml-10 -mb-10"></div>
                 <div className="relative z-10 flex flex-col items-center w-full">
-                  <img src="/logo.png" alt="Logo" className="w-14 h-14 mb-3 object-contain drop-shadow-md bg-white rounded-full p-1" onError={(e) => e.currentTarget.style.display = 'none'} />
-                  <h1 className="text-lg sm:text-xl font-black text-white whitespace-nowrap">SRI VENKATESWARA JY SCHOOL</h1>
-                  <p className="text-indigo-200 text-[10px] mt-1.5 max-w-[280px] mx-auto font-medium leading-relaxed">Opp. Hero Showroom, SVL Paradise Campus, Narasannapeta</p>
+                  <div className="flex items-center gap-3 w-full justify-center">
+                    <img src="/logo.png" alt="Logo" className="w-12 h-12 object-contain drop-shadow-md bg-white rounded-full p-1 shrink-0" onError={(e) => e.currentTarget.style.display = 'none'} />
+                    <div className="text-left">
+                      <h1 className="text-base sm:text-lg font-black text-white leading-tight">SRI VENKATESWARA JY SCHOOL</h1>
+                      <p className="text-indigo-200 text-[9px] mt-0.5 max-w-[240px] font-medium leading-relaxed">Opp. Hero Showroom, SVL Paradise Campus, Narasannapeta</p>
+                    </div>
+                  </div>
                   <div className="mt-4 inline-block bg-white/20 backdrop-blur-md px-4 py-1.5 rounded-full border border-white/20">
                     <span className="text-white text-xs font-bold tracking-widest uppercase shadow-sm">Fee Reminder</span>
                   </div>
@@ -433,17 +437,21 @@ export const StudentFeeDetailsTab: React.FC<StudentFeeDetailsProps> = ({ student
 
               {/* Body */}
               <div className="p-6">
-                <div className="text-center mb-6 flex flex-col items-center">
-                  {reminderStudent.photo ? (
-                    <img src={reminderStudent.photo} alt="Student" className="w-16 h-16 rounded-full object-cover border-[3px] border-indigo-100 shadow-md mb-3" />
-                  ) : (
-                    <div className="w-16 h-16 rounded-full bg-gradient-to-br from-indigo-100 to-purple-100 text-indigo-600 flex items-center justify-center font-black text-2xl mb-3 shadow-md border-[3px] border-white">
-                      {reminderStudent.name.charAt(0)}
-                    </div>
-                  )}
-                  <p className="text-xs text-gray-500 font-bold uppercase tracking-wider mb-1">Student Details</p>
-                  <h2 className="text-xl font-black text-gray-900 leading-tight">{reminderStudent.name}</h2>
-                  <p className="text-sm font-bold text-indigo-600 mt-1.5 bg-indigo-50 px-3 py-1 rounded-lg inline-block">{reminderStudent.id} • Class: {reminderStudent.className}</p>
+                <div className="mb-6 flex items-center gap-4 bg-gray-50 p-4 rounded-2xl border border-gray-100">
+                  <div className="shrink-0">
+                    {reminderStudent.photo ? (
+                      <img src={reminderStudent.photo} alt="Student" className="w-16 h-16 rounded-full object-cover border-[3px] border-white shadow-md" />
+                    ) : (
+                      <div className="w-16 h-16 rounded-full bg-gradient-to-br from-indigo-100 to-purple-100 text-indigo-600 flex items-center justify-center font-black text-2xl shadow-md border-[3px] border-white">
+                        {reminderStudent.name.charAt(0)}
+                      </div>
+                    )}
+                  </div>
+                  <div className="text-left flex-1">
+                    <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-1">Student Details</p>
+                    <h2 className="text-lg font-black text-gray-900 leading-tight">{reminderStudent.name}</h2>
+                    <p className="text-xs font-bold text-indigo-600 mt-1">{reminderStudent.id} • Class: {reminderStudent.className}</p>
+                  </div>
                 </div>
 
                 <div className="space-y-3">

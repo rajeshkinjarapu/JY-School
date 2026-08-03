@@ -88,8 +88,15 @@ export const createStructure = async (req: AuthRequest, res: Response, next: Nex
   const cls = await prisma.class.findUnique({ where: { id: classId } });
   if (!cls) return next(createError('Class not found', 404));
 
+  // Check for duplicates (case-insensitive)
+  const existingList = await prisma.feeStructure.findMany({ where: { classId, term } });
+  const isDuplicate = existingList.some(f => f.name.toLowerCase().trim() === name.toLowerCase().trim());
+  if (isDuplicate) {
+    return next(createError(`A fee structure named '${name}' already exists for this class and term.`, 400));
+  }
+
   const structure = await prisma.feeStructure.create({
-    data: { classId, term, name, amount, dueDate: new Date(dueDate) },
+    data: { classId, term, name: name.trim(), amount, dueDate: new Date(dueDate) },
   });
   successResponse(res, structure, 'Fee structure created', 201);
 };
@@ -100,9 +107,21 @@ export const updateStructure = async (req: AuthRequest, res: Response, next: Nex
   const existing = await prisma.feeStructure.findUnique({ where: { id } });
   if (!existing) return next(createError('Fee structure not found', 404));
 
+  // Check for duplicates (case-insensitive) if name or term is being updated
+  if (name || term) {
+    const existingList = await prisma.feeStructure.findMany({ 
+      where: { classId: existing.classId, term: term || existing.term } 
+    });
+    const checkName = (name || existing.name).toLowerCase().trim();
+    const isDuplicate = existingList.some(f => f.id !== id && f.name.toLowerCase().trim() === checkName);
+    if (isDuplicate) {
+      return next(createError(`A fee structure named '${name || existing.name}' already exists for this class and term.`, 400));
+    }
+  }
+
   const structure = await prisma.feeStructure.update({
     where: { id },
-    data: { term, name, amount, dueDate: dueDate ? new Date(dueDate) : undefined },
+    data: { term, name: name ? name.trim() : undefined, amount, dueDate: dueDate ? new Date(dueDate) : undefined },
   });
   successResponse(res, structure, 'Fee structure updated');
 };
