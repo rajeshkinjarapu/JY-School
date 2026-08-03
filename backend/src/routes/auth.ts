@@ -9,15 +9,14 @@ import {
   resetPassword,
   getMe,
   changePassword,
-  updateProfile,
-  verifyOtp
+  updateProfile
 } from '../controllers/auth.controller';
 
 const router = Router();
 
 router.post('/register', authenticate, register);
 router.post('/login', login);
-router.post('/verify-otp', verifyOtp);
+
 router.post('/refresh', refreshToken);
 router.post('/logout', authenticate, logout);
 router.post('/forgot-password', forgotPassword);

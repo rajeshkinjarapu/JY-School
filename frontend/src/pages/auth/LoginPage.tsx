@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useAuth } from '../../hooks/useAuth';
-import { login as loginApi, verifyOtp } from '../../api/auth';
+import { login as loginApi } from '../../api/auth';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { Eye, EyeOff, Lock, Mail, ArrowRight, GraduationCap } from 'lucide-react';
@@ -11,7 +11,6 @@ import { Eye, EyeOff, Lock, Mail, ArrowRight, GraduationCap } from 'lucide-react
 const loginSchema = z.object({
   email: z.string().min(1, 'Username is required'),
   password: z.string().min(1, 'Password is required'),
-  otp: z.string().optional(),
 });
 
 type LoginFormValues = z.infer<typeof loginSchema>;
@@ -22,8 +21,6 @@ export const LoginPage: React.FC = () => {
   const location = useLocation();
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [step, setStep] = useState<1 | 2>(1);
-  const [emailOrId, setEmailOrId] = useState('');
 
   React.useEffect(() => {
     if (isAuthenticated) {
@@ -44,29 +41,11 @@ export const LoginPage: React.FC = () => {
   const onSubmit = async (values: LoginFormValues) => {
     setIsSubmitting(true);
     try {
-      if (step === 1) {
-        const response = await loginApi(values);
-        if (response.data.requiresOtp) {
-          toast.success(response.data.message || 'OTP sent to your mobile');
-          setEmailOrId(values.email);
-          setStep(2);
-        } else {
-          const { accessToken, refreshToken, user } = response.data.data; // auth endpoints return data inside data based on successResponse wrapper
-          login(accessToken, refreshToken, user);
-          toast.success(`Welcome back, ${user.name}!`);
-          navigate('/dashboard', { replace: true });
-        }
-      } else {
-        if (!values.otp) {
-          toast.error('OTP is required');
-          return;
-        }
-        const response = await verifyOtp({ emailOrId, otp: values.otp });
-        const { accessToken, refreshToken, user } = response.data.data; // successResponse wrapper
-        login(accessToken, refreshToken, user);
-        toast.success(`Welcome back, ${user.name}!`);
-        navigate('/dashboard', { replace: true });
-      }
+      const response = await loginApi(values);
+      const { accessToken, refreshToken, user } = response.data.data; // auth endpoints return data inside data based on successResponse wrapper
+      login(accessToken, refreshToken, user);
+      toast.success(`Welcome back, ${user.name}!`);
+      navigate('/dashboard', { replace: true });
     } catch (error: any) {
       const message = error?.response?.data?.message || error?.message || 'Login failed. Please check your credentials.';
       toast.error(message);
@@ -102,9 +81,7 @@ export const LoginPage: React.FC = () => {
 
         <div className="flex-1">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 sm:space-y-5">
-            {step === 1 ? (
-              <>
-                <div className="space-y-1.5">
+            <div className="space-y-1.5">
                   <label className="text-sm font-bold text-gray-700 ml-1">Username or Email</label>
                   <div className="relative group">
                     <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400 group-focus-within:text-indigo-600 transition-colors">
@@ -146,32 +123,6 @@ export const LoginPage: React.FC = () => {
                   </div>
                   {errors.password && <p className="text-red-500 text-xs mt-1 ml-1 font-medium">{errors.password.message}</p>}
                 </div>
-              </>
-            ) : (
-              <div className="space-y-1.5 animate-fade-in">
-                <label className="text-sm font-bold text-gray-700 ml-1">Enter OTP</label>
-                <div className="relative group">
-                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400 group-focus-within:text-indigo-600 transition-colors">
-                    <Lock className="h-5 w-5" />
-                  </div>
-                  <input
-                    type="text"
-                    placeholder="6-digit OTP"
-                    className={`w-full pl-11 pr-4 py-3 bg-gray-50/80 border-2 rounded-2xl text-gray-900 placeholder-gray-400 focus:bg-white focus:ring-0 focus:border-indigo-500 outline-none transition-all ${
-                      errors.otp ? 'border-red-400 focus:border-red-500' : 'border-gray-100 hover:border-gray-200'
-                    }`}
-                    {...register('otp')}
-                  />
-                </div>
-                {errors.otp && <p className="text-red-500 text-xs mt-1 ml-1 font-medium">{errors.otp.message}</p>}
-                
-                <div className="flex justify-end">
-                   <button type="button" onClick={() => setStep(1)} className="text-xs text-indigo-600 font-semibold mt-2 hover:text-indigo-700">Back to Login</button>
-                </div>
-              </div>
-            )}
-
-            {step === 1 && (
               <div className="flex items-center justify-between pt-1 pb-1">
                 <label className="flex items-center space-x-2 cursor-pointer group">
                   <input type="checkbox" className="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 transition-colors" />
@@ -181,8 +132,6 @@ export const LoginPage: React.FC = () => {
                   Forgot Password?
                 </Link>
               </div>
-            )}
-
             <button
               type="submit"
               disabled={isSubmitting}
@@ -194,7 +143,7 @@ export const LoginPage: React.FC = () => {
                   'Processing...'
                 ) : (
                   <>
-                    <span>{step === 1 ? 'Sign In' : 'Verify OTP & Login'}</span>
+                    <span>Sign In</span>
                     <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                   </>
                 )}

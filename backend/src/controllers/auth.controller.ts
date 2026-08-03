@@ -126,40 +126,7 @@ export const login = async (req: AuthRequest, res: Response, next: NextFunction)
   successResponse(res, { accessToken, refreshToken, user: safeUser }, 'Login successful');
 };
 
-export const verifyOtp = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
-  const { emailOrId, otp } = req.body;
-  if (!emailOrId || !otp) return next(createError('Email/ID and OTP are required', 400));
 
-  const searchTerm = emailOrId.trim();
-  let user = await prisma.user.findFirst({
-    where: {
-      OR: [
-        { email: searchTerm },
-        { phone: searchTerm }
-      ],
-      role: 'SUPER_ADMIN'
-    }
-  });
-
-  if (!user || !user.isActive) return next(createError('Invalid request', 401));
-  if (!user.resetOtp || user.resetOtp !== otp) return next(createError('Invalid OTP', 401));
-  if (!user.resetOtpExp || user.resetOtpExp < new Date()) return next(createError('OTP has expired', 401));
-
-  // Clear OTP
-  await prisma.user.update({
-    where: { id: user.id },
-    data: { resetOtp: null, resetOtpExp: null }
-  });
-
-  const tokenPayload = { id: user.id, email: user.email, role: user.role as Role, name: user.name };
-  const accessToken = generateAccessToken(tokenPayload);
-  const refreshToken = generateRefreshToken(tokenPayload);
-
-  await prisma.user.update({ where: { id: user.id }, data: { refreshToken } });
-
-  const { password: _p, refreshToken: _rt, resetOtp: _o, resetOtpExp: _e, ...safeUser } = user as any;
-  successResponse(res, { accessToken, refreshToken, user: safeUser }, 'Login successful');
-};
 
 export const refreshToken = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   const { refreshToken: token } = req.body;
