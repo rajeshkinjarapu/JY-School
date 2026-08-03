@@ -515,7 +515,22 @@ export const StudentProfilePage: React.FC = () => {
                             <div className="flex items-center gap-2">
                               <span className="text-sm font-bold text-gray-900 dark:text-white group-hover:text-indigo-600 transition-colors">{s.name}</span>
                               {(user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN') && (
-                                <button onClick={() => { setDiscountFee(s); setDiscountAmount(effectiveAmount); setShowDiscountModal(true); }} className="text-gray-400 hover:text-indigo-600 transition-colors p-1"><Edit2 className="w-3 h-3" /></button>
+                                <div className="flex items-center gap-1">
+                                  <button onClick={() => { setDiscountFee(s); setDiscountAmount(effectiveAmount); setShowDiscountModal(true); }} className="text-gray-400 hover:text-indigo-600 transition-colors p-1" title="Add Discount"><Edit2 className="w-3 h-3" /></button>
+                                  {s.studentId && (
+                                    <button onClick={async () => {
+                                      if (window.confirm('Are you sure you want to delete this specific fee structure?')) {
+                                        try {
+                                          await api.delete(`/api/fees/structures/${s.id}`);
+                                          toast.success('Fee deleted successfully!');
+                                          fetchStudentProfile();
+                                        } catch (e: any) {
+                                          toast.error(e.message || 'Failed to delete fee');
+                                        }
+                                      }
+                                    }} className="text-gray-400 hover:text-red-500 transition-colors p-1" title="Delete Fee"><Trash2 className="w-3 h-3" /></button>
+                                  )}
+                                </div>
                               )}
                             </div>
                             <div className="text-right">
