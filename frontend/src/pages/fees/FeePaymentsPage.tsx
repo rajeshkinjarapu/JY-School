@@ -593,6 +593,10 @@ export const FeePaymentsPage: React.FC = () => {
                   </div>
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      )}
                {/* Settings Modal (Edit/Delete) */}
       {settingsModalPayment && createPortal(
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
