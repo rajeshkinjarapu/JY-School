@@ -1017,7 +1017,7 @@ export const StudentProfilePage: React.FC = () => {
           <div className="relative card w-full max-w-sm p-6 space-y-5 animate-scale-in z-10 bg-white dark:bg-gray-900 max-h-[90vh] overflow-y-auto">
             <div>
               <h3 className="text-lg font-bold text-gray-900 dark:text-white">Edit Fee Amount</h3>
-              <p className="text-xs text-gray-450 mt-1">Applying discount for {discountFee.name}</p>
+              <p className="text-xs text-gray-450 mt-1">Adjusting fee for {discountFee.name}</p>
             </div>
 
             <form onSubmit={handleApplyDiscount} className="space-y-4">
@@ -1031,7 +1031,6 @@ export const StudentProfilePage: React.FC = () => {
                 <input
                   type="number"
                   min="0"
-                  max={discountFee.amount}
                   required
                   value={discountAmount}
                   onChange={(e) => setDiscountAmount(Number(e.target.value))}
@@ -1039,7 +1038,7 @@ export const StudentProfilePage: React.FC = () => {
                 />
                 <p className="text-[10px] text-gray-400 mt-1.5 ml-1">
                   Original fee was: <strong className="text-gray-600">₹{discountFee.amount}</strong>. 
-                  (Discount applied: ₹{Math.max(0, discountFee.amount - discountAmount)})
+                  (Difference: ₹{Math.abs(discountFee.amount - discountAmount)})
                 </p>
               </div>
 

@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
+import { createPortal } from "react-dom";
 import api from "../../api/axios";
 import { Search, UserPlus, Trash2, Edit, FileDown, Eye, Filter, ChevronLeft, ChevronRight, Upload, Image as ImageIcon, X, CheckCircle2, AlertCircle, FileText } from "lucide-react";
 import toast from "react-hot-toast";
@@ -341,7 +342,7 @@ export const StudentListPage: React.FC = () => {
         )}
 
       {/* Bulk Import Modal */}
-      {showImportModal && (
+      {showImportModal && createPortal(
         <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
           <div className="absolute inset-0" onClick={() => !importLoading && setShowImportModal(false)}></div>
           <div className="relative w-full max-w-2xl bg-white rounded-3xl shadow-2xl overflow-hidden animate-scale-in">
@@ -484,7 +485,8 @@ export const StudentListPage: React.FC = () => {
               )}
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

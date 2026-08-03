@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import api from '../../api/axios';
 import { LoadingSpinner } from '../../components/UI/LoadingSpinner';
 import { Badge } from '../../components/UI/Badge';
@@ -592,14 +593,9 @@ export const FeePaymentsPage: React.FC = () => {
                   </div>
                 </div>
               )}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Settings Modal (Edit/Delete) */}
-      {settingsModalPayment && (
-        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
+               {/* Settings Modal (Edit/Delete) */}
+      {settingsModalPayment && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
           <div className="absolute inset-0" onClick={() => !isSubmittingEdit && setSettingsModalPayment(null)} />
           <div className="relative bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden animate-scale-in">
             <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
@@ -638,7 +634,7 @@ export const FeePaymentsPage: React.FC = () => {
                       min="0"
                       value={editAmount}
                       onChange={(e) => setEditAmount(e.target.value)}
-                      className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all font-bold text-slate-700 bg-slate-50 focus:bg-white"
+                      className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 bg-slate-50"
                     />
                   </div>
                   <div>
@@ -646,7 +642,7 @@ export const FeePaymentsPage: React.FC = () => {
                     <select
                       value={editMethod}
                       onChange={(e) => setEditMethod(e.target.value)}
-                      className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all font-bold text-slate-700 bg-slate-50 focus:bg-white appearance-none"
+                      className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 bg-slate-50"
                     >
                       <option value="CASH">CASH</option>
                       <option value="UPI">UPI</option>
@@ -656,35 +652,40 @@ export const FeePaymentsPage: React.FC = () => {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">Remarks (Optional)</label>
-                    <textarea
-                      value={editRemarks}
-                      onChange={(e) => setEditRemarks(e.target.value)}
-                      placeholder="Add any notes..."
-                      className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all font-medium text-slate-700 bg-slate-50 focus:bg-white resize-none"
-                      rows={2}
+                    <label className="block text-xs font-bold text-slate-700 mb-1">Receipt Number (Optional)</label>
+                    <input
+                      type="text"
+                      value={editReceipt}
+                      onChange={(e) => setEditReceipt(e.target.value)}
+                      className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 bg-slate-50"
                     />
                   </div>
-                  <div className="pt-2">
+                  <div className="pt-2 flex gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setSettingsModalPayment(null)}
+                      className="flex-1 py-3 rounded-xl font-bold text-slate-500 hover:bg-slate-100 transition-all"
+                    >
+                      Cancel
+                    </button>
                     <button
                       type="submit"
                       disabled={isSubmittingEdit}
-                      className="w-full py-3.5 rounded-xl font-bold text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 transition-all flex items-center justify-center gap-2"
+                      className="flex-1 py-3 rounded-xl font-bold text-white bg-indigo-600 hover:bg-indigo-700 transition-all disabled:opacity-50"
                     >
-                      {isSubmittingEdit ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : null}
-                      Save Changes
+                      {isSubmittingEdit ? 'Saving...' : 'Save Changes'}
                     </button>
                   </div>
                 </form>
               ) : (
-                <div className="text-center space-y-4 py-4">
-                  <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-2">
-                    <Trash2 className="w-8 h-8 text-red-500" />
+                <div className="text-center space-y-4">
+                  <div className="inline-flex p-4 rounded-full bg-red-100 text-red-500 mb-2">
+                    <AlertCircle className="w-8 h-8" />
                   </div>
-                  <div>
-                    <h4 className="text-lg font-black text-slate-800">Delete this payment?</h4>
-                    <p className="text-sm text-slate-500 mt-1">This action cannot be undone and will permanently remove this record.</p>
-                  </div>
+                  <h4 className="text-lg font-black text-slate-800">Delete this payment?</h4>
+                  <p className="text-sm text-slate-500">
+                    This action cannot be undone. The amount will be deducted from the student's paid total.
+                  </p>
                   <div className="pt-4">
                     <button
                       onClick={() => {
@@ -705,7 +706,8 @@ export const FeePaymentsPage: React.FC = () => {
               )}
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Hidden Print Component */}
