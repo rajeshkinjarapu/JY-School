@@ -239,47 +239,47 @@ export const FeePaymentsPage: React.FC = () => {
       <div className="print:hidden">
       {user?.role !== 'TEACHER' && (
         <div className="hidden md:flex flex-col sm:flex-row sm:items-center justify-end gap-4 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 p-3 sm:p-4 shadow-xl text-white">
-          <div className="flex flex-wrap gap-2.5 w-full justify-end px-2 sm:px-4">
+          <div className="flex flex-nowrap overflow-x-auto hide-scrollbar gap-2.5 w-full justify-start md:justify-end px-2 sm:px-4 pb-2 -mb-2">
             {(user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN' || user?.role === 'ACCOUNTANT') && (
               <>
                 <button
                   onClick={() => window.print()}
-                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 transition-all shadow-sm"
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 transition-all shadow-sm flex-shrink-0 whitespace-nowrap"
                 >
                   <Printer className="w-4 h-4" /> Print
                 </button>
                 <button
                   onClick={exportPaymentsExcel}
-                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 transition-all shadow-sm"
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 transition-all shadow-sm flex-shrink-0 whitespace-nowrap"
                 >
                   <FileDown className="w-4 h-4" /> Export Excel
                 </button>
                 <button
                   onClick={exportPaymentsPdf}
-                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 transition-all shadow-sm"
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 transition-all shadow-sm flex-shrink-0 whitespace-nowrap"
                 >
                   <FileDown className="w-4 h-4" /> Export PDF
                 </button>
                 <button
                   onClick={downloadTemplate}
-                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 transition-all shadow-sm"
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 transition-all shadow-sm flex-shrink-0 whitespace-nowrap"
                 >
                   <FileText className="w-4 h-4" /> Sample Excel
                 </button>
                 {(user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN') && (
-                  <Link to="/fees/structures" className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 transition-all shadow-sm">
+                  <Link to="/fees/structures" className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 transition-all shadow-sm flex-shrink-0 whitespace-nowrap">
                     <SlidersHorizontal className="w-4 h-4" /> Structure Settings
                   </Link>
                 )}
                 <button
                   onClick={() => { setShowImportModal(true); setImportResult(null); setImportFile(null); }}
-                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 transition-all shadow-sm"
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 transition-all shadow-sm flex-shrink-0 whitespace-nowrap"
                 >
                   <Upload className="w-4 h-4" /> Import Excel
                 </button>
                 <Link
                   to="/collect-payment"
-                  className="flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-black bg-white text-indigo-600 hover:bg-indigo-50 shadow-lg shadow-white/10 transition-all ml-2"
+                  className="flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-black bg-white text-indigo-600 hover:bg-indigo-50 shadow-lg shadow-white/10 transition-all ml-2 flex-shrink-0 whitespace-nowrap"
                 >
                   <Plus className="w-4 h-4" /> Collect Payment
                 </Link>
@@ -340,7 +340,7 @@ export const FeePaymentsPage: React.FC = () => {
           <div className="bg-white/70 backdrop-blur-xl border border-white/40 rounded-[2rem] overflow-hidden shadow-[0_20px_40px_-15px_rgba(0,0,0,0.05)] ring-1 ring-slate-200/50">
             <div className="overflow-x-auto w-full max-w-full block">
               <table className="w-full text-sm text-left border-collapse">
-                <thead className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white font-black text-[11px] uppercase tracking-widest relative z-10">
+                <thead className="bg-white text-slate-500 border-b border-slate-200 font-black text-[11px] uppercase tracking-widest relative z-10">
                   <tr>
                     <th className="px-5 py-5 text-center w-12 rounded-tl-[2rem]">S.No</th>
                     <th className="px-5 py-5">Date</th>

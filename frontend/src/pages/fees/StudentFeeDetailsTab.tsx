@@ -108,9 +108,9 @@ export const StudentFeeDetailsTab: React.FC<StudentFeeDetailsProps> = ({ student
       row.id,
       row.name,
       row.className,
-      `Rs. ${row.totalFee.toLocaleString('en-IN')}`,
-      `Rs. ${row.paidAmount.toLocaleString('en-IN')}`,
-      `Rs. ${row.balance.toLocaleString('en-IN')}`
+      row.totalFee.toLocaleString('en-IN'),
+      row.paidAmount.toLocaleString('en-IN'),
+      row.balance.toLocaleString('en-IN')
     ]);
 
     autoTable(doc, {
@@ -121,7 +121,7 @@ export const StudentFeeDetailsTab: React.FC<StudentFeeDetailsProps> = ({ student
       styles: { fontSize: 8, cellPadding: 3, valign: 'middle', lineColor: [200, 200, 200], lineWidth: 0.1 },
       headStyles: { fillColor: [240, 245, 250], textColor: [20, 20, 20], fontStyle: 'bold', fontSize: 9, halign: 'center' },
       columnStyles: {
-        0: { halign: 'center', cellWidth: 12 },
+        0: { halign: 'center', cellWidth: 14 },
         1: { cellWidth: 22 },
         2: { cellWidth: 'auto' }, // Student Name auto width
         3: { cellWidth: 20 },
