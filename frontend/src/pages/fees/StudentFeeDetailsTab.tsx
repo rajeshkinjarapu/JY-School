@@ -76,58 +76,63 @@ export const StudentFeeDetailsTab: React.FC<StudentFeeDetailsProps> = ({ student
     const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
 
     // Header
-    doc.setFillColor(30, 27, 75); // dark indigo
-    doc.rect(0, 0, 210, 28, 'F');
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(14);
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(16);
     doc.setFont('helvetica', 'bold');
-    doc.text('SRI VENKATESWARA JY SCHOOL', 105, 10, { align: 'center' });
-    doc.setFontSize(8);
+    doc.text('SRI VENKATESWARA JY SCHOOL', 105, 14, { align: 'center' });
+    doc.setFontSize(9);
     doc.setFont('helvetica', 'normal');
-    doc.text('Opp. Hero Showroom, SVL Paradise Campus, Narasannapeta', 105, 16, { align: 'center' });
+    doc.text('Opp. Hero Showroom, SVL Paradise Campus, Narasannapeta', 105, 20, { align: 'center' });
 
-    doc.setFontSize(11);
+    doc.setFontSize(12);
     doc.setFont('helvetica', 'bold');
-    doc.text('STUDENT FEE STATEMENT', 105, 23, { align: 'center' });
+    doc.text('CLASS-WISE FEE STATEMENT', 105, 28, { align: 'center' });
+    
+    // Line separator
+    doc.setDrawColor(200, 200, 200);
+    doc.setLineWidth(0.5);
+    doc.line(14, 33, 196, 33);
 
     // Class line
-    doc.setTextColor(30, 27, 75);
+    doc.setTextColor(0, 0, 0);
     doc.setFontSize(10);
     doc.setFont('helvetica', 'bold');
-    doc.text(`Class: ${classLabel}`, 14, 35);
+    doc.text(`Class: ${classLabel}`, 14, 41);
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(9);
-    doc.text(`Date: ${new Date().toLocaleDateString('en-IN')}`, 196, 35, { align: 'right' });
+    doc.text(`Date: ${new Date().toLocaleDateString('en-IN')}`, 196, 41, { align: 'right' });
 
-    const tableColumn = ['S.No', 'Student ID', 'Student Name', 'Class', 'Total Fee (₹)', 'Paid (₹)', 'Balance (₹)'];
+    const tableColumn = ['S.No', 'Student ID', 'Student Name', 'Class', 'Total Fee', 'Paid', 'Balance'];
     const tableRows = tableData.map(row => [
       row.sno,
       row.id,
       row.name,
       row.className,
-      row.totalFee.toLocaleString('en-IN'),
-      row.paidAmount.toLocaleString('en-IN'),
-      row.balance.toLocaleString('en-IN')
+      `Rs. ${row.totalFee.toLocaleString('en-IN')}`,
+      `Rs. ${row.paidAmount.toLocaleString('en-IN')}`,
+      `Rs. ${row.balance.toLocaleString('en-IN')}`
     ]);
 
     autoTable(doc, {
       head: [tableColumn],
       body: tableRows,
-      startY: 40,
+      startY: 46,
       theme: 'grid',
-      styles: { fontSize: 8, cellPadding: 2.5, valign: 'middle' },
-      headStyles: { fillColor: [79, 70, 229], textColor: 255, fontStyle: 'bold', fontSize: 8 },
+      styles: { fontSize: 8, cellPadding: 3, valign: 'middle', lineColor: [200, 200, 200], lineWidth: 0.1 },
+      headStyles: { fillColor: [240, 245, 250], textColor: [20, 20, 20], fontStyle: 'bold', fontSize: 9, halign: 'center' },
       columnStyles: {
         0: { halign: 'center', cellWidth: 12 },
         1: { cellWidth: 22 },
+        2: { cellWidth: 'auto' }, // Student Name auto width
+        3: { cellWidth: 20 },
         4: { halign: 'right', cellWidth: 26 },
-        5: { halign: 'right', cellWidth: 22 },
-        6: { halign: 'right', cellWidth: 22 },
+        5: { halign: 'right', cellWidth: 26 },
+        6: { halign: 'right', cellWidth: 26 },
       },
-      alternateRowStyles: { fillColor: [248, 250, 255] },
+      alternateRowStyles: { fillColor: [250, 250, 250] },
       didParseCell: (data) => {
         if (data.column.index === 6 && data.section === 'body') {
-          const val = Number(String(data.cell.raw).replace(/,/g, ''));
+          const val = Number(String(data.cell.raw).replace(/[^0-9.-]+/g,""));
           if (val > 0) {
             data.cell.styles.textColor = [220, 38, 38];
             data.cell.styles.fontStyle = 'bold';
@@ -138,17 +143,28 @@ export const StudentFeeDetailsTab: React.FC<StudentFeeDetailsProps> = ({ student
       },
     });
 
-    const finalY = (doc as any).lastAutoTable.finalY || 40;
+    const finalY = (doc as any).lastAutoTable.finalY || 46;
 
     // Summary footer
     const totalFee = tableData.reduce((s, r) => s + (r.totalFee || 0), 0);
     const totalPaid = tableData.reduce((s, r) => s + r.paidAmount, 0);
     const totalBalance = tableData.reduce((s, r) => s + r.balance, 0);
 
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(30, 27, 75);
-    doc.text(`Total Fee: ₹${totalFee.toLocaleString('en-IN')}   |   Collected: ₹${totalPaid.toLocaleString('en-IN')}   |   Balance: ₹${totalBalance.toLocaleString('en-IN')}`, 14, finalY + 8);
+    // Summary Table at the bottom
+    autoTable(doc, {
+      startY: finalY + 10,
+      head: [['TOTAL FEE (Rs)', 'COLLECTED (Rs)', 'BALANCE DUE (Rs)']],
+      body: [[
+        totalFee.toLocaleString('en-IN'),
+        totalPaid.toLocaleString('en-IN'),
+        totalBalance.toLocaleString('en-IN')
+      ]],
+      theme: 'grid',
+      styles: { fontSize: 10, cellPadding: 5, halign: 'center', valign: 'middle', lineColor: [200, 200, 200], lineWidth: 0.1 },
+      headStyles: { fillColor: [230, 230, 230], textColor: [0, 0, 0], fontStyle: 'bold' },
+      bodyStyles: { fontStyle: 'bold', textColor: [20, 20, 20] },
+      margin: { left: 14, right: 14 },
+    });
 
     doc.save(`Fee_Statement_${classLabel.replace(/\s+/g, '_')}_${new Date().getTime()}.pdf`);
   };
