@@ -25,6 +25,7 @@ export const FeePaymentsPage: React.FC = () => {
   const [editAmount, setEditAmount] = useState('');
   const [editMethod, setEditMethod] = useState('CASH');
   const [editRemarks, setEditRemarks] = useState('');
+  const [editReceipt, setEditReceipt] = useState('');
   const [isSubmittingEdit, setIsSubmittingEdit] = useState(false);
 
   // Excel bulk import states
@@ -101,6 +102,7 @@ export const FeePaymentsPage: React.FC = () => {
         amountPaid: Number(editAmount),
         method: editMethod,
         remarks: editRemarks,
+        receiptNo: editReceipt,
       });
       toast.success('Payment updated successfully');
       setSettingsModalPayment(null);
@@ -118,6 +120,7 @@ export const FeePaymentsPage: React.FC = () => {
     setEditAmount(payment.amountPaid.toString());
     setEditMethod(payment.method || 'CASH');
     setEditRemarks(payment.remarks || '');
+    setEditReceipt(payment.receiptNo || '');
   };
 
   const handlePrintReceipt = (paymentId: string) => {

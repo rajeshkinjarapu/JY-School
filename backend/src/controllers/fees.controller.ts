@@ -401,7 +401,7 @@ export const deleteFeePayment = async (req: AuthRequest, res: Response, next: Ne
 export const updateFeePayment = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
     const id = req.params.id as string;
-    const { amountPaid, method, remarks, status } = req.body;
+    const { amountPaid, method, remarks, status, receiptNo } = req.body;
     
     const payment = await prisma.feePayment.findUnique({ where: { id } });
     if (!payment) return next(createError('Fee payment not found', 404));
@@ -412,6 +412,7 @@ export const updateFeePayment = async (req: AuthRequest, res: Response, next: Ne
         amountPaid: amountPaid !== undefined ? Number(amountPaid) : payment.amountPaid,
         method: method || payment.method,
         remarks: remarks !== undefined ? remarks : payment.remarks,
+        receiptNo: receiptNo !== undefined ? receiptNo : payment.receiptNo,
         status: status || payment.status
       }
     });
