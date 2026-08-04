@@ -48,8 +48,36 @@ export const FinancePage: React.FC = () => {
   const [structName, setStructName] = useState('');
   const [structAmount, setStructAmount] = useState('');
   const [structStatus, setStructStatus] = useState('Active');
-  // CRUD States for Payments (Admin only)
+  // CRUD States for Payments  // ── Modals & State ──
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [showTransactionModal, setShowTransactionModal] = useState(false);
+  const [transactionData, setTransactionData] = useState<any>(null);
+
+  // Bulk Payment Import
+  const paymentFileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleBulkPaymentImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const importToast = toast.loading('Uploading payments...');
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const res: any = await api.post('/api/fees/payments/bulk-import', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      const data = res.data?.data || res.data || {};
+      toast.success(`Import complete! ✅ Success: ${data.success || 0} | ❌ Failed: ${data.failed || 0}`, { id: importToast, duration: 5000 });
+      fetchData(); // Refresh UI
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || 'Bulk import failed. Please verify format rules.', { id: importToast });
+    } finally {
+      if (paymentFileInputRef.current) paymentFileInputRef.current.value = '';
+    }
+  };
+
   const [payStudentId, setPayStudentId] = useState('');
   const [payStructureId, setPayStructureId] = useState('');
   const [payAmount, setPayAmount] = useState('');
@@ -735,26 +763,54 @@ export const FinancePage: React.FC = () => {
                     <p className="text-xs text-gray-400">List of fee collections and transaction statements.</p>
                   </div>
                   {isAdmin && (
-                    <button
-                      onClick={() => {
-                        if (students.length === 0 || structures.length === 0) {
-                          toast.error('Ensure students and structures exist');
-                          return;
-                        }
-                        const firstStudentId = students[0]?.id || '';
-                        const firstStructureId = structures[0]?.id || '';
-                        setPayStudentId(firstStudentId);
-                        setPayStructureId(firstStructureId);
-                        
-                        const paidSoFar = payments.filter(p => p.studentId === firstStudentId && p.feeStructureId === firstStructureId).reduce((sum, p) => sum + p.amountPaid, 0);
-                        const initialAmount = Math.max(0, (structures[0]?.amount || 0) - paidSoFar);
-                        setPayAmount(initialAmount.toString());
-                        setShowPaymentModal(true);
-                      }}
-                      className="btn-primary py-1.5 px-3.5 text-xs flex items-center gap-1 cursor-pointer"
-                    >
-                      <Plus className="w-4 h-4" /> Record Transaction
-                    </button>
+                    <div className="flex gap-2 items-center flex-wrap">
+                      <input
+                        type="file"
+                        ref={paymentFileInputRef}
+                        className="hidden"
+                        accept=".xlsx, .xls"
+                        onChange={handleBulkPaymentImport}
+                      />
+                      <button
+                        onClick={() => {
+                          const ws = XLSX.utils.json_to_sheet([
+                            { "Student ID": "JY26-0001", "Amount Paid": 15000, "Payment Mode": "UPI", "Payment Date": new Date().toISOString().split('T')[0] }
+                          ]);
+                          const wb = XLSX.utils.book_new();
+                          XLSX.utils.book_append_sheet(wb, ws, "Payments");
+                          XLSX.writeFile(wb, "Fee_Payments_Import_Template.xlsx");
+                        }}
+                        className="btn-secondary py-1.5 px-3.5 text-xs flex items-center gap-1 cursor-pointer"
+                      >
+                        <FileDown className="w-4 h-4" /> Get Template
+                      </button>
+                      <button
+                        onClick={() => paymentFileInputRef.current?.click()}
+                        className="btn-secondary py-1.5 px-3.5 text-xs flex items-center gap-1 cursor-pointer bg-amber-50 text-amber-700 hover:bg-amber-100 hover:text-amber-800 border-amber-200"
+                      >
+                        <Upload className="w-4 h-4" /> Import Payments
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (students.length === 0 || structures.length === 0) {
+                            toast.error('Ensure students and structures exist');
+                            return;
+                          }
+                          const firstStudentId = students[0]?.id || '';
+                          const firstStructureId = structures[0]?.id || '';
+                          setPayStudentId(firstStudentId);
+                          setPayStructureId(firstStructureId);
+                          
+                          const paidSoFar = payments.filter(p => p.studentId === firstStudentId && p.feeStructureId === firstStructureId).reduce((sum, p) => sum + p.amountPaid, 0);
+                          const initialAmount = Math.max(0, (structures[0]?.amount || 0) - paidSoFar);
+                          setPayAmount(initialAmount.toString());
+                          setShowPaymentModal(true);
+                        }}
+                        className="btn-primary py-1.5 px-3.5 text-xs flex items-center gap-1 cursor-pointer"
+                      >
+                        <Plus className="w-4 h-4" /> Record Transaction
+                      </button>
+                    </div>
                   )}
                 </div>
 

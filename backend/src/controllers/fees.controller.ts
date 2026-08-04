@@ -23,10 +23,10 @@ export const bulkImportFees = async (req: AuthRequest, res: Response, next: Next
 
     for (const row of results) {
       const studentId = row['Student ID'] || row.studentId;
-      const term = row.Term || row.term || 'Term 1';
-      const name = row.Name || row['Fee Name'] || row.name || 'General Fee';
+      const term = 'Annual';
+      const name = 'Tuition Fee';
       const amount = parseFloat(row.Amount || row.amount);
-      const dueDate = row['Due Date'] || row.dueDate ? new Date(row['Due Date'] || row.dueDate) : new Date();
+      const dueDate = new Date();
 
       if (!amount || isNaN(amount)) {
         errorCount++;
