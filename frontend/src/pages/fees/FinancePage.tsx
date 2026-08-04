@@ -23,6 +23,8 @@ export const FinancePage: React.FC = () => {
 
   const [loading, setLoading] = useState(false);
   const [dataLoaded, setDataLoaded] = useState(false);
+  const [baseDataLoaded, setBaseDataLoaded] = useState(false);
+  const [heavyDataLoaded, setHeavyDataLoaded] = useState(false);
 
   // Database-backed states
   const [payments, setPayments] = useState<any[]>([]);
@@ -80,63 +82,89 @@ export const FinancePage: React.FC = () => {
   // Bulk Upload Ref
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
-  const fetchData = async () => {
-    // Stale-While-Revalidate cache mechanism for instant loading
-    try {
-      const cached = localStorage.getItem('fin_dashboard_cache');
-      if (cached) {
-        const parsed = JSON.parse(cached);
-        if (parsed.payments) setPayments(parsed.payments);
-        if (parsed.students) setStudents(parsed.students);
-        if (parsed.structures) setStructures(parsed.structures);
-        if (parsed.classes) setClasses(parsed.classes);
-        setLoading(false); // Disable loading instantly if cache exists
-      }
-    } catch(e) {}
-
+  const fetchBaseData = async () => {
     try {
       const isStudent = user?.role === 'STUDENT';
-      const [payRes, studRes, structRes, classRes]: any = await Promise.all([
-        api.get('/api/fees/payments?limit=2000'),
-        isStudent ? Promise.resolve({ data: [] }) : api.get('/api/students?limit=2000'),
+      const [structRes, classRes]: any = await Promise.all([
         isStudent ? Promise.resolve({ data: [] }) : api.get('/api/fees/structures?limit=2000'),
         isStudent ? Promise.resolve({ data: [] }) : api.get('/api/classes?limit=2000'),
       ]);
-
-      const paymentData = Array.isArray(payRes.data)
-        ? payRes.data
-        : Array.isArray(payRes)
-          ? payRes
-          : [];
-      const uniquePayments = [...new Map(paymentData.map((p: any) => [p.id, p])).values()];
-      
-      const newStudents = studRes.data?.data || studRes.data || [];
       const newStructures = structRes.data || structRes || [];
       const newClasses = classRes.data || classRes || [];
-
-      setPayments(uniquePayments);
-      setStudents(newStudents);
+      
       setStructures(newStructures);
       setClasses(newClasses);
+      
+      const cached = JSON.parse(localStorage.getItem('fin_dashboard_cache') || '{}');
+      localStorage.setItem('fin_dashboard_cache', JSON.stringify({ ...cached, structures: newStructures, classes: newClasses }));
+    } catch(e) {}
+  };
 
-      // Save to cache
-      localStorage.setItem('fin_dashboard_cache', JSON.stringify({
-        payments: uniquePayments,
-        students: newStudents,
-        structures: newStructures,
-        classes: newClasses
-      }));
-    } catch (e) {
-      if (loading) toast.error('Failed to load financial records');
-    } finally {
-      setLoading(false);
-    }
+  const fetchHeavyData = async () => {
+    try {
+      const isStudent = user?.role === 'STUDENT';
+      const [payRes, studRes]: any = await Promise.all([
+        api.get('/api/fees/payments?limit=2000'),
+        isStudent ? Promise.resolve({ data: [] }) : api.get('/api/students?limit=2000'),
+      ]);
+      const paymentData = Array.isArray(payRes.data) ? payRes.data : Array.isArray(payRes) ? payRes : [];
+      const uniquePayments = [...new Map(paymentData.map((p: any) => [p.id, p])).values()];
+      const newStudents = studRes.data?.data || studRes.data || [];
+      
+      setPayments(uniquePayments);
+      setStudents(newStudents);
+      
+      const cached = JSON.parse(localStorage.getItem('fin_dashboard_cache') || '{}');
+      localStorage.setItem('fin_dashboard_cache', JSON.stringify({ ...cached, payments: uniquePayments, students: newStudents }));
+    } catch(e) {}
+  };
+
+  const fetchData = async () => {
+    setLoading(true);
+    await Promise.all([fetchBaseData(), fetchHeavyData()]);
+    setBaseDataLoaded(true);
+    setHeavyDataLoaded(true);
+    setDataLoaded(true);
+    setLoading(false);
   };
 
   useEffect(() => {
-    if (activeTab !== 'home' && !dataLoaded) {
-      setLoading(true);
-      fetchData().then(() => setDataLoaded(true));
+    const loadRequiredData = async () => {
+      if (!dataLoaded) {
+        try {
+          const cached = localStorage.getItem('fin_dashboard_cache');
+          if (cached) {
+            const parsed = JSON.parse(cached);
+            if (parsed.payments) setPayments(parsed.payments);
+            if (parsed.students) setStudents(parsed.students);
+            if (parsed.structures) setStructures(parsed.structures);
+            if (parsed.classes) setClasses(parsed.classes);
+          }
+        } catch(e) {}
+      }
+
+      const needsBase = ['fee-structure', 'transaction', 'student-fee-details'].includes(activeTab);
+      const needsHeavy = ['transaction', 'student-fee-details'].includes(activeTab);
+
+      if (needsBase && !baseDataLoaded) {
+        setLoading(true);
+        await fetchBaseData();
+        setBaseDataLoaded(true);
+        setDataLoaded(true);
+        setLoading(false);
+      }
+
+      if (needsHeavy && !heavyDataLoaded) {
+        setLoading(true);
+        await fetchHeavyData();
+        setHeavyDataLoaded(true);
+        setDataLoaded(true);
+        setLoading(false);
+      }
+    };
+
+    if (activeTab !== 'home') {
+      loadRequiredData();
     }
 
     // Init Mock configurations in LocalStorage
@@ -189,7 +217,7 @@ export const FinancePage: React.FC = () => {
       { id: '3', name: 'JY SCHOOL Operations Bank A/C', typeId: '3' },
       { id: '4', name: 'Petty Cash Counter A/C', typeId: '3' },
     ]));
-  }, [user, activeTab, dataLoaded]);
+  }, [user, activeTab, dataLoaded, baseDataLoaded, heavyDataLoaded]);
 
   // Save mocks back to local storage
   const saveMock = (key: string, data: any[]) => {
