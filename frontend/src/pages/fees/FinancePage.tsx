@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import api from '../../api/axios';
 import { useAuth } from '../../hooks/useAuth';
-import { LoadingSpinner } from '../../components/UI/LoadingSpinner';
+
 import { Badge } from '../../components/UI/Badge';
 import {
   CreditCard, Plus, FileDown, ShieldCheck, Printer, ArrowRight,
@@ -21,10 +21,18 @@ export const FinancePage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const activeTab = searchParams.get('tab') || 'home';
 
-  const [loading, setLoading] = useState(false);
-  const [dataLoaded, setDataLoaded] = useState(false);
+  const [baseLoading, setBaseLoading] = useState(false);
+  const [heavyLoading, setHeavyLoading] = useState(false);
   const [baseDataLoaded, setBaseDataLoaded] = useState(false);
   const [heavyDataLoaded, setHeavyDataLoaded] = useState(false);
+
+  // Initialize mock data synchronously from localStorage (instant)
+  const initMockSync = (key: string, defaults: any[]) => {
+    try {
+      const stored = localStorage.getItem(key);
+      return stored ? JSON.parse(stored) : defaults;
+    } catch { return defaults; }
+  };
 
   // Database-backed states
   const [payments, setPayments] = useState<any[]>([]);
@@ -48,13 +56,42 @@ export const FinancePage: React.FC = () => {
   const [payRemarks, setPayRemarks] = useState('');
   const [isSubmittingPayment, setIsSubmittingPayment] = useState(false);
 
-  // Local storage states for Finance configuration (Mock Persistence)
-  const [paymentMethods, setPaymentMethods] = useState<any[]>([]);
-  const [feeGroups, setFeeGroups] = useState<any[]>([]);
-  const [feeHeads, setFeeHeads] = useState<any[]>([]);
-  const [feeConcessions, setFeeConcessions] = useState<any[]>([]);
-  const [ledgerTypes, setLedgerTypes] = useState<any[]>([]);
-  const [ledgers, setLedgers] = useState<any[]>([]);
+  // Local storage states - initialized synchronously for INSTANT render
+  const [paymentMethods, setPaymentMethods] = useState<any[]>(() => initMockSync('fin_payment_methods', [
+    { id: '1', name: 'Cash', isActive: true, notes: 'Direct cash collection at counter' },
+    { id: '2', name: 'UPI / PhonePe / GPay', isActive: true, notes: 'Instant UPI transfer' },
+    { id: '3', name: 'Bank Transfer / IMPS', isActive: true, notes: 'Direct bank settlement' },
+    { id: '4', name: 'Credit / Debit Card', isActive: false, notes: 'POS machine or payment gateway' },
+  ]));
+  const [feeGroups, setFeeGroups] = useState<any[]>(() => initMockSync('fin_fee_groups', [
+    { id: '1', name: 'Academic Fees', description: 'Standard tuition and examination fees' },
+    { id: '2', name: 'Transport Fees', description: 'Bus commute and route subscription fees' },
+    { id: '3', name: 'Hostel Fees', description: 'Room rent, mess, and utility expenses' },
+    { id: '4', name: 'Extracurricular Fees', description: 'Sports, events, and lab equipment charges' },
+  ]));
+  const [feeHeads, setFeeHeads] = useState<any[]>(() => initMockSync('fin_fee_heads', [
+    { id: '1', name: 'Tuition fee', groupId: '1', description: 'Academic tuition' },
+    { id: '2', name: 'Admission fee', groupId: '1', description: 'One-time admission charge' },
+    { id: '3', name: 'Books Fee', groupId: '2', description: 'Cost of books and materials' },
+    { id: '4', name: 'Other Fee', groupId: '3', description: 'Other miscellaneous fees' },
+  ]));
+  const [feeConcessions, setFeeConcessions] = useState<any[]>(() => initMockSync('fin_fee_concessions', [
+    { id: '1', name: 'Sibling Waiver (10%)', type: 'PERCENT', value: 10 },
+    { id: '2', name: 'Staff Child Discount (50%)', type: 'PERCENT', value: 50 },
+    { id: '3', name: 'Sports Merit Scholarship', type: 'FIXED', value: 5000 },
+  ]));
+  const [ledgerTypes, setLedgerTypes] = useState<any[]>(() => initMockSync('fin_ledger_types', [
+    { id: '1', name: 'Revenue (Income)' },
+    { id: '2', name: 'Expense' },
+    { id: '3', name: 'Asset (Bank/Cash)' },
+    { id: '4', name: 'Liability' },
+  ]));
+  const [ledgers, setLedgers] = useState<any[]>(() => initMockSync('fin_ledgers', [
+    { id: '1', name: 'Tuition Fee Revenue A/C', typeId: '1' },
+    { id: '2', name: 'Bus Fee Revenue A/C', typeId: '1' },
+    { id: '3', name: 'JY SCHOOL Operations Bank A/C', typeId: '3' },
+    { id: '4', name: 'Petty Cash Counter A/C', typeId: '3' },
+  ]));
 
   // Search & Filter
   const [searchTerm, setSearchTerm] = useState('');
@@ -86,15 +123,13 @@ export const FinancePage: React.FC = () => {
     try {
       const isStudent = user?.role === 'STUDENT';
       const [structRes, classRes]: any = await Promise.all([
-        isStudent ? Promise.resolve({ data: [] }) : api.get('/api/fees/structures?limit=2000'),
-        isStudent ? Promise.resolve({ data: [] }) : api.get('/api/classes?limit=2000'),
+        isStudent ? Promise.resolve({ data: [] }) : api.get('/api/fees/structures?limit=500'),
+        isStudent ? Promise.resolve({ data: [] }) : api.get('/api/classes?limit=200'),
       ]);
       const newStructures = structRes.data || structRes || [];
       const newClasses = classRes.data || classRes || [];
-      
       setStructures(newStructures);
       setClasses(newClasses);
-      
       const cached = JSON.parse(localStorage.getItem('fin_dashboard_cache') || '{}');
       localStorage.setItem('fin_dashboard_cache', JSON.stringify({ ...cached, structures: newStructures, classes: newClasses }));
     } catch(e) {}
@@ -104,120 +139,65 @@ export const FinancePage: React.FC = () => {
     try {
       const isStudent = user?.role === 'STUDENT';
       const [payRes, studRes]: any = await Promise.all([
-        api.get('/api/fees/payments?limit=2000'),
-        isStudent ? Promise.resolve({ data: [] }) : api.get('/api/students?limit=2000'),
+        api.get('/api/fees/payments?limit=500'),
+        isStudent ? Promise.resolve({ data: [] }) : api.get('/api/students?limit=500'),
       ]);
       const paymentData = Array.isArray(payRes.data) ? payRes.data : Array.isArray(payRes) ? payRes : [];
       const uniquePayments = [...new Map(paymentData.map((p: any) => [p.id, p])).values()];
       const newStudents = studRes.data?.data || studRes.data || [];
-      
       setPayments(uniquePayments);
       setStudents(newStudents);
-      
       const cached = JSON.parse(localStorage.getItem('fin_dashboard_cache') || '{}');
       localStorage.setItem('fin_dashboard_cache', JSON.stringify({ ...cached, payments: uniquePayments, students: newStudents }));
     } catch(e) {}
   };
 
   const fetchData = async () => {
-    setLoading(true);
+    setBaseLoading(true);
+    setHeavyLoading(true);
     await Promise.all([fetchBaseData(), fetchHeavyData()]);
     setBaseDataLoaded(true);
     setHeavyDataLoaded(true);
-    setDataLoaded(true);
-    setLoading(false);
+    setBaseLoading(false);
+    setHeavyLoading(false);
   };
 
+  // Load cache instantly on mount — no spinner, no wait
   useEffect(() => {
-    const loadRequiredData = async () => {
-      if (!dataLoaded) {
-        try {
-          const cached = localStorage.getItem('fin_dashboard_cache');
-          if (cached) {
-            const parsed = JSON.parse(cached);
-            if (parsed.payments) setPayments(parsed.payments);
-            if (parsed.students) setStudents(parsed.students);
-            if (parsed.structures) setStructures(parsed.structures);
-            if (parsed.classes) setClasses(parsed.classes);
-          }
-        } catch(e) {}
+    try {
+      const cached = localStorage.getItem('fin_dashboard_cache');
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (parsed.payments) setPayments(parsed.payments);
+        if (parsed.students) setStudents(parsed.students);
+        if (parsed.structures) setStructures(parsed.structures);
+        if (parsed.classes) setClasses(parsed.classes);
       }
+    } catch(e) {}
+  }, []);
 
-      const needsBase = ['fee-structure', 'transaction', 'student-fee-details'].includes(activeTab);
-      const needsHeavy = ['transaction', 'student-fee-details'].includes(activeTab);
+  // Fetch fresh data in background when tab changes — NO blocking spinner
+  useEffect(() => {
+    if (activeTab === 'home') return;
 
-      if (needsBase && !baseDataLoaded) {
-        setLoading(true);
-        await fetchBaseData();
+    const needsBase = ['fee-structure', 'transaction', 'student-fee-details'].includes(activeTab);
+    const needsHeavy = ['transaction', 'student-fee-details'].includes(activeTab);
+
+    if (needsBase && !baseDataLoaded) {
+      setBaseLoading(true);
+      fetchBaseData().then(() => {
         setBaseDataLoaded(true);
-        setDataLoaded(true);
-        setLoading(false);
-      }
-
-      if (needsHeavy && !heavyDataLoaded) {
-        setLoading(true);
-        await fetchHeavyData();
-        setHeavyDataLoaded(true);
-        setDataLoaded(true);
-        setLoading(false);
-      }
-    };
-
-    if (activeTab !== 'home') {
-      loadRequiredData();
+        setBaseLoading(false);
+      });
     }
-
-    // Init Mock configurations in LocalStorage
-    const initMock = (key: string, defaults: any[]) => {
-      const stored = localStorage.getItem(key);
-      if (!stored) {
-        localStorage.setItem(key, JSON.stringify(defaults));
-        return defaults;
-      }
-      return JSON.parse(stored);
-    };
-
-    setPaymentMethods(initMock('fin_payment_methods', [
-      { id: '1', name: 'Cash', isActive: true, notes: 'Direct cash collection at counter' },
-      { id: '2', name: 'UPI / PhonePe / GPay', isActive: true, notes: 'Instant UPI transfer' },
-      { id: '3', name: 'Bank Transfer / IMPS', isActive: true, notes: 'Direct bank settlement' },
-      { id: '4', name: 'Credit / Debit Card', isActive: false, notes: 'POS machine or payment gateway' },
-    ]));
-
-    setFeeGroups(initMock('fin_fee_groups', [
-      { id: '1', name: 'Academic Fees', description: 'Standard tuition and examination fees' },
-      { id: '2', name: 'Transport Fees', description: 'Bus commute and route subscription fees' },
-      { id: '3', name: 'Hostel Fees', description: 'Room rent, mess, and utility expenses' },
-      { id: '4', name: 'Extracurricular Fees', description: 'Sports, events, and lab equipment charges' },
-    ]));
-
-    setFeeHeads(initMock('fin_fee_heads', [
-      { id: '1', name: 'Tuition fee', groupId: '1', description: 'Academic tuition' },
-      { id: '2', name: 'Admission fee', groupId: '1', description: 'One-time admission charge' },
-      { id: '3', name: 'Books Fee', groupId: '2', description: 'Cost of books and materials' },
-      { id: '4', name: 'Other Fee', groupId: '3', description: 'Other miscellaneous fees' },
-    ]));
-
-    setFeeConcessions(initMock('fin_fee_concessions', [
-      { id: '1', name: 'Sibling Waiver (10%)', type: 'PERCENT', value: 10 },
-      { id: '2', name: 'Staff Child Discount (50%)', type: 'PERCENT', value: 50 },
-      { id: '3', name: 'Sports Merit Scholarship', type: 'FIXED', value: 5000 },
-    ]));
-
-    setLedgerTypes(initMock('fin_ledger_types', [
-      { id: '1', name: 'Revenue (Income)' },
-      { id: '2', name: 'Expense' },
-      { id: '3', name: 'Asset (Bank/Cash)' },
-      { id: '4', name: 'Liability' },
-    ]));
-
-    setLedgers(initMock('fin_ledgers', [
-      { id: '1', name: 'Tuition Fee Revenue A/C', typeId: '1' },
-      { id: '2', name: 'Bus Fee Revenue A/C', typeId: '1' },
-      { id: '3', name: 'JY SCHOOL Operations Bank A/C', typeId: '3' },
-      { id: '4', name: 'Petty Cash Counter A/C', typeId: '3' },
-    ]));
-  }, [user, activeTab, dataLoaded, baseDataLoaded, heavyDataLoaded]);
+    if (needsHeavy && !heavyDataLoaded) {
+      setHeavyLoading(true);
+      fetchHeavyData().then(() => {
+        setHeavyDataLoaded(true);
+        setHeavyLoading(false);
+      });
+    }
+  }, [user, activeTab]);
 
   // Save mocks back to local storage
   const saveMock = (key: string, data: any[]) => {
@@ -467,18 +447,21 @@ export const FinancePage: React.FC = () => {
 
       {/* ══ RIGHT CONTENT PANEL ══ */}
       <div className="flex-1 bg-white dark:bg-gray-900 md:border border-gray-150 dark:border-gray-800 md:rounded-3xl p-0 md:p-8 md:shadow-sm">
-        {loading ? (
-          <LoadingSpinner size="lg" className="py-24" />
-        ) : (
-          <>
-            {/* ── 1. PAYMENT METHOD TAB ── */}
+        <>
+          {/* ── 1. STUDENT FEE DETAILS TAB ── */}
             {activeTab === 'student-fee-details' && (
-              <StudentFeeDetailsTab 
-                students={students} 
-                structures={structures} 
-                payments={payments} 
-                classes={classes} 
-              />
+              heavyLoading && students.length === 0 ? (
+                <div className="space-y-3 animate-pulse">
+                  {[1,2,3,4,5].map(i => <div key={i} className="h-14 bg-gray-100 dark:bg-gray-800 rounded-xl" />)}
+                </div>
+              ) : (
+                <StudentFeeDetailsTab 
+                  students={students} 
+                  structures={structures} 
+                  payments={payments} 
+                  classes={classes} 
+                />
+              )
             )}
 
             {activeTab === 'payment-method' && (
@@ -765,6 +748,13 @@ export const FinancePage: React.FC = () => {
                   )}
                 </div>
 
+                {baseLoading && structures.length === 0 ? (
+                  <div className="col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6 animate-pulse">
+                    {[1,2,3,4].map(i => (
+                      <div key={i} className="bg-gray-100 dark:bg-gray-800 rounded-2xl h-40" />
+                    ))}
+                  </div>
+                ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {classes.map(cls => {
                     const classFees = structures.filter(s => s.classId === cls.id);
@@ -837,6 +827,7 @@ export const FinancePage: React.FC = () => {
                     </div>
                   )}
                 </div>
+                )}
 
                 {/* Structure Creation Modal */}
                 {showStructureModal && (
@@ -1291,10 +1282,9 @@ export const FinancePage: React.FC = () => {
                 </div>
               </div>
             )}
-          </>
-        )}
-      </div>
         </>
+      </div>
+      </>
       )}
       </div>
     </div>
