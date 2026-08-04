@@ -279,7 +279,7 @@ export const FinancePage: React.FC = () => {
     formData.append('file', file);
 
     try {
-      const res: any = await api.post('/api/fees/structures/bulk-import', formData, {
+      const res: any = await api.post('/api/fees/payments/bulk-import', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
       const data = res.data || res;
@@ -732,11 +732,11 @@ export const FinancePage: React.FC = () => {
                       <button
                         onClick={() => {
                           const ws = XLSX.utils.json_to_sheet([
-                            { "Student ID": "JY24-001", "Fee Name": "Tuition fee", "Term": "Term 1", "Amount": 500, "Due Date": new Date().toISOString().split('T')[0] }
+                            { "Student ID": "JY24-001", "Amount Paid": 1000, "Payment Mode": "UPI", "Payment Date": new Date().toISOString().split('T')[0] }
                           ]);
                           const wb = XLSX.utils.book_new();
-                          XLSX.utils.book_append_sheet(wb, ws, "Fees Template");
-                          XLSX.writeFile(wb, "Fees_Import_Template.xlsx");
+                          XLSX.utils.book_append_sheet(wb, ws, "Payments Template");
+                          XLSX.writeFile(wb, "Fee_Payments_Import_Template.xlsx");
                         }}
                         className="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs px-5 py-2.5 rounded-xl shadow-lg shadow-emerald-500/30 flex items-center gap-2 transition-all cursor-pointer"
                       >
