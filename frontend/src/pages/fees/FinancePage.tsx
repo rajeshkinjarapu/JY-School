@@ -140,15 +140,26 @@ export const FinancePage: React.FC = () => {
   const fetchHeavyData = async () => {
     try {
       const isStudent = user?.role === 'STUDENT';
-      const [payRes, studRes]: any = await Promise.all([
+      const [payRes, studRes]: any = await Promise.allSettled([
         api.get('/api/fees/payments?limit=500'),
         isStudent ? Promise.resolve({ data: [] }) : api.get('/api/students?limit=500'),
       ]);
-      const paymentData = payRes.data?.data || payRes.data || payRes || [];
-      const paymentArray = Array.isArray(paymentData) ? paymentData : [];
-      const newStudents = studRes.data?.data || studRes.data || [];
-      setPayments(paymentArray);
-      setStudents(newStudents);
+
+      let paymentArray = payments;
+      let newStudents = students;
+
+      if (payRes.status === 'fulfilled') {
+        const paymentData = payRes.value.data?.data || payRes.value.data || payRes.value || [];
+        paymentArray = Array.isArray(paymentData) ? paymentData : [];
+        setPayments(paymentArray);
+      }
+
+      if (studRes.status === 'fulfilled') {
+        const studData = studRes.value.data?.data || studRes.value.data || studRes.value || [];
+        newStudents = Array.isArray(studData) ? studData : (Array.isArray(studData.data) ? studData.data : []);
+        setStudents(newStudents);
+      }
+
       const cached = JSON.parse(localStorage.getItem('fin_dashboard_cache') || '{}');
       localStorage.setItem('fin_dashboard_cache', JSON.stringify({ ...cached, payments: paymentArray, students: newStudents }));
     } catch(e) {}
