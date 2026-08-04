@@ -142,13 +142,13 @@ export const FinancePage: React.FC = () => {
         api.get('/api/fees/payments?limit=500'),
         isStudent ? Promise.resolve({ data: [] }) : api.get('/api/students?limit=500'),
       ]);
-      const paymentData = Array.isArray(payRes.data?.data) ? payRes.data.data : Array.isArray(payRes.data) ? payRes.data : Array.isArray(payRes) ? payRes : [];
-      const uniquePayments = [...new Map(paymentData.map((p: any) => [p.id, p])).values()];
+      const paymentData = payRes.data?.data || payRes.data || payRes || [];
+      const paymentArray = Array.isArray(paymentData) ? paymentData : [];
       const newStudents = studRes.data?.data || studRes.data || [];
-      setPayments(uniquePayments);
+      setPayments(paymentArray);
       setStudents(newStudents);
       const cached = JSON.parse(localStorage.getItem('fin_dashboard_cache') || '{}');
-      localStorage.setItem('fin_dashboard_cache', JSON.stringify({ ...cached, payments: uniquePayments, students: newStudents }));
+      localStorage.setItem('fin_dashboard_cache', JSON.stringify({ ...cached, payments: paymentArray, students: newStudents }));
     } catch(e) {}
   };
 
