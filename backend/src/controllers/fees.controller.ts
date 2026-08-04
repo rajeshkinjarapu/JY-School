@@ -77,14 +77,36 @@ export const getStructures = async (req: AuthRequest, res: Response): Promise<vo
 
   const structures = await prisma.feeStructure.findMany({
     where,
-    include: { class: { select: { name: true, section: true } }, _count: { select: { payments: true } } },
+    include: { 
+      class: { select: { name: true, section: true } }, 
+      student: { select: { rollNo: true, user: { select: { name: true } } } },
+      _count: { select: { payments: true } } 
+    },
     orderBy: { dueDate: 'asc' },
   });
   successResponse(res, structures, 'Fee structures fetched');
 };
 
 export const createStructure = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
-  const { classId, term, name, amount, dueDate } = req.body;
+  const { classId, studentId, term, name, amount, dueDate } = req.body;
+
+  if (!classId && !studentId) {
+    return next(createError('Either classId or studentId is required', 400));
+  }
+
+  // Student-wise fee creation
+  if (studentId) {
+    const student = await prisma.student.findUnique({ where: { id: studentId } });
+    if (!student) return next(createError('Student not found', 404));
+
+    const structure = await prisma.feeStructure.create({
+      data: { studentId, classId: null, term: term || 'Annual', name: name.trim(), amount, dueDate: dueDate ? new Date(dueDate) : new Date() },
+    });
+    successResponse(res, structure, 'Student fee created', 201);
+    return;
+  }
+
+  // Class-wise fee creation
   const cls = await prisma.class.findUnique({ where: { id: classId } });
   if (!cls) return next(createError('Class not found', 404));
 
