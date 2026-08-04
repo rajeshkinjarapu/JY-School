@@ -62,7 +62,7 @@ export const StudentFeeDetailsTab: React.FC<StudentFeeDetailsProps> = ({ student
       );
     }
 
-    return filteredStudents.map((student, index) => {
+    const rawData = filteredStudents.map((student) => {
       const classStructs = classMap.get(student.classId) ? (classStructuresMap.get(student.classId) || []) : [];
       const stdStructs = studentStructuresMap.get(student.id) || [];
       const studentStructures = [...classStructs, ...stdStructs];
@@ -75,7 +75,6 @@ export const StudentFeeDetailsTab: React.FC<StudentFeeDetailsProps> = ({ student
       const phone = student.user?.phone || student.phone || '';
 
       return {
-        sno: index + 1,
         id: student.rollNo || '-',
         name: student.user?.name || student.name || '-',
         className: studentClass ? `${studentClass.name} - ${studentClass.section}` : '-',
@@ -86,6 +85,19 @@ export const StudentFeeDetailsTab: React.FC<StudentFeeDetailsProps> = ({ student
         photo: student.user?.avatar || student.photo || '',
       };
     });
+
+    // Sort class-wise first, then by student name
+    rawData.sort((a, b) => {
+      if (a.className < b.className) return -1;
+      if (a.className > b.className) return 1;
+      return a.name.localeCompare(b.name);
+    });
+
+    // Assign S.No after sorting
+    return rawData.map((row, index) => ({
+      ...row,
+      sno: index + 1
+    }));
   }, [students, structures, payments, classes, selectedClassId, searchTerm]);
 
   const selectedClass = classes.find(c => c.id === selectedClassId);
