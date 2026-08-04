@@ -70,7 +70,7 @@ export const FeePaymentsPage: React.FC = () => {
 
   const fetchData = async () => {
     try {
-      const payRes: any = await api.get('/api/fees/payments?limit=5000');
+      const payRes: any = await api.get('/api/fees/payments?limit=750');
       setPayments(payRes.data?.data || payRes.data || payRes || []);
     } catch (e) {
       toast.error('Failed to load transaction records');
@@ -154,8 +154,8 @@ export const FeePaymentsPage: React.FC = () => {
       queryParams.append('studentId', studentData.id);
 
       const [structRes, payRes]: any[] = await Promise.all([
-        api.get(`/api/fees/structures?${queryParams.toString()}`),
-        api.get(`/api/fees/payments?studentId=${studentData.id}&limit=500`),
+        api.get(`/api/fees/structures?${queryParams.toString()}&limit=750`),
+        api.get(`/api/fees/payments?studentId=${studentData.id}&limit=750`),
       ]);
 
       const structs: any[] = structRes.data?.data || structRes.data || [];

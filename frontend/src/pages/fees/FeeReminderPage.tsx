@@ -19,7 +19,7 @@ export const FeeReminderPage: React.FC = () => {
   const { data: classes = [] } = useQuery({
     queryKey: ['classes-dropdown'],
     queryFn: async () => {
-      const res = await api.get('/api/classes?limit=500'); // Reduced from 5000
+      const res = await api.get('/api/classes?limit=750'); // Reduced to 750
       return res.data || [];
     },
     staleTime: 1000 * 60 * 10,
