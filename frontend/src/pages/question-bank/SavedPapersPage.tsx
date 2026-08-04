@@ -181,29 +181,29 @@ const SavedPapersPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50/50 p-4 sm:p-6 lg:p-8 animate-fade-in pb-24">
-      {/* Header */}
-      <div className="mb-6 max-w-7xl mx-auto">
-        <button
-          onClick={() => navigate('/question-bank')}
-          className="flex items-center gap-2 text-slate-500 hover:text-indigo-600 transition-colors mb-4 text-sm font-bold w-fit bg-white/50 px-3 py-1.5 rounded-lg border border-slate-200/60 backdrop-blur-sm"
-        >
-          <ChevronLeft className="w-4 h-4" />
-          Back to Question Bank
-        </button>
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-black text-slate-900 tracking-tight">Saved AI Papers</h1>
-            <p className="text-slate-500 mt-1 text-sm font-medium">{papers.length} paper{papers.length !== 1 ? 's' : ''} organized</p>
-          </div>
+    <div className="min-h-screen bg-slate-100 p-3 sm:p-4 animate-fade-in pb-16">
+      {/* Compact Header */}
+      <div className="mb-3 max-w-7xl mx-auto flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
           <button
-            onClick={() => navigate('/question-bank/generator')}
-            className="flex items-center gap-2 px-6 py-3 bg-slate-900 text-white rounded-2xl font-bold shadow-xl shadow-slate-900/20 hover:-translate-y-0.5 transition-all duration-200"
+            onClick={() => navigate('/question-bank')}
+            className="flex items-center gap-1.5 text-slate-500 hover:text-indigo-600 transition-colors text-xs font-bold bg-white px-2.5 py-1.5 rounded-lg border border-slate-200 shadow-sm"
           >
-            <Plus className="w-4 h-4" />
-            New Paper
+            <ChevronLeft className="w-3.5 h-3.5" />
+            Back
           </button>
+          <div>
+            <h1 className="text-xl font-black text-slate-900 tracking-tight">Saved AI Papers</h1>
+            <p className="text-slate-400 text-xs font-medium">{papers.length} paper{papers.length !== 1 ? 's' : ''} saved</p>
+          </div>
         </div>
+        <button
+          onClick={() => navigate('/question-bank/generator')}
+          className="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-xl font-bold shadow-lg text-sm hover:-translate-y-0.5 transition-all duration-200"
+        >
+          <Plus className="w-4 h-4" />
+          New Paper
+        </button>
       </div>
 
       <div className="max-w-7xl mx-auto">
@@ -293,51 +293,45 @@ const SavedPapersPage = () => {
         ) : (
           <>
             {viewMode === 'grid' ? (
-              /* Dense Grid View */
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+              /* Dense Colorful Grid View */
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 {filtered.map(paper => {
                   const colors = getSubjectColor(paper.examSubject || 'Default');
                   return (
                     <div
                       key={paper.id}
-                      className="group bg-white rounded-[1.5rem] border border-slate-100 shadow-sm hover:shadow-2xl hover:shadow-indigo-500/10 hover:-translate-y-1.5 transition-all duration-300 overflow-hidden flex flex-col relative"
+                      className="group rounded-2xl shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden flex flex-col"
                     >
-                      <div className={`absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r ${colors.gradient} opacity-80`} />
-                      <div className="p-5 flex-1 flex flex-col pt-6">
-                        <div className="flex items-start justify-between mb-3">
-                          <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider ${colors.bg} ${colors.text} ${colors.border} border shadow-sm`}>
-                            {paper.examSubject || 'General'}
-                          </span>
-                          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity translate-x-2 group-hover:translate-x-0 duration-200">
-                            <button onClick={() => handlePrint(paper)} className="p-1.5 text-slate-400 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors"><Printer className="w-3.5 h-3.5" /></button>
-                            <button onClick={() => handleDownloadPDF(paper)} className="p-1.5 text-slate-400 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors"><Download className="w-3.5 h-3.5" /></button>
-                          </div>
-                        </div>
-                        
-                        <h3 className="text-[15px] font-black text-slate-800 leading-tight mb-2 line-clamp-2" title={paper.examName}>
+                      {/* Full colorful gradient header */}
+                      <div className={`bg-gradient-to-br ${colors.gradient} px-4 py-4 flex-shrink-0`}>
+                        <span className="inline-block px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider bg-white/20 text-white border border-white/30 mb-2">
+                          {paper.examSubject || 'General'}
+                        </span>
+                        <h3 className="text-[14px] font-black text-white leading-tight line-clamp-2" title={paper.examName}>
                           {paper.examName}
                         </h3>
-                        
-                        <div className="mt-auto pt-4 space-y-2.5 border-t border-slate-50 border-dashed">
-                          <div className="flex flex-wrap gap-2 text-[11px] font-bold text-slate-500">
-                            <span className="flex items-center gap-1.5 bg-slate-50 px-2.5 py-1.5 rounded-lg border border-slate-100"><Calendar className="w-3.5 h-3.5 text-slate-400" /> {paper.examDate || '—'}</span>
-                            <span className="flex items-center gap-1.5 bg-slate-50 px-2.5 py-1.5 rounded-lg border border-slate-100"><Clock className="w-3.5 h-3.5 text-slate-400" /> {paper.time || '—'}</span>
-                          </div>
+                        <div className="flex flex-wrap gap-2 mt-2 text-[10px] font-bold text-white/80">
+                          <span className="flex items-center gap-1"><Calendar className="w-3 h-3" /> {paper.examDate || '—'}</span>
+                          <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {paper.time || '—'} mins</span>
                         </div>
                       </div>
-                      
-                      <div className="px-3 pb-3 grid grid-cols-4 gap-1.5">
-                        <button onClick={() => setPreviewPaper(paper)} className="col-span-1 flex items-center justify-center p-2.5 bg-slate-50 text-slate-600 rounded-xl hover:bg-slate-800 hover:text-white hover:shadow-md transition-all duration-200 group/btn" title="Preview">
-                          <Eye className="w-4 h-4 group-hover/btn:scale-110 transition-transform" />
+
+                      {/* Card Action Buttons */}
+                      <div className="bg-white px-3 py-2.5 grid grid-cols-5 gap-1.5">
+                        <button onClick={() => setPreviewPaper(paper)} className="col-span-1 flex items-center justify-center p-2 bg-slate-100 text-slate-600 rounded-xl hover:bg-slate-800 hover:text-white transition-all duration-200" title="Preview">
+                          <Eye className="w-3.5 h-3.5" />
                         </button>
-                        <button onClick={() => navigate(`/question-bank/generator?id=${paper.id}`)} className="col-span-1 flex items-center justify-center p-2.5 bg-indigo-50 text-indigo-600 rounded-xl hover:bg-indigo-600 hover:text-white hover:shadow-md transition-all duration-200 group/btn" title="Edit">
-                          <Edit2 className="w-4 h-4 group-hover/btn:scale-110 transition-transform" />
+                        <button onClick={() => handlePrint(paper)} className="col-span-1 flex items-center justify-center p-2 bg-sky-100 text-sky-600 rounded-xl hover:bg-sky-600 hover:text-white transition-all duration-200" title="Print">
+                          <Printer className="w-3.5 h-3.5" />
                         </button>
-                        <button onClick={() => handleDuplicate(paper)} className="col-span-1 flex items-center justify-center p-2.5 bg-emerald-50 text-emerald-600 rounded-xl hover:bg-emerald-600 hover:text-white hover:shadow-md transition-all duration-200 group/btn" title="Duplicate">
-                          <Copy className="w-4 h-4 group-hover/btn:scale-110 transition-transform" />
+                        <button onClick={() => handleDownloadPDF(paper)} className="col-span-1 flex items-center justify-center p-2 bg-violet-100 text-violet-600 rounded-xl hover:bg-violet-600 hover:text-white transition-all duration-200" title="Download PDF">
+                          <Download className="w-3.5 h-3.5" />
                         </button>
-                        <button onClick={() => setDeleteId(paper.id)} className="col-span-1 flex items-center justify-center p-2.5 bg-rose-50 text-rose-500 rounded-xl hover:bg-rose-500 hover:text-white hover:shadow-md transition-all duration-200 group/btn" title="Delete">
-                          <Trash2 className="w-4 h-4 group-hover/btn:scale-110 transition-transform" />
+                        <button onClick={() => navigate(`/question-bank/generator?id=${paper.id}`)} className="col-span-1 flex items-center justify-center p-2 bg-indigo-100 text-indigo-600 rounded-xl hover:bg-indigo-600 hover:text-white transition-all duration-200" title="Edit">
+                          <Edit2 className="w-3.5 h-3.5" />
+                        </button>
+                        <button onClick={() => setDeleteId(paper.id)} className="col-span-1 flex items-center justify-center p-2 bg-rose-100 text-rose-500 rounded-xl hover:bg-rose-500 hover:text-white transition-all duration-200" title="Delete">
+                          <Trash2 className="w-3.5 h-3.5" />
                         </button>
                       </div>
                     </div>
