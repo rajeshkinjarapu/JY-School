@@ -35,7 +35,9 @@ export const LaTeXPreview: React.FC<LaTeXPreviewProps> = ({ text = '', className
 
       if (displayMath) {
         try {
-          const html = katex.renderToString(displayMath, {
+          // Auto-convert standard slash fractions to LaTeX vertical fractions (e.g. 3/5 -> \frac{3}{5})
+          const processedDisplayMath = displayMath.replace(/(\d+)\/(\d+)/g, '\\frac{$1}{$2}');
+          const html = katex.renderToString(processedDisplayMath, {
             displayMode: true,
             throwOnError: false,
           });
@@ -55,7 +57,9 @@ export const LaTeXPreview: React.FC<LaTeXPreviewProps> = ({ text = '', className
         }
       } else if (inlineMath) {
         try {
-          const html = katex.renderToString(inlineMath, {
+          // Auto-convert standard slash fractions to LaTeX vertical fractions (e.g. 3/5 -> \frac{3}{5})
+          const processedInlineMath = inlineMath.replace(/(\d+)\/(\d+)/g, '\\frac{$1}{$2}');
+          const html = katex.renderToString(processedInlineMath, {
             displayMode: false,
             throwOnError: false,
           });
