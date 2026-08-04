@@ -287,12 +287,26 @@ export const bulkImportPayments = async (req: AuthRequest, res: Response, next: 
       let paymentDate = new Date();
       if (rawDate) {
         if (typeof rawDate === 'number') {
-          // Convert Excel serial date to JS Date
           paymentDate = new Date(Math.round((rawDate - 25569) * 86400 * 1000));
         } else if (rawDate instanceof Date && !isNaN(rawDate.getTime())) {
           paymentDate = rawDate;
         } else {
-          const d = new Date(rawDate);
+          let d = new Date(rawDate);
+          if (isNaN(d.getTime())) {
+            // Handle DD-MM-YYYY or DD/MM/YYYY
+            const parts = String(rawDate).split(/[-/]/);
+            if (parts.length === 3) {
+              const day = parseInt(parts[0], 10);
+              const month = parseInt(parts[1], 10) - 1;
+              const year = parseInt(parts[2], 10);
+              if (year < 100) {
+                 // Assume 2000s if 2 digit year
+                 d = new Date(2000 + year, month, day);
+              } else {
+                 d = new Date(year, month, day);
+              }
+            }
+          }
           if (!isNaN(d.getTime())) paymentDate = d;
         }
       }
@@ -401,7 +415,7 @@ export const deleteFeePayment = async (req: AuthRequest, res: Response, next: Ne
 export const updateFeePayment = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
     const id = req.params.id as string;
-    const { amountPaid, method, remarks, status, receiptNo } = req.body;
+    const { amountPaid, method, remarks, status, receiptNo, paymentDate } = req.body;
     
     const payment = await prisma.feePayment.findUnique({ where: { id } });
     if (!payment) return next(createError('Fee payment not found', 404));
@@ -413,6 +427,7 @@ export const updateFeePayment = async (req: AuthRequest, res: Response, next: Ne
         method: method || payment.method,
         remarks: remarks !== undefined ? remarks : payment.remarks,
         receiptNo: receiptNo !== undefined ? receiptNo : payment.receiptNo,
+        paymentDate: paymentDate ? new Date(paymentDate) : payment.paymentDate,
         status: status || payment.status
       }
     });

@@ -26,6 +26,7 @@ export const FeePaymentsPage: React.FC = () => {
   const [editMethod, setEditMethod] = useState('CASH');
   const [editRemarks, setEditRemarks] = useState('');
   const [editReceipt, setEditReceipt] = useState('');
+  const [editDate, setEditDate] = useState('');
   const [isSubmittingEdit, setIsSubmittingEdit] = useState(false);
 
   // Excel bulk import states
@@ -103,6 +104,7 @@ export const FeePaymentsPage: React.FC = () => {
         method: editMethod,
         remarks: editRemarks,
         receiptNo: editReceipt,
+        paymentDate: editDate,
       });
       toast.success('Payment updated successfully');
       setSettingsModalPayment(null);
@@ -121,6 +123,14 @@ export const FeePaymentsPage: React.FC = () => {
     setEditMethod(payment.method || 'CASH');
     setEditRemarks(payment.remarks || '');
     setEditReceipt(payment.receiptNo || '');
+    
+    // Format date for the input field (YYYY-MM-DD)
+    const dateStr = payment.paymentDate || payment.createdAt;
+    if (dateStr) {
+      setEditDate(new Date(dateStr).toISOString().split('T')[0]);
+    } else {
+      setEditDate('');
+    }
   };
 
   const handlePrintReceipt = (paymentId: string) => {
@@ -641,6 +651,16 @@ export const FeePaymentsPage: React.FC = () => {
                       min="0"
                       value={editAmount}
                       onChange={(e) => setEditAmount(e.target.value)}
+                      className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 bg-slate-50"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">Payment Date</label>
+                    <input
+                      type="date"
+                      required
+                      value={editDate}
+                      onChange={(e) => setEditDate(e.target.value)}
                       className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 bg-slate-50"
                     />
                   </div>
