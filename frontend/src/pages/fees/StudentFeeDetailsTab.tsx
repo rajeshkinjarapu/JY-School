@@ -4,6 +4,7 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { toBlob } from 'html-to-image';
 import toast from 'react-hot-toast';
+import * as XLSX from 'xlsx';
 
 interface StudentFeeDetailsProps {
   students: any[];
@@ -193,6 +194,38 @@ export const StudentFeeDetailsTab: React.FC<StudentFeeDetailsProps> = ({ student
     doc.save(`Fee_Statement_${classLabel.replace(/\s+/g, '_')}_${new Date().getTime()}.pdf`);
   };
 
+  const handleExportExcel = () => {
+    const excelData = tableData.map(row => ({
+      'S.No': row.sno,
+      'Student ID': row.id,
+      'Student Name': row.name,
+      'Class': row.className,
+      'Total Fee': row.totalFee,
+      'Paid': row.paidAmount,
+      'Balance': row.balance
+    }));
+
+    const totalFee = tableData.reduce((s, r) => s + (r.totalFee || 0), 0);
+    const totalPaid = tableData.reduce((s, r) => s + r.paidAmount, 0);
+    const totalBalance = tableData.reduce((s, r) => s + r.balance, 0);
+    
+    excelData.push({
+      'S.No': '' as any,
+      'Student ID': '' as any,
+      'Student Name': '' as any,
+      'Class': 'TOTAL',
+      'Total Fee': totalFee,
+      'Paid': totalPaid,
+      'Balance': totalBalance
+    });
+
+    const worksheet = XLSX.utils.json_to_sheet(excelData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Fee Details');
+
+    XLSX.writeFile(workbook, `Fee_Statement_${classLabel.replace(/\s+/g, '_')}_${new Date().getTime()}.xlsx`);
+  };
+
   const handleWhatsAppClick = (row: any) => {
     if (!row.phone) {
       toast.error('No phone number available for this student.');
@@ -271,6 +304,9 @@ export const StudentFeeDetailsTab: React.FC<StudentFeeDetailsProps> = ({ student
           </button>
           <button onClick={handleDownloadPDF} className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 font-medium text-sm transition-colors shadow-sm">
             <Download className="w-4 h-4" /> Export PDF
+          </button>
+          <button onClick={handleExportExcel} className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 font-medium text-sm transition-colors shadow-sm">
+            <Download className="w-4 h-4" /> Export Excel
           </button>
         </div>
       </div>
