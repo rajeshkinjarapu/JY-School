@@ -12,8 +12,9 @@ export const LaTeXPreview: React.FC<LaTeXPreviewProps> = ({ text = '', className
     if (!content) return '';
 
     // Split text into text segments and math segments
-    // Regex matches $$...$$ (group 1) or $...$ (group 2)
-    const regex = /\$\$([\s\S]+?)\$\$|\$([\s\S]+?)\$/g;
+    // Regex matches $$...$$ (group 1) or \[...\] (group 2) for display math
+    // and $...$ (group 3) or \(...\) (group 4) for inline math
+    const regex = /\$\$([\s\S]+?)\$\$|\\\[([\s\S]+?)\\\]|\$([\s\S]+?)\$|\\\(([\s\S]+?)\\\)/g;
     const parts: React.ReactNode[] = [];
     let lastIndex = 0;
     let match;
@@ -55,8 +56,8 @@ export const LaTeXPreview: React.FC<LaTeXPreviewProps> = ({ text = '', className
         );
       }
 
-      const displayMath = match[1];
-      const inlineMath = match[2];
+      const displayMath = match[1] || match[2];
+      const inlineMath = match[3] || match[4];
 
       if (displayMath) {
         try {
