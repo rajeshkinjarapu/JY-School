@@ -96,6 +96,8 @@ export const FinancePage: React.FC = () => {
   // Search & Filter
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
+  const [filterClass, setFilterClass] = useState('ALL');
+  const [filterSection, setFilterSection] = useState('ALL');
 
   // Receipt Modal State
   const [selectedReceipt, setSelectedReceipt] = useState<any>(null);
@@ -308,7 +310,7 @@ export const FinancePage: React.FC = () => {
 
   const handlePrintReceipt = async (paymentId: string) => {
     try {
-      const response: any = await api.get(`/api/reports/receipt/${paymentId}`, {
+      const response: any = await api.get(`/api/fees/payments/${paymentId}/invoice`, {
         responseType: 'blob',
       });
       const url = window.URL.createObjectURL(new Blob([response.data || response], { type: 'application/pdf' }));
@@ -335,8 +337,19 @@ export const FinancePage: React.FC = () => {
     const feeName = p.feeStructure?.name?.toLowerCase() || '';
     const matchesSearch = studentName.includes(searchTerm.toLowerCase()) || feeName.includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'ALL' || p.status === statusFilter;
-    return matchesSearch && matchesStatus;
+    const matchesClass = filterClass === 'ALL' || p.student?.class?.name === filterClass;
+    const matchesSection = filterSection === 'ALL' || p.student?.class?.section === filterSection;
+    return matchesSearch && matchesStatus && matchesClass && matchesSection;
   });
+
+  const uniqueClassNames = [...new Set(classes.map(c => c.name))].sort();
+  const availableSections = filterClass === 'ALL' ? [] : [...new Set(classes.filter(c => c.name === filterClass).map(c => c.section))].sort();
+
+  const getDisplayDate = (p: any) => {
+    let d = new Date(p.paymentDate || p.createdAt || new Date());
+    if (d.getFullYear() < 2000) d = new Date(p.createdAt || new Date());
+    return d.toLocaleDateString();
+  };
 
   const FINANCE_MENU = [
     { key: 'payment-method', label: 'Payment Method', icon: CreditCard, gradient: 'from-indigo-500 to-blue-600', desc: 'Cash, UPI, Bank transfers' },
@@ -924,8 +937,29 @@ export const FinancePage: React.FC = () => {
                       onChange={e => setSearchTerm(e.target.value)}
                     />
                   </div>
-                  <div className="flex items-center gap-2 w-full sm:w-auto shrink-0">
-                    <Filter className="w-4 h-4 text-gray-400" />
+                  <div className="flex items-center gap-2 w-full sm:w-auto shrink-0 flex-wrap">
+                    <Filter className="w-4 h-4 text-gray-400 hidden sm:block" />
+                    <select
+                      className="input py-2 text-xs font-bold"
+                      value={filterClass}
+                      onChange={e => {
+                        setFilterClass(e.target.value);
+                        setFilterSection('ALL');
+                      }}
+                    >
+                      <option value="ALL">All Classes</option>
+                      {uniqueClassNames.map(cName => <option key={cName} value={cName}>Class {cName}</option>)}
+                    </select>
+                    {filterClass !== 'ALL' && (
+                      <select
+                        className="input py-2 text-xs font-bold"
+                        value={filterSection}
+                        onChange={e => setFilterSection(e.target.value)}
+                      >
+                        <option value="ALL">All Sec</option>
+                        {availableSections.map(sec => <option key={sec} value={sec}>Sec {sec}</option>)}
+                      </select>
+                    )}
                     <select
                       className="input py-2 text-xs font-bold"
                       value={statusFilter}
@@ -971,9 +1005,9 @@ export const FinancePage: React.FC = () => {
                                 <span className="font-semibold text-gray-700 dark:text-gray-300">{p.method}</span>
                               </div>
                               <div>
-                                <span className="block text-gray-400 font-bold mb-0.5 text-[10px] uppercase">Date</span>
-                                <span className="font-semibold text-gray-700 dark:text-gray-300">{new Date(p.paymentDate).toLocaleDateString()}</span>
-                              </div>
+                              <span className="block text-gray-400 font-bold mb-0.5 text-[10px] uppercase">Date</span>
+                              <span className="font-semibold text-gray-700 dark:text-gray-300">{getDisplayDate(p)}</span>
+                            </div>
                             </div>
                             <div className="flex items-center justify-between mt-2">
                               <div>
@@ -1000,7 +1034,9 @@ export const FinancePage: React.FC = () => {
                     <table className="w-full text-sm text-left">
                       <thead>
                         <tr className="bg-indigo-50/50 text-indigo-900 border-b border-indigo-100 font-bold">
-                          <th className="px-5 py-4 text-xs uppercase tracking-wider">Student</th>
+                          <th className="px-5 py-4 text-xs uppercase tracking-wider w-12 text-center">S.No</th>
+                          <th className="px-5 py-4 text-xs uppercase tracking-wider">Student ID</th>
+                          <th className="px-5 py-4 text-xs uppercase tracking-wider">Student Name</th>
                           <th className="px-5 py-4 text-xs uppercase tracking-wider">Fee Category</th>
                           <th className="px-5 py-4 text-xs uppercase tracking-wider text-right">Amount Paid</th>
                           <th className="px-5 py-4 text-xs uppercase tracking-wider text-center">Status / Method</th>
@@ -1009,11 +1045,13 @@ export const FinancePage: React.FC = () => {
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-100 dark:divide-white/10">
-                        {filteredPayments.map(p => (
+                        {filteredPayments.map((p, idx) => (
                           <tr key={p.id} className="hover:bg-white transition-all duration-300 border-b border-indigo-50/50 hover:shadow-glow-primary">
+                            <td className="px-5 py-4 text-center font-bold text-gray-400 text-xs">{idx + 1}</td>
+                            <td className="px-5 py-4 font-mono text-xs font-semibold text-gray-500">{p.student?.rollNo || '-'}</td>
                             <td className="px-5 py-4">
                               <div className="font-extrabold text-[15px] text-indigo-950 dark:text-white">{p.student?.user?.name || 'Student'}</div>
-                              <div className="text-[11px] text-gray-400 mt-0.5">{p.student?.rollNo || ''}</div>
+                              <div className="text-[11px] text-gray-400 mt-0.5">{p.student?.class?.name}-{p.student?.class?.section}</div>
                             </td>
                             <td className="px-5 py-4">
                               <span className="text-[11px] font-bold text-teal-700 bg-teal-50 px-2 py-1 rounded-md border border-teal-100">{p.feeStructure?.name || 'Fees'}</span>
@@ -1026,7 +1064,7 @@ export const FinancePage: React.FC = () => {
                               </div>
                             </td>
                             <td className="px-5 py-4 text-right text-xs text-gray-500 font-semibold">
-                              {new Date(p.paymentDate).toLocaleDateString()}
+                              {getDisplayDate(p)}
                             </td>
                             <td className="px-5 py-4 text-right">
                               <div className="flex items-center justify-end gap-2">
