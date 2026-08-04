@@ -20,12 +20,37 @@ export const LaTeXPreview: React.FC<LaTeXPreviewProps> = ({ text = '', className
 
     let keyCounter = 0;
 
+    const renderPlainTextWithFractions = (text: string, baseKey: number) => {
+      const fracRegex = /(\d+)\/(\d+)/g;
+      const nodes: React.ReactNode[] = [];
+      let lastFracIndex = 0;
+      let fracMatch;
+      let localCounter = 0;
+      
+      while ((fracMatch = fracRegex.exec(text)) !== null) {
+        if (fracMatch.index > lastFracIndex) {
+          nodes.push(<React.Fragment key={`t-${baseKey}-${localCounter++}`}>{text.substring(lastFracIndex, fracMatch.index)}</React.Fragment>);
+        }
+        try {
+          const html = katex.renderToString(`\\frac{${fracMatch[1]}}{${fracMatch[2]}}`, { displayMode: false, throwOnError: false });
+          nodes.push(<span key={`f-${baseKey}-${localCounter++}`} dangerouslySetInnerHTML={{ __html: html }} className="inline-block whitespace-nowrap px-0.5" />);
+        } catch(e) {
+          nodes.push(<span key={`f-${baseKey}-${localCounter++}`}>{fracMatch[0]}</span>);
+        }
+        lastFracIndex = fracRegex.lastIndex;
+      }
+      if (lastFracIndex < text.length) {
+         nodes.push(<React.Fragment key={`t-${baseKey}-${localCounter++}`}>{text.substring(lastFracIndex)}</React.Fragment>);
+      }
+      return nodes;
+    };
+
     while ((match = regex.exec(content)) !== null) {
       // Add plain text before match
       if (match.index > lastIndex) {
         parts.push(
           <span key={`text-${keyCounter++}`}>
-            {content.substring(lastIndex, match.index)}
+            {renderPlainTextWithFractions(content.substring(lastIndex, match.index), keyCounter)}
           </span>
         );
       }
@@ -86,7 +111,7 @@ export const LaTeXPreview: React.FC<LaTeXPreviewProps> = ({ text = '', className
     if (lastIndex < content.length) {
       parts.push(
         <span key={`text-${keyCounter++}`}>
-          {content.substring(lastIndex)}
+          {renderPlainTextWithFractions(content.substring(lastIndex), keyCounter)}
         </span>
       );
     }
