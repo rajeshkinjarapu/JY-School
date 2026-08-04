@@ -590,7 +590,7 @@ export const StudentProfilePage: React.FC = () => {
                       <tr key={p.id} className="hover:bg-gray-50/50 dark:hover:bg-gray-800/20 transition-colors">
                         <td className="px-6 py-4 font-semibold text-gray-800 dark:text-gray-200">{p.feeStructure?.name}</td>
                         <td className="px-6 py-4 font-black text-emerald-600">₹{p.amountPaid}</td>
-                        <td className="px-6 py-4 font-medium text-gray-500">{new Date(p.createdAt).toLocaleDateString()}</td>
+                        <td className="px-6 py-4 font-medium text-gray-500">{new Date(p.paymentDate || p.createdAt).toLocaleDateString()}</td>
                         <td className="px-6 py-4">
                           <span className={`inline-flex px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider ${p.method === 'UPI' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}`}>
                             {p.method}
