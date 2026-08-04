@@ -74,7 +74,11 @@ export const FeeStructurePage: React.FC = () => {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
       const data = res.data || res;
-      toast.success(`Import complete! Added ${data.success} fees.`, { id: importToast });
+      if (data.failed && data.failed > 0) {
+        toast.success(`Import complete! Added ${data.success} fees. Failed: ${data.failed} (check Student IDs)`, { id: importToast, duration: 5000 });
+      } else {
+        toast.success(`Import complete! Added ${data.success} fees.`, { id: importToast });
+      }
       fetchData();
     } catch (err: any) {
       toast.error(err.message || 'Bulk import failed. Please verify format rules.', { id: importToast });

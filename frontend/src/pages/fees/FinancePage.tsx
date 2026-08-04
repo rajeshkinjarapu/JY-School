@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { StudentFeeDetailsTab } from './StudentFeeDetailsTab';
+import * as XLSX from 'xlsx';
 
 export const FinancePage: React.FC = () => {
   const { user } = useAuth();
@@ -20,7 +21,8 @@ export const FinancePage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const activeTab = searchParams.get('tab') || 'home';
 
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [dataLoaded, setDataLoaded] = useState(false);
 
   // Database-backed states
   const [payments, setPayments] = useState<any[]>([]);
@@ -132,7 +134,10 @@ export const FinancePage: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchData();
+    if (activeTab !== 'home' && !dataLoaded) {
+      setLoading(true);
+      fetchData().then(() => setDataLoaded(true));
+    }
 
     // Init Mock configurations in LocalStorage
     const initMock = (key: string, defaults: any[]) => {
@@ -184,7 +189,7 @@ export const FinancePage: React.FC = () => {
       { id: '3', name: 'JY SCHOOL Operations Bank A/C', typeId: '3' },
       { id: '4', name: 'Petty Cash Counter A/C', typeId: '3' },
     ]));
-  }, [user]);
+  }, [user, activeTab, dataLoaded]);
 
   // Save mocks back to local storage
   const saveMock = (key: string, data: any[]) => {
@@ -250,7 +255,11 @@ export const FinancePage: React.FC = () => {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
       const data = res.data || res;
-      toast.success(`Import complete! Added ${data.success} fees.`, { id: importToast });
+      if (data.failed && data.failed > 0) {
+        toast.success(`Import complete! Added ${data.success} fees. Failed: ${data.failed} (check Student IDs)`, { id: importToast, duration: 5000 });
+      } else {
+        toast.success(`Import complete! Added ${data.success} fees.`, { id: importToast });
+      }
       fetchData();
     } catch (err: any) {
       toast.error(err.message || 'Bulk import failed. Please verify format rules.', { id: importToast });
@@ -694,16 +703,12 @@ export const FinancePage: React.FC = () => {
                       />
                       <button
                         onClick={() => {
-                          const link = document.createElement('a');
-                          link.href = 'data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,'; // Optional: add an empty excel base64 string or link to a real template. We'll generate a CSV for simplicity
-                          const csvContent = "data:text/csv;charset=utf-8,Student ID,Fee Name,Amount\nJY24-001,Tuition fee,500";
-                          const encodedUri = encodeURI(csvContent);
-                          const tempLink = document.createElement("a");
-                          tempLink.setAttribute("href", encodedUri);
-                          tempLink.setAttribute("download", "fees_import_template.csv");
-                          document.body.appendChild(tempLink);
-                          tempLink.click();
-                          document.body.removeChild(tempLink);
+                          const ws = XLSX.utils.json_to_sheet([
+                            { "Student ID": "JY24-001", "Fee Name": "Tuition fee", "Term": "Term 1", "Amount": 500, "Due Date": new Date().toISOString().split('T')[0] }
+                          ]);
+                          const wb = XLSX.utils.book_new();
+                          XLSX.utils.book_append_sheet(wb, ws, "Fees Template");
+                          XLSX.writeFile(wb, "Fees_Import_Template.xlsx");
                         }}
                         className="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs px-5 py-2.5 rounded-xl shadow-lg shadow-emerald-500/30 flex items-center gap-2 transition-all cursor-pointer"
                       >
