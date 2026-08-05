@@ -94,12 +94,14 @@ export const DashboardLayout: React.FC = () => {
     return 'Dashboard';
   };
 
-  // Student on mobile: full-screen app — no header/sidebar
+  // Hide sidebar for Students on mobile, and completely hide for Teachers
   const isStudentMobile = user?.role === 'STUDENT' && isMobile;
+  const hideSidebar = user?.role === 'TEACHER' || isStudentMobile;
 
-  if (isStudentMobile) {
+  if (hideSidebar) {
     return (
       <div style={{ height: '100dvh', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+        <Header onMenuClick={() => setSidebarOpen(true)} title={getPageTitle(location.pathname)} forceShow={true} />
         <main style={{ flex: 1, overflowY: 'auto', overscrollBehavior: 'contain' }}>
           <Outlet context={{ setDynamicTitle }} />
         </main>

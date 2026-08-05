@@ -505,7 +505,9 @@ const TeacherView: React.FC<{ data: any }> = ({ data }) => {
           { label: 'Result Cards', value: 'View', icon: FileText, gradient: 'linear-gradient(135deg,#14b8a6 0%,#0f766e 100%)', glow: 'rgba(255,255,255,0.2)', sub: 'Progress Cards', link: '/exams?tab=jee-progress-card' },
           { label: 'Fee Reminder', value: 'Send', icon: CreditCard, gradient: 'linear-gradient(135deg,#f43f5e 0%,#be123c 100%)', glow: 'rgba(255,255,255,0.2)', sub: 'WhatsApp fee dues', link: '/fee-reminder' },
           { label: 'Leave Apply', value: 'Apply', icon: FileText, gradient: 'linear-gradient(135deg,#06b6d4 0%,#2563eb 100%)', glow: 'rgba(255,255,255,0.2)', sub: 'Request leave', link: '/leave' },
-          { label: 'Salary Status', value: pendingSalary ? `₹${pendingSalary.netSalary}` : 'All Paid', icon: Wallet, gradient: 'linear-gradient(135deg,#f43f5e 0%,#e11d48 100%)', glow: 'rgba(255,255,255,0.2)', sub: pendingSalary ? 'Pending' : 'No dues' },
+          { label: 'My Salary', value: pendingSalary ? `₹${pendingSalary.netSalary}` : 'All Paid', icon: Wallet, gradient: 'linear-gradient(135deg,#f43f5e 0%,#e11d48 100%)', glow: 'rgba(255,255,255,0.2)', sub: pendingSalary ? 'Pending' : 'No dues', link: '/salary' },
+          { label: 'Announcements', value: 'View', icon: Megaphone, gradient: 'linear-gradient(135deg,#8b5cf6 0%,#6d28d9 100%)', glow: 'rgba(255,255,255,0.2)', sub: 'Notice Board', link: '/announcements' },
+          { label: 'Messages', value: 'Chat', icon: Megaphone, gradient: 'linear-gradient(135deg,#10b981 0%,#059669 100%)', glow: 'rgba(255,255,255,0.2)', sub: 'Real-time Messaging', link: '/messages' },
 
         ].map((stat, i) => <StatCard key={i} {...(stat as StatCardProps)} />)}
       </div>

@@ -1,17 +1,21 @@
 import React from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { useTheme } from '../../hooks/useTheme';
-import { Menu, ArrowLeft } from 'lucide-react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { Menu, ArrowLeft, User, LogOut, Settings } from 'lucide-react';
+import { useLocation, useNavigate, Link } from 'react-router-dom';
+import { getPhotoUrl } from '../../utils/photo';
 
 interface HeaderProps {
   onMenuClick: () => void;
   title: string;
+  forceShow?: boolean;
 }
 
-export const Header: React.FC<HeaderProps> = ({ onMenuClick, title }) => {
+export const Header: React.FC<HeaderProps> = ({ onMenuClick, title, forceShow }) => {
+  const { user, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+  const [profileOpen, setProfileOpen] = React.useState(false);
 
   const isDashboard = location.pathname === '/dashboard' || location.pathname === '/';
   const showBackButton = !isDashboard;
@@ -31,12 +35,12 @@ export const Header: React.FC<HeaderProps> = ({ onMenuClick, title }) => {
 
   return (
     <header
-      className="print:hidden lg:hidden sticky top-0 z-30 flex items-center justify-between gap-3 px-3 py-2.5 shadow-lg shadow-black/30"
+      className={`print:hidden sticky top-0 z-30 flex items-center justify-between gap-3 px-3 py-2.5 shadow-lg shadow-black/30 ${!forceShow ? 'lg:hidden' : ''}`}
       style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e1b4b 60%, #0f172a 100%)' }}
     >
       {/* Left: Hamburger + Back + Page Title */}
       <div className="flex items-center gap-1.5 min-w-0">
-        {/* Hamburger — mobile only */}
+        {/* Hamburger — mobile only, hide if forceShow (desktop) unless on mobile size */}
         <button
           onClick={onMenuClick}
           className="p-2 rounded-xl text-white/90 hover:text-white hover:bg-white/20 transition-all duration-200 lg:hidden cursor-pointer shrink-0"
@@ -65,8 +69,47 @@ export const Header: React.FC<HeaderProps> = ({ onMenuClick, title }) => {
         </div>
       </div>
 
-      {/* Right: reserved */}
-      <div className="flex items-center gap-2 shrink-0" />
+      {/* Right: Profile Dropdown */}
+      <div className="flex items-center gap-2 shrink-0 relative">
+        <button 
+          onClick={() => setProfileOpen(!profileOpen)}
+          className="w-8 h-8 rounded-full border-2 border-white/20 overflow-hidden shadow-sm hover:border-white/50 transition-colors"
+        >
+          {getPhotoUrl(user?.photoUrl) ? (
+            <img src={getPhotoUrl(user?.photoUrl)} alt="Profile" className="w-full h-full object-cover" />
+          ) : (
+            <div className="w-full h-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-xs">
+              {user?.name?.charAt(0).toUpperCase() || 'U'}
+            </div>
+          )}
+        </button>
+        
+        {profileOpen && (
+          <>
+            <div className="fixed inset-0 z-40" onClick={() => setProfileOpen(false)}></div>
+            <div className="absolute top-10 right-0 w-48 bg-white rounded-xl shadow-xl border border-gray-100 py-1 z-50 animate-fade-in-up">
+              <Link 
+                to="/profile" 
+                onClick={() => setProfileOpen(false)}
+                className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+              >
+                <User className="w-4 h-4 text-gray-400" />
+                Profile Update
+              </Link>
+              <button 
+                onClick={() => {
+                  setProfileOpen(false);
+                  logout();
+                }}
+                className="w-full flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
+              >
+                <LogOut className="w-4 h-4" />
+                Logout
+              </button>
+            </div>
+          </>
+        )}
+      </div>
     </header>
   );
 };
