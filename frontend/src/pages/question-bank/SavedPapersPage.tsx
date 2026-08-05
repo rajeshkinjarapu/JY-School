@@ -42,8 +42,17 @@ const SUBJECT_COLORS: Record<string, { bg: string; text: string; border: string;
 };
 
 const getSubjectColor = (subject: string) => {
-  const key = Object.keys(SUBJECT_COLORS).find(k => subject.toLowerCase().includes(k.toLowerCase()));
-  return key ? SUBJECT_COLORS[key] : SUBJECT_COLORS['Default'];
+  const keys = Object.keys(SUBJECT_COLORS).filter(k => k !== 'Default');
+  const matchedKey = keys.find(k => subject.toLowerCase().includes(k.toLowerCase()));
+  if (matchedKey) return SUBJECT_COLORS[matchedKey];
+  
+  // Pick a consistent colorful gradient based on the subject string
+  let hash = 0;
+  for (let i = 0; i < subject.length; i++) {
+    hash = subject.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const index = Math.abs(hash) % keys.length;
+  return SUBJECT_COLORS[keys[index]];
 };
 
 const SavedPapersPage = () => {
