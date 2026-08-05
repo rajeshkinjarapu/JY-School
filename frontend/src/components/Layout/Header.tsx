@@ -7,10 +7,9 @@ import { useLocation, useNavigate } from 'react-router-dom';
 interface HeaderProps {
   onMenuClick: () => void;
   title: string;
-  hideOnDesktop?: boolean;
 }
 
-export const Header: React.FC<HeaderProps> = ({ onMenuClick, title, hideOnDesktop = false }) => {
+export const Header: React.FC<HeaderProps> = ({ onMenuClick, title }) => {
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -32,7 +31,7 @@ export const Header: React.FC<HeaderProps> = ({ onMenuClick, title, hideOnDeskto
 
   return (
     <header
-      className={`print:hidden sticky top-0 z-30 flex items-center justify-between gap-3 px-3 py-2.5 shadow-lg shadow-black/30 ${hideOnDesktop ? 'lg:hidden' : ''}`}
+      className="print:hidden lg:hidden sticky top-0 z-30 flex items-center justify-between gap-3 px-3 py-2.5 shadow-lg shadow-black/30"
       style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e1b4b 60%, #0f172a 100%)' }}
     >
       {/* Left: Hamburger + Back + Page Title */}
