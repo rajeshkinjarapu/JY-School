@@ -300,6 +300,8 @@ export const sendMarksSMS = async (req: AuthRequest, res: Response, next: NextFu
 
     if (!exam) return next(createError('Exam not found', 404));
 
+    const { studentId } = req.body;
+
     // Fetch class to get class name
     const classData = await prisma.class.findUnique({ where: { id: classId } });
     if (!classData) return next(createError('Class not found', 404));
@@ -307,14 +309,18 @@ export const sendMarksSMS = async (req: AuthRequest, res: Response, next: NextFu
     const fullClassName = `${classData.name}-${classData.section}`;
 
     // Fetch students of this class
+    const whereClause: any = { classId };
+    if (studentId) {
+      whereClause.id = studentId;
+    }
     const students = await prisma.student.findMany({
-      where: { classId },
+      where: whereClause,
       include: { user: true }
     });
 
-    if (students.length === 0) return next(createError('No students in this class', 400));
+    if (students.length === 0) return next(createError('No students found', 400));
 
-    // Fetch all marks for this class & exam
+    // Fetch all marks for this class & exam (or individual student)
     const marks = await prisma.examMark.findMany({
       where: {
         examId: id,

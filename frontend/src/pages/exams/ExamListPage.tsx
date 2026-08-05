@@ -223,15 +223,43 @@ export const ExamListPage: React.FC = () => {
   const [showSmsModal, setShowSmsModal] = useState(false);
   const [smsExamId, setSmsExamId] = useState('');
   const [smsClassId, setSmsClassId] = useState('');
+  const [smsSendType, setSmsSendType] = useState('all');
+  const [smsStudentId, setSmsStudentId] = useState('');
+  const [classStudents, setClassStudents] = useState<any[]>([]);
   const [isSendingSms, setIsSendingSms] = useState(false);
+
+  useEffect(() => {
+    if (smsClassId && showSmsModal) {
+      api.get('/api/students', { params: { classId: smsClassId } })
+        .then(res => {
+          setClassStudents(res.data.data || res.data || []);
+        })
+        .catch(err => {
+          console.error('Failed to fetch students', err);
+          setClassStudents([]);
+        });
+    } else {
+      setClassStudents([]);
+    }
+  }, [smsClassId, showSmsModal]);
 
   const handleSendMarksSMS = async () => {
     if (!smsExamId || !smsClassId) return;
+    if (smsSendType === 'individual' && !smsStudentId) {
+      toast.error('Please select a student');
+      return;
+    }
     setIsSendingSms(true);
     try {
-      await api.post('/api/exams/send-jee-marks', { examId: smsExamId, classId: smsClassId });
-      toast.success('SMS sent successfully to parents!');
+      const payload: any = {};
+      if (smsSendType === 'individual') {
+        payload.studentId = smsStudentId;
+      }
+      await api.post(`/api/exams/${smsExamId}/classes/${smsClassId}/send-sms`, payload);
+      toast.success('SMS sent successfully!');
       setShowSmsModal(false);
+      setSmsSendType('all');
+      setSmsStudentId('');
     } catch (e: any) {
       toast.error(e.response?.data?.message || e.message || 'Failed to send SMS');
     } finally {
@@ -1844,10 +1872,41 @@ export const ExamListPage: React.FC = () => {
               {smsExamId && (
                 <div>
                   <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 block">Select Class</label>
-                  <select value={smsClassId} onChange={e => setSmsClassId(e.target.value)} className="input-field">
+                  <select value={smsClassId} onChange={e => {
+                    setSmsClassId(e.target.value);
+                    setSmsStudentId('');
+                  }} className="input-field">
                     <option value="">Select Class...</option>
                     {exams.find(e => e.id === smsExamId)?.classes?.map((c: any) => (
                       <option key={c.id} value={c.id}>{c.name}-{c.section}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {smsClassId && (
+                <div>
+                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 block">Send To</label>
+                  <div className="flex gap-4">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input type="radio" name="smsSendType" value="all" checked={smsSendType === 'all'} onChange={() => setSmsSendType('all')} className="w-4 h-4 text-orange-500" />
+                      <span className="text-sm font-semibold text-gray-700">Entire Class</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input type="radio" name="smsSendType" value="individual" checked={smsSendType === 'individual'} onChange={() => setSmsSendType('individual')} className="w-4 h-4 text-orange-500" />
+                      <span className="text-sm font-semibold text-gray-700">Individual Student</span>
+                    </label>
+                  </div>
+                </div>
+              )}
+
+              {smsClassId && smsSendType === 'individual' && (
+                <div>
+                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 block">Select Student</label>
+                  <select value={smsStudentId} onChange={e => setSmsStudentId(e.target.value)} className="input-field">
+                    <option value="">Select Student...</option>
+                    {classStudents.map(s => (
+                      <option key={s.id} value={s.id}>{s.user?.name || s.name} ({s.rollNumber || s.admissionNumber})</option>
                     ))}
                   </select>
                 </div>

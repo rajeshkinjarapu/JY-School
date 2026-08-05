@@ -94,6 +94,7 @@ const SlipTestManualPage = lazy(() => import('../pages/office-tools/SlipTestManu
 const FeeReminderPage = lazy(() => import('../pages/fees/FeeReminderPage'));
 const QuestionBankDashboard = lazy(routeImports['/question-bank']);
 const QuestionPaperGeneratorPage = lazy(() => import('../pages/question-bank/QuestionPaperGeneratorPage'));
+const NavodayaPaperGeneratorPage = lazy(() => import('../pages/question-bank/NavodayaPaperGeneratorPage'));
 const SavedPapersPage = lazy(() => import('../pages/question-bank/SavedPapersPage'));
 const TransportDashboard = lazy(routeImports['/transport']);
 const TransportRoutesPage = lazy(() => import('../pages/transport/RoutesPage'));
@@ -310,6 +311,22 @@ export const router = createBrowserRouter([
         ),
       },
       {
+        path: 'question-bank/generator',
+        element: (
+          <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN', 'TEACHER']}>
+            <QuestionPaperGeneratorPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'question-bank/navodaya-generator',
+        element: (
+          <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN', 'TEACHER']}>
+            <NavodayaPaperGeneratorPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
         path: 'question-bank/papers/new',
         element: withSuspense(
           <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN', 'TEACHER']}>
@@ -398,6 +415,14 @@ export const router = createBrowserRouter([
         element: withSuspense(
           <ProtectedRoute allowedRoles={['SUPER_ADMIN']}>
             <QuestionPaperGeneratorPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'question-bank/navodaya-generator',
+        element: withSuspense(
+          <ProtectedRoute allowedRoles={['SUPER_ADMIN']}>
+            <NavodayaPaperGeneratorPage />
           </ProtectedRoute>
         ),
       },
