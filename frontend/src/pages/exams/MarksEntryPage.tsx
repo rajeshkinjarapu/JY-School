@@ -350,7 +350,7 @@ export const MarksEntryPage: React.FC = () => {
 
         {/* Mobile / Tablet Card View */}
         {/* Mobile View */}
-        <div className="lg:hidden space-y-4">
+        <div className="lg:hidden space-y-4 pb-24">
           {students.map((student, index) => (
             <div key={student.id} className="bg-white/80 backdrop-blur-md border border-indigo-100 rounded-3xl shadow-sm overflow-hidden flex flex-col">
               <div className="p-4 bg-gradient-to-r from-indigo-50/50 to-purple-50/50 border-b border-indigo-100 flex items-center gap-3">

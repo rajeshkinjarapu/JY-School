@@ -805,13 +805,13 @@ export const JEEProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
                       </td>
                       {!isTeacher && <td className="py-2 px-2 text-gray-600 font-medium hidden md:table-cell text-sm">{data.rollNo || '-'}</td>}
                       <td className="py-2 px-2 text-center hidden md:table-cell font-medium text-gray-700 text-sm">
-                        {data.marks?.find((m: any) => m.subject === 'Mathematics' || m.subject === 'Maths' || m.subject === 'MAT')?.obtained ?? '-'}
+                        {data.marks?.find((m: any) => m.subject?.toLowerCase().startsWith('mat') || m.subject?.toLowerCase() === 'mathematics' || m.subject?.toLowerCase() === 'maths')?.obtained ?? '-'}
                       </td>
                       <td className="py-2 px-2 text-center hidden md:table-cell font-medium text-gray-700 text-sm">
-                        {data.marks?.find((m: any) => m.subject === 'Physics' || m.subject === 'PHY')?.obtained ?? '-'}
+                        {data.marks?.find((m: any) => m.subject?.toLowerCase().startsWith('phy') || m.subject?.toLowerCase() === 'physics')?.obtained ?? '-'}
                       </td>
                       <td className="py-2 px-2 text-center hidden md:table-cell font-medium text-gray-700 text-sm">
-                        {data.marks?.find((m: any) => m.subject === 'Chemistry' || m.subject === 'CHE')?.obtained ?? '-'}
+                        {data.marks?.find((m: any) => m.subject?.toLowerCase().startsWith('che') || m.subject?.toLowerCase() === 'chemistry')?.obtained ?? '-'}
                       </td>
                       <td className="py-2 px-2 text-center">
                         <span className="font-bold text-emerald-600 text-sm">{data.total}</span>
@@ -823,9 +823,11 @@ export const JEEProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
                               <Printer className="w-4 h-4" />
                           </button>
                         )}
-                        <button onClick={(e) => { e.stopPropagation(); handleDownloadSingle(data.studentId, data.studentName, idx); }} className="bg-indigo-50 hover:bg-indigo-100 text-indigo-600 p-2 rounded-lg text-xs font-semibold flex items-center justify-center transition-colors" title="Download PDF">
-                            <Download className="w-4 h-4" /> 
-                        </button>
+                        {!isTeacher && (
+                          <button onClick={(e) => { e.stopPropagation(); handleDownloadSingle(data.studentId, data.studentName, idx); }} className="bg-indigo-50 hover:bg-indigo-100 text-indigo-600 p-2 rounded-lg text-xs font-semibold flex items-center justify-center transition-colors" title="Download PDF">
+                              <Download className="w-4 h-4" /> 
+                          </button>
+                        )}
                         
                         <button onClick={(e) => { e.stopPropagation(); handleWhatsAppShare(data.studentId, data.studentName, idx, data.mobile); }} className="bg-green-50 hover:bg-green-100 text-green-600 p-2 md:px-3 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors" title="Send WhatsApp">
                             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
@@ -840,15 +842,15 @@ export const JEEProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
                           <div className="grid grid-cols-3 gap-2 w-full text-center">
                              <div className="bg-white border border-indigo-100 rounded-lg p-2 shadow-sm">
                                 <div className="text-[10px] font-bold text-gray-500 uppercase">MAT</div>
-                                <div className="font-black text-indigo-700">{data.marks?.find((m: any) => m.subject === 'Mathematics' || m.subject === 'Maths' || m.subject === 'MAT')?.obtained ?? '-'}</div>
+                                <div className="font-black text-indigo-700">{data.marks?.find((m: any) => m.subject?.toLowerCase().startsWith('mat') || m.subject?.toLowerCase() === 'mathematics' || m.subject?.toLowerCase() === 'maths')?.obtained ?? '-'}</div>
                              </div>
                              <div className="bg-white border border-indigo-100 rounded-lg p-2 shadow-sm">
                                 <div className="text-[10px] font-bold text-gray-500 uppercase">PHY</div>
-                                <div className="font-black text-indigo-700">{data.marks?.find((m: any) => m.subject === 'Physics' || m.subject === 'PHY')?.obtained ?? '-'}</div>
+                                <div className="font-black text-indigo-700">{data.marks?.find((m: any) => m.subject?.toLowerCase().startsWith('phy') || m.subject?.toLowerCase() === 'physics')?.obtained ?? '-'}</div>
                              </div>
                              <div className="bg-white border border-indigo-100 rounded-lg p-2 shadow-sm">
                                 <div className="text-[10px] font-bold text-gray-500 uppercase">CHE</div>
-                                <div className="font-black text-indigo-700">{data.marks?.find((m: any) => m.subject === 'Chemistry' || m.subject === 'CHE')?.obtained ?? '-'}</div>
+                                <div className="font-black text-indigo-700">{data.marks?.find((m: any) => m.subject?.toLowerCase().startsWith('che') || m.subject?.toLowerCase() === 'chemistry')?.obtained ?? '-'}</div>
                              </div>
                           </div>
                        </td>
