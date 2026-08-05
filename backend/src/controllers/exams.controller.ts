@@ -282,8 +282,91 @@ export const toggleFreezeClass = async (req: AuthRequest, res: Response, next: N
       },
     });
 
-    successResponse(res, updatedExam, isFrozen ? 'Marks frozen successfully' : 'Marks unfrozen successfully');
+    successResponse(res, { frozen: !isCurrentlyFrozen }, `Results ${!isCurrentlyFrozen ? 'frozen' : 'unfrozen'} successfully`);
   } catch (error) {
+    next(error);
+  }
+};
+
+export const sendMarksSMS = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const { id, classId } = req.params;
+
+    // Fetch exam
+    const exam = await prisma.exam.findUnique({
+      where: { id },
+      include: { classes: true }
+    });
+
+    if (!exam) return next(createError('Exam not found', 404));
+
+    // Fetch class to get class name
+    const classData = await prisma.class.findUnique({ where: { id: classId } });
+    if (!classData) return next(createError('Class not found', 404));
+
+    const fullClassName = `${classData.name}-${classData.section}`;
+
+    // Fetch students of this class
+    const students = await prisma.student.findMany({
+      where: { classId },
+      include: { user: true }
+    });
+
+    if (students.length === 0) return next(createError('No students in this class', 400));
+
+    // Fetch all marks for this class & exam
+    const marks = await prisma.examMark.findMany({
+      where: {
+        examId: id,
+        studentId: { in: students.map(s => s.id) }
+      },
+      include: { subject: true }
+    });
+
+    const dltTemplateId = '1707175316314375479';
+    let sentCount = 0;
+    let failedCount = 0;
+
+    // We will dynamically import the sendSMS function
+    const { sendSMS } = await import('../utils/sms');
+
+    for (const student of students) {
+      const parentMobile = student.fatherMobile || student.motherMobile;
+      if (!parentMobile) {
+        failedCount++;
+        continue;
+      }
+
+      const studentMarks = marks.filter(m => m.studentId === student.id);
+      
+      let mathScore = 'A';
+      let phyScore = 'A';
+      let chemScore = 'A';
+      let totalScore = 0;
+
+      studentMarks.forEach(m => {
+        const subName = m.subject.name.toLowerCase();
+        if (subName.includes('math')) mathScore = m.isAbsent ? 'A' : m.marksObtained.toString();
+        else if (subName.includes('phy')) phyScore = m.isAbsent ? 'A' : m.marksObtained.toString();
+        else if (subName.includes('chem')) chemScore = m.isAbsent ? 'A' : m.marksObtained.toString();
+
+        if (!m.isAbsent) totalScore += m.marksObtained;
+      });
+
+      // DLT Template: Dear parent Your child {#var#} Class {#var#} JEE MAINS SCORE MATHS: {#var#} PHYSICS : {#var#} CHEMISTRY: {#var#} TOTAL: {#var#} Thanking you SVJY SCHOOL
+      const message = `Dear parent Your child ${student.user.name} Class ${fullClassName} JEE MAINS SCORE MATHS: ${mathScore} PHYSICS : ${phyScore} CHEMISTRY: ${chemScore} TOTAL: ${totalScore} Thanking you SVJY SCHOOL`;
+
+      const success = await sendSMS(parentMobile, message, dltTemplateId);
+      if (success) {
+        sentCount++;
+      } else {
+        failedCount++;
+      }
+    }
+
+    successResponse(res, { sent: sentCount, failed: failedCount }, `SMS sending complete. Sent: ${sentCount}, Failed: ${failedCount}`);
+  } catch (error: any) {
+    console.error("SEND MARKS SMS ERROR:", error);
     next(error);
   }
 };

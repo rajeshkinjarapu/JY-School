@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { authenticate, authorize } from '../middlewares/auth';
-import { getAll, getById, create, update, deleteExam, getResults, updateAdmitCardSettings, publishResults, toggleFreezeClass, getAllStatus } from '../controllers/exams.controller';
+import { getAll, getById, create, update, deleteExam, getResults, updateAdmitCardSettings, publishResults, toggleFreezeClass, getAllStatus, sendMarksSMS } from '../controllers/exams.controller';
 
 const router = Router();
 
@@ -13,6 +13,7 @@ router.get('/:id/results', getResults);
 router.post('/', authorize('SUPER_ADMIN', 'ADMIN'), create);
 router.post('/:id/freeze', authorize('SUPER_ADMIN', 'ADMIN', 'TEACHER'), toggleFreezeClass);
 router.put('/:id', authorize('SUPER_ADMIN', 'ADMIN'), update);
+router.post('/:id/classes/:classId/send-sms', authorize('SUPER_ADMIN', 'ADMIN'), sendMarksSMS);
 router.put('/:id/publish-results', authorize('SUPER_ADMIN', 'ADMIN'), publishResults);
 router.post('/:id/admit-card-settings', authorize('SUPER_ADMIN', 'ADMIN'), updateAdmitCardSettings);
 router.delete('/:id', authorize('SUPER_ADMIN', 'ADMIN'), deleteExam);

@@ -6,7 +6,7 @@ import { useAuth } from '../../hooks/useAuth';
 import {
   Plus, Edit3, Trash2, ClipboardList, BookOpen, Layers, CheckSquare,
   Clock, Award, FileText, Settings, Play, ShieldAlert, HelpCircle, Save, X, Calendar, ExternalLink,
-  MapPin, FileSpreadsheet, Download, Printer, CheckCircle
+  MapPin, FileSpreadsheet, Download, Printer, CheckCircle, MessageSquare
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { Link, useSearchParams, useOutletContext, useNavigate } from 'react-router-dom';
@@ -220,10 +220,15 @@ export const ExamListPage: React.FC = () => {
   // -------------------------------------------------------------
   const [examPlans, setExamPlans] = useState<any[]>([]);
   const [showPlanModal, setShowPlanModal] = useState(false);
+  const [showSmsModal, setShowSmsModal] = useState(false);
+  const [smsExamId, setSmsExamId] = useState('');
+  const [smsClassId, setSmsClassId] = useState('');
+  const [isSendingSms, setIsSendingSms] = useState(false);
+
   const [planSubjectId, setPlanSubjectId] = useState('');
-  const [planDate, setPlanDate] = useState(new Date().toISOString().split('T')[0]);
-  const [planStartTime, setPlanStartTime] = useState('09:00');
-  const [planEndTime, setPlanEndTime] = useState('12:00');
+  const [planDate, setPlanDate] = useState('');
+  const [planStartTime, setPlanStartTime] = useState('');
+  const [planEndTime, setPlanEndTime] = useState('');
   const [planRoom, setPlanRoom] = useState('');
   const [planMaxMarks, setPlanMaxMarks] = useState(100);
   const [planPassingMarks, setPlanPassingMarks] = useState(40);
@@ -851,11 +856,13 @@ export const ExamListPage: React.FC = () => {
                 <div className="p-2 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl shadow-sm border border-emerald-100/50 dark:border-emerald-800/30"><Award className="w-5 h-5 text-emerald-600 dark:text-emerald-400" /></div>
                 <h3 className="text-lg font-extrabold text-gray-900 dark:text-white uppercase tracking-widest opacity-90">Post-Examination</h3>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 mt-4">
                 <ExamCard label="Marks Upload" sub="Upload student marks" icon={Edit3} gradient="linear-gradient(135deg, #10b981, #059669)" glow="rgba(16,185,129,0.4)" onClick={() => setActiveTab('written-exam')} />
                 <ExamCard label="Results" sub="View grade sheets" icon={Award} gradient="linear-gradient(135deg, #0ea5e9, #0284c7)" glow="rgba(14,165,233,0.4)" onClick={() => setActiveTab('results')} />
                 <ExamCard label="Progress Card" sub="Detailed progress" icon={FileSpreadsheet} gradient="linear-gradient(135deg, #f43f5e, #e11d48)" glow="rgba(244,63,94,0.4)" onClick={() => setActiveTab('jee-progress-card')} />
                 {isAdmin && <ExamCard label="Slip Test Rank Card" sub="Generate manual rank cards" icon={Award} gradient="linear-gradient(135deg, #06b6d4, #0891b2)" glow="rgba(6,182,212,0.4)" onClick={() => navigate('/office-tools/slip-test')} />}
+                {isAdmin && <ExamCard label="Send Marks SMS" sub="SMS to parents" icon={MessageSquare} gradient="linear-gradient(135deg, #f59e0b, #d97706)" glow="rgba(245,158,11,0.4)" onClick={() => setShowSmsModal(true)} />}
               </div>
             </div>
 
@@ -1791,6 +1798,53 @@ export const ExamListPage: React.FC = () => {
                   </button>
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* SMS Modal */}
+      {showSmsModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white dark:bg-gray-900 rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl border border-gray-100 dark:border-gray-800 animate-scale-up">
+            <div className="p-6 bg-gradient-to-r from-amber-500 to-orange-500 text-white flex justify-between items-center">
+              <h2 className="text-xl font-black flex items-center gap-2"><MessageSquare className="w-5 h-5" /> Send Marks via SMS</h2>
+              <button onClick={() => setShowSmsModal(false)} className="p-2 hover:bg-white/20 rounded-full transition-colors"><X className="w-5 h-5" /></button>
+            </div>
+            
+            <div className="p-6 space-y-5">
+              <div className="bg-orange-50 dark:bg-orange-900/20 p-4 rounded-xl border border-orange-100 dark:border-orange-800/30">
+                <p className="text-sm font-bold text-orange-800 dark:text-orange-300">
+                  ⚠️ This will send SMS to all parents in the selected class using the approved DLT template. Ensure Marks for Maths, Physics, and Chemistry are updated.
+                </p>
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 block">Select Exam</label>
+                <select value={smsExamId} onChange={e => setSmsExamId(e.target.value)} className="input-field">
+                  <option value="">Select Exam...</option>
+                  {exams.map(ex => <option key={ex.id} value={ex.id}>{ex.name}</option>)}
+                </select>
+              </div>
+
+              {smsExamId && (
+                <div>
+                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 block">Select Class</label>
+                  <select value={smsClassId} onChange={e => setSmsClassId(e.target.value)} className="input-field">
+                    <option value="">Select Class...</option>
+                    {exams.find(e => e.id === smsExamId)?.classes?.map((c: any) => (
+                      <option key={c.id} value={c.id}>{c.name}-{c.section}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+            </div>
+
+            <div className="p-5 border-t border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50 flex justify-end gap-3">
+              <button onClick={() => setShowSmsModal(false)} className="px-5 py-2.5 rounded-xl text-sm font-bold text-gray-600 hover:bg-gray-200 transition-colors">Cancel</button>
+              <button onClick={handleSendMarksSMS} disabled={isSendingSms || !smsExamId || !smsClassId} className="px-5 py-2.5 rounded-xl text-sm font-bold bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:from-amber-600 hover:to-orange-600 shadow-md shadow-orange-500/20 transition-all disabled:opacity-50 flex items-center gap-2">
+                {isSendingSms ? 'Sending...' : 'Send SMS'}
+              </button>
             </div>
           </div>
         </div>

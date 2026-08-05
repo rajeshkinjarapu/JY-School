@@ -223,8 +223,8 @@ export const FinancePage: React.FC = () => {
   useEffect(() => {
     if (activeTab === 'home') return;
 
-    const needsBase = ['fee-structure', 'transaction', 'student-fee-details'].includes(activeTab);
-    const needsHeavy = ['transaction', 'student-fee-details'].includes(activeTab);
+    const needsBase = ['fee-structure', 'transaction', 'student-fee-details', 'class-wise-fee-report'].includes(activeTab);
+    const needsHeavy = ['transaction', 'student-fee-details', 'class-wise-fee-report'].includes(activeTab);
 
     if (needsBase && !baseDataLoaded) {
       setBaseLoading(true);
