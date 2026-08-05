@@ -8,7 +8,7 @@ import {
   CreditCard, Plus, FileDown, ShieldCheck, Printer, ArrowRight,
   TrendingUp, Wallet, Award, Briefcase, DollarSign, Layers,
   Receipt, FileText, Search, Filter, Trash2, Edit3, Calendar,
-  Clock, CheckCircle, AlertTriangle, Users
+  Clock, CheckCircle, AlertTriangle, Users, Upload
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { StudentFeeDetailsTab } from './StudentFeeDetailsTab';
