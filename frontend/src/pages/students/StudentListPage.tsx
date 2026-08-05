@@ -10,7 +10,7 @@ import * as XLSX from "xlsx";
 import { useAuth } from "../../hooks/useAuth";
 import { getPhotoUrl } from "../../utils/photo";
 
-const LIMIT = 30;
+const LIMIT = 5000;
 
 const avatarColors = [
   "from-indigo-500 to-purple-600",
@@ -212,7 +212,7 @@ export const StudentListPage: React.FC = () => {
             <p className="text-white/70 text-xs font-semibold uppercase tracking-wider">Total</p>
             <p className="text-2xl font-black text-white">{total} Students</p>
           </div>
-          <div className="flex gap-2">
+          <div className="hidden md:flex gap-2">
             {isSuperAdmin && (
               <>
                 <button
@@ -359,7 +359,7 @@ export const StudentListPage: React.FC = () => {
       </div>
 
       {/* Mobile Student List View */}
-      <div className="flex-1 overflow-auto bg-slate-50/50 p-3 md:hidden">
+      <div className="flex-1 overflow-auto bg-slate-50/50 p-2 md:hidden">
         {loading ? (
           <div className="py-12 flex flex-col items-center gap-2">
             <div className="w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
@@ -378,8 +378,8 @@ export const StudentListPage: React.FC = () => {
             {students.map((student, idx) => {
               const name = student.user?.name || 'Unknown Student';
               return (
-                <div key={student.id} className="bg-white rounded-[24px] p-5 shadow-sm border border-slate-100 flex flex-col hover:shadow-md transition-shadow relative overflow-hidden group">
-                  <div className="absolute top-0 right-0 p-3">
+                <div key={student.id} className="bg-white rounded-[16px] p-3.5 shadow-sm border border-slate-100 flex flex-col hover:shadow-md transition-shadow relative overflow-hidden group">
+                  <div className="absolute top-0 right-0 p-2.5">
                     <span className="text-[10px] font-black text-slate-300 group-hover:text-indigo-200 transition-colors">
                       #{(page - 1) * LIMIT + idx + 1}
                     </span>
@@ -411,8 +411,8 @@ export const StudentListPage: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="mt-auto pt-4 border-t border-slate-100 flex items-center justify-between">
-                    <div className="flex items-center gap-2 text-slate-500">
+                  <div className="mt-auto pt-3 border-t border-slate-100 flex items-center justify-between">
+                    <div className="flex items-center gap-1.5 text-slate-500">
                       {student.user?.phone ? (
                         <a href={`tel:${student.user.phone}`} className="flex items-center gap-1.5 text-xs font-bold text-indigo-600 hover:text-indigo-800 transition-colors bg-indigo-50 px-3 py-2 rounded-xl">
                           <Phone className="w-3.5 h-3.5" />
