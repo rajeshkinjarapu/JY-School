@@ -250,7 +250,7 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
           flex-wrap: wrap;
         }
       `}</style>
-      <div className="py-6 px-10 font-serif">
+      <div className="py-6 px-10 font-serif lining-nums tabular-nums">
         
         {/* Header Section */}
         <div className="mb-3 border-b-2 border-black pb-2">
