@@ -225,6 +225,20 @@ export const ExamListPage: React.FC = () => {
   const [smsClassId, setSmsClassId] = useState('');
   const [isSendingSms, setIsSendingSms] = useState(false);
 
+  const handleSendMarksSMS = async () => {
+    if (!smsExamId || !smsClassId) return;
+    setIsSendingSms(true);
+    try {
+      await api.post('/api/exams/send-jee-marks', { examId: smsExamId, classId: smsClassId });
+      toast.success('SMS sent successfully to parents!');
+      setShowSmsModal(false);
+    } catch (e: any) {
+      toast.error(e.response?.data?.message || e.message || 'Failed to send SMS');
+    } finally {
+      setIsSendingSms(false);
+    }
+  };
+
   const [planSubjectId, setPlanSubjectId] = useState('');
   const [planDate, setPlanDate] = useState('');
   const [planStartTime, setPlanStartTime] = useState('');

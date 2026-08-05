@@ -22,12 +22,12 @@ export const ClassWiseFeeReportTab: React.FC<ClassWiseFeeReportTabProps> = ({ st
     const classInfo = classes.find(c => c.id === selectedClassId);
     if (!classInfo) return null;
 
-    const classStudents = students.filter(s => s.classId === selectedClassId && s.user?.isActive !== false);
+    const classStudents = students.filter(s => (s.classId === selectedClassId || s.class?.id === selectedClassId) && s.user?.isActive !== false);
 
     // Filter payments and structures for optimization
     const classStudentIds = new Set(classStudents.map(s => s.id));
     const relevantPayments = payments.filter(p => classStudentIds.has(p.studentId) && p.status === 'PAID');
-    const relevantStructures = structures.filter(st => st.classId === selectedClassId || classStudentIds.has(st.studentId));
+    const relevantStructures = structures.filter(st => (st.classId === selectedClassId || st.class?.id === selectedClassId) || classStudentIds.has(st.studentId));
 
     // Create maps
     const paymentsMap = new Map();
@@ -36,7 +36,7 @@ export const ClassWiseFeeReportTab: React.FC<ClassWiseFeeReportTabProps> = ({ st
       paymentsMap.set(p.studentId, current + (Number(p.amount) || 0));
     });
 
-    const classStructures = relevantStructures.filter(st => st.classId === selectedClassId);
+    const classStructures = relevantStructures.filter(st => st.classId === selectedClassId || st.class?.id === selectedClassId);
     const studentStructuresMap = new Map();
     relevantStructures.filter(st => st.studentId).forEach(st => {
       const existing = studentStructuresMap.get(st.studentId) || [];
