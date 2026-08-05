@@ -10,7 +10,7 @@ import * as XLSX from "xlsx";
 import { useAuth } from "../../hooks/useAuth";
 import { getPhotoUrl } from "../../utils/photo";
 
-const LIMIT = 5000;
+const LIMIT = 50;
 
 const avatarColors = [
   "from-indigo-500 to-purple-600",
@@ -207,7 +207,7 @@ export const StudentListPage: React.FC = () => {
     <div className="flex flex-col h-full">
       {/* ── Colorful Hero Header ── */}
       <div className="px-3 pt-3 pb-4 bg-gradient-to-br from-indigo-600 via-violet-600 to-purple-700 shadow-lg">
-        <div className="flex items-center justify-between mb-3">
+        <div className="hidden md:flex items-center justify-between mb-3">
           <div>
             <p className="text-white/70 text-xs font-semibold uppercase tracking-wider">Total</p>
             <p className="text-2xl font-black text-white">{total} Students</p>

@@ -1,5 +1,7 @@
 import React, { useState, useMemo } from 'react';
-import { Search, Printer, Download, Users, MessageCircle, X, Share2, Copy } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Search, Printer, Download, Users, MessageCircle, X, Share2, Copy, Eye } from 'lucide-react';
+import { useAuth } from '../../hooks/useAuth';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { toBlob } from 'html-to-image';
@@ -14,6 +16,11 @@ interface StudentFeeDetailsProps {
 }
 
 export const StudentFeeDetailsTab: React.FC<StudentFeeDetailsProps> = ({ students, structures, payments, classes }) => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const isTeacher = user?.role === 'TEACHER';
+  const isAdminOrSuper = user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN';
+
   const [selectedClassId, setSelectedClassId] = useState<string>('ALL');
   const [searchTerm, setSearchTerm] = useState('');
   
@@ -75,6 +82,7 @@ export const StudentFeeDetailsTab: React.FC<StudentFeeDetailsProps> = ({ student
       const phone = student.user?.phone || student.phone || '';
 
       return {
+        studentId: student.id,
         id: student.rollNo || '-',
         name: student.user?.name || student.name || '-',
         className: studentClass ? `${studentClass.name} - ${studentClass.section}` : '-',
@@ -310,14 +318,14 @@ export const StudentFeeDetailsTab: React.FC<StudentFeeDetailsProps> = ({ student
           </h3>
           <p className="text-xs text-gray-400">View total fee, paid amount, and balances class-wise.</p>
         </div>
-        <div className="flex items-center gap-3 flex-wrap">
-          <button onClick={handlePrint} className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-700 font-medium text-sm transition-colors">
+        <div className="hidden md:flex items-center gap-3 flex-wrap">
+          <button onClick={handlePrint} className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-700 font-medium text-sm transition-colors cursor-pointer">
             <Printer className="w-4 h-4" /> Print
           </button>
-          <button onClick={handleDownloadPDF} className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 font-medium text-sm transition-colors shadow-sm">
+          <button onClick={handleDownloadPDF} className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 font-medium text-sm transition-colors shadow-sm cursor-pointer">
             <Download className="w-4 h-4" /> Export PDF
           </button>
-          <button onClick={handleExportExcel} className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 font-medium text-sm transition-colors shadow-sm">
+          <button onClick={handleExportExcel} className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 font-medium text-sm transition-colors shadow-sm cursor-pointer">
             <Download className="w-4 h-4" /> Export Excel
           </button>
         </div>
@@ -382,44 +390,78 @@ export const StudentFeeDetailsTab: React.FC<StudentFeeDetailsProps> = ({ student
             <thead className="bg-indigo-600 text-white font-semibold">
               <tr>
                 <th className="px-4 py-3 text-xs font-bold uppercase border border-indigo-500">S.No</th>
-                <th className="px-4 py-3 text-xs font-bold uppercase border border-indigo-500">Student ID</th>
+                {!isTeacher && !isAdminOrSuper && <th className="px-4 py-3 text-xs font-bold uppercase border border-indigo-500">Student ID</th>}
                 <th className="px-4 py-3 text-xs font-bold uppercase border border-indigo-500">Student Name</th>
-                <th className="px-4 py-3 text-xs font-bold uppercase border border-indigo-500">Class</th>
-                <th className="px-4 py-3 text-xs font-bold uppercase text-right border border-indigo-500">Total Fee</th>
-                <th className="px-4 py-3 text-xs font-bold uppercase text-right border border-indigo-500">Paid</th>
-                <th className="px-4 py-3 text-xs font-bold uppercase text-right border border-indigo-500">Balance</th>
-                <th className="px-4 py-3 text-xs font-bold uppercase text-center border border-indigo-500 print:hidden">WhatsApp</th>
+                {!isTeacher && <th className="px-4 py-3 text-xs font-bold uppercase border border-indigo-500">Class</th>}
+                {!isTeacher && !isAdminOrSuper && (
+                  <>
+                    <th className="px-4 py-3 text-xs font-bold uppercase text-right border border-indigo-500">Total Fee</th>
+                    <th className="px-4 py-3 text-xs font-bold uppercase text-right border border-indigo-500">Paid</th>
+                  </>
+                )}
+                {!isAdminOrSuper && <th className="px-4 py-3 text-xs font-bold uppercase text-right border border-indigo-500">Balance</th>}
+                {!isTeacher && !isAdminOrSuper && <th className="px-4 py-3 text-xs font-bold uppercase text-center border border-indigo-500 print:hidden">WhatsApp</th>}
+                {isAdminOrSuper && <th className="px-4 py-3 text-xs font-bold uppercase text-center border border-indigo-500 print:hidden">Action</th>}
               </tr>
             </thead>
             <tbody className="bg-white">
               {tableData.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-6 py-8 text-center text-gray-500 border border-gray-200">No students found.</td>
+                  <td colSpan={isAdminOrSuper ? 4 : (isTeacher ? 3 : 8)} className="px-6 py-8 text-center text-gray-500 border border-gray-200">No students found.</td>
                 </tr>
               ) : (
                 tableData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((row) => (
                   <tr key={row.sno} className="hover:bg-indigo-50/50 transition-colors">
                     <td className="px-4 py-3 text-gray-600 font-medium border border-gray-200">{row.sno}</td>
-                    <td className="px-4 py-3 font-mono text-xs font-bold text-indigo-600 border border-gray-200">{row.id}</td>
+                    
+                    {!isTeacher && !isAdminOrSuper && (
+                      <td className="px-4 py-3 font-mono text-xs font-bold text-indigo-600 border border-gray-200">{row.id}</td>
+                    )}
+                    
                     <td className="px-4 py-3 font-bold text-gray-900 border border-gray-200">{row.name}</td>
-                    <td className="px-4 py-3 text-gray-600 text-xs border border-gray-200">{row.className}</td>
-                    <td className="px-4 py-3 text-right font-medium text-gray-900 border border-gray-200">₹{row.totalFee.toLocaleString('en-IN')}</td>
-                    <td className="px-4 py-3 text-right font-medium text-emerald-600 border border-gray-200">₹{row.paidAmount.toLocaleString('en-IN')}</td>
-                    <td className={`px-4 py-3 text-right font-black text-sm border border-gray-200 ${row.balance > 0 ? 'text-rose-600' : 'text-emerald-600'}`}>
-                      ₹{row.balance.toLocaleString('en-IN')}
-                    </td>
-                    <td className="px-4 py-3 text-center border border-gray-200 print:hidden">
-                      {row.balance > 0 && row.phone && (
+                    
+                    {!isTeacher && (
+                      <td className="px-4 py-3 text-gray-600 text-xs border border-gray-200">{row.className}</td>
+                    )}
+                    
+                    {!isTeacher && !isAdminOrSuper && (
+                      <>
+                        <td className="px-4 py-3 text-right font-medium text-gray-900 border border-gray-200">₹{row.totalFee.toLocaleString('en-IN')}</td>
+                        <td className="px-4 py-3 text-right font-medium text-emerald-600 border border-gray-200">₹{row.paidAmount.toLocaleString('en-IN')}</td>
+                      </>
+                    )}
+                    
+                    {!isAdminOrSuper && (
+                      <td className={`px-4 py-3 text-right font-black text-sm border border-gray-200 ${row.balance > 0 ? 'text-rose-600' : 'text-emerald-600'}`}>
+                        ₹{row.balance.toLocaleString('en-IN')}
+                      </td>
+                    )}
+                    
+                    {!isTeacher && !isAdminOrSuper && (
+                      <td className="px-4 py-3 text-center border border-gray-200 print:hidden">
+                        {row.balance > 0 && row.phone && (
+                          <button
+                            onClick={() => handleWhatsAppClick(row)}
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-green-500 hover:bg-green-600 text-white text-xs font-bold rounded-lg transition-colors shadow-sm cursor-pointer"
+                            title={`Generate fee reminder for ${row.phone}`}
+                          >
+                            <MessageCircle className="w-3.5 h-3.5" />
+                            Remind
+                          </button>
+                        )}
+                      </td>
+                    )}
+                    
+                    {isAdminOrSuper && (
+                      <td className="px-4 py-3 text-center border border-gray-200 print:hidden">
                         <button
-                          onClick={() => handleWhatsAppClick(row)}
-                          className="inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-green-500 hover:bg-green-600 text-white text-xs font-bold rounded-lg transition-colors shadow-sm cursor-pointer"
-                          title={`Generate fee reminder for ${row.phone}`}
+                          onClick={() => navigate(`/students/${row.studentId}`)}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 text-xs font-bold rounded-lg transition-colors cursor-pointer"
                         >
-                          <MessageCircle className="w-3.5 h-3.5" />
-                          Remind
+                          <Eye className="w-4 h-4" /> View
                         </button>
-                      )}
-                    </td>
+                      </td>
+                    )}
                   </tr>
                 ))
               )}

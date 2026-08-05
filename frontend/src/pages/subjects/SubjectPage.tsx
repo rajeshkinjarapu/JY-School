@@ -127,7 +127,7 @@ export const SubjectPage: React.FC = () => {
   return (
     <div className="flex flex-col h-full bg-gray-50/50" style={{ minHeight: 'calc(100vh - 64px)' }}>
       {/* Colorful Header */}
-      <div className="px-6 py-6 bg-gradient-to-br from-violet-600 via-purple-600 to-indigo-700 shadow-lg flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <div className="px-6 py-6 bg-gradient-to-br from-violet-600 via-purple-600 to-indigo-700 shadow-lg hidden md:flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-2xl font-black uppercase tracking-tight text-white drop-shadow-sm">Subjects & Curriculum</h1>
           <p className="text-white/80 text-sm font-medium mt-1">Manage subjects and assign them to specific classes and teachers.</p>
@@ -168,7 +168,7 @@ export const SubjectPage: React.FC = () => {
               const color = SUBJECT_COLORS[idx % SUBJECT_COLORS.length];
               const isExpanded = expandedSubjects[subjectName];
               const abbr = subjectName.substring(0, 2).toUpperCase();
-              const displayEntries = isExpanded ? entries : entries.slice(0, 4);
+              const displayEntries = isExpanded ? entries : [];
 
               return (
                 <div
@@ -176,7 +176,10 @@ export const SubjectPage: React.FC = () => {
                   className={`bg-white rounded-2xl shadow-sm border ${color.border} overflow-hidden hover:shadow-lg transition-all duration-300`}
                 >
                   {/* Card Header */}
-                  <div className={`bg-gradient-to-br ${color.bg} p-5 relative overflow-hidden`}>
+                  <div 
+                    className={`bg-gradient-to-br ${color.bg} p-5 relative overflow-hidden cursor-pointer active:scale-[0.98] transition-transform`}
+                    onClick={() => toggleExpand(subjectName)}
+                  >
                     <div className="absolute -top-4 -right-4 w-20 h-20 rounded-full bg-white/10" />
                     <div className="absolute -bottom-6 -left-3 w-16 h-16 rounded-full bg-white/10" />
                     <div className="flex items-center justify-between relative z-10">
@@ -186,6 +189,7 @@ export const SubjectPage: React.FC = () => {
                       <div className="flex items-center gap-1.5 text-white/90 text-xs font-bold bg-white/20 px-2.5 py-1 rounded-full">
                         <Users className="w-3.5 h-3.5" />
                         {entries.length} {entries.length === 1 ? 'Class' : 'Classes'}
+                        {isExpanded ? <ChevronUp className="w-3.5 h-3.5 ml-1" /> : <ChevronDown className="w-3.5 h-3.5 ml-1" />}
                       </div>
                     </div>
                     <div className="mt-3 relative z-10">
@@ -231,17 +235,14 @@ export const SubjectPage: React.FC = () => {
                       );
                     })}
 
-                    {entries.length > 4 && (
-                      <button
-                        onClick={() => toggleExpand(subjectName)}
-                        className={`w-full flex items-center justify-center gap-1 text-xs font-bold py-2 rounded-xl border ${color.border} ${color.light} ${color.text} hover:opacity-80 transition-opacity cursor-pointer`}
-                      >
-                        {isExpanded ? (
-                          <><ChevronUp className="w-3.5 h-3.5" /> Show Less</>
-                        ) : (
-                          <><ChevronDown className="w-3.5 h-3.5" /> +{entries.length - 4} more classes</>
-                        )}
-                      </button>
+                    {/* Only show Add Class button inside if it's expanded, or not needed. We'll show it if expanded. */}
+                    {!isExpanded && entries.length > 0 && (
+                       <button
+                         onClick={() => toggleExpand(subjectName)}
+                         className={`w-full flex items-center justify-center gap-1 text-xs font-bold py-2 rounded-xl border ${color.border} ${color.light} ${color.text} hover:opacity-80 transition-opacity cursor-pointer`}
+                       >
+                         <ChevronDown className="w-3.5 h-3.5" /> View {entries.length} Classes
+                       </button>
                     )}
 
                     {/* Add to another class button */}

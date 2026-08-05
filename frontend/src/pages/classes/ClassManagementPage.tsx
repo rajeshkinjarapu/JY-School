@@ -7,6 +7,77 @@ import toast from 'react-hot-toast';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 
+const MobileClassAccordion: React.FC<{ cls: any, idx: number, isSuperAdmin: boolean, openEditModal: (cls: any) => void, handleDelete: (id: string) => void }> = ({ cls, idx, isSuperAdmin, openEditModal, handleDelete }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  return (
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-3">
+      {/* Header (Always Visible) */}
+      <div 
+        onClick={() => setIsOpen(!isOpen)}
+        className="p-4 flex items-center justify-between cursor-pointer active:bg-gray-50 transition-colors"
+      >
+        <div className="flex items-center gap-4">
+          <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-black text-sm shrink-0">
+            {idx + 1}
+          </div>
+          <div>
+            <h4 className="font-extrabold text-gray-900 text-[15px]">
+              Class {cls.name}-{cls.section}
+            </h4>
+            <p className="text-xs font-bold text-gray-500 mt-0.5">
+              {cls._count?.students || 0} Students
+            </p>
+          </div>
+        </div>
+        <div className={`p-2 rounded-full transition-transform ${isOpen ? 'rotate-180 bg-indigo-50 text-indigo-600' : 'bg-gray-50 text-gray-400'}`}>
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
+          </svg>
+        </div>
+      </div>
+      
+      {/* Expanded Content */}
+      {isOpen && (
+        <div className="p-4 pt-0 border-t border-gray-50 bg-gray-50/30">
+          <div className="grid grid-cols-2 gap-3 mt-3">
+            <div className="bg-white p-2.5 rounded-xl border border-gray-100 shadow-sm">
+              <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">Academic Year</p>
+              <p className="text-xs font-black text-fuchsia-700 truncate">{cls.academicYear}</p>
+            </div>
+            <div className="bg-white p-2.5 rounded-xl border border-gray-100 shadow-sm">
+              <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">Class Teacher</p>
+              <p className="text-xs font-black text-gray-800 truncate">{cls.classTeacher?.user?.name || 'Not Assigned'}</p>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-2 mt-3">
+            <Link 
+              to={`/classes/${cls.id}`}
+              className="flex-1 py-2.5 bg-indigo-600 text-white text-xs font-black rounded-xl text-center shadow-md hover:bg-indigo-700 active:scale-95 transition-all"
+            >
+              View Full Details
+            </Link>
+            <button
+              onClick={() => openEditModal(cls)}
+              className="w-10 h-10 flex items-center justify-center bg-white border border-gray-200 text-gray-600 rounded-xl shadow-sm hover:bg-gray-50 active:scale-95 transition-all"
+            >
+              <Edit3 className="w-4 h-4" />
+            </button>
+            {isSuperAdmin && (
+              <button
+                onClick={() => handleDelete(cls.id)}
+                className="w-10 h-10 flex items-center justify-center bg-red-50 text-red-600 rounded-xl shadow-sm hover:bg-red-100 active:scale-95 transition-all"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 export const ClassManagementPage: React.FC = () => {
   const { user } = useAuth();
   const isSuperAdmin = user?.role === 'SUPER_ADMIN';
@@ -118,7 +189,7 @@ export const ClassManagementPage: React.FC = () => {
   return (
     <div className="flex flex-col h-full bg-gray-50/50 h-[calc(100vh-64px)]">
       {/* Colorful Header */}
-      <div className="px-6 py-6 bg-gradient-to-br from-violet-600 via-purple-600 to-indigo-700 shadow-lg flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <div className="px-6 py-6 bg-gradient-to-br from-indigo-600 via-violet-600 to-purple-700 shadow-lg hidden md:flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-2xl font-black uppercase tracking-tight text-white drop-shadow-sm">Classes Directory</h1>
           <p className="text-white/80 text-sm font-medium mt-1">Manage all grades, sections, and class teacher assignments.</p>
@@ -131,8 +202,9 @@ export const ClassManagementPage: React.FC = () => {
         </div>
       </div>
 
-      <div className="flex-1 overflow-auto p-4">
-        <div className="min-w-[800px] w-full bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+      <div className="flex-1 overflow-auto p-3 md:p-4">
+        {/* Desktop Table */}
+        <div className="hidden md:block min-w-[800px] w-full bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
           <table className="w-full text-sm text-left">
             <thead>
               <tr className="bg-gray-50 text-gray-600 border-b border-gray-200 font-bold uppercase tracking-wider text-xs">
@@ -220,6 +292,19 @@ export const ClassManagementPage: React.FC = () => {
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile Accordion */}
+        <div className="md:hidden">
+          {loading ? (
+             <LoadingSpinner size="lg" className="py-12" />
+          ) : classes.length === 0 ? (
+             <p className="text-center text-gray-400 font-bold py-12">No classes found.</p>
+          ) : (
+            classes.map((cls, idx) => (
+              <MobileClassAccordion key={cls.id} cls={cls} idx={idx} isSuperAdmin={isSuperAdmin} openEditModal={openEditModal} handleDelete={handleDelete} />
+            ))
+          )}
         </div>
       </div>
 

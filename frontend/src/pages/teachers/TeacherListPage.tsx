@@ -101,13 +101,13 @@ export const TeacherListPage: React.FC = () => {
   return (
     <div className="flex flex-col h-full">
       {/* Colorful Hero Header */}
-      <div className="px-3 pt-3 pb-4 bg-gradient-to-br from-emerald-500 via-teal-500 to-cyan-600 shadow-lg">
-        <div className="flex items-center justify-between mb-3">
+      <div className="px-3 pt-3 pb-4 bg-gradient-to-br from-indigo-600 via-violet-600 to-purple-700 shadow-lg">
+        <div className="hidden md:flex items-center justify-between mb-3">
           <div>
             <p className="text-white/70 text-xs font-semibold uppercase tracking-wider">Total</p>
             <p className="text-2xl font-black text-white">{teachers.length} Teachers</p>
           </div>
-          <div className="flex gap-2">
+          <div className="hidden md:flex gap-2">
             {isSuperAdmin && (
               <>
                 <button
@@ -249,9 +249,14 @@ export const TeacherListPage: React.FC = () => {
                         </span>
                       </td>
                       <td className="px-5 py-4">
-                        <p className="text-gray-700 text-sm font-medium">
+                        <div className="flex items-center gap-2 text-gray-700 text-sm font-medium">
                           {teacher.user?.phone || "–"}
-                        </p>
+                          {teacher.user?.phone && (
+                            <a href={`https://wa.me/91${teacher.user.phone}`} target="_blank" rel="noreferrer" className="text-emerald-500 hover:text-emerald-600 transition-colors" title="WhatsApp Message">
+                              <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg>
+                            </a>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   );
@@ -315,12 +320,19 @@ export const TeacherListPage: React.FC = () => {
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <Link
-                      to={`/teachers/${teacher.id}`}
-                      className="font-extrabold text-[15px] text-indigo-950 truncate block hover:text-indigo-600 transition-colors mb-2"
-                    >
-                      {name}
-                    </Link>
+                    <div className="flex items-center gap-2 mb-2">
+                      <Link
+                        to={`/teachers/${teacher.id}`}
+                        className="font-extrabold text-[15px] text-indigo-950 truncate block hover:text-indigo-600 transition-colors"
+                      >
+                        {name}
+                      </Link>
+                      {teacher.user?.phone && (
+                        <a href={`https://wa.me/91${teacher.user.phone}`} target="_blank" rel="noreferrer" className="text-emerald-500 hover:text-emerald-600 transition-colors shrink-0" title="WhatsApp Message">
+                          <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg>
+                        </a>
+                      )}
+                    </div>
                     <div className="flex flex-wrap gap-1.5">
                       <span className="font-mono text-[10px] font-bold text-indigo-700 dark:text-indigo-200 bg-indigo-50 dark:bg-indigo-500/20 px-2 py-0.5 rounded-md border border-indigo-100 dark:border-indigo-500/30">
                         {teacher.employeeId}
@@ -331,25 +343,6 @@ export const TeacherListPage: React.FC = () => {
                     </div>
                   </div>
                   <div className="shrink-0 flex flex-col gap-2">
-                    <Link
-                      to={`/teachers/${teacher.id}`}
-                      className="flex items-center justify-center w-10 h-10 bg-gray-50 dark:bg-white/5 hover:bg-indigo-50 dark:hover:bg-white/10 text-gray-400 hover:text-indigo-600 dark:hover:text-white rounded-xl transition-all shadow-sm border border-gray-200 dark:border-white/10 cursor-pointer"
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="18"
-                        height="18"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
-                        <circle cx="12" cy="12" r="3" />
-                      </svg>
-                    </Link>
                     {isSuperAdmin && (
                       <button
                         onClick={() => handleDelete(teacher.id)}
