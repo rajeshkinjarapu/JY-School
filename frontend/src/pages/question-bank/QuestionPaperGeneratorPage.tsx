@@ -187,9 +187,14 @@ export const QuestionPaperGeneratorPage = () => {
   const handleAiFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    // 10MB limit
     if (file.size > 10 * 1024 * 1024) {
       toast.error('File too large! Maximum size is 10MB.');
+      return;
+    }
+
+    const fileExt = '.' + file.name.split('.').pop()?.toLowerCase();
+    if (fileExt === '.doc' || fileExt === '.docx') {
+      toast.error('Word documents (.doc/.docx) are not supported by the AI directly. Please save as PDF or copy-paste the text.');
       return;
     }
     // For text-based files (TEX, TXT, CSV), read as text and put in editor
@@ -615,7 +620,7 @@ export const QuestionPaperGeneratorPage = () => {
               )}
               {aiSourceType === 'file' && (
                 <div className="border-2 border-dashed border-slate-300 rounded-xl p-8 flex flex-col items-center justify-center bg-slate-50 hover:bg-slate-100 transition-colors relative cursor-pointer group">
-                  <input type="file" accept="image/*,application/pdf,.doc,.docx,.tex,.txt,.csv,.md" onChange={handleAiFileUpload} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+                  <input type="file" accept="image/*,application/pdf,.tex,.txt,.csv,.md" onChange={handleAiFileUpload} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
                   <div className="p-3 bg-white rounded-full shadow-sm mb-3 group-hover:scale-110 transition-transform">
                     <Upload className="w-6 h-6 text-blue-500" />
                   </div>
