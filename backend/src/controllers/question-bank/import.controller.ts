@@ -82,7 +82,7 @@ Each object must strictly match this structure:
   "topic": "Extracted topic or empty string",
   "type": "MCQ_SINGLE" | "MCQ_MULTI" | "NUMERICAL",
   "difficulty": "Easy" | "Medium" | "Hard",
-  "questionText": "Question text in LaTeX format if math/science. Enclose math in \\\\( \\\\) or \\\\[ \\\\]",
+  "questionText": "Question text in LaTeX format if math/science. Enclose math in \\\\( \\\\) or \\\\[ \\\\]. \\n**CRITICAL FORMATTING RULES**:\\n1. For **Matching questions**, strictly format like this:\\nMatch the following:\\n       'Column I'                 'Column II'\\n(a) Item 1                   (i) Match 1\\n(b) Item 2                   (ii) Match 2\\n(c) Item 3                   (iii) Match 3\\n(d) Item 4                   (iv) Match 4\\n\\n2. For **Assertion-Reason questions**, strictly format like this:\\nAssertion (A): [Assertion text here]\\nReason (R): [Reason text here]\\n",
   "optionA": "Option A text",
   "optionB": "Option B text",
   "optionC": "Option C text",

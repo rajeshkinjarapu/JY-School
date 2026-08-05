@@ -178,8 +178,8 @@ export const PrintablePaper: React.FC<PrintablePaperProps> = ({
                   const qNum = absoluteQuestionCounter++;
                   return (
                     <div key={q.id} className="question-block">
-                      <div className="flex items-start">
-                        <span className="font-sans font-bold text-xs bg-slate-100 border border-slate-350 rounded px-1.5 py-0.5 mr-2">
+                      <div className="flex items-start gap-1.5 mb-1.5 leading-snug whitespace-pre-wrap">
+                        <span className="font-sans font-bold text-xs bg-slate-100 border border-slate-350 rounded px-1.5 py-0.5 mr-2 flex-shrink-0">
                           {qNum}.
                         </span>
                         <div className="flex-1">

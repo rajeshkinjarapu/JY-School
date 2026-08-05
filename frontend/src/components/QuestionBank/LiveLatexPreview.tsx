@@ -142,7 +142,7 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
                 const num = qNumMatch2[1];
                 const restText = block.substring(qNumMatch2[0].length);
                 return (
-                  <div className="mb-2 break-inside-avoid text-[11pt] flex" style={{ gap: '0.4em' }}>
+                  <div className="mb-2 break-inside-avoid text-[11pt] flex whitespace-pre-wrap" style={{ gap: '0.4em' }}>
                     <strong className="flex-shrink-0">{num}.</strong>
                     <div dangerouslySetInnerHTML={{ __html: renderLatex(restText) }} />
                   </div>
@@ -202,7 +202,7 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
 
               return (
                 <div className="mb-1 break-inside-avoid text-[11pt] leading-snug">
-                  <div className="mb-0.5 flex" style={{ gap: '0.4em' }}>
+                  <div className="mb-0.5 flex whitespace-pre-wrap" style={{ gap: '0.4em' }}>
                     <strong className="flex-shrink-0">{qNum}.</strong>
                     <div dangerouslySetInnerHTML={{ __html: renderLatex(qRest) }} />
                   </div>
