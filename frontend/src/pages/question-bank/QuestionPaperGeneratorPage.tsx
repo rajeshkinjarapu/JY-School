@@ -193,8 +193,34 @@ export const QuestionPaperGeneratorPage = () => {
     }
 
     const fileExt = '.' + file.name.split('.').pop()?.toLowerCase();
-    if (fileExt === '.doc' || fileExt === '.docx') {
-      toast.error('Word documents (.doc/.docx) are not supported by the AI directly. Please save as PDF or copy-paste the text.');
+    if (fileExt === '.doc') {
+      toast.error('Old Word documents (.doc) are not supported. Please save as .docx or PDF and try again.');
+      return;
+    }
+
+    if (fileExt === '.docx') {
+      const reader = new FileReader();
+      reader.onload = async (event) => {
+        try {
+          const loadingId = toast.loading("Extracting text from Word document...", { id: 'docx' });
+          const arrayBuffer = event.target?.result as ArrayBuffer;
+          const mammoth = await import('mammoth');
+          const result = await mammoth.extractRawText({ arrayBuffer });
+          
+          if (!result.value.trim()) {
+             toast.error("Could not find any text in this document.", { id: 'docx' });
+             return;
+          }
+          
+          setAiInput(result.value);
+          setAiSourceType('text');
+          toast.success(`${file.name} loaded successfully! You can now generate.`, { id: 'docx' });
+        } catch (error) {
+          console.error(error);
+          toast.error("Failed to read Word document. Please try PDF or copy-paste text.", { id: 'docx' });
+        }
+      };
+      reader.readAsArrayBuffer(file);
       return;
     }
     // For text-based files (TEX, TXT, CSV), read as text and put in editor
@@ -630,7 +656,7 @@ export const QuestionPaperGeneratorPage = () => {
               )}
               {aiSourceType === 'file' && (
                 <div className="border-2 border-dashed border-slate-300 rounded-xl p-8 flex flex-col items-center justify-center bg-slate-50 hover:bg-slate-100 transition-colors relative cursor-pointer group">
-                  <input type="file" accept="image/*,application/pdf,.tex,.txt,.csv,.md" onChange={handleAiFileUpload} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+                  <input type="file" accept="image/*,application/pdf,.tex,.txt,.csv,.md,.doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" onChange={handleAiFileUpload} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
                   <div className="p-3 bg-white rounded-full shadow-sm mb-3 group-hover:scale-110 transition-transform">
                     <Upload className="w-6 h-6 text-blue-500" />
                   </div>
