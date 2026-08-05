@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import fs from 'fs';
+import path from 'path';
 import { GoogleGenAI } from '@google/genai';
 import axios from 'axios';
 
@@ -170,4 +171,107 @@ ${text || ''}`;
 };
 export const importQuestionFile = async (req: Request, res: Response) => {
   return res.status(501).json({ message: 'Not implemented' });
+};
+
+/**
+ * parseDocxWithGemini
+ * Uploads a .docx file directly to the Gemini Files API and
+ * asks Gemini to extract all exam questions including equations & symbols.
+ */
+export const parseDocxWithGemini = async (req: Request, res: Response) => {
+  let filePath: string | undefined;
+  try {
+    const { subject, apiKey } = req.body;
+    if (!req.file) {
+      return res.status(400).json({ message: 'No file uploaded.' });
+    }
+
+    filePath = req.file.path;
+    const mimeType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+
+    const activeKey = apiKey || process.env.GEMINI_API_KEY;
+    if (!activeKey) throw new Error('Gemini API key is missing');
+
+    const ai = new GoogleGenAI({ apiKey: activeKey });
+
+    // Step 1: Upload the file to Gemini Files API
+    const uploadedFile = await ai.files.upload({
+      file: {
+        path: filePath,
+        mimeType,
+        name: path.basename(filePath),
+        displayName: req.file.originalname,
+      },
+    });
+
+    const fileUri = uploadedFile.uri;
+    if (!fileUri) throw new Error('File upload to Gemini failed — no URI returned.');
+
+    // Step 2: Ask Gemini to read the uploaded doc and extract questions
+    const prompt = `You are an expert exam question extractor. You are given a Word document (.docx) that may contain exam questions, mathematical equations (in OMML / MathML format), symbols, and tables.
+
+Your job:
+- Read every question in the document carefully.
+- Convert ALL mathematical expressions, equations, and symbols into LaTeX format.
+  - Use \\( ... \\) for inline math.
+  - Use \\[ ... \\] for display/block math.
+- For Matching Type questions format them exactly as:
+     Column I              Column II
+(a) item1          (i) match1
+(b) item2          (ii) match2
+- For Assertion-Reason questions format them as:
+Assertion (A): ...
+Reason (R): ...
+
+Return ONLY a raw JSON array (no markdown code blocks) where each element has:
+{
+  "subject": "${subject || 'General'}",
+  "chapter": "",
+  "topic": "",
+  "type": "MCQ_SINGLE",
+  "difficulty": "Medium",
+  "questionText": "Question with LaTeX math",
+  "optionA": "Option A with LaTeX if needed",
+  "optionB": "Option B",
+  "optionC": "Option C",
+  "optionD": "Option D",
+  "correctAnswer": "A",
+  "solution": "",
+  "marks": 1,
+  "negativeMarks": 0
+}`;
+
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: [
+        {
+          role: 'user',
+          parts: [
+            { text: prompt },
+            { fileData: { mimeType, fileUri } },
+          ],
+        },
+      ],
+      config: { responseMimeType: 'application/json' },
+    });
+
+    // Step 3: Delete the uploaded file from Gemini to save quota
+    try { await ai.files.delete({ name: uploadedFile.name! }); } catch (_) {}
+
+    let parsed = null;
+    if (response.text) {
+      parsed = JSON.parse(response.text.replace(/```json\n?|```/g, ''));
+    }
+
+    if (!Array.isArray(parsed)) parsed = parsed ? [parsed] : [];
+    return res.status(200).json({ questions: parsed });
+  } catch (error: any) {
+    console.error('DOCX parse error:', error);
+    return res.status(500).json({ message: error.message || 'Failed to parse document.' });
+  } finally {
+    // Always clean up the local temp file
+    if (filePath && fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+    }
+  }
 };

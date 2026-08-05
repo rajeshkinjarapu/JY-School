@@ -1,4 +1,4 @@
-import { parseWithGemini } from '../controllers/question-bank/import.controller';
+import { parseWithGemini, parseDocxWithGemini } from '../controllers/question-bank/import.controller';
 import { bulkCreateQuestions } from '../controllers/question-bank/question.controller';
 import { Router } from 'express';
 import {
@@ -44,6 +44,31 @@ const upload = multer({
   })
 });
 
+// Multer config for DOCX files (stores temp in uploads/)
+const docxUpload = multer({
+  storage: multer.diskStorage({
+    destination: (req, file, cb) => {
+      cb(null, path.join(__dirname, '../../uploads'));
+    },
+    filename: (req, file, cb) => {
+      const uniqueSuffix = 'docx-' + Date.now() + '-' + Math.round(Math.random() * 1e9);
+      cb(null, uniqueSuffix + '.docx');
+    },
+  }),
+  fileFilter: (req, file, cb) => {
+    const allowed = [
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'application/msword',
+    ];
+    if (allowed.includes(file.mimetype) || file.originalname.endsWith('.docx') || file.originalname.endsWith('.doc')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only .docx files are allowed'));
+    }
+  },
+  limits: { fileSize: 20 * 1024 * 1024 }, // 20MB
+});
+
 // ================= QUESTION BANK ROUTES =================
 router.get('/questions', authenticate, getQuestions);
 router.get('/questions/meta', authenticate, getQuestionMeta);
@@ -78,6 +103,7 @@ router.delete('/templates/:id', authenticate, authorize('SUPER_ADMIN', 'ADMIN'),
 
 // AI and Bulk Imports
 router.post('/questions/import-ai', authenticate, authorize('SUPER_ADMIN', 'ADMIN', 'TEACHER'), parseWithGemini);
+router.post('/questions/import-docx', authenticate, authorize('SUPER_ADMIN', 'ADMIN', 'TEACHER'), docxUpload.single('file'), parseDocxWithGemini);
 router.post('/questions/bulk', authenticate, authorize('SUPER_ADMIN', 'ADMIN', 'TEACHER'), bulkCreateQuestions);
 export default router;
 

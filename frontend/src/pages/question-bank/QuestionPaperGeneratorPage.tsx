@@ -194,33 +194,60 @@ export const QuestionPaperGeneratorPage = () => {
 
     const fileExt = '.' + file.name.split('.').pop()?.toLowerCase();
     if (fileExt === '.doc') {
-      toast.error('Old Word documents (.doc) are not supported. Please save as .docx or PDF and try again.');
+      toast.error('Old Word documents (.doc) are not supported. Please save as .docx and try again.');
       return;
     }
 
     if (fileExt === '.docx') {
-      const reader = new FileReader();
-      reader.onload = async (event) => {
-        try {
-          const loadingId = toast.loading("Extracting text from Word document...", { id: 'docx' });
-          const arrayBuffer = event.target?.result as ArrayBuffer;
-          const mammoth = await import('mammoth');
-          const result = await mammoth.extractRawText({ arrayBuffer });
-          
-          if (!result.value.trim()) {
-             toast.error("Could not find any text in this document.", { id: 'docx' });
-             return;
-          }
-          
-          setAiInput(result.value);
-          setAiSourceType('text');
-          toast.success(`${file.name} loaded successfully! You can now generate.`, { id: 'docx' });
-        } catch (error) {
-          console.error(error);
-          toast.error("Failed to read Word document. Please try PDF or copy-paste text.", { id: 'docx' });
+      // Send the DOCX file to backend → Gemini Files API reads it natively (equations, symbols, tables preserved)
+      const toastId = toast.loading('Uploading Word document to AI... Please wait.');
+      try {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('subject', examSubject);
+        if (activeAiModel === 'gemini' && geminiApiKey) {
+          formData.append('apiKey', geminiApiKey);
         }
-      };
-      reader.readAsArrayBuffer(file);
+
+        const response = await api.post('/api/question-bank/questions/import-docx', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+          timeout: 120000, // 2 min for large docs
+        });
+
+        const questions = response.data.questions;
+        if (!questions || questions.length === 0) {
+          toast.error('No questions found in document.', { id: toastId });
+          return;
+        }
+
+        // Directly insert questions into the paper editor
+        let generatedText = '\n\n';
+        const lines = content.split('\n');
+        let maxQ = 0;
+        for (const line of lines) {
+          const match = line.match(/^(\d+)\.\s/);
+          if (match) {
+            const num = parseInt(match[1], 10);
+            if (num > maxQ) maxQ = num;
+          }
+        }
+
+        questions.forEach((q: any, i: number) => {
+          generatedText += `${maxQ + i + 1}. ${q.questionText}\n`;
+          if (q.optionA) generatedText += `(A) ${q.optionA}\n`;
+          if (q.optionB) generatedText += `(B) ${q.optionB}\n`;
+          if (q.optionC) generatedText += `(C) ${q.optionC}\n`;
+          if (q.optionD) generatedText += `(D) ${q.optionD}\n`;
+          generatedText += '\n';
+        });
+
+        setContent(prev => prev.trim() + generatedText);
+        toast.success(`✅ ${questions.length} questions extracted from Word document!`, { id: toastId });
+        setIsAiModalOpen(false);
+      } catch (err: any) {
+        console.error(err);
+        toast.error('Failed to process Word document: ' + (err.response?.data?.message || err.message), { id: toastId });
+      }
       return;
     }
     // For text-based files (TEX, TXT, CSV), read as text and put in editor
@@ -661,7 +688,7 @@ export const QuestionPaperGeneratorPage = () => {
                     <Upload className="w-6 h-6 text-blue-500" />
                   </div>
                   <p className="text-sm font-medium text-slate-700">Click to upload a file</p>
-                  <p className="text-xs text-slate-500 mt-1">Supports JPG, PNG, PDF, DOC, TEX and more (Max 10MB)</p>
+                  <p className="text-xs text-slate-500 mt-1">Supports JPG, PNG, PDF, <strong className="text-purple-600">DOCX (Word with Equations)</strong>, TEX and more (Max 20MB)</p>
                 </div>
               )}
               {aiSourceType === 'url' && (
