@@ -184,7 +184,7 @@ export const QuestionPaperGeneratorPage = () => {
     }
   };
 
-  const handleAiFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAiFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     if (file.size > 10 * 1024 * 1024) {

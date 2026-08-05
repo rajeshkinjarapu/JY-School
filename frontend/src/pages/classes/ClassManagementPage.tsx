@@ -274,17 +274,6 @@ export const ClassManagementPage: React.FC = () => {
                 </select>
               </div>
 
-              <div>
-                <label className="label">Student Capacity</label>
-                <input
-                  type="number"
-                  required
-                  value={capacity}
-                  onChange={(e) => setCapacity(Number(e.target.value))}
-                  className="input"
-                />
-              </div>
-
               <div className="flex gap-3 justify-end pt-2">
                 <button
                   type="button"

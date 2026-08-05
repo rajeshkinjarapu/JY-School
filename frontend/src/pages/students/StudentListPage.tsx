@@ -25,7 +25,7 @@ const getInitials = (n: string) =>
   n.trim().split(" ").map((p) => p[0]).slice(0, 2).join("").toUpperCase();
 
 // Helper for table avatars
-const StudentAvatar = ({ name, photoUrl, isActive }: { name: string, photoUrl?: string, isActive?: boolean }) => {
+const StudentAvatar = ({ name, photoUrl, isActive }: { name?: string, photoUrl?: string, isActive?: boolean }) => {
   const safeName = name || "Student";
   const colorClass = avatarColors[safeName.charCodeAt(0) % avatarColors.length];
   const url = getPhotoUrl(photoUrl);
