@@ -192,7 +192,7 @@ export const ClassManagementPage: React.FC = () => {
       <div className="px-6 py-6 bg-gradient-to-br from-indigo-600 via-violet-600 to-purple-700 shadow-lg hidden md:flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-2xl font-black uppercase tracking-tight text-white drop-shadow-sm">Classes Directory</h1>
-          <p className="text-white/80 text-sm font-medium mt-1">Manage all grades, sections, and class teacher assignments.</p>
+
         </div>
         <div className="flex gap-3 w-full md:w-auto">
           <button onClick={openCreateModal} className="flex items-center gap-1.5 px-3.5 py-2.5 text-sm font-extrabold text-indigo-700 bg-white rounded-xl shadow hover:bg-indigo-50 transition-colors w-full md:w-auto cursor-pointer">

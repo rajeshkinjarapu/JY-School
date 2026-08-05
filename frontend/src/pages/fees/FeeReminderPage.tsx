@@ -145,7 +145,7 @@ export const FeeReminderPage: React.FC = () => {
                 </div>
                 Student Fee Reminder
               </h2>
-              <p className="text-white/80 text-sm mt-1">Send WhatsApp fee reminders to parents class-wise</p>
+
             </div>
             <div className="flex gap-2 flex-wrap">
               <button

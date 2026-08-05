@@ -53,7 +53,7 @@ export const RoutesPage = () => {
             </div>
             <div>
               <h1 className="text-2xl md:text-3xl font-black text-slate-800 dark:text-white tracking-tight">Bus Routes</h1>
-              <p className="text-sm font-semibold text-slate-500 dark:text-slate-400 mt-1">Manage transport routes and assign vehicles.</p>
+
             </div>
           </div>
           

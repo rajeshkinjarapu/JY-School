@@ -98,7 +98,7 @@ export const AnnouncementsPage: React.FC = () => {
           </div>
           <div>
             <h1 className="text-2xl font-black uppercase tracking-tight text-white drop-shadow-sm">Announcements</h1>
-            <p className="text-white/80 text-sm font-medium mt-0.5">Notice board for students and teachers.</p>
+
           </div>
         </div>
         {isManagement && (

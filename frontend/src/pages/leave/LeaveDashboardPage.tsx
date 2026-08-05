@@ -29,7 +29,7 @@ const LeaveDashboardPage: React.FC = () => {
           </div>
           <div>
             <h1 className="text-2xl font-black uppercase tracking-tight text-white drop-shadow-sm">Leave Management</h1>
-            <p className="text-white/80 text-sm font-medium mt-0.5">Manage leave requests and leave types.</p>
+
           </div>
         </div>
       </div>

@@ -1704,7 +1704,7 @@ export const ExamListPage: React.FC = () => {
               </div>
               <div>
                 <h3 className="text-xl sm:text-2xl font-black bg-gradient-to-r from-slate-700 to-slate-900 dark:from-slate-100 dark:to-slate-300 bg-clip-text text-transparent drop-shadow-sm">Global Exam Settings</h3>
-                <p className="text-sm font-semibold text-slate-500 mt-0.5">Configure grading scales, publishing rules, and security controls</p>
+
               </div>
             </div>
 

@@ -48,7 +48,7 @@ export default function AttendanceDashboard() {
       {/* ── Colorful Hero ── */}
       <div className="px-4 pt-4 pb-5 bg-gradient-to-br from-amber-500 via-orange-500 to-rose-500 shadow-lg">
         <p className="text-white font-black text-lg">Attendance Dashboard</p>
-        <p className="text-white/70 text-xs mt-0.5">Today's overview & weekly trends</p>
+
       </div>
 
       <div className="p-3 space-y-3">

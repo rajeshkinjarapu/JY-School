@@ -55,7 +55,7 @@ export const ReportsPage: React.FC = () => {
       {/* Colorful Hero Header */}
       <div className="px-4 pt-4 pb-5 bg-gradient-to-br from-rose-500 via-pink-600 to-fuchsia-600 shadow-lg">
         <p className="text-white font-black text-lg">Reports Generator</p>
-        <p className="text-white/70 text-xs mt-0.5">Download Excel & PDF reports</p>
+
       </div>
 
       <div className="p-3 space-y-3 max-w-2xl mx-auto">

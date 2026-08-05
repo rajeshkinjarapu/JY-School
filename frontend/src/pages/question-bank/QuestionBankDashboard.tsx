@@ -34,7 +34,7 @@ export const QuestionBankDashboard = () => {
           </div>
           <div>
             <h1 className="text-xl sm:text-2xl font-black bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent drop-shadow-sm">Question Bank Hub</h1>
-            <p className="text-sm font-semibold text-slate-500 mt-0.5">Manage questions, papers, and assessments</p>
+
           </div>
         </div>
       </div>      {/* Grid of Tools */}

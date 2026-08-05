@@ -62,7 +62,7 @@ export const StudentTransportPage = () => {
             </div>
             <div>
               <h1 className="text-2xl md:text-3xl font-black text-slate-800 dark:text-white tracking-tight">Student Transport</h1>
-              <p className="text-sm font-semibold text-slate-500 dark:text-slate-400 mt-1">Assign and manage student transportation.</p>
+
             </div>
           </div>
           

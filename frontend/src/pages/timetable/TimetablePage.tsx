@@ -573,7 +573,7 @@ export const TimetablePage: React.FC = () => {
           </div>
           <div>
             <h1 className="text-2xl font-black uppercase tracking-tight text-white drop-shadow-sm">Timetable Manager</h1>
-            <p className="text-white/80 text-sm font-medium mt-0.5">Manage schedules, teachers, and workloads.</p>
+
           </div>
         </div>
         <div className="flex flex-wrap bg-white/10 backdrop-blur p-1 rounded-xl border border-white/20 gap-1 w-full md:w-auto">

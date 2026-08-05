@@ -51,7 +51,7 @@ export const OfficeToolsDashboard = () => {
             </div>
             <div>
               <h1 className="text-2xl md:text-3xl font-black text-slate-800 dark:text-white tracking-tight">Office Tools</h1>
-              <p className="text-sm font-semibold text-slate-500 dark:text-slate-400 mt-1">Manage certificates, progress cards, and official documents.</p>
+
             </div>
           </div>
         </div>

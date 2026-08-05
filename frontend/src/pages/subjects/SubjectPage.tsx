@@ -130,7 +130,7 @@ export const SubjectPage: React.FC = () => {
       <div className="px-6 py-6 bg-gradient-to-br from-violet-600 via-purple-600 to-indigo-700 shadow-lg hidden md:flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-2xl font-black uppercase tracking-tight text-white drop-shadow-sm">Subjects & Curriculum</h1>
-          <p className="text-white/80 text-sm font-medium mt-1">Manage subjects and assign them to specific classes and teachers.</p>
+
         </div>
         <div className="flex gap-3 w-full md:w-auto">
           <button

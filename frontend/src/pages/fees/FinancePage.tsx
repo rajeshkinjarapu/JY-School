@@ -413,7 +413,7 @@ export const FinancePage: React.FC = () => {
           </div>
           <div>
             <h1 className="text-2xl font-black uppercase tracking-tight text-white drop-shadow-sm">Finance</h1>
-            <p className="text-white/80 text-sm font-medium mt-0.5">Manage fees, payments, and financial records.</p>
+
           </div>
         </div>
         {activeTab !== 'home' && (
