@@ -3,7 +3,7 @@ import api from "../../api/axios";
 import { LoadingSpinner } from "../../components/UI/LoadingSpinner";
 import { Badge } from "../../components/UI/Badge";
 import { Avatar } from "../../components/UI/Avatar";
-import { Search, UserPlus, Trash2, Edit, Upload, FileDown, Eye, Image as ImageIcon } from "lucide-react";
+import { Search, UserPlus, Trash2, Edit, Upload, FileDown, Eye, Image as ImageIcon, MessageCircle } from "lucide-react";
 import toast from "react-hot-toast";
 import { Link } from "react-router-dom";
 import jsPDF from "jspdf";
@@ -154,13 +154,14 @@ export const TeacherListPage: React.FC = () => {
 
       {/* Main Content */}
       <div className="flex-1 overflow-y-auto bg-gray-50/50 p-4">
-      {/* Main Table */}
+      {/* Main Content */}
       {loading ? (
         <LoadingSpinner size="lg" className="py-12" />
       ) : (
-        <div className="min-w-[800px] w-full bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-          <div className="overflow-x-auto hidden md:block">
-            <table className="w-full text-sm text-left">
+        <div className="w-full">
+          {/* Desktop View */}
+          <div className="overflow-x-auto hidden md:block bg-white rounded-xl shadow-sm border border-gray-200">
+            <table className="w-full text-sm text-left min-w-[800px]">
               <thead>
                 <tr className="bg-gray-50 text-gray-600 border-b border-gray-200 font-bold uppercase tracking-wider text-xs">
                   <th className="px-5 py-4 text-center w-12 border-r border-gray-100">
@@ -327,11 +328,6 @@ export const TeacherListPage: React.FC = () => {
                       >
                         {name}
                       </Link>
-                      {teacher.user?.phone && (
-                        <a href={`https://wa.me/91${teacher.user.phone}`} target="_blank" rel="noreferrer" className="text-emerald-500 hover:text-emerald-600 transition-colors shrink-0" title="WhatsApp Message">
-                          <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg>
-                        </a>
-                      )}
                     </div>
                     <div className="flex flex-wrap gap-1.5">
                       <span className="font-mono text-[10px] font-bold text-indigo-700 dark:text-indigo-200 bg-indigo-50 dark:bg-indigo-500/20 px-2 py-0.5 rounded-md border border-indigo-100 dark:border-indigo-500/30">
@@ -342,24 +338,27 @@ export const TeacherListPage: React.FC = () => {
                       </span>
                     </div>
                   </div>
-                  <div className="shrink-0 flex flex-col gap-2">
-                    {isSuperAdmin && (
-                      <button
-                        onClick={() => handleDelete(teacher.id)}
-                        className="flex items-center justify-center w-10 h-10 bg-red-50 dark:bg-white/5 hover:bg-red-100 dark:hover:bg-white/10 text-red-400 hover:text-red-600 dark:hover:text-white rounded-xl transition-all shadow-sm border border-red-200 dark:border-white/10 cursor-pointer"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    )}
-                  </div>
 
-                  <div className="shrink-0">
+                  <div className="shrink-0 flex items-center gap-2">
+                    {teacher.user?.phone && (
+                      <a href={`https://wa.me/91${teacher.user.phone}`} target="_blank" rel="noreferrer" className="flex items-center justify-center w-10 h-10 bg-green-50 text-green-600 hover:bg-green-500 hover:text-white rounded-xl transition-all shadow-sm border border-green-100 cursor-pointer" title="WhatsApp Message">
+                        <MessageCircle className="w-5 h-5" />
+                      </a>
+                    )}
                     <Link
                       to={`/teachers/${teacher.id}`}
                       className="flex items-center justify-center w-10 h-10 bg-indigo-50 text-indigo-500 hover:bg-indigo-600 hover:text-white hover:shadow-lg hover:shadow-indigo-500/30 rounded-xl transition-all border border-indigo-100 cursor-pointer"
                     >
-                      <Eye className="w-4 h-4" />
+                      <Eye className="w-5 h-5" />
                     </Link>
+                    {isSuperAdmin && (
+                      <button
+                        onClick={() => handleDelete(teacher.id)}
+                        className="flex items-center justify-center w-10 h-10 bg-red-50 text-red-400 hover:bg-red-500 hover:text-white rounded-xl transition-all shadow-sm border border-red-100 cursor-pointer"
+                      >
+                        <Trash2 className="w-5 h-5" />
+                      </button>
+                    )}
                   </div>
                 </div>
               );

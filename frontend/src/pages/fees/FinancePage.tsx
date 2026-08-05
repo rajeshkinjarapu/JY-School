@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { StudentFeeDetailsTab } from './StudentFeeDetailsTab';
+import { ClassWiseFeeReportTab } from './ClassWiseFeeReportTab';
 import { FeeStructurePage } from './FeeStructurePage';
 import * as XLSX from 'xlsx';
 
@@ -398,6 +399,7 @@ export const FinancePage: React.FC = () => {
     { key: 'fee-concession', label: 'Fee Concession', icon: Award, gradient: 'from-rose-500 to-pink-600', desc: 'Sibling waiver, Merit scholarship' },
     { key: 'fee-structure', label: 'Fee Structure', icon: Briefcase, gradient: 'from-violet-500 to-purple-600', desc: 'Class-wise fee configuration' },
     { key: 'student-fee-details', label: 'Student Fee Details', icon: Users, gradient: 'from-cyan-500 to-sky-600', desc: 'Student balances & dues' },
+    { key: 'class-wise-fee-report', label: 'Class Wise Fee Report', icon: FileText, gradient: 'from-orange-500 to-amber-600', desc: 'Class-wise fee collection status' },
     { key: 'transaction', label: 'Transaction', icon: Receipt, gradient: 'from-fuchsia-500 to-purple-600', desc: 'All payment transactions' },
     { key: 'receipt', label: 'Receipt', icon: FileText, gradient: 'from-lime-500 to-green-600', desc: 'Fee receipts & invoices' },
     { key: 'report', label: 'Report', icon: TrendingUp, gradient: 'from-blue-500 to-indigo-600', desc: 'Financial analytics & reports' },
@@ -748,11 +750,8 @@ export const FinancePage: React.FC = () => {
               )}
 
               {/* ── 5. FEE STRUCTURE TAB ── */}
-            {activeTab === 'fee-structure' && (
-              <FeeStructurePage />
-            )}
-
-
+            {activeTab === 'fee-structure' && <FeeStructurePage structures={structures} setStructures={setStructures} classes={classes} refresh={fetchData} />}
+            {activeTab === 'class-wise-fee-report' && <ClassWiseFeeReportTab classes={classes} students={students} payments={payments} structures={structures} />}
 
             {/* ── 8. TRANSACTION TAB ── */}
             {activeTab === 'transaction' && (
