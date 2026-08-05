@@ -9,9 +9,10 @@ interface HeaderProps {
   onMenuClick: () => void;
   title: string;
   forceShow?: boolean;
+  hideMenuButton?: boolean;
 }
 
-export const Header: React.FC<HeaderProps> = ({ onMenuClick, title, forceShow }) => {
+export const Header: React.FC<HeaderProps> = ({ onMenuClick, title, forceShow, hideMenuButton }) => {
   const { user, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
@@ -41,13 +42,15 @@ export const Header: React.FC<HeaderProps> = ({ onMenuClick, title, forceShow })
       {/* Left: Hamburger + Back + Page Title */}
       <div className="flex items-center gap-1.5 min-w-0">
         {/* Hamburger — mobile only, hide if forceShow (desktop) unless on mobile size */}
-        <button
-          onClick={onMenuClick}
-          className="p-2 rounded-xl text-white/90 hover:text-white hover:bg-white/20 transition-all duration-200 lg:hidden cursor-pointer shrink-0"
-          aria-label="Open menu"
-        >
-          <Menu className="w-5 h-5" />
-        </button>
+        {!hideMenuButton && (
+          <button
+            onClick={onMenuClick}
+            className="p-2 rounded-xl text-white/90 hover:text-white hover:bg-white/20 transition-all duration-200 lg:hidden cursor-pointer shrink-0"
+            aria-label="Open menu"
+          >
+            <Menu className="w-5 h-5" />
+          </button>
+        )}
 
         {/* Back Button */}
         {showBackButton && (
