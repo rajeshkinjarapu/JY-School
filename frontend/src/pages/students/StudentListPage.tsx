@@ -106,28 +106,66 @@ export const StudentListPage: React.FC = () => {
     }
   };
 
-  const exportStudents = () => {
-    const doc = new jsPDF();
-    doc.setFontSize(18);
-    doc.text("Student List", 14, 22);
-    autoTable(doc, {
-      head: [["S.No", "Student ID", "Name", "Class", "Mobile", "Father Name", "Status"]],
-      body: students.map((s: any, i: number) => [
-        (page - 1) * LIMIT + i + 1,
-        s.rollNo || "–",
-        s.user?.name || "–",
-        `${s.class?.name || ""} ${s.class?.section || ""}`,
-        s.user?.phone || "–",
-        s.fatherName || "–",
-        s.user?.isActive ? "Active" : "Inactive",
-      ]),
-      startY: 30,
-      theme: "grid",
-      styles: { fontSize: 9, cellPadding: 3 },
-      headStyles: { fillColor: [79, 70, 229], textColor: 255, fontStyle: "bold" },
-    });
-    doc.save("Student_List.pdf");
-    toast.success("PDF exported!");
+  const exportStudents = async () => {
+    const toastId = toast.loading("Preparing PDF with all students...");
+    try {
+      // Fetch all students (bypassing pagination) for the current filters
+      const res: any = await api.get("/api/students", {
+        params: { search, classId, limit: 5000 },
+      });
+      const allStudents = res.data?.data || res.data || [];
+      toast.dismiss(toastId);
+
+      const doc = new jsPDF("p", "mm", "a4");
+      
+      // Beautiful Header
+      doc.setFontSize(22);
+      doc.setTextColor(79, 70, 229); // Indigo 600
+      doc.setFont("helvetica", "bold");
+      doc.text("JY SCHOOL", 105, 15, { align: "center" });
+
+      doc.setFontSize(14);
+      doc.setTextColor(50, 50, 50);
+      doc.text("Student Directory", 105, 23, { align: "center" });
+      
+      doc.setFontSize(10);
+      doc.setTextColor(100, 100, 100);
+      doc.setFont("helvetica", "normal");
+      doc.text(`Total Students: ${allStudents.length}    Date: ${new Date().toLocaleDateString()}`, 105, 30, { align: "center" });
+
+      autoTable(doc, {
+        head: [["S.No", "Student ID", "Name", "Class", "Mobile", "Father Name", "Status"]],
+        body: allStudents.map((s: any, i: number) => [
+          i + 1,
+          s.rollNo || "–",
+          s.user?.name || "–",
+          `${s.class?.name || ""} ${s.class?.section || ""}`,
+          s.user?.phone || "–",
+          s.fatherName || "–",
+          s.user?.isActive ? "Active" : "Inactive",
+        ]),
+        startY: 35,
+        theme: "grid",
+        styles: { fontSize: 8, cellPadding: 3, textColor: [40, 40, 40] },
+        headStyles: { fillColor: [79, 70, 229], textColor: [255, 255, 255], fontStyle: "bold", halign: "center" },
+        alternateRowStyles: { fillColor: [249, 250, 251] },
+        columnStyles: {
+          0: { halign: 'center', cellWidth: 12 },
+          1: { halign: 'center', cellWidth: 22 },
+          2: { cellWidth: 45 },
+          3: { halign: 'center', cellWidth: 20 },
+          4: { halign: 'center', cellWidth: 25 },
+          5: { cellWidth: 40 },
+          6: { halign: 'center', cellWidth: 18 }
+        },
+        margin: { top: 10, left: 14, right: 14 },
+      });
+      
+      doc.save("Student_Directory.pdf");
+      toast.success("PDF exported successfully!");
+    } catch (e) {
+      toast.error("Failed to fetch students for export", { id: toastId });
+    }
   };
 
   const downloadTemplate = () => {

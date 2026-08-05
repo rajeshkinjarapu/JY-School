@@ -114,7 +114,7 @@ export const DashboardLayout: React.FC = () => {
     >
       <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
       <div className="flex flex-col flex-1 overflow-hidden min-w-0">
-        <Header onMenuClick={() => setSidebarOpen(true)} title={getPageTitle(location.pathname)} hideOnDesktop={location.pathname === '/classes'} />
+        <Header onMenuClick={() => setSidebarOpen(true)} title={getPageTitle(location.pathname)} hideOnDesktop={location.pathname === '/classes' || location.pathname === '/students'} />
         <main
           className="flex-1 overflow-y-auto animate-fade-in-up"
           style={{ overscrollBehavior: 'contain' }}
