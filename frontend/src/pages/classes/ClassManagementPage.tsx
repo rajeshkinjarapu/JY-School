@@ -39,8 +39,8 @@ export const ClassManagementPage: React.FC = () => {
 
   const fetchTeachers = async () => {
     try {
-      const res: any = await api.get('/api/teachers');
-      setTeachers(res.data.data || res.data || []);
+      const res: any = await api.get('/api/teachers?limit=75');
+      setTeachers(res.data?.data || res.data || []);
     } catch (e) {
       console.error(e);
     }
