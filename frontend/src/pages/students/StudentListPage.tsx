@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { createPortal } from "react-dom";
 import api from "../../api/axios";
-import { Search, UserPlus, Trash2, Edit, FileDown, Eye, Filter, ChevronLeft, ChevronRight, Upload, Image as ImageIcon, X, CheckCircle2, AlertCircle, FileText } from "lucide-react";
+import { Search, UserPlus, Trash2, Edit, FileDown, Eye, Filter, ChevronLeft, ChevronRight, Upload, Image as ImageIcon, X, CheckCircle2, AlertCircle, FileText, Phone, IdCard } from "lucide-react";
 import toast from "react-hot-toast";
 import { Link, useNavigate } from "react-router-dom";
 import jsPDF from "jspdf";
@@ -240,7 +240,7 @@ export const StudentListPage: React.FC = () => {
       </div>
 
       {/* ── Student List (Tabular) ── */}
-      <div className="flex-1 overflow-auto bg-gray-50/50 p-4">
+      <div className="flex-1 overflow-auto bg-gray-50/50 p-4 hidden md:block">
         <div className="min-w-[800px] w-full bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
           <table className="w-full text-sm text-left">
             <thead>
@@ -303,7 +303,14 @@ export const StudentListPage: React.FC = () => {
                       <p className="font-bold text-gray-800 text-sm">{student.fatherName || "–"}</p>
                     </td>
                     <td className="px-5 py-4">
-                      <p className="text-gray-700 text-sm font-medium">{student.user?.phone || "–"}</p>
+                      {student.user?.phone ? (
+                        <a href={`tel:${student.user.phone}`} className="text-indigo-600 hover:text-indigo-800 text-sm font-medium flex items-center gap-1.5 transition-colors">
+                          <Phone className="w-4 h-4" />
+                          {student.user.phone}
+                        </a>
+                      ) : (
+                        <span className="text-gray-400 text-sm font-medium">—</span>
+                      )}
                     </td>
                   </tr>
                 ))
@@ -311,6 +318,87 @@ export const StudentListPage: React.FC = () => {
             </tbody>
           </table>
         </div>
+      </div>
+
+      {/* Mobile Student List View */}
+      <div className="flex-1 overflow-auto bg-slate-50/50 p-3 md:hidden">
+        {loading ? (
+          <div className="py-12 flex flex-col items-center gap-2">
+            <div className="w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
+            <p className="text-gray-400 text-xs font-bold uppercase tracking-wider">Loading Students...</p>
+          </div>
+        ) : students.length === 0 ? (
+          <div className="py-16 text-center text-gray-400 bg-white rounded-3xl border border-slate-100 p-8 shadow-sm">
+            <div className="w-16 h-16 rounded-full bg-indigo-50 flex items-center justify-center mx-auto mb-3">
+              <Search className="w-7 h-7 text-indigo-300" />
+            </div>
+            <p className="font-bold text-gray-500 text-lg">No students found</p>
+            <p className="text-sm text-gray-400 mt-1">Try adjusting your search or filter</p>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-3 pb-24">
+            {students.map((student, idx) => {
+              const name = student.user?.name || 'Unknown Student';
+              return (
+                <div key={student.id} className="bg-white rounded-[24px] p-5 shadow-sm border border-slate-100 flex flex-col hover:shadow-md transition-shadow relative overflow-hidden group">
+                  <div className="absolute top-0 right-0 p-3">
+                    <span className="text-[10px] font-black text-slate-300 group-hover:text-indigo-200 transition-colors">
+                      #{(page - 1) * LIMIT + idx + 1}
+                    </span>
+                  </div>
+
+                  <div className="flex items-start gap-4">
+                    <div className="shrink-0 relative group">
+                      <StudentAvatar name={student.user?.name} photoUrl={student.user?.photoUrl} isActive={student.user?.isActive} />
+                    </div>
+                    
+                    <div className="min-w-0 flex-1 pt-1">
+                      <Link to={`/students/${student.id}`} className="block">
+                        <h3 className="font-extrabold text-lg text-slate-800 hover:text-indigo-600 truncate transition-colors leading-tight" title={name}>
+                          {name}
+                        </h3>
+                      </Link>
+                      
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold bg-teal-50 text-teal-700 border border-teal-100">
+                          Class {student.class?.name || 'N/A'}-{student.class?.section || 'N/A'}
+                        </span>
+                        {student.rollNo && (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-100">
+                            <IdCard className="w-3.5 h-3.5" />
+                            {student.rollNo}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-auto pt-4 border-t border-slate-100 flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-slate-500">
+                      {student.user?.phone ? (
+                        <a href={`tel:${student.user.phone}`} className="flex items-center gap-1.5 text-xs font-bold text-indigo-600 hover:text-indigo-800 transition-colors bg-indigo-50 px-3 py-2 rounded-xl">
+                          <Phone className="w-3.5 h-3.5" />
+                          <span className="truncate max-w-[120px]">{student.user.phone}</span>
+                        </a>
+                      ) : (
+                        <div className="flex items-center gap-1.5 text-xs font-bold text-slate-400 bg-slate-50 px-3 py-2 rounded-xl">
+                          <Phone className="w-3.5 h-3.5" />
+                          <span className="truncate max-w-[120px]">{student.fatherName || student.parentName || 'No Contact'}</span>
+                        </div>
+                      )}
+                    </div>
+                    <Link 
+                      to={`/students/${student.id}`} 
+                      className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-extrabold text-white bg-indigo-500 hover:bg-indigo-600 rounded-xl transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5"
+                    >
+                      <Eye className="w-4 h-4" /> View Profile
+                    </Link>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
         {/* Pagination */}
