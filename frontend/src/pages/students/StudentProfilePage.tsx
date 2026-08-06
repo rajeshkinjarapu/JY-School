@@ -639,7 +639,6 @@ export const StudentProfilePage: React.FC = () => {
           </div>
 
         </div>
-      </div>
 
       {/* ============================================================
              ================= PRINT-ONLY DOSSIER VIEW =================
