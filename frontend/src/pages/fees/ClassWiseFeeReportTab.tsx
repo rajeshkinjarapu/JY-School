@@ -131,13 +131,30 @@ export const ClassWiseFeeReportTab: React.FC<ClassWiseFeeReportTabProps> = ({ st
     
     const doc = makePDF(data);
     if (!doc) return;
-    
-    const toastId = toast.loading('Uploading PDF for WhatsApp share...');
+
+    const fileName = `FeeReport_${data.classInfo.name}_${data.classInfo.section}.pdf`;
+    const ph = data.teacherPhone ? data.teacherPhone.replace(/\D/g, '') : null;
+    const waNum = ph ? (ph.startsWith('91') ? ph : '91' + ph) : '';
+    const msg = `Hello ${data.teacherName},\n\n*${data.classInfo.name} - ${data.classInfo.section} Fee Report* (${new Date().toLocaleDateString('en-IN')})\nStudents: ${data.rows.length}\n\n_JY School Finance_`;
+
+    const toastId = toast.loading('Preparing PDF for WhatsApp...');
     
     try {
       const blob = doc.output('blob');
-      const file = new File([blob], `FeeReport_${data.classInfo.name}_${data.classInfo.section}.pdf`, { type: 'application/pdf' });
-      
+      const file = new File([blob], fileName, { type: 'application/pdf' });
+
+      // 📱 MOBILE: Use Web Share API to directly share PDF file
+      if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+        toast.dismiss(toastId);
+        await navigator.share({
+          files: [file],
+          title: `${data.classInfo.name} - ${data.classInfo.section} Fee Report`,
+          text: msg,
+        });
+        return;
+      }
+
+      // 💻 DESKTOP: Upload PDF to server and send link via WhatsApp
       const formData = new FormData();
       formData.append('file', file);
       
@@ -147,29 +164,22 @@ export const ClassWiseFeeReportTab: React.FC<ClassWiseFeeReportTabProps> = ({ st
       
       const pdfUrl = uploadRes.data.url || (uploadRes.data.data && uploadRes.data.data.url);
       
-      if (!pdfUrl) {
-         throw new Error('Failed to get PDF URL from server');
-      }
+      if (!pdfUrl) throw new Error('Failed to get PDF URL from server');
       
-      const msg = `Hello ${data.teacherName},\n\n*${data.classInfo.name} - ${data.classInfo.section} Fee Report* (${new Date().toLocaleDateString('en-IN')})\nStudents: ${data.rows.length}\n\n*Please click the link below to view/download the PDF:*\n${pdfUrl}\n\n_JY School Finance_`;
+      const linkMsg = `${msg}\n\n*Fee Report PDF Link:*\n${pdfUrl}`;
       
       toast.dismiss(toastId);
-      toast.success('Opening WhatsApp...');
-      
-      if (!data.teacherPhone) {
-        window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
-      } else {
-        const ph = data.teacherPhone.replace(/\D/g, '');
-        window.open(`https://wa.me/${ph.startsWith('91') ? ph : '91' + ph}?text=${encodeURIComponent(msg)}`, '_blank');
-      }
+      toast.success('Opening WhatsApp with PDF link...');
+      window.open(`https://wa.me/${waNum}?text=${encodeURIComponent(linkMsg)}`, '_blank');
+
     } catch (err: any) {
-      console.error('Failed to upload PDF:', err);
-      toast.error('Failed to prepare direct PDF link. Falling back to download...', { id: toastId });
-      doc.save(`FeeReport_${data.classInfo.name}_${data.classInfo.section}.pdf`);
-      
-      const msg = `Hello ${data.teacherName},\n\n*${data.classInfo.name} - ${data.classInfo.section} Fee Report* (${new Date().toLocaleDateString('en-IN')})\nStudents: ${data.rows.length}\n\n_JY School Finance_`;
-      const ph = data.teacherPhone ? data.teacherPhone.replace(/\D/g, '') : null;
-      window.open(`https://wa.me/${ph ? (ph.startsWith('91') ? ph : '91' + ph) : ''}?text=${encodeURIComponent(msg)}`, '_blank');
+      if (err.name === 'AbortError') { toast.dismiss(toastId); return; }
+      console.error('WhatsApp share error:', err);
+      // Final fallback: download PDF + open WhatsApp
+      toast.dismiss(toastId);
+      toast.success('Downloading PDF and opening WhatsApp...');
+      doc.save(fileName);
+      window.open(`https://wa.me/${waNum}?text=${encodeURIComponent(msg)}`, '_blank');
     }
   };
 
