@@ -155,7 +155,7 @@ export const SlipTestManualPage = () => {
     }
   };
 
-  const handleDownloadExcel = () => {
+  const handleDownloadExcel = async () => {
     if (processedStudents.length === 0) {
       toast.error("No data to export");
       return;
