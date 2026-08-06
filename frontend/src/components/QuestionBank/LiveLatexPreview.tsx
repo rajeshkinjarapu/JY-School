@@ -328,8 +328,8 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
             }}
             bounds="parent"
             cancel=".delete-btn"
-            className="group absolute z-50 print:!transform-none"
-            style={/* For printing, Rnd relies on inline styles. To ensure it prints exactly where it is, we let Rnd apply its transform. However, sometimes browsers don't print absolute transforms well. But react-rnd usually uses transform: translate(x, y) which prints fine in Chrome. */ {}}
+            className="group absolute z-50"
+            style={{}}
           >
             <div className="relative w-full h-full bg-white/50 backdrop-blur-[1px] hover:bg-transparent transition-all border border-transparent group-hover:border-blue-400 border-dashed print:border-none print:bg-transparent">
               <img src={dataUrl} className="w-full h-full object-contain pointer-events-none" />
