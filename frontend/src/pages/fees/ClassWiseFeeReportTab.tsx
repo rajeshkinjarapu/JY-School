@@ -3,6 +3,7 @@ import { Search, Download, Users, MessageCircle, FileText, FileSpreadsheet } fro
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
+import toast from 'react-hot-toast';
 
 interface ClassWiseFeeReportTabProps {
   students: any[];
@@ -103,8 +104,13 @@ export const ClassWiseFeeReportTab: React.FC<ClassWiseFeeReportTabProps> = ({ st
       ]),
       startY: 35,
       theme: 'grid',
-      styles: { fontSize: 8, cellPadding: 1.5 },
-      headStyles: { fillColor: [79, 70, 229], textColor: [255, 255, 255], fontStyle: 'bold' },
+      styles: { 
+        fontSize: 9, 
+        cellPadding: 2, 
+        valign: 'middle',
+        minCellHeight: data.rows.length > 0 ? 245 / (data.rows.length + 1) : 10 
+      },
+      headStyles: { fillColor: [79, 70, 229], textColor: [255, 255, 255], fontStyle: 'bold', valign: 'middle' },
       alternateRowStyles: { fillColor: [249, 250, 251] },
     });
 
@@ -142,7 +148,11 @@ export const ClassWiseFeeReportTab: React.FC<ClassWiseFeeReportTabProps> = ({ st
   };
 
   const handleWhatsAppShare = (type: 'pdf' | 'excel') => {
-    if (!classData || !classData.teacherPhone) return;
+    if (!classData) return;
+    if (!classData.teacherPhone) {
+      toast.error('Class Teacher phone number is not assigned!');
+      return;
+    }
 
     let fileName = '';
     if (type === 'pdf') fileName = generatePDF(classData, false) as string;
@@ -213,26 +223,14 @@ export const ClassWiseFeeReportTab: React.FC<ClassWiseFeeReportTabProps> = ({ st
               >
                 <FileSpreadsheet className="w-5 h-5" />
               </button>
-              
-              {classData.teacherPhone && (
-                <div className="flex items-center gap-2 pl-3 border-l border-gray-200">
-                  <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Share:</span>
-                  <button 
-                    onClick={() => handleWhatsAppShare('pdf')}
-                    className="flex items-center gap-1.5 px-3 py-2 bg-green-500 hover:bg-green-600 text-white text-sm font-bold rounded-xl transition-colors shadow-sm cursor-pointer"
-                    title={`Send PDF to ${classData.teacherPhone}`}
-                  >
-                    <MessageCircle className="w-4 h-4" /> PDF
-                  </button>
-                  <button 
-                    onClick={() => handleWhatsAppShare('excel')}
-                    className="flex items-center gap-1.5 px-3 py-2 bg-green-500 hover:bg-green-600 text-white text-sm font-bold rounded-xl transition-colors shadow-sm cursor-pointer"
-                    title={`Send Excel to ${classData.teacherPhone}`}
-                  >
-                    <MessageCircle className="w-4 h-4" /> Excel
-                  </button>
-                </div>
-              )}
+
+              <button 
+                onClick={() => handleWhatsAppShare('pdf')}
+                className="flex items-center justify-center w-10 h-10 bg-green-50 text-green-600 hover:bg-green-600 hover:text-white rounded-xl transition-all shadow-sm border border-green-100 cursor-pointer" 
+                title="Share PDF via WhatsApp"
+              >
+                <MessageCircle className="w-5 h-5" />
+              </button>
             </div>
           </div>
 

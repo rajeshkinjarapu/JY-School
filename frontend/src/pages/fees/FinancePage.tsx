@@ -155,8 +155,8 @@ export const FinancePage: React.FC = () => {
     try {
       const isStudent = user?.role === 'STUDENT';
       const [structRes, classRes]: any = await Promise.all([
-        isStudent ? Promise.resolve({ data: [] }) : api.get('/api/fees/structures?limit=750'),
-        isStudent ? Promise.resolve({ data: [] }) : api.get('/api/classes?limit=750'),
+        isStudent ? Promise.resolve({ data: [] }) : api.get('/api/fees/structures?limit=5000'),
+        isStudent ? Promise.resolve({ data: [] }) : api.get('/api/classes?limit=5000'),
       ]);
       const newStructures = structRes.data || structRes || [];
       const newClasses = classRes.data || classRes || [];
@@ -171,8 +171,8 @@ export const FinancePage: React.FC = () => {
     try {
       const isStudent = user?.role === 'STUDENT';
       const [payRes, studRes]: any = await Promise.allSettled([
-        api.get('/api/fees/payments?limit=750'),
-        isStudent ? Promise.resolve({ data: [] }) : api.get('/api/students?limit=750'),
+        api.get('/api/fees/payments?limit=5000'),
+        isStudent ? Promise.resolve({ data: [] }) : api.get('/api/students?limit=5000'),
       ]);
 
       let paymentArray = payments;
