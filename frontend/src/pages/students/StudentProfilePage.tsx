@@ -272,7 +272,6 @@ export const StudentProfilePage: React.FC = () => {
   if (!student) return <div className="text-center py-12">Student profile not found.</div>;
 
   return (
-    <>
     <div className="flex flex-col h-full bg-gray-50/50 w-full" style={{ minHeight: 'calc(100vh - 64px)' }}>
       <PageHeader 
         title={`${student.user.name}'s Profile`}
@@ -801,7 +800,7 @@ export const StudentProfilePage: React.FC = () => {
         </div>
       </div>
 
-    </div>
+
 
       {/* Change Section Modal */}
       {showSectionModal && createPortal(
@@ -1110,7 +1109,6 @@ export const StudentProfilePage: React.FC = () => {
       {/* Hidden Print Component */}
       <FeeReceiptPrint payment={printPayment} />
     </div>
-    </>
   );
 };
 
