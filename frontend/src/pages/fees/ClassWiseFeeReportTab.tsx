@@ -143,18 +143,24 @@ export const ClassWiseFeeReportTab: React.FC<ClassWiseFeeReportTabProps> = ({ st
       const blob = doc.output('blob');
       const file = new File([blob], fileName, { type: 'application/pdf' });
 
-      // 📱 MOBILE: Use Web Share API to directly share PDF file
+      let sharedNatively = false;
+      // 📱 MOBILE: Try Web Share API first
       if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-        toast.dismiss(toastId);
-        await navigator.share({
-          files: [file],
-          title: `${data.classInfo.name} - ${data.classInfo.section} Fee Report`,
-          text: msg,
-        });
-        return;
+        try {
+          await navigator.share({
+            files: [file],
+            title: `${data.classInfo.name} - ${data.classInfo.section} Fee Report`,
+            text: msg,
+          });
+          toast.dismiss(toastId);
+          return;
+        } catch (shareErr: any) {
+          if (shareErr.name === 'AbortError') { toast.dismiss(toastId); return; }
+          console.warn('Native share failed, falling back to server upload...', shareErr);
+        }
       }
 
-      // 💻 DESKTOP: Upload PDF to server and send link via WhatsApp
+      // 💻 DESKTOP or FALLBACK: Upload PDF to server and send link via WhatsApp
       const formData = new FormData();
       formData.append('file', file);
       
@@ -170,16 +176,15 @@ export const ClassWiseFeeReportTab: React.FC<ClassWiseFeeReportTabProps> = ({ st
       
       toast.dismiss(toastId);
       toast.success('Opening WhatsApp with PDF link...');
-      window.open(`https://wa.me/${waNum}?text=${encodeURIComponent(linkMsg)}`, '_blank');
+      window.open(`https://wa.me/${waNum}?text=${encodeURIComponent(linkMsg)}`, '_system');
 
     } catch (err: any) {
-      if (err.name === 'AbortError') { toast.dismiss(toastId); return; }
       console.error('WhatsApp share error:', err);
       // Final fallback: download PDF + open WhatsApp
       toast.dismiss(toastId);
       toast.success('Downloading PDF and opening WhatsApp...');
       doc.save(fileName);
-      window.open(`https://wa.me/${waNum}?text=${encodeURIComponent(msg)}`, '_blank');
+      window.open(`https://wa.me/${waNum}?text=${encodeURIComponent(msg)}`, '_system');
     }
   };
 
