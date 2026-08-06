@@ -849,110 +849,51 @@ export const ExamListPage: React.FC = () => {
               <div className="text-gray-400"><svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg></div>
               <input type="text" placeholder="Search exams, subjects, or actions..." className="w-full bg-transparent border-none focus:outline-none text-sm font-medium text-gray-700 dark:text-gray-200" />
             </div>
-
-            {/* Quick Insights Dashboard */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="bg-white dark:bg-gray-900 rounded-3xl p-6 border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md transition-shadow flex items-center gap-4">
-                <div className="p-4 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 rounded-2xl"><ClipboardList className="w-6 h-6" /></div>
+            {/* Quick Insights - Compact */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 border border-gray-100 dark:border-gray-800 shadow-sm flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-500 font-bold">Active Exams</p>
-                  <h4 className="text-2xl font-black text-gray-900 dark:text-white">{exams.length}</h4>
+                  <p className="text-xs text-gray-500 font-bold uppercase tracking-wider">Active Exams</p>
+                  <h4 className="text-xl font-black text-indigo-600 dark:text-indigo-400 mt-1">{exams.length}</h4>
                 </div>
+                <div className="p-3 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 rounded-xl"><ClipboardList className="w-5 h-5" /></div>
               </div>
-              <div className="bg-white dark:bg-gray-900 rounded-3xl p-6 border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md transition-shadow flex items-center gap-4">
-                <div className="p-4 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 rounded-2xl"><CheckSquare className="w-6 h-6" /></div>
+              <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 border border-gray-100 dark:border-gray-800 shadow-sm flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-500 font-bold">Total Classes</p>
-                  <h4 className="text-2xl font-black text-gray-900 dark:text-white">{classes.length || '12'}</h4>
+                  <p className="text-xs text-gray-500 font-bold uppercase tracking-wider">Total Classes</p>
+                  <h4 className="text-xl font-black text-emerald-600 dark:text-emerald-400 mt-1">{classes.length || '12'}</h4>
                 </div>
+                <div className="p-3 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 rounded-xl"><CheckSquare className="w-5 h-5" /></div>
               </div>
-              <div className="bg-white dark:bg-gray-900 rounded-3xl p-6 border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md transition-shadow flex items-center gap-4">
-                <div className="p-4 bg-orange-50 dark:bg-orange-900/20 text-orange-600 rounded-2xl"><HelpCircle className="w-6 h-6" /></div>
+              <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 border border-gray-100 dark:border-gray-800 shadow-sm flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-500 font-bold">Results Pending</p>
-                  <h4 className="text-2xl font-black text-gray-900 dark:text-white">3</h4>
+                  <p className="text-xs text-gray-500 font-bold uppercase tracking-wider">Results Pending</p>
+                  <h4 className="text-xl font-black text-orange-600 dark:text-orange-400 mt-1">3</h4>
                 </div>
+                <div className="p-3 bg-orange-50 dark:bg-orange-900/20 text-orange-600 rounded-xl"><HelpCircle className="w-5 h-5" /></div>
               </div>
             </div>
 
-            {/* Pre-Examination */}
-            <div className="space-y-4">
-              <div className="flex items-center gap-3 px-2 mb-2">
-                <div className="p-2 bg-indigo-50 dark:bg-indigo-900/20 rounded-xl shadow-sm border border-indigo-100/50 dark:border-indigo-800/30"><ClipboardList className="w-5 h-5 text-indigo-600 dark:text-indigo-400" /></div>
-                <h3 className="text-lg font-extrabold text-gray-900 dark:text-white uppercase tracking-widest opacity-90">Pre-Examination</h3>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
-                {isAdmin && <ExamCard label="Examinations List" sub="Manage all exams" icon={ClipboardList} gradient="linear-gradient(135deg, #6366f1, #4f46e5)" glow="rgba(99,102,241,0.4)" onClick={() => setActiveTab('examination')} />}
-                {isAdminOrTeacher && (
-                  <>
-                    <ExamCard label="Admit Card" sub="Generate hall tickets" icon={FileText} gradient="linear-gradient(135deg, #f59e0b, #ea580c)" glow="rgba(245,158,11,0.4)" onClick={() => setActiveTab('admit-card')} />
-                    <ExamCard label="Question Papers" sub="Manage papers" icon={Layers} gradient="linear-gradient(135deg, #475569, #334155)" glow="rgba(71,85,105,0.4)" onClick={() => setActiveTab('question-bank')} />
-                  </>
-                )}
-              </div>
-            </div>
-
-            {/* Post-Examination */}
-            <div className="space-y-4 pt-4">
-              <div className="flex items-center gap-3 px-2 mb-2">
-                <div className="p-2 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl shadow-sm border border-emerald-100/50 dark:border-emerald-800/30"><Award className="w-5 h-5 text-emerald-600 dark:text-emerald-400" /></div>
-                <h3 className="text-lg font-extrabold text-gray-900 dark:text-white uppercase tracking-widest opacity-90">Post-Examination</h3>
-              </div>
-              
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 mt-4">
-                <ExamCard label="Marks Upload" sub="Upload student marks" icon={Edit3} gradient="linear-gradient(135deg, #10b981, #059669)" glow="rgba(16,185,129,0.4)" onClick={() => setActiveTab('written-exam')} />
-                <ExamCard label="Results" sub="View grade sheets" icon={Award} gradient="linear-gradient(135deg, #0ea5e9, #0284c7)" glow="rgba(14,165,233,0.4)" onClick={() => setActiveTab('results')} />
-                <ExamCard label="Progress Card" sub="Detailed progress" icon={FileSpreadsheet} gradient="linear-gradient(135deg, #f43f5e, #e11d48)" glow="rgba(244,63,94,0.4)" onClick={() => setActiveTab('jee-progress-card')} />
-                {isAdmin && <ExamCard label="Slip Test Rank Card" sub="Generate manual rank cards" icon={Award} gradient="linear-gradient(135deg, #06b6d4, #0891b2)" glow="rgba(6,182,212,0.4)" onClick={() => navigate('/office-tools/slip-test')} />}
-                {isAdmin && <ExamCard label="Send Marks SMS" sub="SMS to parents" icon={MessageSquare} gradient="linear-gradient(135deg, #f59e0b, #d97706)" glow="rgba(245,158,11,0.4)" onClick={() => setShowSmsModal(true)} />}
-              </div>
-            </div>
-
-            {/* Configuration */}
-            {isAdmin && (
-              <div className="space-y-4 pt-4">
-                <div className="flex items-center gap-3 px-2 mb-2">
-                  <div className="p-2 bg-gray-100 dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200/50 dark:border-gray-700/50"><Settings className="w-5 h-5 text-gray-700 dark:text-gray-300" /></div>
-                  <h3 className="text-lg font-extrabold text-gray-900 dark:text-white uppercase tracking-widest opacity-90">Configuration & Settings</h3>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
-                  <ExamCard label="Status Overview" sub="Track progress" icon={ShieldAlert} gradient="linear-gradient(135deg, #d946ef, #c026d3)" glow="rgba(217,70,239,0.4)" onClick={() => setActiveTab('status-overview')} />
-                  <ExamCard label="Settings" sub="Exam configurations" icon={Settings} gradient="linear-gradient(135deg, #64748b, #475569)" glow="rgba(100,116,139,0.4)" onClick={() => setActiveTab('settings')} />
-                </div>
-              </div>
-            )}
-
-            {/* Recent Activity */}
-            <div className="space-y-4 pt-4 pb-8">
-              <div className="flex items-center gap-3 px-2 mb-2">
-                <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-xl shadow-sm border border-blue-100/50 dark:border-blue-800/30"><Clock className="w-5 h-5 text-blue-600 dark:text-blue-400" /></div>
-                <h3 className="text-lg font-extrabold text-gray-900 dark:text-white uppercase tracking-widest opacity-90">Recent Activity</h3>
-              </div>
-              <div className="bg-white dark:bg-gray-900 rounded-3xl p-6 border border-gray-100 dark:border-gray-800 shadow-sm">
-                <div className="space-y-6">
-                  <div className="flex gap-4">
-                    <div className="w-2.5 h-2.5 mt-1.5 rounded-full bg-emerald-500 shrink-0 shadow-[0_0_8px_rgba(16,185,129,0.6)]"></div>
-                    <div>
-                      <p className="text-sm font-bold text-gray-800 dark:text-gray-200">10th Class Math marks uploaded</p>
-                      <p className="text-xs font-semibold text-gray-500 mt-1">2 hours ago by Mr. Sharma</p>
-                    </div>
-                  </div>
-                  <div className="flex gap-4">
-                    <div className="w-2.5 h-2.5 mt-1.5 rounded-full bg-blue-500 shrink-0 shadow-[0_0_8px_rgba(59,130,246,0.6)]"></div>
-                    <div>
-                      <p className="text-sm font-bold text-gray-800 dark:text-gray-200">New exam "Half Yearly" created</p>
-                      <p className="text-xs font-semibold text-gray-500 mt-1">Yesterday by Admin</p>
-                    </div>
-                  </div>
-                  <div className="flex gap-4">
-                    <div className="w-2.5 h-2.5 mt-1.5 rounded-full bg-amber-500 shrink-0 shadow-[0_0_8px_rgba(245,158,11,0.6)]"></div>
-                    <div>
-                      <p className="text-sm font-bold text-gray-800 dark:text-gray-200">Results pending for 8th Class Science</p>
-                      <p className="text-xs font-semibold text-gray-500 mt-1">2 days ago</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
+            {/* Unified Tools Grid */}
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 mt-6">
+              {isAdmin && <ExamCard label="Examinations List" sub="Manage exams" icon={ClipboardList} gradient="linear-gradient(135deg, #6366f1, #4f46e5)" glow="rgba(99,102,241,0.4)" onClick={() => setActiveTab('examination')} />}
+              {isAdminOrTeacher && (
+                <>
+                  <ExamCard label="Admit Card" sub="Hall tickets" icon={FileText} gradient="linear-gradient(135deg, #f59e0b, #ea580c)" glow="rgba(245,158,11,0.4)" onClick={() => setActiveTab('admit-card')} />
+                  <ExamCard label="Question Papers" sub="Manage papers" icon={Layers} gradient="linear-gradient(135deg, #475569, #334155)" glow="rgba(71,85,105,0.4)" onClick={() => setActiveTab('question-bank')} />
+                  <ExamCard label="Marks Upload" sub="Upload marks" icon={Edit3} gradient="linear-gradient(135deg, #10b981, #059669)" glow="rgba(16,185,129,0.4)" onClick={() => setActiveTab('written-exam')} />
+                  <ExamCard label="Results" sub="Grade sheets" icon={Award} gradient="linear-gradient(135deg, #0ea5e9, #0284c7)" glow="rgba(14,165,233,0.4)" onClick={() => setActiveTab('results')} />
+                  <ExamCard label="Progress Card" sub="Detailed progress" icon={FileSpreadsheet} gradient="linear-gradient(135deg, #f43f5e, #e11d48)" glow="rgba(244,63,94,0.4)" onClick={() => setActiveTab('jee-progress-card')} />
+                </>
+              )}
+              {isAdmin && (
+                <>
+                  <ExamCard label="Slip Test Rank Card" sub="Manual ranks" icon={Award} gradient="linear-gradient(135deg, #06b6d4, #0891b2)" glow="rgba(6,182,212,0.4)" onClick={() => navigate('/office-tools/slip-test')} />
+                  <ExamCard label="Send Marks SMS" sub="SMS parents" icon={MessageSquare} gradient="linear-gradient(135deg, #ec4899, #db2777)" glow="rgba(236,72,153,0.4)" onClick={() => setShowSmsModal(true)} />
+                  <ExamCard label="Status Overview" sub="Track progress" icon={ShieldAlert} gradient="linear-gradient(135deg, #8b5cf6, #7c3aed)" glow="rgba(139,92,246,0.4)" onClick={() => setActiveTab('status-overview')} />
+                  <ExamCard label="Settings" sub="Configurations" icon={Settings} gradient="linear-gradient(135deg, #3f3f46, #27272a)" glow="rgba(63,63,70,0.4)" onClick={() => setActiveTab('settings')} />
+                </>
+              )}
             </div>
 
           </div>

@@ -321,7 +321,7 @@ export const sendMarksSMS = async (req: AuthRequest, res: Response, next: NextFu
     if (students.length === 0) return next(createError('No students found', 400));
 
     // Fetch all marks for this class & exam (or individual student)
-    const marks = await prisma.examMark.findMany({
+    const marks = await prisma.mark.findMany({
       where: {
         examId: id,
         studentId: { in: students.map(s => s.id) }
@@ -352,11 +352,14 @@ export const sendMarksSMS = async (req: AuthRequest, res: Response, next: NextFu
 
       studentMarks.forEach(m => {
         const subName = m.subject.name.toLowerCase();
-        if (subName.includes('math')) mathScore = m.isAbsent ? 'A' : m.marksObtained.toString();
-        else if (subName.includes('phy')) phyScore = m.isAbsent ? 'A' : m.marksObtained.toString();
-        else if (subName.includes('chem')) chemScore = m.isAbsent ? 'A' : m.marksObtained.toString();
+        const isAbsent = m.remarks?.toLowerCase().includes('absent');
+        const score = isAbsent ? 'A' : m.marksObtained.toString();
 
-        if (!m.isAbsent) totalScore += m.marksObtained;
+        if (subName.includes('math')) mathScore = score;
+        else if (subName.includes('phy')) phyScore = score;
+        else if (subName.includes('chem')) chemScore = score;
+
+        if (!isAbsent) totalScore += m.marksObtained;
       });
 
       // DLT Template: Dear parent Your child {#var#} Class {#var#} JEE MAINS SCORE MATHS: {#var#} PHYSICS : {#var#} CHEMISTRY: {#var#} TOTAL: {#var#} Thanking you SVJY SCHOOL

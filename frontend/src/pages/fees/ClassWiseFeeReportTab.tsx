@@ -145,25 +145,21 @@ export const ClassWiseFeeReportTab: React.FC<ClassWiseFeeReportTabProps> = ({ st
       <div className="block md:hidden">
         {!selectedClassId ? (
           <div className="bg-white shadow-sm overflow-hidden">
-            <div className="px-4 py-4 bg-emerald-500">
-              <h2 className="text-white font-black text-lg flex items-center gap-2"><Users className="w-5 h-5" /> Class Fee Report</h2>
-            </div>
             <div className="divide-y divide-gray-100">
               {classes.map(cls => {
                 const hasPhone = !!(cls.classTeacher?.user?.phone || cls.classTeacher?.phone);
                 return (
-                  <div key={cls.id} className="flex items-center gap-3 px-4 py-3.5 hover:bg-emerald-50/50 transition-colors cursor-pointer" onClick={() => setSelectedClassId(cls.id)}>
+                  <div key={cls.id} className="flex items-center gap-3 px-4 py-4 hover:bg-emerald-50/50 transition-colors cursor-pointer" onClick={() => setSelectedClassId(cls.id)}>
                     <div className="flex-1 min-w-0">
-                      <div className="font-black text-gray-900 text-sm">{cls.name} - {cls.section}</div>
-                      <div className="text-xs text-emerald-600 font-semibold truncate mt-0.5">{cls.classTeacher?.user?.name || 'Not Assigned'}</div>
+                      <div className="font-black text-gray-900 text-base">{cls.name} - {cls.section}</div>
+                      <div className="text-sm text-emerald-600 font-bold truncate mt-0.5">{cls.classTeacher?.user?.name || 'Not Assigned'}</div>
                     </div>
                     <button
                       onClick={e => { e.stopPropagation(); whatsappShare(cls.id); }}
-                      className={`flex-shrink-0 w-9 h-9 flex items-center justify-center rounded-xl transition-all cursor-pointer ${hasPhone ? 'bg-[#25D366] hover:bg-[#1db954] text-white shadow-sm' : 'bg-gray-100 text-gray-300'}`}
+                      className="flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-xl bg-[#25D366] hover:bg-[#1db954] text-white shadow-sm transition-all cursor-pointer"
                     >
                       <WhatsAppIcon />
                     </button>
-                    <ChevronRight className="w-4 h-4 text-gray-300 flex-shrink-0" />
                   </div>
                 );
               })}

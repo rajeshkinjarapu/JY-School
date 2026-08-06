@@ -413,10 +413,9 @@ export const FinancePage: React.FC = () => {
           <div className="p-3 bg-white/20 rounded-2xl">
             <CreditCard className="w-7 h-7 text-white" />
           </div>
-          <div>
-            <h1 className="text-2xl font-black uppercase tracking-tight text-white drop-shadow-sm">Finance</h1>
-
-          </div>
+            <h1 className="text-2xl font-black uppercase tracking-tight text-white drop-shadow-sm">
+              {activeTab === 'home' ? 'Finance' : FINANCE_MENU.find(m => m.key === activeTab)?.label || 'Finance'}
+            </h1>
         </div>
         {activeTab !== 'home' && (
           <button
