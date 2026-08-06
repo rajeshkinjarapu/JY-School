@@ -408,7 +408,7 @@ export const FinancePage: React.FC = () => {
   return (
     <div className="flex flex-col h-full bg-gray-50/50" style={{ minHeight: 'calc(100vh - 64px)' }}>
       {/* Header */}
-      <div className="px-6 py-6 bg-gradient-to-br from-emerald-600 via-teal-600 to-cyan-700 shadow-lg flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <div className="hidden md:flex px-6 py-6 bg-gradient-to-br from-emerald-600 via-teal-600 to-cyan-700 shadow-lg flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div className="flex items-center gap-3 sm:gap-4 min-w-0 w-full md:w-auto">
           <div className="p-2.5 sm:p-3 bg-white/20 rounded-xl sm:rounded-2xl shrink-0">
             <CreditCard className="w-5 h-5 sm:w-7 sm:h-7 text-white" />
