@@ -134,29 +134,12 @@ export const ClassWiseFeeReportTab: React.FC<ClassWiseFeeReportTabProps> = ({ st
     
     const msg = `Hello ${data.teacherName},\n\n*${data.classInfo.name} - ${data.classInfo.section} Fee Report* (${new Date().toLocaleDateString('en-IN')})\nStudents: ${data.rows.length}\n\n_JY School Finance_`;
     
-    try {
-      const blob = doc.output('blob');
-      const file = new File([blob], `FeeReport_${data.classInfo.name}_${data.classInfo.section}.pdf`, { type: 'application/pdf' });
-      if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-        await navigator.share({
-          files: [file],
-          title: `Fee Report - ${data.classInfo.name} ${data.classInfo.section}`,
-          text: msg
-        });
-        return;
-      }
-    } catch (e: any) {
-      if (e.name !== 'AbortError') console.error('Share error:', e);
-      return;
-    }
-
-    // Fallback for PC or unsupported browsers
+    toast.success('Downloading PDF and opening WhatsApp...');
     doc.save(`FeeReport_${data.classInfo.name}_${data.classInfo.section}.pdf`);
+    
     if (!data.teacherPhone) {
-      toast.success('PDF saved. Select contact in WhatsApp.');
       window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
     } else {
-      toast.success('PDF saved. Opening WhatsApp...');
       const ph = data.teacherPhone.replace(/\D/g, '');
       window.open(`https://wa.me/${ph.startsWith('91') ? ph : '91' + ph}?text=${encodeURIComponent(msg)}`, '_blank');
     }
