@@ -125,15 +125,33 @@ export const ClassWiseFeeReportTab: React.FC<ClassWiseFeeReportTabProps> = ({ st
     XLSX.writeFile(wb, `FeeReport_${data.classInfo.name}_${data.classInfo.section}.xlsx`);
   };
 
-  const whatsappShare = (classId: string) => {
+  const whatsappShare = async (classId: string) => {
     const data = buildRows(classId, '');
     if (!data.classInfo) return;
     
     const doc = makePDF(data);
-    if (doc) doc.save(`FeeReport_${data.classInfo.name}_${data.classInfo.section}.pdf`);
+    if (!doc) return;
     
-    const msg = `Hello ${data.teacherName},\n\n*${data.classInfo.name} - ${data.classInfo.section} Fee Report* (${new Date().toLocaleDateString('en-IN')})\nStudents: ${data.rows.length}\n\nPDF saved to device.\n_JY School Finance_`;
+    const msg = `Hello ${data.teacherName},\n\n*${data.classInfo.name} - ${data.classInfo.section} Fee Report* (${new Date().toLocaleDateString('en-IN')})\nStudents: ${data.rows.length}\n\n_JY School Finance_`;
     
+    try {
+      const blob = doc.output('blob');
+      const file = new File([blob], `FeeReport_${data.classInfo.name}_${data.classInfo.section}.pdf`, { type: 'application/pdf' });
+      if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          files: [file],
+          title: `Fee Report - ${data.classInfo.name} ${data.classInfo.section}`,
+          text: msg
+        });
+        return;
+      }
+    } catch (e: any) {
+      if (e.name !== 'AbortError') console.error('Share error:', e);
+      return;
+    }
+
+    // Fallback for PC or unsupported browsers
+    doc.save(`FeeReport_${data.classInfo.name}_${data.classInfo.section}.pdf`);
     if (!data.teacherPhone) {
       toast.success('PDF saved. Select contact in WhatsApp.');
       window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
