@@ -145,7 +145,11 @@ export const ClassWiseFeeReportTab: React.FC<ClassWiseFeeReportTabProps> = ({ st
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       
-      const pdfUrl = uploadRes.data.data.url;
+      const pdfUrl = uploadRes.data.url || (uploadRes.data.data && uploadRes.data.data.url);
+      
+      if (!pdfUrl) {
+         throw new Error('Failed to get PDF URL from server');
+      }
       
       const msg = `Hello ${data.teacherName},\n\n*${data.classInfo.name} - ${data.classInfo.section} Fee Report* (${new Date().toLocaleDateString('en-IN')})\nStudents: ${data.rows.length}\n\n*Please click the link below to view/download the PDF:*\n${pdfUrl}\n\n_JY School Finance_`;
       
