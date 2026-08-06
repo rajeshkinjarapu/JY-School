@@ -26,14 +26,14 @@ export const ClassWiseFeeReportTab: React.FC<ClassWiseFeeReportTabProps> = ({ st
 
     // Filter payments and structures for optimization
     const classStudentIds = new Set(classStudents.map(s => s.id));
-    const relevantPayments = payments.filter(p => classStudentIds.has(p.studentId) && p.status === 'PAID');
+    const relevantPayments = payments.filter(p => classStudentIds.has(p.studentId) && (p.status === 'PAID' || p.status === 'PARTIAL'));
     const relevantStructures = structures.filter(st => (st.classId === selectedClassId || st.class?.id === selectedClassId) || classStudentIds.has(st.studentId));
 
     // Create maps
     const paymentsMap = new Map();
     relevantPayments.forEach(p => {
       const current = paymentsMap.get(p.studentId) || 0;
-      paymentsMap.set(p.studentId, current + (Number(p.amount) || 0));
+      paymentsMap.set(p.studentId, current + (Number(p.amountPaid) || 0));
     });
 
     const classStructures = relevantStructures.filter(st => st.classId === selectedClassId || st.class?.id === selectedClassId);
@@ -51,12 +51,14 @@ export const ClassWiseFeeReportTab: React.FC<ClassWiseFeeReportTabProps> = ({ st
       const totalFee = allStructs.reduce((sum, st) => sum + (Number(st.amount) || 0), 0);
       const paid = paymentsMap.get(student.id) || 0;
       const percentage = totalFee > 0 ? ((paid / totalFee) * 100).toFixed(1) : '100.0';
+      const phone = student.user?.phone || student.phone || '-';
 
       return {
         sno: idx + 1,
         studentId: student.rollNo || '-',
         name: student.user?.name || student.name || '-',
         className: `${classInfo.name} - ${classInfo.section}`,
+        phone,
         totalFee,
         paid,
         percentage: Number(percentage)
@@ -89,19 +91,19 @@ export const ClassWiseFeeReportTab: React.FC<ClassWiseFeeReportTabProps> = ({ st
     doc.text(`Date: ${new Date().toLocaleDateString('en-IN')}`, 196, 30, { align: 'right' });
 
     autoTable(doc, {
-      head: [['S.No', 'Student ID', 'Student Name', 'Class/Section', 'Total Fee', 'Paid', 'Paid %']],
+      head: [['S.No', 'Student ID', 'Student Name', 'Class/Section', 'Mobile No.', 'Paid', 'Paid %']],
       body: data.rows.map((row: any) => [
         row.sno,
         row.studentId,
         row.name,
         row.className,
-        `Rs. ${row.totalFee.toLocaleString('en-IN')}`,
+        row.phone,
         `Rs. ${row.paid.toLocaleString('en-IN')}`,
         `${row.percentage}%`
       ]),
       startY: 35,
       theme: 'grid',
-      styles: { fontSize: 8, cellPadding: 3 },
+      styles: { fontSize: 8, cellPadding: 1.5 },
       headStyles: { fillColor: [79, 70, 229], textColor: [255, 255, 255], fontStyle: 'bold' },
       alternateRowStyles: { fillColor: [249, 250, 251] },
     });
@@ -118,13 +120,13 @@ export const ClassWiseFeeReportTab: React.FC<ClassWiseFeeReportTabProps> = ({ st
 
   const generateExcel = (data: any, downloadOnly = true) => {
     const wsData = [
-      ['S.No', 'Student ID', 'Student Name', 'Class/Section', 'Total Fee', 'Paid', 'Paid Percentage (%)'],
+      ['S.No', 'Student ID', 'Student Name', 'Class/Section', 'Mobile No.', 'Paid', 'Paid Percentage (%)'],
       ...data.rows.map((row: any) => [
         row.sno,
         row.studentId,
         row.name,
         row.className,
-        row.totalFee,
+        row.phone,
         row.paid,
         row.percentage
       ])
@@ -242,7 +244,7 @@ export const ClassWiseFeeReportTab: React.FC<ClassWiseFeeReportTabProps> = ({ st
                   <th className="px-5 py-4 font-bold uppercase text-xs">Student ID</th>
                   <th className="px-5 py-4 font-bold uppercase text-xs">Student Name</th>
                   <th className="px-5 py-4 font-bold uppercase text-xs">Class/Section</th>
-                  <th className="px-5 py-4 font-bold uppercase text-xs text-right">Total Fee</th>
+                  <th className="px-5 py-4 font-bold uppercase text-xs">Mobile No.</th>
                   <th className="px-5 py-4 font-bold uppercase text-xs text-right">Paid</th>
                   <th className="px-5 py-4 font-bold uppercase text-xs text-center">Paid %</th>
                 </tr>
@@ -259,7 +261,7 @@ export const ClassWiseFeeReportTab: React.FC<ClassWiseFeeReportTabProps> = ({ st
                       <td className="px-5 py-3 font-mono text-xs font-bold text-indigo-600">{row.studentId}</td>
                       <td className="px-5 py-3 font-bold text-gray-900">{row.name}</td>
                       <td className="px-5 py-3 text-gray-600 text-xs">{row.className}</td>
-                      <td className="px-5 py-3 text-right font-medium text-gray-600">₹{row.totalFee.toLocaleString('en-IN')}</td>
+                      <td className="px-5 py-3 font-medium text-gray-600">{row.phone}</td>
                       <td className="px-5 py-3 text-right font-bold text-emerald-600">₹{row.paid.toLocaleString('en-IN')}</td>
                       <td className="px-5 py-3 text-center">
                         <div className="inline-flex items-center justify-center px-2.5 py-1 rounded-full text-xs font-black
