@@ -78,7 +78,7 @@ export const ClassWiseFeeReportTab: React.FC<ClassWiseFeeReportTabProps> = ({ st
     return {
       classInfo,
       teacherName: classInfo.classTeacher?.user?.name || 'Not Assigned',
-      teacherPhone: (classInfo.classTeacher?.user?.phone || null) as string | null,
+      teacherPhone: (classInfo.classTeacher?.user?.phone || classInfo.classTeacher?.phone || null) as string | null,
       rows
     };
   };
@@ -139,24 +139,23 @@ export const ClassWiseFeeReportTab: React.FC<ClassWiseFeeReportTabProps> = ({ st
   const badge = (p: number) => p >= 100 ? 'bg-emerald-100 text-emerald-700' : p >= 50 ? 'bg-amber-100 text-amber-700' : 'bg-rose-100 text-rose-700';
 
   return (
-    <div className="space-y-4 animate-fade-in">
+    <div className="animate-fade-in -mx-4 -my-4 md:m-0">
 
       {/* ── MOBILE VIEW ── */}
       <div className="block md:hidden">
         {!selectedClassId ? (
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-            <div className="px-4 py-3 bg-gradient-to-r from-indigo-600 to-purple-600">
-              <h2 className="text-white font-black text-base flex items-center gap-2"><Users className="w-4 h-4" /> Class Fee Report</h2>
-              <p className="text-indigo-200 text-xs mt-0.5">క్లాస్ మీద click చేయండి</p>
+          <div className="bg-white shadow-sm overflow-hidden">
+            <div className="px-4 py-4 bg-emerald-500">
+              <h2 className="text-white font-black text-lg flex items-center gap-2"><Users className="w-5 h-5" /> Class Fee Report</h2>
             </div>
             <div className="divide-y divide-gray-100">
               {classes.map(cls => {
-                const hasPhone = !!(cls.classTeacher?.user?.phone);
+                const hasPhone = !!(cls.classTeacher?.user?.phone || cls.classTeacher?.phone);
                 return (
-                  <div key={cls.id} className="flex items-center gap-3 px-4 py-3.5 hover:bg-indigo-50/50 transition-colors cursor-pointer" onClick={() => setSelectedClassId(cls.id)}>
+                  <div key={cls.id} className="flex items-center gap-3 px-4 py-3.5 hover:bg-emerald-50/50 transition-colors cursor-pointer" onClick={() => setSelectedClassId(cls.id)}>
                     <div className="flex-1 min-w-0">
                       <div className="font-black text-gray-900 text-sm">{cls.name} - {cls.section}</div>
-                      <div className="text-xs text-indigo-600 font-semibold truncate mt-0.5">{cls.classTeacher?.user?.name || 'Not Assigned'}</div>
+                      <div className="text-xs text-emerald-600 font-semibold truncate mt-0.5">{cls.classTeacher?.user?.name || 'Not Assigned'}</div>
                     </div>
                     <button
                       onClick={e => { e.stopPropagation(); whatsappShare(cls.id); }}
@@ -172,14 +171,14 @@ export const ClassWiseFeeReportTab: React.FC<ClassWiseFeeReportTabProps> = ({ st
             </div>
           </div>
         ) : (
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-            <div className="px-4 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 flex items-center gap-3">
+          <div className="bg-white shadow-sm overflow-hidden">
+            <div className="px-4 py-3 bg-emerald-500 flex items-center gap-3">
               <button onClick={() => { setSelectedClassId(''); setSearchTerm(''); }} className="w-8 h-8 flex items-center justify-center bg-white/20 rounded-xl text-white cursor-pointer flex-shrink-0">
                 <ArrowLeft className="w-4 h-4" />
               </button>
               <div className="flex-1 min-w-0">
                 <div className="text-white font-black text-sm">{classData?.classInfo?.name} - {classData?.classInfo?.section}</div>
-                <div className="text-indigo-200 text-xs truncate">{classData?.teacherName}</div>
+                <div className="text-emerald-50 text-xs truncate">{classData?.teacherName}</div>
               </div>
               <div className="flex gap-2">
                 <button onClick={() => classData && downloadPDF(classData)} className="w-8 h-8 flex items-center justify-center bg-white/20 rounded-xl text-white cursor-pointer"><FileText className="w-4 h-4" /></button>
