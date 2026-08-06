@@ -406,11 +406,11 @@ const AdminView: React.FC<{ data: any }> = ({ data }) => {
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 rounded-xl flex items-center justify-center font-black text-sm shrink-0"
                     style={{ background: 'linear-gradient(135deg,#6366f1,#8b5cf6)', color: '#fff' }}>
-                    {p.student.user.name.charAt(0)}
+                    {(p.student?.user?.name || p.student?.name || 'S').charAt(0)}
                   </div>
                   <div>
-                    <p className="text-sm font-bold text-slate-800 group-hover:text-indigo-700 transition-colors">{p.student.user.name}</p>
-                    <p className="text-xs text-slate-400 font-medium">{p.feeStructure.name}</p>
+                    <p className="text-sm font-bold text-slate-800 group-hover:text-indigo-700 transition-colors">{p.student?.user?.name || p.student?.name || 'Unknown Student'}</p>
+                    <p className="text-xs text-slate-400 font-medium">{p.feeStructure?.name || 'Fee Payment'}</p>
                   </div>
                 </div>
                 <div className="text-right">

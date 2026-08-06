@@ -58,7 +58,7 @@ export const getAdminDashboard = async (req: AuthRequest, res: Response, next: N
       prisma.student.groupBy({ by: ['gender'], _count: { _all: true } }),
       prisma.feePayment.findMany({
         take: 5,
-        orderBy: { paymentDate: 'desc' },
+        orderBy: { createdAt: 'desc' },
         include: {
           student: { include: { user: { select: { name: true } } } },
           feeStructure: { select: { name: true } }
