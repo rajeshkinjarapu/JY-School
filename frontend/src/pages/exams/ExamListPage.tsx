@@ -30,31 +30,31 @@ const ExamCard: React.FC<{
   const primaryColor = match ? match[0] : '#6366f1';
   
   return (
-    <div onClick={onClick} className="group relative overflow-hidden bg-white dark:bg-gray-900 rounded-3xl p-6 transition-all duration-300 hover:-translate-y-2 cursor-pointer shadow-sm hover:shadow-2xl border border-gray-100 dark:border-gray-800">
+    <div onClick={onClick} className="group relative overflow-hidden rounded-[1.5rem] p-5 sm:p-6 transition-all duration-300 hover:-translate-y-1.5 cursor-pointer shadow-md hover:shadow-2xl border border-white/10"
+         style={{ background: gradient, boxShadow: `0 10px 25px -5px ${primaryColor}70` }}>
       
       {/* Background Watermark Icon */}
-      <div className="absolute -right-4 -bottom-4 opacity-5 group-hover:opacity-[0.07] transition-all duration-500 transform group-hover:scale-110 group-hover:-rotate-12 pointer-events-none" style={{ color: primaryColor }}>
-        <Icon className="w-32 h-32" />
+      <div className="absolute -right-4 -bottom-4 opacity-10 group-hover:opacity-20 transition-all duration-500 transform group-hover:scale-110 group-hover:-rotate-12 pointer-events-none text-white">
+        <Icon className="w-28 h-28 sm:w-32 sm:h-32" />
       </div>
         
-      {/* Left Accent Border */}
-      <div className="absolute top-0 left-0 bottom-0 w-1.5 opacity-80 group-hover:opacity-100 transition-opacity" style={{ background: gradient }} />
-      
-      <div className="relative z-10 flex flex-col h-full justify-between gap-6 pl-2">
+      {/* Top right gradient orb */}
+      <div className="absolute -top-10 -right-10 w-24 h-24 bg-white/20 blur-2xl rounded-full group-hover:bg-white/30 transition-all" />
+
+      <div className="relative z-10 flex flex-col h-full justify-between gap-5 sm:gap-6">
         <div className="flex items-start justify-between">
-          <div className="p-3 rounded-2xl shadow-sm transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3"
-            style={{ background: `linear-gradient(135deg, ${primaryColor}15, ${primaryColor}05)`, border: `1px solid ${primaryColor}20` }}>
-            <Icon className="w-6 h-6" style={{ color: primaryColor }} />
+          <div className="p-3 sm:p-3.5 rounded-2xl bg-white/20 backdrop-blur-md shadow-sm transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3 border border-white/20">
+            <Icon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
           </div>
-          <div className="p-2 rounded-full bg-gray-50 dark:bg-gray-800 group-hover:bg-white dark:group-hover:bg-gray-700 transition-all transform group-hover:translate-x-1 border border-transparent group-hover:border-gray-200 dark:group-hover:border-gray-600 shadow-sm">
-            <svg className="w-4 h-4 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <div className="p-2 sm:p-2.5 rounded-full bg-white/10 group-hover:bg-white/20 backdrop-blur-sm transition-all transform group-hover:translate-x-1 border border-white/10">
+            <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
             </svg>
           </div>
         </div>
         <div>
-          <h3 className="text-lg font-bold text-gray-900 dark:text-white tracking-wide mb-1 leading-tight transition-colors">{label}</h3>
-          {sub && <p className="text-sm text-gray-500 dark:text-gray-400 font-medium flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full opacity-60" style={{ backgroundColor: primaryColor }}/>{sub}</p>}
+          <h3 className="text-base sm:text-lg font-extrabold text-white tracking-wide mb-1 sm:mb-1.5 leading-tight">{label}</h3>
+          {sub && <p className="text-xs sm:text-sm text-white/80 font-bold flex items-center gap-1.5"><span className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-white/60"/>{sub}</p>}
         </div>
       </div>
     </div>
@@ -844,36 +844,6 @@ export const ExamListPage: React.FC = () => {
       <div className="space-y-6 md:space-y-8">
         {!activeTab && (
           <div className="pt-2 sm:pt-4 space-y-8">
-            {/* Search Bar */}
-            <div className="bg-white dark:bg-gray-900 p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 flex items-center gap-3">
-              <div className="text-gray-400"><svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg></div>
-              <input type="text" placeholder="Search exams, subjects, or actions..." className="w-full bg-transparent border-none focus:outline-none text-sm font-medium text-gray-700 dark:text-gray-200" />
-            </div>
-            {/* Quick Insights - Compact */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 border border-gray-100 dark:border-gray-800 shadow-sm flex items-center justify-between">
-                <div>
-                  <p className="text-xs text-gray-500 font-bold uppercase tracking-wider">Active Exams</p>
-                  <h4 className="text-xl font-black text-indigo-600 dark:text-indigo-400 mt-1">{exams.length}</h4>
-                </div>
-                <div className="p-3 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 rounded-xl"><ClipboardList className="w-5 h-5" /></div>
-              </div>
-              <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 border border-gray-100 dark:border-gray-800 shadow-sm flex items-center justify-between">
-                <div>
-                  <p className="text-xs text-gray-500 font-bold uppercase tracking-wider">Total Classes</p>
-                  <h4 className="text-xl font-black text-emerald-600 dark:text-emerald-400 mt-1">{classes.length || '12'}</h4>
-                </div>
-                <div className="p-3 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 rounded-xl"><CheckSquare className="w-5 h-5" /></div>
-              </div>
-              <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 border border-gray-100 dark:border-gray-800 shadow-sm flex items-center justify-between">
-                <div>
-                  <p className="text-xs text-gray-500 font-bold uppercase tracking-wider">Results Pending</p>
-                  <h4 className="text-xl font-black text-orange-600 dark:text-orange-400 mt-1">3</h4>
-                </div>
-                <div className="p-3 bg-orange-50 dark:bg-orange-900/20 text-orange-600 rounded-xl"><HelpCircle className="w-5 h-5" /></div>
-              </div>
-            </div>
-
             {/* Unified Tools Grid */}
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 mt-6">
               {isAdmin && <ExamCard label="Examinations List" sub="Manage exams" icon={ClipboardList} gradient="linear-gradient(135deg, #6366f1, #4f46e5)" glow="rgba(99,102,241,0.4)" onClick={() => setActiveTab('examination')} />}

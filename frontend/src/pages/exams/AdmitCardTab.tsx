@@ -15,6 +15,7 @@ import {
   Save,
   ExternalLink,
   Download,
+  FileText,
 } from "lucide-react";
 import { jsPDF } from "jspdf";
 import { toJpeg } from "html-to-image";

@@ -132,7 +132,8 @@ export const ClassWiseFeeReportTab: React.FC<ClassWiseFeeReportTabProps> = ({ st
     const doc = makePDF(data);
     if (!doc) return;
 
-    const fileName = `FeeReport_${data.classInfo.name}_${data.classInfo.section}.pdf`;
+    const rawFileName = `FeeReport_${data.classInfo.name}_${data.classInfo.section}.pdf`;
+    const fileName = rawFileName.replace(/[^a-zA-Z0-9._-]/g, '');
     const ph = data.teacherPhone ? data.teacherPhone.replace(/\D/g, '') : null;
     const waNum = ph ? (ph.startsWith('91') ? ph : '91' + ph) : '';
     const msg = `Hello ${data.teacherName},\n\n*${data.classInfo.name} - ${data.classInfo.section} Fee Report* (${new Date().toLocaleDateString('en-IN')})\nStudents: ${data.rows.length}\n\n_JY School Finance_`;
@@ -162,7 +163,7 @@ export const ClassWiseFeeReportTab: React.FC<ClassWiseFeeReportTabProps> = ({ st
 
       // 💻 DESKTOP or FALLBACK: Upload PDF to server and send link via WhatsApp
       const formData = new FormData();
-      formData.append('file', file);
+      formData.append('file', blob, fileName);
       
       const uploadRes = await api.post('/api/uploads/document', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
