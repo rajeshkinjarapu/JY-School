@@ -128,12 +128,20 @@ export const ClassWiseFeeReportTab: React.FC<ClassWiseFeeReportTabProps> = ({ st
   const whatsappShare = (classId: string) => {
     const data = buildRows(classId, '');
     if (!data.classInfo) return;
-    if (!data.teacherPhone) { toast.error(`${data.teacherName} - Phone number not found!`); return; }
+    
     const doc = makePDF(data);
     if (doc) doc.save(`FeeReport_${data.classInfo.name}_${data.classInfo.section}.pdf`);
+    
     const msg = `Hello ${data.teacherName},\n\n*${data.classInfo.name} - ${data.classInfo.section} Fee Report* (${new Date().toLocaleDateString('en-IN')})\nStudents: ${data.rows.length}\n\nPDF saved to device.\n_JY School Finance_`;
-    const ph = data.teacherPhone.replace(/\D/g, '');
-    window.open(`https://wa.me/${ph.startsWith('91') ? ph : '91' + ph}?text=${encodeURIComponent(msg)}`, '_blank');
+    
+    if (!data.teacherPhone) {
+      toast.success('PDF saved. Select contact in WhatsApp.');
+      window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+    } else {
+      toast.success('PDF saved. Opening WhatsApp...');
+      const ph = data.teacherPhone.replace(/\D/g, '');
+      window.open(`https://wa.me/${ph.startsWith('91') ? ph : '91' + ph}?text=${encodeURIComponent(msg)}`, '_blank');
+    }
   };
 
   const badge = (p: number) => p >= 100 ? 'bg-emerald-100 text-emerald-700' : p >= 50 ? 'bg-amber-100 text-amber-700' : 'bg-rose-100 text-rose-700';
