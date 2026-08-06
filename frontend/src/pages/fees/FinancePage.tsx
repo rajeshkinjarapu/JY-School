@@ -421,7 +421,7 @@ export const FinancePage: React.FC = () => {
         {activeTab !== 'home' && (
           <button
             onClick={() => setTab('home')}
-            className="flex items-center gap-1.5 px-4 py-2.5 text-sm font-extrabold text-teal-700 bg-white rounded-xl shadow hover:bg-teal-50 transition-colors cursor-pointer"
+            className="hidden md:flex items-center gap-1.5 px-4 py-2.5 text-sm font-extrabold text-teal-700 bg-white rounded-xl shadow hover:bg-teal-50 transition-colors cursor-pointer"
           >
             ← Back to Finance Home
           </button>
