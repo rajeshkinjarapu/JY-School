@@ -21,7 +21,7 @@ export const getAll = async (req: AuthRequest, res: Response): Promise<void> => 
     where,
     include: {
       _count: { select: { students: true } },
-      classTeacher: { include: { user: { select: { name: true } } } },
+      classTeacher: { include: { user: { select: { name: true, phone: true } } } },
     },
   });
 
@@ -49,7 +49,7 @@ export const getById = async (req: AuthRequest, res: Response, next: NextFunctio
           teacher: { include: { user: { select: { name: true } } } },
         },
       },
-      classTeacher: { include: { user: { select: { name: true } } } },
+      classTeacher: { include: { user: { select: { name: true, phone: true } } } },
     },
   });
   if (!cls) return next(createError('Class not found', 404));
