@@ -132,16 +132,40 @@ export const ClassWiseFeeReportTab: React.FC<ClassWiseFeeReportTabProps> = ({ st
     const doc = makePDF(data);
     if (!doc) return;
     
-    const msg = `Hello ${data.teacherName},\n\n*${data.classInfo.name} - ${data.classInfo.section} Fee Report* (${new Date().toLocaleDateString('en-IN')})\nStudents: ${data.rows.length}\n\n_JY School Finance_`;
+    const toastId = toast.loading('Uploading PDF for WhatsApp share...');
     
-    toast.success('Downloading PDF and opening WhatsApp...');
-    doc.save(`FeeReport_${data.classInfo.name}_${data.classInfo.section}.pdf`);
-    
-    if (!data.teacherPhone) {
-      window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
-    } else {
-      const ph = data.teacherPhone.replace(/\D/g, '');
-      window.open(`https://wa.me/${ph.startsWith('91') ? ph : '91' + ph}?text=${encodeURIComponent(msg)}`, '_blank');
+    try {
+      const blob = doc.output('blob');
+      const file = new File([blob], `FeeReport_${data.classInfo.name}_${data.classInfo.section}.pdf`, { type: 'application/pdf' });
+      
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      const uploadRes = await api.post('/api/uploads/document', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      
+      const pdfUrl = uploadRes.data.data.url;
+      
+      const msg = `Hello ${data.teacherName},\n\n*${data.classInfo.name} - ${data.classInfo.section} Fee Report* (${new Date().toLocaleDateString('en-IN')})\nStudents: ${data.rows.length}\n\n*Please click the link below to view/download the PDF:*\n${pdfUrl}\n\n_JY School Finance_`;
+      
+      toast.dismiss(toastId);
+      toast.success('Opening WhatsApp...');
+      
+      if (!data.teacherPhone) {
+        window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+      } else {
+        const ph = data.teacherPhone.replace(/\D/g, '');
+        window.open(`https://wa.me/${ph.startsWith('91') ? ph : '91' + ph}?text=${encodeURIComponent(msg)}`, '_blank');
+      }
+    } catch (err: any) {
+      console.error('Failed to upload PDF:', err);
+      toast.error('Failed to prepare direct PDF link. Falling back to download...', { id: toastId });
+      doc.save(`FeeReport_${data.classInfo.name}_${data.classInfo.section}.pdf`);
+      
+      const msg = `Hello ${data.teacherName},\n\n*${data.classInfo.name} - ${data.classInfo.section} Fee Report* (${new Date().toLocaleDateString('en-IN')})\nStudents: ${data.rows.length}\n\n_JY School Finance_`;
+      const ph = data.teacherPhone ? data.teacherPhone.replace(/\D/g, '') : null;
+      window.open(`https://wa.me/${ph ? (ph.startsWith('91') ? ph : '91' + ph) : ''}?text=${encodeURIComponent(msg)}`, '_blank');
     }
   };
 
