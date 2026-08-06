@@ -1,6 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import { prisma } from '../utils/prisma';
 import { createError } from './errorHandler';
 import { Role } from '../types/enums';
 
@@ -13,11 +12,11 @@ export interface AuthRequest extends Request {
   };
 }
 
-export const authenticate = async (
+export const authenticate = (
   req: AuthRequest,
   _res: Response,
   next: NextFunction
-): Promise<void> => {
+): void => {
   const authHeader = req.headers.authorization;
   if (!authHeader?.startsWith('Bearer ')) {
     return next(createError('No token provided', 401));
@@ -32,11 +31,7 @@ export const authenticate = async (
       name: string;
     };
 
-    const user = await prisma.user.findUnique({ where: { id: decoded.id } });
-    if (!user || !user.isActive) {
-      return next(createError('User not found or inactive', 401));
-    }
-
+    // JWT token itself is trusted — no extra DB round-trip per request
     req.user = { id: decoded.id, email: decoded.email, role: decoded.role, name: decoded.name };
     next();
   } catch {

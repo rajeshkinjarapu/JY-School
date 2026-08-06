@@ -2,6 +2,8 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import api from '../../api/axios';
 import { useAuth } from '../../hooks/useAuth';
+import { PageHeader } from '../../components/UI/PageHeader';
+import { LoadingSpinner } from '../../components/UI/LoadingSpinner';
 
 import { Badge } from '../../components/UI/Badge';
 import {
@@ -14,7 +16,8 @@ import toast from 'react-hot-toast';
 import { StudentFeeDetailsTab } from './StudentFeeDetailsTab';
 import { ClassWiseFeeReportTab } from './ClassWiseFeeReportTab';
 import { FeeStructurePage } from './FeeStructurePage';
-import * as XLSX from 'xlsx';
+import { FeeSettingsTabs } from './FeeSettingsTabs';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from 'recharts';
 
 export const FinancePage: React.FC = () => {
   const { user } = useAuth();
@@ -93,23 +96,9 @@ export const FinancePage: React.FC = () => {
     { id: '3', name: 'Bank Transfer / IMPS', isActive: true, notes: 'Direct bank settlement' },
     { id: '4', name: 'Credit / Debit Card', isActive: false, notes: 'POS machine or payment gateway' },
   ]));
-  const [feeGroups, setFeeGroups] = useState<any[]>(() => initMockSync('fin_fee_groups', [
-    { id: '1', name: 'Academic Fees', description: 'Standard tuition and examination fees' },
-    { id: '2', name: 'Transport Fees', description: 'Bus commute and route subscription fees' },
-    { id: '3', name: 'Hostel Fees', description: 'Room rent, mess, and utility expenses' },
-    { id: '4', name: 'Extracurricular Fees', description: 'Sports, events, and lab equipment charges' },
-  ]));
-  const [feeHeads, setFeeHeads] = useState<any[]>(() => initMockSync('fin_fee_heads', [
-    { id: '1', name: 'Tuition fee', groupId: '1', description: 'Academic tuition' },
-    { id: '2', name: 'Admission fee', groupId: '1', description: 'One-time admission charge' },
-    { id: '3', name: 'Books Fee', groupId: '2', description: 'Cost of books and materials' },
-    { id: '4', name: 'Other Fee', groupId: '3', description: 'Other miscellaneous fees' },
-  ]));
-  const [feeConcessions, setFeeConcessions] = useState<any[]>(() => initMockSync('fin_fee_concessions', [
-    { id: '1', name: 'Sibling Waiver (10%)', type: 'PERCENT', value: 10 },
-    { id: '2', name: 'Staff Child Discount (50%)', type: 'PERCENT', value: 50 },
-    { id: '3', name: 'Sports Merit Scholarship', type: 'FIXED', value: 5000 },
-  ]));
+  const [feeGroups, setFeeGroups] = useState<any[]>([]);
+  const [feeHeads, setFeeHeads] = useState<any[]>([]);
+  const [feeConcessions, setFeeConcessions] = useState<any[]>([]);
   const [ledgerTypes, setLedgerTypes] = useState<any[]>(() => initMockSync('fin_ledger_types', [
     { id: '1', name: 'Revenue (Income)' },
     { id: '2', name: 'Expense' },
@@ -138,6 +127,36 @@ export const FinancePage: React.FC = () => {
     setExpandedRows(prev => ({ ...prev, [id]: !prev[id] }));
   };
 
+  // KPI Calculations
+  const dashboardStats = React.useMemo(() => {
+    const totalStructuresAmount = structures.reduce((sum, s) => sum + (Number(s.amount) || 0), 0);
+    const totalCollected = payments.reduce((sum, p) => sum + (Number(p.amountPaid) || 0), 0);
+    const today = new Date().toISOString().split('T')[0];
+    const todayCollected = payments
+      .filter(p => p.paymentDate?.startsWith(today) || p.createdAt?.startsWith(today))
+      .reduce((sum, p) => sum + (Number(p.amountPaid) || 0), 0);
+    const pendingDues = Math.max(0, totalStructuresAmount - totalCollected);
+
+    // Monthly data for chart
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const monthlyMap: Record<string, number> = {};
+    payments.forEach(p => {
+      const d = new Date(p.paymentDate || p.createdAt);
+      if (d.getFullYear() === new Date().getFullYear()) {
+        const m = monthNames[d.getMonth()];
+        monthlyMap[m] = (monthlyMap[m] || 0) + (Number(p.amountPaid) || 0);
+      }
+    });
+    const monthlyData = Object.keys(monthlyMap).map(k => ({ name: k, amount: monthlyMap[k] }));
+
+    const pieData = [
+      { name: 'Collected', value: totalCollected, color: '#10b981' },
+      { name: 'Pending', value: pendingDues, color: '#f43f5e' }
+    ];
+
+    return { totalCollected, todayCollected, pendingDues, totalStructuresAmount, monthlyData, pieData };
+  }, [structures, payments]);
+
   const handleApprovePayment = async (id: string) => {
     try {
       await api.put(`/api/fees/payments/${id}`, { status: 'PAID' });
@@ -154,14 +173,20 @@ export const FinancePage: React.FC = () => {
   const fetchBaseData = async () => {
     try {
       const isStudent = user?.role === 'STUDENT';
-      const [structRes, classRes]: any = await Promise.all([
+      const [structRes, classRes, groupsRes, headsRes, concessionsRes]: any = await Promise.all([
         isStudent ? Promise.resolve({ data: [] }) : api.get('/api/fees/structures?limit=5000'),
         isStudent ? Promise.resolve({ data: [] }) : api.get('/api/classes?limit=5000'),
+        isStudent ? Promise.resolve({ data: [] }) : api.get('/api/fees/groups'),
+        isStudent ? Promise.resolve({ data: [] }) : api.get('/api/fees/heads'),
+        isStudent ? Promise.resolve({ data: [] }) : api.get('/api/fees/concessions'),
       ]);
       const newStructures = structRes.data || structRes || [];
       const newClasses = classRes.data || classRes || [];
       setStructures(newStructures);
       setClasses(newClasses);
+      setFeeGroups(groupsRes.data?.data || []);
+      setFeeHeads(headsRes.data?.data || []);
+      setFeeConcessions(concessionsRes.data?.data || []);
       const cached = JSON.parse(localStorage.getItem('fin_dashboard_cache') || '{}');
       localStorage.setItem('fin_dashboard_cache', JSON.stringify({ ...cached, structures: newStructures, classes: newClasses }));
     } catch(e) {}
@@ -179,14 +204,24 @@ export const FinancePage: React.FC = () => {
       let newStudents = students;
 
       if (payRes.status === 'fulfilled') {
-        const paymentData = payRes.value.data?.data || payRes.value.data || payRes.value || [];
-        paymentArray = Array.isArray(paymentData) ? paymentData : [];
+        let payload = payRes.value?.data || payRes.value || [];
+        if (payload && payload.success && Array.isArray(payload.data)) {
+           payload = payload.data;
+        } else if (payload && Array.isArray(payload.data)) {
+           payload = payload.data;
+        }
+        paymentArray = Array.isArray(payload) ? payload : [];
         setPayments(paymentArray);
       }
 
       if (studRes.status === 'fulfilled') {
-        const studData = studRes.value.data?.data || studRes.value.data || studRes.value || [];
-        newStudents = Array.isArray(studData) ? studData : (Array.isArray(studData.data) ? studData.data : []);
+        let payload = studRes.value?.data || studRes.value || [];
+        if (payload && payload.success && Array.isArray(payload.data)) {
+           payload = payload.data;
+        } else if (payload && Array.isArray(payload.data)) {
+           payload = payload.data;
+        }
+        newStudents = Array.isArray(payload) ? payload : [];
         setStudents(newStudents);
       }
 
@@ -381,7 +416,7 @@ export const FinancePage: React.FC = () => {
     const matchesClass = filterClass === 'ALL' || p.student?.class?.name === filterClass;
     const matchesSection = filterSection === 'ALL' || p.student?.class?.section === filterSection;
     return matchesSearch && matchesStatus && matchesClass && matchesSection;
-  });
+  }).sort((a, b) => new Date(b.paymentDate || b.createdAt || new Date()).getTime() - new Date(a.paymentDate || a.createdAt || new Date()).getTime());
 
   const uniqueClassNames = [...new Set(classes.map(c => c.name))].sort();
   const availableSections = filterClass === 'ALL' ? [] : [...new Set(classes.filter(c => c.name === filterClass).map(c => c.section))].sort();
@@ -389,7 +424,10 @@ export const FinancePage: React.FC = () => {
   const getDisplayDate = (p: any) => {
     let d = new Date(p.paymentDate || p.createdAt || new Date());
     if (d.getFullYear() < 2000) d = new Date(p.createdAt || new Date());
-    return d.toLocaleDateString();
+    const dd = String(d.getDate()).padStart(2, '0');
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const yyyy = d.getFullYear();
+    return `${dd}/${mm}/${yyyy}`;
   };
 
   const FINANCE_MENU = [
@@ -407,31 +445,108 @@ export const FinancePage: React.FC = () => {
 
   return (
     <div className="flex flex-col h-full bg-gray-50/50" style={{ minHeight: 'calc(100vh - 64px)' }}>
-      {/* Header */}
-      <div className="hidden md:flex px-6 py-6 bg-gradient-to-br from-emerald-600 via-teal-600 to-cyan-700 shadow-lg flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div className="flex items-center gap-3 sm:gap-4 min-w-0 w-full md:w-auto">
-          <div className="p-2.5 sm:p-3 bg-white/20 rounded-xl sm:rounded-2xl shrink-0">
-            <CreditCard className="w-5 h-5 sm:w-7 sm:h-7 text-white" />
-          </div>
-          <h1 className="text-lg sm:text-xl md:text-2xl font-black uppercase tracking-tight text-white drop-shadow-sm truncate">
-            {activeTab === 'home' ? 'Finance' : FINANCE_MENU.find(m => m.key === activeTab)?.label || 'Finance'}
-          </h1>
-        </div>
-        {activeTab !== 'home' && (
-          <button
-            onClick={() => setTab('home')}
-            className="hidden md:flex items-center gap-1.5 px-4 py-2.5 text-sm font-extrabold text-teal-700 bg-white rounded-xl shadow hover:bg-teal-50 transition-colors cursor-pointer"
-          >
-            ← Back to Finance Home
-          </button>
-        )}
-      </div>
+      <PageHeader 
+        title={activeTab === 'home' ? 'Finance' : FINANCE_MENU.find(m => m.key === activeTab)?.label || 'Finance'}
+        icon={<CreditCard className="w-6 h-6" />}
+        action={
+          activeTab !== 'home' ? (
+            <button
+              onClick={() => setTab('home')}
+              className="btn-secondary w-full sm:w-auto"
+            >
+              ← Back to Finance Home
+            </button>
+          ) : undefined
+        }
+      />
 
       <div className="flex-1 overflow-auto p-4 md:p-6">
       {/* ══ HOME GRID VIEW ══ */}
       {activeTab === 'home' && (
-        <div className="w-full animate-fade-in">
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 sm:gap-5">
+        <div className="w-full animate-fade-in space-y-6">
+          {/* KPI Dashboard Section */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm flex items-center gap-4">
+              <div className="w-12 h-12 rounded-xl bg-emerald-50 flex items-center justify-center shrink-0">
+                <DollarSign className="w-6 h-6 text-emerald-600" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-500 font-medium">Total Collected</p>
+                <h3 className="text-xl font-bold text-gray-900">₹{dashboardStats.totalCollected.toLocaleString('en-IN')}</h3>
+              </div>
+            </div>
+            <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm flex items-center gap-4">
+              <div className="w-12 h-12 rounded-xl bg-rose-50 flex items-center justify-center shrink-0">
+                <AlertTriangle className="w-6 h-6 text-rose-600" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-500 font-medium">Pending Dues</p>
+                <h3 className="text-xl font-bold text-gray-900">₹{dashboardStats.pendingDues.toLocaleString('en-IN')}</h3>
+              </div>
+            </div>
+            <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm flex items-center gap-4">
+              <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center shrink-0">
+                <Clock className="w-6 h-6 text-blue-600" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-500 font-medium">Today's Collection</p>
+                <h3 className="text-xl font-bold text-gray-900">₹{dashboardStats.todayCollected.toLocaleString('en-IN')}</h3>
+              </div>
+            </div>
+            <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm flex items-center gap-4">
+              <div className="w-12 h-12 rounded-xl bg-purple-50 flex items-center justify-center shrink-0">
+                <Briefcase className="w-6 h-6 text-purple-600" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-500 font-medium">Total Expected</p>
+                <h3 className="text-xl font-bold text-gray-900">₹{dashboardStats.totalStructuresAmount.toLocaleString('en-IN')}</h3>
+              </div>
+            </div>
+          </div>
+
+          {/* Charts Section */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <div className="lg:col-span-2 bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+              <h3 className="text-sm font-bold text-gray-800 mb-4">Monthly Collection</h3>
+              <div className="h-64 w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={dashboardStats.monthlyData}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" />
+                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#6b7280' }} />
+                    <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#6b7280' }} tickFormatter={(v) => `₹${v/1000}k`} />
+                    <RechartsTooltip cursor={{ fill: '#f9fafb' }} contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
+                    <Bar dataKey="amount" fill="#10b981" radius={[4, 4, 0, 0]} barSize={32} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+              <h3 className="text-sm font-bold text-gray-800 mb-4">Collection Status</h3>
+              <div className="h-64 w-full flex items-center justify-center">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={dashboardStats.pieData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={60}
+                      outerRadius={80}
+                      paddingAngle={5}
+                      dataKey="value"
+                    >
+                      {dashboardStats.pieData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <RechartsTooltip formatter={(value: number) => `₹${value.toLocaleString('en-IN')}`} contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
+                    <Legend iconType="circle" wrapperStyle={{ fontSize: '12px' }} />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-5 mt-6">
             {FINANCE_MENU.map((item, idx) => {
               const Icon = item.icon;
               return (
@@ -560,193 +675,18 @@ export const FinancePage: React.FC = () => {
 
             {/* ── 2. FEE GROUP TAB ── */}
             {activeTab === 'fee-group' && (
-              <div className="space-y-6 animate-fade-in">
-                <div className="flex items-center justify-between pb-4 border-b border-gray-100 dark:border-gray-800">
-                  <div>
-                    <h3 className="text-lg font-black text-gray-900 dark:text-white">Fee Groups</h3>
-                    <p className="text-xs text-gray-400">Manage categories of fees like Tuition, Hostel, and Transport.</p>
-                  </div>
-                  {isAdmin && (
-                    <button
-                      onClick={() => {
-                        const name = prompt('Enter Fee Group Name:');
-                        const desc = prompt('Enter Description:');
-                        if (name) {
-                          const updated = [...feeGroups, { id: Date.now().toString(), name, description: desc }];
-                          setFeeGroups(updated);
-                          saveMock('fin_fee_groups', updated);
-                          toast.success('Group added!');
-                        }
-                      }}
-                      className="btn-primary py-1.5 px-3.5 text-xs flex items-center gap-1 cursor-pointer"
-                    >
-                      <Plus className="w-4 h-4" /> Add Group
-                    </button>
-                  )}
-                </div>
-
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm text-left">
-                    <thead>
-                      <tr className="text-gray-450 border-b border-gray-150 dark:border-gray-800 font-bold">
-                        <th className="pb-3 text-[10px] uppercase tracking-wider">Group Name</th>
-                        <th className="pb-3 text-[10px] uppercase tracking-wider">Description</th>
-                        {isAdmin && <th className="pb-3 text-right text-[10px] uppercase tracking-wider">Actions</th>}
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-                      {feeGroups.map(g => (
-                        <tr key={g.id} className="hover:bg-gray-50/50 dark:hover:bg-gray-850/10">
-                          <td className="py-4 font-bold text-gray-900 dark:text-white">{g.name}</td>
-                          <td className="py-4 text-xs text-gray-400">{g.description || '-'}</td>
-                          {isAdmin && (
-                            <td className="py-4 text-right">
-                              <button
-                                onClick={() => {
-                                  const updated = feeGroups.filter(item => item.id !== g.id);
-                                  setFeeGroups(updated);
-                                  saveMock('fin_fee_groups', updated);
-                                  toast.success('Deleted!');
-                                }}
-                                className="text-red-500 hover:text-red-650 cursor-pointer"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </button>
-                            </td>
-                          )}
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
+              <FeeSettingsTabs type="fee-group" data={feeGroups} onRefresh={fetchBaseData} />
             )}
 
             {/* ── 3. FEE HEAD TAB ── */}
             {activeTab === 'fee-head' && (
-              <div className="space-y-6 animate-fade-in">
-                <div className="flex items-center justify-between pb-4 border-b border-gray-100 dark:border-gray-800">
-                  <div>
-                    <h3 className="text-lg font-black text-gray-900 dark:text-white">Fee Heads</h3>
-                    <p className="text-xs text-gray-400">Define particular components linked to fee groups.</p>
-                  </div>
-                  {isAdmin && (
-                    <button
-                      onClick={() => {
-                        const name = prompt('Enter Fee Head Name:');
-                        const gId = prompt(`Select Group ID:\n${feeGroups.map(g => `${g.id}: ${g.name}`).join('\n')}`);
-                        const desc = prompt('Enter Description:');
-                        if (name && gId) {
-                          const updated = [...feeHeads, { id: Date.now().toString(), name, groupId: gId, description: desc }];
-                          setFeeHeads(updated);
-                          saveMock('fin_fee_heads', updated);
-                          toast.success('Fee Head added!');
-                        }
-                      }}
-                      className="btn-primary py-1.5 px-3.5 text-xs flex items-center gap-1 cursor-pointer"
-                    >
-                      <Plus className="w-4 h-4" /> Add Fee Head
-                    </button>
-                  )}
-                </div>
-
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm text-left">
-                    <thead>
-                      <tr className="text-gray-455 border-b border-gray-150 dark:border-gray-800 font-bold">
-                        <th className="pb-3 text-[10px] uppercase tracking-wider">Fee Head</th>
-                        <th className="pb-3 text-[10px] uppercase tracking-wider">Associated Group</th>
-                        <th className="pb-3 text-[10px] uppercase tracking-wider">Description</th>
-                        {isAdmin && <th className="pb-3 text-right text-[10px] uppercase tracking-wider">Actions</th>}
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-                      {feeHeads.map(h => {
-                        const group = feeGroups.find(g => g.id === h.groupId);
-                        return (
-                          <tr key={h.id} className="hover:bg-gray-50/50 dark:hover:bg-gray-850/10">
-                            <td className="py-4 font-bold text-gray-900 dark:text-white">{h.name}</td>
-                            <td className="py-4">
-                              <Badge variant="info">{group?.name || 'Default'}</Badge>
-                            </td>
-                            <td className="py-4 text-xs text-gray-400">{h.description || '-'}</td>
-                            {isAdmin && (
-                              <td className="py-4 text-right">
-                                <button
-                                  onClick={() => {
-                                    const updated = feeHeads.filter(item => item.id !== h.id);
-                                    setFeeHeads(updated);
-                                    saveMock('fin_fee_heads', updated);
-                                    toast.success('Deleted!');
-                                  }}
-                                  className="text-red-500 hover:text-red-650 cursor-pointer"
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </button>
-                              </td>
-                            )}
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
+              <FeeSettingsTabs type="fee-head" data={feeHeads} groups={feeGroups} onRefresh={fetchBaseData} />
             )}
 
             {/* ── 4. FEE CONCESSION TAB ── */}
             {activeTab === 'fee-concession' && (
-              <div className="space-y-6 animate-fade-in">
-                <div className="flex items-center justify-between pb-4 border-b border-gray-100 dark:border-gray-800">
-                  <div>
-                    <h3 className="text-lg font-black text-gray-900 dark:text-white">Fee Concessions</h3>
-                    <p className="text-xs text-gray-400">Configure fee waivers or scholarship discount plans.</p>
-                  </div>
-                  {isAdmin && (
-                    <button
-                      onClick={() => {
-                        const name = prompt('Enter Concession Name:');
-                        const type = prompt('Enter Type (PERCENT or FIXED):') || 'PERCENT';
-                        const val = prompt('Enter Discount Value:');
-                        if (name && val) {
-                          const updated = [...feeConcessions, { id: Date.now().toString(), name, type, value: Number(val) }];
-                          setFeeConcessions(updated);
-                          saveMock('fin_fee_concessions', updated);
-                          toast.success('Concession added!');
-                        }
-                      }}
-                      className="btn-primary py-1.5 px-3.5 text-xs flex items-center gap-1 cursor-pointer"
-                    >
-                      <Plus className="w-4 h-4" /> Add Concession
-                    </button>
-                  )}
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {feeConcessions.map(c => (
-                    <div key={c.id} className="p-5 bg-gray-50 dark:bg-gray-800/40 border border-gray-150 dark:border-gray-800 rounded-2xl flex items-center justify-between">
-                      <div className="space-y-1">
-                        <span className="font-bold text-sm text-gray-900 dark:text-white">{c.name}</span>
-                        <p className="text-xs text-indigo-500 font-extrabold">{c.type === 'PERCENT' ? `${c.value}% Off` : `₹${c.value.toLocaleString()} Off`}</p>
-                      </div>
-                      {isAdmin && (
-                        <button
-                          onClick={() => {
-                            const updated = feeConcessions.filter(item => item.id !== c.id);
-                            setFeeConcessions(updated);
-                            saveMock('fin_fee_concessions', updated);
-                            toast.success('Deleted!');
-                          }}
-                          className="text-red-500 hover:text-red-650 cursor-pointer"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      )}
-                    </div>
-                  ))}
-                  </div>
-                </div>
-              )}
+              <FeeSettingsTabs type="fee-concession" data={feeConcessions} onRefresh={fetchBaseData} />
+            )}
 
               {/* ── 5. FEE STRUCTURE TAB ── */}
             {activeTab === 'fee-structure' && <FeeStructurePage structures={structures} setStructures={setStructures} classes={classes} refresh={fetchData} />}
@@ -754,14 +694,41 @@ export const FinancePage: React.FC = () => {
 
             {/* ── 8. TRANSACTION TAB ── */}
             {activeTab === 'transaction' && (
-              <div className="space-y-6 animate-fade-in">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-gray-100 dark:border-gray-800">
-                  <div>
-                    <h3 className="text-lg font-black text-gray-900 dark:text-white">Transaction Logs</h3>
-                    <p className="text-xs text-gray-400">List of fee collections and transaction statements.</p>
+              <div className="space-y-4 animate-fade-in -mx-4 -mt-4 sm:mx-0 sm:mt-0">
+                
+                {/* Compact Toolbar */}
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white dark:bg-gray-800 p-2 sm:p-3 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 w-full">
+                  <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto flex-1">
+                    <div className="relative flex-1 min-w-[150px] max-w-xs">
+                      <Search className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
+                      <input
+                        type="text"
+                        className="w-full bg-gray-50 dark:bg-gray-900 border-none rounded-xl pl-9 pr-4 py-2 text-sm focus:ring-2 focus:ring-indigo-500 font-medium"
+                        placeholder="Search student or fee..."
+                        value={searchTerm}
+                        onChange={e => setSearchTerm(e.target.value)}
+                      />
+                    </div>
+                    {/* Compact Filters */}
+                    <select className="bg-gray-50 border-none rounded-xl py-2 px-3 text-xs font-bold text-gray-600 cursor-pointer focus:ring-2 focus:ring-indigo-500" value={filterClass} onChange={e => { setFilterClass(e.target.value); setFilterSection('ALL'); }}>
+                      <option value="ALL">Class</option>
+                      {uniqueClassNames.map(cName => <option key={cName} value={cName}>{cName}</option>)}
+                    </select>
+                    {filterClass !== 'ALL' && (
+                      <select className="bg-gray-50 border-none rounded-xl py-2 px-3 text-xs font-bold text-gray-600 cursor-pointer focus:ring-2 focus:ring-indigo-500" value={filterSection} onChange={e => setFilterSection(e.target.value)}>
+                        <option value="ALL">Sec</option>
+                        {availableSections.map(sec => <option key={sec} value={sec}>{sec}</option>)}
+                      </select>
+                    )}
+                    <select className="bg-gray-50 border-none rounded-xl py-2 px-3 text-xs font-bold text-gray-600 cursor-pointer focus:ring-2 focus:ring-indigo-500" value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
+                      <option value="ALL">Status</option>
+                      <option value="PAID">Paid</option>
+                      <option value="PENDING">Pending</option>
+                    </select>
                   </div>
+                  
                   {isAdmin && (
-                    <div className="flex gap-2 items-center flex-wrap">
+                    <div className="flex items-center gap-2 w-full sm:w-auto shrink-0 justify-end overflow-x-auto pb-1 sm:pb-0">
                       <input
                         type="file"
                         ref={paymentFileInputRef}
@@ -770,141 +737,93 @@ export const FinancePage: React.FC = () => {
                         onChange={handleBulkPaymentImport}
                       />
                       <button
-                        onClick={() => {
-                          const ws = XLSX.utils.json_to_sheet([
-                            { "Student ID": "JY26-0001", "Amount Paid": 15000, "Payment Mode": "UPI", "Payment Date": new Date().toISOString().split('T')[0] }
-                          ]);
+                        onClick={async () => {
+                          const XLSX = await import('xlsx');
+                          const ws = XLSX.utils.json_to_sheet([{ "Student ID": "JY26-0001", "Amount Paid": 15000, "Payment Mode": "UPI", "Payment Date": new Date().toISOString().split('T')[0] }]);
                           const wb = XLSX.utils.book_new();
                           XLSX.utils.book_append_sheet(wb, ws, "Payments");
                           XLSX.writeFile(wb, "Fee_Payments_Import_Template.xlsx");
                         }}
-                        className="btn-secondary py-1.5 px-3.5 text-xs flex items-center gap-1 cursor-pointer"
+                        className="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 py-2 px-3 rounded-xl text-xs font-bold flex items-center gap-1.5 cursor-pointer whitespace-nowrap transition-colors"
                       >
-                        <FileDown className="w-4 h-4" /> Get Template
+                        <FileDown className="w-4 h-4" /> Template
                       </button>
                       <button
                         onClick={() => paymentFileInputRef.current?.click()}
-                        className="btn-secondary py-1.5 px-3.5 text-xs flex items-center gap-1 cursor-pointer bg-amber-50 text-amber-700 hover:bg-amber-100 hover:text-amber-800 border-amber-200"
+                        className="bg-amber-50 hover:bg-amber-100 text-amber-700 py-2 px-3 rounded-xl text-xs font-bold flex items-center gap-1.5 cursor-pointer whitespace-nowrap transition-colors"
                       >
-                        <Upload className="w-4 h-4" /> Import Payments
+                        <Upload className="w-4 h-4" /> Import
                       </button>
                       <button
                         onClick={() => {
-                          if (students.length === 0 || structures.length === 0) {
-                            toast.error('Ensure students and structures exist');
-                            return;
-                          }
+                          if (students.length === 0 || structures.length === 0) { toast.error('Ensure students and structures exist'); return; }
                           const firstStudentId = students[0]?.id || '';
                           const firstStructureId = structures[0]?.id || '';
                           setPayStudentId(firstStudentId);
                           setPayStructureId(firstStructureId);
-                          
                           const paidSoFar = payments.filter(p => p.studentId === firstStudentId && p.feeStructureId === firstStructureId).reduce((sum, p) => sum + p.amountPaid, 0);
                           const initialAmount = Math.max(0, (structures[0]?.amount || 0) - paidSoFar);
                           setPayAmount(initialAmount.toString());
                           setShowPaymentModal(true);
                         }}
-                        className="btn-primary py-1.5 px-3.5 text-xs flex items-center gap-1 cursor-pointer"
+                        className="bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-3 rounded-xl text-xs font-bold flex items-center gap-1.5 cursor-pointer whitespace-nowrap shadow-md shadow-indigo-500/30 transition-all"
                       >
-                        <Plus className="w-4 h-4" /> Record Transaction
+                        <Plus className="w-4 h-4" /> Record
                       </button>
                     </div>
                   )}
                 </div>
 
-                {/* Filter and Search Bar */}
-                <div className="flex flex-col sm:flex-row items-center gap-3">
-                  <div className="relative flex-1 w-full">
-                    <Search className="absolute left-3.5 top-3 w-4 h-4 text-gray-400" />
-                    <input
-                      type="text"
-                      className="input pl-10"
-                      placeholder="Search student or fee title..."
-                      value={searchTerm}
-                      onChange={e => setSearchTerm(e.target.value)}
-                    />
-                  </div>
-                  <div className="flex items-center gap-2 w-full sm:w-auto shrink-0 flex-wrap">
-                    <Filter className="w-4 h-4 text-gray-400 hidden sm:block" />
-                    <select
-                      className="input py-2 text-xs font-bold"
-                      value={filterClass}
-                      onChange={e => {
-                        setFilterClass(e.target.value);
-                        setFilterSection('ALL');
-                      }}
-                    >
-                      <option value="ALL">All Classes</option>
-                      {uniqueClassNames.map(cName => <option key={cName} value={cName}>Class {cName}</option>)}
-                    </select>
-                    {filterClass !== 'ALL' && (
-                      <select
-                        className="input py-2 text-xs font-bold"
-                        value={filterSection}
-                        onChange={e => setFilterSection(e.target.value)}
-                      >
-                        <option value="ALL">All Sec</option>
-                        {availableSections.map(sec => <option key={sec} value={sec}>Sec {sec}</option>)}
-                      </select>
-                    )}
-                    <select
-                      className="input py-2 text-xs font-bold"
-                      value={statusFilter}
-                      onChange={e => setStatusFilter(e.target.value)}
-                    >
-                      <option value="ALL">All Status</option>
-                      <option value="PAID">Paid</option>
-                      <option value="PENDING">Pending</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div className="md:bg-white/40 md:dark:bg-white/5 md:border md:border-white/60 md:dark:border-white/10 md:rounded-3xl md:shadow-sm overflow-hidden md:backdrop-blur-xl">
+                <div className="bg-white dark:bg-gray-900 rounded-3xl shadow-xl shadow-indigo-100/20 border border-gray-100 dark:border-gray-800 overflow-hidden">
                   
                   {/* Mobile View */}
-                  <div className="md:hidden flex flex-col px-4">
+                  <div className="md:hidden flex flex-col">
                     {filteredPayments.map((p, idx) => (
-                      <div key={p.id} className="bg-transparent flex flex-col relative py-2">
+                      <div key={p.id} className="bg-transparent flex flex-col relative py-3 px-4 border-b border-gray-50 last:border-0">
                         <div 
                           className="flex items-center justify-between gap-1 cursor-pointer"
                           onClick={() => toggleRow(p.id)}
                         >
-                          <div className="flex-1 min-w-0 flex items-center gap-1.5">
-                            <span className="text-[10px] font-bold text-gray-400 w-4">{idx + 1}.</span>
-                            <h4 className="font-extrabold text-[12px] text-gray-900 dark:text-white truncate max-w-[90px]">{p.student?.user?.name || 'Student'}</h4>
-                            <span className="text-[9px] font-bold text-teal-700 bg-teal-50 px-1 py-0.5 rounded border border-teal-100 shrink-0 truncate max-w-[65px]">
-                              {p.feeStructure?.name || 'Fee'}
-                            </span>
+                          <div className="flex-1 min-w-0 flex items-center gap-2">
+                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-100 to-purple-100 flex items-center justify-center text-indigo-700 font-bold text-xs shrink-0">
+                              {(p.student?.user?.name || 'S').charAt(0)}
+                            </div>
+                            <div>
+                              <h4 className="font-extrabold text-sm text-gray-900 dark:text-white truncate">{p.student?.user?.name || 'Student'}</h4>
+                              <span className="text-[10px] font-bold text-teal-700 bg-teal-50 px-1.5 py-0.5 rounded-md border border-teal-100 mt-0.5 inline-block">
+                                {p.feeStructure?.name || 'Fee'}
+                              </span>
+                            </div>
                           </div>
-                          <div className="shrink-0 flex items-center gap-1">
-                            <span className="font-black text-indigo-600 dark:text-indigo-400 text-[13px]">₹{p.amountPaid.toLocaleString()}</span>
+                          <div className="shrink-0 flex items-center gap-2">
+                            <span className="font-black text-indigo-600 dark:text-indigo-400 text-sm">₹{p.amountPaid.toLocaleString()}</span>
                             <div className={`transform transition-transform ${expandedRows[p.id] ? 'rotate-180' : ''}`}>
-                              <ArrowRight className="w-3.5 h-3.5 text-gray-400" />
+                              <ArrowRight className="w-4 h-4 text-gray-400" />
                             </div>
                           </div>
                         </div>
 
                         {expandedRows[p.id] && (
-                          <div className="p-3 bg-gray-50/80 dark:bg-black/20 border-t border-gray-100 dark:border-white/5 space-y-3 animate-fade-in text-xs">
-                            <div className="grid grid-cols-2 gap-2">
+                          <div className="mt-3 pt-3 border-t border-gray-100 dark:border-white/5 space-y-3 animate-fade-in text-xs">
+                            <div className="grid grid-cols-2 gap-2 bg-gray-50 rounded-xl p-3">
                               <div>
                                 <span className="block text-gray-400 font-bold mb-0.5 text-[10px] uppercase">Payment Method</span>
-                                <span className="font-semibold text-gray-700 dark:text-gray-300">{p.method}</span>
+                                <span className="font-bold text-indigo-900 bg-indigo-100 px-2 py-0.5 rounded-md text-[10px]">{p.method}</span>
                               </div>
                               <div>
-                              <span className="block text-gray-400 font-bold mb-0.5 text-[10px] uppercase">Date</span>
-                              <span className="font-semibold text-gray-700 dark:text-gray-300">{getDisplayDate(p)}</span>
+                                <span className="block text-gray-400 font-bold mb-0.5 text-[10px] uppercase">Date</span>
+                                <span className="font-semibold text-gray-700 dark:text-gray-300">{getDisplayDate(p)}</span>
+                              </div>
                             </div>
-                            </div>
-                            <div className="flex items-center justify-between mt-2">
+                            <div className="flex items-center justify-between">
                               <div>
                                 <Badge variant={p.status === 'PAID' ? 'success' : 'warning'}>{p.status}</Badge>
                               </div>
                               <div className="flex items-center gap-2">
                                 {p.status === 'PENDING' && isAdmin && (
-                                  <button onClick={() => handleApprovePayment(p.id)} className="px-3 py-1 bg-teal-500 hover:bg-teal-600 text-white rounded-lg font-bold text-[10px] shadow-md transition-all">Approve</button>
+                                  <button onClick={() => handleApprovePayment(p.id)} className="px-3 py-1.5 bg-teal-500 hover:bg-teal-600 text-white rounded-lg font-bold text-[11px] shadow-md transition-all">Approve</button>
                                 )}
-                                <button onClick={() => handlePrintReceipt(p.id)} className="px-3 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg font-bold text-[10px] border border-indigo-200 transition-all">Receipt</button>
+                                <button onClick={() => handlePrintReceipt(p.id)} className="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg font-bold text-[11px] border border-indigo-200 transition-all">Receipt</button>
                               </div>
                             </div>
                           </div>
@@ -912,57 +831,58 @@ export const FinancePage: React.FC = () => {
                       </div>
                     ))}
                     {filteredPayments.length === 0 && (
-                      <div className="py-8 text-center text-gray-400 font-semibold text-sm">No transactions recorded.</div>
+                      <div className="py-12 text-center text-gray-400 font-semibold text-sm">No transactions recorded.</div>
                     )}
                   </div>
 
                   {/* Desktop View */}
                   <div className="hidden md:block overflow-x-auto">
-                    <table className="w-full text-sm text-left">
+                    <table className="w-full text-sm text-left border-collapse">
                       <thead>
-                        <tr className="bg-indigo-50/50 text-indigo-900 border-b border-indigo-100 font-bold">
-                          <th className="px-5 py-4 text-xs uppercase tracking-wider w-12 text-center">S.No</th>
-                          <th className="px-5 py-4 text-xs uppercase tracking-wider">Student ID</th>
-                          <th className="px-5 py-4 text-xs uppercase tracking-wider">Student Name</th>
-                          <th className="px-5 py-4 text-xs uppercase tracking-wider">Fee Category</th>
-                          <th className="px-5 py-4 text-xs uppercase tracking-wider text-right">Amount Paid</th>
-                          <th className="px-5 py-4 text-xs uppercase tracking-wider text-center">Status / Method</th>
-                          <th className="px-5 py-4 text-xs uppercase tracking-wider text-right">Date</th>
-                          <th className="px-5 py-4 text-xs uppercase tracking-wider text-right">Actions</th>
+                        <tr className="bg-gradient-to-r from-indigo-50 to-purple-50 text-indigo-900 border-b border-indigo-100 font-black text-xs uppercase tracking-wider">
+                          <th className="px-5 py-4 w-12 text-center rounded-tl-3xl">S.No</th>
+                          <th className="px-5 py-4">Student ID</th>
+                          <th className="px-5 py-4">Student Name</th>
+                          <th className="px-5 py-4">Fee Category</th>
+                          <th className="px-5 py-4 text-right">Amount Paid</th>
+                          <th className="px-5 py-4 text-center">Status</th>
+                          <th className="px-5 py-4 text-center">Method</th>
+                          <th className="px-5 py-4 text-center">Date</th>
+                          <th className="px-5 py-4 text-right rounded-tr-3xl">Actions</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-gray-100 dark:divide-white/10">
+                      <tbody className="divide-y divide-gray-100/50">
                         {filteredPayments.map((p, idx) => (
-                          <tr key={p.id} className="hover:bg-white transition-all duration-300 border-b border-indigo-50/50 hover:shadow-glow-primary">
+                          <tr key={p.id} className="hover:bg-indigo-50/30 transition-all duration-300">
                             <td className="px-5 py-4 text-center font-bold text-gray-400 text-xs">{idx + 1}</td>
                             <td className="px-5 py-4 font-mono text-xs font-semibold text-gray-500">{p.student?.rollNo || '-'}</td>
                             <td className="px-5 py-4">
-                              <div className="font-extrabold text-[15px] text-indigo-950 dark:text-white">{p.student?.user?.name || 'Student'}</div>
-                              <div className="text-[11px] text-gray-400 mt-0.5">{p.student?.class?.name}-{p.student?.class?.section}</div>
+                              <div className="font-extrabold text-[14px] text-gray-900 dark:text-white">{p.student?.user?.name || 'Student'}</div>
+                              <div className="text-[11px] font-bold text-indigo-400 mt-0.5">{p.student?.class?.name}-{p.student?.class?.section}</div>
                             </td>
                             <td className="px-5 py-4">
-                              <span className="text-[11px] font-bold text-teal-700 bg-teal-50 px-2 py-1 rounded-md border border-teal-100">{p.feeStructure?.name || 'Fees'}</span>
+                              <span className="text-[11px] font-bold text-teal-700 bg-teal-50 px-2.5 py-1 rounded-lg border border-teal-100 shadow-sm">{p.feeStructure?.name || 'Fees'}</span>
                             </td>
-                            <td className="px-5 py-4 font-black text-indigo-600 dark:text-indigo-400 text-right text-lg">₹{p.amountPaid.toLocaleString()}</td>
+                            <td className="px-5 py-4 font-black text-indigo-600 dark:text-indigo-400 text-right text-[15px]">₹{p.amountPaid.toLocaleString()}</td>
                             <td className="px-5 py-4 text-center">
-                              <div className="flex flex-col items-center gap-1.5">
-                                <Badge variant={p.status === 'PAID' ? 'success' : 'warning'}>{p.status}</Badge>
-                                <span className="text-[10px] font-bold text-gray-400">{p.method}</span>
-                              </div>
+                              <Badge variant={p.status === 'PAID' ? 'success' : 'warning'}>{p.status}</Badge>
                             </td>
-                            <td className="px-5 py-4 text-right text-xs text-gray-500 font-semibold">
+                            <td className="px-5 py-4 text-center">
+                              <span className="text-[10px] font-black tracking-wider text-purple-700 bg-purple-50 px-2.5 py-1 rounded-lg border border-purple-100">{p.method}</span>
+                            </td>
+                            <td className="px-5 py-4 text-center text-xs text-gray-600 font-bold">
                               {getDisplayDate(p)}
                             </td>
                             <td className="px-5 py-4 text-right">
                               <div className="flex items-center justify-end gap-2">
                                 {p.status === 'PENDING' && isAdmin && (
-                                  <button onClick={() => handleApprovePayment(p.id)} className="px-3 py-1.5 bg-teal-500 hover:bg-teal-600 text-white rounded-lg font-bold text-xs shadow-md shadow-teal-500/20 transition-all cursor-pointer">
+                                  <button onClick={() => handleApprovePayment(p.id)} className="px-3 py-1.5 bg-teal-500 hover:bg-teal-600 text-white rounded-lg font-bold text-[11px] shadow-md shadow-teal-500/20 transition-all cursor-pointer">
                                     Approve
                                   </button>
                                 )}
                                 <button
                                   onClick={() => handlePrintReceipt(p.id)}
-                                  className="p-2 rounded-xl text-indigo-500 hover:text-white hover:bg-indigo-500 hover:shadow-md transition-all border border-indigo-100 cursor-pointer"
+                                  className="p-2 rounded-xl text-indigo-600 bg-indigo-50 hover:text-white hover:bg-indigo-600 shadow-sm hover:shadow-md transition-all border border-indigo-100 cursor-pointer"
                                   title="Download Receipt"
                                 >
                                   <FileDown className="w-4 h-4" />
@@ -973,7 +893,12 @@ export const FinancePage: React.FC = () => {
                         ))}
                         {filteredPayments.length === 0 && (
                           <tr>
-                            <td colSpan={6} className="py-12 text-center text-gray-400 font-semibold">No transactions recorded.</td>
+                            <td colSpan={9} className="py-16 text-center">
+                              <div className="inline-flex flex-col items-center justify-center p-6 bg-gray-50 rounded-3xl border border-gray-100">
+                                <Receipt className="w-10 h-10 text-gray-300 mb-3" />
+                                <span className="text-gray-500 font-bold">No transactions found</span>
+                              </div>
+                            </td>
                           </tr>
                         )}
                       </tbody>

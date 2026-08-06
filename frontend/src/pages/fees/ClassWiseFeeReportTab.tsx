@@ -1,8 +1,5 @@
 import React, { useState, useMemo } from 'react';
 import { Search, Users, FileText, FileSpreadsheet, ArrowLeft, ChevronRight } from 'lucide-react';
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
-import * as XLSX from 'xlsx';
 import toast from 'react-hot-toast';
 
 const WhatsAppIcon = () => (
@@ -88,8 +85,10 @@ export const ClassWiseFeeReportTab: React.FC<ClassWiseFeeReportTabProps> = ({ st
     return buildRows(selectedClassId, searchTerm);
   }, [selectedClassId, searchTerm, allClassData, classes, students]);
 
-  const makePDF = (data: ReturnType<typeof buildRows>) => {
+  const makePDF = async (data: ReturnType<typeof buildRows>) => {
     if (!data.classInfo) return null;
+    const { default: jsPDF } = await import('jspdf');
+    const { default: autoTable } = await import('jspdf-autotable');
     const doc = new jsPDF('p', 'mm', 'a4');
     doc.setFontSize(18); doc.setTextColor(79, 70, 229); doc.setFont('helvetica', 'bold');
     doc.text('JY SCHOOL', 105, 15, { align: 'center' });
@@ -114,8 +113,9 @@ export const ClassWiseFeeReportTab: React.FC<ClassWiseFeeReportTabProps> = ({ st
     if (doc && data.classInfo) doc.save(`FeeReport_${data.classInfo.name}_${data.classInfo.section}.pdf`);
   };
 
-  const downloadExcel = (data: ReturnType<typeof buildRows>) => {
+  const downloadExcel = async (data: ReturnType<typeof buildRows>) => {
     if (!data.classInfo) return;
+    const XLSX = await import('xlsx');
     const ws = XLSX.utils.aoa_to_sheet([
       ['S.No', 'Student ID', 'Student Name', 'Class/Section', 'Mobile No.', 'Paid', 'Paid %'],
       ...data.rows.map((r: any) => [r.sno, r.studentId, r.name, r.className, r.phone, r.paid, `${r.percentage}%`])

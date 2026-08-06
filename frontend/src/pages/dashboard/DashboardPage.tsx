@@ -307,26 +307,28 @@ const AdminView: React.FC<{ data: any }> = ({ data }) => {
       {/* Charts Row 1 */}
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
         <ChartCard className="hidden md:block lg:col-span-3">
-          <SectionHeader title="Revenue Trend" subtitle="Monthly fee collection (last 12 months)" icon={TrendingUp} iconColor="#6366f1"
-            action={<Link to="/finance" className="flex items-center gap-1 text-xs font-bold text-indigo-600 hover:text-indigo-700">View Finance <ChevronRight className="w-3.5 h-3.5" /></Link>} />
-          <div className="h-[260px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={data.monthlyFeeCollection} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="revGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#6366f1" stopOpacity={0.35} />
-                    <stop offset="100%" stopColor="#6366f1" stopOpacity={0.01} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#94a3b8', fontWeight: 600 }} dy={8} />
-                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#94a3b8', fontWeight: 600 }}
-                  tickFormatter={v => `₹${v >= 1000 ? (v / 1000).toFixed(0) + 'k' : v}`} />
-                <RechartsTooltip contentStyle={TT} formatter={(v: any) => [`₹${Number(v || 0).toLocaleString('en-IN')}`, 'Revenue']} />
-                <Area type="monotone" dataKey="amount" stroke="#6366f1" strokeWidth={2.5}
-                  fillOpacity={1} fill="url(#revGrad)" dot={false} activeDot={{ r: 5, fill: '#6366f1', strokeWidth: 0 }} />
-              </AreaChart>
-            </ResponsiveContainer>
+          <SectionHeader title="Recent Payments" subtitle="Latest fee transactions" icon={Wallet} iconColor="#6366f1"
+            action={<Link to="/fee-payment" className="flex items-center gap-1 text-xs font-bold text-indigo-600 hover:text-indigo-700">View All <ChevronRight className="w-3.5 h-3.5" /></Link>} />
+          <div className="space-y-3 overflow-y-auto max-h-[260px] pr-2">
+            {data.recentPayments?.length === 0 && <p className="text-sm text-slate-400 text-center py-8">No recent payments.</p>}
+            {data.recentPayments?.map((p: any) => (
+              <div key={p.id} className="flex items-center justify-between p-3 rounded-xl hover:bg-slate-50 group transition-colors">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl flex items-center justify-center font-black text-sm shrink-0"
+                    style={{ background: 'linear-gradient(135deg,#6366f1,#8b5cf6)', color: '#fff' }}>
+                    {(p.student?.user?.name || p.student?.name || 'S').charAt(0)}
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-slate-800 group-hover:text-indigo-700 transition-colors">{p.student?.user?.name || p.student?.name || 'Unknown Student'}</p>
+                    <p className="text-xs text-slate-400 font-medium">{p.feeStructure?.name || 'Fee Payment'}</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm font-black text-slate-900">₹{p.amountPaid.toLocaleString('en-IN')}</p>
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${p.status === 'PAID' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>{p.status}</span>
+                </div>
+              </div>
+            ))}
           </div>
         </ChartCard>
 
@@ -395,33 +397,7 @@ const AdminView: React.FC<{ data: any }> = ({ data }) => {
       </div>
 
       {/* Bottom row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        <ChartCard>
-          <SectionHeader title="Recent Payments" subtitle="Latest fee transactions" icon={Wallet} iconColor="#6366f1"
-            action={<Link to="/fee-payment" className="flex items-center gap-1 text-xs font-bold text-indigo-600 hover:text-indigo-700">View All <ChevronRight className="w-3.5 h-3.5" /></Link>} />
-          <div className="space-y-3">
-            {data.recentPayments?.length === 0 && <p className="text-sm text-slate-400 text-center py-8">No recent payments.</p>}
-            {data.recentPayments?.map((p: any) => (
-              <div key={p.id} className="flex items-center justify-between p-3 rounded-xl hover:bg-slate-50 group transition-colors">
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl flex items-center justify-center font-black text-sm shrink-0"
-                    style={{ background: 'linear-gradient(135deg,#6366f1,#8b5cf6)', color: '#fff' }}>
-                    {(p.student?.user?.name || p.student?.name || 'S').charAt(0)}
-                  </div>
-                  <div>
-                    <p className="text-sm font-bold text-slate-800 group-hover:text-indigo-700 transition-colors">{p.student?.user?.name || p.student?.name || 'Unknown Student'}</p>
-                    <p className="text-xs text-slate-400 font-medium">{p.feeStructure?.name || 'Fee Payment'}</p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm font-black text-slate-900">₹{p.amountPaid.toLocaleString('en-IN')}</p>
-                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${p.status === 'PAID' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>{p.status}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </ChartCard>
-
+      <div className="grid grid-cols-1 gap-5">
         <ChartCard>
           <SectionHeader title="Notice Board" subtitle="Latest school announcements" icon={Megaphone} iconColor="#8b5cf6"
             action={<Link to="/announcements" className="flex items-center gap-1 text-xs font-bold text-purple-600 hover:text-purple-700">View All <ChevronRight className="w-3.5 h-3.5" /></Link>} />

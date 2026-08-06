@@ -4,7 +4,6 @@ import { ArrowLeft, Download, FileText } from 'lucide-react';
 import api from '../../../api/axios';
 import { LoadingSpinner } from '../../../components/UI/LoadingSpinner';
 import toast from 'react-hot-toast';
-import * as XLSX from 'xlsx';
 
 export const FormResponsesPage: React.FC = () => {
   const { id } = useParams();
@@ -48,6 +47,7 @@ export const FormResponsesPage: React.FC = () => {
         return row;
       });
 
+      const XLSX = await import('xlsx');
       const ws = XLSX.utils.json_to_sheet(data, { header: headers });
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, 'Responses');

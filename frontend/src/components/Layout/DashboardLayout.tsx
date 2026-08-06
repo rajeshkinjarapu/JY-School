@@ -103,7 +103,9 @@ export const DashboardLayout: React.FC = () => {
       <div style={{ height: '100dvh', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
         <Header onMenuClick={() => setSidebarOpen(true)} title={getPageTitle(location.pathname)} forceShow={true} hideMenuButton={true} />
         <main style={{ flex: 1, overflowY: 'auto', overscrollBehavior: 'contain' }}>
-          <Outlet context={{ setDynamicTitle }} />
+          <div key={location.pathname} className="animate-slide-in h-full">
+            <Outlet context={{ setDynamicTitle }} />
+          </div>
         </main>
       </div>
     );
@@ -118,10 +120,12 @@ export const DashboardLayout: React.FC = () => {
       <div className="flex flex-col flex-1 overflow-hidden min-w-0">
         <Header onMenuClick={() => setSidebarOpen(true)} title={getPageTitle(location.pathname)} />
         <main
-          className="flex-1 overflow-y-auto animate-fade-in-up"
+          className="flex-1 overflow-y-auto"
           style={{ overscrollBehavior: 'contain' }}
         >
-          <Outlet context={{ setDynamicTitle }} />
+          <div key={location.pathname} className="animate-slide-in h-full">
+            <Outlet context={{ setDynamicTitle }} />
+          </div>
         </main>
       </div>
     </div>

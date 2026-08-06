@@ -196,12 +196,10 @@ export const parseDocxWithGemini = async (req: Request, res: Response) => {
 
     // Step 1: Upload the file to Gemini Files API
     const uploadedFile = await ai.files.upload({
-      file: {
-        path: filePath,
-        mimeType,
-        name: path.basename(filePath),
-        displayName: req.file.originalname,
-      },
+      file: filePath,
+      mimeType,
+      name: path.basename(filePath),
+      displayName: req.file.originalname,
     });
 
     const fileUri = uploadedFile.uri;

@@ -1,10 +1,12 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import api from '../../api/axios';
+import { PageHeader } from '../../components/UI/PageHeader';
 import { LoadingSpinner } from '../../components/UI/LoadingSpinner';
-import { Plus, Search, X, CheckCircle2, FileText, ChevronLeft, Wallet } from 'lucide-react';
+import { Plus, Search, X, CheckCircle2, FileText, ChevronLeft, Wallet, User2, ArrowLeft } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
+import { getPhotoUrl } from '../../utils/photo';
 
 export const CollectPaymentPage: React.FC = () => {
   const { user } = useAuth();
@@ -192,27 +194,22 @@ export const CollectPaymentPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-slate-50 p-4 lg:p-8 flex items-start justify-center">
-      <div className="w-full max-w-7xl mx-auto">
-        <div className="flex items-center gap-4 mb-8">
-          <Link to="/fee-payment" className="p-2.5 rounded-2xl bg-white text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 transition-colors shadow-sm border border-slate-200">
-            <ChevronLeft className="w-5 h-5" />
-          </Link>
-          <div>
-            <h1 className="text-2xl lg:text-3xl font-black text-slate-900 tracking-tight">Collect Fee</h1>
-            <p className="text-sm font-bold text-slate-500 mt-1">Record a new payment transaction</p>
-          </div>
-        </div>
+    <div className="flex flex-col h-full bg-slate-50/50 w-full" style={{ minHeight: 'calc(100vh - 64px)' }}>
+      <PageHeader 
+        title="Collect Fee"
+        icon={<ArrowLeft className="w-6 h-6 cursor-pointer" onClick={() => navigate(-1)} />}
+      />
 
-        <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
+      <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
+        <div className="w-full max-w-7xl mx-auto flex flex-col lg:flex-row gap-6 lg:gap-8">
           {/* Left Side: Form */}
           <div className="flex-1">
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-8">
               
               {/* 1. Student Selection */}
-              <div className="bg-white rounded-[2rem] p-6 lg:p-8 shadow-sm border border-slate-200/60 relative z-50">
+              <div className="bg-white rounded-[2rem] p-6 lg:p-8 shadow-xl shadow-indigo-100/20 border border-gray-100 relative z-50">
                 <div className="flex items-center gap-3 mb-6">
-                  <div className="w-8 h-8 rounded-xl bg-pink-100 flex items-center justify-center text-pink-600 font-black shadow-sm">1</div>
+                  <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white font-black shadow-lg shadow-indigo-500/30">1</div>
                   <h3 className="text-lg font-black text-slate-800">Identify Student</h3>
                 </div>
                 
@@ -289,8 +286,12 @@ export const CollectPaymentPage: React.FC = () => {
                               }}
                               className="w-full flex items-center gap-4 px-4 py-3 rounded-xl hover:bg-indigo-50 text-left transition-all group"
                             >
-                              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-100 to-purple-100 flex items-center justify-center flex-shrink-0 border border-indigo-200 group-hover:border-indigo-300 group-hover:shadow-sm transition-all">
-                                <span className="text-base font-black text-indigo-600">{s.user.name?.[0]?.toUpperCase()}</span>
+                              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-100 to-purple-100 flex items-center justify-center flex-shrink-0 border border-indigo-200 group-hover:border-indigo-300 group-hover:shadow-sm transition-all overflow-hidden">
+                                {getPhotoUrl(s.user?.photoUrl) ? (
+                                  <img src={getPhotoUrl(s.user.photoUrl)} alt={s.user.name} className="w-full h-full object-cover" />
+                                ) : (
+                                  <span className="text-base font-black text-indigo-600">{s.user.name?.[0]?.toUpperCase()}</span>
+                                )}
                               </div>
                               <div>
                                 <p className="text-sm font-bold text-slate-800 group-hover:text-indigo-700 transition-colors">{s.user.name}</p>
@@ -307,8 +308,12 @@ export const CollectPaymentPage: React.FC = () => {
                 {selectedStudent && (
                   <div className="flex items-center justify-between p-4 bg-emerald-50 border border-emerald-200 rounded-2xl shadow-sm mt-4 animate-fade-in-up relative z-0">
                     <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-full bg-emerald-500 flex items-center justify-center shadow-md text-white font-black text-lg ring-4 ring-emerald-100">
-                        {selectedStudent.user.name?.[0]?.toUpperCase()}
+                      <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-md text-emerald-600 font-black text-lg ring-4 ring-emerald-100 overflow-hidden">
+                        {getPhotoUrl(selectedStudent.user?.photoUrl) ? (
+                          <img src={getPhotoUrl(selectedStudent.user.photoUrl)} alt={selectedStudent.user.name} className="w-full h-full object-cover" />
+                        ) : (
+                          selectedStudent.user.name?.[0]?.toUpperCase()
+                        )}
                       </div>
                       <div>
                         <p className="text-base font-black text-emerald-950">{selectedStudent.user.name}</p>
@@ -324,9 +329,9 @@ export const CollectPaymentPage: React.FC = () => {
 
               {/* 2. Fee Components */}
               {studentId && (
-                <div className="bg-white rounded-[2rem] p-6 lg:p-8 shadow-sm border border-slate-200/60 animate-fade-in-up relative z-0">
+                <div className="bg-white rounded-[2rem] p-6 lg:p-8 shadow-xl shadow-indigo-100/20 border border-gray-100 animate-fade-in-up relative z-0">
                   <div className="flex items-center gap-3 mb-6">
-                    <div className="w-8 h-8 rounded-xl bg-indigo-100 flex items-center justify-center text-indigo-600 font-black shadow-sm">2</div>
+                    <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-black shadow-lg shadow-pink-500/30">2</div>
                     <h3 className="text-lg font-black text-slate-800">Select Fees</h3>
                   </div>
 
@@ -411,9 +416,9 @@ export const CollectPaymentPage: React.FC = () => {
               )}
 
               {/* 3. Payment Details */}
-              <div className="bg-white rounded-[2rem] p-6 lg:p-8 shadow-sm border border-slate-200/60 relative z-0">
+              <div className="bg-white rounded-[2rem] p-6 lg:p-8 shadow-xl shadow-indigo-100/20 border border-gray-100 relative z-0">
                 <div className="flex items-center gap-3 mb-6">
-                  <div className="w-8 h-8 rounded-xl bg-purple-100 flex items-center justify-center text-purple-600 font-black shadow-sm">3</div>
+                  <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-white font-black shadow-lg shadow-emerald-500/30">3</div>
                   <h3 className="text-lg font-black text-slate-800">Transaction Details</h3>
                 </div>
 
@@ -498,7 +503,7 @@ export const CollectPaymentPage: React.FC = () => {
                   disabled={isSubmitting || selectedFees.length === 0}
                   className="w-full py-4 text-base font-black rounded-2xl text-white bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 shadow-xl shadow-emerald-200 transform transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
-                  {isSubmitting ? 'Processing...' : `Confirm Payment of ₹${selectedFees.reduce((sum, f) => sum + f.amountPaid, 0).toLocaleString()}`}
+                      {isSubmitting ? 'Processing...' : `Confirm Payment of ₹${selectedFees.reduce((sum, f) => sum + f.amountPaid, 0).toLocaleString()}`}
                   {!isSubmitting && <CheckCircle2 className="w-5 h-5" />}
                 </button>
               </div>
@@ -508,17 +513,17 @@ export const CollectPaymentPage: React.FC = () => {
           {/* Right Side: Sticky Summary Panel */}
           <div className="lg:w-[420px] flex-shrink-0">
             <div className="sticky top-6">
-              <div className="bg-gradient-to-br from-indigo-900 via-purple-900 to-indigo-950 rounded-[2.5rem] p-8 text-white shadow-2xl relative overflow-hidden border border-white/10">
-                <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
-                <div className="absolute bottom-0 left-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl -ml-20 -mb-20 pointer-events-none"></div>
+              <div className="bg-white/70 backdrop-blur-xl rounded-[2.5rem] p-8 text-slate-800 shadow-2xl relative overflow-hidden border border-white">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
+                <div className="absolute bottom-0 left-0 w-64 h-64 bg-pink-500/10 rounded-full blur-3xl -ml-20 -mb-20 pointer-events-none"></div>
                 
                 <div className="relative z-10 flex items-center gap-4 mb-8">
-                  <div className="w-12 h-12 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center shadow-inner">
-                    <Wallet className="w-6 h-6 text-indigo-300" />
+                  <div className="w-12 h-12 rounded-2xl bg-white border border-indigo-100 flex items-center justify-center shadow-sm">
+                    <Wallet className="w-6 h-6 text-indigo-500" />
                   </div>
                   <div>
-                    <h2 className="text-xl font-black tracking-tight text-white">Payment Summary</h2>
-                    <p className="text-xs font-bold text-indigo-300/80 mt-0.5 uppercase tracking-widest">Review & Confirm</p>
+                    <h2 className="text-xl font-black tracking-tight text-slate-900">Payment Summary</h2>
+                    <p className="text-xs font-bold text-slate-500 mt-0.5 uppercase tracking-widest">Review & Confirm</p>
                   </div>
                 </div>
 
@@ -529,35 +534,36 @@ export const CollectPaymentPage: React.FC = () => {
                         {selectedFees.map((fee, idx) => {
                           const name = structures.find(s => s.id === fee.feeStructureId)?.name || 'Fee';
                           return (
-                            <div key={idx} className="flex items-center justify-between py-2 border-b border-white/10 last:border-0">
-                              <span className="text-sm font-medium text-indigo-100 truncate pr-4">{name}</span>
-                              <span className="text-sm font-black text-white whitespace-nowrap">₹{fee.amountPaid.toLocaleString()}</span>
+                            <div key={idx} className="flex items-center justify-between py-2 border-b border-slate-200/60 last:border-0">
+                              <span className="text-sm font-medium text-slate-600 truncate pr-4">{name}</span>
+                              <span className="text-sm font-black text-slate-900 whitespace-nowrap">₹{fee.amountPaid.toLocaleString()}</span>
                             </div>
                           );
                         })}
                       </div>
                       
-                      <div className="bg-black/20 rounded-3xl p-6 border border-white/10 shadow-inner mb-6 backdrop-blur-sm">
-                        <p className="text-[11px] font-black text-indigo-300 uppercase tracking-widest mb-1.5">Total Amount</p>
-                        <p className="text-4xl font-black text-white tracking-tight">₹{selectedFees.reduce((sum, f) => sum + f.amountPaid, 0).toLocaleString()}</p>
+                      <div className="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-3xl p-6 border border-indigo-400 shadow-xl mb-6 text-white relative overflow-hidden">
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10"></div>
+                        <p className="text-[11px] font-black text-indigo-100 uppercase tracking-widest mb-1.5 relative z-10">Total Amount</p>
+                        <p className="text-4xl font-black text-white tracking-tight relative z-10">₹{selectedFees.reduce((sum, f) => sum + f.amountPaid, 0).toLocaleString()}</p>
                       </div>
 
                       <button
                         onClick={handleSubmit}
                         disabled={isSubmitting}
-                        className="hidden lg:flex w-full py-4 text-base font-black rounded-2xl text-slate-900 bg-white hover:bg-indigo-50 shadow-xl shadow-black/20 transform transition-all hover:-translate-y-1 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed items-center justify-center gap-2"
+                        className="hidden lg:flex w-full py-4 text-base font-black rounded-2xl text-white bg-slate-900 hover:bg-indigo-600 shadow-xl shadow-slate-900/20 transform transition-all hover:-translate-y-1 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed items-center justify-center gap-2"
                       >
                         {isSubmitting ? 'Processing...' : 'Confirm Payment'}
-                        {!isSubmitting && <CheckCircle2 className="w-5 h-5 text-emerald-500" />}
+                        {!isSubmitting && <CheckCircle2 className="w-5 h-5 text-emerald-400" />}
                       </button>
                     </div>
                   ) : (
-                    <div className="border border-dashed border-white/20 rounded-3xl p-10 flex flex-col items-center justify-center text-center bg-white/5">
-                      <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mb-4 border border-white/10 shadow-inner">
-                        <FileText className="w-7 h-7 text-white/40" />
+                    <div className="border-2 border-dashed border-slate-200 rounded-3xl p-10 flex flex-col items-center justify-center text-center bg-white/50">
+                      <div className="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center mb-4 border border-slate-200 shadow-sm">
+                        <FileText className="w-8 h-8 text-slate-300" />
                       </div>
-                      <p className="text-base font-black text-white mb-1.5">No Fees Selected</p>
-                      <p className="text-xs text-indigo-200/70 font-medium leading-relaxed">Search for a student and select the fees you wish to collect.</p>
+                      <p className="text-lg font-black text-slate-700">No Fees Selected</p>
+                      <p className="text-sm font-medium text-slate-500 mt-2">Search for a student and select the fees you wish to collect.</p>
                     </div>
                   )}
                 </div>

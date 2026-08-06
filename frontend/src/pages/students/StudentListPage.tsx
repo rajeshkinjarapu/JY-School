@@ -4,9 +4,6 @@ import api from "../../api/axios";
 import { Search, UserPlus, Trash2, Edit, FileDown, Eye, Filter, ChevronLeft, ChevronRight, Upload, Image as ImageIcon, X, CheckCircle2, AlertCircle, FileText, Phone, IdCard } from "lucide-react";
 import toast from "react-hot-toast";
 import { Link, useNavigate } from "react-router-dom";
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
-import * as XLSX from "xlsx";
 import { useAuth } from "../../hooks/useAuth";
 import { getPhotoUrl } from "../../utils/photo";
 
@@ -49,14 +46,20 @@ export const StudentListPage: React.FC = () => {
   const isSuperAdmin = user?.role === "SUPER_ADMIN";
   const navigate = useNavigate();
 
-  const [students, setStudents] = useState<any[]>([]);
-  const [classes, setClasses] = useState<any[]>([]);
+  const [students, setStudents] = useState<any[]>(() => {
+    try { return JSON.parse(localStorage.getItem('sl_students_cache') || '[]'); } catch { return []; }
+  });
+  const [classes, setClasses] = useState<any[]>(() => {
+    try { return JSON.parse(localStorage.getItem('sl_classes_cache') || '[]'); } catch { return []; }
+  });
   const [loading, setLoading] = useState(true);
 
   const [search, setSearch] = useState("");
   const [classId, setClassId] = useState("");
   const [page, setPage] = useState(1);
-  const [total, setTotal] = useState(0);
+  const [total, setTotal] = useState(() => {
+    try { return parseInt(localStorage.getItem('sl_total_cache') || '0'); } catch { return 0; }
+  });
 
   // Bulk import states
   const [showImportModal, setShowImportModal] = useState(false);
@@ -68,19 +71,29 @@ export const StudentListPage: React.FC = () => {
   const fetchClasses = useCallback(async () => {
     try {
       const res: any = await api.get("/api/classes");
-      setClasses(res.data.data || res.data || []);
+      const data = res.data.data || res.data || [];
+      setClasses(data);
+      localStorage.setItem('sl_classes_cache', JSON.stringify(data));
     } catch {}
   }, []);
 
   const fetchStudents = useCallback(async () => {
-    setLoading(true);
+    // If we have cached data, show it first without spinner
+    const hasCached = students.length > 0;
+    if (!hasCached) setLoading(true);
     try {
       const response: any = await api.get("/api/students", {
         params: { search, classId, limit: LIMIT, page },
       });
       const data = response.data.data || response.data || [];
+      const totalCount = response.data.meta?.total || data.length;
       setStudents(data);
-      setTotal(response.data.meta?.total || data.length);
+      setTotal(totalCount);
+      // Cache only the first page with no filters
+      if (!search && !classId && page === 1) {
+        localStorage.setItem('sl_students_cache', JSON.stringify(data));
+        localStorage.setItem('sl_total_cache', String(totalCount));
+      }
     } catch {
       toast.error("Failed to load students");
     } finally {
@@ -91,7 +104,7 @@ export const StudentListPage: React.FC = () => {
   useEffect(() => { fetchClasses(); }, [fetchClasses]);
 
   useEffect(() => {
-    const timer = setTimeout(fetchStudents, 250);
+    const timer = setTimeout(fetchStudents, search || classId ? 400 : 0);
     return () => clearTimeout(timer);
   }, [fetchStudents]);
 
@@ -115,6 +128,9 @@ export const StudentListPage: React.FC = () => {
       });
       const allStudents = res.data?.data || res.data || [];
       toast.dismiss(toastId);
+
+      const { default: jsPDF } = await import("jspdf");
+      const { default: autoTable } = await import("jspdf-autotable");
 
       const doc = new jsPDF("p", "mm", "a4");
       
@@ -168,7 +184,8 @@ export const StudentListPage: React.FC = () => {
     }
   };
 
-  const downloadTemplate = () => {
+  const downloadTemplate = async () => {
+    const XLSX = await import("xlsx");
     const ws = XLSX.utils.aoa_to_sheet([
       ['Student Name', 'Mobile No', 'Class', 'Section', 'Father Name', 'Date of Birth', 'Address'],
       ['Suhash Kumar', '9052308483', 'PP1', 'A', 'Botu', '2019-05-12', 'Visakhapatnam'],

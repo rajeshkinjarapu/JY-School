@@ -251,6 +251,31 @@ model TimetableConfig {
   @@unique([category, periodNumber])
 }
 
+model FeeGroup {
+  id          String    @id @default(uuid())
+  name        String    @unique
+  description String?
+  createdAt   DateTime  @default(now())
+  feeHeads    FeeHead[]
+}
+
+model FeeHead {
+  id          String    @id @default(uuid())
+  name        String
+  groupId     String?
+  description String?
+  group       FeeGroup? @relation(fields: [groupId], references: [id])
+  createdAt   DateTime  @default(now())
+}
+
+model FeeConcession {
+  id        String   @id @default(uuid())
+  name      String
+  type      String   // PERCENT or FIXED
+  value     Float
+  createdAt DateTime @default(now())
+}
+
 model FeeStructure {
   id        String   @id @default(uuid())
   classId   String?

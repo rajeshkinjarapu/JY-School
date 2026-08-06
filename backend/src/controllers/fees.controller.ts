@@ -2,6 +2,7 @@ import { Response, NextFunction } from 'express';
 import { AuthRequest } from '../middlewares/auth';
 import { createError } from '../middlewares/errorHandler';
 import { prisma } from '../utils/prisma';
+import { cache } from '../utils/cache';
 import { successResponse, paginatedResponse } from '../utils/response';
 import PDFDocument from 'pdfkit';
 import * as XLSX from 'xlsx';
@@ -59,7 +60,11 @@ export const getStructures = async (req: AuthRequest, res: Response): Promise<vo
   const classId = (req.query.classId as string) || '';
   const term = (req.query.term as string) || '';
   const studentId = (req.query.studentId as string) || '';
-  
+
+  const cacheKey = `fee-structures:${classId}:${studentId}:${term}`;
+  const cached = await cache.get<any>(cacheKey);
+  if (cached) { res.json({ success: true, data: cached }); return; }
+
   const where: any = {};
   
   if (studentId && classId) {
@@ -84,6 +89,7 @@ export const getStructures = async (req: AuthRequest, res: Response): Promise<vo
     },
     orderBy: { dueDate: 'asc' },
   });
+  await cache.set(cacheKey, structures, 120); // 2 min cache
   successResponse(res, structures, 'Fee structures fetched');
 };
 
@@ -166,6 +172,10 @@ export const getPayments = async (req: AuthRequest, res: Response): Promise<void
   const endDate = req.query.endDate as string;
   const skip = (page - 1) * limit;
 
+  const cacheKey = `payments:${req.user?.id}:${page}:${limit}:${studentId}:${status}:${classId}:${startDate}:${endDate}`;
+  const cached = await cache.get<any>(cacheKey);
+  if (cached) return res.json(cached) as any;
+
   const where: any = {};
   if (studentId) {
     where.studentId = studentId;
@@ -199,7 +209,9 @@ export const getPayments = async (req: AuthRequest, res: Response): Promise<void
     prisma.feePayment.count({ where }),
   ]);
 
-  paginatedResponse(res, payments, total, page, limit, 'Payments fetched');
+  const responseBody = { success: true, data: payments, pagination: { total, page, limit, totalPages: Math.ceil(total / limit) } };
+  await cache.set(cacheKey, responseBody, 60); // 1 min cache for payments
+  return res.json(responseBody) as any;
 };
 
 export const createPayment = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
@@ -306,8 +318,8 @@ export const bulkImportPayments = async (req: AuthRequest, res: Response, next: 
       const rawMethod = String(row['Payment Mode'] || row['Payment Method'] || row['paymentMode'] || row['method'] || 'CASH').trim().toUpperCase();
       const method = ['CASH', 'UPI', 'ONLINE', 'BANK_TRANSFER', 'CHEQUE'].includes(rawMethod) ? rawMethod : 'CASH';
       const rawDate = row['Payment Date'] || row['paymentDate'] || row['Date'] || row['date'];
-      let paymentDate = new Date();
-      if (rawDate) {
+      let paymentDate: Date | null = null;
+      if (rawDate !== undefined && rawDate !== null && rawDate !== '') {
         if (typeof rawDate === 'number') {
           paymentDate = new Date(Math.round((rawDate - 25569) * 86400 * 1000));
         } else if (rawDate instanceof Date && !isNaN(rawDate.getTime())) {
@@ -315,14 +327,12 @@ export const bulkImportPayments = async (req: AuthRequest, res: Response, next: 
         } else {
           let d = new Date(rawDate);
           if (isNaN(d.getTime())) {
-            // Handle DD-MM-YYYY or DD/MM/YYYY
             const parts = String(rawDate).split(/[-/]/);
             if (parts.length === 3) {
               const day = parseInt(parts[0], 10);
               const month = parseInt(parts[1], 10) - 1;
               const year = parseInt(parts[2], 10);
               if (year < 100) {
-                 // Assume 2000s if 2 digit year
                  d = new Date(2000 + year, month, day);
               } else {
                  d = new Date(year, month, day);
@@ -331,6 +341,11 @@ export const bulkImportPayments = async (req: AuthRequest, res: Response, next: 
           }
           if (!isNaN(d.getTime())) paymentDate = d;
         }
+      }
+
+      if (!paymentDate || isNaN(paymentDate.getTime()) || paymentDate.getFullYear() === 1970) {
+        results.push({ row: i + 2, rollNo, status: 'ERROR', error: 'Valid Payment Date is required' });
+        continue;
       }
 
       if (!rollNo) {
@@ -432,6 +447,77 @@ export const deleteFeePayment = async (req: AuthRequest, res: Response, next: Ne
   await prisma.feePayment.delete({ where: { id } });
   clearDashboardCache();
   successResponse(res, null, 'Fee payment deleted successfully');
+};
+
+// --- Fee Group Controllers ---
+export const getFeeGroups = async (req: AuthRequest, res: Response): Promise<void> => {
+  const groups = await prisma.feeGroup.findMany({ include: { feeHeads: true } });
+  successResponse(res, groups, 'Fee groups fetched');
+};
+
+export const createFeeGroup = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  const { name, description } = req.body;
+  if (!name) return next(createError('Name is required', 400));
+  try {
+    const group = await prisma.feeGroup.create({ data: { name, description } });
+    successResponse(res, group, 'Fee group created', 201);
+  } catch (error: any) {
+    if (error.code === 'P2002') return next(createError('Fee group already exists', 400));
+    next(error);
+  }
+};
+
+export const deleteFeeGroup = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    await prisma.feeGroup.delete({ where: { id: req.params.id } });
+    successResponse(res, null, 'Fee group deleted');
+  } catch {
+    next(createError('Fee group not found or cannot be deleted', 400));
+  }
+};
+
+// --- Fee Head Controllers ---
+export const getFeeHeads = async (req: AuthRequest, res: Response): Promise<void> => {
+  const heads = await prisma.feeHead.findMany({ include: { group: true } });
+  successResponse(res, heads, 'Fee heads fetched');
+};
+
+export const createFeeHead = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  const { name, groupId, description } = req.body;
+  if (!name) return next(createError('Name is required', 400));
+  const head = await prisma.feeHead.create({ data: { name, groupId, description } });
+  successResponse(res, head, 'Fee head created', 201);
+};
+
+export const deleteFeeHead = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    await prisma.feeHead.delete({ where: { id: req.params.id } });
+    successResponse(res, null, 'Fee head deleted');
+  } catch {
+    next(createError('Fee head not found', 400));
+  }
+};
+
+// --- Fee Concession Controllers ---
+export const getFeeConcessions = async (req: AuthRequest, res: Response): Promise<void> => {
+  const concessions = await prisma.feeConcession.findMany();
+  successResponse(res, concessions, 'Fee concessions fetched');
+};
+
+export const createFeeConcession = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  const { name, type, value } = req.body;
+  if (!name || !type || value === undefined) return next(createError('All fields required', 400));
+  const concession = await prisma.feeConcession.create({ data: { name, type, value: Number(value) } });
+  successResponse(res, concession, 'Fee concession created', 201);
+};
+
+export const deleteFeeConcession = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    await prisma.feeConcession.delete({ where: { id: req.params.id } });
+    successResponse(res, null, 'Fee concession deleted');
+  } catch {
+    next(createError('Fee concession not found', 400));
+  }
 };
 
 export const updateFeePayment = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
@@ -600,80 +686,88 @@ export const downloadInvoice = async (req: AuthRequest, res: Response, next: Nex
   const schoolEmail = settings?.email || 'info@school.com';
   const schoolWebsite = settings?.website || 'https://school.com';
 
+  // Modern Minimalist Professional Design for White Paper
   const doc = new PDFDocument({ margin: 50, size: 'A4' });
   res.setHeader('Content-Type', 'application/pdf');
   res.setHeader('Content-Disposition', `attachment; filename=invoice-${payment.receiptNo}.pdf`);
   doc.pipe(res);
 
-  // Background accent block at the very top header
-  doc.rect(50, 45, 500, 85).fill('#1e1b4b');
+  const primaryColor = '#1e1b4b'; // Deep Indigo
+  const accentColor = '#6366f1'; // Indigo 500
+  const textColor = '#1e293b'; // Slate 800
+  const mutedColor = '#64748b'; // Slate 500
+  const borderColor = '#e2e8f0'; // Slate 200
 
-  // School Header overlay
-  doc.fillColor('#ffffff');
-  doc.fontSize(20).font('Helvetica-Bold').text(schoolName.toUpperCase(), 70, 65);
-  doc.fontSize(9).font('Helvetica').fillColor('#93c5fd').text(schoolWebsite, 70, 90);
+  // Top Accent Bar (Thin, elegant)
+  doc.rect(0, 0, 595, 8).fill(primaryColor);
   
-  doc.fillColor('#ffffff');
-  doc.fontSize(14).font('Helvetica-Bold').text('PAYMENT RECEIPT', 380, 65, { align: 'right', width: 150 });
-  doc.fontSize(9).font('Helvetica').fillColor('#93c5fd').text(`Receipt No: ${payment.receiptNo}`, 380, 90, { align: 'right', width: 150 });
-
-  // Reset text color for billing details
-  doc.fillColor('#1e293b');
+  // School Info
+  doc.fontSize(22).font('Helvetica-Bold').fillColor(primaryColor).text(schoolName.toUpperCase(), 50, 45);
+  doc.fontSize(9).font('Helvetica').fillColor(mutedColor).text(schoolWebsite, 50, 72);
   
-  // Left Column - Issued To Info
-  doc.fontSize(9).font('Helvetica-Bold').fillColor('#64748b').text('ISSUED TO:', 50, 155);
-  doc.fontSize(11).font('Helvetica-Bold').fillColor('#1e293b').text(payment.student.user.name, 50, 170);
-  doc.fontSize(9).font('Helvetica').fillColor('#334155').text(`Student ID: ${payment.student.rollNo}`, 50, 185);
-  doc.fontSize(9).font('Helvetica').fillColor('#334155').text(`Class: ${payment.student.class ? `${payment.student.class.name}-${payment.student.class.section}` : 'N/A'}`, 50, 200);
+  // Receipt Title & Meta
+  doc.fontSize(16).font('Helvetica-Bold').fillColor(primaryColor).text('PAYMENT RECEIPT', 380, 45, { align: 'right', width: 165 });
+  doc.fontSize(10).font('Helvetica-Bold').fillColor(accentColor).text(`No: ${payment.receiptNo}`, 380, 65, { align: 'right', width: 165 });
+  doc.fontSize(9).font('Helvetica').fillColor(mutedColor).text(`Date: ${payment.paymentDate.toLocaleDateString('en-IN')}`, 380, 80, { align: 'right', width: 165 });
 
-  // Right Column - Payment metadata
-  doc.fontSize(9).font('Helvetica-Bold').fillColor('#64748b').text('TRANSACTION DETAILS:', 350, 155);
-  doc.fontSize(9).font('Helvetica').fillColor('#334155').text(`Payment Date: ${payment.paymentDate.toLocaleDateString()}`, 350, 170);
-  doc.fontSize(9).font('Helvetica').fillColor('#334155').text(`Payment Method: ${payment.method.toUpperCase()}`, 350, 185);
-  doc.fontSize(9).font('Helvetica').fillColor('#334155').text(`Status: ${payment.status}`, 350, 200);
+  // Subtle separator
+  doc.moveTo(50, 110).lineTo(545, 110).stroke(borderColor);
 
-  // Table Headers
-  const tableY = 240;
-  doc.rect(50, tableY, 500, 24).fill('#f1f5f9');
-  doc.fontSize(9).font('Helvetica-Bold').fillColor('#475569');
-  doc.text('FEE DESCRIPTION', 65, tableY + 8);
-  doc.text('AMOUNT DUE', 370, tableY + 8, { align: 'right', width: 80 });
-  doc.text('AMOUNT PAID', 460, tableY + 8, { align: 'right', width: 80 });
+  // Billing Details (Two Columns)
+  doc.fontSize(8).font('Helvetica-Bold').fillColor(mutedColor).text('ISSUED TO', 50, 130, { characterSpacing: 1 });
+  doc.fontSize(12).font('Helvetica-Bold').fillColor(textColor).text(payment.student.user.name, 50, 145);
+  doc.fontSize(10).font('Helvetica').fillColor(mutedColor).text(`ID: ${payment.student.rollNo}`, 50, 162);
+  doc.fontSize(10).font('Helvetica').fillColor(mutedColor).text(`Class: ${payment.student.class ? `${payment.student.class.name}-${payment.student.class.section}` : 'N/A'}`, 50, 177);
 
-  // Table Row Content
-  const rowY = tableY + 32;
-  doc.fontSize(10).font('Helvetica').fillColor('#1e293b');
-  doc.text(payment.feeStructure.name, 65, rowY);
-  doc.text(`Rs. ${payment.feeStructure.amount.toLocaleString()}`, 370, rowY, { align: 'right', width: 80 });
-  doc.font('Helvetica-Bold').text(`Rs. ${payment.amountPaid.toLocaleString()}`, 460, rowY, { align: 'right', width: 80 });
+  doc.fontSize(8).font('Helvetica-Bold').fillColor(mutedColor).text('PAYMENT INFO', 350, 130, { characterSpacing: 1 });
+  doc.fontSize(10).font('Helvetica-Bold').fillColor(textColor).text(`Method: ${payment.method.toUpperCase()}`, 350, 145);
+  if (payment.method === 'UPI' && payment.utrNumber) {
+    doc.fontSize(10).font('Helvetica').fillColor(mutedColor).text(`UTR: ${payment.utrNumber}`, 350, 162);
+  }
+  doc.fontSize(10).font('Helvetica').fillColor(mutedColor).text(`Status: ${payment.status}`, 350, payment.method === 'UPI' && payment.utrNumber ? 177 : 162);
+
+  // Table Structure
+  const tableTop = 230;
+  
+  // Table Header
+  doc.rect(50, tableTop, 495, 28).fill('#f8fafc');
+  doc.fontSize(9).font('Helvetica-Bold').fillColor(mutedColor);
+  doc.text('DESCRIPTION', 65, tableTop + 10, { characterSpacing: 1 });
+  doc.text('AMOUNT DUE', 330, tableTop + 10, { align: 'right', width: 100, characterSpacing: 1 });
+  doc.text('AMOUNT PAID', 440, tableTop + 10, { align: 'right', width: 90, characterSpacing: 1 });
+
+  // Table Row
+  const rowY = tableTop + 45;
+  doc.fontSize(11).font('Helvetica-Bold').fillColor(textColor).text(payment.feeStructure.name, 65, rowY);
+  doc.fontSize(11).font('Helvetica').fillColor(mutedColor).text(`Rs. ${payment.feeStructure.amount.toLocaleString('en-IN')}`, 330, rowY, { align: 'right', width: 100 });
+  doc.fontSize(11).font('Helvetica-Bold').fillColor(textColor).text(`Rs. ${payment.amountPaid.toLocaleString('en-IN')}`, 440, rowY, { align: 'right', width: 90 });
 
   // Divider Line
-  doc.moveTo(50, rowY + 20).lineTo(550, rowY + 20).stroke('#e2e8f0');
+  const lineY = rowY + 30;
+  doc.moveTo(50, lineY).lineTo(545, lineY).stroke(borderColor);
 
-  // Bottom Summary Cards / Notes
-  const cardY = rowY + 40;
-  
-  // Muted Note box
-  doc.rect(50, cardY, 260, 75).fill('#f8fafc');
-  doc.fontSize(8).font('Helvetica-Bold').fillColor('#475569').text(payment.method === 'UPI' ? 'UPI TRANSACTION DETAILS' : 'PAYMENT NOTE / REMARKS', 60, cardY + 10);
-  
-  if (payment.method === 'UPI' && payment.utrNumber) {
-    doc.fontSize(8).font('Helvetica-Bold').fillColor('#1e293b').text(`UTR Number: ${payment.utrNumber}`, 60, cardY + 25);
-    doc.fontSize(8).font('Helvetica').fillColor('#64748b').text(payment.remarks || 'No additional transaction remarks recorded.', 60, cardY + 38, { width: 240, lineGap: 3 });
-  } else {
-    doc.fontSize(8).font('Helvetica').fillColor('#64748b').text(payment.remarks || 'No additional transaction remarks recorded.', 60, cardY + 25, { width: 240, lineGap: 3 });
+  // Total Section
+  const totalY = lineY + 15;
+  doc.fontSize(12).font('Helvetica-Bold').fillColor(primaryColor).text('TOTAL PAID', 330, totalY, { align: 'right', width: 100 });
+  doc.fontSize(14).font('Helvetica-Bold').fillColor(accentColor).text(`Rs. ${payment.amountPaid.toLocaleString('en-IN')}`, 440, totalY - 1, { align: 'right', width: 90 });
+
+  // Status Stamp / Box
+  const stampY = totalY + 40;
+  doc.rect(430, stampY, 100, 28).fill(payment.status === 'PAID' ? '#ecfdf5' : '#fffbeb');
+  doc.fontSize(10).font('Helvetica-Bold').fillColor(payment.status === 'PAID' ? '#059669' : '#d97706').text(payment.status === 'PAID' ? 'SUCCESS / PAID' : 'PARTIAL / PENDING', 430, stampY + 9, { align: 'center', width: 100 });
+
+  // Remarks Note
+  if (payment.remarks) {
+    doc.fontSize(9).font('Helvetica-Bold').fillColor(mutedColor).text('Remarks:', 50, totalY);
+    doc.fontSize(9).font('Helvetica').fillColor(mutedColor).text(payment.remarks, 50, totalY + 15, { width: 250, lineGap: 3 });
   }
 
-  // Green Success Total box
-  doc.rect(330, cardY, 220, 75).fill('#ecfdf5');
-  doc.fontSize(9).font('Helvetica-Bold').fillColor('#047857').text('PAYMENT STATUS', 345, cardY + 12);
-  doc.fontSize(16).font('Helvetica-Bold').fillColor('#065f46').text('SUCCESS / PAID', 345, cardY + 26);
-  doc.fontSize(9).font('Helvetica-Bold').fillColor('#047857').text(`Total Paid: Rs. ${payment.amountPaid.toLocaleString()}`, 345, cardY + 52);
-
-  // Footer section
-  doc.moveTo(50, 710).lineTo(550, 710).stroke('#f1f5f9');
-  doc.fontSize(8).font('Helvetica').fillColor('#94a3b8').text('This is a secure, computer-generated transaction document. No physical signature is required.', 50, 725, { align: 'center', width: 500 });
-  doc.fontSize(7).font('Helvetica').fillColor('#cbd5e1').text(`${schoolAddress} | Telephone: ${schoolPhone} | Email: ${schoolEmail}`, 50, 740, { align: 'center', width: 500 });
+  // Footer (Bottom of page)
+  const footerY = 750;
+  doc.moveTo(50, footerY - 15).lineTo(545, footerY - 15).stroke(borderColor);
+  doc.fontSize(8).font('Helvetica-Bold').fillColor(primaryColor).text('THANK YOU FOR YOUR PAYMENT', 50, footerY, { align: 'center', width: 495 });
+  doc.fontSize(8).font('Helvetica').fillColor(mutedColor).text('This is a computer generated document. No signature is required.', 50, footerY + 15, { align: 'center', width: 495 });
+  doc.fontSize(8).font('Helvetica').fillColor(mutedColor).text(`${schoolAddress} | ${schoolPhone} | ${schoolEmail}`, 50, footerY + 30, { align: 'center', width: 495 });
 
   doc.end();
 };

@@ -2,9 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { useParams, Link, useOutletContext } from 'react-router-dom';
 import api from '../../api/axios';
 import { LoadingSpinner } from '../../components/UI/LoadingSpinner';
-import { Avatar } from '../../components/UI/Avatar';
-import { Badge } from '../../components/UI/Badge';
-import { ArrowLeft, BookOpen, GraduationCap, School, Camera, Printer } from 'lucide-react';
+import { PageHeader } from '../../components/UI/PageHeader';
+import { ArrowLeft, BookOpen, GraduationCap, School, Camera, Printer, Phone, Mail, MapPin } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getPhotoUrl } from '../../utils/photo';
 import { compressImage } from '../../utils/imageCompressor';
@@ -72,81 +71,134 @@ export const TeacherProfilePage: React.FC = () => {
   if (!teacher) return <div className="text-center py-12">Teacher profile not found.</div>;
 
   return (
-    <>
-    <div className="max-w-4xl mx-auto space-y-6 print:hidden">
-      {/* Navigation Row */}
-      <div className="flex items-center justify-between">
-        <Link to="/teachers" className="inline-flex items-center gap-1.5 text-sm font-semibold text-gray-500 hover:text-black dark:hover:text-white">
-          <ArrowLeft className="w-4 h-4" /> Back to Teachers
-        </Link>
-        <button onClick={() => window.print()} className="btn-primary flex items-center gap-2 text-xs font-bold shadow-md hover:scale-102 transition-all">
-          <Printer className="w-4 h-4" /> Print Profile
-        </button>
-      </div>
-
-      <div className="card p-6 flex flex-col md:flex-row items-center gap-6">
-        <div className="relative">
-          <Avatar name={teacher.user.name} src={getPhotoUrl(teacher.user.photoUrl)} size="lg" variant="rectangular" className="w-28 h-36 rounded-2xl ring-4 ring-primary-500/10 shadow-lg object-cover" />
-          {/* Upload Button */}
-          <label className="cursor-pointer absolute bottom-0 right-0 inline-flex items-center gap-1.5 text-xs font-bold text-primary-600 hover:text-primary-700 bg-primary-50 hover:bg-primary-100 dark:bg-gray-800 dark:text-gray-200 px-3 py-1.5 rounded-xl transition-colors border border-primary-200 dark:border-gray-700 shadow-sm hover:scale-102 active:scale-98 select-none">
-            <Camera className="w-3.5 h-3.5" />
-            <span>{uploading ? 'Uploading...' : 'Upload Photo'}</span>
-            <input type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} disabled={uploading} />
-          </label>
-        </div>
-        <div className="flex-1 text-center md:text-left space-y-2">
-          <h2 className="text-2xl font-bold">{teacher.user.name}</h2>
-          <div className="flex flex-wrap justify-center md:justify-start gap-2">
-            <Badge variant="info">Employee ID: {teacher.employeeId}</Badge>
-            <Badge variant="success">Specialization: {teacher.specialization || 'N/A'}</Badge>
-          </div>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="card p-6 md:col-span-2 space-y-4">
-          <h3 className="font-bold text-lg border-b pb-2">Academic Qualifications</h3>
-          <div className="space-y-4 text-sm">
-            <div className="flex items-center gap-2">
-              <GraduationCap className="w-5 h-5 text-gray-400" />
-              <div>
-                <span className="text-xs text-gray-400 block">Degree / Certification</span>
-                <span className="font-semibold">{teacher.qualification || 'N/A'}</span>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <BookOpen className="w-5 h-5 text-gray-400" />
-              <div>
-                <span className="text-xs text-gray-400 block">Subjects Specialized</span>
-                <span className="font-semibold">{teacher.specialization || 'N/A'}</span>
-              </div>
-            </div>
-            <div>
-              <span className="text-xs text-gray-400 block">Joining Date</span>
-              <span className="font-semibold">{new Date(teacher.joiningDate).toLocaleDateString()}</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="card p-6 space-y-4">
-          <h3 className="font-bold text-lg border-b pb-2">Class Assignments</h3>
-          <div className="space-y-3">
-            {assignedClasses.map((item, index) => (
-              <div key={index} className="flex items-center gap-2.5 p-2.5 rounded-xl bg-gray-50 dark:bg-gray-800/30 border border-gray-100 dark:border-gray-800">
-                <School className="w-5 h-5 text-primary-500" />
-                <div className="text-xs">
-                  <span className="font-bold block">{item.class.name}-{item.class.section}</span>
-                  <span className="text-gray-400">{item.subject.name}</span>
+    <div className="flex flex-col h-full bg-slate-50/50 w-full" style={{ minHeight: 'calc(100vh - 64px)' }}>
+      <PageHeader 
+        title="Teacher Profile"
+        icon={<Link to="/teachers"><ArrowLeft className="w-6 h-6 text-gray-400 hover:text-indigo-600 cursor-pointer" /></Link>}
+        action={
+          <button onClick={() => window.print()} className="btn-primary w-full sm:w-auto">
+            <Printer className="w-4 h-4 mr-2" /> Print Profile
+          </button>
+        }
+      />
+      
+      <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 print:hidden">
+        <div className="max-w-6xl mx-auto space-y-6">
+          
+          {/* Identity Card */}
+          <div className="bg-white rounded-[2rem] p-6 lg:p-8 shadow-xl shadow-indigo-100/20 border border-gray-100 flex flex-col md:flex-row items-center md:items-start gap-8">
+            {/* Photo Section */}
+            <div className="relative shrink-0">
+              <div className="w-32 h-40 md:w-36 md:h-48 rounded-xl bg-gray-50 dark:bg-gray-800 p-1 border border-gray-200 dark:border-gray-700">
+                <div className="w-full h-full rounded-lg overflow-hidden">
+                  {getPhotoUrl(teacher.user?.photoUrl) ? (
+                    <img 
+                      src={getPhotoUrl(teacher.user.photoUrl)} 
+                      alt={teacher.user.name} 
+                      className="w-full h-full object-cover" 
+                    />
+                  ) : (
+                    <div className="w-full h-full flex flex-col items-center justify-center bg-gray-100 dark:bg-gray-800 text-gray-400">
+                      <Camera className="w-8 h-8 mb-2 opacity-50" />
+                      <span className="text-[10px] font-bold uppercase tracking-wider">No Photo</span>
+                    </div>
+                  )}
                 </div>
               </div>
-            ))}
-            {assignedClasses.length === 0 && (
-              <p className="text-sm text-gray-400">No classes assigned to this teacher yet.</p>
-            )}
+              <label className="absolute -bottom-3 -right-3 p-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl cursor-pointer shadow-lg shadow-indigo-600/30 transition-transform hover:scale-110">
+                <Camera className="w-4 h-4" />
+                <input type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} disabled={uploading} />
+              </label>
+            </div>
+            
+            {/* Main Info */}
+            <div className="flex-1 text-center md:text-left space-y-4">
+              <div>
+                <h2 className="text-3xl font-black text-slate-800 tracking-tight">{teacher.user.name}</h2>
+                <p className="text-indigo-600 font-bold mt-1 text-sm">{teacher.specialization || 'Teacher'}</p>
+              </div>
+              
+              <div className="flex flex-wrap justify-center md:justify-start gap-2 pt-2">
+                <span className="px-3 py-1.5 bg-slate-100 text-slate-600 rounded-lg text-xs font-bold border border-slate-200">
+                  EMP ID: {teacher.employeeId}
+                </span>
+                <span className="px-3 py-1.5 bg-emerald-50 text-emerald-700 rounded-lg text-xs font-bold border border-emerald-200">
+                  Joined: {new Date(teacher.joiningDate).toLocaleDateString()}
+                </span>
+              </div>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-gray-100">
+                <div className="flex items-center gap-3 text-sm font-medium text-gray-600">
+                  <Phone className="w-4 h-4 text-indigo-400" />
+                  {teacher.user.phone || 'N/A'}
+                </div>
+                <div className="flex items-center gap-3 text-sm font-medium text-gray-600">
+                  <Mail className="w-4 h-4 text-indigo-400" />
+                  {teacher.user.email || 'N/A'}
+                </div>
+              </div>
+            </div>
           </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Academic Info */}
+            <div className="lg:col-span-2 space-y-6">
+              <div className="bg-white rounded-[2rem] p-6 lg:p-8 shadow-xl shadow-indigo-100/20 border border-gray-100">
+                <h3 className="text-lg font-black text-slate-800 mb-6 flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white shadow-md">
+                    <GraduationCap className="w-4 h-4" />
+                  </div>
+                  Academic Qualifications
+                </h3>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100">
+                    <span className="text-[11px] font-extrabold text-slate-400 uppercase tracking-widest block mb-1">Degree / Certification</span>
+                    <span className="font-bold text-slate-700">{teacher.qualification || 'N/A'}</span>
+                  </div>
+                  <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100">
+                    <span className="text-[11px] font-extrabold text-slate-400 uppercase tracking-widest block mb-1">Specialization</span>
+                    <span className="font-bold text-slate-700">{teacher.specialization || 'N/A'}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Assignments Sidebar */}
+            <div className="space-y-6">
+              <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-[2rem] p-6 lg:p-8 shadow-xl text-white">
+                <h3 className="text-lg font-black mb-6 flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-xl bg-white/10 flex items-center justify-center border border-white/20">
+                    <School className="w-4 h-4 text-indigo-300" />
+                  </div>
+                  Class Assignments
+                </h3>
+                
+                <div className="space-y-3">
+                  {assignedClasses.length > 0 ? (
+                    assignedClasses.map((item, index) => (
+                      <div key={index} className="bg-white/5 rounded-xl p-3 border border-white/10 flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-lg bg-indigo-500/20 flex items-center justify-center border border-indigo-500/30 text-indigo-300 font-bold text-xs shrink-0">
+                          {item.class.name}
+                        </div>
+                        <div>
+                          <div className="font-bold text-sm text-indigo-100">{item.subject.name}</div>
+                          <div className="text-xs text-slate-400 mt-0.5">Section {item.class.section}</div>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-6 bg-white/5 rounded-xl border border-white/10 border-dashed">
+                      <p className="text-sm text-slate-400 font-medium">No classes assigned</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+          
         </div>
       </div>
-    </div>
 
     {/* Print-only version (mirrors on-screen layout without interactive controls) */}
     <div className="hidden print:block space-y-6">
@@ -171,10 +223,7 @@ export const TeacherProfilePage: React.FC = () => {
         </div>
       </div>
     </div>
-
-    </>
+    </div>
   );
 };
 export default TeacherProfilePage;
-
-

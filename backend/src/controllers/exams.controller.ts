@@ -282,7 +282,7 @@ export const toggleFreezeClass = async (req: AuthRequest, res: Response, next: N
       },
     });
 
-    successResponse(res, { frozen: !isCurrentlyFrozen }, `Results ${!isCurrentlyFrozen ? 'frozen' : 'unfrozen'} successfully`);
+    successResponse(res, { frozen: isFrozen }, `Results ${isFrozen ? 'frozen' : 'unfrozen'} successfully`);
   } catch (error) {
     next(error);
   }

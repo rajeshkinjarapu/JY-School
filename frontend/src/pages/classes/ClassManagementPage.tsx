@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import api from '../../api/axios';
 import { LoadingSpinner } from '../../components/UI/LoadingSpinner';
-import { Badge } from '../../components/UI/Badge';
-import { School, User, Users, Plus, Trash2, Edit3, Upload, FileDown } from 'lucide-react';
+import { PageHeader } from '../../components/UI/PageHeader';
+import { School, User, Users, Plus, Trash2, Edit3 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
@@ -87,8 +87,6 @@ export const ClassManagementPage: React.FC = () => {
   const [teachers, setTeachers] = useState<any[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [editingClassId, setEditingClassId] = useState<string | null>(null);
-
-  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   // Form states
   const [name, setName] = useState('');
@@ -187,20 +185,21 @@ export const ClassManagementPage: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col h-full bg-gray-50/50 h-[calc(100vh-64px)]">
-      {/* Colorful Header */}
-      <div className="px-6 py-6 bg-gradient-to-br from-indigo-600 via-violet-600 to-purple-700 shadow-lg hidden md:flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <h1 className="text-2xl font-black uppercase tracking-tight text-white drop-shadow-sm">Classes Directory</h1>
-
-        </div>
-        <div className="flex gap-3 w-full md:w-auto">
-          <button onClick={openCreateModal} className="flex items-center gap-1.5 px-3.5 py-2.5 text-sm font-extrabold text-indigo-700 bg-white rounded-xl shadow hover:bg-indigo-50 transition-colors w-full md:w-auto cursor-pointer">
-            <Plus className="w-4 h-4" />
-            <span>New Class</span>
+    <div className="flex flex-col h-full bg-slate-50" style={{ minHeight: 'calc(100vh - 64px)' }}>
+      <PageHeader 
+        title="Classes Directory"
+        icon={<School className="w-6 h-6" />}
+        action={
+          <button
+            type="button"
+            onClick={openCreateModal}
+            className="btn-primary w-full sm:w-auto"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            New Class
           </button>
-        </div>
-      </div>
+        }
+      />
 
       <div className="flex-1 overflow-auto p-3 md:p-4">
         {/* Desktop Table */}

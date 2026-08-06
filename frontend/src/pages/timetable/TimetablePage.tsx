@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import api from "../../api/axios";
+import { PageHeader } from "../../components/UI/PageHeader";
 import { LoadingSpinner } from "../../components/UI/LoadingSpinner";
 import { useAuth } from "../../hooks/useAuth";
 import {
@@ -566,31 +567,25 @@ export const TimetablePage: React.FC = () => {
   return (
     <div className="flex flex-col h-full bg-gray-50/50 print-landscape" style={{ minHeight: 'calc(100vh - 64px)' }}>
       {/* ══ HEADER ══ */}
-      <div className="px-6 py-6 bg-gradient-to-br from-indigo-600 via-blue-600 to-cyan-600 shadow-lg flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shrink-0 no-print">
-        <div className="flex items-center gap-4">
-          <div className="p-3 bg-white/20 rounded-2xl">
-            <Calendar className="w-7 h-7 text-white" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-black uppercase tracking-tight text-white drop-shadow-sm">Timetable Manager</h1>
+      <PageHeader 
+        title="Timetable Manager"
+        icon={<Calendar className="w-6 h-6" />}
+      />
 
-          </div>
-        </div>
-        <div className="flex flex-wrap bg-white/10 backdrop-blur p-1 rounded-xl border border-white/20 gap-1 w-full md:w-auto">
-          {tabs.map((t) => (
-            <button
-              key={t.key}
-              onClick={() => setActiveTab(t.key as any)}
-              className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-bold transition-all cursor-pointer flex-1 md:flex-none justify-center ${
-                activeTab === t.key
-                  ? "bg-white text-indigo-700 shadow-sm"
-                  : "text-white/70 hover:text-white hover:bg-white/10"
-              }`}
-            >
-              {t.icon} <span className="hidden sm:inline">{t.label}</span>
-            </button>
-          ))}
-        </div>
+      <div className="bg-white border-b border-gray-200 px-4 py-2 shrink-0 no-print flex gap-2 overflow-x-auto hide-scrollbar">
+        {tabs.map((t) => (
+          <button
+            key={t.key}
+            onClick={() => setActiveTab(t.key as any)}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all cursor-pointer shrink-0 ${
+              activeTab === t.key
+                ? "bg-indigo-50 text-indigo-700 shadow-sm border border-indigo-100"
+                : "text-gray-600 hover:bg-gray-50 hover:text-gray-900 border border-transparent"
+            }`}
+          >
+            {t.icon} <span>{t.label}</span>
+          </button>
+        ))}
       </div>
 
       <div className="flex-1 overflow-auto p-4 md:p-6 print:p-0">

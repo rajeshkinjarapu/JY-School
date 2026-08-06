@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import api from '../../api/axios';
 import { LoadingSpinner } from '../../components/UI/LoadingSpinner';
+import { PageHeader } from '../../components/UI/PageHeader';
 import { Badge } from '../../components/UI/Badge';
 import { useAuth } from '../../hooks/useAuth';
 import {
@@ -10,7 +11,6 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { Link, useSearchParams, useOutletContext, useNavigate } from 'react-router-dom';
-import * as XLSX from 'xlsx';
 import { SlipTestsTab } from './SlipTestsTab';
 import { AdmitCardTab } from './AdmitCardTab';
 import { ProgressCardTab } from './ProgressCardTab';
@@ -169,7 +169,8 @@ export const ExamListPage: React.FC = () => {
   // -------------------------------------------------------------
   // EXCEL UPLOAD Logic
   // -------------------------------------------------------------
-  const downloadSampleExcel = () => {
+  const downloadSampleExcel = async () => {
+    const XLSX = await import('xlsx');
     const ws = XLSX.utils.json_to_sheet([
       { "Student ID": "STU123", "Subject": "MATH101", "Marks": 85 },
       { "Student ID": "STU124", "Subject": "MATH101", "Marks": 90 }
@@ -189,6 +190,7 @@ export const ExamListPage: React.FC = () => {
       const reader = new FileReader();
       reader.onload = async (evt) => {
         const data = evt.target?.result;
+        const XLSX = await import('xlsx');
         const workbook = XLSX.read(data, { type: 'binary' });
         const sheetName = workbook.SheetNames[0];
         const sheet = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
@@ -841,6 +843,21 @@ export const ExamListPage: React.FC = () => {
   return (
     <div className="space-y-4 sm:space-y-6 md:space-y-8 p-4 sm:p-6 md:p-8 bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 min-h-screen overflow-x-hidden">
       
+      {/* BEAUTIFUL PAGE HEADING BANNER */}
+      <PageHeader 
+        title="Examination Dashboard"
+        icon={<ClipboardList className="w-6 h-6" />}
+        action={
+          activeTab ? (
+            <button
+              onClick={() => setActiveTab('')}
+              className="btn-secondary w-full sm:w-auto"
+            >
+              ← Back to Examination Home
+            </button>
+          ) : undefined
+        }
+      />
       <div className="space-y-6 md:space-y-8">
         {!activeTab && (
           <div className="pt-2 sm:pt-4 space-y-8">

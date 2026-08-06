@@ -4,6 +4,7 @@ import api from '../../api/axios';
 import { useAuth } from '../../hooks/useAuth';
 import { compressImage } from '../../utils/imageCompressor';
 import { LoadingSpinner } from '../../components/UI/LoadingSpinner';
+import { PageHeader } from '../../components/UI/PageHeader';
 import toast from 'react-hot-toast';
 import { ArrowLeft, CreditCard, Calendar, FileText, Upload, CheckCircle2 } from 'lucide-react';
 
@@ -68,7 +69,6 @@ export const RecordFeePaymentPage: React.FC = () => {
     e.preventDefault();
     if (isSubmitting) return;
     if (selectedFees.length === 0) return toast.error('Please select at least one fee structure to pay.');
-    if (method === 'UPI' && !utrNumber) return toast.error('Please enter UTR number');
 
     setIsSubmitting(true);
     try {
@@ -79,11 +79,6 @@ export const RecordFeePaymentPage: React.FC = () => {
         remarks,
         paymentDate,
       };
-
-      if (method === 'UPI') {
-        payload.utrNumber = utrNumber;
-        payload.receiptUrl = receiptUrl;
-      }
 
       await api.post('/api/fees/payments', payload);
       toast.success('Payment recorded successfully!');
@@ -106,24 +101,21 @@ export const RecordFeePaymentPage: React.FC = () => {
   const totalAmountToPay = selectedFees.reduce((sum, f) => sum + f.amountPaid, 0);
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6 p-4 sm:p-6 lg:p-8 animate-fade-in">
-      <div className="flex items-center gap-4 mb-6">
-        <button
-          onClick={() => navigate(-1)}
-          className="p-2.5 bg-white border border-gray-200 text-gray-600 rounded-xl hover:bg-gray-50 hover:text-indigo-600 transition-colors shadow-sm"
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </button>
-        <div>
-          <h1 className="text-2xl font-black text-gray-900 tracking-tight flex items-center gap-2">
-            Record Fee Payment
-          </h1>
-          <p className="text-sm text-gray-500 font-medium">Processing payment for <span className="font-bold text-indigo-600">{student.user.name}</span></p>
-        </div>
-      </div>
+    <div className="flex flex-col h-full bg-gray-50/50 w-full" style={{ minHeight: 'calc(100vh - 64px)' }}>
+      <PageHeader 
+        title="Record Fee Payment"
+        icon={<ArrowLeft className="w-6 h-6 cursor-pointer" onClick={() => navigate(-1)} />}
+        action={
+          <div className="bg-indigo-50 dark:bg-indigo-900/20 px-4 py-2 rounded-xl text-sm font-bold text-indigo-700 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-800">
+            For: {student.user.name}
+          </div>
+        }
+      />
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-6">
+      <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
+        <div className="max-w-6xl mx-auto grid grid-cols-1 xl:grid-cols-3 gap-6 lg:gap-8">
+
+        <div className="xl:col-span-2 space-y-6">
           <form id="payment-form" onSubmit={handlePaymentSubmit} className="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden">
             <div className="p-6 sm:p-8 space-y-8">
               
@@ -228,37 +220,6 @@ export const RecordFeePaymentPage: React.FC = () => {
                 </div>
               </div>
 
-              {method === 'UPI' && (
-                <div className="p-4 bg-gray-50 rounded-2xl border border-gray-200 space-y-4">
-                  <div className="space-y-2">
-                    <label className="text-sm font-bold text-gray-700">UPI UTR Reference Number</label>
-                    <input
-                      type="text"
-                      required
-                      value={utrNumber}
-                      onChange={(e) => setUtrNumber(e.target.value)}
-                      className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-500 outline-none text-sm font-medium"
-                      placeholder="e.g. 123456789012"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-bold text-gray-700">Upload Receipt (Optional)</label>
-                    <div className="flex items-center gap-3">
-                      <label className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl cursor-pointer hover:bg-gray-50 transition-colors">
-                        <Upload className="w-4 h-4 text-gray-500" />
-                        <span className="text-sm font-medium text-gray-600">Choose File</span>
-                        <input
-                          type="file"
-                          accept="image/*,application/pdf"
-                          onChange={handleFileChange}
-                          className="hidden"
-                        />
-                      </label>
-                      {receiptUrl && <span className="text-xs text-emerald-600 font-bold flex items-center gap-1"><CheckCircle2 className="w-4 h-4"/> Uploaded</span>}
-                    </div>
-                  </div>
-                </div>
-              )}
 
               <div className="space-y-2">
                 <label className="text-sm font-bold text-gray-700 flex items-center gap-2">
@@ -277,48 +238,54 @@ export const RecordFeePaymentPage: React.FC = () => {
         </div>
 
         {/* Summary Card Sidebar */}
-        <div className="lg:col-span-1">
-          <div className="bg-gradient-to-br from-indigo-900 to-purple-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl sticky top-6">
-            <h3 className="text-xl font-black mb-6 flex items-center gap-2">
-              Payment Summary
-            </h3>
+        <div className="xl:col-span-1">
+          <div className="bg-gradient-to-br from-indigo-500 via-purple-500 to-fuchsia-600 rounded-[2rem] p-6 sm:p-8 text-white shadow-2xl shadow-indigo-500/20 sticky top-6 border border-white/20 relative overflow-hidden group">
+            <div className="absolute top-0 right-0 w-48 h-48 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10 transition-transform duration-700 group-hover:scale-110"></div>
+            <div className="absolute bottom-0 left-0 w-32 h-32 bg-indigo-900/20 rounded-full blur-2xl transition-transform duration-700 group-hover:scale-110"></div>
             
-            <div className="space-y-4 mb-8">
-              {selectedFees.length === 0 ? (
-                <p className="text-indigo-200 text-sm">No fees selected yet.</p>
-              ) : (
-                selectedFees.map((f, idx) => {
-                  const name = feeStructures.find(s => s.id === f.feeStructureId)?.name;
-                  return (
-                    <div key={idx} className="flex justify-between items-center text-sm border-b border-white/10 pb-2">
-                      <span className="text-indigo-100">{name}</span>
-                      <span className="font-bold">₹{f.amountPaid.toLocaleString()}</span>
-                    </div>
-                  );
-                })
-              )}
-            </div>
-
-            <div className="pt-4 border-t border-white/20 mb-8">
-              <div className="flex justify-between items-end">
-                <span className="text-indigo-200 font-medium">Total Amount</span>
-                <span className="text-4xl font-black text-white tracking-tight">₹{totalAmountToPay.toLocaleString()}</span>
+            <div className="relative z-10">
+              <h3 className="text-xl font-black mb-6 flex items-center gap-2 drop-shadow-md">
+                Payment Summary
+              </h3>
+              
+              <div className="space-y-4 mb-8 bg-black/10 rounded-2xl p-4 backdrop-blur-sm border border-white/10">
+                {selectedFees.length === 0 ? (
+                  <p className="text-indigo-100 text-sm font-semibold text-center py-2">No fees selected yet.</p>
+                ) : (
+                  selectedFees.map((f, idx) => {
+                    const name = feeStructures.find(s => s.id === f.feeStructureId)?.name;
+                    return (
+                      <div key={idx} className="flex justify-between items-center text-sm border-b border-white/10 pb-2 last:border-0 last:pb-0">
+                        <span className="text-indigo-50 font-bold">{name}</span>
+                        <span className="font-black">₹{f.amountPaid.toLocaleString()}</span>
+                      </div>
+                    );
+                  })
+                )}
               </div>
-            </div>
 
-            <button
-              type="submit"
-              form="payment-form"
-              disabled={isSubmitting || selectedFees.length === 0}
-              className="w-full py-4 bg-emerald-500 hover:bg-emerald-400 text-white rounded-xl font-black text-lg shadow-lg shadow-emerald-500/30 transition-all hover:-translate-y-1 disabled:opacity-50 disabled:hover:translate-y-0 disabled:cursor-not-allowed flex justify-center items-center gap-2"
-            >
-              {isSubmitting ? 'Processing...' : 'Confirm Payment'}
-            </button>
-            <p className="text-center text-xs text-indigo-300 mt-4">
-              Upon success, you will be redirected to the student's profile.
-            </p>
+              <div className="pt-4 mb-8">
+                <div className="flex flex-col items-center justify-center bg-white/10 rounded-2xl p-4 border border-white/20 backdrop-blur-md shadow-inner">
+                  <span className="text-indigo-100 font-extrabold uppercase tracking-widest text-[10px] mb-1">Total Amount</span>
+                  <span className="text-5xl font-black text-white tracking-tight drop-shadow-lg">₹{totalAmountToPay.toLocaleString()}</span>
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                form="payment-form"
+                disabled={isSubmitting || selectedFees.length === 0}
+                className="w-full py-4 bg-white hover:bg-gray-50 text-indigo-700 rounded-xl font-black text-lg shadow-xl shadow-black/10 transition-all hover:-translate-y-1 disabled:opacity-50 disabled:hover:translate-y-0 disabled:cursor-not-allowed flex justify-center items-center gap-2 uppercase tracking-widest"
+              >
+                {isSubmitting ? 'Processing...' : 'Confirm Payment'}
+              </button>
+              <p className="text-center text-xs font-semibold text-indigo-100 mt-4 opacity-80">
+                Upon success, you will be redirected to the student's profile.
+              </p>
+            </div>
           </div>
         </div>
+      </div>
       </div>
     </div>
   );

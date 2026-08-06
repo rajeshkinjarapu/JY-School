@@ -6,7 +6,6 @@ import { useNavigate, useOutletContext } from 'react-router-dom';
 import html2canvas from 'html2canvas';
 import toast from 'react-hot-toast';
 import { SlipTestRankCard, type ProcessedStudent } from '../../components/OfficeTools/SlipTestRankCard';
-import * as XLSX from 'xlsx';
 
 export const SlipTestManualPage = () => {
   const navigate = useNavigate();
@@ -171,6 +170,7 @@ export const SlipTestManualPage = () => {
       "Percentage (%)": s.percentage
     }));
 
+    const XLSX = await import('xlsx');
     const worksheet = XLSX.utils.json_to_sheet(excelData);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Slip Test Marks");

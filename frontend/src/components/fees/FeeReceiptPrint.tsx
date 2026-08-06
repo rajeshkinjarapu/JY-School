@@ -28,21 +28,28 @@ export const FeeReceiptPrint: React.FC<FeeReceiptPrintProps> = ({ payment, schoo
     : 0;
 
   return (
-    <div 
-      className="hidden print:flex print:flex-col w-full text-slate-900 bg-white print:h-[296mm] print:w-[210mm] m-0 p-0 overflow-hidden box-border"
-      style={{ WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }}
-    >
-      {/* 2 Copies (Office Copy & Parent Copy) */}
-      {[ 'OFFICE COPY', 'PARENT COPY' ].map((copyType, idx) => (
-        <div key={copyType} className={`relative print:h-[148mm] w-full flex flex-col justify-center px-8 ${idx === 1 ? 'border-t-[2px] border-dashed border-indigo-300' : ''}`}>
-          
-          {idx === 1 && (
-             <div className="absolute top-[-10px] left-1/2 -translate-x-1/2 flex items-center justify-center bg-white px-4 text-indigo-400 text-[10px] uppercase tracking-[0.2em] font-black">
-               <Scissors className="w-4 h-4 mr-2" /> CUT HERE <Scissors className="w-4 h-4 ml-2 rotate-180" />
-             </div>
-          )}
+    <>
+      <style type="text/css" media="print">
+        {`
+          @page { size: A4 portrait; margin: 0; }
+          body { margin: 0; padding: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; background: white; }
+        `}
+      </style>
+      <div 
+        className="hidden print:flex print:flex-col w-[210mm] h-[297mm] text-slate-900 bg-white m-0 p-0 overflow-hidden box-border"
+        style={{ WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact', pageBreakAfter: 'always', pageBreakInside: 'avoid' }}
+      >
+        {/* 2 Copies (Office Copy & Parent Copy) */}
+        {[ 'OFFICE COPY', 'PARENT COPY' ].map((copyType, idx) => (
+          <div key={copyType} className={`relative h-[148.5mm] w-[210mm] flex flex-col justify-center px-[10mm] box-border ${idx === 1 ? 'border-t-[2px] border-dashed border-indigo-400/60' : ''}`}>
+            
+            {idx === 1 && (
+               <div className="absolute top-[-10px] left-1/2 -translate-x-1/2 flex items-center justify-center bg-white px-4 text-indigo-500 text-[10px] uppercase tracking-[0.2em] font-black z-20">
+                 <Scissors className="w-4 h-4 mr-2" /> CUT HERE <Scissors className="w-4 h-4 ml-2 rotate-180" />
+               </div>
+            )}
 
-          <div className="w-full h-[135mm] max-w-[850px] mx-auto border border-indigo-100 rounded-2xl relative overflow-hidden box-border flex flex-col bg-white shadow-2xl shadow-indigo-900/5">
+            <div className="w-full h-[135mm] border border-indigo-100 rounded-2xl relative overflow-hidden box-border flex flex-col bg-white shadow-2xl shadow-indigo-900/5">
             
             {/* Background Watermark */}
             <div className="absolute inset-0 flex items-center justify-center opacity-[0.03] pointer-events-none">
@@ -156,6 +163,7 @@ export const FeeReceiptPrint: React.FC<FeeReceiptPrintProps> = ({ payment, schoo
         </div>
       ))}
     </div>
+    </>
   );
 };
 // ─────────────────────────────────────────────────────────────────────────────

@@ -36,16 +36,16 @@ export const Header: React.FC<HeaderProps> = ({ onMenuClick, title, forceShow, h
 
   return (
     <header
-      className={`print:hidden sticky top-0 z-30 flex items-center justify-between gap-3 px-3 py-2.5 shadow-lg shadow-black/30 ${!forceShow ? 'lg:hidden' : ''}`}
+      className={`print:hidden lg:hidden sticky top-0 z-30 flex items-center justify-between gap-3 px-3 py-2.5 shadow-lg shadow-black/30`}
       style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e1b4b 60%, #0f172a 100%)' }}
     >
       {/* Left: Hamburger + Back + Page Title */}
       <div className="flex items-center gap-1.5 min-w-0">
-        {/* Hamburger — mobile only, hide if forceShow (desktop) unless on mobile size */}
+        {/* Hamburger — mobile only */}
         {!hideMenuButton && (
           <button
             onClick={onMenuClick}
-            className="p-2 rounded-xl text-white/90 hover:text-white hover:bg-white/20 transition-all duration-200 lg:hidden cursor-pointer shrink-0"
+            className="p-2 rounded-xl text-white/90 hover:text-white hover:bg-white/20 transition-all duration-200 cursor-pointer shrink-0 lg:hidden"
             aria-label="Open menu"
           >
             <Menu className="w-5 h-5" />
@@ -64,8 +64,8 @@ export const Header: React.FC<HeaderProps> = ({ onMenuClick, title, forceShow, h
           </button>
         )}
 
-        {/* Page Title */}
-        <div className="flex items-center gap-2 min-w-0">
+        {/* Page Title - Hidden on desktop to avoid double headings with Hero Banners */}
+        <div className="flex items-center gap-2 min-w-0 md:hidden">
           <h1 className="text-base font-black text-white leading-tight truncate drop-shadow-md">
             {title}
           </h1>

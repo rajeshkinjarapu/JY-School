@@ -4,7 +4,7 @@ import api from '../../api/axios';
 import { LoadingSpinner } from '../../components/UI/LoadingSpinner';
 import { Badge } from '../../components/UI/Badge';
 import { Plus, FileDown, Trash2, Search, X, ChevronDown, FileText, Upload, CheckCircle2, AlertCircle, MinusCircle, Calendar, SlidersHorizontal, Printer, Settings } from 'lucide-react';
-import * as XLSX from 'xlsx';
+
 import toast from 'react-hot-toast';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
@@ -196,7 +196,8 @@ export const FeePaymentsPage: React.FC = () => {
     }
   };
 
-  const downloadTemplate = () => {
+  const downloadTemplate = async () => {
+    const XLSX = await import('xlsx');
     const ws = XLSX.utils.aoa_to_sheet([
       ['Student ID', 'Amount Paid', 'Payment Mode', 'Payment Date'],
       ['ST001', 5000, 'CASH', '2026-07-29'],
@@ -321,52 +322,59 @@ export const FeePaymentsPage: React.FC = () => {
         </div>
 
         {loading ? <LoadingSpinner size="lg" className="py-12" /> : (
-          <div className="bg-white/70 backdrop-blur-xl border border-white/40 rounded-[2rem] overflow-hidden shadow-[0_20px_40px_-15px_rgba(0,0,0,0.05)]">
-            <div className="overflow-x-auto w-full max-w-full block">
-              <table className="w-full text-sm text-left border-collapse">
-                <thead className="bg-white text-slate-500 border-b border-slate-200 font-black text-[11px] uppercase tracking-widest">
+          <div className="bg-white/70 backdrop-blur-xl border-2 border-slate-200 rounded-xl overflow-hidden shadow-sm">
+            <div className="w-full">
+              <table className="w-full text-xs text-left border-collapse table-fixed md:table-auto">
+                <thead className="bg-slate-100 text-slate-600 font-bold uppercase tracking-wider">
                   <tr>
-                    <th className="px-5 py-5 text-center w-12 rounded-tl-[2rem]">S.No</th>
-                    <th className="px-5 py-5">Date</th>
-                    <th className="px-5 py-5">Student ID</th>
-                    <th className="px-5 py-5">Student Name</th>
-                    <th className="px-5 py-5">Fee Structure</th>
-                    <th className="px-5 py-5">Amount Paid</th>
-                    <th className="px-5 py-5 hidden md:table-cell text-center">Method</th>
-                    <th className="px-5 py-5 hidden md:table-cell">Receipt No</th>
-                    <th className="px-5 py-5 text-center hidden md:table-cell rounded-tr-[2rem]">Action</th>
+                    <th className="px-2 py-3 border border-slate-200 text-center w-10 hidden md:table-cell">S.No</th>
+                    <th className="px-2 py-3 border border-slate-200 w-24">Date</th>
+                    <th className="px-2 py-3 border border-slate-200 hidden md:table-cell">Student ID</th>
+                    <th className="px-2 py-3 border border-slate-200 truncate">Student Name</th>
+                    <th className="px-2 py-3 border border-slate-200 hidden md:table-cell w-20">Class</th>
+                    <th className="px-2 py-3 border border-slate-200 hidden md:table-cell">Fee Structure</th>
+                    <th className="px-2 py-3 border border-slate-200 text-right w-24">Amount Paid</th>
+                    <th className="px-2 py-3 border border-slate-200 hidden md:table-cell text-center w-20">Method</th>
+                    <th className="px-2 py-3 border border-slate-200 hidden md:table-cell">Receipt No</th>
+                    <th className="px-2 py-3 border border-slate-200 text-center w-16 md:w-24">Action</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100/80 bg-white/50">
+                <tbody className="bg-white">
                   {filteredPayments.map((p, idx) => {
                     let d = new Date(p.paymentDate || p.createdAt);
                     if (d.getFullYear() < 2000) d = new Date(p.createdAt);
                     return (
                     <React.Fragment key={p.id}>
-                    <tr onClick={() => toggleRow(p.id)} className="group hover:bg-gradient-to-r hover:from-indigo-50/50 hover:to-purple-50/50 transition-all duration-300">
-                      <td className="px-5 py-4 font-black text-slate-300 text-xs text-center">{idx + 1}</td>
-                      <td className="px-5 py-4"><div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-100 text-slate-600 font-bold text-xs">{d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</div></td>
-                      <td className="px-5 py-4"><span className="font-black text-purple-600 text-xs">{p.student?.rollNo || '-'}</span></td>
-                      <td className="px-5 py-4 font-extrabold text-slate-700 text-xs">{p.student?.user?.name || 'Unknown student'}</td>
-                      <td className="px-5 py-4"><span className="inline-flex px-3 py-1.5 rounded-xl bg-pink-50 text-pink-600 font-bold text-xs">{p.feeStructure?.name || 'Deleted structure'}</span></td>
-                      <td className="px-5 py-4"><div className="font-black text-emerald-500 text-sm">₹{p.amountPaid.toLocaleString()}</div></td>
-                      <td className="px-5 py-4 hidden md:table-cell text-center"><div className="inline-flex px-3 py-1.5 rounded-xl bg-blue-50 text-blue-600 font-bold text-xs">{p.method}</div></td>
-                      <td className="px-5 py-4 font-mono font-bold text-[11px] text-slate-400 hidden md:table-cell">{p.receiptNo}</td>
-                      <td className="px-5 py-4 hidden md:table-cell text-center">
-                        <div className="flex items-center justify-center gap-1.5">
-                          <button onClick={(e) => { e.stopPropagation(); handlePrintReceipt(p.id); }} className="p-2 rounded-xl text-slate-400 hover:text-indigo-600 hover:bg-indigo-50"><FileDown className="w-4 h-4" /></button>
-                          {(user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN' || user?.role === 'ACCOUNTANT') ? (
-                            <>
-                              <button onClick={(e) => { e.stopPropagation(); handleGenerateStatement(p.student); }} className="p-2 rounded-xl text-slate-400 hover:text-purple-600 hover:bg-purple-50"><FileText className="w-4 h-4" /></button>
-                              <button onClick={(e) => { e.stopPropagation(); openSettingsModal(p); }} className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100"><Settings className="w-4 h-4" /></button>
-                            </>
-                          ) : null}
+                    <tr onClick={() => toggleRow(p.id)} className="group hover:bg-slate-50 transition-colors">
+                      <td className="px-2 py-2 border border-slate-200 text-center font-bold text-slate-500 hidden md:table-cell">{idx + 1}</td>
+                      <td className="px-2 py-2 border border-slate-200 font-bold text-slate-600 whitespace-nowrap">{d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
+                      <td className="px-2 py-2 border border-slate-200 font-bold text-purple-600 hidden md:table-cell">{p.student?.rollNo || '-'}</td>
+                      <td className="px-2 py-2 border border-slate-200 font-bold text-slate-800 truncate max-w-[120px] md:max-w-none">{p.student?.user?.name || 'Unknown student'}</td>
+                      <td className="px-2 py-2 border border-slate-200 hidden md:table-cell whitespace-nowrap">
+                        {p.student?.class ? (
+                          <span className="font-bold text-indigo-600">{p.student.class.name}-{p.student.class.section}</span>
+                        ) : '-'}
+                      </td>
+                      <td className="px-2 py-2 border border-slate-200 hidden md:table-cell truncate max-w-[120px]">
+                        <span className="font-bold text-pink-600">{p.feeStructure?.name || 'Deleted structure'}</span>
+                      </td>
+                      <td className="px-2 py-2 border border-slate-200 text-right font-black text-emerald-600 whitespace-nowrap">₹{p.amountPaid.toLocaleString()}</td>
+                      <td className="px-2 py-2 border border-slate-200 hidden md:table-cell text-center">
+                        <span className="font-bold text-blue-600 text-[10px]">{p.method}</span>
+                      </td>
+                      <td className="px-2 py-2 border border-slate-200 font-mono font-bold text-[10px] text-slate-500 hidden md:table-cell truncate max-w-[100px]">{p.receiptNo}</td>
+                      <td className="px-2 py-2 border border-slate-200 text-center">
+                        <div className="flex items-center justify-center gap-1">
+                          <button onClick={(e) => { e.stopPropagation(); handlePrintReceipt(p.id); }} className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50" title="Download Receipt"><FileDown className="w-4 h-4" /></button>
+                          {(user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN' || user?.role === 'ACCOUNTANT') && (
+                            <button onClick={(e) => { e.stopPropagation(); openSettingsModal(p); }} className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 hidden md:block" title="Payment Settings"><Settings className="w-4 h-4" /></button>
+                          )}
                         </div>
                       </td>
                     </tr>
                     {expandedRow === p.id && (
-                      <tr className="md:hidden bg-gradient-to-r from-indigo-50/80 to-purple-50/80 border-b border-indigo-100/50 animate-scale-in origin-top">
-                        <td colSpan={3} className="px-5 py-5 space-y-3">
+                      <tr className="md:hidden bg-slate-50 border-b border-slate-200">
+                        <td colSpan={4} className="p-4 space-y-2">
                           <div className="flex justify-between text-xs items-center bg-white/50 p-2.5 rounded-xl">
                             <span className="font-extrabold text-indigo-900/40 uppercase tracking-wider">Date</span>
                             <span className="font-bold text-indigo-900">{new Date(p.paymentDate).toLocaleDateString()}</span>

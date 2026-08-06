@@ -2,6 +2,7 @@ import { Response, NextFunction } from 'express';
 import { AuthRequest } from '../middlewares/auth';
 import { createError } from '../middlewares/errorHandler';
 import { prisma } from '../utils/prisma';
+import { cache } from '../utils/cache';
 import { successResponse, paginatedResponse } from '../utils/response';
 import * as XLSX from 'xlsx';
 import { sortClasses } from '../utils/sortClasses';
@@ -12,6 +13,10 @@ export const getAll = async (req: AuthRequest, res: Response): Promise<void> => 
   const search = (req.query.search as string) || '';
   const academicYear = (req.query.academicYear as string) || '';
   const skip = (page - 1) * limit;
+
+  const cacheKey = `classes:list:${search}:${academicYear}:${page}:${limit}`;
+  const cached = await cache.get<any>(cacheKey);
+  if (cached) return res.json(cached) as any;
 
   const where: any = {};
   if (search) where.name = { contains: search };
@@ -26,11 +31,12 @@ export const getAll = async (req: AuthRequest, res: Response): Promise<void> => 
   });
 
   const sortedClasses = sortClasses(allMatchedClasses);
-  
   const total = sortedClasses.length;
   const classes = sortedClasses.slice(skip, skip + limit);
 
-  paginatedResponse(res, classes, total, page, limit, 'Classes fetched');
+  const responseBody = { success: true, data: classes, pagination: { total, page, limit, totalPages: Math.ceil(total / limit) } };
+  await cache.set(cacheKey, responseBody, 600); // 10 min — classes rarely change
+  return res.json(responseBody) as any;
 };
 
 export const getById = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {

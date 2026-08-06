@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { AuthRequest } from '../middlewares/auth';
 import { createError } from '../middlewares/errorHandler';
 import { prisma } from '../utils/prisma';
+import { cache } from '../utils/cache';
 import { successResponse, paginatedResponse } from '../utils/response';
 import { generateRollNo } from '../utils/helpers';
 import bcrypt from 'bcryptjs';
@@ -20,6 +21,13 @@ export const getAll = async (req: AuthRequest, res: Response): Promise<void> => 
   const classId = (req.query.classId as string) || '';
   const gender = (req.query.gender as string) || '';
   const skip = (page - 1) * limit;
+
+  // Cache key based on query params
+  const cacheKey = `students:list:${page}:${limit}:${search}:${classId}:${gender}`;
+  const cached = await cache.get<any>(cacheKey);
+  if (cached) {
+    return res.json(cached) as any;
+  }
 
   const where: any = {};
   if (classId) where.classId = classId;
@@ -45,7 +53,9 @@ export const getAll = async (req: AuthRequest, res: Response): Promise<void> => 
     prisma.student.count({ where }),
   ]);
 
-  paginatedResponse(res, students, total, page, limit, 'Students fetched');
+  const responseBody = { success: true, data: students, pagination: { total, page, limit, totalPages: Math.ceil(total / limit) } };
+  await cache.set(cacheKey, responseBody, 180); // 3 min cache
+  return res.json(responseBody) as any;
 };
 
 export const getById = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
@@ -103,6 +113,7 @@ export const create = async (req: Request, res: Response, next: NextFunction): P
     },
   });
 
+  cache.delPattern('students:list:*');
   clearDashboardCache();
   successResponse(res, student, 'Student created', 201);
 };
@@ -162,6 +173,8 @@ export const update = async (req: AuthRequest, res: Response, next: NextFunction
     },
   });
 
+  cache.delPattern('students:list:*');
+  clearDashboardCache();
   successResponse(res, updated, 'Student updated');
 };
 
@@ -228,6 +241,7 @@ export const deleteStudent = async (req: AuthRequest, res: Response, next: NextF
       prisma.student.deleteMany({ where: { id } }),
       prisma.user.deleteMany({ where: { id: student.userId } }),
     ]);
+    cache.delPattern('students:list:*');
     clearDashboardCache();
     successResponse(res, null, 'Student deleted');
   } catch (err) {

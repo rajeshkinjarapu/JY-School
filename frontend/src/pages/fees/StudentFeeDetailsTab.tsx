@@ -2,11 +2,8 @@ import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, Printer, Download, Users, MessageCircle, X, Share2, Copy, Eye } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
 import { toBlob } from 'html-to-image';
 import toast from 'react-hot-toast';
-import * as XLSX from 'xlsx';
 
 interface StudentFeeDetailsProps {
   students: any[];
@@ -117,7 +114,9 @@ export const StudentFeeDetailsTab: React.FC<StudentFeeDetailsProps> = ({ student
     window.print();
   };
 
-  const handleDownloadPDF = () => {
+  const handleDownloadPDF = async () => {
+    const { default: jsPDF } = await import('jspdf');
+    const { default: autoTable } = await import('jspdf-autotable');
     const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
 
     // Header
@@ -214,7 +213,7 @@ export const StudentFeeDetailsTab: React.FC<StudentFeeDetailsProps> = ({ student
     doc.save(`Fee_Statement_${classLabel.replace(/\s+/g, '_')}_${new Date().getTime()}.pdf`);
   };
 
-  const handleExportExcel = () => {
+  const handleExportExcel = async () => {
     const excelData = tableData.map(row => ({
       'S.No': row.sno,
       'Student ID': row.id,
@@ -239,6 +238,7 @@ export const StudentFeeDetailsTab: React.FC<StudentFeeDetailsProps> = ({ student
       'Balance': totalBalance
     });
 
+    const XLSX = await import('xlsx');
     const worksheet = XLSX.utils.json_to_sheet(excelData);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Fee Details');
@@ -310,24 +310,34 @@ export const StudentFeeDetailsTab: React.FC<StudentFeeDetailsProps> = ({ student
   return (
     <div className="space-y-5 animate-fade-in">
       {/* Controls — hidden on print */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-gray-100 dark:border-gray-800 print:hidden">
-        <div>
-          <h3 className="text-lg font-black text-gray-900 dark:text-white flex items-center gap-2">
-            <Users className="w-5 h-5 text-indigo-500" />
-            Student Fee Details
-          </h3>
-          <p className="text-xs text-gray-400">View total fee, paid amount, and balances class-wise.</p>
-        </div>
-        <div className="hidden md:flex items-center gap-3 flex-wrap">
-          <button onClick={handlePrint} className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-700 font-medium text-sm transition-colors cursor-pointer">
-            <Printer className="w-4 h-4" /> Print
-          </button>
-          <button onClick={handleDownloadPDF} className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 font-medium text-sm transition-colors shadow-sm cursor-pointer">
-            <Download className="w-4 h-4" /> Export PDF
-          </button>
-          <button onClick={handleExportExcel} className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 font-medium text-sm transition-colors shadow-sm cursor-pointer">
-            <Download className="w-4 h-4" /> Export Excel
-          </button>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 mb-2 border-b border-gray-100 dark:border-gray-800 print:hidden">
+        {/* BEAUTIFUL PAGE HEADING BANNER FOR TAB */}
+        <div className="relative w-full overflow-hidden bg-gradient-to-r from-emerald-800 via-teal-700 to-cyan-800 rounded-3xl px-6 py-6 sm:px-8 sm:py-8 shadow-xl border border-teal-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+           <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
+           <div className="absolute bottom-0 left-20 w-40 h-40 bg-teal-500/20 rounded-full blur-2xl pointer-events-none"></div>
+           <div className="relative z-10 flex items-center gap-4">
+              <div className="hidden sm:flex w-14 h-14 bg-white/10 backdrop-blur-md rounded-2xl items-center justify-center border border-white/20 shadow-inner">
+                <Users className="w-7 h-7 text-white" />
+              </div>
+              <div>
+                <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight drop-shadow-md">
+                  Student Fee Details
+                </h1>
+                <p className="text-teal-100 text-xs sm:text-sm font-semibold mt-1">View total fee, paid amount, and balances class-wise.</p>
+              </div>
+           </div>
+           
+           <div className="relative z-10 hidden md:flex items-center gap-3 flex-wrap">
+             <button onClick={handlePrint} className="flex items-center gap-2 px-4 py-2 bg-white/10 text-white rounded-xl hover:bg-white/20 font-bold text-sm transition-colors cursor-pointer border border-white/20">
+               <Printer className="w-4 h-4" /> Print
+             </button>
+             <button onClick={handleDownloadPDF} className="flex items-center gap-2 px-4 py-2 bg-white/10 text-white rounded-xl hover:bg-white/20 font-bold text-sm transition-colors shadow-sm cursor-pointer border border-white/20">
+               <Download className="w-4 h-4" /> Export PDF
+             </button>
+             <button onClick={handleExportExcel} className="flex items-center gap-2 px-4 py-2 bg-white text-teal-800 rounded-xl hover:bg-teal-50 font-bold text-sm transition-colors shadow-sm cursor-pointer border border-teal-100">
+               <Download className="w-4 h-4" /> Export Excel
+             </button>
+           </div>
         </div>
       </div>
 
@@ -390,78 +400,61 @@ export const StudentFeeDetailsTab: React.FC<StudentFeeDetailsProps> = ({ student
             <thead className="bg-indigo-600 text-white font-semibold">
               <tr>
                 <th className="px-4 py-3 text-xs font-bold uppercase border border-indigo-500">S.No</th>
-                {!isTeacher && !isAdminOrSuper && <th className="px-4 py-3 text-xs font-bold uppercase border border-indigo-500">Student ID</th>}
+                <th className="hidden lg:table-cell px-4 py-3 text-xs font-bold uppercase border border-indigo-500">Student ID</th>
                 <th className="px-4 py-3 text-xs font-bold uppercase border border-indigo-500">Student Name</th>
-                {!isTeacher && <th className="px-4 py-3 text-xs font-bold uppercase border border-indigo-500">Class</th>}
-                {!isTeacher && !isAdminOrSuper && (
-                  <>
-                    <th className="px-4 py-3 text-xs font-bold uppercase text-right border border-indigo-500">Total Fee</th>
-                    <th className="px-4 py-3 text-xs font-bold uppercase text-right border border-indigo-500">Paid</th>
-                  </>
-                )}
-                {!isAdminOrSuper && <th className="px-4 py-3 text-xs font-bold uppercase text-right border border-indigo-500">Balance</th>}
-                {!isTeacher && !isAdminOrSuper && <th className="px-4 py-3 text-xs font-bold uppercase text-center border border-indigo-500 print:hidden">WhatsApp</th>}
-                {isAdminOrSuper && <th className="px-4 py-3 text-xs font-bold uppercase text-center border border-indigo-500 print:hidden">Action</th>}
+                <th className="px-4 py-3 text-xs font-bold uppercase border border-indigo-500">Class</th>
+                <th className="hidden lg:table-cell px-4 py-3 text-xs font-bold uppercase text-right border border-indigo-500">Total Fee</th>
+                <th className="hidden lg:table-cell px-4 py-3 text-xs font-bold uppercase text-right border border-indigo-500">Paid</th>
+                <th className="hidden lg:table-cell px-4 py-3 text-xs font-bold uppercase text-right border border-indigo-500">Balance</th>
+                <th className="hidden lg:table-cell px-4 py-3 text-xs font-bold uppercase text-center border border-indigo-500 print:hidden">WhatsApp</th>
+                <th className="px-4 py-3 text-xs font-bold uppercase text-center border border-indigo-500 print:hidden">Action</th>
               </tr>
             </thead>
             <tbody className="bg-white">
               {tableData.length === 0 ? (
                 <tr>
-                  <td colSpan={isAdminOrSuper ? 4 : (isTeacher ? 3 : 8)} className="px-6 py-8 text-center text-gray-500 border border-gray-200">No students found.</td>
+                  <td colSpan={9} className="px-6 py-8 text-center text-gray-500 border border-gray-200">No students found.</td>
                 </tr>
               ) : (
                 tableData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((row) => (
                   <tr key={row.sno} className="hover:bg-indigo-50/50 transition-colors">
                     <td className="px-4 py-3 text-gray-600 font-medium border border-gray-200">{row.sno}</td>
                     
-                    {!isTeacher && !isAdminOrSuper && (
-                      <td className="px-4 py-3 font-mono text-xs font-bold text-indigo-600 border border-gray-200">{row.id}</td>
-                    )}
+                    <td className="hidden lg:table-cell px-4 py-3 font-mono text-xs font-bold text-indigo-600 border border-gray-200">{row.id}</td>
                     
                     <td className="px-4 py-3 font-bold text-gray-900 border border-gray-200">{row.name}</td>
                     
-                    {!isTeacher && (
-                      <td className="px-4 py-3 text-gray-600 text-xs border border-gray-200">{row.className}</td>
-                    )}
+                    <td className="px-4 py-3 text-gray-600 text-xs border border-gray-200">{row.className}</td>
                     
-                    {!isTeacher && !isAdminOrSuper && (
-                      <>
-                        <td className="px-4 py-3 text-right font-medium text-gray-900 border border-gray-200">₹{row.totalFee.toLocaleString('en-IN')}</td>
-                        <td className="px-4 py-3 text-right font-medium text-emerald-600 border border-gray-200">₹{row.paidAmount.toLocaleString('en-IN')}</td>
-                      </>
-                    )}
+                    <td className="hidden lg:table-cell px-4 py-3 text-right font-medium text-gray-900 border border-gray-200">₹{row.totalFee.toLocaleString('en-IN')}</td>
                     
-                    {!isAdminOrSuper && (
-                      <td className={`px-4 py-3 text-right font-black text-sm border border-gray-200 ${row.balance > 0 ? 'text-rose-600' : 'text-emerald-600'}`}>
-                        ₹{row.balance.toLocaleString('en-IN')}
-                      </td>
-                    )}
+                    <td className="hidden lg:table-cell px-4 py-3 text-right font-medium text-emerald-600 border border-gray-200">₹{row.paidAmount.toLocaleString('en-IN')}</td>
                     
-                    {!isTeacher && !isAdminOrSuper && (
-                      <td className="px-4 py-3 text-center border border-gray-200 print:hidden">
-                        {row.balance > 0 && row.phone && (
-                          <button
-                            onClick={() => handleWhatsAppClick(row)}
-                            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-green-500 hover:bg-green-600 text-white text-xs font-bold rounded-lg transition-colors shadow-sm cursor-pointer"
-                            title={`Generate fee reminder for ${row.phone}`}
-                          >
-                            <MessageCircle className="w-3.5 h-3.5" />
-                            Remind
-                          </button>
-                        )}
-                      </td>
-                    )}
+                    <td className={`hidden lg:table-cell px-4 py-3 text-right font-black text-sm border border-gray-200 ${row.balance > 0 ? 'text-rose-600' : 'text-emerald-600'}`}>
+                      ₹{row.balance.toLocaleString('en-IN')}
+                    </td>
                     
-                    {isAdminOrSuper && (
-                      <td className="px-4 py-3 text-center border border-gray-200 print:hidden">
+                    <td className="hidden lg:table-cell px-4 py-3 text-center border border-gray-200 print:hidden">
+                      {row.balance > 0 && row.phone && (
                         <button
-                          onClick={() => navigate(`/students/${row.studentId}`)}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 text-xs font-bold rounded-lg transition-colors cursor-pointer"
+                          onClick={() => handleWhatsAppClick(row)}
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-green-500 hover:bg-green-600 text-white text-xs font-bold rounded-lg transition-colors shadow-sm cursor-pointer"
+                          title={`Generate fee reminder for ${row.phone}`}
                         >
-                          <Eye className="w-4 h-4" /> View
+                          <MessageCircle className="w-3.5 h-3.5" />
+                          Remind
                         </button>
-                      </td>
-                    )}
+                      )}
+                    </td>
+                    
+                    <td className="px-4 py-3 text-center border border-gray-200 print:hidden">
+                      <button
+                        onClick={() => navigate(`/students/${row.studentId}`)}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 text-xs font-bold rounded-lg transition-colors cursor-pointer"
+                      >
+                        <Eye className="w-4 h-4" /> View
+                      </button>
+                    </td>
                   </tr>
                 ))
               )}

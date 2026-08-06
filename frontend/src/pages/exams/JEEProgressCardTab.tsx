@@ -6,7 +6,6 @@ import { toJpeg } from 'html-to-image';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
 import toast from 'react-hot-toast';
-import * as XLSX from 'xlsx';
 import { ProgressCardTemplate } from '../../components/Exams/ProgressCardTemplate';
 import { LoadingSpinner } from '../../components/UI/LoadingSpinner';
 import { useAuth } from '../../hooks/useAuth';
@@ -565,6 +564,7 @@ export const JEEProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
             row.total
           ]);
         });
+        const XLSX = await import('xlsx');
         const ws = XLSX.utils.aoa_to_sheet(excelData);
         ws['!cols'] = [{wch: 8}, {wch: 30}, {wch: 15}, {wch: 15}, {wch: 20}, {wch: 15}, {wch: 10}, {wch: 10}, {wch: 10}, {wch: 12}];
         const wb = XLSX.utils.book_new();

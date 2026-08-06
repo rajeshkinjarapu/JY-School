@@ -3,8 +3,6 @@ import { useQuery } from '@tanstack/react-query';
 import api from '../../api/axios';
 import { LoadingSpinner } from '../../components/UI/LoadingSpinner';
 import { Search, MessageCircle, Download, Users, IndianRupee, AlertCircle, ChevronLeft, ChevronRight } from 'lucide-react';
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
 import toast from 'react-hot-toast';
 
 export const FeeReminderPage: React.FC = () => {
@@ -78,6 +76,8 @@ export const FeeReminderPage: React.FC = () => {
       const res = await api.get('/api/fees/pending-balances', { params });
       const allPending = res.data?.data || [];
 
+      const { default: jsPDF } = await import('jspdf');
+      const { default: autoTable } = await import('jspdf-autotable');
       const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
 
       doc.setFillColor(30, 27, 75);

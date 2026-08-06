@@ -15,6 +15,7 @@ import {
   Hash, MapPin, Sparkles, GraduationCap, Camera, CreditCard, FileDown, Trash2, Edit2
 } from 'lucide-react';
 import { FeeReceiptPrint } from '../../components/fees/FeeReceiptPrint';
+import { PageHeader } from '../../components/UI/PageHeader';
 
 export const StudentProfilePage: React.FC = () => {
   const { id } = useParams();
@@ -167,7 +168,8 @@ export const StudentProfilePage: React.FC = () => {
       await api.put(`/api/fees/payments/${editingPayment.id}`, {
         amountPaid: editingPayment.amountPaid,
         method: editingPayment.method,
-        remarks: editingPayment.remarks
+        remarks: editingPayment.remarks,
+        paymentDate: editingPayment.paymentDate
       });
       toast.success('Payment updated successfully!');
       setShowEditModal(false);
@@ -270,86 +272,132 @@ export const StudentProfilePage: React.FC = () => {
   if (!student) return <div className="text-center py-12">Student profile not found.</div>;
 
   return (
-    <>
-      <div className="max-w-7xl mx-auto space-y-8 p-4 sm:p-6 lg:p-8 animate-fade-in print:max-w-full print:p-0 print:space-y-4">
-        
-        {/* ================= SCREEN-ONLY VIEW ================= */}
-        <div className="space-y-8 print:hidden">
-          {/* Hero Profile Banner */}
-          <div className="relative overflow-hidden rounded-[2.5rem] bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 shadow-xl shadow-indigo-100/20 dark:shadow-none group">
-            {/* Background Effects */}
-            <div className="absolute inset-0 bg-gradient-to-br from-indigo-50/80 via-white to-purple-50/80 dark:from-indigo-950/20 dark:via-gray-900 dark:to-purple-950/20" />
-            <div className="absolute top-0 right-0 w-[30rem] h-[30rem] bg-indigo-400/10 rounded-full blur-3xl -mr-20 -mt-20 transition-transform duration-700 group-hover:scale-110" />
-            <div className="absolute bottom-0 left-0 w-[20rem] h-[20rem] bg-fuchsia-400/10 rounded-full blur-3xl -ml-20 -mb-20 transition-transform duration-700 group-hover:scale-110" />
-
-            <div className="relative p-8 sm:p-10 lg:p-12 flex flex-col md:flex-row items-center gap-8 lg:gap-12">
-              {/* Interactive Avatar */}
-              <div className="relative flex-shrink-0">
-                <div className="absolute inset-0 bg-gradient-to-tr from-indigo-500 to-fuchsia-500 rounded-3xl blur-xl opacity-40 group-hover:opacity-60 transition-opacity duration-500" />
-                <div className="relative p-1.5 bg-white dark:bg-gray-800 rounded-3xl shadow-2xl">
-                  {getPhotoUrl(student.user?.photoUrl) ? (
-                    <img 
-                      src={getPhotoUrl(student.user.photoUrl)} 
-                      alt={student.user.name} 
-                      className="w-32 h-32 md:w-40 md:h-40 rounded-2xl object-cover border-4 border-white dark:border-gray-800" 
-                    />
-                  ) : (
-                    <div className="w-32 h-32 md:w-40 md:h-40 rounded-2xl bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-gray-800 dark:to-gray-700 border-4 border-white dark:border-gray-800 flex flex-col items-center justify-center text-gray-400 dark:text-gray-500 shadow-inner">
-                      <User2 className="w-12 h-12 mb-2 opacity-50" />
-                      <span className="text-[10px] font-black uppercase tracking-widest opacity-60">No Photo</span>
+    <div className="flex flex-col h-full bg-gray-50/50 w-full" style={{ minHeight: 'calc(100vh - 64px)' }}>
+      <PageHeader 
+        title={`${student.user.name}'s Profile`}
+        icon={
+          <Link to="/students">
+            <ArrowLeft className="w-6 h-6 text-gray-400 hover:text-indigo-600 cursor-pointer" />
+          </Link>
+        }
+      />
+      
+      <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 pt-2">
+        <div className="w-full space-y-4">
+          
+          {/* Simple Profile Header */}
+          <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 relative overflow-hidden p-4 md:p-6">
+            
+            <div className="flex flex-col md:flex-row gap-4 md:gap-6 items-center md:items-start">
+                
+                {/* Back Button (Desktop) */}
+                <div className="hidden md:block absolute top-6 right-6">
+                  <Link 
+                    to="/students" 
+                    className="flex items-center gap-2 text-sm font-semibold text-gray-500 hover:text-indigo-600 transition-colors"
+                  >
+                    <ArrowLeft className="w-4 h-4" /> Back to Students
+                  </Link>
+                </div>
+                
+                {/* Sleek Portrait Avatar */}
+                <div className="relative shrink-0 z-10">
+                  <div className="w-32 h-40 md:w-36 md:h-48 rounded-xl bg-gray-50 dark:bg-gray-800 p-1 border border-gray-200 dark:border-gray-700">
+                    <div className="w-full h-full rounded-lg overflow-hidden">
+                      {getPhotoUrl(student.user?.photoUrl) ? (
+                        <img 
+                          src={getPhotoUrl(student.user.photoUrl)} 
+                          alt={student.user.name} 
+                          className="w-full h-full object-cover" 
+                        />
+                      ) : (
+                        <div className="w-full h-full flex flex-col items-center justify-center text-gray-400 dark:text-gray-500 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900">
+                          <User2 className="w-10 h-10 mb-1 opacity-40" />
+                          <span className="text-[10px] font-bold uppercase tracking-widest opacity-50">No Photo</span>
+                        </div>
+                      )}
                     </div>
-                  )}
+                  </div>
                   {(isAdmin || user?.role === 'TEACHER') && (
-                    <label className="absolute -bottom-4 left-1/2 -translate-x-1/2 cursor-pointer flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full text-xs font-bold shadow-lg shadow-indigo-500/30 transition-all hover:scale-105 select-none whitespace-nowrap">
-                      <Camera className="w-3.5 h-3.5" />
-                      <span>{uploading ? '...' : 'Update'}</span>
+                    <label className="absolute bottom-2 right-2 cursor-pointer flex items-center justify-center w-8 h-8 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full shadow-md transition-transform hover:scale-110 border-2 border-white dark:border-gray-900">
+                      <Camera className="w-4 h-4" />
                       <input type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} disabled={uploading} />
                     </label>
                   )}
                 </div>
-              </div>
 
-              {/* Core Info */}
-              <div className="flex-1 text-center md:text-left space-y-5">
-                <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-                  <div className="flex flex-col md:flex-row items-center gap-3">
-                    <h2 className="text-3xl lg:text-4xl font-black text-gray-900 dark:text-white tracking-tight flex items-center">
-                      {student.user.name}
-                      {isAdmin && (
+                {/* Core Info */}
+                <div className="flex-1 text-center md:text-left w-full">
+                  
+                  <div className="md:hidden flex justify-center mb-4">
+                    <Link 
+                      to="/students" 
+                      className="flex items-center gap-2 text-sm font-semibold text-gray-500 hover:text-indigo-600 transition-colors"
+                    >
+                      <ArrowLeft className="w-4 h-4" /> Back to Students
+                    </Link>
+                  </div>
+
+                  <h2 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white tracking-tight flex items-center justify-center md:justify-start gap-3">
+                    {student.user.name}
+                    {isAdmin && (
+                      <button 
+                        onClick={() => {
+                          setNewStudentName(student.user.name);
+                          setShowNameModal(true);
+                        }}
+                        className="p-1.5 text-gray-400 hover:text-indigo-600 transition-colors rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-900/30"
+                        title="Edit Name"
+                      >
+                        <Edit2 className="w-4 h-4" />
+                      </button>
+                    )}
+                  </h2>
+                  
+                  <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 mt-3">
+                    <Badge variant="info" className="px-3 py-1 text-[11px] font-bold uppercase tracking-widest rounded-lg bg-indigo-50 text-indigo-700 border border-indigo-100">
+                      ID: {student.rollNo}
+                    </Badge>
+                    <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-purple-50 dark:bg-purple-900/30 border border-purple-100 dark:border-purple-800/50">
+                      <GraduationCap className="w-3.5 h-3.5 text-purple-600" />
+                      <span className="text-[11px] font-bold text-purple-700 dark:text-purple-300 uppercase tracking-wide">
+                        {student.class ? `${student.class.name}-${student.class.section}` : 'N/A'}
+                      </span>
+                      {(isAdmin || user?.role === 'TEACHER') && (
                         <button 
                           onClick={() => {
-                            setNewStudentName(student.user.name);
-                            setShowNameModal(true);
+                            setNewClassId(student.classId || '');
+                            setShowSectionModal(true);
                           }}
-                          className="ml-3 p-1.5 text-gray-400 hover:text-indigo-600 transition-colors bg-white/50 dark:bg-gray-800/50 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700"
-                          title="Edit Name"
+                          className="ml-1 text-purple-400 hover:text-purple-600 transition-colors"
                         >
-                          <Edit2 className="w-5 h-5" />
+                          <Edit2 className="w-3 h-3" />
                         </button>
                       )}
-                    </h2>
-                    <div className="flex items-center gap-2 mt-2 md:mt-0">
-                      <Badge variant="info" className="px-3 py-1 text-xs font-black uppercase tracking-widest rounded-full bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400 border-none">
-                        #{student.rollNo}
-                      </Badge>
+                    </div>
+                    <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-100 dark:border-emerald-800/50">
+                      <Calendar className="w-3.5 h-3.5 text-emerald-600" />
+                      <span className="text-[11px] font-bold text-emerald-700 dark:text-emerald-300 uppercase tracking-wide">
+                        Joined {new Date(student.admissionDate).toLocaleDateString('en-GB')}
+                      </span>
                     </div>
                   </div>
-                  
-                  {/* Action Buttons Integrated */}
-                  <div className="flex flex-wrap items-center justify-center gap-2">
+
+                  {/* Action Buttons */}
+                  <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 mt-6 pt-6 border-t border-gray-100 dark:border-gray-800">
                     {(isAdmin || (user?.role === 'TEACHER' && (user?.teacher as any)?.canEditStudents)) && (
                       <Link
                         to={`/students/${student.id}/edit`}
-                        className="bg-white/80 dark:bg-gray-800 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-900/50 flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold shadow-sm hover:shadow-md hover:bg-white transition-all backdrop-blur-sm"
+                        className="bg-white dark:bg-gray-800 text-indigo-600 border border-gray-200 dark:border-gray-700 flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold shadow-sm hover:bg-gray-50 transition-all"
                       >
                         <Edit2 className="w-3.5 h-3.5" />
-                        <span>Edit</span>
+                        <span>Edit Profile</span>
                       </Link>
                     )}
                     {(isAdmin || user?.role === 'ACCOUNTANT') && (
                       <Link
                         to={`/students/${student.id}/pay-fee`}
-                        className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold shadow-md shadow-emerald-500/20 hover:shadow-emerald-500/40 hover:-translate-y-0.5 transition-all"
+                        className="bg-gray-900 text-white flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold shadow-sm hover:bg-gray-800 transition-all"
                       >
                         <CreditCard className="w-3.5 h-3.5" />
                         <span>Pay Fee</span>
@@ -357,148 +405,112 @@ export const StudentProfilePage: React.FC = () => {
                     )}
                     <button
                       onClick={() => window.print()}
-                      className="bg-white/80 dark:bg-gray-800 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-700 flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold shadow-sm hover:shadow-md hover:bg-white transition-all backdrop-blur-sm"
+                      className="bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300 flex items-center justify-center w-10 h-10 rounded-lg transition-all hover:bg-gray-200"
+                      title="Print Profile"
                     >
-                      <Printer className="w-3.5 h-3.5" />
-                      <span>Print</span>
+                      <Printer className="w-4 h-4" />
                     </button>
                   </div>
                 </div>
-                
-                <div className="flex flex-wrap items-center justify-center md:justify-start gap-3">
-                  <div className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-white/60 dark:bg-gray-800/60 border border-gray-100 dark:border-gray-700 backdrop-blur-sm shadow-sm">
-                    <GraduationCap className="w-4 h-4 text-purple-500" />
-                    <span className="text-sm font-bold text-gray-700 dark:text-gray-200">
-                      Class: {student.class ? `${student.class.name}-${student.class.section}` : 'N/A'}
-                    </span>
-                    {(isAdmin || user?.role === 'TEACHER') && (
-                      <button 
-                        onClick={() => {
-                          setNewClassId(student.classId || '');
-                          setShowSectionModal(true);
-                        }}
-                        className="ml-2 p-1 text-gray-400 hover:text-indigo-600 transition-colors"
-                        title="Change Section"
-                      >
-                        <Edit2 className="w-3.5 h-3.5" />
-                      </button>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-white/60 dark:bg-gray-800/60 border border-gray-100 dark:border-gray-700 backdrop-blur-sm shadow-sm">
-                    <Calendar className="w-4 h-4 text-emerald-500" />
-                    <span className="text-sm font-bold text-gray-700 dark:text-gray-200">
-                      Admitted: {new Date(student.admissionDate).toLocaleDateString()}
-                    </span>
-                  </div>
-                </div>
               </div>
             </div>
-          </div>
 
           {/* Details Masonry/Grid */}
-          <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
             
             {/* Left Column: Demographics & Guardian */}
-            <div className="xl:col-span-2 space-y-8">
+            <div className="xl:col-span-2 space-y-4">
               
-              <div className="bg-white dark:bg-gray-900 rounded-[2rem] border border-gray-150 dark:border-gray-800 shadow-sm overflow-hidden">
-                <div className="p-6 md:p-8 border-b border-gray-100 dark:border-gray-800 flex items-center gap-3 bg-gray-50/50 dark:bg-gray-800/20">
-                  <div className="p-2.5 bg-blue-50 dark:bg-blue-900/20 rounded-xl text-blue-600 dark:text-blue-400"><User2 className="w-5 h-5" /></div>
-                  <h3 className="text-xl font-extrabold text-gray-900 dark:text-white">Demographics</h3>
-                </div>
-                <div className="p-6 md:p-8 grid grid-cols-2 md:grid-cols-3 gap-6 md:gap-8">
-                  <div className="space-y-1">
-                    <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest block">Gender</span>
-                    <span className="text-sm font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                      {student.gender || 'N/A'}
-                    </span>
-                  </div>
-                  <div className="space-y-1">
-                    <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest block">Date of Birth</span>
-                    <span className="text-sm font-bold text-gray-900 dark:text-white">
-                      {student.dob ? new Date(student.dob).toLocaleDateString() : 'N/A'}
-                    </span>
-                  </div>
-                  <div className="space-y-1">
-                    <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest block">Blood Group</span>
-                    <span className="text-sm font-bold text-rose-600 flex items-center gap-1.5">
-                      <Droplet className="w-3.5 h-3.5" /> {student.bloodGroup || 'N/A'}
-                    </span>
-                  </div>
-                  <div className="space-y-1">
-                    <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest block">Aadhar No</span>
-                    <span className="text-sm font-mono font-bold text-gray-900 dark:text-white">{student.aadharNo || 'N/A'}</span>
-                  </div>
-                  <div className="space-y-1">
-                    <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest block">PEN Number</span>
-                    <span className="text-sm font-mono font-bold text-gray-900 dark:text-white">{student.penNumber || 'N/A'}</span>
-                  </div>
-                </div>
-                <div className="px-6 md:px-8 pb-8">
-                  <div className="p-4 bg-gray-50 dark:bg-gray-800/40 rounded-2xl border border-gray-100 dark:border-gray-800">
-                    <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest block mb-1">Residential Address</span>
-                    <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 leading-relaxed">
-                      {student.address || 'No address provided'}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-white dark:bg-gray-900 rounded-[2rem] border border-gray-150 dark:border-gray-800 shadow-sm overflow-hidden">
-                <div className="p-6 md:p-8 border-b border-gray-100 dark:border-gray-800 flex items-center gap-3 bg-gray-50/50 dark:bg-gray-800/20">
-                  <div className="p-2.5 bg-amber-50 dark:bg-amber-900/20 rounded-xl text-amber-600 dark:text-amber-400"><Users className="w-5 h-5" /></div>
-                  <h3 className="text-xl font-extrabold text-gray-900 dark:text-white">Family & Contacts</h3>
-                </div>
-                <div className="p-6 md:p-8 grid grid-cols-1 md:grid-cols-2 gap-8">
-                  <div className="space-y-6">
-                    <div className="space-y-1">
-                      <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest block">Father's Name</span>
-                      <span className="text-base font-bold text-gray-900 dark:text-white">{student.fatherName || 'N/A'}</span>
-                    </div>
-                    <div className="space-y-1">
-                      <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest block">Mother's Name</span>
-                      <span className="text-base font-bold text-gray-900 dark:text-white">{student.motherName || 'N/A'}</span>
-                    </div>
+              {/* Demographics & Family Compact Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                
+                {/* Demographics Table */}
+                <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm overflow-hidden">
+                  <div className="p-3 border-b border-gray-50 dark:border-gray-800 flex items-center gap-2 bg-blue-50/30 dark:bg-blue-900/10">
+                    <div className="p-1.5 bg-blue-100 dark:bg-blue-900/40 rounded-lg text-blue-600 dark:text-blue-400"><User2 className="w-4 h-4" /></div>
+                    <h3 className="text-[13px] font-bold text-gray-900 dark:text-white">Demographics</h3>
                   </div>
                   
-                  <div className="relative p-5 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/20 dark:to-orange-950/20 rounded-2xl border border-amber-100 dark:border-amber-900/30">
-                    <span className="text-[10px] text-amber-600 font-black uppercase tracking-widest block mb-3">Primary Guardian</span>
-                    {student.parent ? (
-                      <div className="space-y-3">
-                        <div className="font-extrabold text-lg text-gray-900 dark:text-white">{student.parent.user.name}</div>
-                        <div className="flex flex-col gap-2">
-                          <div className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300 font-semibold">
-                            <Phone className="w-4 h-4 text-amber-500" />
-                            {student.parent.user.phone || 'N/A'}
-                          </div>
-                          {student.parent.user.email && (
-                            <div className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300 font-semibold">
-                              <Mail className="w-4 h-4 text-amber-500" />
-                              {student.parent.user.email}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    ) : (
-                      <p className="text-sm font-semibold text-gray-500">No guardian linked.</p>
-                    )}
+                  <table className="w-full text-xs text-left">
+                    <tbody className="divide-y divide-gray-100 dark:divide-gray-800/60">
+                      <tr className="hover:bg-blue-50/30 transition-colors">
+                        <th className="px-3 py-2 w-1/3 font-bold text-gray-500 uppercase bg-gray-50/50">Gender</th>
+                        <td className="px-3 py-2 font-semibold text-gray-900">{student.gender || 'N/A'}</td>
+                      </tr>
+                      <tr className="hover:bg-blue-50/30 transition-colors">
+                        <th className="px-3 py-2 w-1/3 font-bold text-gray-500 uppercase bg-gray-50/50">DOB</th>
+                        <td className="px-3 py-2 font-semibold text-gray-900">{student.dob ? new Date(student.dob).toLocaleDateString('en-GB') : 'N/A'}</td>
+                      </tr>
+                      <tr className="hover:bg-blue-50/30 transition-colors">
+                        <th className="px-3 py-2 w-1/3 font-bold text-gray-500 uppercase bg-gray-50/50">Blood Grp</th>
+                        <td className="px-3 py-2 font-semibold text-rose-600 flex items-center gap-1.5"><Droplet className="w-3 h-3" /> {student.bloodGroup || 'N/A'}</td>
+                      </tr>
+                      <tr className="hover:bg-blue-50/30 transition-colors">
+                        <th className="px-3 py-2 w-1/3 font-bold text-gray-500 uppercase bg-gray-50/50">Aadhar</th>
+                        <td className="px-3 py-2 font-mono font-semibold text-gray-900">{student.aadharNo || 'N/A'}</td>
+                      </tr>
+                      <tr className="hover:bg-blue-50/30 transition-colors">
+                        <th className="px-3 py-2 w-1/3 font-bold text-gray-500 uppercase bg-gray-50/50">PEN</th>
+                        <td className="px-3 py-2 font-mono font-semibold text-gray-900">{student.penNumber || 'N/A'}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Family Table */}
+                <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm overflow-hidden">
+                  <div className="p-3 border-b border-gray-50 dark:border-gray-800 flex items-center gap-2 bg-amber-50/30 dark:bg-amber-900/10">
+                    <div className="p-1.5 bg-amber-100 dark:bg-amber-900/40 rounded-lg text-amber-600 dark:text-amber-400"><Users className="w-4 h-4" /></div>
+                    <h3 className="text-[13px] font-bold text-gray-900 dark:text-white">Family</h3>
                   </div>
+                  
+                  <table className="w-full text-xs text-left">
+                    <tbody className="divide-y divide-gray-100 dark:divide-gray-800/60">
+                      <tr className="hover:bg-amber-50/30 transition-colors">
+                        <th className="px-3 py-2 w-1/3 font-bold text-gray-500 uppercase bg-gray-50/50">Father</th>
+                        <td className="px-3 py-2 font-semibold text-gray-900">{student.fatherName || 'N/A'}</td>
+                      </tr>
+                      <tr className="hover:bg-amber-50/30 transition-colors">
+                        <th className="px-3 py-2 w-1/3 font-bold text-gray-500 uppercase bg-gray-50/50">Mother</th>
+                        <td className="px-3 py-2 font-semibold text-gray-900">{student.motherName || 'N/A'}</td>
+                      </tr>
+                      <tr className="hover:bg-amber-50/30 transition-colors">
+                        <th className="px-3 py-2 w-1/3 font-bold text-gray-500 uppercase bg-gray-50/50">Guardian</th>
+                        <td className="px-3 py-2">
+                          {student.parent ? (
+                            <div className="space-y-1">
+                              <div className="font-bold text-gray-900">{student.parent.user.name}</div>
+                              <div className="flex items-center gap-1.5 text-gray-600">
+                                <Phone className="w-3 h-3 text-amber-500" /> {student.parent.user.phone || 'N/A'}
+                              </div>
+                            </div>
+                          ) : (
+                            <span className="text-gray-500 font-semibold">No guardian linked.</span>
+                          )}
+                        </td>
+                      </tr>
+                      <tr className="hover:bg-amber-50/30 transition-colors">
+                        <th className="px-3 py-2 w-1/3 font-bold text-gray-500 uppercase bg-gray-50/50">Address</th>
+                        <td className="px-3 py-2 text-gray-700 max-w-[150px] truncate" title={student.address}>{student.address || 'No address provided'}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
                 </div>
               </div>
-
-            </div>
+            </div> {/* Closing left column */}
 
             {/* Right Column: Fee Ledger Snapshot */}
-            <div className="space-y-8">
-              <div className="bg-white dark:bg-gray-900 rounded-[2rem] border border-gray-150 dark:border-gray-800 shadow-sm overflow-hidden flex flex-col h-full">
-                <div className="p-6 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center bg-gray-50/50 dark:bg-gray-800/20">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2.5 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl text-emerald-600 dark:text-emerald-400"><CreditCard className="w-5 h-5" /></div>
-                    <h3 className="text-lg font-extrabold text-gray-900 dark:text-white">Fee Ledger</h3>
+            <div className="space-y-4">
+              <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm overflow-hidden flex flex-col h-[280px]">
+                <div className="p-3 border-b border-gray-50 dark:border-gray-800 flex justify-between items-center bg-gradient-to-r from-emerald-50/50 to-transparent dark:from-emerald-900/10">
+                  <div className="flex items-center gap-2">
+                    <div className="p-1.5 bg-emerald-500 rounded-lg text-white shadow-md shadow-emerald-500/20"><CreditCard className="w-4 h-4" /></div>
+                    <h3 className="text-[13px] font-bold text-gray-900 dark:text-white">Fee Ledger</h3>
                   </div>
                 </div>
                 
-                <div className="p-6 flex-1 space-y-4 max-h-[500px] overflow-y-auto">
+                <div className="p-3 flex-1 space-y-2 overflow-y-auto">
                   {feeStructures
                     .filter((s) => s.studentId === student.id || s.classId === student.classId)
                     .map((s) => {
@@ -563,51 +575,57 @@ export const StudentProfilePage: React.FC = () => {
           </div>
 
           {/* Full Width Transactions Table */}
-          <div className="bg-white dark:bg-gray-900 rounded-[2rem] border border-gray-150 dark:border-gray-800 shadow-sm overflow-hidden">
-            <div className="p-6 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between bg-gray-50/50 dark:bg-gray-800/20">
-              <h3 className="text-lg font-extrabold text-gray-900 dark:text-white flex items-center gap-3">
-                <div className="p-2.5 bg-indigo-50 dark:bg-indigo-900/20 rounded-xl text-indigo-600 dark:text-indigo-400"><ClipboardCheck className="w-5 h-5" /></div>
+          <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm overflow-hidden mt-4">
+            <div className="p-3 border-b border-gray-50 dark:border-gray-800 flex items-center justify-between bg-gradient-to-r from-indigo-50/50 to-transparent dark:from-indigo-900/10">
+              <h3 className="text-[13px] font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                <div className="p-1.5 bg-indigo-500 rounded-lg text-white shadow-md shadow-indigo-500/30"><ClipboardCheck className="w-4 h-4" /></div>
                 Transaction History
               </h3>
             </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm text-left">
-                <thead className="bg-gray-50/80 dark:bg-gray-800/40 text-[10px] uppercase tracking-widest text-gray-500 font-black border-b border-gray-100 dark:border-gray-800">
+            <div className="overflow-x-auto max-h-[220px] overflow-y-auto">
+              <table className="w-full text-xs text-left">
+                <thead className="bg-gray-50/80 dark:bg-gray-800/40 uppercase text-gray-500 font-bold border-b border-gray-100 dark:border-gray-800 sticky top-0">
                   <tr>
-                    <th className="px-6 py-4">Fee Structure</th>
-                    <th className="px-6 py-4">Amount</th>
-                    <th className="px-6 py-4">Date</th>
-                    <th className="px-6 py-4">Method</th>
-                    <th className="px-6 py-4">Receipt No</th>
-                    <th className="px-6 py-4 text-right">Actions</th>
+                    <th className="px-4 py-2">Fee Structure</th>
+                    <th className="px-4 py-2">Amount</th>
+                    <th className="px-4 py-2">Date</th>
+                    <th className="px-4 py-2">Method</th>
+                    <th className="px-4 py-2">Receipt No</th>
+                    <th className="px-4 py-2 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50 dark:divide-gray-800/60">
                   {student.feePayments?.length === 0 ? (
-                    <tr><td colSpan={6} className="px-6 py-8 text-center text-sm font-bold text-gray-400">No payment records found.</td></tr>
+                    <tr><td colSpan={6} className="px-4 py-4 text-center text-xs font-bold text-gray-400">No payment records found.</td></tr>
                   ) : (
                     student.feePayments?.map((p: any) => (
                       <tr key={p.id} className="hover:bg-gray-50/50 dark:hover:bg-gray-800/20 transition-colors">
-                        <td className="px-6 py-4 font-semibold text-gray-800 dark:text-gray-200">{p.feeStructure?.name}</td>
-                        <td className="px-6 py-4 font-black text-emerald-600">₹{p.amountPaid}</td>
-                        <td className="px-6 py-4 font-medium text-gray-500">{new Date(p.paymentDate || p.createdAt).toLocaleDateString()}</td>
-                        <td className="px-6 py-4">
-                          <span className={`inline-flex px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider ${p.method === 'UPI' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}`}>
+                        <td className="px-4 py-2 font-semibold text-gray-800 dark:text-gray-200">{p.feeStructure?.name}</td>
+                        <td className="px-4 py-2 font-black text-emerald-600">₹{p.amountPaid}</td>
+                        <td className="px-4 py-2 font-medium text-gray-500">{new Date(p.paymentDate || p.createdAt).toLocaleDateString('en-GB')}</td>
+                        <td className="px-4 py-2">
+                          <span className={`inline-flex px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider ${p.method === 'UPI' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}`}>
                             {p.method}
                           </span>
                         </td>
-                        <td className="px-6 py-4 font-mono text-xs font-semibold text-gray-400 truncate max-w-[120px]">{p.receiptNo || 'N/A'}</td>
-                        <td className="px-6 py-4 text-right flex items-center justify-end gap-1.5">
-                          <button onClick={() => handlePrintReceipt(p)} className="p-2 rounded-xl text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-colors" title="Print Receipt">
-                            <FileDown className="w-4 h-4" />
+                        <td className="px-4 py-2 font-mono text-xs font-semibold text-gray-400 truncate max-w-[120px]">{p.receiptNo || 'N/A'}</td>
+                        <td className="px-4 py-2 text-right flex items-center justify-end gap-1">
+                          <button onClick={() => handlePrintReceipt(p)} className="p-1.5 rounded-lg text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-colors" title="Print Receipt">
+                            <FileDown className="w-3.5 h-3.5" />
                           </button>
                           {(user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN' || user?.role === 'ACCOUNTANT') && (
                             <>
-                              <button onClick={() => { setEditingPayment(p); setShowEditModal(true); }} className="p-2 rounded-xl text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors" title="Edit">
-                                <Edit2 className="w-4 h-4" />
+                              <button onClick={() => { 
+                                setEditingPayment({
+                                  ...p,
+                                  paymentDate: p.paymentDate ? new Date(p.paymentDate).toISOString().split('T')[0] : new Date(p.createdAt).toISOString().split('T')[0]
+                                }); 
+                                setShowEditModal(true); 
+                              }} className="p-1.5 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors" title="Edit">
+                                <Edit2 className="w-3.5 h-3.5" />
                               </button>
-                              <button onClick={() => handleDeletePayment(p.id)} className="p-2 rounded-xl text-gray-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/30 transition-colors" title="Delete">
-                                <Trash2 className="w-4 h-4" />
+                              <button onClick={() => handleDeletePayment(p.id)} className="p-1.5 rounded-lg text-gray-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/30 transition-colors" title="Delete">
+                                <Trash2 className="w-3.5 h-3.5" />
                               </button>
                             </>
                           )}
@@ -621,6 +639,7 @@ export const StudentProfilePage: React.FC = () => {
           </div>
 
         </div>
+      </div>
 
       {/* ============================================================
              ================= PRINT-ONLY DOSSIER VIEW =================
@@ -631,7 +650,7 @@ export const StudentProfilePage: React.FC = () => {
           body { margin: 0; padding: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; background: white; }
         `}
       </style>
-      <div className={`hidden ${printPayment ? '' : 'print:flex'} print:w-[210mm] print:h-[297mm] bg-white text-black font-sans relative flex-col mx-auto box-border overflow-hidden`} style={{ pageBreakAfter: 'always' }}>
+      <div className={`hidden ${printPayment ? '' : 'print:flex'} print:w-[210mm] print:h-screen print:max-h-[297mm] bg-white text-black font-sans relative flex-col mx-auto box-border overflow-hidden`}>
         
         {/* Background Watermark */}
         <div className="absolute inset-0 flex items-center justify-center opacity-[0.03] pointer-events-none">
@@ -924,29 +943,6 @@ export const StudentProfilePage: React.FC = () => {
                 </select>
               </div>
 
-              {method === 'UPI' && (
-                <div className="space-y-4 border-l-2 border-primary-500 pl-3.5 my-2">
-                  <div>
-                    <label className="label">UPI UTR Reference Number</label>
-                    <input
-                      type="text"
-                      required
-                      value={utrNumber}
-                      onChange={(e) => setUtrNumber(e.target.value)}
-                      className="input text-xs"
-                    />
-                  </div>
-                  <div>
-                    <label className="label">Upload Payment Receipt (Optional)</label>
-                    <input
-                      type="file"
-                      accept="image/*,application/pdf"
-                      onChange={handleFileChange}
-                      className="w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100 cursor-pointer"
-                    />
-                  </div>
-                </div>
-              )}
 
               <div>
                 <label className="label">Remarks</label>
@@ -1003,6 +999,16 @@ export const StudentProfilePage: React.FC = () => {
                   <option value="CHEQUE">Cheque</option>
                   <option value="UPI">UPI / QR Code</option>
                 </select>
+              </div>
+
+              <div>
+                <label className="label">Date</label>
+                <input
+                  type="date"
+                  value={editingPayment.paymentDate || ''}
+                  onChange={(e) => setEditingPayment({ ...editingPayment, paymentDate: e.target.value })}
+                  className="input text-xs"
+                />
               </div>
 
               <div>
@@ -1102,7 +1108,7 @@ export const StudentProfilePage: React.FC = () => {
 
       {/* Hidden Print Component */}
       <FeeReceiptPrint payment={printPayment} />
-    </>
+    </div>
   );
 };
 

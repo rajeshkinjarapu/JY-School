@@ -2,8 +2,9 @@ import React, { useEffect, useState } from 'react';
 import api from '../../api/axios';
 import { LoadingSpinner } from '../../components/UI/LoadingSpinner';
 import { Badge } from '../../components/UI/Badge';
-import { Save, School, CalendarDays, Users, Edit, Trash2, Plus, Search, Shield, Key, Settings as SettingsIcon } from 'lucide-react';
+import { Trash2, AlertTriangle, Shield, CheckCircle, Save, Settings as SettingsIcon, Users, UserX, Database, Eye } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { PageHeader } from '../../components/UI/PageHeader';
 import { useOutletContext } from 'react-router-dom';
 import { DeleteRecordsTab } from './DeleteRecordsTab';
 
@@ -197,18 +198,10 @@ export const SettingsPage: React.FC = () => {
   return (
     <div className="w-full max-w-7xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       {/* Header Area */}
-      <div className="bg-gradient-to-br from-indigo-900 via-purple-900 to-indigo-800 rounded-3xl p-8 shadow-2xl relative overflow-hidden">
-        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10 mix-blend-overlay"></div>
-        <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 rounded-full bg-gradient-to-br from-pink-500/20 to-purple-500/20 blur-3xl"></div>
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div>
-            <h1 className="text-3xl font-black text-white tracking-tight flex items-center gap-3">
-              <Shield className="w-8 h-8 text-pink-400" /> Settings & Administration
-            </h1>
-            <p className="text-indigo-200 mt-2 font-medium">Manage system configurations, users, and security.</p>
-          </div>
-        </div>
-      </div>
+      <PageHeader 
+        title="Settings & Administration"
+        icon={<Shield className="w-6 h-6" />}
+      />
 
       {/* Navigation Tabs */}
       <div className="flex flex-wrap gap-3 bg-white/50 dark:bg-gray-900/50 backdrop-blur-md p-2 rounded-2xl border border-white/20 shadow-sm">

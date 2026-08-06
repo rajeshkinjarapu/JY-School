@@ -3,8 +3,6 @@ import api from '../../api/axios';
 import { Award, Medal, Printer, Download, Star, TrendingUp, Trophy } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { LoadingSpinner } from '../../components/UI/LoadingSpinner';
-import { jsPDF } from 'jspdf';
-import autoTable from 'jspdf-autotable';
 import { useSearchParams } from 'react-router-dom';
 
 export const ResultsTab: React.FC<{ exams: any[] }> = ({ exams }) => {
@@ -100,6 +98,8 @@ export const ResultsTab: React.FC<{ exams: any[] }> = ({ exams }) => {
     setIsDownloading(true);
     const toastId = toast.loading('Generating Professional PDF...');
     try {
+      const { default: jsPDF } = await import('jspdf');
+      const { default: autoTable } = await import('jspdf-autotable');
       // Use portrait as requested by user
       const doc = new jsPDF('p', 'mm', 'a4');
       const title = `Examination Results - ${selectedExam?.name}`;

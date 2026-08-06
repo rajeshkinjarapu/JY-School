@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import api from '../../api/axios';
 import { LoadingSpinner } from '../../components/UI/LoadingSpinner';
 import { Plus, Edit, Trash2, School, BookOpen, Users, ChevronDown, ChevronUp } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../hooks/useAuth';
+import { PageHeader } from '../../components/UI/PageHeader';
 
 const SUBJECT_COLORS = [
   { bg: 'from-violet-500 to-purple-600', light: 'bg-violet-50', text: 'text-violet-700', border: 'border-violet-200', badge: 'bg-violet-100 text-violet-700' },
@@ -18,6 +20,7 @@ const SUBJECT_COLORS = [
 
 export const SubjectPage: React.FC = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const isSuperAdmin = user?.role === 'SUPER_ADMIN';
 
   const [subjects, setSubjects] = useState<any[]>([]);
@@ -126,13 +129,10 @@ export const SubjectPage: React.FC = () => {
 
   return (
     <div className="flex flex-col h-full bg-gray-50/50" style={{ minHeight: 'calc(100vh - 64px)' }}>
-      {/* Colorful Header */}
-      <div className="px-6 py-6 bg-gradient-to-br from-violet-600 via-purple-600 to-indigo-700 shadow-lg hidden md:flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <h1 className="text-2xl font-black uppercase tracking-tight text-white drop-shadow-sm">Subjects & Curriculum</h1>
-
-        </div>
-        <div className="flex gap-3 w-full md:w-auto">
+      <PageHeader 
+        title="Subjects & Curriculum"
+        icon={<BookOpen className="w-6 h-6" />}
+        action={
           <button
             type="button"
             onClick={() => {
@@ -142,13 +142,13 @@ export const SubjectPage: React.FC = () => {
               setTeacherId('');
               setShowModal(true);
             }}
-            className="flex items-center gap-1.5 px-3.5 py-2.5 text-sm font-extrabold text-indigo-700 bg-white rounded-xl shadow hover:bg-indigo-50 transition-colors w-full md:w-auto cursor-pointer"
+            className="btn-primary w-full sm:w-auto"
           >
-            <Plus className="w-4 h-4" />
-            <span>New Subject</span>
+            <Plus className="w-4 h-4 mr-2" />
+            New Subject
           </button>
-        </div>
-      </div>
+        }
+      />
 
       <div className="flex-1 overflow-auto p-4 md:p-6">
         {loading ? (
@@ -178,7 +178,7 @@ export const SubjectPage: React.FC = () => {
                   {/* Card Header */}
                   <div 
                     className={`bg-gradient-to-br ${color.bg} p-5 relative overflow-hidden cursor-pointer active:scale-[0.98] transition-transform`}
-                    onClick={() => toggleExpand(subjectName)}
+                    onClick={() => navigate('/subjects/' + encodeURIComponent(subjectName))}
                   >
                     <div className="absolute -top-4 -right-4 w-20 h-20 rounded-full bg-white/10" />
                     <div className="absolute -bottom-6 -left-3 w-16 h-16 rounded-full bg-white/10" />
@@ -189,76 +189,11 @@ export const SubjectPage: React.FC = () => {
                       <div className="flex items-center gap-1.5 text-white/90 text-xs font-bold bg-white/20 px-2.5 py-1 rounded-full">
                         <Users className="w-3.5 h-3.5" />
                         {entries.length} {entries.length === 1 ? 'Class' : 'Classes'}
-                        {isExpanded ? <ChevronUp className="w-3.5 h-3.5 ml-1" /> : <ChevronDown className="w-3.5 h-3.5 ml-1" />}
                       </div>
                     </div>
                     <div className="mt-3 relative z-10">
                       <h3 className="text-white font-black text-lg leading-tight drop-shadow-sm">{subjectName}</h3>
                     </div>
-                  </div>
-
-                  {/* Class List */}
-                  <div className="p-4 space-y-2">
-                    {displayEntries.map((sub: any) => {
-                      const teacherName = sub.classSubjectTeachers?.[0]?.teacher?.user?.name;
-                      const className = sub.class ? `${sub.class.name}-${sub.class.section}` : 'N/A';
-                      return (
-                        <div key={sub.id} className={`flex items-center justify-between px-3 py-2 rounded-xl ${color.light} group/item`}>
-                          <div className="flex items-center gap-2 min-w-0">
-                            <School className={`w-3.5 h-3.5 shrink-0 ${color.text}`} />
-                            <div className="min-w-0">
-                              <span className={`text-xs font-bold ${color.text} block truncate`}>{className}</span>
-                              {teacherName && (
-                                <span className="text-[10px] text-gray-500 truncate block">{teacherName}</span>
-                              )}
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover/item:opacity-100 transition-opacity">
-                            <button
-                              onClick={() => handleEditClick(sub)}
-                              className="p-1 rounded-lg hover:bg-white text-gray-400 hover:text-indigo-600 transition-colors cursor-pointer"
-                              title="Edit"
-                            >
-                              <Edit className="w-3.5 h-3.5" />
-                            </button>
-                            {isSuperAdmin && (
-                              <button
-                                onClick={() => handleDelete(sub.id)}
-                                className="p-1 rounded-lg hover:bg-white text-gray-400 hover:text-red-500 transition-colors cursor-pointer"
-                                title="Delete"
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
-
-                    {/* Only show Add Class button inside if it's expanded, or not needed. We'll show it if expanded. */}
-                    {!isExpanded && entries.length > 0 && (
-                       <button
-                         onClick={() => toggleExpand(subjectName)}
-                         className={`w-full flex items-center justify-center gap-1 text-xs font-bold py-2 rounded-xl border ${color.border} ${color.light} ${color.text} hover:opacity-80 transition-opacity cursor-pointer`}
-                       >
-                         <ChevronDown className="w-3.5 h-3.5" /> View {entries.length} Classes
-                       </button>
-                    )}
-
-                    {/* Add to another class button */}
-                    <button
-                      onClick={() => {
-                        setEditingSubject(null);
-                        setName(subjectName);
-                        setClassId('');
-                        setTeacherId('');
-                        setShowModal(true);
-                      }}
-                      className={`w-full flex items-center justify-center gap-1.5 text-xs font-bold py-2 rounded-xl border-dashed border-2 ${color.border} ${color.text} hover:${color.light} transition-colors cursor-pointer mt-1`}
-                    >
-                      <Plus className="w-3.5 h-3.5" />
-                      Add to another class
-                    </button>
                   </div>
                 </div>
               );

@@ -248,17 +248,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden"
           onClick={() => setIsOpen(false)} />
       )}
-      {/* Mobile */}
-      <aside className={`fixed inset-y-0 left-0 z-50 w-[260px] transform transition-transform duration-300 ease-out lg:hidden ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}
+      <aside className={`fixed inset-y-0 left-0 z-50 w-[260px] shrink-0 transform transition-transform duration-300 ease-out lg:relative lg:translate-x-0 ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}
         style={sidebarStyle}>
         <button onClick={() => setIsOpen(false)}
-          className="absolute top-4 right-4 p-1.5 rounded-lg text-slate-500 hover:text-white hover:bg-white/10 transition-all cursor-pointer">
+          className="lg:hidden absolute top-4 right-4 p-1.5 rounded-lg text-slate-500 hover:text-white hover:bg-white/10 transition-all cursor-pointer">
           <X className="w-4 h-4" />
         </button>
-        {renderContent()}
-      </aside>
-      {/* Desktop */}
-      <aside className="hidden lg:flex flex-col w-[260px] shrink-0 h-screen sticky top-0" style={sidebarStyle}>
         {renderContent()}
       </aside>
     </>

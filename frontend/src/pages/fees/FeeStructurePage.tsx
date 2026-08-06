@@ -1,7 +1,6 @@
 import React, { useEffect, useState, useRef, useMemo } from 'react';
 import api from '../../api/axios';
 import toast from 'react-hot-toast';
-import * as XLSX from 'xlsx';
 import {
   Plus, Upload, FileSpreadsheet, Trash2, Search, X, 
   User, IndianRupee, Layers, FileDown, RefreshCw, 
@@ -131,7 +130,8 @@ export const FeeStructurePage: React.FC = () => {
     } finally { setImporting(false); }
   };
 
-  const downloadTemplate = () => {
+  const downloadTemplate = async () => {
+    const XLSX = await import('xlsx');
     const data = [
       { 'Student ID': 'JY26-0001', 'Amount': 30000 },
       { 'Student ID': 'JY26-0002', 'Amount': 28000 },

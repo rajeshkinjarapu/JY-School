@@ -61,6 +61,7 @@ const TeacherAdmitCardsPage = lazy(() => import('../pages/teachers/TeacherAdmitC
 const ClassManagementPage = lazy(routeImports['/classes']);
 const ClassDetailPage = lazy(() => import('../pages/classes/ClassDetailPage'));
 const SubjectPage = lazy(routeImports['/subjects']);
+const SubjectDetailsPage = lazy(() => import('../pages/subjects/SubjectDetailsPage'));
 const AttendanceDashboard = lazy(routeImports['/attendance']);
 const AttendanceMarkingPage = lazy(() => import('../pages/attendance/AttendanceMarkingPage'));
 const MyAttendancePage = lazy(() => import('../pages/attendance/MyAttendancePage').then((mod) => ({ default: mod.MyAttendancePage })));
@@ -251,6 +252,14 @@ export const router = createBrowserRouter([
         element: withSuspense(
           <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN']}>
             <SubjectPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'subjects/:name',
+        element: withSuspense(
+          <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN', 'TEACHER']}>
+            <SubjectDetailsPage />
           </ProtectedRoute>
         ),
       },

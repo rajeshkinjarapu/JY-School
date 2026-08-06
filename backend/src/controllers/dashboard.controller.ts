@@ -8,7 +8,11 @@ import { Role, Gender, AttendanceStatus } from '../types/enums';
 const cache: { [key: string]: { data: any; expiry: number } } = {};
 
 export const clearDashboardCache = () => {
-  Object.keys(cache).forEach(key => delete cache[key]);
+  Object.keys(cache).forEach(key => {
+    if (key === 'admin_dashboard' || key === 'dashboard:stats' || key === 'dashboard:recent_activities' || key.startsWith('students:list:')) {
+      delete cache[key];
+    }
+  });
 };
 
 export const getAdminDashboard = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
