@@ -216,12 +216,26 @@ export const FinancePage: React.FC = () => {
 
       if (studRes.status === 'fulfilled') {
         let payload = studRes.value?.data || studRes.value || [];
-        if (payload && payload.success && Array.isArray(payload.data)) {
+        if (payload && payload.data && Array.isArray(payload.data)) {
+           payload = payload.data;
+        } else if (payload && payload.success && Array.isArray(payload.data)) {
            payload = payload.data;
         } else if (payload && Array.isArray(payload.data)) {
            payload = payload.data;
         }
         newStudents = Array.isArray(payload) ? payload : [];
+        
+        // Direct fallback if empty array returned from limit query
+        if (newStudents.length === 0 && !isStudent) {
+          try {
+            const fallbackRes: any = await api.get('/api/students');
+            const fbData = fallbackRes?.data?.data || fallbackRes?.data || fallbackRes || [];
+            if (Array.isArray(fbData) && fbData.length > 0) {
+              newStudents = fbData;
+            }
+          } catch(err) {}
+        }
+        
         setStudents(newStudents);
       }
 
@@ -247,7 +261,7 @@ export const FinancePage: React.FC = () => {
       if (cached) {
         const parsed = JSON.parse(cached);
         if (parsed.payments) setPayments(parsed.payments);
-        if (parsed.students) setStudents(parsed.students);
+        if (parsed.students && parsed.students.length > 0) setStudents(parsed.students);
         if (parsed.structures) setStructures(parsed.structures);
         if (parsed.classes) setClasses(parsed.classes);
       }
@@ -268,7 +282,7 @@ export const FinancePage: React.FC = () => {
         setBaseLoading(false);
       });
     }
-    if (needsHeavy && !heavyDataLoaded) {
+    if (needsHeavy && (!heavyDataLoaded || students.length === 0)) {
       setHeavyLoading(true);
       fetchHeavyData().then(() => {
         setHeavyDataLoaded(true);
@@ -760,9 +774,9 @@ export const FinancePage: React.FC = () => {
                 <div className="bg-white dark:bg-gray-900 rounded-3xl shadow-xl shadow-indigo-100/20 border border-gray-100 dark:border-gray-800 overflow-hidden">
                   
                   {/* Mobile View */}
-                  <div className="md:hidden flex flex-col">
+                  <div className="md:hidden flex flex-col p-2 bg-gray-50/50">
                     {filteredPayments.map((p, idx) => (
-                      <div key={p.id} className="bg-transparent flex flex-col relative py-3 px-4 border-b border-gray-50 last:border-0">
+                      <div key={p.id} className="bg-white flex flex-col relative py-3.5 px-4 border border-gray-200 rounded-2xl mb-2.5 shadow-sm">
                         <div 
                           className="flex items-center justify-between gap-1 cursor-pointer"
                           onClick={() => toggleRow(p.id)}
@@ -788,7 +802,7 @@ export const FinancePage: React.FC = () => {
 
                         {expandedRows[p.id] && (
                           <div className="mt-3 pt-3 border-t border-gray-100 dark:border-white/5 space-y-3 animate-fade-in text-xs">
-                            <div className="grid grid-cols-2 gap-2 bg-gray-50 rounded-xl p-3">
+                            <div className="grid grid-cols-2 gap-2 bg-gray-50 rounded-xl p-3 border border-gray-200">
                               <div>
                                 <span className="block text-gray-400 font-bold mb-0.5 text-[10px] uppercase">Payment Method</span>
                                 <span className="font-bold text-indigo-900 bg-indigo-100 px-2 py-0.5 rounded-md text-[10px]">{p.method}</span>
@@ -820,43 +834,43 @@ export const FinancePage: React.FC = () => {
 
                   {/* Desktop View */}
                   <div className="hidden md:block overflow-x-auto">
-                    <table className="w-full text-sm text-left border-collapse">
+                    <table className="w-full text-sm text-left border-collapse border border-gray-200">
                       <thead>
-                        <tr className="bg-gradient-to-r from-indigo-50 to-purple-50 text-indigo-900 border-b border-indigo-100 font-black text-xs uppercase tracking-wider">
-                          <th className="px-5 py-4 w-12 text-center rounded-tl-3xl">S.No</th>
-                          <th className="px-5 py-4">Student ID</th>
-                          <th className="px-5 py-4">Student Name</th>
-                          <th className="px-5 py-4">Fee Category</th>
-                          <th className="px-5 py-4 text-right">Amount Paid</th>
-                          <th className="px-5 py-4 text-center">Status</th>
-                          <th className="px-5 py-4 text-center">Method</th>
-                          <th className="px-5 py-4 text-center">Date</th>
-                          <th className="px-5 py-4 text-right rounded-tr-3xl">Actions</th>
+                        <tr className="bg-gradient-to-r from-indigo-50 to-purple-50 text-indigo-900 border-b border-gray-200 font-black text-xs uppercase tracking-wider">
+                          <th className="px-5 py-4 w-12 text-center border border-gray-200">S.No</th>
+                          <th className="px-5 py-4 border border-gray-200">Student ID</th>
+                          <th className="px-5 py-4 border border-gray-200">Student Name</th>
+                          <th className="px-5 py-4 border border-gray-200">Fee Category</th>
+                          <th className="px-5 py-4 text-right border border-gray-200">Amount Paid</th>
+                          <th className="px-5 py-4 text-center border border-gray-200">Status</th>
+                          <th className="px-5 py-4 text-center border border-gray-200">Method</th>
+                          <th className="px-5 py-4 text-center border border-gray-200">Date</th>
+                          <th className="px-5 py-4 text-right border border-gray-200">Actions</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-gray-100/50">
+                      <tbody className="divide-y divide-gray-200">
                         {filteredPayments.map((p, idx) => (
                           <tr key={p.id} className="hover:bg-indigo-50/30 transition-all duration-300">
-                            <td className="px-5 py-4 text-center font-bold text-gray-400 text-xs">{idx + 1}</td>
-                            <td className="px-5 py-4 font-mono text-xs font-semibold text-gray-500">{p.student?.rollNo || '-'}</td>
-                            <td className="px-5 py-4">
+                            <td className="px-5 py-4 text-center font-bold text-gray-400 text-xs border border-gray-200">{idx + 1}</td>
+                            <td className="px-5 py-4 font-mono text-xs font-semibold text-gray-500 border border-gray-200">{p.student?.rollNo || '-'}</td>
+                            <td className="px-5 py-4 border border-gray-200">
                               <div className="font-extrabold text-[14px] text-gray-900 dark:text-white">{p.student?.user?.name || 'Student'}</div>
                               <div className="text-[11px] font-bold text-indigo-400 mt-0.5">{p.student?.class?.name}-{p.student?.class?.section}</div>
                             </td>
-                            <td className="px-5 py-4">
+                            <td className="px-5 py-4 border border-gray-200">
                               <span className="text-[11px] font-bold text-teal-700 bg-teal-50 px-2.5 py-1 rounded-lg border border-teal-100 shadow-sm">{p.feeStructure?.name || 'Fees'}</span>
                             </td>
-                            <td className="px-5 py-4 font-black text-indigo-600 dark:text-indigo-400 text-right text-[15px]">₹{p.amountPaid.toLocaleString()}</td>
-                            <td className="px-5 py-4 text-center">
+                            <td className="px-5 py-4 font-black text-indigo-600 dark:text-indigo-400 text-right text-[15px] border border-gray-200">₹{p.amountPaid.toLocaleString()}</td>
+                            <td className="px-5 py-4 text-center border border-gray-200">
                               <Badge variant={p.status === 'PAID' ? 'success' : 'warning'}>{p.status}</Badge>
                             </td>
-                            <td className="px-5 py-4 text-center">
+                            <td className="px-5 py-4 text-center border border-gray-200">
                               <span className="text-[10px] font-black tracking-wider text-purple-700 bg-purple-50 px-2.5 py-1 rounded-lg border border-purple-100">{p.method}</span>
                             </td>
-                            <td className="px-5 py-4 text-center text-xs text-gray-600 font-bold">
+                            <td className="px-5 py-4 text-center text-xs text-gray-600 font-bold border border-gray-200">
                               {getDisplayDate(p)}
                             </td>
-                            <td className="px-5 py-4 text-right">
+                            <td className="px-5 py-4 text-right border border-gray-200">
                               <div className="flex items-center justify-end gap-2">
                                 {p.status === 'PENDING' && isAdmin && (
                                   <button onClick={() => handleApprovePayment(p.id)} className="px-3 py-1.5 bg-teal-500 hover:bg-teal-600 text-white rounded-lg font-bold text-[11px] shadow-md shadow-teal-500/20 transition-all cursor-pointer">

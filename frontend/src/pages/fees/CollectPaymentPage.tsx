@@ -449,40 +449,7 @@ export const CollectPaymentPage: React.FC = () => {
                   </div>
                 </div>
 
-                {/* UPI fields */}
-                {method === 'UPI' && (
-                  <div className="rounded-2xl border-2 border-dashed border-violet-200 bg-violet-50/50 p-6 mb-5 animate-scale-in">
-                    <div className="flex items-center gap-2 mb-4">
-                      <div className="p-1.5 bg-violet-100 rounded-lg"><Wallet className="w-4 h-4 text-violet-600" /></div>
-                      <p className="text-xs font-black text-violet-800 uppercase tracking-widest">UPI Details</p>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                      <div>
-                        <label className="text-[11px] font-extrabold text-slate-500 uppercase tracking-widest mb-2 block ml-1">
-                          UTR / Trans ID (Optional)
-                        </label>
-                        <input
-                          type="text"
-                          placeholder="e.g. 12-digit transaction number"
-                          value={utrNumber}
-                          onChange={(e) => setUtrNumber(e.target.value)}
-                          className="w-full px-5 py-3.5 text-sm border-2 border-violet-200 rounded-2xl bg-white outline-none focus:border-violet-500 focus:ring-4 focus:ring-violet-100 font-bold text-slate-800 transition-all shadow-sm"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-[11px] font-extrabold text-slate-500 uppercase tracking-widest mb-2 block ml-1">Upload Receipt (Optional)</label>
-                        <input
-                          type="file"
-                          accept="image/*,application/pdf"
-                          onChange={handleFileChange}
-                          className="w-full text-xs text-slate-500 file:mr-3 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-black file:bg-violet-100 file:text-violet-700 hover:file:bg-violet-200 cursor-pointer bg-white border-2 border-violet-200 rounded-2xl transition-all"
-                        />
-                        {isUploading && <span className="text-[11px] font-black text-violet-500 block mt-2 ml-1 animate-pulse">Uploading...</span>}
-                        {receiptUrl && <span className="text-[11px] font-black text-emerald-600 block mt-2 ml-1 flex items-center gap-1"><CheckCircle2 className="w-3.5 h-3.5"/> Uploaded</span>}
-                      </div>
-                    </div>
-                  </div>
-                )}
+
 
                 <div>
                   <label className="text-[11px] font-extrabold text-slate-500 uppercase tracking-widest mb-2 block ml-1">Remarks / Notes (Optional)</label>

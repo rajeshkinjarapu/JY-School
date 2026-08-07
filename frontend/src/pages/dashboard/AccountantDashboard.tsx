@@ -138,10 +138,6 @@ export const AccountantDashboard: React.FC = () => {
       toast.error('All payment fields are required.');
       return;
     }
-    if (method === 'UPI' && !utrNumber) {
-      toast.error('UTR Reference Number is required for UPI payments.');
-      return;
-    }
 
     setIsSubmittingPayment(true);
     try {
@@ -598,43 +594,7 @@ export const AccountantDashboard: React.FC = () => {
                 </select>
               </div>
 
-              {/* UPI fields details */}
-              {method === 'UPI' && (
-                <div className="space-y-4 border-l-2 border-primary-500 pl-3.5 my-2 animate-slide-in">
-                  <div>
-                    <label className="label">UPI UTR Reference Number</label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="e.g. 12-digit transaction number"
-                      value={utrNumber}
-                      onChange={(e) => setUtrNumber(e.target.value)}
-                      className="input text-xs focus:ring-teal-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="label">Upload Payment Receipt</label>
-                    <div className="relative">
-                      <input
-                        type="file"
-                        accept="image/*,application/pdf"
-                        onChange={handleFileChange}
-                        className="w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100 cursor-pointer"
-                      />
-                    </div>
-                    {isUploading && (
-                      <span className="text-xxs text-primary-500 block mt-1 animate-pulse">
-                        Uploading receipt...
-                      </span>
-                    )}
-                    {receiptUrl && (
-                      <span className="text-xxs text-emerald-600 font-bold block mt-1">
-                        ✓ Receipt uploaded successfully
-                      </span>
-                    )}
-                  </div>
-                </div>
-              )}
+
 
               <div>
                 <label className="label">Remarks (Optional)</label>

@@ -75,14 +75,14 @@ export const StudentFeeDetailsTab: React.FC<StudentFeeDetailsProps> = ({ student
       const paidAmount = studentPaymentsMap.get(student.id) || 0;
 
       const balance = totalFeeAmount - paidAmount;
-      const studentClass = classMap.get(student.classId);
+      const studentClass = classMap.get(student.classId) || student.class;
       const phone = student.user?.phone || student.phone || '';
 
       return {
         studentId: student.id,
-        id: student.rollNo || '-',
+        id: student.rollNo || student.studentId || '-',
         name: student.user?.name || student.name || '-',
-        className: studentClass ? `${studentClass.name} - ${studentClass.section}` : '-',
+        className: studentClass ? `${studentClass.name}${studentClass.section ? ` - ${studentClass.section}` : ''}` : '-',
         totalFee: totalFeeAmount,
         paidAmount,
         balance,
@@ -248,7 +248,7 @@ export const StudentFeeDetailsTab: React.FC<StudentFeeDetailsProps> = ({ student
 
   const handleWhatsAppClick = (row: any) => {
     if (!row.phone) {
-      toast.error('No phone number available for this student.');
+      toast.error('No phone number registered for this student.');
       return;
     }
     setReminderStudent(row);
@@ -308,23 +308,23 @@ export const StudentFeeDetailsTab: React.FC<StudentFeeDetailsProps> = ({ student
   const totalBalance = tableData.reduce((s, r) => s + r.balance, 0);
 
   return (
-    <div className="space-y-5 animate-fade-in">
-      <div className="flex flex-col md:flex-row gap-4 mb-6 print:hidden items-stretch md:items-center">
+    <div className="space-y-4 animate-fade-in">
+      <div className="flex flex-col md:flex-row gap-3 mb-4 print:hidden items-stretch md:items-center">
         <div className="relative flex-1">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input
             type="text"
             placeholder="Search by student name or ID..."
             value={searchTerm}
             onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
-            className="w-full pl-12 pr-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl focus:ring-2 focus:ring-indigo-500 text-sm font-medium transition-all"
+            className="w-full pl-11 pr-4 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 text-sm font-medium transition-all"
           />
         </div>
         <div className="md:w-56">
           <select
             value={selectedClassId}
             onChange={(e) => { setSelectedClassId(e.target.value); setCurrentPage(1); }}
-            className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl focus:ring-2 focus:ring-indigo-500 text-sm font-medium cursor-pointer transition-all"
+            className="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 text-sm font-medium cursor-pointer transition-all"
           >
             <option value="ALL">All Classes</option>
             {classes.map(c => (
@@ -332,29 +332,29 @@ export const StudentFeeDetailsTab: React.FC<StudentFeeDetailsProps> = ({ student
             ))}
           </select>
         </div>
-        <div className="flex items-center gap-2">
-          <button onClick={handlePrint} className="flex-1 md:flex-none flex items-center justify-center gap-1.5 px-3 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-bold text-xs transition-colors cursor-pointer border border-gray-200">
+        <div className="hidden md:flex items-center gap-2">
+          <button onClick={handlePrint} className="flex items-center justify-center gap-1.5 px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-bold text-xs transition-colors cursor-pointer border border-gray-200">
             <Printer className="w-4 h-4" /> Print
           </button>
-          <button onClick={handleDownloadPDF} className="flex-1 md:flex-none flex items-center justify-center gap-1.5 px-3 py-2.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-xl font-bold text-xs transition-colors cursor-pointer border border-indigo-100">
+          <button onClick={handleDownloadPDF} className="flex items-center justify-center gap-1.5 px-3 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-xl font-bold text-xs transition-colors cursor-pointer border border-indigo-100">
             <Download className="w-4 h-4" /> PDF
           </button>
-          <button onClick={handleExportExcel} className="flex-1 md:flex-none flex items-center justify-center gap-1.5 px-3 py-2.5 bg-teal-50 hover:bg-teal-100 text-teal-700 rounded-xl font-bold text-xs transition-colors cursor-pointer border border-teal-100">
+          <button onClick={handleExportExcel} className="flex items-center justify-center gap-1.5 px-3 py-2 bg-teal-50 hover:bg-teal-100 text-teal-700 rounded-xl font-bold text-xs transition-colors cursor-pointer border border-teal-100">
             <Download className="w-4 h-4" /> Excel
           </button>
         </div>
       </div>
 
       {/* Summary Stats */}
-      <div className="grid grid-cols-3 gap-4 print:hidden">
+      <div className="grid grid-cols-3 gap-2 sm:gap-4 print:hidden">
         {[
-          { label: 'Total Fee', value: `₹${totalFee.toLocaleString('en-IN')}`, color: 'from-indigo-500 to-purple-600' },
-          { label: 'Collected', value: `₹${totalPaid.toLocaleString('en-IN')}`, color: 'from-emerald-500 to-teal-600' },
-          { label: 'Balance Due', value: `₹${totalBalance.toLocaleString('en-IN')}`, color: 'from-rose-500 to-pink-600' },
+          { label: 'TOTAL FEE', value: `₹${totalFee.toLocaleString('en-IN')}`, color: 'from-indigo-500 to-purple-600' },
+          { label: 'COLLECTED', value: `₹${totalPaid.toLocaleString('en-IN')}`, color: 'from-emerald-500 to-teal-600' },
+          { label: 'BALANCE DUE', value: `₹${totalBalance.toLocaleString('en-IN')}`, color: 'from-rose-500 to-pink-600' },
         ].map((s, i) => (
-          <div key={i} className={`bg-gradient-to-br ${s.color} p-4 rounded-2xl text-white shadow-md`}>
-            <p className="text-white/70 text-xs font-bold uppercase tracking-wider">{s.label}</p>
-            <p className="text-xl font-black mt-1">{s.value}</p>
+          <div key={i} className={`bg-gradient-to-br ${s.color} px-3 py-2.5 sm:p-4 rounded-xl text-white shadow-sm flex flex-col justify-center`}>
+            <p className="text-white/80 text-[10px] sm:text-xs font-bold uppercase tracking-tight whitespace-nowrap truncate">{s.label}</p>
+            <p className="text-sm sm:text-xl font-black mt-0.5 whitespace-nowrap truncate">{s.value}</p>
           </div>
         ))}
       </div>

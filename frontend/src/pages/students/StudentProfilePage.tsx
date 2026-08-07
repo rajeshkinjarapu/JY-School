@@ -127,7 +127,6 @@ export const StudentProfilePage: React.FC = () => {
     e.preventDefault();
     if (isSubmitting) return; // Prevent double-clicks
     if (selectedFees.length === 0) return toast.error('Please select at least one fee structure to pay.');
-    if (method === 'UPI' && !utrNumber) return toast.error('Please enter UTR number');
 
     setIsSubmitting(true);
     try {
@@ -721,8 +720,6 @@ export const StudentProfilePage: React.FC = () => {
           </div>
         </div>
       )}
-
-        </div>
 
       {/* ============================================================
              ================= PRINT-ONLY DOSSIER VIEW =================
