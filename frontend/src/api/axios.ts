@@ -1,18 +1,17 @@
 import axios from 'axios';
 
 const getApiUrl = () => {
+  if (import.meta.env.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL;
+  }
   if (typeof window !== 'undefined') {
     const host = window.location.hostname;
-    // On VPS or localhost, use relative path '' so requests are local and fast
-    if (host === '148.113.8.82' || host === 'localhost' || host === '127.0.0.1') {
-      return '';
+    // If running on Vercel, route requests to the live VPS server
+    if (host.includes('vercel.app') || host.includes('railway.app')) {
+      return 'http://148.113.8.82:19999';
     }
   }
-  const envUrl = import.meta.env.VITE_API_URL || '';
-  if (envUrl && !envUrl.includes('railway.app')) {
-    return envUrl;
-  }
-  return 'http://148.113.8.82:19999';
+  return '';
 };
 
 const API_URL = getApiUrl();

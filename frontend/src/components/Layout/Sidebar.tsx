@@ -67,7 +67,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
 
   if (!user) return null;
 
-  const role = user.role;
+  const role = (user.role || '').toUpperCase();
 
   const getLinks = () => {
     const base = [

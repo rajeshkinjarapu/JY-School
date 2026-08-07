@@ -28,7 +28,14 @@ const mergeProfilePhoto = (userData: any): any => {
 };
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<User | null>(() => {
+    try {
+      const saved = localStorage.getItem('user');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchUser = async () => {
@@ -37,12 +44,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (token) {
         const response = await getMe();
         const userData = response.data || response;
-        setUser(mergeProfilePhoto(userData));
+        const merged = mergeProfilePhoto(userData);
+        setUser(merged);
+        localStorage.setItem('user', JSON.stringify(merged));
       }
     } catch (error) {
       console.error('Fetch user error:', error);
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
+      // Keep cached user if offline or network blip
     } finally {
       setIsLoading(false);
     }
@@ -55,12 +63,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = (accessToken: string, refreshToken: string, userData: User) => {
     localStorage.setItem('accessToken', accessToken);
     localStorage.setItem('refreshToken', refreshToken);
-    setUser(mergeProfilePhoto(userData));
+    const merged = mergeProfilePhoto(userData);
+    setUser(merged);
+    localStorage.setItem('user', JSON.stringify(merged));
   };
 
   const logout = () => {
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
+    localStorage.removeItem('user');
     setUser(null);
   };
 
