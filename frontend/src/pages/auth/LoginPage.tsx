@@ -41,11 +41,19 @@ export const LoginPage: React.FC = () => {
   const onSubmit = async (values: LoginFormValues) => {
     setIsSubmitting(true);
     try {
-      const response = await loginApi(values);
-      const { accessToken, refreshToken, user } = response.data; 
-      login(accessToken, refreshToken, user);
-      toast.success(`Welcome back, ${user.name}!`);
-      navigate('/dashboard', { replace: true });
+      const response: any = await loginApi(values);
+      const authData = response.data?.data || response.data || response;
+      const accessToken = authData?.accessToken;
+      const refreshToken = authData?.refreshToken;
+      const user = authData?.user;
+
+      if (accessToken && user) {
+        login(accessToken, refreshToken, user);
+        toast.success(`Welcome back, ${user.name || 'User'}!`);
+        navigate('/dashboard', { replace: true });
+      } else {
+        toast.error('Login response format error. Please try again.');
+      }
     } catch (error: any) {
       const message = error?.response?.data?.message || error?.message || 'Login failed. Please check your credentials.';
       toast.error(message);
