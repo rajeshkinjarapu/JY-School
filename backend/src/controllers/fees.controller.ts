@@ -9,6 +9,7 @@ import * as XLSX from 'xlsx';
 import { clearDashboardCache } from './dashboard.controller';
 import { Role } from '../types/enums';
 import { sendSMS } from '../utils/sms';
+import { createSystemNotification } from './notifications.controller';
 
 export const bulkImportFees = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   if (!req.file) return next(createError('No file uploaded', 400));
@@ -217,7 +218,17 @@ export const getPayments = async (req: AuthRequest, res: Response): Promise<void
 export const createPayment = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   const { studentId, feeStructureId, amountPaid, method, remarks, utrNumber, receiptUrl, payments, paymentDate } = req.body;
 
-  const student = await prisma.student.findUnique({ where: { id: studentId }, include: { user: true } });
+  const student = await prisma.student.findUnique({ 
+    where: { id: studentId }, 
+    include: { 
+      user: true,
+      class: {
+        include: {
+          teachers: { select: { userId: true } }
+        }
+      }
+    } 
+  });
   if (!student) return next(createError('Student not found', 404));
 
   const baseReceiptNo = 'JY' + Math.floor(10000000 + Math.random() * 90000000).toString();
@@ -286,14 +297,66 @@ export const createPayment = async (req: AuthRequest, res: Response, next: NextF
   }
 
   try {
+    const totalAmount = createdPayments.reduce((sum, p) => sum + p.amountPaid, 0);
+
+    // 1. Send SMS to parent if phone exists
     if (student.user && student.user.phone) {
-      const totalAmount = createdPayments.reduce((sum, p) => sum + p.amountPaid, 0);
       const smsMessage = `Dear parent, We have received fee payment of Rs.${totalAmount} for your child ${student.user.name}. Thanking you, SVJY SCHOOL`;
-      // User requested template ID: 1707175316314375479
       await sendSMS(student.user.phone, smsMessage, '1707175316314375479');
     }
+
+    // 2. Dispatch Notifications & Web Push Alerts (Super Admin, Admin, Class Teacher, Student)
+    const studentName = student.user?.name || 'Student';
+    const className = student.class ? `${student.class.name}-${student.class.section}` : '';
+    const receiptNo = createdPayments[0]?.receiptNo || '';
+    const notifTitle = `Fee Payment Received: ₹${totalAmount}`;
+    const notifMsg = `Fee payment of ₹${totalAmount} received for ${studentName}${className ? ` (${className})` : ''}. Receipt: #${receiptNo}`;
+
+    // Notify Super Admin
+    createSystemNotification({
+      role: 'SUPER_ADMIN',
+      title: notifTitle,
+      message: notifMsg,
+      type: 'FEES',
+      link: '/fees'
+    });
+
+    // Notify Admin
+    createSystemNotification({
+      role: 'ADMIN',
+      title: notifTitle,
+      message: notifMsg,
+      type: 'FEES',
+      link: '/fees'
+    });
+
+    // Notify Student / Parent
+    if (student.userId) {
+      createSystemNotification({
+        userId: student.userId,
+        title: notifTitle,
+        message: notifMsg,
+        type: 'FEES',
+        link: '/student-fees'
+      });
+    }
+
+    // Notify Class Teacher(s)
+    if (student.class?.teachers) {
+      for (const t of student.class.teachers) {
+        if (t.userId) {
+          createSystemNotification({
+            userId: t.userId,
+            title: notifTitle,
+            message: notifMsg,
+            type: 'FEES',
+            link: '/fees'
+          });
+        }
+      }
+    }
   } catch (error) {
-    console.error('Failed to send fee SMS:', error);
+    console.error('Failed to send fee notifications/SMS:', error);
   }
 
   clearDashboardCache();
