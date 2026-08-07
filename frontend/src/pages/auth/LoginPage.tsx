@@ -42,17 +42,37 @@ export const LoginPage: React.FC = () => {
     setIsSubmitting(true);
     try {
       const response: any = await loginApi(values);
-      const authData = response.data?.data || response.data || response;
-      const accessToken = authData?.accessToken;
-      const refreshToken = authData?.refreshToken;
-      const user = authData?.user;
+      const accessToken = 
+        response?.accessToken || 
+        response?.data?.accessToken || 
+        response?.data?.data?.accessToken || 
+        response?.token;
+      
+      const refreshToken = 
+        response?.refreshToken || 
+        response?.data?.refreshToken || 
+        response?.data?.data?.refreshToken;
+      
+      let user = 
+        response?.user || 
+        response?.data?.user || 
+        response?.data?.data?.user;
 
-      if (accessToken && user) {
-        login(accessToken, refreshToken, user);
-        toast.success(`Welcome back, ${user.name || 'User'}!`);
+      if (accessToken) {
+        if (!user) {
+          try {
+            const meRes: any = await api.get('/api/auth/me');
+            user = meRes?.data?.data || meRes?.data || meRes;
+          } catch (e) {
+            console.warn('Failed to fetch user profile after login:', e);
+          }
+        }
+        
+        login(accessToken, refreshToken, user || { role: 'STUDENT', name: 'User' });
+        toast.success(`Welcome back, ${user?.name || 'User'}!`);
         navigate('/dashboard', { replace: true });
       } else {
-        toast.error('Login response format error. Please try again.');
+        toast.error(response?.message || 'Login response format error. Please try again.');
       }
     } catch (error: any) {
       const message = error?.response?.data?.message || error?.message || 'Login failed. Please check your credentials.';

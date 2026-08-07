@@ -18,7 +18,7 @@ const API_URL = getApiUrl();
 
 export const api = axios.create({
   baseURL: API_URL,
-  timeout: 15000, // 15 seconds — fail fast instead of spinning forever
+  timeout: 30000, // 30 seconds for mobile network reliability
   headers: {
     'Content-Type': 'application/json',
   },
