@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { PageHeader } from '../../components/UI/PageHeader';
-import { ArrowLeft, BookOpen, Users, School, Calendar, FileText, Download, PlayCircle } from 'lucide-react';
+import { ArrowLeft, Users, School, Calendar, FileText, Download, PlayCircle } from 'lucide-react';
 import api from '../../api/axios';
 import { LoadingSpinner } from '../../components/UI/LoadingSpinner';
 
@@ -34,31 +34,18 @@ export const SubjectDetailsPage: React.FC = () => {
         title={`${name} Curriculum`}
         icon={
           <Link to="/subjects">
-            <ArrowLeft className="w-6 h-6 text-gray-400 hover:text-indigo-600 cursor-pointer" />
+            <ArrowLeft className="w-5 h-5 text-white/90 hover:text-white transition-colors" />
           </Link>
+        }
+        action={
+          <div className="flex items-center gap-1.5 text-xs font-bold text-white bg-white/15 px-3 py-1.5 rounded-lg border border-white/10 shadow-sm shrink-0">
+            <School className="w-4 h-4" />
+            {classes.length} {classes.length === 1 ? 'Class' : 'Classes'} Assigned
+          </div>
         }
       />
       
-      <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 pt-2">
-        
-        <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl shadow-lg border border-indigo-500 relative overflow-hidden p-6 md:p-8 mb-6">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-white opacity-5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3"></div>
-          <div className="relative z-10 flex flex-col md:flex-row items-center gap-6">
-            <div className="w-20 h-20 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center border border-white/30 shadow-inner shrink-0">
-              <BookOpen className="w-10 h-10 text-white" />
-            </div>
-            <div className="text-center md:text-left">
-              <h2 className="text-2xl md:text-3xl font-black text-white tracking-tight">{name}</h2>
-              <p className="text-indigo-100 mt-2 font-medium">Explore the curriculum, materials, and classes assigned for {name}.</p>
-              <div className="flex items-center gap-4 mt-4 justify-center md:justify-start">
-                <div className="flex items-center gap-1.5 text-xs font-bold text-white bg-white/10 px-3 py-1.5 rounded-lg border border-white/20">
-                  <School className="w-4 h-4" />
-                  {classes.length} Classes Assigned
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+      <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 pt-4">
 
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
           {/* Left Column - Assigned Classes */}
