@@ -263,12 +263,14 @@ export const StudentListPage: React.FC = () => {
                 </button>
               </>
             )}
-            <Link
-              to="/students/new"
-              className="flex items-center gap-1.5 px-3.5 py-2.5 text-sm font-extrabold text-indigo-700 bg-white rounded-xl shadow hover:bg-indigo-50 transition-colors"
-            >
-              <UserPlus className="w-4 h-4" /> Add
-            </Link>
+            {(isSuperAdmin || user?.role === 'ADMIN') && (
+              <Link
+                to="/students/new"
+                className="flex items-center gap-1.5 px-3.5 py-2.5 text-sm font-extrabold text-indigo-700 bg-white rounded-xl shadow hover:bg-indigo-50 transition-colors"
+              >
+                <UserPlus className="w-4 h-4" /> Add
+              </Link>
+            )}
           </div>
         </div>
 

@@ -145,7 +145,7 @@ export const router = createBrowserRouter([
       {
         path: 'students',
         element: withSuspense(
-          <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN']}>
+          <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN', 'TEACHER']}>
             <StudentListPage />
           </ProtectedRoute>
         ),
