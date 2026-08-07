@@ -405,7 +405,7 @@ export const StudentProfilePage: React.FC = () => {
                     )}
                     <button
                       onClick={() => window.print()}
-                      className="bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300 flex items-center justify-center w-10 h-10 rounded-lg transition-all hover:bg-gray-200"
+                      className="hidden md:flex bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300 items-center justify-center w-10 h-10 rounded-lg transition-all hover:bg-gray-200"
                       title="Print Profile"
                     >
                       <Printer className="w-4 h-4" />

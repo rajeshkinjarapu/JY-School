@@ -162,7 +162,7 @@ export const SubjectPage: React.FC = () => {
             <p className="text-sm mt-1">Click "New Subject" to get started.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-5">
             {uniqueSubjectNames.map((subjectName, idx) => {
               const entries = groupedSubjects[subjectName];
               const color = SUBJECT_COLORS[idx % SUBJECT_COLORS.length];
@@ -177,22 +177,22 @@ export const SubjectPage: React.FC = () => {
                 >
                   {/* Card Header */}
                   <div 
-                    className={`bg-gradient-to-br ${color.bg} p-5 relative overflow-hidden cursor-pointer active:scale-[0.98] transition-transform`}
+                    className={`bg-gradient-to-br ${color.bg} p-3.5 sm:p-5 relative overflow-hidden cursor-pointer active:scale-[0.98] transition-transform`}
                     onClick={() => navigate('/subjects/' + encodeURIComponent(subjectName))}
                   >
-                    <div className="absolute -top-4 -right-4 w-20 h-20 rounded-full bg-white/10" />
-                    <div className="absolute -bottom-6 -left-3 w-16 h-16 rounded-full bg-white/10" />
+                    <div className="absolute -top-4 -right-4 w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-white/10" />
+                    <div className="absolute -bottom-6 -left-3 w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-white/10" />
                     <div className="flex items-center justify-between relative z-10">
-                      <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center text-white font-black text-xl shadow-inner border border-white/30">
+                      <div className="w-9 h-9 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center text-white font-black text-sm sm:text-xl shadow-inner border border-white/30">
                         {abbr}
                       </div>
-                      <div className="flex items-center gap-1.5 text-white/90 text-xs font-bold bg-white/20 px-2.5 py-1 rounded-full">
-                        <Users className="w-3.5 h-3.5" />
+                      <div className="flex items-center gap-1 text-white/90 text-[10px] sm:text-xs font-bold bg-white/20 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full">
+                        <Users className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                         {entries.length} {entries.length === 1 ? 'Class' : 'Classes'}
                       </div>
                     </div>
-                    <div className="mt-3 relative z-10">
-                      <h3 className="text-white font-black text-lg leading-tight drop-shadow-sm">{subjectName}</h3>
+                    <div className="mt-2.5 sm:mt-3 relative z-10">
+                      <h3 className="text-white font-black text-sm sm:text-lg leading-tight drop-shadow-sm truncate">{subjectName}</h3>
                     </div>
                   </div>
                 </div>

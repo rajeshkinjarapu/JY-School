@@ -76,7 +76,7 @@ export const TeacherProfilePage: React.FC = () => {
         title="Teacher Profile"
         icon={<Link to="/teachers"><ArrowLeft className="w-6 h-6 text-gray-400 hover:text-indigo-600 cursor-pointer" /></Link>}
         action={
-          <button onClick={() => window.print()} className="btn-primary w-full sm:w-auto">
+          <button onClick={() => window.print()} className="hidden md:inline-flex items-center justify-center btn-primary w-full sm:w-auto">
             <Printer className="w-4 h-4 mr-2" /> Print Profile
           </button>
         }

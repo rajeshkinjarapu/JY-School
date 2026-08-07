@@ -8,6 +8,8 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
+import { PageHeader } from '../../components/UI/PageHeader';
+
 export default function AttendanceDashboard() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
@@ -40,59 +42,56 @@ export default function AttendanceDashboard() {
 
   if (!stats) return null;
 
-  // Extract day and max percentages for the bar chart
-  const maxPercent = Math.max(...stats.weeklyTrend.map((w: any) => w.percentage), 100);
-
   return (
-    <div className="animate-fade-in-up">
-      {/* ── Colorful Hero ── */}
-      <div className="px-4 pt-4 pb-5 bg-gradient-to-br from-amber-500 via-orange-500 to-rose-500 shadow-lg">
-        <p className="text-white font-black text-lg">Attendance Dashboard</p>
+    <div className="flex flex-col h-full bg-slate-50/50 w-full animate-fade-in">
+      {/* Dark Blue Hero Header */}
+      <PageHeader 
+        title="Attendance Dashboard"
+        icon={<Calendar className="w-6 h-6" />}
+      />
 
-      </div>
-
-      <div className="p-3 space-y-3">
+      <div className="p-3 sm:p-6 space-y-4">
       
-      {/* ── TOP SUMMARY CARDS ── */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
+      {/* ── TOP SUMMARY CARDS (2x2 Grid) ── */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
         {[
-          { label: 'Total Students', value: stats.totalStudents, icon: Users, from: 'from-blue-500', to: 'to-cyan-500' },
-          { label: 'Present Today', value: stats.todayPresent, icon: CheckCircle, from: 'from-emerald-500', to: 'to-teal-500' },
-          { label: 'Absent Today', value: stats.todayAbsent, icon: XCircle, from: 'from-rose-500', to: 'to-pink-500' },
-          { label: 'Attendance %', value: `${stats.attendancePercentage}%`, icon: Percent, from: 'from-purple-500', to: 'to-violet-500' }
+          { label: 'Total Students', value: stats.totalStudents, icon: Users, from: 'from-blue-600 to-indigo-700' },
+          { label: 'Present Today', value: stats.todayPresent, icon: CheckCircle, from: 'from-emerald-500 to-teal-600' },
+          { label: 'Absent Today', value: stats.todayAbsent, icon: XCircle, from: 'from-rose-500 to-pink-600' },
+          { label: 'Attendance %', value: `${stats.attendancePercentage}%`, icon: Percent, from: 'from-purple-600 to-violet-700' }
         ].map((c, i) => (
-          <div key={i} className={`bg-gradient-to-br ${c.from} ${c.to} rounded-2xl p-3.5 flex flex-col gap-1.5 shadow`}>
-            <c.icon className="w-5 h-5 text-white/80" />
-            <div>
-              <p className="text-[11px] font-semibold text-white/70">{c.label}</p>
-              <p className="text-xl font-black text-white">{c.value}</p>
+          <div key={i} className={`bg-gradient-to-br ${c.from} rounded-2xl p-3.5 sm:p-4 flex flex-col justify-between shadow-sm text-white relative overflow-hidden`}>
+            <div className="flex items-center justify-between">
+              <p className="text-[10px] sm:text-xs font-bold text-white/80 uppercase tracking-tight truncate">{c.label}</p>
+              <c.icon className="w-4 h-4 sm:w-5 sm:h-5 text-white/70 shrink-0" />
             </div>
+            <p className="text-lg sm:text-2xl font-black text-white mt-2 leading-none">{c.value}</p>
           </div>
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* ── LEFT COLUMN (WIDER) ── */}
-        <div className="lg:col-span-2 space-y-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+        {/* ── LEFT COLUMN ── */}
+        <div className="lg:col-span-2 space-y-4 sm:space-y-6">
           
           {/* Quick Actions */}
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
-            <h2 className="text-base font-bold text-slate-800 mb-4 flex items-center gap-2">
-              <PlusCircle className="w-5 h-5 text-indigo-500" />
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-4 sm:p-6">
+            <h2 className="text-xs sm:text-sm font-extrabold text-slate-800 uppercase tracking-wider mb-3 flex items-center gap-2">
+              <PlusCircle className="w-4 h-4 text-indigo-600" />
               Quick Actions
             </h2>
-            <div className="flex flex-wrap gap-3">
-              <Link to="/attendance/mark" className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl flex items-center gap-2 transition-colors shadow-sm shadow-indigo-200">
-                <CheckCircle className="w-4 h-4" /> Mark Attendance
+            <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 sm:gap-3">
+              <Link to="/attendance/mark" className="px-3.5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 transition-all shadow-md shadow-indigo-500/20">
+                <CheckCircle className="w-3.5 h-3.5" /> Mark
               </Link>
-              <button onClick={() => navigate('/attendance/mark')} className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl flex items-center gap-2 transition-colors">
-                <Edit className="w-4 h-4" /> Edit Attendance
+              <button onClick={() => navigate('/attendance/mark')} className="px-3.5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 transition-all cursor-pointer">
+                <Edit className="w-3.5 h-3.5" /> Edit
               </button>
-              <Link to="/attendance/report" className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl flex items-center gap-2 transition-colors">
-                <Calendar className="w-4 h-4" /> Monthly Report
+              <Link to="/attendance/report" className="px-3.5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 transition-all">
+                <Calendar className="w-3.5 h-3.5" /> Monthly
               </Link>
-              <Link to="/attendance/daily-report" className="px-5 py-2.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-semibold rounded-xl flex items-center gap-2 transition-colors">
-                <Download className="w-4 h-4" /> Download PDF
+              <Link to="/attendance/daily-report" className="px-3.5 py-2.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 transition-all border border-emerald-100">
+                <Download className="w-3.5 h-3.5" /> PDF
               </Link>
             </div>
           </div>
