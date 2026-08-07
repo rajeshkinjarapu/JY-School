@@ -498,10 +498,10 @@ export const getAccountantDashboard = async (req: AuthRequest, res: Response, ne
     };
 
     const recentPayments = await prisma.feePayment.findMany({
-      take: 8,
+      take: 12,
       orderBy: { paymentDate: 'desc' },
       include: {
-        student: { include: { user: { select: { name: true } } } },
+        student: { include: { user: { select: { name: true, photoUrl: true } } } },
         feeStructure: { select: { name: true } }
       }
     });

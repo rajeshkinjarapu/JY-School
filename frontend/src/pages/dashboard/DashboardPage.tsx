@@ -309,26 +309,67 @@ const AdminView: React.FC<{ data: any }> = ({ data }) => {
         <ChartCard className="lg:col-span-3">
           <SectionHeader title="Recent Payments" subtitle="Latest fee transactions" icon={Wallet} iconColor="#6366f1"
             action={<Link to="/fee-payment" className="flex items-center gap-1 text-xs font-bold text-indigo-600 hover:text-indigo-700">View All <ChevronRight className="w-3.5 h-3.5" /></Link>} />
-          <div className="space-y-3 overflow-y-auto max-h-[260px] pr-2">
-            {data.recentPayments?.length === 0 && <p className="text-sm text-slate-400 text-center py-8">No recent payments.</p>}
-            {data.recentPayments?.map((p: any) => (
-              <div key={p.id} className="flex items-center justify-between p-3 rounded-xl hover:bg-slate-50 group transition-colors">
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl flex items-center justify-center font-black text-sm shrink-0"
-                    style={{ background: 'linear-gradient(135deg,#6366f1,#8b5cf6)', color: '#fff' }}>
-                    {(p.student?.user?.name || p.student?.name || 'S').charAt(0)}
-                  </div>
-                  <div>
-                    <p className="text-sm font-bold text-slate-800 group-hover:text-indigo-700 transition-colors">{p.student?.user?.name || p.student?.name || 'Unknown Student'}</p>
-                    <p className="text-xs text-slate-400 font-medium">{p.feeStructure?.name || 'Fee Payment'}</p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm font-black text-slate-900">₹{p.amountPaid.toLocaleString('en-IN')}</p>
-                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${p.status === 'PAID' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>{p.status}</span>
-                </div>
+          
+          <div className="w-full text-left">
+            {/* Table Header */}
+            <div className="grid grid-cols-3 bg-slate-50 dark:bg-gray-800 p-2.5 rounded-t-xl text-[10px] font-black uppercase text-slate-400 tracking-wider">
+              <div>Student</div>
+              <div className="text-center">Date</div>
+              <div className="text-right">Amount</div>
+            </div>
+
+            {/* Scrollable Viewport */}
+            <div className="relative h-[240px] overflow-hidden bg-white dark:bg-gray-900 border border-t-0 border-gray-100 dark:border-gray-800 rounded-b-xl">
+              <style>{`
+                @keyframes scroll-up {
+                  0% { transform: translateY(0); }
+                  100% { transform: translateY(-50%); }
+                }
+                .infinite-scroll-y {
+                  animation: scroll-up 24s linear infinite;
+                }
+                .infinite-scroll-y:hover {
+                  animation-play-state: paused;
+                }
+              `}</style>
+              <div className="infinite-scroll-y flex flex-col">
+                {(() => {
+                  const payments = data.recentPayments || [];
+                  if (payments.length === 0) {
+                    return <p className="text-sm text-slate-400 text-center py-8">No recent payments.</p>;
+                  }
+                  
+                  // Duplicate the payments list for infinite loop effect
+                  const displayList = [...payments, ...payments];
+                  
+                  return displayList.map((p: any, idx: number) => {
+                    const studentName = p.student?.user?.name || p.student?.name || 'Unknown Student';
+                    const photo = p.student?.user?.photoUrl;
+                    const dateStr = p.paymentDate 
+                      ? new Date(p.paymentDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })
+                      : '-';
+                    const amountStr = `₹${Number(p.amountPaid).toLocaleString('en-IN')}`;
+                    
+                    return (
+                      <div key={idx} className="grid grid-cols-3 items-center p-3 border-b border-gray-50 dark:border-gray-800 hover:bg-slate-50 dark:hover:bg-gray-800 transition-colors">
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          {photo ? (
+                            <img src={getPhotoUrl(photo)} alt="" className="w-8 h-8 rounded-full object-cover border border-slate-100" />
+                          ) : (
+                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-white font-black text-xs flex items-center justify-center shrink-0">
+                              {studentName.charAt(0)}
+                            </div>
+                          )}
+                          <span className="text-xs font-bold text-slate-700 truncate">{studentName}</span>
+                        </div>
+                        <div className="text-center text-xs font-semibold text-slate-400">{dateStr}</div>
+                        <div className="text-right text-xs font-black text-slate-900">{amountStr}</div>
+                      </div>
+                    );
+                  });
+                })()}
               </div>
-            ))}
+            </div>
           </div>
         </ChartCard>
 
