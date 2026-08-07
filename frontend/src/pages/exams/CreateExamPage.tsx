@@ -45,6 +45,14 @@ export const CreateExamPage: React.FC = () => {
     }
   };
 
+  const handleClassToggle = (classId: string) => {
+    if (examClassIds.includes(classId)) {
+      setExamClassIds(examClassIds.filter(id => id !== classId));
+    } else {
+      setExamClassIds([...examClassIds, classId]);
+    }
+  };
+
   const handleCreateExam = async (e: React.FormEvent) => {
     e.preventDefault();
     if (examClassIds.length === 0) {
@@ -279,8 +287,9 @@ export const CreateExamPage: React.FC = () => {
                 {classes.map(c => {
                   const isSelected = examClassIds.includes(c.id);
                   return (
-                    <label 
+                    <div 
                       key={c.id} 
+                      onClick={() => handleClassToggle(c.id)}
                       className={`flex items-center justify-between p-4 cursor-pointer rounded-2xl border-2 transition-all ${
                         isSelected 
                           ? 'border-indigo-500 bg-indigo-50 shadow-sm' 
@@ -300,7 +309,7 @@ export const CreateExamPage: React.FC = () => {
                       <div className="text-[10px] font-bold text-slate-400 bg-white px-2 py-1 rounded-md border border-slate-100">
                         {c._count?.students || 0} students
                       </div>
-                    </label>
+                    </div>
                   );
                 })}
                 
