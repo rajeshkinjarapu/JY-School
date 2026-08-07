@@ -44,6 +44,7 @@ model User {
   leaveRequests    LeaveRequest[] @relation("LeaveRequests")
   approvedLeaves   LeaveRequest[] @relation("ApprovedLeaves")
   transportStaff   TransportStaff?
+  notifications    Notification[]
 
   @@index([email])
   @@index([role])
@@ -765,3 +766,22 @@ model TransportStaff {
 
   @@index([vehicleId])
 }
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String?
+  role      Role?
+  title     String
+  message   String
+  type      String   // MARKS, ATTENDANCE, RESULT, LEAVE, GATEPASS, HOMEWORK, ANNOUNCEMENT
+  isRead    Boolean  @default(false)
+  link      String?
+  createdAt DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([role])
+  @@index([createdAt])
+}
+

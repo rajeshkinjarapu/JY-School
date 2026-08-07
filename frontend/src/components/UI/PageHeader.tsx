@@ -1,6 +1,7 @@
 import React from 'react';
 import { Menu, Home } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
+import { NotificationBell } from './NotificationBell';
 
 interface PageHeaderProps {
   title: React.ReactNode;
@@ -48,11 +49,10 @@ export const PageHeader: React.FC<PageHeaderProps> = ({ title, icon, action }) =
         </h1>
       </div>
 
-      {action && (
-        <div className="relative z-10 flex shrink-0 w-full sm:w-auto justify-end sm:justify-start mt-2 sm:mt-0">
-          {action}
-        </div>
-      )}
+      <div className="relative z-10 flex items-center shrink-0 w-full sm:w-auto justify-end sm:justify-start gap-2 mt-2 sm:mt-0">
+        <NotificationBell />
+        {action}
+      </div>
     </div>
   );
 };

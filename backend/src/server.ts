@@ -38,6 +38,7 @@ import examsExtendedRoutes from './routes/examsExtended';
 
 import latexRoutes from './routes/latex';
 import gatePassRoutes from './routes/gatePass';
+import notificationRoutes from './routes/notification.routes';
 import homeworkRoutes from './routes/homework';
 import teacherAttendanceRoutes from './routes/teacherAttendance';
 import salaryRoutes from './routes/salary';
@@ -97,6 +98,7 @@ app.use('/api/settings', settingsRoutes);
 app.use('/api/uploads', uploadRoutes);
 app.use('/api/events', eventRoutes);
 app.use('/api/exams-extended', examsExtendedRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 app.use('/api/latex', latexRoutes);
 app.use('/api/gate-pass', gatePassRoutes);

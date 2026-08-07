@@ -5,6 +5,7 @@ import { prisma } from '../utils/prisma';
 import { successResponse } from '../utils/response';
 import { Role } from '../types/enums';
 import { sortClasses } from '../utils/sortClasses';
+import { createSystemNotification } from './notifications.controller';
 
 export const getByClass = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   const { classId, date } = req.query as { classId: string; date: string };
@@ -86,10 +87,29 @@ export const markBulk = async (req: AuthRequest, res: Response, next: NextFuncti
         markedById: req.user!.id,
         teacherId: teacher?.id || null,
       },
-    })
-  );
-
   await prisma.$transaction(upsertOps);
+
+  // Trigger absent notification for students
+  const absentRecords = records.filter((r: any) => r.status === 'ABSENT');
+  if (absentRecords.length > 0) {
+    const studentIds = absentRecords.map((r: any) => r.studentId);
+    const students = await prisma.student.findMany({
+      where: { id: { in: studentIds } },
+      select: { userId: true },
+    });
+    for (const s of students) {
+      if (s.userId) {
+        createSystemNotification({
+          userId: s.userId,
+          title: '⚠️ Attendance Alert',
+          message: `You were marked ABSENT today (${date}).`,
+          type: 'ATTENDANCE',
+          link: '/dashboard',
+        });
+      }
+    }
+  }
+
   successResponse(res, null, `Attendance marked for ${records.length} students`);
 };
 

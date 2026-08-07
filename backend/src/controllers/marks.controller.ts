@@ -4,6 +4,7 @@ import { createError } from '../middlewares/errorHandler';
 import { prisma } from '../utils/prisma';
 import { successResponse } from '../utils/response';
 import { calculateGrade } from '../utils/helpers';
+import { createSystemNotification } from './notifications.controller';
 import PDFDocument from 'pdfkit';
 
 export const getByStudent = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
@@ -130,6 +131,27 @@ export const bulkCreate = async (req: AuthRequest, res: Response, next: NextFunc
     });
 
     const results = await prisma.$transaction(upsertOps);
+
+    // Trigger Notification for Admin & Super Admin
+    if (results.length > 0 && marks[0]) {
+      const examInfo = await prisma.exam.findUnique({ where: { id: marks[0].examId } });
+      const teacherName = req.user?.name || 'A Teacher';
+      createSystemNotification({
+        role: 'ADMIN',
+        title: '📝 Marks Entry / Freeze',
+        message: `Teacher ${teacherName} entered/updated marks for ${examInfo?.name || 'Exam'}.`,
+        type: 'MARKS',
+        link: '/exams',
+      });
+      createSystemNotification({
+        role: 'SUPER_ADMIN',
+        title: '📝 Marks Entry / Freeze',
+        message: `Teacher ${teacherName} entered/updated marks for ${examInfo?.name || 'Exam'}.`,
+        type: 'MARKS',
+        link: '/exams',
+      });
+    }
+
     successResponse(res, results, `${results.length} marks saved`);
   } catch (error) {
     next(error);
