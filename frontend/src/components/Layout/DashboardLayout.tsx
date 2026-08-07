@@ -114,7 +114,7 @@ export const DashboardLayout: React.FC = () => {
         <MobileNotificationToast />
         <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
         <Header onMenuClick={() => setSidebarOpen(true)} title={getPageTitle(location.pathname)} />
-        <main style={{ flex: 1, overflowY: 'auto', overscrollBehavior: 'contain' }}>
+        <main style={{ flex: 1, overflowY: 'auto', overscrollBehavior: 'contain' }} className="pb-[max(env(safe-area-inset-bottom),1.5rem)]">
           <div key={location.pathname} className="animate-slide-in h-full">
             <Outlet context={{ setDynamicTitle }} />
           </div>
@@ -133,7 +133,7 @@ export const DashboardLayout: React.FC = () => {
       <div className="flex flex-col flex-1 overflow-hidden min-w-0">
         <Header onMenuClick={() => setSidebarOpen(true)} title={getPageTitle(location.pathname)} />
         <main
-          className="flex-1 overflow-y-auto"
+          className="flex-1 overflow-y-auto pb-[max(env(safe-area-inset-bottom),1.5rem)]"
           style={{ overscrollBehavior: 'contain' }}
         >
           <div key={location.pathname} className="animate-slide-in h-full">
