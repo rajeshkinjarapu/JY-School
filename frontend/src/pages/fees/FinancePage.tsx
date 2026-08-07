@@ -454,8 +454,8 @@ export const FinancePage: React.FC = () => {
       {/* ══ HOME GRID VIEW ══ */}
       {activeTab === 'home' && (
         <div className="w-full animate-fade-in space-y-6">
-          {/* KPI Dashboard Section */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* KPI Dashboard Section — Hidden on Mobile */}
+          <div className="hidden md:grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm flex items-center gap-4">
               <div className="w-12 h-12 rounded-xl bg-emerald-50 flex items-center justify-center shrink-0">
                 <DollarSign className="w-6 h-6 text-emerald-600" />
