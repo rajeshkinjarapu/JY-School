@@ -108,7 +108,7 @@ export const DashboardLayout: React.FC = () => {
   if (hideSidebar) {
     return (
       <div style={{ height: '100dvh', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-        <Header onMenuClick={() => setSidebarOpen(true)} title={getPageTitle(location.pathname)} forceShow={true} hideMenuButton={true} />
+        <Header onMenuClick={() => setSidebarOpen(true)} title={getPageTitle(location.pathname)} />
         <main style={{ flex: 1, overflowY: 'auto', overscrollBehavior: 'contain' }}>
           <div key={location.pathname} className="animate-slide-in h-full">
             <Outlet context={{ setDynamicTitle }} />

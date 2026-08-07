@@ -1,5 +1,6 @@
 import React from 'react';
-import { Menu } from 'lucide-react';
+import { Menu, Home } from 'lucide-react';
+import { Link, useLocation } from 'react-router-dom';
 
 interface PageHeaderProps {
   title: React.ReactNode;
@@ -8,6 +9,9 @@ interface PageHeaderProps {
 }
 
 export const PageHeader: React.FC<PageHeaderProps> = ({ title, icon, action }) => {
+  const location = useLocation();
+  const isDashboard = location.pathname === '/dashboard' || location.pathname === '/';
+
   return (
     <div className="relative overflow-hidden flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-gradient-to-r from-indigo-900 via-blue-800 to-indigo-900 px-3 py-3 sm:px-8 sm:py-3 shadow-md border-b border-indigo-900/50 shrink-0">
       <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
@@ -23,6 +27,16 @@ export const PageHeader: React.FC<PageHeaderProps> = ({ title, icon, action }) =
           >
             <Menu className="w-5 h-5" />
           </button>
+
+          {!isDashboard && (
+            <Link
+              to="/dashboard"
+              className="p-1.5 rounded-lg text-white/90 hover:text-white hover:bg-white/20 transition-all duration-200 cursor-pointer"
+              aria-label="Home Dashboard"
+            >
+              <Home className="w-5 h-5" />
+            </Link>
+          )}
           
           {icon && (
             <div className="p-1.5 sm:p-2 bg-white/10 backdrop-blur-md text-white rounded-lg sm:rounded-xl border border-white/20 shadow-inner flex items-center justify-center">
