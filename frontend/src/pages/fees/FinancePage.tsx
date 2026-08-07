@@ -474,7 +474,7 @@ export const FinancePage: React.FC = () => {
                 <h3 className="text-xl font-bold text-gray-900">₹{dashboardStats.pendingDues.toLocaleString('en-IN')}</h3>
               </div>
             </div>
-            <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm flex items-center gap-4">
+            <div className="hidden md:flex bg-white rounded-2xl p-5 border border-gray-100 shadow-sm items-center gap-4">
               <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center shrink-0">
                 <Clock className="w-6 h-6 text-blue-600" />
               </div>
@@ -494,8 +494,8 @@ export const FinancePage: React.FC = () => {
             </div>
           </div>
 
-          {/* Charts Section */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          {/* Charts Section — Hidden on Mobile */}
+          <div className="hidden md:grid grid-cols-1 lg:grid-cols-3 gap-4">
             <div className="lg:col-span-2 bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
               <h3 className="text-sm font-bold text-gray-800 mb-4">Monthly Collection</h3>
               <div className="h-64 w-full">
