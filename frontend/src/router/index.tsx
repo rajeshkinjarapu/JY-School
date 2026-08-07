@@ -107,6 +107,9 @@ const AttendanceWrapper = () => {
   if (user?.role === 'STUDENT') {
     return <MyAttendancePage />;
   }
+  if (user?.role === 'TEACHER') {
+    return <AttendanceMarkingPage />;
+  }
   return <AttendanceDashboard />;
 };
 

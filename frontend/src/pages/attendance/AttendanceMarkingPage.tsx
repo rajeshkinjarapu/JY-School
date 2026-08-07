@@ -5,6 +5,7 @@ import { LoadingSpinner } from '../../components/UI/LoadingSpinner';
 import { ShieldAlert, Search, Calendar, Users, ListFilter, CheckCircle, XCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../hooks/useAuth';
+import { PageHeader } from '../../components/UI/PageHeader';
 
 export const AttendanceMarkingPage: React.FC = () => {
   const { user } = useAuth();
@@ -129,9 +130,15 @@ export const AttendanceMarkingPage: React.FC = () => {
   );
 
   return (
-    <div className="bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 min-h-screen p-0 sm:p-4 md:p-8 pb-24 overflow-x-hidden">
-      <div className="px-3 sm:px-0 space-y-6">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+    <div className="flex flex-col h-full bg-slate-50/50 min-h-screen animate-fade-in" style={{ minHeight: 'calc(100vh - 64px)' }}>
+      <PageHeader 
+        title="Mark Student Attendance"
+        icon={<Calendar className="w-6 h-6" />}
+      />
+
+      <div className="flex-1 overflow-auto p-4 sm:p-6 md:p-8">
+        <div className="max-w-5xl mx-auto space-y-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="flex bg-white/60 backdrop-blur-md p-1 rounded-2xl shadow-sm border border-white/50 w-full sm:w-auto overflow-hidden">
           <Link
             to="/attendance"
@@ -311,16 +318,8 @@ export const AttendanceMarkingPage: React.FC = () => {
               </div>
             )}
           </div>
-        )
-      ) : (
-        <div className="bg-white/80 backdrop-blur-xl border border-white rounded-3xl p-16 text-center shadow-xl shadow-indigo-100/50 flex flex-col items-center justify-center min-h-[400px]">
-          <div className="w-20 h-20 bg-indigo-100 rounded-full flex items-center justify-center mb-6 shadow-inner">
-            <ShieldAlert className="w-10 h-10 text-indigo-500" />
-          </div>
-          <h3 className="text-2xl font-black text-indigo-900 mb-2">No Class Selected</h3>
-          <p className="font-semibold text-slate-500 text-sm max-w-sm">Please select a class, section, and date, then click <strong className="text-indigo-600">VIEW</strong> to record student attendances.</p>
+        )}
         </div>
-      )}
       </div>
 
       {/* Mobile Sticky Save Button */}

@@ -138,7 +138,7 @@ const TeacherAttendancePage: React.FC = () => {
   if (loading) return <LoadingSpinner size="lg" className="h-[70vh]" />;
 
   return (
-    <div className="space-y-4 sm:space-y-6 md:space-y-8 p-0 sm:p-4 md:p-8 bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 min-h-screen animate-fade-in-up pb-10 overflow-x-hidden">
+    <div className="space-y-4 sm:space-y-6 md:space-y-8 p-4 sm:p-6 md:p-8 bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 min-h-screen animate-fade pb-10 overflow-x-hidden">
       <div className="flex justify-end mb-4">
         {/* Month Navigator */}
         <div className="flex items-center gap-3 bg-white p-2 rounded-xl shadow-sm border border-gray-100">
@@ -243,19 +243,18 @@ const TeacherAttendancePage: React.FC = () => {
 
       {/* TEACHER VIEW — Calendar */}
       {isTeacher && (
-        <div className="space-y-5 px-3 sm:px-0">
+        <div className="space-y-5">
           {/* Summary Cards */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             {[
-              { label: 'Present', value: summary.present, color: '#22c55e', bg: '#f0fdf4' },
-              { label: 'Absent', value: summary.absent, color: '#ef4444', bg: '#fef2f2' },
-              { label: 'Half Day', value: summary.halfDay, color: '#0ea5e9', bg: '#f0f9ff' },
-              { label: 'Attendance %', value: `${summary.rate}%`, color: '#8b5cf6', bg: '#faf5ff' },
+              { label: 'Present', value: summary.present, color: 'text-emerald-600', bg: 'bg-emerald-50/60 border-emerald-100' },
+              { label: 'Absent', value: summary.absent, color: 'text-rose-600', bg: 'bg-rose-50/60 border-rose-100' },
+              { label: 'Half Day', value: summary.halfDay, color: 'text-sky-600', bg: 'bg-sky-50/60 border-sky-100' },
+              { label: 'Attendance %', value: `${summary.rate}%`, color: 'text-violet-600', bg: 'bg-violet-50/60 border-violet-100' },
             ].map((stat, i) => (
-              <div key={i} className="rounded-[1.5rem] p-5 transition-all hover:-translate-y-1"
-                style={{ background: stat.bg, border: `1px solid ${stat.color}20`, boxShadow: `0 4px 20px ${stat.color}10` }}>
-                <p className="text-xs font-black uppercase tracking-wider mb-1" style={{ color: stat.color }}>{stat.label}</p>
-                <p className="text-3xl font-black" style={{ color: stat.color }}>{stat.value}</p>
+              <div key={i} className={`rounded-[1.25rem] p-4 sm:p-5 border shadow-sm transition-all hover:-translate-y-0.5 ${stat.bg}`}>
+                <p className={`text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-1 ${stat.color}`}>{stat.label}</p>
+                <p className={`text-2xl sm:text-3xl font-black ${stat.color}`}>{stat.value}</p>
               </div>
             ))}
           </div>

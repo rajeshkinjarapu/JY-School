@@ -79,10 +79,11 @@ const getColor = (name: string) => {
 export const TimetablePage: React.FC = () => {
   const { user } = useAuth();
   const isAdmin = user?.role === "SUPER_ADMIN" || user?.role === "ADMIN";
+  const isTeacher = user?.role === "TEACHER";
 
   const [activeTab, setActiveTab] = useState<
     "class" | "teacher" | "workload" | "settings"
-  >("class");
+  >(isTeacher ? "teacher" : "class");
   const [activeCategory, setActiveCategory] = useState<"PRIMARY" | "HIGHER">(
     "PRIMARY",
   );
@@ -143,8 +144,13 @@ export const TimetablePage: React.FC = () => {
         setModalClassId(cl[0].id);
       }
       if (tl.length) {
-        setSelectedTeacherId(tl[0].id);
-        setModalTeacherId(tl[0].id);
+        if (isTeacher && user?.teacher?.id) {
+          setSelectedTeacherId(user.teacher.id);
+          setModalTeacherId(user.teacher.id);
+        } else {
+          setSelectedTeacherId(tl[0].id);
+          setModalTeacherId(tl[0].id);
+        }
       }
     } catch {
       /* ignore */
@@ -228,6 +234,12 @@ export const TimetablePage: React.FC = () => {
     fetchBaseData();
     fetchConfigs();
   }, []);
+  useEffect(() => {
+    if (isTeacher && user?.teacher?.id) {
+      setSelectedTeacherId(user.teacher.id);
+      setModalTeacherId(user.teacher.id);
+    }
+  }, [user, isTeacher]);
   useEffect(() => {
     if (selectedClassId) fetchClassSchedule();
   }, [selectedClassId]);
@@ -572,21 +584,23 @@ export const TimetablePage: React.FC = () => {
         icon={<Calendar className="w-6 h-6" />}
       />
 
-      <div className="bg-white border-b border-gray-200 px-4 py-2 shrink-0 no-print flex gap-2 overflow-x-auto hide-scrollbar">
-        {tabs.map((t) => (
-          <button
-            key={t.key}
-            onClick={() => setActiveTab(t.key as any)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all cursor-pointer shrink-0 ${
-              activeTab === t.key
-                ? "bg-indigo-50 text-indigo-700 shadow-sm border border-indigo-100"
-                : "text-gray-600 hover:bg-gray-50 hover:text-gray-900 border border-transparent"
-            }`}
-          >
-            {t.icon} <span>{t.label}</span>
-          </button>
-        ))}
-      </div>
+      {!isTeacher && (
+        <div className="bg-white border-b border-gray-200 px-4 py-2 shrink-0 no-print flex gap-2 overflow-x-auto hide-scrollbar">
+          {tabs.map((t) => (
+            <button
+              key={t.key}
+              onClick={() => setActiveTab(t.key as any)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all cursor-pointer shrink-0 ${
+                activeTab === t.key
+                  ? "bg-indigo-50 text-indigo-700 shadow-sm border border-indigo-100"
+                  : "text-gray-600 hover:bg-gray-50 hover:text-gray-900 border border-transparent"
+              }`}
+            >
+              {t.icon} <span>{t.label}</span>
+            </button>
+          ))}
+        </div>
+      )}
 
       <div className="flex-1 overflow-auto p-4 md:p-6 print:p-0">
         <div className="space-y-5 max-w-7xl mx-auto print:max-w-none print:w-[297mm] print:h-auto">
@@ -597,7 +611,11 @@ export const TimetablePage: React.FC = () => {
             <span className="text-[10px] font-extrabold uppercase text-gray-400 tracking-widest">
               Filter:
             </span>
-            {activeTab === "class" ? (
+            {isTeacher ? (
+              <span className="text-sm font-bold text-gray-700 dark:text-gray-300">
+                {user?.name} ({user?.teacher?.employeeId || ''})
+              </span>
+            ) : activeTab === "class" ? (
               <select
                 value={selectedClassId}
                 onChange={(e) => setSelectedClassId(e.target.value)}
