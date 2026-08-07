@@ -55,11 +55,12 @@ export const create = async (req: AuthRequest, res: Response, next: NextFunction
   // If no classId provided, create subject across all classes
   const allClasses = await prisma.class.findMany();
   if (allClasses.length === 0) {
-    // If no classes exist at all, create a default dummy subject entry or return error
     return next(createError('No classes found in the system.', 400));
   }
 
   const createdSubjects = [];
+  let lastFoundSubject = null;
+
   for (const cls of allClasses) {
     const existing = await prisma.subject.findFirst({ where: { name: baseName, classId: cls.id } });
     if (!existing) {
@@ -74,10 +75,17 @@ export const create = async (req: AuthRequest, res: Response, next: NextFunction
           data: { classId: cls.id, subjectId: sub.id, teacherId },
         }).catch(() => {});
       }
+    } else {
+      lastFoundSubject = existing;
     }
   }
 
-  return successResponse(res, createdSubjects[0] || { name: baseName }, 'Subject created successfully', 201);
+  return successResponse(
+    res, 
+    createdSubjects[0] || lastFoundSubject || { name: baseName }, 
+    createdSubjects.length > 0 ? 'Subject created successfully across classes' : 'Subject already exists in all classes', 
+    200
+  );
 };
 
 export const update = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {

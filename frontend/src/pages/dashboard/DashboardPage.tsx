@@ -310,13 +310,13 @@ const AdminView: React.FC<{ data: any }> = ({ data }) => {
           <SectionHeader title="Recent Payments" subtitle="Latest fee transactions" icon={Wallet} iconColor="#6366f1"
             action={<Link to="/fee-payment" className="flex items-center gap-1 text-xs font-bold text-indigo-600 hover:text-indigo-700">View All <ChevronRight className="w-3.5 h-3.5" /></Link>} />
           
-          <div className="w-full overflow-x-auto">
-            <table className="w-full border-collapse border border-gray-200 dark:border-gray-700 text-left">
+          <div className="w-full overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700">
+            <table className="w-full table-fixed text-left">
               <thead>
                 <tr className="bg-slate-50 dark:bg-gray-800 text-[10px] font-black uppercase text-slate-500 tracking-wider">
-                  <th className="border border-gray-200 dark:border-gray-700 p-2.5">Student</th>
-                  <th className="border border-gray-200 dark:border-gray-700 p-2.5 w-24 text-center">Date</th>
-                  <th className="border border-gray-200 dark:border-gray-700 p-2.5 w-28 text-right">Amount</th>
+                  <th className="border-b border-r border-gray-200 dark:border-gray-700 p-2.5 w-[50%]">Student</th>
+                  <th className="border-b border-r border-gray-200 dark:border-gray-700 p-2.5 w-[25%] text-center whitespace-nowrap">Date</th>
+                  <th className="border-b border-gray-200 dark:border-gray-700 p-2.5 w-[25%] text-right whitespace-nowrap">Amount</th>
                 </tr>
               </thead>
               <tbody>
@@ -325,7 +325,7 @@ const AdminView: React.FC<{ data: any }> = ({ data }) => {
                   if (payments.length === 0) {
                     return (
                       <tr>
-                        <td colSpan={3} className="border border-gray-200 dark:border-gray-700 text-sm text-slate-400 text-center py-8">
+                        <td colSpan={3} className="text-sm text-slate-400 text-center py-8">
                           No recent payments.
                         </td>
                       </tr>
@@ -334,30 +334,22 @@ const AdminView: React.FC<{ data: any }> = ({ data }) => {
                   
                   return payments.map((p: any, idx: number) => {
                     const studentName = p.student?.user?.name || p.student?.name || 'Unknown Student';
-                    const photo = p.student?.user?.photoUrl;
                     const dateStr = p.paymentDate 
                       ? new Date(p.paymentDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })
                       : '-';
                     const amountStr = `₹${Number(p.amountPaid).toLocaleString('en-IN')}`;
                     
                     return (
-                      <tr key={idx} className="hover:bg-slate-50 dark:hover:bg-gray-800 transition-colors">
-                        <td className="border border-gray-200 dark:border-gray-700 p-2.5">
-                          <div className="flex items-center gap-2.5">
-                            {photo ? (
-                              <img src={getPhotoUrl(photo)} alt="" className="w-8 h-8 rounded-full object-cover border border-slate-100" />
-                            ) : (
-                              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-white font-black text-xs flex items-center justify-center shrink-0">
-                                {studentName.charAt(0)}
-                              </div>
-                            )}
-                            <span className="text-xs font-bold text-slate-700 whitespace-nowrap">{studentName}</span>
-                          </div>
+                      <tr key={idx} className="hover:bg-slate-50 dark:hover:bg-gray-800 transition-colors border-b last:border-b-0 border-gray-200 dark:border-gray-700">
+                        <td className="p-2.5 border-r border-gray-200 dark:border-gray-700 truncate">
+                          <span className="text-xs font-bold text-slate-800 dark:text-gray-200 truncate block" title={studentName}>
+                            {studentName}
+                          </span>
                         </td>
-                        <td className="border border-gray-200 dark:border-gray-700 p-2.5 text-center text-xs font-semibold text-slate-500">
+                        <td className="p-2.5 border-r border-gray-200 dark:border-gray-700 text-center text-xs font-semibold text-slate-500 whitespace-nowrap">
                           {dateStr}
                         </td>
-                        <td className="border border-gray-200 dark:border-gray-700 p-2.5 text-right text-xs font-black text-slate-900">
+                        <td className="p-2.5 text-right text-xs font-black text-slate-900 dark:text-white whitespace-nowrap">
                           {amountStr}
                         </td>
                       </tr>
