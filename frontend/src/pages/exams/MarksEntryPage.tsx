@@ -212,7 +212,7 @@ export const MarksEntryPage: React.FC = () => {
             <ArrowLeft className="w-5 h-5 text-white" />
           </Link>
           <div>
-            <h2 className="text-xl md:text-2xl font-black tracking-tight text-white uppercase drop-shadow-sm">{exam?.name}</h2>
+            <h2 className="text-xs sm:text-lg md:text-2xl font-black tracking-tight text-white uppercase drop-shadow-sm whitespace-nowrap truncate max-w-[240px] sm:max-w-none">{exam?.name}</h2>
             <div className="flex flex-wrap items-center gap-3 mt-1">
               <span className="bg-white/20 px-3 py-1 text-[11px] md:text-xs font-bold uppercase tracking-wider rounded-lg backdrop-blur-sm border border-white/10">
                 Class: {currentClass?.name}-{currentClass?.section}
