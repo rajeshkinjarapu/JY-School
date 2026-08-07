@@ -63,7 +63,7 @@ export const getConversation = async (req: AuthRequest, res: Response, next: Nex
     data: { readStatus: 'READ' },
   });
 
-  successResponse(res, { partner, messages }, 'Conversation fetched');
+  successResponse(res, messages, 'Conversation fetched');
 };
 
 export const sendMessage = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
