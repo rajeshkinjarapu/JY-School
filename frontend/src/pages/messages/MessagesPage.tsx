@@ -55,9 +55,11 @@ export const MessagesPage: React.FC = () => {
   const fetchConversations = async () => {
     try {
       const res: any = await api.get('/api/messages/conversations');
-      setConversations(res.data || []);
+      const list = Array.isArray(res.data) ? res.data : (res.data?.data || []);
+      setConversations(Array.isArray(list) ? list : []);
     } catch (e) {
       console.error(e);
+      setConversations([]);
     } finally {
       setLoading(false);
     }
@@ -66,9 +68,11 @@ export const MessagesPage: React.FC = () => {
   const fetchMessages = async (partnerId: string) => {
     try {
       const res: any = await api.get(`/api/messages/conversation/${partnerId}`);
-      setMessages(res.data || []);
+      const list = Array.isArray(res.data) ? res.data : (res.data?.data || []);
+      setMessages(Array.isArray(list) ? list : []);
     } catch (e) {
       console.error(e);
+      setMessages([]);
     }
   };
 
@@ -103,8 +107,8 @@ export const MessagesPage: React.FC = () => {
         content: content,
       });
 
-      const savedMessage = res.data;
-      setMessages((prev) => [...prev, savedMessage]);
+      const savedMessage = res.data?.data || res.data;
+      setMessages((prev) => [...(Array.isArray(prev) ? prev : []), savedMessage]);
 
       socketRef.current?.emit('send_message', {
         senderId: user!.id,
@@ -122,10 +126,12 @@ export const MessagesPage: React.FC = () => {
   const fetchUsers = async () => {
     try {
       const res: any = await api.get('/api/users', { params: { search: userSearch } });
-      const list = (res.data.data || res.data || []).filter((u: any) => u.id !== user!.id);
+      const raw = Array.isArray(res.data) ? res.data : (res.data?.data || res.data?.users || []);
+      const list = Array.isArray(raw) ? raw.filter((u: any) => u.id !== user!.id) : [];
       setUsersList(list);
     } catch (e) {
       console.error(e);
+      setUsersList([]);
     }
   };
 
@@ -140,7 +146,8 @@ export const MessagesPage: React.FC = () => {
     setShowNewChatModal(false);
   };
 
-  const filteredConversations = conversations.filter(c => {
+  const safeConversations = Array.isArray(conversations) ? conversations : [];
+  const filteredConversations = safeConversations.filter(c => {
     if (!searchQuery.trim()) return true;
     return c.partner?.name?.toLowerCase().includes(searchQuery.toLowerCase());
   });
