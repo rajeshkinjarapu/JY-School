@@ -48,7 +48,7 @@ export const NotificationBell: React.FC = () => {
     fetchNotifications(true);
     const interval = setInterval(() => {
       fetchNotifications(false);
-    }, 15000); // Poll every 15 seconds
+    }, 45000); // Poll every 45 seconds
 
     return () => clearInterval(interval);
   }, []);
