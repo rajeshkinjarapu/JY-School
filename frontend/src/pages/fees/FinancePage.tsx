@@ -207,7 +207,7 @@ export const FinancePage: React.FC = () => {
       const isStudent = user?.role === 'STUDENT';
       const [payRes, studRes]: any = await Promise.allSettled([
         api.get('/api/fees/payments?limit=5000'),
-        isStudent ? Promise.resolve({ data: [] }) : api.get('/api/students?limit=5000'),
+        isStudent ? Promise.resolve({ data: [] }) : api.get('/api/students?limit=5000', { timeout: 60000 }),
       ]);
 
       let paymentArray = payments;
@@ -248,7 +248,7 @@ export const FinancePage: React.FC = () => {
         // Direct fallback if empty array returned from limit query
         if (newStudents.length === 0 && !isStudent) {
           try {
-            const fallbackRes: any = await api.get('/api/students');
+            const fallbackRes: any = await api.get('/api/students', { timeout: 60000 });
             const fbData = fallbackRes?.data?.data || fallbackRes?.data || fallbackRes || [];
             if (Array.isArray(fbData) && fbData.length > 0) {
               newStudents = fbData;
@@ -484,7 +484,7 @@ export const FinancePage: React.FC = () => {
         icon={<CreditCard className="w-6 h-6" />}
       />
 
-      <div className={`flex-1 overflow-auto ${activeTab === 'home' ? 'p-4 md:p-6' : 'p-3 md:p-4'}`}>
+      <div className={`flex-1 overflow-auto ${activeTab === 'home' ? 'p-4 md:p-6' : 'p-0'}`}>
       {/* ══ HOME GRID VIEW ══ */}
       {activeTab === 'home' && (
         <div className="w-full animate-fade-in space-y-6">
@@ -589,7 +589,7 @@ export const FinancePage: React.FC = () => {
       </div>
 
       {/* ══ RIGHT CONTENT PANEL ══ */}
-      <div className="flex-1 bg-white dark:bg-gray-900 md:border border-gray-150 dark:border-gray-800 md:rounded-2xl p-4 md:p-6 md:shadow-sm">
+      <div className="flex-1 bg-white dark:bg-gray-900 p-4 md:p-6 md:px-8">
         <>
           {/* ── 1. STUDENT FEE DETAILS TAB ── */}
             {activeTab === 'student-fee-details' && (
