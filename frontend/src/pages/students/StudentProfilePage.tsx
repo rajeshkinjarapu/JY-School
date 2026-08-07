@@ -12,7 +12,7 @@ import toast from 'react-hot-toast';
 import { 
   ArrowLeft, Mail, Phone, Printer, User2, Calendar, 
   Droplet, ClipboardCheck, Users, Fingerprint, 
-  Hash, MapPin, Sparkles, GraduationCap, Camera, CreditCard, FileDown, Trash2, Edit2
+  Hash, MapPin, Sparkles, GraduationCap, Camera, CreditCard, FileDown, Trash2, Edit2, X
 } from 'lucide-react';
 import { FeeReceiptPrint } from '../../components/fees/FeeReceiptPrint';
 import { PageHeader } from '../../components/UI/PageHeader';
@@ -52,6 +52,7 @@ export const StudentProfilePage: React.FC = () => {
   // Change Name Modal States
   const [showNameModal, setShowNameModal] = useState(false);
   const [newStudentName, setNewStudentName] = useState('');
+  const [viewTransaction, setViewTransaction] = useState<any>(null);
   const fetchStudentProfile = async () => {
     try {
       const [studentRes, structRes, classRes]: any = await Promise.all([
@@ -282,7 +283,7 @@ export const StudentProfilePage: React.FC = () => {
         }
       />
       
-      <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 pt-2">
+      <div className="flex-1 overflow-y-auto p-2.5 sm:p-6 lg:p-8 pt-2">
         <div className="w-full space-y-4">
           
           {/* Simple Profile Header */}
@@ -586,12 +587,12 @@ export const StudentProfilePage: React.FC = () => {
               <table className="w-full text-xs text-left">
                 <thead className="bg-gray-50/80 dark:bg-gray-800/40 uppercase text-gray-500 font-bold border-b border-gray-100 dark:border-gray-800 sticky top-0">
                   <tr>
-                    <th className="px-4 py-2">Fee Structure</th>
-                    <th className="px-4 py-2">Amount</th>
-                    <th className="px-4 py-2">Date</th>
-                    <th className="px-4 py-2">Method</th>
-                    <th className="px-4 py-2">Receipt No</th>
-                    <th className="px-4 py-2 text-right">Actions</th>
+                    <th className="px-3 py-2">Fee Structure</th>
+                    <th className="px-3 py-2">Amount</th>
+                    <th className="px-3 py-2">Date</th>
+                    <th className="hidden md:table-cell px-4 py-2">Method</th>
+                    <th className="hidden md:table-cell px-4 py-2">Receipt No</th>
+                    <th className="hidden md:table-cell px-4 py-2 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50 dark:divide-gray-800/60">
@@ -600,16 +601,25 @@ export const StudentProfilePage: React.FC = () => {
                   ) : (
                     student.feePayments?.map((p: any) => (
                       <tr key={p.id} className="hover:bg-gray-50/50 dark:hover:bg-gray-800/20 transition-colors">
-                        <td className="px-4 py-2 font-semibold text-gray-800 dark:text-gray-200">{p.feeStructure?.name}</td>
-                        <td className="px-4 py-2 font-black text-emerald-600">₹{p.amountPaid}</td>
-                        <td className="px-4 py-2 font-medium text-gray-500">{new Date(p.paymentDate || p.createdAt).toLocaleDateString('en-GB')}</td>
-                        <td className="px-4 py-2">
+                        <td className="px-3 py-2 font-semibold text-gray-800 dark:text-gray-200">{p.feeStructure?.name}</td>
+                        <td className="px-3 py-2">
+                          <button
+                            type="button"
+                            onClick={() => setViewTransaction(p)}
+                            className="font-black text-emerald-600 hover:text-emerald-700 underline underline-offset-2 decoration-emerald-300 md:no-underline md:pointer-events-none cursor-pointer text-left"
+                            title="Click to view full transaction details"
+                          >
+                            ₹{p.amountPaid}
+                          </button>
+                        </td>
+                        <td className="px-3 py-2 font-medium text-gray-500">{new Date(p.paymentDate || p.createdAt).toLocaleDateString('en-GB')}</td>
+                        <td className="hidden md:table-cell px-4 py-2">
                           <span className={`inline-flex px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider ${p.method === 'UPI' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}`}>
                             {p.method}
                           </span>
                         </td>
-                        <td className="px-4 py-2 font-mono text-xs font-semibold text-gray-400 truncate max-w-[120px]">{p.receiptNo || 'N/A'}</td>
-                        <td className="px-4 py-2 text-right flex items-center justify-end gap-1">
+                        <td className="hidden md:table-cell px-4 py-2 font-mono text-xs font-semibold text-gray-400 truncate max-w-[120px]">{p.receiptNo || 'N/A'}</td>
+                        <td className="hidden md:table-cell px-4 py-2 text-right flex items-center justify-end gap-1">
                           <button onClick={() => handlePrintReceipt(p)} className="p-1.5 rounded-lg text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-colors" title="Print Receipt">
                             <FileDown className="w-3.5 h-3.5" />
                           </button>
@@ -637,6 +647,80 @@ export const StudentProfilePage: React.FC = () => {
               </table>
             </div>
           </div>
+
+        </div>
+
+      {/* Transaction Details Popup Modal for Mobile */}
+      {viewTransaction && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-gray-900 rounded-3xl p-5 w-full max-w-xs border border-gray-100 dark:border-gray-800 shadow-2xl space-y-4 animate-fade-in">
+            <div className="flex justify-between items-center pb-3 border-b border-gray-100 dark:border-gray-800">
+              <h3 className="text-sm font-extrabold text-gray-900 dark:text-white">Transaction Details</h3>
+              <button onClick={() => setViewTransaction(null)} className="p-1 rounded-full text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="space-y-2.5 text-xs">
+              <div className="flex justify-between py-1 border-b border-gray-50 dark:border-gray-800">
+                <span className="text-gray-400 font-bold uppercase text-[10px]">Fee Structure</span>
+                <span className="font-bold text-gray-900 dark:text-white">{viewTransaction.feeStructure?.name || 'N/A'}</span>
+              </div>
+              <div className="flex justify-between py-1 border-b border-gray-50 dark:border-gray-800">
+                <span className="text-gray-400 font-bold uppercase text-[10px]">Amount Paid</span>
+                <span className="font-black text-emerald-600 text-sm">₹{viewTransaction.amountPaid}</span>
+              </div>
+              <div className="flex justify-between py-1 border-b border-gray-50 dark:border-gray-800">
+                <span className="text-gray-400 font-bold uppercase text-[10px]">Date</span>
+                <span className="font-semibold text-gray-700 dark:text-gray-300">{new Date(viewTransaction.paymentDate || viewTransaction.createdAt).toLocaleDateString('en-GB')}</span>
+              </div>
+              <div className="flex justify-between py-1 border-b border-gray-50 dark:border-gray-800">
+                <span className="text-gray-400 font-bold uppercase text-[10px]">Method</span>
+                <span className="font-extrabold px-2 py-0.5 rounded bg-purple-100 text-purple-700 text-[10px]">{viewTransaction.method}</span>
+              </div>
+              <div className="flex justify-between py-1 border-b border-gray-50 dark:border-gray-800">
+                <span className="text-gray-400 font-bold uppercase text-[10px]">Receipt No</span>
+                <span className="font-mono font-bold text-gray-600 dark:text-gray-300">{viewTransaction.receiptNo || 'N/A'}</span>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 pt-2">
+              <button
+                onClick={() => { handlePrintReceipt(viewTransaction); setViewTransaction(null); }}
+                className="flex-1 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 border border-indigo-100 cursor-pointer"
+              >
+                <FileDown className="w-3.5 h-3.5" /> Receipt
+              </button>
+              {(user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN' || user?.role === 'ACCOUNTANT') && (
+                <>
+                  <button
+                    onClick={() => {
+                      setEditingPayment({
+                        ...viewTransaction,
+                        paymentDate: viewTransaction.paymentDate ? new Date(viewTransaction.paymentDate).toISOString().split('T')[0] : new Date(viewTransaction.createdAt).toISOString().split('T')[0]
+                      });
+                      setShowEditModal(true);
+                      setViewTransaction(null);
+                    }}
+                    className="p-2 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-xl font-bold text-xs cursor-pointer"
+                    title="Edit"
+                  >
+                    <Edit2 className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    onClick={() => {
+                      handleDeletePayment(viewTransaction.id);
+                      setViewTransaction(null);
+                    }}
+                    className="p-2 bg-rose-50 text-rose-600 hover:bg-rose-100 rounded-xl font-bold text-xs cursor-pointer"
+                    title="Delete"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
         </div>
 
