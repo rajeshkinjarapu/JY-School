@@ -387,6 +387,7 @@ export const ProfilePage: React.FC = () => {
             </button>
           </form>
         </div>
+      )}
       </div>
       </div>
     </div>
