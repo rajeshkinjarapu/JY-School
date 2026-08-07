@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, Save, Plus, X, Edit3, Calendar, FileText, CheckCircle, Hash } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../../api/axios';
+import { PageHeader } from '../../components/UI/PageHeader';
 
 export const CreateExamPage: React.FC = () => {
   const navigate = useNavigate();
@@ -94,56 +95,52 @@ export const CreateExamPage: React.FC = () => {
   };
 
   return (
-    <div className="flex-1 w-full p-4 sm:p-6 lg:p-8 bg-slate-50 min-h-screen">
-      <div className="max-w-5xl mx-auto space-y-6">
-        
-        {/* Header Section */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <button 
-              onClick={() => navigate('/exams')}
-              className="p-2 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 text-slate-500 transition-colors shadow-sm"
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </button>
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
-                {editExam ? 'Edit Exam Configuration' : 'Create New Exam'}
-              </h1>
-              <p className="text-sm font-semibold text-slate-500 mt-1">
-                Configure exam details, assign classes, and set subjects & marks.
-              </p>
-            </div>
-          </div>
-        </div>
+    <div className="flex flex-col h-full bg-slate-50/50 animate-fade-in" style={{ minHeight: 'calc(100vh - 64px)' }}>
+      <PageHeader 
+        title={editExam ? 'Edit Exam Configuration' : 'Create New Exam'}
+        icon={
+          <button 
+            type="button"
+            onClick={() => navigate('/exams')}
+            className="text-white hover:text-indigo-200 transition-colors cursor-pointer flex items-center justify-center"
+            title="Go Back"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+        }
+      />
 
-        <form onSubmit={handleCreateExam} className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="flex-1 overflow-auto p-4 sm:p-6">
+        <form onSubmit={handleCreateExam} className="max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
           
           {/* Main Form Left Column */}
           <div className="lg:col-span-2 space-y-6">
             
             {/* General Settings Card */}
-            <div className="bg-white rounded-[2rem] border border-slate-200 shadow-sm p-6 sm:p-8">
-              <h2 className="text-lg font-black text-slate-800 flex items-center gap-2 mb-6">
-                <FileText className="w-5 h-5 text-indigo-500" /> General Details
+            <div className="bg-white rounded-[2rem] border border-slate-200/80 shadow-sm p-6 sm:p-8">
+              <h2 className="text-base sm:text-lg font-black text-slate-800 flex items-center gap-2.5 mb-6">
+                <span className="p-1.5 bg-indigo-50 text-indigo-600 rounded-lg dark:bg-indigo-950/50 dark:text-indigo-400">
+                  <FileText className="w-5 h-5" />
+                </span>
+                General Details
               </h2>
               
               <div className="space-y-6">
                 <div>
                   <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-3">Exam Category</label>
-                  <div className="flex flex-wrap gap-4">
-                    <label className={`flex items-center gap-3 p-4 rounded-2xl border-2 cursor-pointer transition-all ${examCategory === 'JEE' ? 'border-indigo-500 bg-indigo-50' : 'border-slate-100 hover:border-slate-200 bg-white'}`}>
-                      <input type="radio" name="examCategory" value="JEE" checked={examCategory === 'JEE'} onChange={() => { setExamCategory('JEE'); setBoardExamType(''); setExamName('JEE Mains Model Examination'); }} className="w-5 h-5 text-indigo-600 focus:ring-indigo-500" />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <label className={`flex items-center gap-3.5 p-4 rounded-2xl border-2 cursor-pointer transition-all ${examCategory === 'JEE' ? 'border-amber-500 bg-amber-50/40 text-amber-900 shadow-sm' : 'border-slate-100 hover:border-slate-200 bg-white'}`}>
+                      <input type="radio" name="examCategory" value="JEE" checked={examCategory === 'JEE'} onChange={() => { setExamCategory('JEE'); setBoardExamType(''); setExamName('JEE Mains Model Examination'); }} className="w-5 h-5 text-amber-600 focus:ring-amber-500 cursor-pointer" />
                       <div>
-                        <div className="text-sm font-bold text-slate-800">JEE Mains Exams</div>
-                        <div className="text-xs font-medium text-slate-500 mt-0.5">Objective patterns</div>
+                        <div className="text-sm font-black text-slate-800">JEE Mains Exams</div>
+                        <div className="text-xs font-bold text-slate-500 mt-0.5">Objective patterns</div>
                       </div>
                     </label>
-                    <label className={`flex items-center gap-3 p-4 rounded-2xl border-2 cursor-pointer transition-all ${examCategory === 'BOARD' ? 'border-indigo-500 bg-indigo-50' : 'border-slate-100 hover:border-slate-200 bg-white'}`}>
-                      <input type="radio" name="examCategory" value="BOARD" checked={examCategory === 'BOARD'} onChange={() => { setExamCategory('BOARD'); setExamName(''); }} className="w-5 h-5 text-indigo-600 focus:ring-indigo-500" />
+                    <label className={`flex items-center gap-3.5 p-4 rounded-2xl border-2 cursor-pointer transition-all ${examCategory === 'BOARD' ? 'border-indigo-500 bg-indigo-50/40 text-indigo-900 shadow-sm' : 'border-slate-100 hover:border-slate-200 bg-white'}`}>
+                      <input type="radio" name="examCategory" value="BOARD" checked={examCategory === 'BOARD'} onChange={() => { setExamCategory('BOARD'); setExamName(''); }} className="w-5 h-5 text-indigo-600 focus:ring-indigo-500 cursor-pointer" />
                       <div>
-                        <div className="text-sm font-bold text-slate-800">Board Exams</div>
-                        <div className="text-xs font-medium text-slate-500 mt-0.5">FA / SA / Finals</div>
+                        <div className="text-sm font-black text-slate-800">Board Exams</div>
+                        <div className="text-xs font-bold text-slate-500 mt-0.5">FA / SA / Finals</div>
                       </div>
                     </label>
                   </div>
@@ -187,10 +184,13 @@ export const CreateExamPage: React.FC = () => {
             </div>
 
             {/* Subjects Card */}
-            <div className="bg-white rounded-[2rem] border border-slate-200 shadow-sm p-6 sm:p-8">
+            <div className="bg-white rounded-[2rem] border border-slate-200/80 shadow-sm p-6 sm:p-8">
               <div className="flex justify-between items-center mb-6">
-                <h2 className="text-lg font-black text-slate-800 flex items-center gap-2">
-                  <Edit3 className="w-5 h-5 text-indigo-500" /> Subjects & Max Marks
+                <h2 className="text-base sm:text-lg font-black text-slate-800 flex items-center gap-2.5">
+                  <span className="p-1.5 bg-emerald-50 text-emerald-600 rounded-lg dark:bg-emerald-950/50 dark:text-emerald-400">
+                    <Edit3 className="w-5 h-5" />
+                  </span>
+                  Subjects & Max Marks
                 </h2>
                 <button 
                   type="button" 
@@ -259,12 +259,12 @@ export const CreateExamPage: React.FC = () => {
                 ))}
                 
                 {selectedExamSubjects.length === 0 && (
-                  <div className="py-12 flex flex-col items-center justify-center text-center bg-slate-50 border-2 border-dashed border-slate-200 rounded-[2rem]">
-                    <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-sm mb-4 text-slate-300">
-                      <Edit3 className="w-8 h-8" />
+                  <div className="py-12 flex flex-col items-center justify-center text-center bg-slate-50/60 border-2 border-dashed border-slate-200 rounded-[2rem]">
+                    <div className="w-14 h-14 bg-white rounded-full flex items-center justify-center shadow-md mb-4 text-slate-400">
+                      <Edit3 className="w-6 h-6" />
                     </div>
                     <h3 className="text-sm font-black text-slate-700">No Subjects Added</h3>
-                    <p className="text-xs font-semibold text-slate-500 mt-2 max-w-xs">
+                    <p className="text-xs font-bold text-slate-500 mt-2 max-w-xs leading-relaxed">
                       Click the "Add Subject" button above to start configuring the exam structure.
                     </p>
                   </div>
@@ -275,11 +275,14 @@ export const CreateExamPage: React.FC = () => {
 
           {/* Sidebar / Classes Column */}
           <div className="space-y-6">
-            <div className="bg-white rounded-[2rem] border border-slate-200 shadow-sm p-6 sm:p-8 sticky top-6">
-              <h2 className="text-lg font-black text-slate-800 flex items-center gap-2 mb-2">
-                <CheckCircle className="w-5 h-5 text-indigo-500" /> Assign Classes
+            <div className="bg-white rounded-[2rem] border border-slate-200/80 shadow-sm p-6 sm:p-8 sticky top-6">
+              <h2 className="text-base sm:text-lg font-black text-slate-800 flex items-center gap-2.5 mb-1">
+                <span className="p-1.5 bg-amber-50 text-amber-600 rounded-lg dark:bg-amber-950/50 dark:text-amber-400">
+                  <CheckCircle className="w-5 h-5" />
+                </span>
+                Assign Classes
               </h2>
-              <p className="text-xs font-semibold text-slate-500 mb-6">
+              <p className="text-xs font-bold text-slate-500 mb-6 pl-9">
                 Select which classes will take this exam.
               </p>
               

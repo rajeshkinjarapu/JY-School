@@ -12,6 +12,52 @@ export const ProgressCardTemplate: React.FC<ProgressCardTemplateProps> = ({
   exam = {}, 
   settings = {} 
 }) => {
+  // Extract subjects from the exam
+  let examSubjects: any[] = [];
+  if (exam && Array.isArray(exam.subjects)) {
+    examSubjects = exam.subjects;
+  } else if (settings && Array.isArray(settings.subjects)) {
+    examSubjects = settings.subjects;
+  }
+
+  // Compile final marks list based on all configured subjects
+  let finalMarks: any[] = [];
+  if (examSubjects.length > 0) {
+    finalMarks = examSubjects.map((sub: any) => {
+      const studentMark = data.marks?.find((m: any) => 
+        m.subject.toLowerCase() === sub.name.toLowerCase() ||
+        sub.name.toLowerCase().includes(m.subject.toLowerCase()) ||
+        m.subject.toLowerCase().includes(sub.name.toLowerCase())
+      );
+      
+      const obtained = studentMark !== undefined ? studentMark.obtained : '-';
+      return {
+        subject: sub.name,
+        maxMarks: Number(sub.maxMarks) || 100,
+        obtained: obtained,
+      };
+    });
+  } else {
+    finalMarks = data.marks && data.marks.length > 0 ? data.marks.map((m: any) => ({
+      subject: m.subject,
+      maxMarks: Number(m.maxMarks) || 100,
+      obtained: m.obtained,
+    })) : [
+      { subject: "Mathematics", maxMarks: 100, obtained: 98 },
+      { subject: "Physics", maxMarks: 100, obtained: 95 },
+      { subject: "Chemistry", maxMarks: 100, obtained: 92 },
+    ];
+  }
+
+  const TOTAL_MAX_MARKS = finalMarks.reduce((sum: number, m: any) => sum + (Number(m.maxMarks) || 100), 0);
+  
+  const TOTAL_OBTAINED = finalMarks.reduce((sum: number, m: any) => {
+    const num = Number(m.obtained);
+    return sum + (isNaN(num) ? 0 : num);
+  }, 0);
+
+  const totalPct = TOTAL_MAX_MARKS > 0 ? ((TOTAL_OBTAINED / TOTAL_MAX_MARKS) * 100).toFixed(1) : '0.0';
+
   // Fallback data for preview
   const safeData = {
     studentName: data.studentName || "VENKATA SAI KUMAR",
@@ -21,20 +67,23 @@ export const ProgressCardTemplate: React.FC<ProgressCardTemplateProps> = ({
     mobile: data.mobile || "+91 9876543210",
     rank: data.rank || "1",
     photo: data.photo || "",
-    total: data.total || 0,
+    total: TOTAL_OBTAINED,
     academicYear: data.academicYear || "2026-2027",
     location: data.location || "Narasannapeta",
-    marks: data.marks && data.marks.length > 0 ? data.marks : [
-      { subject: "Mathematics", maxMarks: 100, obtained: 98 },
-      { subject: "Physics", maxMarks: 100, obtained: 95 },
-      { subject: "Chemistry", maxMarks: 100, obtained: 92 },
-    ]
+    marks: finalMarks
   };
 
-  const TOTAL_MAX_MARKS = safeData.marks.reduce((sum: number, m: any) => sum + (Number(m.maxMarks) || 100), 0);
-  const totalPct = TOTAL_MAX_MARKS > 0 ? ((safeData.total / TOTAL_MAX_MARKS) * 100).toFixed(1) : '0.0';
-  const barWidth = Math.min(Number(totalPct), 100);
-  const PASS_THRESHOLD = 35;
+  const getPerformanceRemark = (pct: number) => {
+    if (pct >= 90) return { label: 'OUTSTANDING', comment: 'Excellent performance! Keep up the brilliant work.', color: 'text-emerald-600 bg-emerald-50 border-emerald-200' };
+    if (pct >= 80) return { label: 'EXCELLENT', comment: 'Excellent effort. Very good academic results.', color: 'text-teal-600 bg-teal-50 border-teal-200' };
+    if (pct >= 70) return { label: 'VERY GOOD', comment: 'Very good progress. With a bit more effort, you can reach outstanding.', color: 'text-indigo-600 bg-indigo-50 border-indigo-200' };
+    if (pct >= 60) return { label: 'GOOD', comment: 'Good work. Steady preparation will help secure higher grades.', color: 'text-blue-600 bg-blue-50 border-blue-200' };
+    if (pct >= 50) return { label: 'SATISFACTORY', comment: 'Satisfactory performance. Focus on regular practice.', color: 'text-amber-600 bg-amber-50 border-amber-200' };
+    if (pct >= 35) return { label: 'AVERAGE', comment: 'Average performance. Needs to study harder to improve grades.', color: 'text-orange-600 bg-orange-50 border-orange-200' };
+    return { label: 'NEEDS IMPROVEMENT', comment: 'Needs immediate improvement and extra guidance.', color: 'text-rose-600 bg-rose-50 border-rose-200' };
+  };
+
+  const remark = getPerformanceRemark(Number(totalPct));
 
   const examTitle = settings?.examNameOverride || exam?.name || 'EXAMINATION RESULT CARD';
   const logoUrl = settings?.logoUrl;
@@ -227,15 +276,18 @@ export const ProgressCardTemplate: React.FC<ProgressCardTemplateProps> = ({
             </table>
         </div>
 
-        <div className="score-bar-wrap">
-            <div className="score-bar">
-                <div className="fill" style={{ width: `${barWidth}%` }}></div>
-            </div>
-            <div className="score-labels">
-                <span>0</span>
-                <span>Threshold: {PASS_THRESHOLD}%</span>
-                <span>{TOTAL_MAX_MARKS}</span>
-            </div>
+        <div className="mx-[28px] my-[10px] p-4 bg-slate-50 border border-slate-150 rounded-xl flex items-center justify-between gap-4">
+          <div>
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Academic Performance Rating</span>
+            <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-black border ${remark.color}`}>
+              {remark.label}
+            </span>
+          </div>
+          <div className="flex-1 text-right">
+            <span className="text-xs font-bold text-slate-600 italic block">
+              "{remark.comment}"
+            </span>
+          </div>
         </div>
 
         <div className="result-footer">
