@@ -46,9 +46,9 @@
     scroll-behavior: smooth;
     height: -webkit-fill-available;
     height: 100%;
-    /* Prevent bounce on iOS */
     overscroll-behavior-y: none;
     -webkit-tap-highlight-color: transparent;
+    background-color: #0f172a !important; /* Full solid dark background for bottom navigation bar */
   }
   
   body {
@@ -58,7 +58,8 @@
     height: -webkit-fill-available;
     overflow: hidden;
     overscroll-behavior-y: none;
-    touch-action: manipulation; /* Removes 300ms tap delay */
+    touch-action: manipulation;
+    background-color: #0f172a !important;
   }
 
   /* Flutter-like GPU Hardware Acceleration & Smooth Mobile Touch Feedback */

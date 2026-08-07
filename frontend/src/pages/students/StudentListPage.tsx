@@ -232,7 +232,7 @@ export const StudentListPage: React.FC = () => {
   return (
     <div className="flex flex-col h-full">
       {/* ── Colorful Hero Header ── */}
-      <div className="px-3 pt-3 pb-4 bg-gradient-to-br from-indigo-600 via-violet-600 to-purple-700 shadow-lg">
+      <div className="px-3.5 pt-8 md:pt-3 pb-4 bg-gradient-to-br from-indigo-600 via-violet-600 to-purple-700 shadow-lg">
         <div className="hidden md:flex items-center justify-between mb-3">
           <div>
             <p className="text-white/70 text-xs font-semibold uppercase tracking-wider">Total</p>
