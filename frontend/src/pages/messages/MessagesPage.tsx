@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import api from '../../api/axios';
 import { Avatar } from '../../components/UI/Avatar';
+import { PageHeader } from '../../components/UI/PageHeader';
 import { io, Socket } from 'socket.io-client';
 import { Send, MessageSquare, Plus, Search, ArrowLeft, CheckCheck, UserCheck, ShieldCheck } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -186,8 +187,22 @@ export const MessagesPage: React.FC = () => {
   });
 
   return (
-    <div className="flex flex-col h-[calc(100vh-65px)] bg-slate-950 w-full overflow-hidden">
-      <div className="flex-1 flex overflow-hidden w-full h-full">
+    <div className="flex flex-col h-full bg-slate-950 w-full overflow-hidden" style={{ minHeight: 'calc(100vh - 64px)' }}>
+      {/* Standard Page Header like all remaining pages */}
+      <PageHeader 
+        title="Real-time Messaging"
+        icon={<MessageSquare className="w-5 h-5 text-white" />}
+        action={
+          <button
+            onClick={() => setShowNewChatModal(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-extrabold text-xs transition-all shadow-md active:scale-95 cursor-pointer shrink-0"
+          >
+            <Plus className="w-4 h-4" /> <span className="hidden sm:inline">New Chat</span>
+          </button>
+        }
+      />
+
+      <div className="flex-1 flex overflow-hidden w-full min-h-0">
         
         {/* LEFT SIDEBAR: Conversations List */}
         <div className={`${activePartner ? 'hidden md:flex' : 'flex'} w-full md:w-80 lg:w-96 flex-col border-r border-slate-800 bg-slate-900/95 shrink-0 h-full`}>
