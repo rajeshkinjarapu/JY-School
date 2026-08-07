@@ -711,7 +711,7 @@ export const FinancePage: React.FC = () => {
                   </div>
                   
                   {isAdmin && (
-                    <div className="flex items-center gap-2 w-full sm:w-auto shrink-0 justify-end overflow-x-auto pb-1 sm:pb-0">
+                    <div className="hidden md:flex items-center gap-2 w-full sm:w-auto shrink-0 justify-end overflow-x-auto pb-1 sm:pb-0">
                       <input
                         type="file"
                         ref={paymentFileInputRef}
