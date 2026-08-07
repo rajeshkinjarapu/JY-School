@@ -64,6 +64,7 @@ export const sendWebPushNotification = async (
       body: payload.message,
       icon: payload.icon || '/icon-192x192.png',
       badge: '/badge-72x72.png',
+      requireInteraction: true,
       data: {
         url: payload.url || '/dashboard'
       },

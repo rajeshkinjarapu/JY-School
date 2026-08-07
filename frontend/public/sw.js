@@ -21,7 +21,8 @@ self.addEventListener('push', (event) => {
     body: data.body || data.message || 'You have a new update.',
     icon: data.icon || '/logo192.png',
     badge: data.badge || '/logo192.png',
-    vibrate: [200, 100, 200],
+    vibrate: [300, 100, 300, 100, 300],
+    requireInteraction: true,
     data: data.data || { url: '/dashboard' },
     actions: [
       { action: 'open', title: 'Open App' },
