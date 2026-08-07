@@ -14,39 +14,38 @@ export default defineConfig({
       },
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
       manifest: {
+        id: '/',
         name: 'JY School Management',
         short_name: 'JY School',
         description: 'Manage grades, attendance, and payments in real-time.',
         theme_color: '#243e8b',
         background_color: '#ffffff',
         display: 'standalone',
+        orientation: 'portrait',
+        start_url: '/',
+        scope: '/',
+        prefer_related_applications: false,
         icons: [
           {
-            src: 'icon.svg',
-            sizes: '192x192 512x512',
-            type: 'image/svg+xml',
+            src: '/logo.png',
+            sizes: '192x192',
+            type: 'image/png',
             purpose: 'any maskable'
           },
           {
-            src: 'icons/manifest-icon-192.maskable.png',
-            sizes: '192x192',
-            type: 'image/png',
-            purpose: 'maskable'
-          },
-          {
-            src: 'icons/manifest-icon-512.maskable.png',
+            src: '/logo.png',
             sizes: '512x512',
             type: 'image/png',
-            purpose: 'maskable'
+            purpose: 'any maskable'
           },
           {
-            src: 'icons/manifest-icon-192.maskable.png',
+            src: '/logo.png',
             sizes: '192x192',
             type: 'image/png',
             purpose: 'any'
           },
           {
-            src: 'icons/manifest-icon-512.maskable.png',
+            src: '/logo.png',
             sizes: '512x512',
             type: 'image/png',
             purpose: 'any'
