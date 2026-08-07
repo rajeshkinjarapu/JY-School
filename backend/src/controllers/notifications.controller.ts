@@ -12,7 +12,7 @@ export const getNotifications = async (req: AuthRequest, res: Response, next: Ne
       where: {
         OR: [
           { userId },
-          { role: userRole as any },
+          { role: userRole },
         ],
       },
       orderBy: { createdAt: 'desc' },
@@ -36,7 +36,7 @@ export const markAllAsRead = async (req: AuthRequest, res: Response, next: NextF
       where: {
         OR: [
           { userId },
-          { role: userRole as any },
+          { role: userRole },
         ],
         isRead: false,
       },
@@ -78,7 +78,7 @@ export const createSystemNotification = async (data: {
     await prisma.notification.create({
       data: {
         userId: data.userId || null,
-        role: data.role ? (data.role as any) : null,
+        role: data.role || null,
         title: data.title,
         message: data.message,
         type: data.type,
