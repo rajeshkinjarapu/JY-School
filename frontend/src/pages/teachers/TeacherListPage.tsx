@@ -3,7 +3,7 @@ import api from "../../api/axios";
 import { LoadingSpinner } from "../../components/UI/LoadingSpinner";
 import { Badge } from "../../components/UI/Badge";
 import { Avatar } from "../../components/UI/Avatar";
-import { Search, UserPlus, Trash2, Edit, Upload, FileDown, Eye, Image as ImageIcon, MessageCircle } from "lucide-react";
+import { Search, UserPlus, Trash2, Edit, Upload, FileDown, Eye, Image as ImageIcon, MessageCircle, Menu } from "lucide-react";
 import toast from "react-hot-toast";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
@@ -141,15 +141,26 @@ export const TeacherListPage: React.FC = () => {
           </div>
         </div>
         {/* Search */}
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/60" />
-          <input
-            type="text"
-            placeholder="Search teachers..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-3 py-2.5 text-sm bg-white/15 border border-white/25 rounded-xl text-white placeholder:text-white/50 font-medium focus:outline-none focus:bg-white/25 transition-all"
-          />
+        <div className="flex gap-2 items-center">
+          {/* Hamburger Menu - Mobile Only */}
+          <button
+            onClick={() => window.dispatchEvent(new CustomEvent('toggleSidebar'))}
+            className="p-2.5 md:hidden bg-white/15 hover:bg-white/25 text-white rounded-xl transition-colors cursor-pointer border border-white/25 shadow-sm"
+            aria-label="Open menu"
+          >
+            <Menu className="w-5 h-5" />
+          </button>
+          
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/60" />
+            <input
+              type="text"
+              placeholder="Search teachers..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full pl-9 pr-3 py-2.5 text-sm bg-white/15 border border-white/25 rounded-xl text-white placeholder:text-white/50 font-medium focus:outline-none focus:bg-white/25 transition-all"
+            />
+          </div>
         </div>
       </div>
 

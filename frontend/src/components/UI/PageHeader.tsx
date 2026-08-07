@@ -2,7 +2,7 @@ import React from 'react';
 import { Menu } from 'lucide-react';
 
 interface PageHeaderProps {
-  title: string;
+  title: React.ReactNode;
   icon?: React.ReactNode;
   action?: React.ReactNode;
 }

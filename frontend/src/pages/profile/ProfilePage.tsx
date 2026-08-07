@@ -111,7 +111,10 @@ export const ProfilePage: React.FC = () => {
   if (!user) return null;
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
+    <div className="flex flex-col h-full bg-gray-50/50 w-full" style={{ minHeight: 'calc(100vh - 64px)' }}>
+      <PageHeader title="My Profile" />
+      <div className="flex-1 overflow-y-auto p-4 sm:p-6">
+        <div className="max-w-2xl mx-auto space-y-6">
       {/* Profile Header */}
       <div className="card p-6 flex flex-col sm:flex-row items-center gap-6">
         <div className="relative">
@@ -384,9 +387,10 @@ export const ProfilePage: React.FC = () => {
             </button>
           </form>
         </div>
-      )}
+      </div>
+      </div>
     </div>
   );
 };
-export default ProfilePage;
 
+export default ProfilePage;

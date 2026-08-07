@@ -322,7 +322,9 @@ export const FinancePage: React.FC = () => {
       window.location.href = '/fee-payment?action=collect';
       return;
     }
-    setSearchParams({ tab });
+    React.startTransition(() => {
+      setSearchParams({ tab });
+    });
   };
 
   /* ── CRUD Functions ── */

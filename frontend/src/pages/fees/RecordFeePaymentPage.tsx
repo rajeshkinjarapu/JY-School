@@ -103,13 +103,15 @@ export const RecordFeePaymentPage: React.FC = () => {
   return (
     <div className="flex flex-col h-full bg-gray-50/50 w-full" style={{ minHeight: 'calc(100vh - 64px)' }}>
       <PageHeader 
-        title="Record Fee Payment"
-        icon={<ArrowLeft className="w-6 h-6 cursor-pointer" onClick={() => navigate(-1)} />}
-        action={
-          <div className="bg-indigo-50 dark:bg-indigo-900/20 px-4 py-2 rounded-xl text-sm font-bold text-indigo-700 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-800">
-            For: {student.user.name}
+        title={
+          <div className="flex flex-col items-center sm:items-start leading-tight">
+            <span>Record Fee Payment</span>
+            <span className="text-[10px] sm:text-xs font-semibold text-indigo-200 uppercase tracking-wide mt-0.5">
+              For: {student.user.name}
+            </span>
           </div>
         }
+        icon={<ArrowLeft className="w-6 h-6 cursor-pointer" onClick={() => navigate(-1)} />}
       />
 
       <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">

@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { createPortal } from "react-dom";
 import api from "../../api/axios";
-import { Search, UserPlus, Trash2, Edit, FileDown, Eye, Filter, ChevronLeft, ChevronRight, Upload, Image as ImageIcon, X, CheckCircle2, AlertCircle, FileText, Phone, IdCard } from "lucide-react";
+import { Search, UserPlus, Trash2, Edit, FileDown, Eye, Filter, ChevronLeft, ChevronRight, Upload, Image as ImageIcon, X, CheckCircle2, AlertCircle, FileText, Phone, IdCard, Menu } from "lucide-react";
 import toast from "react-hot-toast";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
@@ -273,7 +273,16 @@ export const StudentListPage: React.FC = () => {
         </div>
 
         {/* Search + Filter */}
-        <div className="flex gap-2">
+        <div className="flex gap-2 items-center">
+          {/* Hamburger Menu - Mobile Only */}
+          <button
+            onClick={() => window.dispatchEvent(new CustomEvent('toggleSidebar'))}
+            className="p-2.5 md:hidden bg-white/15 hover:bg-white/25 text-white rounded-xl transition-colors cursor-pointer border border-white/25 shadow-sm"
+            aria-label="Open menu"
+          >
+            <Menu className="w-5 h-5" />
+          </button>
+          
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/60" />
             <input

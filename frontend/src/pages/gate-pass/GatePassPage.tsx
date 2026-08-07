@@ -5,6 +5,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { FileText, CheckCircle2, XCircle, PlusCircle, Printer, Clock, LogOut, MapPin, User, ChevronDown, Search, Users } from 'lucide-react';
 import { GatePassPrint } from '../../components/gate-pass/GatePassPrint';
 import { LoadingSpinner } from '../../components/UI/LoadingSpinner';
+import { PageHeader } from '../../components/UI/PageHeader';
 
 interface GatePassItem {
   id: string;
@@ -136,6 +137,10 @@ const GatePassPage: React.FC = () => {
 
   return (
     <div className="flex flex-col h-full bg-gray-50/50" style={{ minHeight: 'calc(100vh - 64px)' }}>
+      <PageHeader 
+        title="Gate Pass Manager"
+        icon={<MapPin className="w-6 h-6" />}
+      />
       {/* Printable Area - Hidden normally */}
       <div className="hidden print:block absolute inset-0 bg-white z-[9999]">
         {printGatePass && <GatePassPrint gatePass={printGatePass} schoolName={schoolName} />}
@@ -143,22 +148,6 @@ const GatePassPage: React.FC = () => {
 
       <div className="print:hidden flex-1 overflow-auto p-4 md:p-6 lg:p-8">
         <div className="max-w-7xl mx-auto space-y-8">
-          
-          {/* Header */}
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center bg-white/60 dark:bg-slate-900/50 backdrop-blur-md p-6 lg:p-8 rounded-3xl border border-white/20 shadow-[0_8px_30px_rgb(0,0,0,0.04)] relative overflow-hidden animate-fade-in-up">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-rose-500/10 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
-            <div className="absolute bottom-0 left-0 w-64 h-64 bg-pink-500/10 rounded-full blur-3xl -ml-20 -mb-20 pointer-events-none"></div>
-            
-            <div className="flex items-center gap-5 relative z-10">
-              <div className="bg-gradient-to-br from-rose-500 to-pink-600 p-4 rounded-2xl shadow-lg shadow-rose-500/30 text-white shrink-0">
-                <MapPin className="w-8 h-8" />
-              </div>
-              <div>
-                <h1 className="text-2xl md:text-3xl font-black text-slate-800 dark:text-white tracking-tight">Gate Pass Manager</h1>
-
-              </div>
-            </div>
-          </div>
 
           <div className="grid grid-cols-1 xl:grid-cols-12 gap-8">
             
