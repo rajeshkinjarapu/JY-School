@@ -43,6 +43,8 @@ model User {
   approvedGatePasses GatePass[] @relation("ApprovedGatePasses")
   leaveRequests    LeaveRequest[] @relation("LeaveRequests")
   approvedLeaves   LeaveRequest[] @relation("ApprovedLeaves")
+  pushSubscriptions PushSubscription[]
+  notifications    Notification[]
   transportStaff   TransportStaff?
   notifications    Notification[]
 
@@ -783,5 +785,18 @@ model Notification {
   @@index([userId])
   @@index([role])
   @@index([createdAt])
+}
+
+model PushSubscription {
+  id        String   @id @default(uuid())
+  userId    String
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 

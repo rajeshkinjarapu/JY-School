@@ -117,6 +117,50 @@ export const markAsRead = async (req: AuthRequest, res: Response, next: NextFunc
 /**
  * Helper utility to create notifications from any backend controller
  */
+export const getVapidKey = async (_req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const { getVapidPublicKey } = await import('../utils/push');
+    successResponse(res, { publicKey: getVapidPublicKey() });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const subscribePush = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const userId = req.user?.id;
+    if (!userId) {
+      res.status(401).json({ message: 'Unauthorized' });
+      return;
+    }
+
+    const { endpoint, keys } = req.body;
+    if (!endpoint || !keys || !keys.p256dh || !keys.auth) {
+      res.status(400).json({ message: 'Invalid subscription payload' });
+      return;
+    }
+
+    await prisma.pushSubscription.upsert({
+      where: { endpoint },
+      update: {
+        userId,
+        p256dh: keys.p256dh,
+        auth: keys.auth,
+      },
+      create: {
+        userId,
+        endpoint,
+        p256dh: keys.p256dh,
+        auth: keys.auth,
+      },
+    });
+
+    successResponse(res, null, 'Push subscription saved successfully');
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const createSystemNotification = async (data: {
   userId?: string;
   role?: string;
@@ -136,6 +180,20 @@ export const createSystemNotification = async (data: {
         link: data.link || null,
       },
     });
+
+    // Also dispatch Web Push notification to user or role devices (for lock screen / screen-off mobile alerts)
+    const { sendWebPushNotification } = await import('../utils/push');
+    sendWebPushNotification(
+      {
+        userIds: data.userId ? [data.userId] : undefined,
+        roles: data.role ? [data.role] : undefined,
+      },
+      {
+        title: data.title,
+        message: data.message,
+        url: data.link || '/dashboard',
+      }
+    ).catch(e => console.error('Web push dispatch error:', e));
   } catch (e) {
     console.error('Failed to create system notification:', e);
   }

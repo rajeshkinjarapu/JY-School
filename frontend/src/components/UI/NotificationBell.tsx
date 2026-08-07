@@ -1,8 +1,9 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { Bell, CheckCheck, X, FileText, AlertTriangle, Award, Calendar, BookOpen, Volume2 } from 'lucide-react';
+import { Bell, CheckCheck, X, FileText, AlertTriangle, Award, Calendar, BookOpen, Volume2, Smartphone } from 'lucide-react';
 import api from '../../api/axios';
 import { playNotificationChime } from '../../utils/sound';
 import { useNavigate } from 'react-router-dom';
+import { usePushNotifications } from '../../hooks/usePushNotifications';
 
 interface NotificationItem {
   id: string;
@@ -118,6 +119,8 @@ export const NotificationBell: React.FC = () => {
     }
   };
 
+  const { isSubscribed, subscribeToPush, loading: pushLoading } = usePushNotifications();
+
   return (
     <div className="relative inline-block" ref={dropdownRef}>
       {/* Bell Button */}
@@ -170,6 +173,23 @@ export const NotificationBell: React.FC = () => {
               </button>
             </div>
           </div>
+
+          {/* Web Push Mobile Alerts Prompt */}
+          {!isSubscribed && (
+            <div className="p-3 bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-slate-800 dark:to-slate-800 border-b border-indigo-100 dark:border-slate-800 flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <Smartphone className="w-4 h-4 text-purple-600 dark:text-purple-400 shrink-0" />
+                <span className="text-xs font-bold text-slate-700 dark:text-slate-200">Screen Off Mobile Alerts</span>
+              </div>
+              <button 
+                onClick={subscribeToPush}
+                disabled={pushLoading}
+                className="px-3 py-1 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg text-xs font-bold shadow-xs hover:from-purple-700 hover:to-indigo-700 disabled:opacity-50 shrink-0"
+              >
+                {pushLoading ? 'Enabling...' : 'Enable'}
+              </button>
+            </div>
+          )}
 
           {/* List */}
           <div className="max-h-80 overflow-y-auto divide-y divide-gray-100 dark:divide-slate-800">
