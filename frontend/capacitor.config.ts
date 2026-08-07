@@ -5,8 +5,8 @@ const config: CapacitorConfig = {
   appName: 'JY School ERP',
   webDir: 'dist',
   server: {
-    androidScheme: 'http',
-    cleartext: true, // HTTP connections allow చేయడానికి
+    url: 'http://148.113.8.82:19999',
+    cleartext: true, // Allow live HTTP connections to VPS
   },
   android: {
     allowMixedContent: true,
