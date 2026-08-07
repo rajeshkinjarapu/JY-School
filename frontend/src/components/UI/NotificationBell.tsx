@@ -119,7 +119,7 @@ export const NotificationBell: React.FC = () => {
     }
   };
 
-  const { isSubscribed, subscribeToPush, loading: pushLoading } = usePushNotifications();
+  const { isSupported, isSubscribed, subscribeToPush, loading: pushLoading } = usePushNotifications();
 
   return (
     <div className="relative inline-block" ref={dropdownRef}>
@@ -175,7 +175,7 @@ export const NotificationBell: React.FC = () => {
           </div>
 
           {/* Web Push Mobile Alerts Prompt */}
-          {!isSubscribed && (
+          {!isSubscribed && isSupported && (
             <div className="p-3 bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-slate-800 dark:to-slate-800 border-b border-indigo-100 dark:border-slate-800 flex items-center justify-between gap-2">
               <div className="flex items-center gap-2">
                 <Smartphone className="w-4 h-4 text-purple-600 dark:text-purple-400 shrink-0" />
