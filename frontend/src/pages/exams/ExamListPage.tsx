@@ -896,7 +896,16 @@ export const ExamListPage: React.FC = () => {
       
       {/* BEAUTIFUL PAGE HEADING BANNER */}
       <PageHeader 
-        title="Examination Dashboard"
+        title={
+          activeTab === 'status' || activeTab === 'status-overview' ? 'Status Overview' :
+          activeTab === 'written-exam' ? 'Marks Entry' :
+          activeTab === 'progress-card' ? 'Progress Cards' :
+          activeTab === 'jee-progress-card' ? 'JEE Progress Cards' :
+          activeTab === 'results' ? 'Exam Results' :
+          activeTab === 'admit-card' ? 'Admit Cards' :
+          activeTab === 'examination' ? 'Examinations List' :
+          'Examination Dashboard'
+        }
         icon={<ClipboardList className="w-5 h-5" />}
       />
       <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 space-y-6">
@@ -1045,65 +1054,62 @@ export const ExamListPage: React.FC = () => {
 
       {/* ══ TAB 3: MARKS UPLOAD (written-exam) ══ */}
       {activeTab === 'written-exam' && (
-        <div className="space-y-6">
-          <div className="flex justify-between items-center bg-white/40 dark:bg-white/10 backdrop-blur-xl p-5 rounded-3xl shadow-xl border border-white/50 dark:border-white/20">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-500/30">
-                <span className="text-xl">📝</span>
-              </div>
-              <div>
-                <h2 className="text-lg font-black uppercase text-slate-900 tracking-wider drop-shadow-sm">Marks Upload & Entry</h2>
-                <p className="text-xs font-bold text-slate-600">Select an examination and class to enter student marks</p>
+        <div className="space-y-4 animate-fade-in-up">
+          {/* Header & Exam Dropdown */}
+          <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md p-4 sm:p-5 rounded-2xl border border-slate-200/60 dark:border-slate-800 shadow-sm space-y-3">
+            <h2 className="text-lg sm:text-xl font-black bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+              Marks Upload & Entry
+            </h2>
+
+            <div className="w-full relative">
+              <select 
+                className="w-full appearance-none bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-sm cursor-pointer truncate pr-8"
+                value={selectedWrittenExamId}
+                onChange={(e) => setSelectedWrittenExamId(e.target.value)}
+              >
+                <option value="" className="text-xs font-medium">-- Select Examination --</option>
+                {exams.map(e => (
+                  <option key={e.id} value={e.id} className="text-xs font-medium">{formatExamOptionLabel(e.name)}</option>
+                ))}
+              </select>
+              <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none">
+                <ChevronDown className="h-4 w-4 text-slate-400" />
               </div>
             </div>
           </div>
-          
-          <div className="bg-white/40 dark:bg-white/10 backdrop-blur-xl p-6 rounded-3xl shadow-xl border border-white/50 dark:border-white/20 flex flex-col gap-3">
-             <label className="text-sm font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider">Select Examination</label>
-             <select 
-               className="input py-3 w-full max-w-md font-bold text-slate-800"
-               value={selectedWrittenExamId}
-               onChange={(e) => setSelectedWrittenExamId(e.target.value)}
-             >
-               <option value="">-- Select Examination --</option>
-               {exams.map(e => (
-                 <option key={e.id} value={e.id}>{e.name}</option>
-               ))}
-             </select>
-          </div>
 
           {selectedWrittenExamId && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {exams.filter(e => e.id === selectedWrittenExamId).map(exam => (
-                <div key={exam.id} className="relative rounded-[2rem] p-6 overflow-hidden bg-white/40 dark:bg-white/10 backdrop-blur-2xl shadow-xl border-2 border-white/50 dark:border-white/20 hover:border-indigo-400 dark:hover:border-indigo-400 transition-all duration-300 flex flex-col group">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-indigo-400/20 to-purple-400/20 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-700" />
-                  
+                <div key={exam.id} className="relative rounded-2xl p-5 overflow-hidden bg-white dark:bg-slate-900 shadow-sm border border-slate-200/60 dark:border-slate-800 flex flex-col group">
                   <div className="relative z-10">
-                    <h4 className="font-extrabold text-slate-900 text-xl drop-shadow-sm truncate whitespace-nowrap overflow-hidden" title={exam.name}>{exam.name}</h4>
-                    <p className="text-xs font-bold text-slate-600 mt-1.5">Select a class to enter marks:</p>
+                    <h4 className="font-extrabold text-slate-900 dark:text-white text-base sm:text-lg truncate" title={exam.name}>
+                      {formatExamOptionLabel(exam.name)}
+                    </h4>
+                    <p className="text-xs font-semibold text-slate-500 mt-1">Select class to enter marks:</p>
                   </div>
                   
-                  <div className="flex flex-col gap-3 flex-1 mt-5 relative z-10">
+                  <div className="flex flex-col gap-2.5 flex-1 mt-4 relative z-10">
                     {(exam.classes || []).map((c: any) => (
-                      <div key={c.id} className="flex gap-2 items-center bg-white/50 dark:bg-black/10 p-2 rounded-2xl border border-white/40 dark:border-white/10 hover:bg-white/80 dark:hover:bg-black/20 transition-colors shadow-sm">
-                        <div className="flex-1 text-sm font-black text-slate-800 px-3 truncate">
-                          {c.name}-{c.section}
+                      <div key={c.id} className="flex gap-2 items-center bg-slate-50 dark:bg-slate-800/50 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800 hover:bg-slate-100 transition-colors">
+                        <div className="flex-1 text-xs sm:text-sm font-extrabold text-slate-800 dark:text-slate-200 px-1 truncate">
+                          {c.name} - {c.section}
                         </div>
-                        <Link to={`/exams/${exam.id}/entry?classId=${c.id}`} className="px-5 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-bold rounded-xl text-xs shadow-lg shadow-indigo-500/30 transition-all transform hover:-translate-y-0.5 text-center shrink-0">
+                        <Link to={`/exams/${exam.id}/entry?classId=${c.id}`} className="px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold rounded-lg text-xs shadow-md shadow-indigo-500/20 transition-all shrink-0">
                           Enter Marks
                         </Link>
                       </div>
                     ))}
                     {(!exam.classes || exam.classes.length === 0) && (
-                      <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-center">
-                        <p className="text-xs text-amber-700 font-bold">No classes assigned to this exam</p>
+                      <div className="p-4 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/40 text-center">
+                        <p className="text-xs text-amber-700 dark:text-amber-300 font-bold">No classes assigned to this exam</p>
                       </div>
                     )}
                   </div>
 
                   {isAdmin && (
-                    <div className="pt-4 mt-4 border-t border-white/20 dark:border-white/10 relative z-10">
-                      <button onClick={() => { setExcelExamId(exam.id); setShowExcelModal(true); }} className="w-full px-4 py-3 bg-gradient-to-r from-emerald-400 to-green-500 hover:from-emerald-500 hover:to-green-600 text-white font-bold rounded-xl text-xs shadow-lg shadow-emerald-500/30 transition-all transform hover:-translate-y-0.5">
+                    <div className="pt-3 mt-3 border-t border-slate-100 dark:border-slate-800 relative z-10">
+                      <button onClick={() => { setExcelExamId(exam.id); setShowExcelModal(true); }} className="w-full px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow-sm transition-all">
                         Excel Bulk Upload
                       </button>
                     </div>
