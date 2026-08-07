@@ -49,7 +49,11 @@ export const Header: React.FC<HeaderProps> = ({ onMenuClick, title, forceShow, h
         {/* Hamburger — mobile only */}
         {!hideMenuButton && (
           <button
-            onClick={onMenuClick}
+            onClick={(e) => {
+              e.stopPropagation();
+              onMenuClick?.();
+              window.dispatchEvent(new CustomEvent('toggleSidebar'));
+            }}
             className="p-2 rounded-xl text-white/90 hover:text-white hover:bg-white/20 transition-all duration-200 cursor-pointer shrink-0 lg:hidden"
             aria-label="Open menu"
           >

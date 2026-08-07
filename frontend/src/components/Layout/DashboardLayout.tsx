@@ -27,6 +27,7 @@ export const DashboardLayout: React.FC = () => {
 
   useEffect(() => {
     setDynamicTitle('');
+    setSidebarOpen(false);
   }, [location.pathname]);
 
   const getPageTitle = (pathname: string) => {
@@ -102,7 +103,7 @@ export const DashboardLayout: React.FC = () => {
     return 'Dashboard';
   };
 
-  // Hide sidebar for Teachers and Students only on mobile screens
+  // Hide sidebar on desktop layout for Teachers and Students on mobile screens
   const isTeacherMobile = user?.role === 'TEACHER' && isMobile;
   const isStudentMobile = user?.role === 'STUDENT' && isMobile;
   const hideSidebar = isTeacherMobile || isStudentMobile;
@@ -111,6 +112,7 @@ export const DashboardLayout: React.FC = () => {
     return (
       <div style={{ height: '100dvh', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
         <MobileNotificationToast />
+        <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
         <Header onMenuClick={() => setSidebarOpen(true)} title={getPageTitle(location.pathname)} />
         <main style={{ flex: 1, overflowY: 'auto', overscrollBehavior: 'contain' }}>
           <div key={location.pathname} className="animate-slide-in h-full">
