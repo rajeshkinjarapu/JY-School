@@ -14,7 +14,14 @@ export const DashboardLayout: React.FC = () => {
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 1024);
     window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    
+    const handleToggleSidebar = () => setSidebarOpen(true);
+    window.addEventListener('toggleSidebar', handleToggleSidebar);
+    
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('toggleSidebar', handleToggleSidebar);
+    };
   }, []);
 
   useEffect(() => {

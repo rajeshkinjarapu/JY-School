@@ -21,6 +21,10 @@ export const Header: React.FC<HeaderProps> = ({ onMenuClick, title, forceShow, h
   const isDashboard = location.pathname === '/dashboard' || location.pathname === '/';
   const showBackButton = !isDashboard;
 
+  if (!isDashboard && !forceShow) {
+    return null;
+  }
+
   const handleBack = () => {
     if (window.history.state && window.history.state.idx > 0) {
       navigate(-1);
