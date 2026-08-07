@@ -34,8 +34,8 @@ const ExamCard: React.FC<{
          style={{ background: gradient, boxShadow: `0 4px 14px -2px ${primaryColor}50` }}>
       
       {/* Background Watermark Icon */}
-      <div className="absolute -right-3 -bottom-3 opacity-10 group-hover:opacity-20 transition-all duration-500 transform group-hover:scale-110 pointer-events-none text-white">
-        <Icon className="w-16 h-16 sm:w-28 sm:h-28" />
+      <div className="absolute -right-2 -bottom-2 opacity-10 group-hover:opacity-20 transition-all duration-500 transform group-hover:scale-110 pointer-events-none text-white">
+        <Icon className="w-12 h-12 sm:w-20 sm:h-20" />
       </div>
         
       {/* Top right gradient orb */}
@@ -841,14 +841,14 @@ export const ExamListPage: React.FC = () => {
   }
 
   return (
-    <div className="space-y-4 sm:space-y-6 md:space-y-8 p-4 sm:p-6 md:p-8 bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 min-h-screen overflow-x-hidden">
+    <div className="flex flex-col h-full bg-gray-50/50 w-full" style={{ minHeight: 'calc(100vh - 64px)' }}>
       
       {/* BEAUTIFUL PAGE HEADING BANNER */}
       <PageHeader 
         title="Examination Dashboard"
-        icon={<ClipboardList className="w-6 h-6" />}
+        icon={<ClipboardList className="w-5 h-5" />}
       />
-      <div className="p-3 sm:p-6 space-y-4">
+      <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 space-y-6">
         {!activeTab && (
           <div>
             {/* Unified Tools Grid */}
