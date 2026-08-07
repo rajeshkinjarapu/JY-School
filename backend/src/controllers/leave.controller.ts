@@ -60,5 +60,18 @@ export const updateLeaveStatus = async (req: AuthRequest, res: Response, next: N
     },
   });
 
+  try {
+    const { createSystemNotification } = await import('./notifications.controller');
+    createSystemNotification({
+      userId: leave.userId,
+      title: `🌴 Leave Request ${status}`,
+      message: `Your leave request has been ${status.toLowerCase()}.${status === 'REJECTED' && rejectionReason ? ` Reason: ${rejectionReason}` : ''}`,
+      type: 'LEAVE',
+      link: '/leave'
+    });
+  } catch (e) {
+    console.error('Failed to send Leave notification:', e);
+  }
+
   successResponse(res, updated, 'Leave status updated');
 };

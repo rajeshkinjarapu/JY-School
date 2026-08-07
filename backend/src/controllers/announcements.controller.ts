@@ -62,6 +62,24 @@ export const create = async (req: AuthRequest, res: Response): Promise<void> => 
     },
     include: { createdBy: { select: { name: true, role: true } } },
   });
+  try {
+    const rolesList = Array.isArray(targetRoles) ? targetRoles : (targetRoles ? targetRoles.split(',') : []);
+    const { createSystemNotification } = await import('./notifications.controller');
+    for (const r of rolesList) {
+      if (r && r.trim()) {
+        createSystemNotification({
+          role: r.trim(),
+          title: `📢 ${title}`,
+          message: content.length > 100 ? content.substring(0, 97) + '...' : content,
+          type: 'ANNOUNCEMENT',
+          link: '/dashboard'
+        });
+      }
+    }
+  } catch (e) {
+    console.error('Failed to send Announcement notification:', e);
+  }
+
   successResponse(res, announcement, 'Announcement created', 201);
 };
 

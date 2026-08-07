@@ -92,6 +92,28 @@ export const createHomework = async (req: AuthRequest, res: Response, next: Next
       },
     });
 
+    // Notify all students in this class
+    try {
+      const classStudents = await prisma.student.findMany({
+        where: { classId },
+        select: { userId: true }
+      });
+      const { createSystemNotification } = await import('./notifications.controller');
+      for (const s of classStudents) {
+        if (s.userId) {
+          createSystemNotification({
+            userId: s.userId,
+            title: `📚 New Homework: ${hw.subject?.name || 'Assignment'}`,
+            message: `${title} (Due: ${new Date(dueDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })})`,
+            type: 'HOMEWORK',
+            link: '/homework'
+          });
+        }
+      }
+    } catch (err) {
+      console.error('Failed to dispatch homework notifications:', err);
+    }
+
     successResponse(res, hw, 'Homework created', 201);
   } catch (e) { next(e); }
 };

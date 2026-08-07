@@ -108,6 +108,22 @@ export const updateGatePass = async (req: AuthRequest, res: Response, next: Next
       },
     });
 
+    try {
+      const { createSystemNotification } = await import('./notifications.controller');
+      const targetUserId = updated.student?.user?.id || updated.requesterId;
+      if (targetUserId) {
+        createSystemNotification({
+          userId: targetUserId,
+          title: `🎫 Gate Pass ${status}`,
+          message: `Your Gate Pass request has been ${status.toLowerCase()}.${status === 'REJECTED' && rejectionReason ? ` Reason: ${rejectionReason}` : ''}`,
+          type: 'GATEPASS',
+          link: '/office-tools/gate-pass'
+        });
+      }
+    } catch (e) {
+      console.error('Failed to send GatePass notification:', e);
+    }
+
     successResponse(res, updated, 'Gate pass updated successfully');
   } catch (error) {
     next(error);
