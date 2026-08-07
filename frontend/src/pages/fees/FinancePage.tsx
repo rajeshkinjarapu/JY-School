@@ -173,23 +173,34 @@ export const FinancePage: React.FC = () => {
   const fetchBaseData = async () => {
     try {
       const isStudent = user?.role === 'STUDENT';
-      const [structRes, classRes, groupsRes, headsRes, concessionsRes]: any = await Promise.all([
+      const [structRes, classRes, groupsRes, headsRes, concessionsRes]: any = await Promise.allSettled([
         isStudent ? Promise.resolve({ data: [] }) : api.get('/api/fees/structures?limit=5000'),
         isStudent ? Promise.resolve({ data: [] }) : api.get('/api/classes?limit=5000'),
         isStudent ? Promise.resolve({ data: [] }) : api.get('/api/fees/groups'),
         isStudent ? Promise.resolve({ data: [] }) : api.get('/api/fees/heads'),
         isStudent ? Promise.resolve({ data: [] }) : api.get('/api/fees/concessions'),
       ]);
-      const newStructures = structRes.data || structRes || [];
-      const newClasses = classRes.data || classRes || [];
+
+      const getVal = (res: any) => {
+        if (res.status !== 'fulfilled') return [];
+        const val = res.value?.data || res.value || [];
+        if (Array.isArray(val)) return val;
+        if (val && Array.isArray(val.data)) return val.data;
+        return [];
+      };
+
+      const newStructures = getVal(structRes);
+      const newClasses = getVal(classRes);
       setStructures(newStructures);
       setClasses(newClasses);
-      setFeeGroups(groupsRes.data?.data || []);
-      setFeeHeads(headsRes.data?.data || []);
-      setFeeConcessions(concessionsRes.data?.data || []);
+      setFeeGroups(getVal(groupsRes));
+      setFeeHeads(getVal(headsRes));
+      setFeeConcessions(getVal(concessionsRes));
       const cached = JSON.parse(localStorage.getItem('fin_dashboard_cache') || '{}');
       localStorage.setItem('fin_dashboard_cache', JSON.stringify({ ...cached, structures: newStructures, classes: newClasses }));
-    } catch(e) {}
+    } catch(e) {
+      console.error("fetchBaseData error:", e);
+    }
   };
 
   const fetchHeavyData = async () => {

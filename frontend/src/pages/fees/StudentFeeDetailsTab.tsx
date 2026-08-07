@@ -309,22 +309,22 @@ export const StudentFeeDetailsTab: React.FC<StudentFeeDetailsProps> = ({ student
 
   return (
     <div className="space-y-4 animate-fade-in">
-      <div className="flex flex-col md:flex-row gap-3 mb-4 print:hidden items-stretch md:items-center">
-        <div className="relative flex-1">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+      <div className="flex flex-row md:flex-row gap-2 sm:gap-3 mb-4 print:hidden items-center">
+        <div className="relative flex-1 min-w-0">
+          <Search className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input
             type="text"
-            placeholder="Search by student name or ID..."
+            placeholder="Search student or ID..."
             value={searchTerm}
             onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
-            className="w-full pl-11 pr-4 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 text-sm font-medium transition-all"
+            className="w-full pl-9 sm:pl-11 pr-3 sm:pr-4 py-2 sm:py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 text-xs sm:text-sm font-medium transition-all truncate"
           />
         </div>
-        <div className="md:w-56">
+        <div className="w-2/5 sm:w-48 md:w-56 shrink-0">
           <select
             value={selectedClassId}
             onChange={(e) => { setSelectedClassId(e.target.value); setCurrentPage(1); }}
-            className="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 text-sm font-medium cursor-pointer transition-all"
+            className="w-full px-2.5 sm:px-4 py-2 sm:py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 text-xs sm:text-sm font-medium cursor-pointer transition-all truncate"
           >
             <option value="ALL">All Classes</option>
             {classes.map(c => (
