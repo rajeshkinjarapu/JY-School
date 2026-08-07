@@ -3,6 +3,7 @@ import { Outlet, useLocation } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
 import { useAuth } from '../../hooks/useAuth';
+import { MobileNotificationToast } from '../UI/MobileNotificationToast';
 
 export const DashboardLayout: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -108,6 +109,7 @@ export const DashboardLayout: React.FC = () => {
   if (hideSidebar) {
     return (
       <div style={{ height: '100dvh', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+        <MobileNotificationToast />
         <Header onMenuClick={() => setSidebarOpen(true)} title={getPageTitle(location.pathname)} />
         <main style={{ flex: 1, overflowY: 'auto', overscrollBehavior: 'contain' }}>
           <div key={location.pathname} className="animate-slide-in h-full">
@@ -123,6 +125,7 @@ export const DashboardLayout: React.FC = () => {
       className="flex overflow-hidden bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 dark:from-[#1e1b4b] dark:via-[#2e1065] dark:to-[#312e81]"
       style={{ height: '100dvh' }}
     >
+      <MobileNotificationToast />
       <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
       <div className="flex flex-col flex-1 overflow-hidden min-w-0">
         <Header onMenuClick={() => setSidebarOpen(true)} title={getPageTitle(location.pathname)} />
