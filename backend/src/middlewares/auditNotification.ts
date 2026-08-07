@@ -1,4 +1,5 @@
 import { Response, NextFunction } from 'express';
+import jwt from 'jsonwebtoken';
 import { AuthRequest } from './auth';
 import { createSystemNotification } from '../controllers/notifications.controller';
 
@@ -32,10 +33,19 @@ export const auditNotificationMiddleware = (req: AuthRequest, res: Response, nex
   // We only track mutating actions (POST, PUT, PATCH, DELETE)
   if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)) {
     res.on('finish', () => {
+      // Extract user from req.user or decode Bearer token
+      let user = req.user;
+      if (!user && req.headers.authorization?.startsWith('Bearer ')) {
+        try {
+          const token = req.headers.authorization.split(' ')[1];
+          user = jwt.verify(token, process.env.JWT_SECRET || 'RajeshSecretKey_12345!@#') as any;
+        } catch {}
+      }
+
       // Only notify if response was successful (2xx or 3xx)
-      if (res.statusCode >= 200 && res.statusCode < 400 && req.user) {
-        const role = req.user.role;
-        const userName = req.user.name || 'User';
+      if (res.statusCode >= 200 && res.statusCode < 400 && user) {
+        const role = user.role;
+        const userName = user.name || 'User';
         const actionSummary = getActionSummary(method, req.originalUrl || req.url);
 
         // Don't track notification read/mark actions to avoid infinite loop
