@@ -61,6 +61,18 @@
     touch-action: manipulation; /* Removes 300ms tap delay */
   }
 
+  /* Flutter-like GPU Hardware Acceleration & Smooth Mobile Touch Feedback */
+  .gpu-accelerated {
+    transform: translate3d(0, 0, 0);
+    will-change: transform, opacity;
+    backface-visibility: hidden;
+  }
+
+  button:active, a:active, [role="button"]:active {
+    transform: scale(0.97);
+    transition: transform 0.05s ease;
+  }
+
   #root {
     height: 100%;
     height: 100dvh;

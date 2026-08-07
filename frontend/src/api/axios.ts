@@ -6,12 +6,12 @@ const getApiUrl = () => {
   }
   if (typeof window !== 'undefined') {
     const host = window.location.hostname;
-    // If running on Vercel, route requests to the live VPS server
-    if (host.includes('vercel.app') || host.includes('railway.app')) {
+    const isCapacitor = !!(window as any).Capacitor || window.location.protocol === 'capacitor:';
+    if (host.includes('vercel.app') || host.includes('railway.app') || host === 'localhost' || host === '127.0.0.1' || isCapacitor) {
       return 'http://148.113.8.82:19999';
     }
   }
-  return '';
+  return 'http://148.113.8.82:19999';
 };
 
 const API_URL = getApiUrl();
