@@ -1,22 +1,18 @@
 import axios from 'axios';
 
 const getApiUrl = () => {
-  const envUrl = import.meta.env.VITE_API_URL || '';
-  // If VITE_API_URL points to offline Railway server, override to live VPS server
-  if (envUrl.includes('railway.app')) {
-    return 'http://148.113.8.82:19999';
-  }
-  if (envUrl) {
-    return envUrl;
-  }
   if (typeof window !== 'undefined') {
     const host = window.location.hostname;
-    // If running on Vercel, route requests to live VPS server
-    if (host.includes('vercel.app')) {
-      return 'http://148.113.8.82:19999';
+    // On VPS or localhost, use relative path '' so requests are local and fast
+    if (host === '148.113.8.82' || host === 'localhost' || host === '127.0.0.1') {
+      return '';
     }
   }
-  return '';
+  const envUrl = import.meta.env.VITE_API_URL || '';
+  if (envUrl && !envUrl.includes('railway.app')) {
+    return envUrl;
+  }
+  return 'http://148.113.8.82:19999';
 };
 
 const API_URL = getApiUrl();
