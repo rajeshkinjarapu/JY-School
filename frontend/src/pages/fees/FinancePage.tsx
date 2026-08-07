@@ -213,6 +213,16 @@ export const FinancePage: React.FC = () => {
       let paymentArray = payments;
       let newStudents = students;
 
+      if (payRes.status === 'rejected') {
+        console.error("Failed to load payments:", payRes.reason);
+        toast.error("Failed to load payments: " + (payRes.reason?.message || "Network error"));
+      }
+
+      if (studRes.status === 'rejected') {
+        console.error("Failed to load students:", studRes.reason);
+        toast.error("Failed to load students: " + (studRes.reason?.message || "Network error"));
+      }
+
       if (payRes.status === 'fulfilled') {
         let payload = payRes.value?.data || payRes.value || [];
         if (payload && payload.success && Array.isArray(payload.data)) {
@@ -474,7 +484,7 @@ export const FinancePage: React.FC = () => {
         icon={<CreditCard className="w-6 h-6" />}
       />
 
-      <div className="flex-1 overflow-auto p-4 md:p-6">
+      <div className={`flex-1 overflow-auto ${activeTab === 'home' ? 'p-4 md:p-6' : 'p-3 md:p-4'}`}>
       {/* ══ HOME GRID VIEW ══ */}
       {activeTab === 'home' && (
         <div className="w-full animate-fade-in space-y-6">
@@ -579,7 +589,7 @@ export const FinancePage: React.FC = () => {
       </div>
 
       {/* ══ RIGHT CONTENT PANEL ══ */}
-      <div className="flex-1 bg-white dark:bg-gray-900 md:border border-gray-150 dark:border-gray-800 md:rounded-3xl p-0 md:p-8 md:shadow-sm">
+      <div className="flex-1 bg-white dark:bg-gray-900 md:border border-gray-150 dark:border-gray-800 md:rounded-2xl p-4 md:p-6 md:shadow-sm">
         <>
           {/* ── 1. STUDENT FEE DETAILS TAB ── */}
             {activeTab === 'student-fee-details' && (

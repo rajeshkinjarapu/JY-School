@@ -14,48 +14,58 @@ import path from 'path';
 import fs from 'fs';
 import { clearDashboardCache } from './dashboard.controller';
 
-export const getAll = async (req: AuthRequest, res: Response): Promise<void> => {
-  const page = parseInt(req.query.page as string) || 1;
-  const limit = parseInt(req.query.limit as string) || 10;
-  const search = (req.query.search as string) || '';
-  const classId = (req.query.classId as string) || '';
-  const gender = (req.query.gender as string) || '';
-  const skip = (page - 1) * limit;
+export const getAll = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+    const search = (req.query.search as string) || '';
+    const classId = (req.query.classId as string) || '';
+    const gender = (req.query.gender as string) || '';
+    const skip = (page - 1) * limit;
 
-  // Cache key based on query params
-  const cacheKey = `students:list:${page}:${limit}:${search}:${classId}:${gender}`;
-  const cached = await cache.get<any>(cacheKey);
-  if (cached) {
-    return res.json(cached) as any;
+    const useCache = limit <= 100;
+    const cacheKey = `students:list:${page}:${limit}:${search}:${classId}:${gender}`;
+    
+    if (useCache) {
+      const cached = await cache.get<any>(cacheKey);
+      if (cached) {
+        return res.json(cached) as any;
+      }
+    }
+
+    const where: any = {};
+    if (classId) where.classId = classId;
+    if (gender) where.gender = gender;
+    if (search) {
+      where.OR = [
+        { user: { name: { contains: search, mode: 'insensitive' } } },
+        { rollNo: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+
+    const [students, total] = await Promise.all([
+      prisma.student.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { rollNo: 'asc' },
+        include: {
+          user: { select: { id: true, name: true, email: true, phone: true, photoUrl: true, isActive: true } },
+          class: { select: { id: true, name: true, section: true } },
+        },
+      }),
+      prisma.student.count({ where }),
+    ]);
+
+    const responseBody = { success: true, data: students, pagination: { total, page, limit, totalPages: Math.ceil(total / limit) } };
+    if (useCache) {
+      await cache.set(cacheKey, responseBody, 180); // 3 min cache
+    }
+    return res.json(responseBody) as any;
+  } catch (error) {
+    console.error("Error in getAll students:", error);
+    return next(error);
   }
-
-  const where: any = {};
-  if (classId) where.classId = classId;
-  if (gender) where.gender = gender;
-  if (search) {
-    where.OR = [
-      { user: { name: { contains: search, mode: 'insensitive' } } },
-      { rollNo: { contains: search, mode: 'insensitive' } },
-    ];
-  }
-
-  const [students, total] = await Promise.all([
-    prisma.student.findMany({
-      where,
-      skip,
-      take: limit,
-      orderBy: { rollNo: 'asc' },
-      include: {
-        user: { select: { id: true, name: true, email: true, phone: true, photoUrl: true, isActive: true } },
-        class: { select: { id: true, name: true, section: true } },
-      },
-    }),
-    prisma.student.count({ where }),
-  ]);
-
-  const responseBody = { success: true, data: students, pagination: { total, page, limit, totalPages: Math.ceil(total / limit) } };
-  await cache.set(cacheKey, responseBody, 180); // 3 min cache
-  return res.json(responseBody) as any;
 };
 
 export const getById = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
