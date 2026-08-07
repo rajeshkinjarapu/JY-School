@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { formatExamOptionLabel } from '../../utils/formatters';
 import { createPortal } from 'react-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { Link, useNavigate } from 'react-router-dom';
@@ -607,8 +608,8 @@ const TeacherView: React.FC<{ data: any }> = ({ data }) => {
                     onChange={e => { setSelectedExamId(e.target.value); setSelectedClassId(''); }} 
                     className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 text-gray-800 font-semibold"
                   >
-                    <option value="">-- Choose Exam --</option>
-                    {exams.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
+                    <option value="" className="text-xs font-medium">-- Choose Exam --</option>
+                    {exams.map(e => <option key={e.id} value={e.id} className="text-xs font-medium">{formatExamOptionLabel(e.name)}</option>)}
                   </select>
                 </div>
 

@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { Link, useSearchParams, useOutletContext, useNavigate } from 'react-router-dom';
+import { formatExamOptionLabel } from '../../utils/formatters';
 import { SlipTestsTab } from './SlipTestsTab';
 import { AdmitCardTab } from './AdmitCardTab';
 import { ProgressCardTab } from './ProgressCardTab';
@@ -1832,8 +1833,8 @@ export const ExamListPage: React.FC = () => {
               <div>
                 <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 block">Select Exam</label>
                 <select value={smsExamId} onChange={e => setSmsExamId(e.target.value)} className="input-field">
-                  <option value="">Select Exam...</option>
-                  {exams.map(ex => <option key={ex.id} value={ex.id}>{ex.name}</option>)}
+                  <option value="" className="text-xs font-medium">Select Exam...</option>
+                  {exams.map(ex => <option key={ex.id} value={ex.id} className="text-xs font-medium">{formatExamOptionLabel(ex.name)}</option>)}
                 </select>
               </div>
 
