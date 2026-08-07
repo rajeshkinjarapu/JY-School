@@ -89,10 +89,18 @@ export const StudentListPage: React.FC = () => {
       const totalCount = response.data.meta?.total || data.length;
       setStudents(data);
       setTotal(totalCount);
-      // Cache only the first page with no filters
+      // Cache only the first page with no filters (wrap in try-catch to prevent quota errors)
       if (!search && !classId && page === 1) {
-        localStorage.setItem('sl_students_cache', JSON.stringify(data));
-        localStorage.setItem('sl_total_cache', String(totalCount));
+        try {
+          const lightData = data.map((s: any) => ({
+            ...s,
+            user: s.user ? { ...s.user, photoUrl: s.user.photoUrl?.startsWith('data:') ? null : s.user.photoUrl } : null
+          }));
+          localStorage.setItem('sl_students_cache', JSON.stringify(lightData));
+          localStorage.setItem('sl_total_cache', String(totalCount));
+        } catch (cacheErr) {
+          console.warn('Student list caching skipped due to quota:', cacheErr);
+        }
       }
     } catch (err: any) {
       console.error("Failed to load students:", err);
