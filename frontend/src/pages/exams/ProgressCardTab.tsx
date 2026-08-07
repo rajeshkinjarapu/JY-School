@@ -418,26 +418,30 @@ export const ProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
               </button>
             </>
           )}
-          {studentsData.length > 0 && (
-            <>
-              <button 
-                onClick={handleDownloadAll} 
-                disabled={isDownloading} 
-                className="bg-white dark:bg-slate-800 border-2 border-pink-200 dark:border-pink-900/50 text-pink-600 dark:text-pink-400 hover:border-pink-400 hover:bg-pink-50 shadow-sm px-4 py-2 rounded-xl text-xs uppercase tracking-widest font-black transition-all duration-300 flex items-center gap-2 disabled:opacity-50"
-              >
-                {isDownloading ? <LoadingSpinner size="sm" /> : <Download className="w-4 h-4" />} 
-                {isDownloading ? 'Generating...' : 'Download ZIP'}
-              </button>
-              <button 
-                onClick={handlePrint} 
-                className="bg-gradient-to-r from-pink-500 to-rose-600 hover:from-pink-600 hover:to-rose-700 text-white shadow-md shadow-pink-500/20 hover:-translate-y-0.5 px-4 py-2 rounded-xl text-xs uppercase tracking-widest font-black transition-all duration-300 flex items-center gap-2"
-              >
-                <Printer className="w-4 h-4" /> Print All Cards
-              </button>
-            </>
-          )}
         </div>
       </div>
+
+      {/* Global Actions */}
+      {studentsData.length > 0 && (
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 print:hidden animate-fade-in-up">
+          <button 
+            onClick={handleDownloadAll} 
+            disabled={isDownloading} 
+            className="flex items-center justify-center gap-2 p-3.5 bg-gradient-to-r from-pink-500 to-rose-600 hover:from-pink-600 hover:to-rose-700 text-white rounded-xl shadow-md shadow-pink-500/20 font-bold text-xs sm:text-sm transition-all hover:-translate-y-0.5 active:scale-95 disabled:opacity-50"
+          >
+            {isDownloading ? <LoadingSpinner size="sm" /> : <Download className="w-4 h-4 shrink-0" />} 
+            <span>{isDownloading ? 'Generating...' : 'Download ZIP'}</span>
+          </button>
+
+          <button 
+            onClick={handlePrint} 
+            className="flex items-center justify-center gap-2 p-3.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-xl shadow-md shadow-indigo-500/20 font-bold text-xs sm:text-sm transition-all hover:-translate-y-0.5 active:scale-95"
+          >
+            <Printer className="w-4 h-4 shrink-0" /> 
+            <span>Print All Cards</span>
+          </button>
+        </div>
+      )}
 
       {showSettings && selectedExamId && isSuperAdmin && (
         <div className="bg-white dark:bg-slate-900 border border-indigo-100 dark:border-slate-800 p-6 rounded-2xl shadow-sm mb-6 print:hidden flex flex-col gap-6 animate-fade-in-up">

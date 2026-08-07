@@ -733,24 +733,41 @@ export const JEEProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
         </div>
       )}
 
-      {/* Global Actions (Super Admin Only) */}
-      {isSuperAdmin && studentsData.length > 0 && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 print:hidden animate-fade-in-up delay-75">
-            <button onClick={handleDownloadAllZip} disabled={isDownloading} className="flex flex-col items-center justify-center p-5 bg-white/60 dark:bg-slate-900/50 backdrop-blur-md border border-indigo-200/60 dark:border-indigo-900/40 rounded-2xl hover:bg-indigo-50 dark:hover:bg-indigo-900/20 hover:-translate-y-1 hover:shadow-lg transition-all duration-300 gap-3 text-indigo-700 dark:text-indigo-400 font-bold text-sm">
-               {isDownloading ? <LoadingSpinner size="sm" /> : <Download className="w-7 h-7 mb-1" />}
-               Generate ZIP (All)
+      {/* Global Actions */}
+      {studentsData.length > 0 && (
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 print:hidden animate-fade-in-up">
+            <button 
+              onClick={handleDownloadAllZip} 
+              disabled={isDownloading} 
+              className="flex items-center justify-center gap-2 p-3.5 bg-gradient-to-r from-pink-500 to-rose-600 hover:from-pink-600 hover:to-rose-700 text-white rounded-xl shadow-md shadow-pink-500/20 font-bold text-xs sm:text-sm transition-all hover:-translate-y-0.5 active:scale-95 disabled:opacity-50"
+            >
+               {isDownloading ? <LoadingSpinner size="sm" /> : <Download className="w-4 h-4 shrink-0" />}
+               <span>Download ZIP</span>
             </button>
-            <button onClick={handleClassWiseReport} className="flex flex-col items-center justify-center p-5 bg-white/60 dark:bg-slate-900/50 backdrop-blur-md border border-blue-200/60 dark:border-blue-900/40 rounded-2xl hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:-translate-y-1 hover:shadow-lg transition-all duration-300 gap-3 text-blue-700 dark:text-blue-400 font-bold text-sm">
-               <FileText className="w-7 h-7 mb-1" />
-               Class Wise Report (PDF)
+
+            <button 
+              onClick={handlePrintAll} 
+              className="flex items-center justify-center gap-2 p-3.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-xl shadow-md shadow-indigo-500/20 font-bold text-xs sm:text-sm transition-all hover:-translate-y-0.5 active:scale-95"
+            >
+               <Printer className="w-4 h-4 shrink-0" />
+               <span>Print All Cards</span>
             </button>
-            <button onClick={() => handleOverallRankList('pdf')} disabled={isGeneratingReport} className="flex flex-col items-center justify-center p-5 bg-white/60 dark:bg-slate-900/50 backdrop-blur-md border border-fuchsia-200/60 dark:border-fuchsia-900/40 rounded-2xl hover:bg-fuchsia-50 dark:hover:bg-fuchsia-900/20 hover:-translate-y-1 hover:shadow-lg transition-all duration-300 gap-3 text-fuchsia-700 dark:text-fuchsia-400 font-bold text-sm">
-               <FileText className="w-7 h-7 mb-1" />
-               Overall Rank List (PDF)
+
+            <button 
+              onClick={handleClassWiseReport} 
+              className="flex items-center justify-center gap-2 p-3.5 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white rounded-xl shadow-md shadow-blue-500/20 font-bold text-xs sm:text-sm transition-all hover:-translate-y-0.5 active:scale-95"
+            >
+               <FileText className="w-4 h-4 shrink-0" />
+               <span>Class Report</span>
             </button>
-            <button onClick={() => handleOverallRankList('excel')} disabled={isGeneratingReport} className="flex flex-col items-center justify-center p-5 bg-white/60 dark:bg-slate-900/50 backdrop-blur-md border border-emerald-200/60 dark:border-emerald-900/40 rounded-2xl hover:bg-emerald-50 dark:hover:bg-emerald-900/20 hover:-translate-y-1 hover:shadow-lg transition-all duration-300 gap-3 text-emerald-700 dark:text-emerald-400 font-bold text-sm">
-               <FileSpreadsheet className="w-7 h-7 mb-1" />
-               Overall Rank List (Excel)
+
+            <button 
+              onClick={() => handleOverallRankList('excel')} 
+              disabled={isGeneratingReport} 
+              className="flex items-center justify-center gap-2 p-3.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-xl shadow-md shadow-emerald-500/20 font-bold text-xs sm:text-sm transition-all hover:-translate-y-0.5 active:scale-95 disabled:opacity-50"
+            >
+               <FileSpreadsheet className="w-4 h-4 shrink-0" />
+               <span>Rank List (Excel)</span>
             </button>
         </div>
       )}
