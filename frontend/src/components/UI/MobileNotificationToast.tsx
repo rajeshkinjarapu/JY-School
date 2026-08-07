@@ -18,6 +18,32 @@ export const MobileNotificationToast: React.FC = () => {
   const prevCountRef = useRef<number>(-1);
   const navigate = useNavigate();
 
+  const triggerNativeNotification = (item: ToastNotification) => {
+    try {
+      if (typeof window !== 'undefined' && 'Notification' in window) {
+        if (Notification.permission === 'granted') {
+          new Notification(item.title, {
+            body: item.message,
+            icon: '/logo.png',
+            badge: '/logo.png',
+            tag: item.id,
+          });
+        } else if (Notification.permission === 'default') {
+          Notification.requestPermission().then(perm => {
+            if (perm === 'granted') {
+              new Notification(item.title, {
+                body: item.message,
+                icon: '/logo.png',
+                badge: '/logo.png',
+                tag: item.id,
+              });
+            }
+          });
+        }
+      }
+    } catch (e) {}
+  };
+
   const checkNewNotifications = async () => {
     try {
       const res: any = await api.get('/api/notifications');
@@ -31,6 +57,7 @@ export const MobileNotificationToast: React.FC = () => {
         if (newestUnread) {
           playNotificationChime();
           setActiveToast(newestUnread);
+          triggerNativeNotification(newestUnread);
         }
       }
       prevCountRef.current = unreadCount;
@@ -40,6 +67,11 @@ export const MobileNotificationToast: React.FC = () => {
   };
 
   useEffect(() => {
+    // Request permission on mount
+    if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission().catch(() => {});
+    }
+
     checkNewNotifications();
     const interval = setInterval(checkNewNotifications, 10000); // Check every 10 seconds
     return () => clearInterval(interval);
