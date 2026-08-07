@@ -14,6 +14,7 @@ function urlBase64ToUint8Array(base64String: string) {
 }
 
 export const usePushNotifications = () => {
+  const isSupported = typeof window !== 'undefined' && 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
   const [permission, setPermission] = useState<NotificationPermission>(
     typeof window !== 'undefined' && 'Notification' in window ? Notification.permission : 'default'
   );
@@ -21,7 +22,7 @@ export const usePushNotifications = () => {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (typeof window === 'undefined' || !('serviceWorker' in navigator) || !('PushManager' in window)) {
+    if (!isSupported) {
       return;
     }
 
@@ -96,6 +97,7 @@ export const usePushNotifications = () => {
   };
 
   return {
+    isSupported,
     permission,
     isSubscribed,
     loading,
