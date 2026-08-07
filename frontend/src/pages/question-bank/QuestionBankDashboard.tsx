@@ -5,6 +5,8 @@ import {
   FileUp, FileText, Key, CheckCircle, PieChart, Settings, ChevronRight, Sparkles, Database
 } from 'lucide-react';
 
+import { PageHeader } from '../../components/UI/PageHeader';
+
 export const QuestionBankDashboard = () => {
   const navigate = useNavigate();
   const tools = [
@@ -25,19 +27,12 @@ export const QuestionBankDashboard = () => {
   ];
 
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-7xl mx-auto p-4 md:p-8">
-      {/* ══ HEADER ══ */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white/60 dark:bg-slate-900/50 backdrop-blur-md p-6 rounded-3xl border border-white/20 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
-        <div className="flex items-center gap-4">
-          <div className="bg-gradient-to-br from-indigo-500 to-purple-600 p-3.5 rounded-2xl shadow-lg shadow-indigo-500/30 text-white">
-            <Database className="w-6 h-6" />
-          </div>
-          <div>
-            <h1 className="text-xl sm:text-2xl font-black bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent drop-shadow-sm">Question Bank Hub</h1>
-
-          </div>
-        </div>
-      </div>      {/* Grid of Tools */}
+    <div className="flex-1 overflow-auto bg-gray-50/50" style={{ minHeight: 'calc(100vh - 64px)' }}>
+      <PageHeader 
+        title="Question Bank Hub" 
+        icon={<Database className="w-5 h-5" />} 
+      />
+      <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-7xl mx-auto p-4 md:p-8">      {/* Grid of Tools */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {tools.map((tool, index) => {
           const Icon = tool.icon;
@@ -78,6 +73,7 @@ export const QuestionBankDashboard = () => {
           );
         })}
       </div>
+    </div>
     </div>
   );
 };

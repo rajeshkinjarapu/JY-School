@@ -6,6 +6,8 @@ import { LiveLatexPreview } from '../../components/QuestionBank/LiveLatexPreview
 import type { FloatingImage } from '../../components/QuestionBank/LiveLatexPreview';
 import { api } from '../../api/axios';
 
+import { PageHeader } from '../../components/UI/PageHeader';
+
 export const NavodayaPaperGeneratorPage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -440,23 +442,22 @@ export const NavodayaPaperGeneratorPage = () => {
   };
 
   return (
-    <div ref={containerRef} className="fixed inset-0 z-[100] flex flex-col print:block bg-slate-50">
+    <div ref={containerRef} className="flex flex-col h-full bg-gray-50/50 print:block" style={{ minHeight: 'calc(100vh - 64px)' }}>
+      <PageHeader 
+        title="Navodaya Paper Generator" 
+        icon={<FileText className="w-5 h-5 text-white" />} 
+      />
       
-      {/* Top Header */}
-      <div className="bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between print:hidden shadow-sm z-10">
-        <div className="flex items-center gap-4">
+      {/* Actions Toolbar */}
+      <div className="bg-white border-b border-slate-200 px-4 py-3 flex flex-wrap items-center justify-between gap-3 print:hidden shadow-sm z-10">
+        <div className="flex items-center gap-2">
           <button
             onClick={() => navigate('/question-bank')}
-            className="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-500"
+            className="p-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition-colors flex items-center justify-center"
+            title="Go Back"
           >
-            <ChevronLeft className="w-6 h-6" />
+            <ChevronLeft className="w-5 h-5" />
           </button>
-          <div>
-            <h1 className="text-xl font-bold text-slate-800 flex items-center gap-2">
-              <FileText className="w-5 h-5 text-blue-600" />
-              Navodaya Paper Generator
-            </h1>
-          </div>
         </div>
         
         <div className="flex items-center gap-3">

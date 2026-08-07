@@ -55,6 +55,8 @@ const getSubjectColor = (subject: string) => {
   return SUBJECT_COLORS[keys[index]];
 };
 
+import { PageHeader } from '../../components/UI/PageHeader';
+
 const SavedPapersPage = () => {
   const navigate = useNavigate();
   const [papers, setPapers] = useState<GeneratedPaper[]>([]);
@@ -190,30 +192,21 @@ const SavedPapersPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-100 p-3 sm:p-4 animate-fade-in pb-16">
-      {/* Compact Header */}
-      <div className="mb-3 max-w-7xl mx-auto flex items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
+    <div className="flex flex-col h-full bg-slate-100" style={{ minHeight: 'calc(100vh - 64px)' }}>
+      <PageHeader 
+        title="Saved AI Papers" 
+        icon={<BookOpen className="w-5 h-5" />} 
+        action={
           <button
-            onClick={() => navigate('/question-bank')}
-            className="flex items-center gap-1.5 text-slate-500 hover:text-indigo-600 transition-colors text-xs font-bold bg-white px-2.5 py-1.5 rounded-lg border border-slate-200 shadow-sm"
+            onClick={() => navigate('/question-bank/generator')}
+            className="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-xl font-bold shadow-lg text-sm hover:-translate-y-0.5 transition-all duration-200"
           >
-            <ChevronLeft className="w-3.5 h-3.5" />
-            Back
+            <Plus className="w-4 h-4" />
+            New Paper
           </button>
-          <div>
-            <h1 className="text-xl font-black text-slate-900 tracking-tight">Saved AI Papers</h1>
-            <p className="text-slate-400 text-xs font-medium">{papers.length} paper{papers.length !== 1 ? 's' : ''} saved</p>
-          </div>
-        </div>
-        <button
-          onClick={() => navigate('/question-bank/generator')}
-          className="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-xl font-bold shadow-lg text-sm hover:-translate-y-0.5 transition-all duration-200"
-        >
-          <Plus className="w-4 h-4" />
-          New Paper
-        </button>
-      </div>
+        }
+      />
+      <div className="flex-1 overflow-auto p-3 sm:p-4 animate-fade-in pb-16">
 
       <div className="max-w-7xl mx-auto">
         {/* Controls Bar */}
@@ -475,6 +468,7 @@ const SavedPapersPage = () => {
           </div>
         </div>
       )}
+    </div>
     </div>
   );
 };

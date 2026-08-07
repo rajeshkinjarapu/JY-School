@@ -196,12 +196,12 @@ export const SettingsPage: React.FC = () => {
   if (loadingSettings) return <LoadingSpinner size="lg" className="h-[50vh]" />;
 
   return (
-    <div className="w-full max-w-7xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      {/* Header Area */}
+    <div className="flex flex-col h-full bg-gray-50/50" style={{ minHeight: 'calc(100vh - 64px)' }}>
       <PageHeader 
-        title="Settings & Administration"
-        icon={<Shield className="w-6 h-6" />}
+        title="Settings & Administration" 
+        icon={<Shield className="w-5 h-5" />} 
       />
+      <div className="flex-1 overflow-auto p-4 md:p-6 lg:p-8 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-7xl mx-auto w-full">
 
       {/* Navigation Tabs */}
       <div className="flex flex-wrap gap-3 bg-white/50 dark:bg-gray-900/50 backdrop-blur-md p-2 rounded-2xl border border-white/20 shadow-sm">
@@ -588,6 +588,7 @@ export const SettingsPage: React.FC = () => {
           </div>
         </div>
       )}
+    </div>
     </div>
   );
 };

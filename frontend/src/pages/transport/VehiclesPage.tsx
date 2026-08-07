@@ -4,6 +4,8 @@ import { LoadingSpinner } from '../../components/UI/LoadingSpinner';
 import { Bus, Plus, Edit, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
+import { PageHeader } from '../../components/UI/PageHeader';
+
 export const VehiclesPage = () => {
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -39,30 +41,21 @@ export const VehiclesPage = () => {
   };
 
   return (
-    <div className="flex-1 overflow-auto p-4 md:p-6 lg:p-8">
-      <div className="max-w-7xl mx-auto space-y-8 animate-fade-in-up">
-        
-        {/* Header */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center bg-white/60 dark:bg-slate-900/50 backdrop-blur-md p-6 lg:p-8 rounded-3xl border border-white/20 shadow-[0_8px_30px_rgb(0,0,0,0.04)] relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
-          <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl -ml-20 -mb-20 pointer-events-none"></div>
-          
-          <div className="flex items-center gap-5 relative z-10">
-            <div className="bg-gradient-to-br from-indigo-500 to-purple-600 p-4 rounded-2xl shadow-lg shadow-indigo-500/30 text-white shrink-0">
-              <Bus className="w-8 h-8" />
-            </div>
-            <div>
-              <h1 className="text-2xl md:text-3xl font-black text-slate-800 dark:text-white tracking-tight">Vehicles</h1>
-
-            </div>
-          </div>
-          
-          <div className="mt-4 md:mt-0 relative z-10">
-            <button onClick={() => setShowModal(true)} className="flex items-center gap-2 px-6 py-3.5 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white rounded-2xl font-black uppercase tracking-widest text-xs shadow-lg shadow-indigo-500/30 hover:shadow-xl hover:shadow-indigo-500/40 transition-all duration-300 hover:-translate-y-0.5">
-              <Plus className="w-4 h-4" /> Add Vehicle
-            </button>
-          </div>
-        </div>
+    <div className="flex flex-col h-full bg-gray-50/50" style={{ minHeight: 'calc(100vh - 64px)' }}>
+      <PageHeader 
+        title="Vehicles" 
+        icon={<Bus className="w-5 h-5" />} 
+        action={
+          <button 
+            onClick={() => setShowModal(true)}
+            className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all font-bold"
+          >
+            <Plus className="w-5 h-5" /> Add Vehicle
+          </button>
+        }
+      />
+      <div className="flex-1 overflow-auto p-4 md:p-6 lg:p-8">
+        <div className="max-w-7xl mx-auto space-y-8 animate-fade-in-up">
 
         {loading ? <div className="py-20 flex justify-center"><LoadingSpinner size="lg" /></div> : (
           <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-3xl shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-200/60 dark:border-slate-800 overflow-hidden relative animate-fade-in-up delay-75">
@@ -152,6 +145,7 @@ export const VehiclesPage = () => {
           </div>
         )}
       </div>
+    </div>
     </div>
   );
 };

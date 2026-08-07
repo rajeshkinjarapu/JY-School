@@ -23,6 +23,8 @@ interface Homework {
 interface ClassOption { id: string; name: string; section: string }
 interface SubjectOption { id: string; name: string; code: string }
 
+import { PageHeader } from '../../components/UI/PageHeader';
+
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
 const HomeworkPage: React.FC = () => {
@@ -144,43 +146,37 @@ const HomeworkPage: React.FC = () => {
   if (loading) return <LoadingSpinner size="lg" className="h-[70vh]" />;
 
   return (
-    <div className="space-y-6 animate-fade-in-up pb-10">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center bg-white/60 dark:bg-slate-900/50 backdrop-blur-md p-6 rounded-3xl border border-white/20 shadow-[0_8px_30px_rgb(0,0,0,0.04)] mb-8 gap-6 relative overflow-hidden animate-fade-in-up">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-green-500/10 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
-        <div className="absolute bottom-0 left-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl -ml-20 -mb-20 pointer-events-none"></div>
+    <div className="flex flex-col h-full bg-gray-50/50" style={{ minHeight: 'calc(100vh - 64px)' }}>
+      <PageHeader 
+        title="Homework Manager" 
+        icon={<BookMarked className="w-5 h-5" />} 
+      />
+      <div className="flex-1 overflow-auto p-4 md:p-6 lg:p-8 space-y-6 animate-fade-in-up pb-10">
         
-        <div className="flex items-center gap-4 relative z-10">
-          <div className="bg-gradient-to-br from-green-500 to-emerald-600 p-4 rounded-2xl shadow-lg shadow-green-500/30 text-white shrink-0">
-            <BookMarked className="w-8 h-8" />
+        {/* Actions & Filters */}
+        <div className="flex flex-col sm:flex-row justify-between items-start md:items-center gap-4">
+          <div className="flex flex-col sm:flex-row items-center gap-4 w-full md:w-auto">
+            {canEdit && (
+              <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto bg-white/50 dark:bg-slate-800/50 p-2 rounded-2xl border border-gray-200 dark:border-slate-700 shadow-sm">
+                <select 
+                  value={filterClass} 
+                  onChange={e => { setFilterClass(e.target.value); setFilterSubject(''); fetchSubjects(e.target.value); }}
+                  className="appearance-none px-4 py-2.5 rounded-xl border-none bg-white dark:bg-slate-800 text-sm font-extrabold text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-4 focus:ring-green-500/20 shadow-sm cursor-pointer min-w-[150px]"
+                >
+                  <option value="">All Classes</option>
+                  {classes.map(c => <option key={c.id} value={c.id}>{c.name}-{c.section}</option>)}
+                </select>
+                <select 
+                  value={filterSubject} 
+                  onChange={e => setFilterSubject(e.target.value)}
+                  className="appearance-none px-4 py-2.5 rounded-xl border-none bg-white dark:bg-slate-800 text-sm font-extrabold text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-4 focus:ring-green-500/20 shadow-sm cursor-pointer min-w-[150px]"
+                >
+                  <option value="">All Subjects</option>
+                  {subjects.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                </select>
+              </div>
+            )}
           </div>
-          <div>
-            <h1 className="text-2xl md:text-3xl font-black text-slate-800 dark:text-white tracking-tight">Homework Manager</h1>
-
-          </div>
-        </div>
-
-        <div className="flex flex-col sm:flex-row items-center gap-4 w-full md:w-auto relative z-10">
-          {canEdit && (
-            <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto bg-white/50 dark:bg-slate-800/50 p-2 rounded-2xl border border-white/40 dark:border-slate-700 shadow-inner">
-              <select 
-                value={filterClass} 
-                onChange={e => { setFilterClass(e.target.value); setFilterSubject(''); fetchSubjects(e.target.value); }}
-                className="appearance-none px-4 py-2.5 rounded-xl border-none bg-white dark:bg-slate-800 text-sm font-extrabold text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-4 focus:ring-green-500/20 shadow-sm cursor-pointer min-w-[150px]"
-              >
-                <option value="">All Classes</option>
-                {classes.map(c => <option key={c.id} value={c.id}>{c.name}-{c.section}</option>)}
-              </select>
-              <select 
-                value={filterSubject} 
-                onChange={e => setFilterSubject(e.target.value)}
-                className="appearance-none px-4 py-2.5 rounded-xl border-none bg-white dark:bg-slate-800 text-sm font-extrabold text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-4 focus:ring-green-500/20 shadow-sm cursor-pointer min-w-[150px]"
-              >
-                <option value="">All Subjects</option>
-                {subjects.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-              </select>
-            </div>
-          )}
-          
           {canEdit && (
             <button 
               onClick={openCreate}
@@ -190,7 +186,6 @@ const HomeworkPage: React.FC = () => {
             </button>
           )}
         </div>
-      </div>
 
       {/* Homework Grid */}
       {/* Homework Grid */}
@@ -414,6 +409,7 @@ const HomeworkPage: React.FC = () => {
           </div>
         </div>
       )}
+    </div>
     </div>
   );
 };

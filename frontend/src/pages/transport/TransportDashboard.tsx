@@ -1,6 +1,7 @@
 import React from 'react';
 import { Bus, Map, Users, Settings, Activity, Calendar, ShieldCheck, ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { PageHeader } from '../../components/UI/PageHeader';
 
 export const TransportDashboard = () => {
   const tools = [
@@ -63,24 +64,13 @@ export const TransportDashboard = () => {
   ];
 
   return (
-    <div className="flex-1 overflow-auto p-4 md:p-6 lg:p-8">
-      <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-        
-        {/* Header */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center bg-white/60 dark:bg-slate-900/50 backdrop-blur-md p-6 lg:p-8 rounded-3xl border border-white/20 shadow-[0_8px_30px_rgb(0,0,0,0.04)] relative overflow-hidden animate-fade-in-up">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
-          <div className="absolute bottom-0 left-0 w-64 h-64 bg-yellow-500/10 rounded-full blur-3xl -ml-20 -mb-20 pointer-events-none"></div>
-          
-          <div className="flex items-center gap-5 relative z-10">
-            <div className="bg-gradient-to-br from-amber-400 to-yellow-600 p-4 rounded-2xl shadow-lg shadow-amber-500/30 text-white shrink-0">
-              <Bus className="w-8 h-8" />
-            </div>
-            <div>
-              <h1 className="text-2xl md:text-3xl font-black text-slate-800 dark:text-white tracking-tight">Transport</h1>
-
-            </div>
-          </div>
-        </div>
+    <div className="flex-1 overflow-auto bg-gray-50/50" style={{ minHeight: 'calc(100vh - 64px)' }}>
+      <PageHeader 
+        title="Transport Dashboard" 
+        icon={<Bus className="w-5 h-5" />} 
+      />
+      <div className="p-4 md:p-6 lg:p-8">
+        <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
 
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
           {tools.map((tool, index) => {
@@ -114,6 +104,7 @@ export const TransportDashboard = () => {
           })}
         </div>
       </div>
+    </div>
     </div>
   );
 };

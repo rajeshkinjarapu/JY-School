@@ -7,6 +7,8 @@ import html2canvas from 'html2canvas';
 import toast from 'react-hot-toast';
 import { SlipTestRankCard, type ProcessedStudent } from '../../components/OfficeTools/SlipTestRankCard';
 
+import { PageHeader } from '../../components/UI/PageHeader';
+
 export const SlipTestManualPage = () => {
   const navigate = useNavigate();
   const { setDynamicTitle } = useOutletContext<{ setDynamicTitle?: (title: string) => void }>() || {};
@@ -247,16 +249,21 @@ export const SlipTestManualPage = () => {
   };
 
   return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-10">
-      <div className="flex justify-end">
-        <button 
-          onClick={() => setIsSettingsOpen(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 rounded-xl shadow-sm transition-colors font-medium"
-        >
-          <Settings className="w-4 h-4" />
-          Test Settings
-        </button>
-      </div>
+    <div className="flex flex-col h-full bg-gray-50/50" style={{ minHeight: 'calc(100vh - 64px)' }}>
+      <PageHeader 
+        title="Slip Test Manual" 
+        icon={<FileSpreadsheet className="w-5 h-5" />} 
+        action={
+          <button 
+            onClick={() => setIsSettingsOpen(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 rounded-xl shadow-sm transition-colors font-medium"
+          >
+            <Settings className="w-4 h-4" />
+            Test Settings
+          </button>
+        }
+      />
+      <div className="flex-1 overflow-auto p-4 md:p-6 lg:p-8 space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-10 max-w-7xl mx-auto w-full">
 
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 items-start">
         {/* LEFT COLUMN: Controls & Input */}
@@ -533,6 +540,7 @@ export const SlipTestManualPage = () => {
           background: #94a3b8;
         }
       `}</style>
+    </div>
     </div>
   );
 };

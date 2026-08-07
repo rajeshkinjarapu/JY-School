@@ -29,6 +29,8 @@ interface Teacher {
   user: { name: string };
 }
 
+import { PageHeader } from '../../components/UI/PageHeader';
+
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
 const SalaryPage: React.FC = () => {
@@ -124,15 +126,20 @@ const SalaryPage: React.FC = () => {
   if (loading) return <LoadingSpinner size="lg" className="h-[70vh]" />;
 
   return (
-    <div className="space-y-4 sm:space-y-6 md:space-y-8 p-0 sm:p-4 md:p-8 bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 min-h-screen animate-fade-in-up pb-10 overflow-x-hidden">
-      {isAdmin && (
-        <div className="flex justify-end mb-4">
-          <button onClick={openCreate}
-            className="flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-sm transition-all hover:scale-105 cursor-pointer bg-violet-600 text-white shadow-md hover:bg-violet-700">
-            <Plus className="w-4 h-4" /> Add Record
-          </button>
-        </div>
-      )}
+    <div className="flex flex-col h-full bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50" style={{ minHeight: 'calc(100vh - 64px)' }}>
+      <PageHeader 
+        title="Salary Records" 
+        icon={<DollarSign className="w-5 h-5" />} 
+        action={
+          isAdmin ? (
+            <button onClick={openCreate}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm transition-all hover:scale-105 cursor-pointer bg-violet-600 text-white shadow-md hover:bg-violet-700">
+              <Plus className="w-4 h-4" /> Add Record
+            </button>
+          ) : undefined
+        }
+      />
+      <div className="flex-1 overflow-auto space-y-4 sm:space-y-6 md:space-y-8 p-3 sm:p-4 md:p-8 animate-fade-in-up pb-10 overflow-x-hidden">
 
       {/* Filters */}
       <div className="flex flex-wrap gap-3 px-3 sm:px-0">
@@ -323,6 +330,7 @@ const SalaryPage: React.FC = () => {
           </div>
         </div>
       )}
+    </div>
     </div>
   );
 };
