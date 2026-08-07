@@ -530,25 +530,25 @@ export const ProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
                 <p className="text-xs font-semibold text-slate-500">Generated {studentsData.length} cards based on exam results.</p>
               </div>
             </div>
-            <div className="overflow-x-auto w-full">
-              <table className="w-full text-sm text-left whitespace-nowrap">
+            <div className="overflow-hidden w-full">
+              <table className="w-full text-sm text-left table-fixed">
                 <thead className="bg-slate-50/80 dark:bg-slate-800/80 text-slate-500 dark:text-slate-400 text-xs uppercase tracking-widest">
                   <tr>
-                    <th className="px-6 py-5 font-black border-b border-slate-100 dark:border-slate-700/50 w-20">Rank</th>
-                    <th className="px-6 py-5 font-black border-b border-slate-100 dark:border-slate-700/50">Student Name</th>
-                    {!isTeacher && <th className="px-6 py-5 font-black border-b border-slate-100 dark:border-slate-700/50 hidden md:table-cell">Roll No</th>}
-                    <th className="px-6 py-5 font-black border-b border-slate-100 dark:border-slate-700/50 text-center">Score</th>
-                    <th className="px-6 py-5 font-black border-b border-slate-100 dark:border-slate-700/50 text-right">Action</th>
+                    <th className="px-3 py-3 font-black border-b border-slate-100 dark:border-slate-700/50 hidden md:table-cell w-14">Rank</th>
+                    <th className="px-3 py-3 font-black border-b border-slate-100 dark:border-slate-700/50 w-auto">Student Name</th>
+                    {!isTeacher && <th className="px-3 py-3 font-black border-b border-slate-100 dark:border-slate-700/50 hidden md:table-cell w-24">Roll No</th>}
+                    <th className="px-3 py-3 font-black border-b border-slate-100 dark:border-slate-700/50 text-center w-14">Score</th>
+                    <th className="px-3 py-3 font-black border-b border-slate-100 dark:border-slate-700/50 text-right w-24 sm:w-28">Action</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
                   {studentsData.map((data, idx) => (
                     <tr key={data.studentId} className="hover:bg-gray-50 transition-colors bg-white">
-                      <td className="py-3 px-4">
+                      <td className="py-2.5 px-3 hidden md:table-cell">
                         <span className="font-bold text-indigo-600 bg-indigo-50 px-2 py-1 rounded">#{data.rank}</span>
                       </td>
-                      <td className="py-3 px-4 font-bold text-gray-900 max-w-[150px] md:max-w-none">
-                        <span className="whitespace-normal break-words">{data.studentName}</span>
+                      <td className="py-2.5 px-3 font-bold text-gray-900 truncate">
+                        <span>{data.studentName}</span>
                       </td>
                       {!isTeacher && <td className="py-3 px-4 text-gray-600 font-medium hidden md:table-cell">{data.rollNo || '-'}</td>}
                       <td className="py-3 px-4 text-center font-bold text-emerald-600">{data.total}</td>
