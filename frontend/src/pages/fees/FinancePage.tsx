@@ -448,16 +448,6 @@ export const FinancePage: React.FC = () => {
       <PageHeader 
         title={activeTab === 'home' ? 'Finance' : FINANCE_MENU.find(m => m.key === activeTab)?.label || 'Finance'}
         icon={<CreditCard className="w-6 h-6" />}
-        action={
-          activeTab !== 'home' ? (
-            <button
-              onClick={() => setTab('home')}
-              className="btn-secondary w-full sm:w-auto"
-            >
-              ← Back to Finance Home
-            </button>
-          ) : undefined
-        }
       />
 
       <div className="flex-1 overflow-auto p-4 md:p-6">
@@ -586,13 +576,6 @@ export const FinancePage: React.FC = () => {
           <Wallet className="w-4 h-4 text-indigo-500" />
           Finance Submenu
         </div>
-        <button
-          onClick={() => setTab('home')}
-          className="flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold transition-all text-left cursor-pointer text-gray-500 hover:bg-gray-50 hover:text-gray-900"
-        >
-          <ArrowRight className="w-4.5 h-4.5 rotate-180" />
-          <span>← Back to Home</span>
-        </button>
         {FINANCE_MENU.map(tab => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.key;

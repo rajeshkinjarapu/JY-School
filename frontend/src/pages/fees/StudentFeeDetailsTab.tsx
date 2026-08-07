@@ -309,39 +309,7 @@ export const StudentFeeDetailsTab: React.FC<StudentFeeDetailsProps> = ({ student
 
   return (
     <div className="space-y-5 animate-fade-in">
-      {/* Controls — hidden on print */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 mb-2 border-b border-gray-100 dark:border-gray-800 print:hidden">
-        {/* BEAUTIFUL PAGE HEADING BANNER FOR TAB */}
-        <div className="relative w-full overflow-hidden bg-gradient-to-r from-emerald-800 via-teal-700 to-cyan-800 rounded-3xl px-6 py-6 sm:px-8 sm:py-8 shadow-xl border border-teal-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-           <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
-           <div className="absolute bottom-0 left-20 w-40 h-40 bg-teal-500/20 rounded-full blur-2xl pointer-events-none"></div>
-           <div className="relative z-10 flex items-center gap-4">
-              <div className="hidden sm:flex w-14 h-14 bg-white/10 backdrop-blur-md rounded-2xl items-center justify-center border border-white/20 shadow-inner">
-                <Users className="w-7 h-7 text-white" />
-              </div>
-              <div>
-                <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight drop-shadow-md">
-                  Student Fee Details
-                </h1>
-                <p className="text-teal-100 text-xs sm:text-sm font-semibold mt-1">View total fee, paid amount, and balances class-wise.</p>
-              </div>
-           </div>
-           
-           <div className="relative z-10 hidden md:flex items-center gap-3 flex-wrap">
-             <button onClick={handlePrint} className="flex items-center gap-2 px-4 py-2 bg-white/10 text-white rounded-xl hover:bg-white/20 font-bold text-sm transition-colors cursor-pointer border border-white/20">
-               <Printer className="w-4 h-4" /> Print
-             </button>
-             <button onClick={handleDownloadPDF} className="flex items-center gap-2 px-4 py-2 bg-white/10 text-white rounded-xl hover:bg-white/20 font-bold text-sm transition-colors shadow-sm cursor-pointer border border-white/20">
-               <Download className="w-4 h-4" /> Export PDF
-             </button>
-             <button onClick={handleExportExcel} className="flex items-center gap-2 px-4 py-2 bg-white text-teal-800 rounded-xl hover:bg-teal-50 font-bold text-sm transition-colors shadow-sm cursor-pointer border border-teal-100">
-               <Download className="w-4 h-4" /> Export Excel
-             </button>
-           </div>
-        </div>
-      </div>
-
-      <div className="flex flex-col sm:flex-row gap-4 mb-6 print:hidden">
+      <div className="flex flex-col md:flex-row gap-4 mb-6 print:hidden items-stretch md:items-center">
         <div className="relative flex-1">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
           <input
@@ -349,20 +317,31 @@ export const StudentFeeDetailsTab: React.FC<StudentFeeDetailsProps> = ({ student
             placeholder="Search by student name or ID..."
             value={searchTerm}
             onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
-            className="w-full pl-12 pr-4 py-3.5 bg-gray-50 dark:bg-gray-800 border-0 rounded-2xl focus:ring-2 focus:ring-indigo-500 text-sm font-medium transition-all"
+            className="w-full pl-12 pr-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl focus:ring-2 focus:ring-indigo-500 text-sm font-medium transition-all"
           />
         </div>
-        <div className="sm:w-64">
+        <div className="md:w-56">
           <select
             value={selectedClassId}
             onChange={(e) => { setSelectedClassId(e.target.value); setCurrentPage(1); }}
-            className="w-full px-4 py-3.5 bg-gray-50 dark:bg-gray-800 border-0 rounded-2xl focus:ring-2 focus:ring-indigo-500 text-sm font-medium cursor-pointer transition-all appearance-none"
+            className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl focus:ring-2 focus:ring-indigo-500 text-sm font-medium cursor-pointer transition-all"
           >
-          <option value="ALL">All Classes</option>
-          {classes.map(c => (
-            <option key={c.id} value={c.id}>{c.name} - {c.section}</option>
-          ))}
-        </select>
+            <option value="ALL">All Classes</option>
+            {classes.map(c => (
+              <option key={c.id} value={c.id}>{c.name} - {c.section}</option>
+            ))}
+          </select>
+        </div>
+        <div className="flex items-center gap-2">
+          <button onClick={handlePrint} className="flex-1 md:flex-none flex items-center justify-center gap-1.5 px-3 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-bold text-xs transition-colors cursor-pointer border border-gray-200">
+            <Printer className="w-4 h-4" /> Print
+          </button>
+          <button onClick={handleDownloadPDF} className="flex-1 md:flex-none flex items-center justify-center gap-1.5 px-3 py-2.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-xl font-bold text-xs transition-colors cursor-pointer border border-indigo-100">
+            <Download className="w-4 h-4" /> PDF
+          </button>
+          <button onClick={handleExportExcel} className="flex-1 md:flex-none flex items-center justify-center gap-1.5 px-3 py-2.5 bg-teal-50 hover:bg-teal-100 text-teal-700 rounded-xl font-bold text-xs transition-colors cursor-pointer border border-teal-100">
+            <Download className="w-4 h-4" /> Excel
+          </button>
         </div>
       </div>
 

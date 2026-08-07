@@ -94,8 +94,9 @@ export const StudentListPage: React.FC = () => {
         localStorage.setItem('sl_students_cache', JSON.stringify(data));
         localStorage.setItem('sl_total_cache', String(totalCount));
       }
-    } catch {
-      toast.error("Failed to load students");
+    } catch (err: any) {
+      console.error("Failed to load students:", err);
+      toast.error(err?.response?.data?.message || err?.message || "Failed to load students");
     } finally {
       setLoading(false);
     }

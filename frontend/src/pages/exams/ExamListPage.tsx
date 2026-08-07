@@ -847,16 +847,6 @@ export const ExamListPage: React.FC = () => {
       <PageHeader 
         title="Examination Dashboard"
         icon={<ClipboardList className="w-6 h-6" />}
-        action={
-          activeTab ? (
-            <button
-              onClick={() => setActiveTab('')}
-              className="btn-secondary w-full sm:w-auto"
-            >
-              ← Back to Examination Home
-            </button>
-          ) : undefined
-        }
       />
       <div className="space-y-6 md:space-y-8">
         {!activeTab && (

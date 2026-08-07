@@ -1,28 +1,19 @@
 const http = require('http');
-const fs = require('fs');
 
-const options = {
+const req = http.request({
   hostname: 'localhost',
   port: 5000,
-  path: '/api/students?limit=10',
-  method: 'GET'
-};
-
-const req = http.request(options, (res) => {
+  path: '/api/students',
+  method: 'GET',
+}, (res) => {
+  console.log(`STATUS: ${res.statusCode}`);
   let data = '';
-  res.on('data', (chunk) => {
-    data += chunk;
-  });
-  res.on('end', () => {
-    fs.writeFileSync('test_students.json', JSON.stringify({
-      statusCode: res.statusCode,
-      data: data
-    }));
-  });
+  res.on('data', chunk => data += chunk);
+  res.on('end', () => console.log(`BODY: ${data}`));
 });
 
 req.on('error', (e) => {
-  fs.writeFileSync('test_students.json', JSON.stringify({ error: e.message }));
+  console.error(`problem with request: ${e.message}`);
 });
 
 req.end();
