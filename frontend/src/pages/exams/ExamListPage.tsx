@@ -30,31 +30,31 @@ const ExamCard: React.FC<{
   const primaryColor = match ? match[0] : '#6366f1';
   
   return (
-    <div onClick={onClick} className="group relative overflow-hidden rounded-[1.5rem] p-5 sm:p-6 transition-all duration-300 hover:-translate-y-1.5 cursor-pointer shadow-md hover:shadow-2xl border border-white/10"
-         style={{ background: gradient, boxShadow: `0 10px 25px -5px ${primaryColor}70` }}>
+    <div onClick={onClick} className="group relative overflow-hidden rounded-2xl p-3 sm:p-5 transition-all duration-300 hover:-translate-y-1 cursor-pointer shadow-sm hover:shadow-lg border border-white/10"
+         style={{ background: gradient, boxShadow: `0 4px 14px -2px ${primaryColor}50` }}>
       
       {/* Background Watermark Icon */}
-      <div className="absolute -right-4 -bottom-4 opacity-10 group-hover:opacity-20 transition-all duration-500 transform group-hover:scale-110 group-hover:-rotate-12 pointer-events-none text-white">
-        <Icon className="w-28 h-28 sm:w-32 sm:h-32" />
+      <div className="absolute -right-3 -bottom-3 opacity-10 group-hover:opacity-20 transition-all duration-500 transform group-hover:scale-110 pointer-events-none text-white">
+        <Icon className="w-16 h-16 sm:w-28 sm:h-28" />
       </div>
         
       {/* Top right gradient orb */}
-      <div className="absolute -top-10 -right-10 w-24 h-24 bg-white/20 blur-2xl rounded-full group-hover:bg-white/30 transition-all" />
+      <div className="absolute -top-8 -right-8 w-16 h-16 bg-white/20 blur-xl rounded-full group-hover:bg-white/30 transition-all" />
 
-      <div className="relative z-10 flex flex-col h-full justify-between gap-5 sm:gap-6">
+      <div className="relative z-10 flex flex-col justify-between h-full gap-2">
         <div className="flex items-start justify-between">
-          <div className="p-3 sm:p-3.5 rounded-2xl bg-white/20 backdrop-blur-md shadow-sm transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3 border border-white/20">
-            <Icon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+          <div className="p-1.5 sm:p-2.5 rounded-xl bg-white/20 backdrop-blur-md shadow-sm border border-white/20">
+            <Icon className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-white" />
           </div>
-          <div className="p-2 sm:p-2.5 rounded-full bg-white/10 group-hover:bg-white/20 backdrop-blur-sm transition-all transform group-hover:translate-x-1 border border-white/10">
-            <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <div className="p-1 sm:p-1.5 rounded-full bg-white/10 group-hover:bg-white/20 backdrop-blur-sm transition-all border border-white/10">
+            <svg className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
             </svg>
           </div>
         </div>
         <div>
-          <h3 className="text-base sm:text-lg font-extrabold text-white tracking-wide mb-1 sm:mb-1.5 leading-tight">{label}</h3>
-          {sub && <p className="text-xs sm:text-sm text-white/80 font-bold flex items-center gap-1.5"><span className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-white/60"/>{sub}</p>}
+          <h3 className="text-xs sm:text-base font-extrabold text-white tracking-wide leading-tight truncate">{label}</h3>
+          {sub && <p className="text-[9px] sm:text-xs text-white/80 font-bold flex items-center gap-1 truncate mt-0.5"><span className="w-1 h-1 rounded-full bg-white/60 shrink-0"/>{sub}</p>}
         </div>
       </div>
     </div>
@@ -848,11 +848,11 @@ export const ExamListPage: React.FC = () => {
         title="Examination Dashboard"
         icon={<ClipboardList className="w-6 h-6" />}
       />
-      <div className="space-y-6 md:space-y-8">
+      <div className="p-3 sm:p-6 space-y-4">
         {!activeTab && (
-          <div className="pt-2 sm:pt-4 space-y-8">
+          <div>
             {/* Unified Tools Grid */}
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 mt-6">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2.5 sm:gap-4">
               {isAdmin && <ExamCard label="Examinations List" sub="Manage exams" icon={ClipboardList} gradient="linear-gradient(135deg, #6366f1, #4f46e5)" glow="rgba(99,102,241,0.4)" onClick={() => setActiveTab('examination')} />}
               {isAdminOrTeacher && (
                 <>
