@@ -83,6 +83,7 @@ export const OfficeToolsDashboard = () => {
         </div>
       </div>
     </div>
+    </div>
   );
 };
 
