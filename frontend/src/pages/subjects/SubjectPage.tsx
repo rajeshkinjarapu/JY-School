@@ -100,16 +100,8 @@ export const SubjectPage: React.FC = () => {
         }
         toast.success('Subject updated successfully!');
       } else {
-        const subRes: any = await api.post('/api/subjects', { name, classId });
-        const subject = subRes.data;
-        if (teacherId) {
-          await api.post('/api/subjects/assign-teacher', {
-            classId,
-            subjectId: subject.id,
-            teacherId,
-          });
-        }
-        toast.success('Subject created and mapped successfully!');
+        await api.post('/api/subjects', { name, teacherId });
+        toast.success('Subject created successfully!');
       }
 
       setShowModal(false);
@@ -230,25 +222,6 @@ export const SubjectPage: React.FC = () => {
                   className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition"
                 />
               </div>
-
-              {!editingSubject && (
-                <div>
-                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">Class Room</label>
-                  <select
-                    required
-                    value={classId}
-                    onChange={(e) => setClassId(e.target.value)}
-                    className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition"
-                  >
-                    <option value="">Select Class</option>
-                    {classes.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.name}-{c.section}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
 
               {editingSubject && (
                 <div>

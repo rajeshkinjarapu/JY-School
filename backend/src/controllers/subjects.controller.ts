@@ -24,15 +24,60 @@ export const getAll = async (req: AuthRequest, res: Response): Promise<void> => 
 };
 
 export const create = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
-  const { name, code, classId } = req.body;
+  const { name, code, classId, teacherId } = req.body;
 
-  const existing = await prisma.subject.findFirst({ where: { code, classId } });
-  if (existing) return next(createError('Subject with this code already exists in the class', 409));
+  if (!name || !name.trim()) {
+    return next(createError('Subject name is required', 400));
+  }
 
-  const subject = await prisma.subject.create({
-    data: { name, code, classId },
-  });
-  successResponse(res, subject, 'Subject created', 201);
+  const baseName = name.trim();
+  const baseCode = code || baseName.toUpperCase().replace(/\s+/g, '_');
+
+  if (classId) {
+    const existing = await prisma.subject.findFirst({ where: { name: baseName, classId } });
+    if (existing) {
+      return next(createError('Subject already exists in this class', 409));
+    }
+
+    const subject = await prisma.subject.create({
+      data: { name: baseName, code: baseCode, classId },
+    });
+
+    if (teacherId) {
+      await prisma.classSubjectTeacher.create({
+        data: { classId, subjectId: subject.id, teacherId },
+      }).catch(() => {});
+    }
+
+    return successResponse(res, subject, 'Subject created', 201);
+  }
+
+  // If no classId provided, create subject across all classes
+  const allClasses = await prisma.class.findMany();
+  if (allClasses.length === 0) {
+    // If no classes exist at all, create a default dummy subject entry or return error
+    return next(createError('No classes found in the system.', 400));
+  }
+
+  const createdSubjects = [];
+  for (const cls of allClasses) {
+    const existing = await prisma.subject.findFirst({ where: { name: baseName, classId: cls.id } });
+    if (!existing) {
+      const subCode = `${baseCode}_${cls.id.slice(-4)}`;
+      const sub = await prisma.subject.create({
+        data: { name: baseName, code: subCode, classId: cls.id },
+      });
+      createdSubjects.push(sub);
+
+      if (teacherId) {
+        await prisma.classSubjectTeacher.create({
+          data: { classId: cls.id, subjectId: sub.id, teacherId },
+        }).catch(() => {});
+      }
+    }
+  }
+
+  return successResponse(res, createdSubjects[0] || { name: baseName }, 'Subject created successfully', 201);
 };
 
 export const update = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
