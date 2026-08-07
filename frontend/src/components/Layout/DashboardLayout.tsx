@@ -102,9 +102,10 @@ export const DashboardLayout: React.FC = () => {
     return 'Dashboard';
   };
 
-  // Hide sidebar for Students on mobile, and completely hide for Teachers
+  // Hide sidebar for Teachers and Students only on mobile screens
+  const isTeacherMobile = user?.role === 'TEACHER' && isMobile;
   const isStudentMobile = user?.role === 'STUDENT' && isMobile;
-  const hideSidebar = user?.role === 'TEACHER' || isStudentMobile;
+  const hideSidebar = isTeacherMobile || isStudentMobile;
 
   if (hideSidebar) {
     return (
