@@ -172,8 +172,8 @@ export const ExamListPage: React.FC = () => {
   const downloadSampleExcel = async () => {
     const XLSX = await import('xlsx');
     const ws = XLSX.utils.json_to_sheet([
-      { "Student ID": "STU123", "Subject": "MATH101", "Marks": 85 },
-      { "Student ID": "STU124", "Subject": "MATH101", "Marks": 90 }
+      { "Student ID": "STU123", "Maths": 85, "Physics": 78, "Chemistry": 92 },
+      { "Student ID": "STU124", "Maths": 90, "Physics": 88, "Chemistry": 89 }
     ]);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Marks");
@@ -186,34 +186,74 @@ export const ExamListPage: React.FC = () => {
       toast.error('Please select an exam and a file');
       return;
     }
+    
+    // Show loading state here if desired
+    const toastId = toast.loading('Processing Excel file...');
+
     try {
+      // Fetch subjects to map names to IDs
+      const subjectsRes: any = await api.get('/api/subjects?limit=5000');
+      const subjectsList = subjectsRes.data?.data || subjectsRes.data || [];
+      const subjectMap = new Map(subjectsList.map((s: any) => [s.name.toLowerCase().trim(), s.id]));
+
       const reader = new FileReader();
       reader.onload = async (evt) => {
-        const data = evt.target?.result;
-        const XLSX = await import('xlsx');
-        const workbook = XLSX.read(data, { type: 'binary' });
-        const sheetName = workbook.SheetNames[0];
-        const sheet = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
-        
-        // Map excel columns to backend payload
-        const mappedMarks = sheet.map((row: any) => ({
-          studentId: row['Student ID'] || row['studentId'] || row['Student Id'],
-          subjectId: row['Subject'] || row['Subject Code'] || row['subjectId'] || row['Subject Id'],
-          marksObtained: Number(row['Marks'] || row['Marks Obtained'] || row['marksObtained']),
-          remarks: row['Remarks'] || row['remarks'] || ''
-        }));
+        try {
+          const data = evt.target?.result;
+          const XLSX = await import('xlsx');
+          const workbook = XLSX.read(data, { type: 'binary' });
+          const sheetName = workbook.SheetNames[0];
+          const sheet = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
+          
+          const mappedMarks: any[] = [];
 
-        await api.post('/api/marks/bulk', {
-          examId: excelExamId,
-          marks: mappedMarks
-        });
-        toast.success('Excel marks uploaded successfully!');
-        setShowExcelModal(false);
-        setExcelFile(null);
+          sheet.forEach((row: any) => {
+            const studentId = row['Student ID'] || row['studentId'] || row['Student Id'] || row['ID'];
+            if (!studentId) return;
+
+            Object.keys(row).forEach((key) => {
+              const normalizedKey = key.toLowerCase().trim();
+              if (['student id', 'studentid', 'student_id', 'id', 'remarks'].includes(normalizedKey)) return;
+
+              // Assume any other column is a subject
+              let subjectId = key;
+              
+              // Try to find the subject ID from the fetched subjects
+              if (subjectMap.has(normalizedKey)) {
+                subjectId = subjectMap.get(normalizedKey);
+              }
+
+              const marksObtained = Number(row[key]);
+              if (!isNaN(marksObtained)) {
+                mappedMarks.push({
+                  studentId: String(studentId),
+                  subjectId: subjectId,
+                  marksObtained: marksObtained,
+                  remarks: row['Remarks'] || row['remarks'] || ''
+                });
+              }
+            });
+          });
+
+          if (mappedMarks.length === 0) {
+            toast.error('No valid marks found in the file', { id: toastId });
+            return;
+          }
+
+          await api.post('/api/marks/bulk', {
+            examId: excelExamId,
+            marks: mappedMarks
+          });
+          toast.success('Excel marks uploaded successfully!', { id: toastId });
+          setShowExcelModal(false);
+          setExcelFile(null);
+        } catch (err: any) {
+          toast.error(err.response?.data?.message || 'Error processing excel file', { id: toastId });
+        }
       };
       reader.readAsBinaryString(excelFile);
     } catch (err) {
-      toast.error('Error uploading excel file');
+      toast.error('Error fetching subjects or uploading excel file', { id: toastId });
     }
   };
 
@@ -1084,7 +1124,7 @@ export const ExamListPage: React.FC = () => {
                   <p className="text-xs text-blue-600 dark:text-blue-400 font-semibold mb-2">Instructions:</p>
                   <ul className="text-xs text-blue-600/80 dark:text-blue-400/80 list-disc pl-4 space-y-1">
                     <li>Download the sample Excel file.</li>
-                    <li>Fill in the 'Student ID', 'Subject', 'Marks' columns.</li>
+                    <li>Ensure columns are: 'Student ID', 'Maths', 'Physics', etc.</li>
                     <li>Upload the filled file back here.</li>
                   </ul>
                   <button onClick={downloadSampleExcel} className="mt-3 text-xs font-bold bg-white dark:bg-gray-800 px-3 py-1.5 rounded-md shadow-sm border border-blue-100 dark:border-blue-800 text-blue-600 hover:bg-blue-50 w-full text-center">
