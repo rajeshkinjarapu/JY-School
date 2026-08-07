@@ -317,6 +317,7 @@ export const AttendanceMarkingPage: React.FC = () => {
                 </button>
               </div>
             )}
+          </div>
         )
       ) : (
         <div className="bg-white/80 backdrop-blur-xl border border-white rounded-3xl p-16 text-center shadow-xl shadow-indigo-100/50 flex flex-col items-center justify-center min-h-[400px]">

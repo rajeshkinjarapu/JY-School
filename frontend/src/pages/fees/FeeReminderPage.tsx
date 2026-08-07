@@ -352,9 +352,10 @@ export const FeeReminderPage: React.FC = () => {
                 >
                   <ChevronRight className="w-4 h-4" />
                 </button>
-              </div>
             </div>
           )}
+        </div>
+      )}
         </div>
       </div>
 
