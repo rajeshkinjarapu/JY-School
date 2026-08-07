@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import api from '../../api/axios';
+import { formatExamOptionLabel } from '../../utils/formatters';
 import { Award, Medal, Printer, Download, Star, TrendingUp, Trophy } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { LoadingSpinner } from '../../components/UI/LoadingSpinner';
@@ -205,7 +206,7 @@ export const ResultsTab: React.FC<{ exams: any[] }> = ({ exams }) => {
               className="appearance-none bg-white dark:bg-slate-800 border-2 border-indigo-100 dark:border-indigo-900/30 rounded-xl px-3 py-2.5 text-xs font-bold text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all shadow-sm cursor-pointer w-full sm:min-w-[180px] truncate"
             >
               <option value="" className="text-xs font-medium">-- Choose Exam --</option>
-              {exams.map(e => <option key={e.id} value={e.id} className="text-xs font-medium">{e.name}</option>)}
+              {exams.map(e => <option key={e.id} value={e.id} className="text-xs font-medium">{formatExamOptionLabel(e.name)}</option>)}
             </select>
             
             {selectedExam && (

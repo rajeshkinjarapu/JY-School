@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../api/axios';
+import { formatExamOptionLabel } from '../../utils/formatters';
 import { LoadingSpinner } from '../../components/UI/LoadingSpinner';
 import { Shield, Lock, Unlock, CheckCircle2, Edit3, XCircle, Search, ChevronDown } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -87,7 +88,7 @@ export const ExamStatusTab: React.FC<{ exams: any[] }> = ({ exams }) => {
           >
             <option value="" disabled>Select an Exam...</option>
             {examData.map(e => (
-              <option key={e.id} value={e.id}>{e.name} ({e.term})</option>
+              <option key={e.id} value={e.id}>{formatExamOptionLabel(e.name)} ({e.term})</option>
             ))}
           </select>
           <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none">

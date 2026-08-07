@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../api/axios';
+import { formatExamOptionLabel } from '../../utils/formatters';
 import { ExternalLink } from 'lucide-react';
 import { LoadingSpinner } from '../../components/UI/LoadingSpinner';
 
@@ -65,8 +66,8 @@ export const TeacherAdmitCardsPage: React.FC = () => {
           onChange={e => { setSelectedExamId(e.target.value); setSelectedClassId(''); }} 
           className="input !py-2 flex-1 max-w-xs"
         >
-          <option value="">-- Choose Exam --</option>
-          {exams.map(e => <option key={e.id} value={e.id}>{e.name} ({e.term})</option>)}
+          <option value="" className="text-xs font-medium">-- Choose Exam --</option>
+          {exams.map(e => <option key={e.id} value={e.id} className="text-xs font-medium">{formatExamOptionLabel(e.name)} ({e.term})</option>)}
         </select>
 
         {selectedExam && (

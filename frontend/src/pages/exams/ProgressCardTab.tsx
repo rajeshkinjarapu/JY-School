@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../api/axios';
+import { formatExamOptionLabel } from '../../utils/formatters';
 import { Printer, Download, FileText, CheckCircle, Settings, Upload, Save, MessageCircle } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
@@ -358,7 +359,7 @@ export const ProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
               className="appearance-none bg-white dark:bg-slate-800 border-2 border-pink-100 dark:border-pink-900/30 rounded-xl px-3 py-2.5 text-xs font-bold text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-4 focus:ring-pink-500/20 focus:border-pink-400 transition-all shadow-sm cursor-pointer w-full sm:min-w-[220px] truncate"
             >
               <option value="" className="text-xs font-medium">-- Choose Exam --</option>
-              {exams.map(e => <option key={e.id} value={e.id} className="text-xs font-medium">{e.name}</option>)}
+              {exams.map(e => <option key={e.id} value={e.id} className="text-xs font-medium">{formatExamOptionLabel(e.name)}</option>)}
             </select>
 
             {selectedExam && (

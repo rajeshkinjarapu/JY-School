@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../../api/axios";
+import { formatExamOptionLabel } from "../../utils/formatters";
 import {
   Printer,
   User,
@@ -333,10 +334,10 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
               onChange={(e) => setSelectedExamId(e.target.value)}
               className="appearance-none bg-white dark:bg-slate-800 border-2 border-orange-100 dark:border-orange-900/30 rounded-xl px-4 py-3 text-sm font-extrabold text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-4 focus:ring-orange-500/20 focus:border-orange-400 transition-all shadow-sm cursor-pointer w-full sm:min-w-[220px]"
             >
-              <option value="">-- Select Exam --</option>
+              <option value="" className="text-xs font-medium">-- Select Exam --</option>
               {exams.map((e) => (
-                <option key={e.id} value={e.id}>
-                  {e.name} ({e.term})
+                <option key={e.id} value={e.id} className="text-xs font-medium">
+                  {formatExamOptionLabel(e.name)} ({e.term})
                 </option>
               ))}
             </select>
