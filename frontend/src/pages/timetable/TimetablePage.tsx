@@ -580,7 +580,7 @@ export const TimetablePage: React.FC = () => {
     <div className="flex flex-col h-full bg-gray-50/50 print-landscape" style={{ minHeight: 'calc(100vh - 64px)' }}>
       {/* ══ HEADER ══ */}
       <PageHeader 
-        title="Timetable Manager"
+        title={isTeacher ? "My Timetable" : "Timetable Manager"}
         icon={<Calendar className="w-6 h-6" />}
       />
 

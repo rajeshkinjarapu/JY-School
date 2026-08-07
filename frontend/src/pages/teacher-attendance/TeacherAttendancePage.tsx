@@ -7,6 +7,7 @@ import {
   CalendarCheck, CheckCircle2, XCircle, Clock, AlertCircle,
   ChevronLeft, ChevronRight, User, Save, BarChart3, FileText, UserCheck,
 } from 'lucide-react';
+import { PageHeader } from '../../components/UI/PageHeader';
 
 interface Teacher {
   id: string;
@@ -138,8 +139,15 @@ const TeacherAttendancePage: React.FC = () => {
   if (loading) return <LoadingSpinner size="lg" className="h-[70vh]" />;
 
   return (
-    <div className="space-y-4 sm:space-y-6 md:space-y-8 p-4 sm:p-6 md:p-8 bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 min-h-screen animate-fade pb-10 overflow-x-hidden">
-      <div className="flex justify-end mb-4">
+    <div className="flex flex-col h-full bg-slate-50/50 min-h-screen animate-fade" style={{ minHeight: 'calc(100vh - 64px)' }}>
+      <PageHeader 
+        title={isAdmin ? "Staff Attendance Manager" : "My Attendance"}
+        icon={<CalendarCheck className="w-6 h-6" />}
+      />
+
+      <div className="flex-1 overflow-auto p-4 sm:p-6 md:p-8">
+        <div className="max-w-5xl mx-auto space-y-6">
+          <div className="flex justify-end">
         {/* Month Navigator */}
         <div className="flex items-center gap-3 bg-white p-2 rounded-xl shadow-sm border border-gray-100">
           <button onClick={() => navigateMonth(-1)}
@@ -160,7 +168,7 @@ const TeacherAttendancePage: React.FC = () => {
 
       {/* ADMIN VIEW */}
       {isAdmin && (
-        <div className="space-y-5 px-3 sm:px-0">
+        <div className="space-y-5">
           {/* Date Selector */}
           <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4 md:bg-white md:rounded-[1.5rem] py-2 md:p-4 md:border md:border-slate-100"
             style={{ boxShadow: window.innerWidth < 768 ? 'none' : '0 4px 24px rgba(0,0,0,0.04)' }}>
@@ -312,6 +320,8 @@ const TeacherAttendancePage: React.FC = () => {
           </div>
         </div>
       )}
+        </div>
+      </div>
     </div>
   );
 };

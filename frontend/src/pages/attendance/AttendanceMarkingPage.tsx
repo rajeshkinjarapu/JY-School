@@ -317,8 +317,16 @@ export const AttendanceMarkingPage: React.FC = () => {
                 </button>
               </div>
             )}
+        )
+      ) : (
+        <div className="bg-white/80 backdrop-blur-xl border border-white rounded-3xl p-16 text-center shadow-xl shadow-indigo-100/50 flex flex-col items-center justify-center min-h-[400px]">
+          <div className="w-20 h-20 bg-indigo-100 rounded-full flex items-center justify-center mb-6 shadow-inner">
+            <ShieldAlert className="w-10 h-10 text-indigo-500" />
           </div>
-        )}
+          <h3 className="text-2xl font-black text-indigo-900 mb-2">No Class Selected</h3>
+          <p className="font-semibold text-slate-500 text-sm max-w-sm">Please select a class, section, and date, then click <strong className="text-indigo-600">VIEW</strong> to record student attendances.</p>
+        </div>
+      )}
         </div>
       </div>
 
