@@ -86,6 +86,7 @@ export const TimetablePage: React.FC = () => {
   >(isTeacher ? "teacher" : "class");
   const [activeCategory, setActiveCategory] = useState<"PRIMARY" | "HIGHER">(
     "PRIMARY",
+  );
   const [selectedDayMobile, setSelectedDayMobile] = useState("Monday");
   // Data
   const [classes, setClasses] = useState<any[]>([]);
