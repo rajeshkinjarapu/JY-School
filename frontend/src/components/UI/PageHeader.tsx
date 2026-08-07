@@ -1,5 +1,6 @@
 import React from 'react';
-import { Menu } from 'lucide-react';
+import { Menu, Home } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 interface PageHeaderProps {
   title: React.ReactNode;
@@ -22,6 +23,16 @@ export const PageHeader: React.FC<PageHeaderProps> = ({ title, icon, action }) =
         >
           <Menu className="w-5 h-5" />
         </button>
+
+        {/* Home Button */}
+        <Link
+          to="/dashboard"
+          className="p-1.5 rounded-lg text-white/90 hover:text-white hover:bg-white/20 transition-all duration-200 cursor-pointer shrink-0 flex items-center justify-center border border-white/20 bg-white/10"
+          title="Go to Dashboard"
+          aria-label="Go to Dashboard"
+        >
+          <Home className="w-4 h-4 text-white" />
+        </Link>
         
         {icon && (
           <div className="p-1.5 sm:p-2 bg-white/10 backdrop-blur-md text-white rounded-lg sm:rounded-xl border border-white/20 shadow-inner flex items-center justify-center shrink-0">

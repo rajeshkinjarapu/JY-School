@@ -1,7 +1,7 @@
 import React from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { useTheme } from '../../hooks/useTheme';
-import { Menu, ArrowLeft, User, LogOut, Settings } from 'lucide-react';
+import { Menu, ArrowLeft, User, LogOut, Settings, Home } from 'lucide-react';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { getPhotoUrl } from '../../utils/photo';
 import { NotificationBell } from '../UI/NotificationBell';
@@ -44,7 +44,7 @@ export const Header: React.FC<HeaderProps> = ({ onMenuClick, title, forceShow, h
       className={`print:hidden lg:hidden sticky top-0 z-30 flex items-center justify-between gap-3 px-3 py-2.5 shadow-lg shadow-black/30`}
       style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e1b4b 60%, #0f172a 100%)' }}
     >
-      {/* Left: Hamburger + Back + Page Title */}
+      {/* Left: Hamburger + Home + Back + Page Title */}
       <div className="flex items-center gap-1.5 min-w-0">
         {/* Hamburger — mobile only */}
         {!hideMenuButton && (
@@ -60,6 +60,16 @@ export const Header: React.FC<HeaderProps> = ({ onMenuClick, title, forceShow, h
             <Menu className="w-5 h-5" />
           </button>
         )}
+
+        {/* Home Button for Teachers & All Users */}
+        <Link
+          to="/dashboard"
+          className="p-2 rounded-xl text-white/90 hover:text-white hover:bg-white/20 transition-all duration-200 cursor-pointer shrink-0 flex items-center justify-center border border-white/20 bg-white/10"
+          title="Go to Dashboard"
+          aria-label="Go to Dashboard"
+        >
+          <Home className="w-4 h-4 text-white" />
+        </Link>
 
         {/* Back Button */}
         {showBackButton && (

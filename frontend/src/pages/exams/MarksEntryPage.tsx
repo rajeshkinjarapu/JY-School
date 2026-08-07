@@ -90,10 +90,15 @@ export const MarksEntryPage: React.FC = () => {
   }, [id, classId]);
 
   const handleMarkChange = (studentId: string, subjectId: string, val: string) => {
-    setMarksData((prev) => ({
-      ...prev,
-      [`${studentId}_${subjectId}`]: Number(val),
-    }));
+    setMarksData((prev) => {
+      const next = { ...prev };
+      if (val === '') {
+        delete next[`${studentId}_${subjectId}`];
+      } else {
+        next[`${studentId}_${subjectId}`] = Number(val);
+      }
+      return next;
+    });
   };
 
   const handleRemarkChange = (studentId: string, subjectId: string, val: string) => {
@@ -109,12 +114,12 @@ export const MarksEntryPage: React.FC = () => {
       return;
     }
     if (isFreeze) {
-      if (!window.confirm("Are you sure you want to freeze the marks for this class? Once frozen, they cannot be edited.")) return;
+      if (!window.confirm("Are you sure you want to freeze the marks for this class? Once frozen, progress cards will be generated and marks cannot be edited.")) return;
     }
 
     const payload = {
       marks: Object.keys(marksData)
-        .filter(key => marksData[key] !== null && marksData[key] !== undefined && !isNaN(Number(marksData[key])))
+        .filter(key => marksData[key] !== null && marksData[key] !== undefined && marksData[key] !== ('' as any) && !isNaN(Number(marksData[key])))
         .map(key => {
           const [studentId, subjectId] = key.split('_');
           const subjectInfo = subjects.find(s => s.id === subjectId);
@@ -129,18 +134,23 @@ export const MarksEntryPage: React.FC = () => {
         }),
     };
 
-    if (payload.marks.length === 0) {
-      toast.error('No marks to save');
+    if (payload.marks.length === 0 && !isFreeze) {
+      toast.error('No marks entered to save');
       return;
     }
 
     try {
-      await api.post('/api/marks/bulk', payload);
+      if (payload.marks.length > 0) {
+        await api.post('/api/marks/bulk', payload);
+      }
       if (isFreeze) {
         await api.post(`/api/exams/${id}/freeze`, { classId, isFrozen: true });
+        toast.success('Marks frozen successfully! Progress cards generated.');
+        navigate(`/exams?tab=progress-card&classId=${classId}`);
+      } else {
+        toast.success('Marks saved as draft successfully!');
+        navigate('/exams?tab=written-exam');
       }
-      toast.success(isFreeze ? 'Marks frozen successfully! No further changes allowed.' : 'Marks saved as draft successfully!');
-      navigate('/exams?tab=written-exam');
     } catch (e: any) {
       toast.error(e.message || 'Failed to save marks');
     }

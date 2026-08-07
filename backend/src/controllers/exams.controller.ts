@@ -142,6 +142,29 @@ export const getResults = async (req: AuthRequest, res: Response, next: NextFunc
 
   // Group marks by student
   const studentMap = new Map<string, { studentId: string; name: string; photo?: string | null; rollNo: string; className: string; mobile: string; marks: any[]; total: number; percentage: number; grade: string }>();
+  
+  if (classId) {
+    const classStudents = await prisma.student.findMany({
+      where: { classId },
+      include: { user: { select: { name: true, photoUrl: true, phone: true } }, class: { select: { name: true, section: true } } },
+      orderBy: { rollNo: 'asc' }
+    });
+    for (const s of classStudents) {
+      studentMap.set(s.id, {
+        studentId: s.id,
+        name: s.user.name,
+        photo: s.user.photoUrl,
+        mobile: s.fatherMobile || s.motherMobile || s.user.phone || '-',
+        rollNo: s.rollNo || '-',
+        className: s.class ? `${s.class.name} - ${s.class.section}` : '',
+        marks: [],
+        total: 0,
+        percentage: 0,
+        grade: '',
+      });
+    }
+  }
+
   for (const mark of exam.marks) {
     const key = mark.studentId;
     if (!studentMap.has(key)) {
@@ -149,7 +172,7 @@ export const getResults = async (req: AuthRequest, res: Response, next: NextFunc
         studentId: key,
         name: mark.student.user.name,
         photo: mark.student.user.photoUrl,
-        mobile: mark.student.user.phone || '-',
+        mobile: mark.student.fatherMobile || mark.student.motherMobile || mark.student.user.phone || '-',
         rollNo: mark.student.rollNo,
         className: mark.student.class ? `${mark.student.class.name} - ${mark.student.class.section}` : '',
         marks: [],
