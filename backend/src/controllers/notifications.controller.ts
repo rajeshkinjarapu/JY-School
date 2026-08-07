@@ -17,9 +17,14 @@ export const getNotifications = async (req: AuthRequest, res: Response, next: Ne
         });
 
         for (const exam of activeExams) {
-          const frozenClasses: string[] = Array.isArray(exam.frozenClasses) 
-            ? (exam.frozenClasses as string[]) 
-            : [];
+          let frozenClasses: string[] = [];
+          if (exam.frozenClasses) {
+            try {
+              frozenClasses = Array.isArray(exam.frozenClasses) 
+                ? (exam.frozenClasses as string[]) 
+                : typeof exam.frozenClasses === 'string' ? JSON.parse(exam.frozenClasses) : [];
+            } catch(e) {}
+          }
           
           for (const cls of exam.classes) {
             if (!frozenClasses.includes(cls.id)) {
