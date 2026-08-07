@@ -99,7 +99,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
       { to: '/settings',      label: 'Settings',      icon: Settings      },
     ];
     if (role === 'TEACHER') return [...base, 
-      { to: '/teachers/students', label: 'Total Students', icon: Users         },
+      { to: '/students',          label: 'Total Students', icon: Users         },
       { to: '/attendance',        label: 'Attendance',     icon: CalendarCheck },
       { to: '/teacher-attendance',label: 'My Attendance',  icon: UserCheck     },
       { to: '/homework',          label: 'Homework',       icon: BookOpen      },

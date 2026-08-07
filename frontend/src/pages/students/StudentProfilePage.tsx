@@ -419,7 +419,7 @@ export const StudentProfilePage: React.FC = () => {
           <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
             
             {/* Left Column: Demographics & Guardian */}
-            <div className="xl:col-span-2 space-y-4">
+            <div className={`${user?.role === 'TEACHER' ? 'xl:col-span-3' : 'xl:col-span-2'} space-y-4`}>
               
               {/* Demographics & Family Compact Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -501,6 +501,7 @@ export const StudentProfilePage: React.FC = () => {
             </div> {/* Closing left column */}
 
             {/* Right Column: Fee Ledger Snapshot */}
+            {user?.role !== 'TEACHER' && (
             <div className="space-y-4">
               <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm overflow-hidden flex flex-col h-[280px]">
                 <div className="p-3 border-b border-gray-50 dark:border-gray-800 flex justify-between items-center bg-gradient-to-r from-emerald-50/50 to-transparent dark:from-emerald-900/10">
@@ -571,10 +572,12 @@ export const StudentProfilePage: React.FC = () => {
                 </div>
               </div>
             </div>
+            )}
 
           </div>
 
           {/* Full Width Transactions Table */}
+          {user?.role !== 'TEACHER' && (
           <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm overflow-hidden mt-4">
             <div className="p-3 border-b border-gray-50 dark:border-gray-800 flex items-center justify-between bg-gradient-to-r from-indigo-50/50 to-transparent dark:from-indigo-900/10">
               <h3 className="text-[13px] font-bold text-gray-900 dark:text-white flex items-center gap-2">
@@ -646,6 +649,7 @@ export const StudentProfilePage: React.FC = () => {
               </table>
             </div>
           </div>
+          )}
 
         </div>
 

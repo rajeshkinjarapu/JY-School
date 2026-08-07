@@ -775,19 +775,18 @@ export const JEEProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
             </div>
             
             {/* Table layout */}
-            <div className="overflow-x-auto w-full">
-              <table className="w-full text-sm text-left whitespace-nowrap min-w-full">
+            <div className="w-full overflow-x-hidden md:overflow-x-auto">
+              <table className="w-full text-sm text-left">
                 <thead className="bg-slate-50/80 dark:bg-slate-800/80 text-slate-500 dark:text-slate-400 text-xs uppercase tracking-widest">
                   <tr>
-                    <th className="py-2 px-2 w-8 text-center">Rank</th>
-                    <th className="py-2 px-2">Student Name</th>
-                    {/* Hide detailed stats on small screens if you want, but user requested mobile friendly. Let's keep it clean */}
-                    {!isTeacher && <th className="py-2 px-2 hidden md:table-cell">Student ID</th>}
-                    <th className="py-2 px-2 text-center hidden md:table-cell">Mat</th>
-                    <th className="py-2 px-2 text-center hidden md:table-cell">Phy</th>
-                    <th className="py-2 px-2 text-center hidden md:table-cell">Che</th>
-                    <th className="py-2 px-2 text-center">Total</th>
-                    <th className="py-2 px-2 text-right">Action</th>
+                    <th className="py-2.5 px-2 w-10 text-center">Rank</th>
+                    <th className="py-2.5 px-2">Student Name</th>
+                    {!isTeacher && <th className="py-2.5 px-2 hidden md:table-cell">Student ID</th>}
+                    <th className="py-2.5 px-2 text-center hidden md:table-cell">Mat</th>
+                    <th className="py-2.5 px-2 text-center hidden md:table-cell">Phy</th>
+                    <th className="py-2.5 px-2 text-center hidden md:table-cell">Che</th>
+                    <th className="py-2.5 px-2 text-center w-16">Total</th>
+                    <th className="py-2.5 px-2 text-right w-20">Action</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
@@ -796,28 +795,27 @@ export const JEEProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
                     <tr onClick={() => setExpandedRow(expandedRow === data.studentId ? null : data.studentId)} 
                       className="hover:bg-gray-50 transition-colors bg-white cursor-pointer md:cursor-auto"
                     >
-                      <td className="py-2 px-2 text-center">
-                        <span className="font-bold text-indigo-600 bg-indigo-50 px-1.5 py-1 rounded-md text-xs">#{data.rank}</span>
+                      <td className="py-2.5 px-2 text-center">
+                        <span className="font-black text-indigo-600 bg-indigo-50 px-1.5 py-1 rounded-md text-xs">#{data.rank}</span>
                       </td>
-                      <td className="py-2 px-2 font-bold text-gray-900 whitespace-normal break-words max-w-[120px] md:max-w-none text-xs sm:text-sm">
+                      <td className="py-2.5 px-2 font-bold text-gray-900 truncate text-xs sm:text-sm">
                         {formatName(data.studentName)}
-                        <div className="text-[10px] sm:text-xs font-normal text-gray-500 mt-0.5">{data.className} {data.section}</div>
                       </td>
-                      {!isTeacher && <td className="py-2 px-2 text-gray-600 font-medium hidden md:table-cell text-sm">{data.rollNo || '-'}</td>}
-                      <td className="py-2 px-2 text-center hidden md:table-cell font-medium text-gray-700 text-sm">
+                      {!isTeacher && <td className="py-2.5 px-2 text-gray-600 font-medium hidden md:table-cell text-sm">{data.rollNo || '-'}</td>}
+                      <td className="py-2.5 px-2 text-center hidden md:table-cell font-medium text-gray-700 text-sm">
                         {data.marks?.find((m: any) => m.subject?.toLowerCase().startsWith('mat') || m.subject?.toLowerCase() === 'mathematics' || m.subject?.toLowerCase() === 'maths')?.obtained ?? '-'}
                       </td>
-                      <td className="py-2 px-2 text-center hidden md:table-cell font-medium text-gray-700 text-sm">
+                      <td className="py-2.5 px-2 text-center hidden md:table-cell font-medium text-gray-700 text-sm">
                         {data.marks?.find((m: any) => m.subject?.toLowerCase().startsWith('phy') || m.subject?.toLowerCase() === 'physics')?.obtained ?? '-'}
                       </td>
-                      <td className="py-2 px-2 text-center hidden md:table-cell font-medium text-gray-700 text-sm">
+                      <td className="py-2.5 px-2 text-center hidden md:table-cell font-medium text-gray-700 text-sm">
                         {data.marks?.find((m: any) => m.subject?.toLowerCase().startsWith('che') || m.subject?.toLowerCase() === 'chemistry')?.obtained ?? '-'}
                       </td>
-                      <td className="py-2 px-2 text-center">
-                        <span className="font-bold text-emerald-600 text-sm">{data.total}</span>
+                      <td className="py-2.5 px-2 text-center">
+                        <span className="font-extrabold text-emerald-600 text-xs sm:text-sm">{data.total}</span>
                       </td>
                       
-                      <td className="py-2 px-2 flex justify-end gap-1 sm:gap-2 items-center">
+                      <td className="py-2.5 px-2 flex justify-end gap-1 sm:gap-2 items-center">
                         {!isTeacher && (
                           <button onClick={(e) => { e.stopPropagation(); handlePrintSingle(idx); }} className="bg-blue-50 hover:bg-blue-100 text-blue-600 p-2 rounded-lg text-xs font-semibold flex items-center justify-center transition-colors" title="Print Card">
                               <Printer className="w-4 h-4" />

@@ -86,8 +86,7 @@ export const TimetablePage: React.FC = () => {
   >(isTeacher ? "teacher" : "class");
   const [activeCategory, setActiveCategory] = useState<"PRIMARY" | "HIGHER">(
     "PRIMARY",
-  );
-
+  const [selectedDayMobile, setSelectedDayMobile] = useState("Monday");
   // Data
   const [classes, setClasses] = useState<any[]>([]);
   const [teachers, setTeachers] = useState<any[]>([]);
@@ -879,7 +878,117 @@ export const TimetablePage: React.FC = () => {
                   </button>
                 ))}
               </div>
-              <div className="overflow-x-auto">
+              {/* Mobile Day Selector Tabs */}
+              <div className="md:hidden p-3 border-b border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/30">
+                <div className="flex gap-1.5 overflow-x-auto no-scrollbar pb-1">
+                  {DAYS.map((d) => {
+                    const isSelected = selectedDayMobile === d;
+                    return (
+                      <button
+                        key={d}
+                        type="button"
+                        onClick={() => setSelectedDayMobile(d)}
+                        className={`px-4 py-2 rounded-xl text-xs font-black shrink-0 transition-all cursor-pointer ${
+                          isSelected 
+                            ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30 scale-105' 
+                            : 'bg-white dark:bg-gray-800 text-gray-500 hover:text-gray-900 border border-gray-100 dark:border-gray-700'
+                        }`}
+                      >
+                        {d.substring(0, 3)}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Mobile Period Schedule List */}
+              <div className="md:hidden p-3 space-y-3">
+                {(configs[activeCategory] || []).map((period) => {
+                  if (period.isBreak) {
+                    return (
+                      <div key={period.periodNumber} className="p-3 bg-amber-50/60 dark:bg-amber-950/20 border border-amber-200/50 dark:border-amber-900/30 rounded-2xl flex items-center justify-between">
+                        <div className="flex items-center gap-2 text-amber-700 dark:text-amber-300 font-extrabold text-xs">
+                          <Clock className="w-4 h-4" />
+                          <span>{period.label}</span>
+                        </div>
+                        <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400">
+                          {period.startTime} – {period.endTime}
+                        </span>
+                      </div>
+                    );
+                  }
+
+                  const slot = (teacherTimetable[selectedDayMobile] || []).find(
+                    (s) => s.periodNumber === period.periodNumber
+                  );
+
+                  if (slot) {
+                    const color = getColor(slot.subject?.name || "");
+                    return (
+                      <div 
+                        key={period.periodNumber} 
+                        className="p-4 rounded-2xl border shadow-sm transition-all flex items-center justify-between gap-3"
+                        style={{
+                          backgroundColor: color.bg,
+                          color: color.text,
+                          borderColor: color.border,
+                        }}
+                      >
+                        <div className="flex items-center gap-3.5 min-w-0">
+                          <div className="w-10 h-10 rounded-2xl bg-white/70 backdrop-blur-md flex flex-col items-center justify-center font-black text-xs shrink-0 shadow-inner">
+                            <span className="text-[9px] uppercase opacity-60">P-{period.periodNumber}</span>
+                            <span className="text-xs">{period.label.replace('Period ', '')}</span>
+                          </div>
+                          <div className="min-w-0">
+                            <h4 className="font-black text-sm truncate">{slot.subject?.name}</h4>
+                            <div className="flex items-center gap-2 mt-1">
+                              <span className="text-[11px] font-extrabold px-2 py-0.5 rounded-md bg-white/80 dark:bg-black/20 shadow-xs flex items-center gap-1">
+                                🏫 {slot.class?.name}-{slot.class?.section}
+                              </span>
+                              {slot.room && (
+                                <span className="text-[10px] font-bold opacity-75 flex items-center gap-0.5">
+                                  <MapPin className="w-3 h-3" /> {slot.room}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="text-right shrink-0">
+                          <div className="text-[10px] font-bold opacity-80 flex items-center gap-1">
+                            <Clock className="w-3 h-3" />
+                            {period.startTime}
+                          </div>
+                          <div className="text-[10px] font-bold opacity-60 mt-0.5">
+                            to {period.endTime}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <div 
+                      key={period.periodNumber} 
+                      className="p-3.5 rounded-2xl border border-dashed border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/30 flex items-center justify-between text-gray-400"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-400 font-bold text-xs flex items-center justify-center">
+                          P{period.periodNumber}
+                        </div>
+                        <div>
+                          <p className="text-xs font-bold text-gray-500 dark:text-gray-400">Free Period</p>
+                          <p className="text-[10px] font-semibold text-gray-400">{period.startTime} – {period.endTime}</p>
+                        </div>
+                      </div>
+                      <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-1 bg-gray-100 dark:bg-gray-800 text-gray-400 rounded-lg">No Class</span>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Desktop Table View */}
+              <div className="hidden md:block overflow-x-auto">
                 <table className="w-full border-collapse min-w-[800px]">
                   <thead>
                     <tr>

@@ -3,9 +3,11 @@ import api from '../../api/axios';
 import { Award, Medal, Printer, Download, Star, TrendingUp, Trophy } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { LoadingSpinner } from '../../components/UI/LoadingSpinner';
-import { useSearchParams } from 'react-router-dom';
+import { useAuth } from '../../hooks/useAuth';
 
 export const ResultsTab: React.FC<{ exams: any[] }> = ({ exams }) => {
+  const { user } = useAuth();
+  const isTeacher = user?.role === 'TEACHER';
   const [searchParams] = useSearchParams();
   const [selectedExamId, setSelectedExamId] = useState(searchParams.get('examId') || '');
   const [selectedClassId, setSelectedClassId] = useState(searchParams.get('classId') || '');
@@ -185,11 +187,21 @@ export const ResultsTab: React.FC<{ exams: any[] }> = ({ exams }) => {
           <div className="bg-gradient-to-br from-blue-500 to-indigo-600 p-3.5 rounded-2xl shadow-lg shadow-indigo-500/30 text-white shrink-0 hidden sm:block">
             <Award className="w-6 h-6" />
           </div>
-          <div className="flex flex-col sm:flex-row w-full gap-3">
+          <div>
+            <h2 className="text-xl sm:text-2xl font-black text-slate-800 dark:text-white tracking-tight">
+              Examination Result
+            </h2>
+            {selectedExam && (
+              <p className="text-xs font-bold text-indigo-600 dark:text-indigo-400 mt-0.5">
+                {selectedExam.name} {selectedClassId ? `· Class ${selectedExam.classes?.find((c: any) => c.id === selectedClassId)?.name || ''}-${selectedExam.classes?.find((c: any) => c.id === selectedClassId)?.section || ''}` : ''}
+              </p>
+            )}
+          </div>
+          <div className="flex flex-col sm:flex-row w-full sm:w-auto gap-3 mt-2 sm:mt-0">
             <select 
               value={selectedExamId} 
               onChange={e => { setSelectedExamId(e.target.value); setSelectedClassId(''); }} 
-              className="appearance-none bg-white dark:bg-slate-800 border-2 border-indigo-100 dark:border-indigo-900/30 rounded-xl px-4 py-3 text-sm font-extrabold text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all shadow-sm cursor-pointer w-full sm:min-w-[220px]"
+              className="appearance-none bg-white dark:bg-slate-800 border-2 border-indigo-100 dark:border-indigo-900/30 rounded-xl px-4 py-2.5 text-xs font-extrabold text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all shadow-sm cursor-pointer w-full sm:min-w-[180px]"
             >
               <option value="">-- Choose Exam --</option>
               {exams.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
@@ -199,7 +211,7 @@ export const ResultsTab: React.FC<{ exams: any[] }> = ({ exams }) => {
               <select 
                 value={selectedClassId} 
                 onChange={e => setSelectedClassId(e.target.value)} 
-                className="appearance-none bg-white dark:bg-slate-800 border-2 border-indigo-100 dark:border-indigo-900/30 rounded-xl px-4 py-3 text-sm font-extrabold text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all shadow-sm cursor-pointer w-full sm:min-w-[180px]"
+                className="appearance-none bg-white dark:bg-slate-800 border-2 border-indigo-100 dark:border-indigo-900/30 rounded-xl px-4 py-2.5 text-xs font-extrabold text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all shadow-sm cursor-pointer w-full sm:min-w-[160px]"
               >
                 <option value="">-- Choose Class --</option>
                 {(selectedExam.classes || []).map((c: any) => (
@@ -210,7 +222,7 @@ export const ResultsTab: React.FC<{ exams: any[] }> = ({ exams }) => {
           </div>
         </div>
         
-        {results.length > 0 && (
+        {!isTeacher && results.length > 0 && (
           <div className="flex flex-wrap gap-2 shrink-0">
             <button 
               onClick={handleDownloadPDF} 

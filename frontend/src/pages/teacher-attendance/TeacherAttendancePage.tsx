@@ -267,7 +267,56 @@ const TeacherAttendancePage: React.FC = () => {
             ))}
           </div>
 
-          {/* Removed Calendar Section as requested */}
+          {/* Monthly Attendance Records Breakdown */}
+          <div className="bg-white/90 backdrop-blur-xl rounded-[1.5rem] border border-slate-100 dark:border-slate-800 overflow-hidden shadow-sm">
+            <div className="p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/30">
+              <div>
+                <h3 className="font-extrabold text-slate-800 dark:text-white text-base">Monthly Attendance Log</h3>
+                <p className="text-xs font-semibold text-slate-400">{MONTHS[selectedMonth]} {selectedYear} · {myRecords.length} records</p>
+              </div>
+              <span className="px-3 py-1 bg-indigo-50 dark:bg-indigo-950/30 text-indigo-600 dark:text-indigo-400 font-extrabold text-xs rounded-xl border border-indigo-100 dark:border-indigo-900/30">
+                {summary.rate}% Attendance
+              </span>
+            </div>
+            
+            <div className="divide-y divide-slate-100 dark:divide-slate-800/50 max-h-[360px] overflow-y-auto">
+              {myRecords.length > 0 ? (
+                myRecords.map((r: any) => {
+                  const sc = STATUS_COLORS[r.status] || STATUS_COLORS.PRESENT;
+                  const StatusIcon = sc.icon;
+                  const dObj = new Date(r.date);
+                  return (
+                    <div key={r.id || r.date} className="p-3.5 sm:p-4 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-2xl flex flex-col items-center justify-center bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-black shrink-0">
+                          <span className="text-[10px] uppercase text-indigo-500 font-bold leading-none">{dObj.toLocaleDateString('en-US', { weekday: 'short' })}</span>
+                          <span className="text-sm font-extrabold leading-none mt-0.5">{dObj.getDate()}</span>
+                        </div>
+                        <div>
+                          <p className="font-bold text-slate-800 dark:text-white text-xs sm:text-sm">
+                            {dObj.toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
+                          </p>
+                          {r.note && <p className="text-[11px] font-semibold text-slate-400 mt-0.5">{r.note}</p>}
+                        </div>
+                      </div>
+
+                      <span 
+                        className="px-3 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-1.5 shrink-0"
+                        style={{ backgroundColor: sc.bg, color: sc.text }}
+                      >
+                        <StatusIcon className="w-3.5 h-3.5" />
+                        {r.status === 'HALF_DAY' ? 'Half Day' : r.status}
+                      </span>
+                    </div>
+                  );
+                })
+              ) : (
+                <div className="p-8 text-center text-slate-400 text-xs font-bold">
+                  No attendance records logged for {MONTHS[selectedMonth]} {selectedYear}.
+                </div>
+              )}
+            </div>
+          </div>
 
           {/* History Logs */}
           <div className="bg-white rounded-[1.5rem] border border-slate-100 overflow-hidden mt-6" style={{ boxShadow: '0 4px 24px rgba(0,0,0,0.04)' }}>
