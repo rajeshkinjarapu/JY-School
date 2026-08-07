@@ -87,8 +87,11 @@ export const ClassWiseFeeReportTab: React.FC<ClassWiseFeeReportTabProps> = ({ st
 
   const makePDF = async (data: ReturnType<typeof buildRows>) => {
     if (!data.classInfo) return null;
-    const { default: jsPDF } = await import('jspdf');
-    const { default: autoTable } = await import('jspdf-autotable');
+    const jspdfModule: any = await import('jspdf');
+    const jsPDF = jspdfModule.jsPDF || jspdfModule.default || jspdfModule;
+    const autoTableModule: any = await import('jspdf-autotable');
+    const autoTable = autoTableModule.default || autoTableModule;
+
     const doc = new jsPDF('p', 'mm', 'a4');
     doc.setFontSize(18); doc.setTextColor(79, 70, 229); doc.setFont('helvetica', 'bold');
     doc.text('JY SCHOOL', 105, 15, { align: 'center' });
@@ -108,8 +111,8 @@ export const ClassWiseFeeReportTab: React.FC<ClassWiseFeeReportTabProps> = ({ st
     return doc;
   };
 
-  const downloadPDF = (data: ReturnType<typeof buildRows>) => {
-    const doc = makePDF(data);
+  const downloadPDF = async (data: ReturnType<typeof buildRows>) => {
+    const doc = await makePDF(data);
     if (doc && data.classInfo) doc.save(`FeeReport_${data.classInfo.name}_${data.classInfo.section}.pdf`);
   };
 
@@ -129,7 +132,7 @@ export const ClassWiseFeeReportTab: React.FC<ClassWiseFeeReportTabProps> = ({ st
     const data = buildRows(classId, '');
     if (!data.classInfo) return;
     
-    const doc = makePDF(data);
+    const doc = await makePDF(data);
     if (!doc) return;
 
     const rawFileName = `FeeReport_${data.classInfo.name}_${data.classInfo.section}.pdf`;
