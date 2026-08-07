@@ -72,47 +72,49 @@ export const Header: React.FC<HeaderProps> = ({ onMenuClick, title, forceShow, h
         </div>
       </div>
 
-      {/* Right: Profile Dropdown */}
-      <div className="flex items-center gap-2 shrink-0 relative">
-        <button 
-          onClick={() => setProfileOpen(!profileOpen)}
-          className="w-8 h-8 rounded-full border-2 border-white/20 overflow-hidden shadow-sm hover:border-white/50 transition-colors"
-        >
-          {getPhotoUrl(user?.photoUrl) ? (
-            <img src={getPhotoUrl(user?.photoUrl)} alt="Profile" className="w-full h-full object-cover" />
-          ) : (
-            <div className="w-full h-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-xs">
-              {user?.name?.charAt(0).toUpperCase() || 'U'}
-            </div>
+      {/* Right: Profile Dropdown — Only for TEACHER */}
+      {user?.role === 'TEACHER' && (
+        <div className="flex items-center gap-2 shrink-0 relative">
+          <button 
+            onClick={() => setProfileOpen(!profileOpen)}
+            className="w-8 h-8 rounded-full border-2 border-white/20 overflow-hidden shadow-sm hover:border-white/50 transition-colors"
+          >
+            {getPhotoUrl(user?.photoUrl) ? (
+              <img src={getPhotoUrl(user?.photoUrl)} alt="Profile" className="w-full h-full object-cover" />
+            ) : (
+              <div className="w-full h-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-xs">
+                {user?.name?.charAt(0).toUpperCase() || 'U'}
+              </div>
+            )}
+          </button>
+          
+          {profileOpen && (
+            <>
+              <div className="fixed inset-0 z-40" onClick={() => setProfileOpen(false)}></div>
+              <div className="absolute top-10 right-0 w-48 bg-white rounded-xl shadow-xl border border-gray-100 py-1 z-50 animate-fade-in-up">
+                <Link 
+                  to="/profile" 
+                  onClick={() => setProfileOpen(false)}
+                  className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                >
+                  <User className="w-4 h-4 text-gray-400" />
+                  Profile Update
+                </Link>
+                <button 
+                  onClick={() => {
+                    setProfileOpen(false);
+                    logout();
+                  }}
+                  className="w-full flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
+                >
+                  <LogOut className="w-4 h-4" />
+                  Logout
+                </button>
+              </div>
+            </>
           )}
-        </button>
-        
-        {profileOpen && (
-          <>
-            <div className="fixed inset-0 z-40" onClick={() => setProfileOpen(false)}></div>
-            <div className="absolute top-10 right-0 w-48 bg-white rounded-xl shadow-xl border border-gray-100 py-1 z-50 animate-fade-in-up">
-              <Link 
-                to="/profile" 
-                onClick={() => setProfileOpen(false)}
-                className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
-              >
-                <User className="w-4 h-4 text-gray-400" />
-                Profile Update
-              </Link>
-              <button 
-                onClick={() => {
-                  setProfileOpen(false);
-                  logout();
-                }}
-                className="w-full flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
-              >
-                <LogOut className="w-4 h-4" />
-                Logout
-              </button>
-            </div>
-          </>
-        )}
-      </div>
+        </div>
+      )}
     </header>
   );
 };
