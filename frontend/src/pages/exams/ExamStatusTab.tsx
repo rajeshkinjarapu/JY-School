@@ -37,11 +37,7 @@ export const ExamStatusTab: React.FC<{ exams: any[] }> = ({ exams }) => {
   return (
     <div className="space-y-4 animate-fade-in-up">
       {/* Header & Exam Dropdown */}
-      <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md p-4 sm:p-5 rounded-2xl border border-slate-200/60 dark:border-slate-800 shadow-sm space-y-3">
-        <h2 className="text-lg sm:text-xl font-black bg-gradient-to-r from-fuchsia-600 to-purple-600 bg-clip-text text-transparent">
-          Status Overview
-        </h2>
-
+      <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md p-4 rounded-2xl border border-slate-200/60 dark:border-slate-800 shadow-sm">
         <div className="w-full relative">
           <select
             value={selectedExamId}
@@ -50,7 +46,9 @@ export const ExamStatusTab: React.FC<{ exams: any[] }> = ({ exams }) => {
           >
             <option value="" disabled>Select an Exam...</option>
             {examData.map(e => (
-              <option key={e.id} value={e.id} className="text-xs font-medium">{formatExamOptionLabel(e.name)} ({e.term})</option>
+              <option key={e.id} value={e.id} className="text-xs font-medium">
+                {formatExamOptionLabel(e.name)}{e.term ? ` (${e.term})` : ''}
+              </option>
             ))}
           </select>
           <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none">
