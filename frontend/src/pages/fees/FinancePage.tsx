@@ -765,7 +765,7 @@ export const FinancePage: React.FC = () => {
                             <div>
                               <h4 className="font-extrabold text-sm text-gray-900 dark:text-white truncate">{p.student?.user?.name || 'Student'}</h4>
                               <span className="text-[10px] font-bold text-teal-700 bg-teal-50 px-1.5 py-0.5 rounded-md border border-teal-100 mt-0.5 inline-block">
-                                {p.feeStructure?.name || 'Fee'}
+                                {getDisplayDate(p)}
                               </span>
                             </div>
                           </div>
