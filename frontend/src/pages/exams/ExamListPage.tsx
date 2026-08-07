@@ -30,31 +30,31 @@ const ExamCard: React.FC<{
   const primaryColor = match ? match[0] : '#6366f1';
   
   return (
-    <div onClick={onClick} className="group relative overflow-hidden rounded-2xl p-3 sm:p-5 transition-all duration-300 hover:-translate-y-1 cursor-pointer shadow-sm hover:shadow-lg border border-white/10"
-         style={{ background: gradient, boxShadow: `0 4px 14px -2px ${primaryColor}50` }}>
+    <div onClick={onClick} className="group relative overflow-hidden rounded-2xl p-4 sm:p-5 min-h-[105px] sm:min-h-[135px] flex flex-col justify-between transition-all duration-300 hover:-translate-y-1 cursor-pointer shadow-md hover:shadow-xl border border-white/10"
+         style={{ background: gradient, boxShadow: `0 6px 18px -3px ${primaryColor}60` }}>
       
       {/* Background Watermark Icon */}
-      <div className="absolute -right-2 -bottom-2 opacity-10 group-hover:opacity-20 transition-all duration-500 transform group-hover:scale-110 pointer-events-none text-white">
-        <Icon className="w-12 h-12 sm:w-20 sm:h-20" />
+      <div className="absolute -right-2 -bottom-2 opacity-15 group-hover:opacity-25 transition-all duration-500 transform group-hover:scale-110 pointer-events-none text-white">
+        <Icon className="w-14 h-14 sm:w-20 sm:h-20" />
       </div>
         
       {/* Top right gradient orb */}
       <div className="absolute -top-8 -right-8 w-16 h-16 bg-white/20 blur-xl rounded-full group-hover:bg-white/30 transition-all" />
 
-      <div className="relative z-10 flex flex-col justify-between h-full gap-2">
+      <div className="relative z-10 flex flex-col justify-between h-full gap-3">
         <div className="flex items-start justify-between">
-          <div className="p-1.5 sm:p-2.5 rounded-xl bg-white/20 backdrop-blur-md shadow-sm border border-white/20">
-            <Icon className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-white" />
+          <div className="p-2 sm:p-2.5 rounded-xl bg-white/20 backdrop-blur-md shadow-sm border border-white/20">
+            <Icon className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
           </div>
-          <div className="p-1 sm:p-1.5 rounded-full bg-white/10 group-hover:bg-white/20 backdrop-blur-sm transition-all border border-white/10">
-            <svg className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <div className="p-1.5 sm:p-1.5 rounded-full bg-white/10 group-hover:bg-white/20 backdrop-blur-sm transition-all border border-white/10">
+            <svg className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
             </svg>
           </div>
         </div>
         <div>
-          <h3 className="text-xs sm:text-base font-extrabold text-white tracking-wide leading-tight truncate">{label}</h3>
-          {sub && <p className="text-[9px] sm:text-xs text-white/80 font-bold flex items-center gap-1 truncate mt-0.5"><span className="w-1 h-1 rounded-full bg-white/60 shrink-0"/>{sub}</p>}
+          <h3 className="text-xs sm:text-base font-black text-white tracking-wide leading-snug truncate">{label}</h3>
+          {sub && <p className="text-[10px] sm:text-xs text-white/90 font-extrabold flex items-center gap-1 truncate mt-1"><span className="w-1 h-1 rounded-full bg-white/70 shrink-0"/>{sub}</p>}
         </div>
       </div>
     </div>
@@ -902,7 +902,7 @@ export const ExamListPage: React.FC = () => {
         {!activeTab && (
           <div>
             {/* Unified Tools Grid */}
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2.5 sm:gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3.5 sm:gap-5">
               {isAdmin && <ExamCard label="Examinations List" sub="Manage exams" icon={ClipboardList} gradient="linear-gradient(135deg, #6366f1, #4f46e5)" glow="rgba(99,102,241,0.4)" onClick={() => setActiveTab('examination')} />}
               {isAdminOrTeacher && (
                 <>
