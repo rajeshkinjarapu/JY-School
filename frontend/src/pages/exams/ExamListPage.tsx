@@ -257,11 +257,21 @@ export const ExamListPage: React.FC = () => {
       if (smsSendType === 'individual') {
         payload.studentId = smsStudentId;
       }
-      await api.post(`/api/exams/${smsExamId}/classes/${smsClassId}/send-sms`, payload);
-      toast.success('SMS sent successfully!');
-      setShowSmsModal(false);
-      setSmsSendType('all');
-      setSmsStudentId('');
+      const res: any = await api.post(`/api/exams/${smsExamId}/classes/${smsClassId}/send-sms`, payload);
+      const data = res.data || res;
+      if (data.sent === 0 && data.failed > 0) {
+        toast.error(`SMS sending failed! Check student mobile numbers or SMS gateway settings. (Failed: ${data.failed})`);
+      } else if (data.failed > 0) {
+        toast.success(`SMS sent with some failures. Sent: ${data.sent}, Failed: ${data.failed}`);
+        setShowSmsModal(false);
+        setSmsSendType('all');
+        setSmsStudentId('');
+      } else {
+        toast.success(`SMS sent successfully to all ${data.sent} students!`);
+        setShowSmsModal(false);
+        setSmsSendType('all');
+        setSmsStudentId('');
+      }
     } catch (e: any) {
       toast.error(e.response?.data?.message || e.message || 'Failed to send SMS');
     } finally {

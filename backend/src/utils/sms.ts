@@ -30,6 +30,14 @@ export const sendSMS = async (mobileNumber: string, message: string, dltTemplate
   try {
     const response = await axios.get(apiUrl, { params });
     console.log(`SMS sent to ${mobileNumber}:`, response.data);
+    
+    // Check if the response indicates failure from Saakshi SMS Gateway
+    const respStr = String(response.data).toLowerCase();
+    if (respStr.includes('error') || respStr.includes('fail') || respStr.includes('invalid') || respStr.includes('wrong') || respStr.includes('missing')) {
+      console.error(`SMS gateway returned error for ${mobileNumber}:`, response.data);
+      return false;
+    }
+    
     return true;
   } catch (error) {
     console.error(`Failed to send SMS to ${mobileNumber}:`, error);
