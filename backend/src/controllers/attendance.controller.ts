@@ -74,6 +74,9 @@ export const markBulk = async (req: AuthRequest, res: Response, next: NextFuncti
   const teacher = await prisma.teacher.findFirst({ where: { userId: req.user!.id } });
   const targetDate = new Date(date);
 
+  const cls = await prisma.class.findUnique({ where: { id: classId } });
+  const className = cls ? `${cls.name}-${cls.section}` : 'Class';
+
   const upsertOps = records.map((r) =>
     prisma.attendance.upsert({
       where: { studentId_date: { studentId: r.studentId, date: targetDate } },
@@ -87,9 +90,29 @@ export const markBulk = async (req: AuthRequest, res: Response, next: NextFuncti
         markedById: req.user!.id,
         teacherId: teacher?.id || null,
       },
+    })
+  );
+
   await prisma.$transaction(upsertOps);
 
-  // Trigger absent notification for students
+  // 1. Notify Admin and Super Admin when teacher marks attendance
+  const teacherName = req.user?.name || 'Teacher';
+  createSystemNotification({
+    role: 'ADMIN',
+    title: '👩‍🏫 Attendance Marked',
+    message: `Teacher ${teacherName} marked attendance for ${className} on ${date}.`,
+    type: 'ATTENDANCE',
+    link: '/attendance',
+  });
+  createSystemNotification({
+    role: 'SUPER_ADMIN',
+    title: '👩‍🏫 Attendance Marked',
+    message: `Teacher ${teacherName} marked attendance for ${className} on ${date}.`,
+    type: 'ATTENDANCE',
+    link: '/attendance',
+  });
+
+  // 2. Trigger absent notification for absent students
   const absentRecords = records.filter((r: any) => r.status === 'ABSENT');
   if (absentRecords.length > 0) {
     const studentIds = absentRecords.map((r: any) => r.studentId);
