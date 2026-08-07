@@ -232,7 +232,7 @@ export const ExamListPage: React.FC = () => {
 
   useEffect(() => {
     if (smsClassId && showSmsModal) {
-      api.get('/api/students', { params: { classId: smsClassId } })
+      api.get('/api/students', { params: { classId: smsClassId, limit: 1000 } })
         .then(res => {
           setClassStudents(res.data.data || res.data || []);
         })
@@ -1766,7 +1766,7 @@ export const ExamListPage: React.FC = () => {
       {/* SMS Modal */}
       {showSmsModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white dark:bg-gray-900 rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl border border-gray-100 dark:border-gray-800 animate-scale-up">
+          <div className="bg-white dark:bg-gray-900 rounded-3xl w-full max-w-2xl overflow-hidden shadow-2xl border border-gray-100 dark:border-gray-800 animate-scale-up">
             <div className="p-6 bg-gradient-to-r from-amber-500 to-orange-500 text-white flex justify-between items-center">
               <h2 className="text-xl font-black flex items-center gap-2"><MessageSquare className="w-5 h-5" /> Send Marks via SMS</h2>
               <button onClick={() => setShowSmsModal(false)} className="p-2 hover:bg-white/20 rounded-full transition-colors"><X className="w-5 h-5" /></button>
@@ -1824,7 +1824,7 @@ export const ExamListPage: React.FC = () => {
                   <select value={smsStudentId} onChange={e => setSmsStudentId(e.target.value)} className="input-field">
                     <option value="">Select Student...</option>
                     {classStudents.map(s => (
-                      <option key={s.id} value={s.id}>{s.user?.name || s.name} ({s.rollNumber || s.admissionNumber})</option>
+                      <option key={s.id} value={s.id}>{s.user?.name || s.name} ({s.rollNo || ''})</option>
                     ))}
                   </select>
                 </div>
