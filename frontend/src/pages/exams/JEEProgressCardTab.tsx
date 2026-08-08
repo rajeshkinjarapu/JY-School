@@ -254,7 +254,7 @@ export const JEEProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
           text: `Please find the progress card for ${studentName} attached.`
         });
       } else {
-        toast.success('Downloading PDF...', { id: toastId });
+        toast.success('PDF downloaded! Attach file in WhatsApp chat.', { id: toastId, duration: 5000 });
         pdf.save(`${studentName}_ProgressCard.pdf`);
         if (newWindow) newWindow.location.href = getWaUrl(mobile, studentName);
       }

@@ -3,60 +3,64 @@ import { AuthRequest } from '../middlewares/auth';
 import { prisma } from '../utils/prisma';
 import { successResponse } from '../utils/response';
 
+let lastPendingExamsCheckTime = 0;
+const PENDING_EXAMS_CHECK_INTERVAL = 10 * 60 * 1000; // Only check once every 10 minutes
+
 export const getNotifications = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
     const userId = req.user?.id;
     const userRole = req.user?.role;
+    const now = Date.now();
 
-    if (userRole === 'SUPER_ADMIN' || userRole === 'ADMIN') {
-      try {
-        const activeExams = await prisma.exam.findMany({
-          take: 5,
-          orderBy: { createdAt: 'desc' },
-          include: { classes: { select: { id: true, name: true, section: true } } }
-        });
+    // Check pending exam notifications only once every 10 minutes asynchronously
+    if ((userRole === 'SUPER_ADMIN' || userRole === 'ADMIN') && (now - lastPendingExamsCheckTime > PENDING_EXAMS_CHECK_INTERVAL)) {
+      lastPendingExamsCheckTime = now;
+      (async () => {
+        try {
+          const activeExams = await prisma.exam.findMany({
+            take: 5,
+            orderBy: { createdAt: 'desc' },
+            include: { classes: { select: { id: true, name: true, section: true } } }
+          });
 
-        for (const exam of activeExams) {
-          let frozenClasses: string[] = [];
-          if (exam.frozenClasses) {
-            try {
-              frozenClasses = Array.isArray(exam.frozenClasses) 
-                ? (exam.frozenClasses as string[]) 
-                : typeof exam.frozenClasses === 'string' ? JSON.parse(exam.frozenClasses) : [];
-            } catch(e) {}
-          }
-          
-          for (const cls of exam.classes) {
-            if (!frozenClasses.includes(cls.id)) {
-              const title = `Pending Marks: ${exam.name}`;
-              const message = `Marks entry is pending for Class ${cls.name}-${cls.section} (${exam.name}).`;
-              
-              const existing = await prisma.notification.findFirst({
-                where: {
-                  title,
-                  message,
-                  role: userRole
-                }
-              });
-
-              if (!existing) {
-                await prisma.notification.create({
-                  data: {
-                    role: userRole,
-                    title,
-                    message,
-                    type: 'WARNING',
-                    link: '/exams?tab=status',
-                    isRead: false
-                  }
+          for (const exam of activeExams) {
+            let frozenClasses: string[] = [];
+            if (exam.frozenClasses) {
+              try {
+                frozenClasses = Array.isArray(exam.frozenClasses) 
+                  ? (exam.frozenClasses as string[]) 
+                  : typeof exam.frozenClasses === 'string' ? JSON.parse(exam.frozenClasses) : [];
+              } catch(e) {}
+            }
+            
+            for (const cls of exam.classes) {
+              if (!frozenClasses.includes(cls.id)) {
+                const title = `Pending Marks: ${exam.name}`;
+                const message = `Marks entry is pending for Class ${cls.name}-${cls.section} (${exam.name}).`;
+                
+                const existing = await prisma.notification.findFirst({
+                  where: { title, message, role: userRole }
                 });
+
+                if (!existing) {
+                  await prisma.notification.create({
+                    data: {
+                      role: userRole,
+                      title,
+                      message,
+                      type: 'WARNING',
+                      link: '/exams?tab=status',
+                      isRead: false
+                    }
+                  });
+                }
               }
             }
           }
+        } catch (err) {
+          console.error('Error generating pending marks notifications:', err);
         }
-      } catch (err) {
-        console.error('Error generating pending marks notifications:', err);
-      }
+      })();
     }
 
     const notifications = await prisma.notification.findMany({

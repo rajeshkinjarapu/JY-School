@@ -229,22 +229,47 @@ export const ProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
     }
   };
 
+  const getWaUrl = (mobile: string, name?: string) => {
+    let clean = (mobile || '').replace(/\D/g, '');
+    if (clean.length === 10) clean = '91' + clean;
+    const text = encodeURIComponent(`Hi! Please find attached the progress card for ${name || 'your child'}.`);
+    return clean ? `https://wa.me/${clean}?text=${text}` : `https://wa.me/?text=${text}`;
+  };
+
   const handleWhatsAppShare = async (studentId: string, studentName: string, index: number, mobile: string) => {
     const el = document.getElementById(`progress-card-${index}`);
     if (!el) return toast.error('Could not find card element');
-    
-    const toastId = toast.loading(`Preparing PDF for WhatsApp...`);
+
+    let canShareNatively = false;
+    try {
+      if ("share" in navigator && "canShare" in navigator) {
+        canShareNatively = navigator.canShare({ files: [new File([''], 't.pdf', { type: 'application/pdf' })] });
+      }
+    } catch (e) {}
+
+    let newWindow: Window | null = null;
+    if (!canShareNatively) {
+      newWindow = window.open('', '_blank');
+      if (!newWindow) {
+        toast.error("Popup blocked! Please allow popups for this site.");
+        return;
+      }
+    }
+
+    const toastId = toast.loading(`Preparing PDF for ${studentName}...`);
     let pdf;
     try {
       pdf = await generatePDFForElement(el, studentName);
     } catch (e) {
       console.error('PDF generation failed:', e);
+      if (newWindow) newWindow.close();
       return toast.error('Failed to generate PDF.', { id: toastId });
     }
+
     try {
       const blob = pdf.output('blob');
       const file = new File([blob], `${studentName}_ProgressCard.pdf`, { type: 'application/pdf' });
-      if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+      if (canShareNatively) {
         toast.dismiss(toastId);
         await navigator.share({
           files: [file],
@@ -252,15 +277,20 @@ export const ProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
           text: `Please find the progress card for ${studentName} attached.`
         });
       } else {
-        toast.success('Downloading PDF...', { id: toastId });
+        toast.success('PDF downloaded! Attach file in WhatsApp chat.', { id: toastId, duration: 5000 });
         pdf.save(`${studentName}_ProgressCard.pdf`);
-        window.open(getWaUrl(mobile), '_blank');
+        if (newWindow) newWindow.location.href = getWaUrl(mobile, studentName);
       }
     } catch (e: any) {
       console.error('WhatsApp share error:', e);
-      if (e.name === 'AbortError') { toast.dismiss(toastId); return; }
+      if (e.name === 'AbortError') { 
+        toast.dismiss(toastId); 
+        if (newWindow) newWindow.close();
+        return; 
+      }
+      toast.success('PDF downloaded to your device.', { id: toastId });
       pdf.save(`${studentName}_ProgressCard.pdf`);
-      window.open(getWaUrl(mobile), '_blank');
+      if (newWindow) newWindow.location.href = getWaUrl(mobile, studentName);
     }
   };
 
@@ -343,7 +373,6 @@ export const ProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
     }
   };
 
-  const getWaUrl = (mobile: string) => `https://wa.me/${(mobile || '').replace(/\D/g, '')}?text=Please%20check%20your%20progress%20card`;
 
   return (
     <div className="space-y-6">
