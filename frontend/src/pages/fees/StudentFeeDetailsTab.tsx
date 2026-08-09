@@ -273,8 +273,9 @@ export const StudentFeeDetailsTab: React.FC<StudentFeeDetailsProps> = ({ student
 
         const file = new File([blob], `Fee_Reminder_${reminderStudent.id}.png`, { type: 'image/png' });
 
+        const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
         // Try Native Share (Works on Mobile)
-        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        if (isMobileDevice && navigator.canShare && navigator.canShare({ files: [file] })) {
           await navigator.share({
             files: [file],
             title: 'Fee Reminder',

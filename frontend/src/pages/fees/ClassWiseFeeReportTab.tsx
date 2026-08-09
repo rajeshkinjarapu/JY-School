@@ -147,9 +147,9 @@ export const ClassWiseFeeReportTab: React.FC<ClassWiseFeeReportTabProps> = ({ st
       const blob = doc.output('blob');
       const file = new File([blob], fileName, { type: 'application/pdf' });
 
-      let sharedNatively = false;
+      const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
       // 📱 MOBILE: Try Web Share API first
-      if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+      if (isMobileDevice && navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
         try {
           await navigator.share({
             files: [file],

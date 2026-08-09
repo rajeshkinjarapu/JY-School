@@ -216,36 +216,41 @@ export const JEEProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
   const handleWhatsAppShare = async (studentId: string, studentName: string, index: number, mobile: string) => {
     const el = document.getElementById(`progress-card-${index}`);
     if (!el) return toast.error('Could not find card element');
+
+    const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     
     let canShareNatively = false;
-    try {
-      if ("share" in navigator && "canShare" in navigator) {
+    if (isMobileDevice && "share" in navigator && "canShare" in navigator) {
+      try {
         canShareNatively = navigator.canShare({ files: [new File([''], 't.pdf', { type: 'application/pdf' })] });
+      } catch (e) {
+        canShareNatively = false;
       }
-    } catch (e) {}
+    }
 
     let newWindow: Window | null = null;
     if (!canShareNatively) {
-      newWindow = window.open('', '_blank');
-      if (!newWindow) {
-         toast.error("Popup blocked! Please allow popups for this site.");
-         return;
-      }
+      newWindow = window.open('about:blank', '_blank');
     }
-    
+
     const toastId = toast.loading(`Preparing PDF for ${studentName}...`);
-    let pdf;
+    let pdf: jsPDF;
     try {
       pdf = await generatePDFForElement(el, studentName);
     } catch (e) {
       console.error('PDF generation failed:', e);
-      if (newWindow) newWindow.close();
+      if (newWindow && !newWindow.closed) newWindow.close();
       return toast.error('Failed to generate PDF.', { id: toastId });
     }
-    
+
+    const cleanName = (studentName || 'Student').replace(/[^a-zA-Z0-9_-]/g, '_');
+    const fileName = `${cleanName}_ProgressCard.pdf`;
+    const waUrl = getWaUrl(mobile, studentName);
+
     try {
       const blob = pdf.output('blob');
-      const file = new File([blob], `${studentName}_ProgressCard.pdf`, { type: 'application/pdf' });
+      const file = new File([blob], fileName, { type: 'application/pdf' });
+
       if (canShareNatively) {
         toast.dismiss(toastId);
         await navigator.share({
@@ -254,19 +259,29 @@ export const JEEProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
           text: `Please find the progress card for ${studentName} attached.`
         });
       } else {
-        toast.success('PDF downloaded! Attach file in WhatsApp chat.', { id: toastId, duration: 5000 });
-        pdf.save(`${studentName}_ProgressCard.pdf`);
-        if (newWindow) newWindow.location.href = getWaUrl(mobile, studentName);
+        pdf.save(fileName);
+        if (newWindow && !newWindow.closed) {
+          newWindow.location.href = waUrl;
+        } else {
+          window.open(waUrl, '_blank');
+        }
+        toast.success('PDF downloaded! Opening WhatsApp...', { id: toastId, duration: 6000 });
       }
     } catch (e: any) {
       console.error('WhatsApp share error:', e);
       if (e.name === 'AbortError') { 
-         toast.dismiss(toastId); 
-         if (newWindow) newWindow.close();
-         return; 
+        toast.dismiss(toastId); 
+        if (newWindow && !newWindow.closed) newWindow.close();
+        return; 
       }
-      pdf.save(`${studentName}_ProgressCard.pdf`);
-      if (newWindow) newWindow.location.href = getWaUrl(mobile, studentName);
+      
+      pdf.save(fileName);
+      if (newWindow && !newWindow.closed) {
+        newWindow.location.href = waUrl;
+      } else {
+        window.open(waUrl, '_blank');
+      }
+      toast.success('PDF downloaded! Opening WhatsApp...', { id: toastId, duration: 5000 });
     }
   };
 
