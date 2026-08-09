@@ -240,74 +240,47 @@ export const ProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
     const el = document.getElementById(`progress-card-${index}`);
     if (!el) return toast.error('Could not find card element');
 
-    const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    
-    // On Desktop PC only, pre-open window to bypass popup blocker when opening WhatsApp Web
-    let newWindow: Window | null = null;
-    if (!isMobileDevice) {
-      newWindow = window.open('about:blank', '_blank');
-    }
-
     const toastId = toast.loading(`Preparing PDF for ${studentName}...`);
     let pdf: jsPDF;
     try {
       pdf = await generatePDFForElement(el, studentName);
     } catch (e) {
       console.error('PDF generation failed:', e);
-      if (newWindow && !newWindow.closed) newWindow.close();
       return toast.error('Failed to generate PDF.', { id: toastId });
     }
 
     const cleanName = (studentName || 'Student').replace(/[^a-zA-Z0-9_-]/g, '_');
     const fileName = `${cleanName}_ProgressCard.pdf`;
-    const waUrl = getWaUrl(mobile, studentName);
 
     try {
       const blob = pdf.output('blob');
       const file = new File([blob], fileName, { type: 'application/pdf' });
 
-      // 📱 MOBILE: Native Share API with actual generated PDF file
-      if (isMobileDevice && navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-        toast.dismiss(toastId);
-        await navigator.share({
-          files: [file],
-          title: `${studentName} Progress Card`,
-          text: `Please find the progress card for ${studentName} attached.`
-        });
-        return;
+      // 📱 Try Native Share Sheet first (Opens Android/iOS Share menu with attached PDF)
+      if (navigator.share) {
+        try {
+          toast.dismiss(toastId);
+          await navigator.share({
+            files: [file],
+            title: `${studentName} Progress Card`,
+            text: `Progress Card for ${studentName}`
+          });
+          return;
+        } catch (shareErr: any) {
+          if (shareErr.name === 'AbortError') {
+            return; // User closed the share menu
+          }
+          console.warn('Native file share failed, downloading PDF fallback...', shareErr);
+        }
       }
 
-      // 💻 DESKTOP or Fallback: Download PDF + open WhatsApp
+      // 💻 Desktop or Fallback: Download PDF file directly
       pdf.save(fileName);
-      if (isMobileDevice) {
-        window.location.href = waUrl;
-      } else {
-        if (newWindow && !newWindow.closed) {
-          newWindow.location.href = waUrl;
-        } else {
-          window.open(waUrl, '_blank');
-        }
-      }
-      toast.success('PDF downloaded! Opening WhatsApp...', { id: toastId, duration: 6000 });
+      toast.success('PDF downloaded successfully! Attach the file in WhatsApp.', { id: toastId, duration: 6000 });
     } catch (e: any) {
       console.error('WhatsApp share error:', e);
-      if (e.name === 'AbortError') { 
-        toast.dismiss(toastId); 
-        if (newWindow && !newWindow.closed) newWindow.close();
-        return; 
-      }
-      
       pdf.save(fileName);
-      if (isMobileDevice) {
-        window.location.href = waUrl;
-      } else {
-        if (newWindow && !newWindow.closed) {
-          newWindow.location.href = waUrl;
-        } else {
-          window.open(waUrl, '_blank');
-        }
-      }
-      toast.success('PDF downloaded! Opening WhatsApp...', { id: toastId, duration: 5000 });
+      toast.success('PDF downloaded to your device.', { id: toastId });
     }
   };
 
