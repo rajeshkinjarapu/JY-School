@@ -6,12 +6,13 @@ const getApiUrl = () => {
   }
   if (typeof window !== 'undefined') {
     const host = window.location.hostname;
-    // If accessing via duckdns (HTTPS), use relative URLs for API to avoid mixed content
-    if (host.includes('duckdns.org')) {
+    // If accessing via Vercel or DuckDNS (HTTPS), use relative URLs for API to avoid mixed content.
+    // Vercel rewrites will proxy these to the backend.
+    if (host.includes('vercel.app') || host.includes('duckdns.org')) {
       return ''; 
     }
     const isCapacitor = !!(window as any).Capacitor || window.location.protocol === 'capacitor:';
-    if (host.includes('vercel.app') || host.includes('railway.app') || host === 'localhost' || host === '127.0.0.1' || isCapacitor) {
+    if (host.includes('railway.app') || host === 'localhost' || host === '127.0.0.1' || isCapacitor) {
       return 'http://148.113.8.82:19999';
     }
   }
