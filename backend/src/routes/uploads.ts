@@ -31,6 +31,16 @@ router.post('/image', upload.single('file'), (req, res) => {
   }
 });
 
+// /share: saves file to disk and returns a public URL (used for WhatsApp sharing on HTTP origins)
+router.post('/share', upload.single('file'), (req, res) => {
+  if (!req.file) {
+    res.status(400).json({ success: false, message: 'No file uploaded or invalid format' });
+    return;
+  }
+  const url = getFileUrl(req.file.filename);
+  successResponse(res, { url }, 'File uploaded successfully');
+});
+
 router.post('/document', upload.single('file'), (req, res) => {
   if (!req.file) {
     res.status(400).json({ success: false, message: 'No file uploaded or invalid format' });

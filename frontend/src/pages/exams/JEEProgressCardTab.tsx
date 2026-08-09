@@ -217,67 +217,99 @@ export const JEEProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
     const el = document.getElementById(`progress-card-${index}`);
     if (!el) return toast.error('Could not find card element');
 
-    const toastId = toast.loading(`Preparing PDF for ${studentName}...`);
-    let pdf: jsPDF;
+    const toastId = toast.loading(`Preparing card for ${studentName}...`);
+
+    const parentContainer = document.getElementById('progress-cards-print-container');
+    const origDisplay = parentContainer?.style.display || '';
+    const origPos = parentContainer?.style.position || '';
+    const origZ = parentContainer?.style.zIndex || '';
+    const origTop = parentContainer?.style.top || '';
+    const origLeft = parentContainer?.style.left || '';
+
+    if (parentContainer) {
+      parentContainer.classList.remove('hidden');
+      parentContainer.style.display = 'flex';
+      parentContainer.style.position = 'fixed';
+      parentContainer.style.top = '0';
+      parentContainer.style.left = '0';
+      parentContainer.style.zIndex = '-9999';
+    }
+    const origElDisplay = el.style.display;
+    el.style.display = 'flex';
+    await new Promise(r => setTimeout(r, 400));
+
+    let blob: Blob | null = null;
     try {
-      pdf = await generatePDFForElement(el, studentName);
+      const dataUrl = await toJpeg(el, {
+        quality: 0.92,
+        backgroundColor: '#ffffff',
+        pixelRatio: 2,
+        useCORS: true,
+      } as any);
+      const res = await fetch(dataUrl);
+      blob = await res.blob();
     } catch (e) {
-      console.error('PDF generation failed:', e);
-      return toast.error('Failed to generate PDF.', { id: toastId });
+      console.error('Image generation failed:', e);
+    } finally {
+      el.style.display = origElDisplay;
+      if (parentContainer) {
+        parentContainer.classList.add('hidden');
+        parentContainer.style.display = origDisplay;
+        parentContainer.style.position = origPos;
+        parentContainer.style.zIndex = origZ;
+        parentContainer.style.top = origTop;
+        parentContainer.style.left = origLeft;
+      }
+    }
+
+    if (!blob) {
+      toast.error('Failed to generate card image.', { id: toastId });
+      return;
     }
 
     const cleanName = (studentName || 'Student').replace(/[^a-zA-Z0-9_-]/g, '_');
-    const fileName = `${cleanName}_ProgressCard.pdf`;
+    const fileName = `${cleanName}_ProgressCard.jpg`;
+    const imageFile = new File([blob], fileName, { type: 'image/jpeg' });
 
-    try {
-      const blob = pdf.output('blob');
-      const file = new File([blob], fileName, { type: 'application/pdf' });
-
-      // 1. Try Native File Share API (Pass ONLY files so Android OS shares PDF document directly, NOT text)
-      if (navigator.share) {
-        try {
-          toast.dismiss(toastId);
-          await navigator.share({
-            files: [file]
-          });
-          return;
-        } catch (shareErr: any) {
-          if (shareErr.name === 'AbortError') {
-            return; // User closed share menu
-          }
-          console.warn('Native file share failed, falling back to server upload...', shareErr);
-        }
-      }
-
-      // 2. HTTP / Fallback: Upload PDF to server & share direct PDF link via WhatsApp contact chooser
-      const formData = new FormData();
-      formData.append('file', blob, fileName);
-
-      let pdfUrl = '';
+    // Try native share with JPEG image (works on HTTP + HTTPS on Android/iOS)
+    if (navigator.share && navigator.canShare && navigator.canShare({ files: [imageFile] })) {
       try {
-        const uploadRes = await api.post('/api/uploads/document', formData, {
-          headers: { 'Content-Type': 'multipart/form-data' }
-        });
-        pdfUrl = uploadRes.data.url || (uploadRes.data.data && uploadRes.data.data.url) || '';
-      } catch (uploadErr) {
-        console.warn('PDF upload failed, using local download fallback', uploadErr);
+        toast.dismiss(toastId);
+        await navigator.share({ files: [imageFile] });
+        return;
+      } catch (shareErr: any) {
+        if (shareErr.name === 'AbortError') return;
+        console.warn('Native image share failed, trying upload fallback...', shareErr);
       }
+    }
 
-      toast.dismiss(toastId);
+    // Fallback: upload image to server → WhatsApp with link
+    const formData = new FormData();
+    formData.append('file', blob, fileName);
+    let imgUrl = '';
+    try {
+      const uploadRes = await api.post('/api/uploads/share', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      imgUrl = uploadRes.data?.data?.url || uploadRes.data?.url || '';
+    } catch (err) {
+      console.warn('Image upload failed', err);
+    }
 
-      if (pdfUrl) {
-        const fullPdfUrl = pdfUrl.startsWith('http') ? pdfUrl : `${window.location.origin}${pdfUrl}`;
-        const msg = `Hi! Please find attached the Examination Result Progress Card for *${studentName}*:\n${fullPdfUrl}`;
-        window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_system');
-        toast.success('Opening WhatsApp to share PDF...');
-      } else {
-        pdf.save(fileName);
-        toast.success('PDF downloaded successfully! Attach file in WhatsApp.');
-      }
-    } catch (e: any) {
-      console.error('WhatsApp share error:', e);
-      pdf.save(fileName);
-      toast.success('PDF downloaded to your device.', { id: toastId });
+    toast.dismiss(toastId);
+
+    if (imgUrl) {
+      const fullUrl = imgUrl.startsWith('http') ? imgUrl : `${window.location.origin}${imgUrl}`;
+      const msg = `Progress Card for *${studentName}*:\n${fullUrl}`;
+      window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_system');
+      toast.success('Opening WhatsApp...');
+    } else {
+      // Last resort: download the image
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = fileName;
+      a.click();
+      toast.success('Image downloaded! Attach it in WhatsApp.');
     }
   };
 
