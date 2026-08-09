@@ -271,15 +271,16 @@ export const JEEProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
     const fileName = `${cleanName}_ProgressCard.jpg`;
     const imageFile = new File([blob], fileName, { type: 'image/jpeg' });
 
-    // Try native share with JPEG image (works on HTTP + HTTPS on Android/iOS)
-    if (navigator.share && navigator.canShare && navigator.canShare({ files: [imageFile] })) {
+    // Try native file share directly (no canShare pre-check - works on some Android browsers over HTTP)
+    if (navigator.share) {
       try {
         toast.dismiss(toastId);
         await navigator.share({ files: [imageFile] });
-        return;
+        return; // success - file shared natively
       } catch (shareErr: any) {
-        if (shareErr.name === 'AbortError') return;
-        console.warn('Native image share failed, trying upload fallback...', shareErr);
+        if (shareErr.name === 'AbortError') return; // user cancelled
+        console.warn('Native file share not supported, trying server upload...', shareErr);
+        toast.loading(`Uploading card for ${studentName}...`, { id: toastId });
       }
     }
 
