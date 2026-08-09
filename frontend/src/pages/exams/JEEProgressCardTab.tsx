@@ -233,14 +233,12 @@ export const JEEProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
       const blob = pdf.output('blob');
       const file = new File([blob], fileName, { type: 'application/pdf' });
 
-      // 1. Try Native File Share API (Works on HTTPS mobile browsers)
+      // 1. Try Native File Share API (Pass ONLY files so Android OS shares PDF document directly, NOT text)
       if (navigator.share) {
         try {
           toast.dismiss(toastId);
           await navigator.share({
-            files: [file],
-            title: `${studentName} Progress Card`,
-            text: `Progress Card for ${studentName}`
+            files: [file]
           });
           return;
         } catch (shareErr: any) {
