@@ -242,17 +242,9 @@ export const ProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
 
     const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     
-    let canShareNatively = false;
-    if (isMobileDevice && "share" in navigator && "canShare" in navigator) {
-      try {
-        canShareNatively = navigator.canShare({ files: [new File([''], 't.pdf', { type: 'application/pdf' })] });
-      } catch (e) {
-        canShareNatively = false;
-      }
-    }
-
+    // On Desktop PC only, pre-open window to bypass popup blocker when opening WhatsApp Web
     let newWindow: Window | null = null;
-    if (!canShareNatively) {
+    if (!isMobileDevice) {
       newWindow = window.open('about:blank', '_blank');
     }
 
@@ -274,22 +266,29 @@ export const ProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
       const blob = pdf.output('blob');
       const file = new File([blob], fileName, { type: 'application/pdf' });
 
-      if (canShareNatively) {
+      // 📱 MOBILE: Native Share API with actual generated PDF file
+      if (isMobileDevice && navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
         toast.dismiss(toastId);
         await navigator.share({
           files: [file],
           title: `${studentName} Progress Card`,
           text: `Please find the progress card for ${studentName} attached.`
         });
+        return;
+      }
+
+      // 💻 DESKTOP or Fallback: Download PDF + open WhatsApp
+      pdf.save(fileName);
+      if (isMobileDevice) {
+        window.location.href = waUrl;
       } else {
-        pdf.save(fileName);
         if (newWindow && !newWindow.closed) {
           newWindow.location.href = waUrl;
         } else {
           window.open(waUrl, '_blank');
         }
-        toast.success('PDF downloaded! Opening WhatsApp...', { id: toastId, duration: 6000 });
       }
+      toast.success('PDF downloaded! Opening WhatsApp...', { id: toastId, duration: 6000 });
     } catch (e: any) {
       console.error('WhatsApp share error:', e);
       if (e.name === 'AbortError') { 
@@ -299,10 +298,14 @@ export const ProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
       }
       
       pdf.save(fileName);
-      if (newWindow && !newWindow.closed) {
-        newWindow.location.href = waUrl;
+      if (isMobileDevice) {
+        window.location.href = waUrl;
       } else {
-        window.open(waUrl, '_blank');
+        if (newWindow && !newWindow.closed) {
+          newWindow.location.href = waUrl;
+        } else {
+          window.open(waUrl, '_blank');
+        }
       }
       toast.success('PDF downloaded! Opening WhatsApp...', { id: toastId, duration: 5000 });
     }
