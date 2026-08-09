@@ -233,7 +233,7 @@ export const JEEProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
       const blob = pdf.output('blob');
       const file = new File([blob], fileName, { type: 'application/pdf' });
 
-      // 📱 Try Native Share Sheet first (Opens Android/iOS Share menu with attached PDF)
+      // 1. Try Native File Share API (Works on HTTPS mobile browsers)
       if (navigator.share) {
         try {
           toast.dismiss(toastId);
@@ -245,15 +245,37 @@ export const JEEProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
           return;
         } catch (shareErr: any) {
           if (shareErr.name === 'AbortError') {
-            return; // User closed the share menu
+            return; // User closed share menu
           }
-          console.warn('Native file share failed, downloading PDF fallback...', shareErr);
+          console.warn('Native file share failed, falling back to server upload...', shareErr);
         }
       }
 
-      // 💻 Desktop or Fallback: Download PDF file directly
-      pdf.save(fileName);
-      toast.success('PDF downloaded successfully! Attach the file in WhatsApp.', { id: toastId, duration: 6000 });
+      // 2. HTTP / Fallback: Upload PDF to server & share direct PDF link via WhatsApp contact chooser
+      const formData = new FormData();
+      formData.append('file', blob, fileName);
+
+      let pdfUrl = '';
+      try {
+        const uploadRes = await api.post('/api/uploads/document', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
+        pdfUrl = uploadRes.data.url || (uploadRes.data.data && uploadRes.data.data.url) || '';
+      } catch (uploadErr) {
+        console.warn('PDF upload failed, using local download fallback', uploadErr);
+      }
+
+      toast.dismiss(toastId);
+
+      if (pdfUrl) {
+        const fullPdfUrl = pdfUrl.startsWith('http') ? pdfUrl : `${window.location.origin}${pdfUrl}`;
+        const msg = `Hi! Please find attached the Examination Result Progress Card for *${studentName}*:\n${fullPdfUrl}`;
+        window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_system');
+        toast.success('Opening WhatsApp to share PDF...');
+      } else {
+        pdf.save(fileName);
+        toast.success('PDF downloaded successfully! Attach file in WhatsApp.');
+      }
     } catch (e: any) {
       console.error('WhatsApp share error:', e);
       pdf.save(fileName);
@@ -724,8 +746,8 @@ export const JEEProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
         </div>
       )}
 
-      {/* Global Actions */}
-      {studentsData.length > 0 && (
+      {/* Global Actions - Visible ONLY to Super Admin */}
+      {isSuperAdmin && studentsData.length > 0 && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 print:hidden animate-fade-in-up">
             <button 
               onClick={handleDownloadAllZip} 
