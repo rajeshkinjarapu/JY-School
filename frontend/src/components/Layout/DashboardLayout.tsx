@@ -5,6 +5,7 @@ import { Header } from './Header';
 import { useAuth } from '../../hooks/useAuth';
 import { MobileNotificationToast } from '../UI/MobileNotificationToast';
 import { registerPushNotifications } from '../../utils/pushNotifications';
+import { PullToRefresh } from '../UI/PullToRefresh';
 
 export const DashboardLayout: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -122,10 +123,15 @@ export const DashboardLayout: React.FC = () => {
         <MobileNotificationToast />
         <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
         <Header onMenuClick={() => setSidebarOpen(true)} title={getPageTitle(location.pathname)} />
-        <main style={{ flex: 1, overflowY: 'auto', overscrollBehavior: 'contain' }} className="pb-4">
-          <div key={location.pathname} className="animate-slide-in h-full">
-            <Outlet context={{ setDynamicTitle }} />
-          </div>
+        <main style={{ flex: 1, overflow: 'hidden' }} className="pb-4">
+          <PullToRefresh onRefresh={async () => {
+            await new Promise(r => setTimeout(r, 600));
+            window.location.reload();
+          }}>
+            <div key={location.pathname} className="animate-slide-in h-full">
+              <Outlet context={{ setDynamicTitle }} />
+            </div>
+          </PullToRefresh>
         </main>
       </div>
     );
@@ -141,12 +147,16 @@ export const DashboardLayout: React.FC = () => {
       <div className="flex flex-col flex-1 overflow-hidden min-w-0">
         <Header onMenuClick={() => setSidebarOpen(true)} title={getPageTitle(location.pathname)} />
         <main
-          className="flex-1 overflow-y-auto pb-4"
-          style={{ overscrollBehavior: 'contain' }}
+          className="flex-1 overflow-hidden pb-4"
         >
-          <div key={location.pathname} className="animate-slide-in h-full">
-            <Outlet context={{ setDynamicTitle }} />
-          </div>
+          <PullToRefresh onRefresh={async () => {
+            await new Promise(r => setTimeout(r, 600));
+            window.location.reload();
+          }}>
+            <div key={location.pathname} className="animate-slide-in h-full">
+              <Outlet context={{ setDynamicTitle }} />
+            </div>
+          </PullToRefresh>
         </main>
       </div>
     </div>
