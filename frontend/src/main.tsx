@@ -63,13 +63,7 @@ window.addEventListener('vite:preloadError', () => {
   window.location.reload();
 });
 
-// Fix Mobile App Notch Overlap (Capacitor)
-if (typeof window !== 'undefined') {
-  const isCapacitor = !!(window as any).Capacitor || window.location.protocol === 'capacitor:';
-  if (isCapacitor) {
-    document.documentElement.classList.add('is-capacitor');
-  }
-}
+
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

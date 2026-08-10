@@ -62,10 +62,7 @@
     background-color: #0f172a !important;
   }
 
-  /* Force top padding for mobile app notch / status bar */
-  html.is-capacitor #root {
-    padding-top: max(env(safe-area-inset-top), 40px) !important;
-  }
+
 
   /* Flutter-like GPU Hardware Acceleration & Smooth Mobile Touch Feedback */
   .gpu-accelerated {
