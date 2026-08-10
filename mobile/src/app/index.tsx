@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from "react-native";
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { login } from "../services/api";
 import { Colors, BorderRadius, Shadows } from "../theme";
 import { router } from "expo-router";
@@ -19,7 +20,7 @@ export default function LoginScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <View style={styles.glassBox}>
         <Text style={styles.title}>JY School</Text>
         <TextInput
@@ -43,7 +44,7 @@ export default function LoginScreen() {
           <Text style={styles.buttonText}>Login</Text>
         </TouchableOpacity>
       </View>
-    </View>
+    </SafeAreaView>
   );
 }
 

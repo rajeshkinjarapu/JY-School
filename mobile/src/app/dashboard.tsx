@@ -1,6 +1,7 @@
 // src/app/dashboard.tsx
 import React, { useEffect, useState } from "react";
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity, Image } from "react-native";
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from "@expo/vector-icons";
 import { fetchStudentDashboard, StudentDashboardData } from "../services/dashboard";
 import { Colors, Gradients, BorderRadius, Shadows } from "../theme";
@@ -47,6 +48,7 @@ export default function DashboardScreen() {
   const { attendanceToday, feeInfo, recentPayments, recentResults } = data;
 
   return (
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#2C497F' }} edges={['top']}>
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       {/* Header */}
       <View style={styles.header}>
@@ -112,6 +114,7 @@ export default function DashboardScreen() {
       </View>
       </View>
     </ScrollView>
+    </SafeAreaView>
   );
 }
 
@@ -126,7 +129,7 @@ const styles = StyleSheet.create({
   header: {
     paddingVertical: 20,
     paddingHorizontal: 16,
-    paddingTop: 40, // For safe area if needed
+    paddingTop: 16, // SafeAreaView handles the notch
     backgroundColor: '#2C497F',
     borderBottomLeftRadius: 24,
     borderBottomRightRadius: 24,
