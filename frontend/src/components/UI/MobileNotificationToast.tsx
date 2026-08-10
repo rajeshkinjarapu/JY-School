@@ -77,15 +77,26 @@ export const MobileNotificationToast: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // Auto hide active toast after 6 seconds
-  useEffect(() => {
-    if (activeToast) {
-      const timer = setTimeout(() => {
-        setActiveToast(null);
-      }, 6000);
-      return () => clearTimeout(timer);
+  const [swipeOffset, setSwipeOffset] = useState(0);
+  const touchStartRef = useRef<number | null>(null);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartRef.current = e.touches[0].clientX;
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (touchStartRef.current === null) return;
+    const currentX = e.touches[0].clientX;
+    setSwipeOffset(currentX - touchStartRef.current);
+  };
+
+  const handleTouchEnd = () => {
+    if (Math.abs(swipeOffset) > 100) {
+      setActiveToast(null);
     }
-  }, [activeToast]);
+    setSwipeOffset(0);
+    touchStartRef.current = null;
+  };
 
   if (!activeToast) return null;
 
@@ -109,7 +120,17 @@ export const MobileNotificationToast: React.FC = () => {
   };
 
   return (
-    <div className="fixed top-3 left-3 right-3 sm:left-auto sm:right-5 sm:w-96 z-[100] animate-bounce-in">
+    <div 
+      className="fixed top-3 left-3 right-3 sm:left-auto sm:right-5 sm:w-96 z-[100] animate-bounce-in"
+      style={{
+        transform: `translateX(${swipeOffset}px)`,
+        transition: touchStartRef.current !== null ? 'none' : 'transform 0.3s ease, opacity 0.3s ease',
+        opacity: Math.abs(swipeOffset) > 100 ? 0 : 1 - (Math.abs(swipeOffset) / 250)
+      }}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+    >
       <div 
         onClick={() => {
           if (activeToast.link) navigate(activeToast.link);
