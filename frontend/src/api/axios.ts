@@ -1,9 +1,6 @@
 import axios from 'axios';
 
 const getApiUrl = () => {
-  if (import.meta.env.VITE_API_URL) {
-    return import.meta.env.VITE_API_URL;
-  }
   if (typeof window !== 'undefined') {
     const host = window.location.hostname;
     // If accessing via Vercel or DuckDNS (HTTPS), use relative URLs for API to avoid mixed content.
@@ -16,6 +13,11 @@ const getApiUrl = () => {
       return 'http://148.113.8.82:19999';
     }
   }
+  
+  if (import.meta.env.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL;
+  }
+  
   return 'http://148.113.8.82:19999';
 };
 
