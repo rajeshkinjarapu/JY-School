@@ -17,7 +17,6 @@ export const ExamPaperGeneratorPage = () => {
   // Paper Settings State
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [examName, setExamName] = useState<string>(() => localStorage.getItem('exam_gen_name') || 'GRAND TEST');
-  const [examSubject, setExamSubject] = useState<string>(() => localStorage.getItem('exam_gen_subject') || '');
   const [examDate, setExamDate] = useState<string>(() => localStorage.getItem('exam_gen_date') || '');
   const [maxMarks, setMaxMarks] = useState('100');
   const [time, setTime] = useState<string>(() => localStorage.getItem('exam_gen_marks') || '75');
@@ -199,7 +198,6 @@ export const ExamPaperGeneratorPage = () => {
       try {
         const formData = new FormData();
         formData.append('file', file);
-        formData.append('subject', examSubject);
         if (activeAiModel === 'gemini' && geminiApiKey) {
           formData.append('apiKey', geminiApiKey);
         }
@@ -281,11 +279,6 @@ export const ExamPaperGeneratorPage = () => {
       return;
     }
 
-    if (!examSubject) {
-      toast.error("Please enter a subject in Paper Settings first.");
-      return;
-    }
-
     setIsGenerating(true);
     toast.loading("AI is analyzing and generating...", { id: 'ai-gen' });
     
@@ -302,7 +295,6 @@ export const ExamPaperGeneratorPage = () => {
 
       const payload: any = {
         text: finalPrompt,
-        subject: examSubject,
         apiKey: selectedKey || undefined,
         aiModel: activeAiModel
       };
@@ -403,7 +395,6 @@ export const ExamPaperGeneratorPage = () => {
         setExamDate(p.examDate || '');
         setTime(p.time || '');
         setInstructions(p.instructions || '');
-        setExamSubject(p.examSubject || '');
         const { text, images } = deserializeContent(p.content || '');
         setContent(text);
         setInlineImages(images);
@@ -426,16 +417,11 @@ export const ExamPaperGeneratorPage = () => {
       }
     }
 
-    if (!examSubject) {
-      toast.error('Please enter a subject in Paper Settings first.');
-      return;
-    }
-
     setIsSaving(true);
     toast.loading(paperId ? 'Updating paper...' : 'Saving paper...', { id: 'save' });
     try {
       const serializedContent = serializeContent();
-      const payload = { examName: finalExamName, examSubject, examDate, time, instructions, content: serializedContent };
+      const payload = { examName: finalExamName, examDate, time, instructions, content: serializedContent };
       if (paperId) {
         await api.put(`/api/generated-papers/${paperId}`, payload);
         toast.success('Paper updated successfully!', { id: 'save' });
@@ -474,7 +460,6 @@ export const ExamPaperGeneratorPage = () => {
             </button>
             <div className="flex items-center gap-2 pl-2">
               <span className="text-sm font-bold text-slate-800">{examName || 'Untitled Exam'}</span>
-              <span className="px-2.5 py-1 bg-indigo-50 text-indigo-700 text-[10px] font-black uppercase tracking-wider rounded-lg border border-indigo-100">{examSubject || 'No Subject'}</span>
             </div>
           </div>
           
@@ -564,7 +549,7 @@ export const ExamPaperGeneratorPage = () => {
             
             <div className="bg-amber-50 border-b border-amber-100 px-4 py-2 flex items-center justify-center gap-2 text-xs font-bold text-amber-700">
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-amber-500"><path d="M12 9v2m0 4v.01M5.05 19h13.9c1.66 0 3-1.34 3-3V8c0-1.66-1.34-3-3-3H5.05c-1.66 0-3 1.34-3 3v8c0 1.66 1.34 3 3 3z"/></svg>
-              Tip: Press Enter 3-4 times to leave empty space for answers. Paste images (Ctrl+V) directly.
+              Tip: Use "## Heading" to add a subject header. Paste images (Ctrl+V) directly.
             </div>
 
             <div className="flex-1 overflow-hidden relative group">
@@ -574,7 +559,7 @@ export const ExamPaperGeneratorPage = () => {
                 onChange={(e) => setContent(e.target.value)}
                 onPaste={handleEditorPaste}
                 className="w-full h-full p-6 font-mono text-[14px] leading-relaxed text-slate-700 bg-white focus:outline-none resize-none custom-scrollbar absolute inset-0"
-                placeholder="1. Question text&#10;(A) Option A&#10;(B) Option B&#10;(C) Option C&#10;(D) Option D&#10;&#10;Tip: You can paste images directly (Ctrl+V) or click 'Insert Image'!"
+                placeholder="## SECTION A - MATHEMATICS&#10;&#10;1. Question text&#10;(A) Option A&#10;(B) Option B&#10;(C) Option C&#10;(D) Option D&#10;&#10;Tip: You can paste images directly (Ctrl+V) or click 'Insert Image'!"
               />
             </div>
           </div>
@@ -607,7 +592,7 @@ export const ExamPaperGeneratorPage = () => {
                   content={content}
                   examName={examName}
                   examDate={examDate}
-                  examSubject={examSubject}
+                  examClass={examClass}
                   logoBase64="/logo.png?v=1"
                   maxMarks={maxMarks}
                   time={time}
@@ -651,7 +636,7 @@ export const ExamPaperGeneratorPage = () => {
               <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm space-y-5">
                 <h3 className="font-bold text-slate-800 mb-4 flex items-center gap-2 border-b border-slate-50 pb-3"><BookOpen className="w-4 h-4 text-indigo-500" /> Basic Information</h3>
                 
-                <div className="grid grid-cols-2 gap-5">
+                <div className="grid grid-cols-3 gap-5">
                   <div>
                     <label className="block text-[13px] font-black text-slate-700 mb-1.5 uppercase tracking-wide">Exam Name</label>
                     <input
@@ -662,22 +647,6 @@ export const ExamPaperGeneratorPage = () => {
                       placeholder="e.g. UNIT TEST - 1"
                     />
                   </div>
-                  <div>
-                    <label className="block text-[13px] font-black text-slate-700 mb-1.5 uppercase tracking-wide">Subject</label>
-                    <input
-                      type="text"
-                      value={examSubject}
-                      onChange={(e) => {
-                        setExamSubject(e.target.value);
-                        localStorage.setItem('exam_gen_subject', e.target.value);
-                      }}
-                      className="w-full rounded-xl border-slate-200 bg-white border p-3 text-sm font-bold text-slate-700 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all shadow-sm"
-                      placeholder="e.g. Mathematics"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-3 gap-5">
                   <div>
                     <label className="block text-[13px] font-black text-slate-700 mb-1.5 uppercase tracking-wide">Class</label>
                     <input
@@ -869,7 +838,7 @@ export const ExamPaperGeneratorPage = () => {
                       onChange={(e) => setAiInput(e.target.value)}
                       onPaste={handleAiPaste}
                       className="w-full rounded-xl border-slate-200 bg-white border p-4 text-sm font-medium text-slate-700 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none resize-none h-36 transition-all custom-scrollbar shadow-sm"
-                      placeholder={`E.g., Generate 10 multiple choice questions for ${examSubject || 'Mathematics'}...`}
+                      placeholder={`E.g., Generate 10 multiple choice questions for Mathematics...`}
                     />
                     {aiImageBase64 && (
                       <div className="mt-4 relative inline-block p-2 bg-slate-50 rounded-xl border border-slate-100">

@@ -579,7 +579,7 @@ export const NavodayaPaperGeneratorPage = () => {
               content={content}
               examName={examName}
               examDate={examDate}
-              examSubject={examSubject}
+              examClass={examClass}
               logoBase64="/logo.png?v=1"
               maxMarks={maxMarks}
               time={time}

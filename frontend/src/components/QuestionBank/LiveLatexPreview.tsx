@@ -19,7 +19,7 @@ interface LiveLatexPreviewProps {
   time: string;
   instructions: string[];
   examDate?: string;
-  examSubject?: string;
+  examClass?: string;
   logoBase64?: string;
   isDoubleColumn?: boolean;
   inlineImages?: Record<string, FloatingImage | string>;
@@ -34,7 +34,7 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
   time,
   instructions,
   examDate = '',
-  examSubject = '',
+  examClass = '',
   logoBase64 = '',
   isDoubleColumn = false,
   inlineImages = {},
@@ -119,28 +119,36 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
       const hasOptions = block.includes('(A)') && block.includes('(B)') && block.includes('(C)') && block.includes('(D)');
       
       let renderHeading = null;
-      let questionNumber = 0;
-      const qNumMatch = block.match(/^(\d+)\./);
-      if (qNumMatch) {
-        questionNumber = parseInt(qNumMatch[1], 10);
-        if (questionNumber === 1) renderHeading = "MATHEMATICS";
-        if (questionNumber === 26) renderHeading = "PHYSICS";
-        if (questionNumber === 51) renderHeading = "CHEMISTRY";
+      const headingMatch = block.match(/^##\s+(.*)/);
+      if (headingMatch) {
+         renderHeading = headingMatch[1].trim();
+         // If the block only contains the heading, render it immediately
+         const remainingBlock = block.replace(/^##\s+.*\n?/, '').trim();
+         if (!remainingBlock) {
+             elements.push(
+               <div key={`heading-${i}`} className="w-full text-center my-3 break-before-auto" style={{ marginBottom }}>
+                 <h3 className="font-bold text-[13pt] underline underline-offset-4 uppercase">{renderHeading}</h3>
+               </div>
+             );
+             continue;
+         }
       }
 
       const blockContent = (
         <>
           {renderHeading && (
             <div className="w-full text-center my-3 break-before-auto">
-              <h3 className="font-bold text-[13pt] underline underline-offset-4">{renderHeading}</h3>
+              <h3 className="font-bold text-[13pt] underline underline-offset-4 uppercase">{renderHeading}</h3>
             </div>
           )}
           {!hasOptions ? (
             (() => {
-              const qNumMatch2 = block.match(/^(\d+)\.\s*/);
+              // Strip the heading from the block before rendering
+              const contentToRender = renderHeading ? block.replace(/^##\s+.*\n?/, '') : block;
+              const qNumMatch2 = contentToRender.match(/^(\d+)\.\s*/);
               if (qNumMatch2) {
                 const num = qNumMatch2[1];
-                const restText = block.substring(qNumMatch2[0].length);
+                const restText = contentToRender.substring(qNumMatch2[0].length);
                 return (
                   <div className="mb-2 break-inside-avoid text-[11pt] flex whitespace-pre-wrap" style={{ gap: '0.4em' }}>
                     <strong className="flex-shrink-0">{num}.</strong>
@@ -151,20 +159,22 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
               return (
                 <div 
                   className="mb-2 break-inside-avoid text-[11pt]"
-                  dangerouslySetInnerHTML={{ __html: renderLatex(block) }} 
+                  dangerouslySetInnerHTML={{ __html: renderLatex(contentToRender) }} 
                 />
               );
             })()
           ) : (
             (() => {
+              // Strip heading if options block
+              const contentToRender = renderHeading ? block.replace(/^##\s+.*\n?/, '') : block;
               const optARegex = /\(A\)\s*(.*?)(?=\(B\)|$)/s;
               const optBRegex = /\(B\)\s*(.*?)(?=\(C\)|$)/s;
               const optCRegex = /\(C\)\s*(.*?)(?=\(D\)|$)/s;
               const optDRegex = /\(D\)\s*(.*)/s;
 
-              const splitIndexA = block.indexOf('(A)');
-              const questionText = block.substring(0, splitIndexA).trim();
-              const optionsText = block.substring(splitIndexA);
+              const splitIndexA = contentToRender.indexOf('(A)');
+              const questionText = contentToRender.substring(0, splitIndexA).trim();
+              const optionsText = contentToRender.substring(splitIndexA);
 
               const matchA = optionsText.match(optARegex);
               const matchB = optionsText.match(optBRegex);
@@ -275,7 +285,7 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
           
           <div className="flex flex-col text-[11pt] font-medium mt-2 px-1 gap-1">
             <div className="flex justify-between items-center">
-              <div><span className="font-bold">Class:</span> {examSubject || '_______________'}</div>
+              <div><span className="font-bold">Class:</span> {examClass || '_______________'}</div>
               <div><span className="font-bold">Marks:</span> {time || '75'}</div>
             </div>
             <div className="flex justify-between items-center">
