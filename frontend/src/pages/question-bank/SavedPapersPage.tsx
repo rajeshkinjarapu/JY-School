@@ -478,7 +478,6 @@ export const SavedPapersPage = ({ isEmbedded = false }: { isEmbedded?: boolean }
         </div>
       )}
     </div>
-    </div>
   );
 };
 
