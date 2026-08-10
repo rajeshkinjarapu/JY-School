@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Key, Save, CheckCircle2, AlertTriangle, FileText, ChevronDown, ListOrdered, Sparkles } from 'lucide-react';
+import { Key, Save, CheckCircle2, AlertTriangle, FileText, ChevronDown, ListOrdered, Sparkles, Printer } from 'lucide-react';
 import { api } from '../../api/axios';
 import toast from 'react-hot-toast';
 
@@ -251,7 +251,8 @@ ${selectedPaper.content}`;
       const data = await response.json();
       if (data.candidates && data.candidates[0].content.parts[0].text) {
          let text = data.candidates[0].content.parts[0].text;
-         let aiAnswers: Answer[] = JSON.parse(text);
+         let cleanText = text.replace(/```json/gi, '').replace(/```/g, '').trim();
+         let aiAnswers: Answer[] = JSON.parse(cleanText);
          
          // Merge AI answers into current answers
          setAnswers(prev => {
@@ -323,19 +324,32 @@ ${selectedPaper.content}`;
             <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
           </div>
 
-          <div className="relative flex-1 min-w-[250px]">
-            <select
-              value={selectedPaperId}
-              onChange={(e) => setSelectedPaperId(e.target.value)}
-              className="appearance-none w-full pl-10 pr-10 py-2.5 bg-white border border-indigo-200 rounded-xl text-sm font-bold text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 cursor-pointer"
-            >
-              <option value="">Select Exam Paper...</option>
-              {filteredPapers.map(p => (
-                <option key={p.id} value={p.id}>{p.examName} {p.examSubject ? `(${p.examSubject})` : ''}</option>
-              ))}
-            </select>
-            <FileText className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-indigo-400" />
-            <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+          <div className="relative flex-1 min-w-[250px] flex items-center gap-3">
+            <div className="relative flex-1">
+              <select
+                value={selectedPaperId}
+                onChange={(e) => setSelectedPaperId(e.target.value)}
+                className="appearance-none w-full pl-10 pr-10 py-2.5 bg-white border border-indigo-200 rounded-xl text-sm font-bold text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 cursor-pointer"
+              >
+                <option value="">Select Exam Paper...</option>
+                {filteredPapers.map(p => (
+                  <option key={p.id} value={p.id}>{p.examName} {p.examSubject ? `(${p.examSubject})` : ''}</option>
+                ))}
+              </select>
+              <FileText className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-indigo-400" />
+              <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+            </div>
+            
+            {selectedPaperId && (
+              <button
+                onClick={handleAIGenerate}
+                disabled={isGeneratingAI}
+                className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-violet-600 to-indigo-600 text-white rounded-xl font-bold shadow-sm shadow-indigo-500/25 hover:shadow-md hover:shadow-indigo-500/30 hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
+              >
+                {isGeneratingAI ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                <span className="hidden sm:inline">AI Auto Generate</span>
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -414,19 +428,19 @@ ${selectedPaper.content}`;
             </div>
             
             {/* Save Button at Bottom */}
-            <div className="p-6 bg-slate-50 border-t border-slate-200 flex justify-end gap-3">
+            <div className="p-6 bg-slate-50 border-t border-slate-200 flex flex-wrap items-center justify-between gap-3">
               <button
-                onClick={handleAIGenerate}
-                disabled={!selectedPaperId || isGeneratingAI}
-                className="flex items-center gap-2 px-6 py-3 bg-white border border-slate-200 text-indigo-600 rounded-xl font-bold shadow-sm hover:bg-slate-50 hover:border-indigo-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                onClick={() => window.print()}
+                className="flex items-center gap-2 px-6 py-3 bg-white border border-slate-200 text-slate-600 rounded-xl font-bold shadow-sm hover:bg-slate-50 hover:text-slate-800 transition-all print:hidden"
               >
-                {isGeneratingAI ? <div className="w-4 h-4 border-2 border-indigo-200 border-t-indigo-600 rounded-full animate-spin" /> : <Sparkles className="w-4 h-4" />}
-                AI Auto Generate
+                <Printer className="w-4 h-4" />
+                Print Answer Key
               </button>
+              
               <button
                 onClick={handleSave}
                 disabled={!selectedPaperId || saving}
-                className="flex items-center gap-2 px-8 py-3 bg-indigo-600 text-white rounded-xl font-bold shadow-xl shadow-indigo-600/20 hover:bg-indigo-700 hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center gap-2 px-8 py-3 bg-indigo-600 text-white rounded-xl font-bold shadow-xl shadow-indigo-600/20 hover:bg-indigo-700 hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed print:hidden"
               >
                 {saving ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Save className="w-4 h-4" />}
                 Save Answer Key
