@@ -102,10 +102,17 @@ export const AnswerKeyManager = () => {
     return papers.filter(p => {
       const cMatch = p.examName.match(/(\d+(th|st|nd|rd)\s+Class)/i);
       const c = cMatch ? cMatch[1] : 'General';
-      const subj = p.examSubject || 'All Subjects / Grand Test';
       
       const classMatch = selectedClass ? c === selectedClass : true;
-      const subjMatch = selectedSubject ? subj === selectedSubject : true;
+      
+      let subjMatch = true;
+      if (selectedSubject && selectedSubject !== 'All Subjects' && selectedSubject !== 'All Subjects / Grand Test') {
+        const escapedSubject = selectedSubject.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const headingRegex = new RegExp(`^##\\s*${escapedSubject}\\s*$`, 'im');
+        const hasHeading = headingRegex.test(p.content);
+        const isExamSubject = p.examSubject === selectedSubject;
+        subjMatch = hasHeading || isExamSubject;
+      }
       
       return classMatch && subjMatch;
     });
