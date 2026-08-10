@@ -4,6 +4,7 @@ import { Sidebar } from './Sidebar';
 import { Header } from './Header';
 import { useAuth } from '../../hooks/useAuth';
 import { MobileNotificationToast } from '../UI/MobileNotificationToast';
+import { registerPushNotifications } from '../../utils/pushNotifications';
 
 export const DashboardLayout: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -13,6 +14,13 @@ export const DashboardLayout: React.FC = () => {
   const { user } = useAuth();
 
   useEffect(() => {
+    if (user) {
+      const token = localStorage.getItem('token');
+      if (token) {
+        registerPushNotifications(user.id, token);
+      }
+    }
+
     const handleResize = () => setIsMobile(window.innerWidth < 1024);
     window.addEventListener('resize', handleResize);
     

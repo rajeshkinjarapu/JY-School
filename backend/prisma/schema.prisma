@@ -23,6 +23,7 @@ model User {
   refreshToken String?
   resetOtp     String?
   resetOtpExp  DateTime?
+  deviceToken  String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 

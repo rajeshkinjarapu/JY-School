@@ -6,6 +6,20 @@ import { successResponse, paginatedResponse } from '../utils/response';
 import { generateEmployeeId } from '../utils/helpers';
 import bcrypt from 'bcryptjs';
 
+export const saveDeviceToken = async (req: AuthRequest, res: Response): Promise<void> => {
+  const { deviceToken } = req.body;
+  if (!deviceToken) {
+    throw createError(400, 'Device token is required');
+  }
+
+  await prisma.user.update({
+    where: { id: req.user?.id },
+    data: { deviceToken },
+  });
+
+  successResponse(res, null, 'Device token saved successfully');
+};
+
 export const getAll = async (req: AuthRequest, res: Response): Promise<void> => {
   const page = parseInt(req.query.page as string) || 1;
   const limit = parseInt(req.query.limit as string) || 10;

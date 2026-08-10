@@ -1,10 +1,12 @@
 import { Router } from 'express';
 import { authenticate, authorize } from '../middlewares/auth';
-import { getAll, getById, createUser, update, deleteUser } from '../controllers/users.controller';
+import { getAll, getById, createUser, update, deleteUser, saveDeviceToken } from '../controllers/users.controller';
 
 const router = Router();
 
 router.use(authenticate);
+
+router.post('/device-token', saveDeviceToken);
 
 router.get('/', authorize('SUPER_ADMIN', 'ADMIN'), getAll);
 router.get('/:id', authorize('SUPER_ADMIN', 'ADMIN'), getById);
