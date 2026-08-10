@@ -47,11 +47,44 @@ export const ClassWiseFeeReportTab: React.FC<ClassWiseFeeReportTabProps> = ({ st
   }, [payments, structures]);
 
   const buildRows = (classId: string, search = '') => {
-    const classInfo = classes.find(c => c.id === classId);
+    const classInfo = classes.find(c => String(c.id) === String(classId));
     if (!classInfo) return { classInfo: null, teacherName: '', teacherPhone: null as string | null, rows: [] as any[] };
-    const classStudents = students.filter(s => (s.classId === classId || s.class?.id === classId) && s.user?.isActive !== false);
+    
+    const classStudents = students.filter(s => {
+      if (s.user && s.user.isActive === false) return false;
+      
+      const sClassId = String(s.classId || s.class?.id || '');
+      const targetClassId = String(classId || '');
+      
+      if (sClassId && targetClassId && sClassId === targetClassId) return true;
+      
+      if (classInfo) {
+        const cName = String(classInfo.name || '').trim().toLowerCase();
+        const cSec = String(classInfo.section || '').trim().toLowerCase();
+        
+        if (s.class && typeof s.class === 'object') {
+          const scName = String(s.class.name || '').trim().toLowerCase();
+          const scSec = String(s.class.section || '').trim().toLowerCase();
+          if (scName === cName && (!cSec || scSec === cSec)) return true;
+        }
+        
+        const rawClassStr = String(s.className || (typeof s.class === 'string' ? s.class : '')).trim().toLowerCase();
+        if (rawClassStr) {
+          if (
+            rawClassStr === `${cName}-${cSec}` || 
+            rawClassStr === `${cName} - ${cSec}` || 
+            rawClassStr === `${cName} ${cSec}` ||
+            (rawClassStr.includes(cName) && (cSec ? rawClassStr.includes(cSec) : true))
+          ) {
+            return true;
+          }
+        }
+      }
+      return false;
+    });
+
     const { paymentsMap, classStructuresMap, studentStructuresMap } = allClassData;
-    const classStructures = classStructuresMap.get(classId) || [];
+    const classStructures = classStructuresMap.get(classId) || classStructuresMap.get(classInfo.id) || [];
 
     const rows = classStudents.map((student, idx) => {
       const stdStructs = studentStructuresMap.get(student.id) || [];
@@ -74,7 +107,7 @@ export const ClassWiseFeeReportTab: React.FC<ClassWiseFeeReportTabProps> = ({ st
 
     return {
       classInfo,
-      teacherName: classInfo.classTeacher?.user?.name || 'Not Assigned',
+      teacherName: classInfo.classTeacher?.user?.name || classInfo.classTeacher?.name || 'Not Assigned',
       teacherPhone: (classInfo.classTeacher?.user?.phone || classInfo.classTeacher?.phone || null) as string | null,
       rows
     };
