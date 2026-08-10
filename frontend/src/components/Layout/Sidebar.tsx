@@ -198,11 +198,18 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
 
       {/* User */}
       <div className="px-3 pb-4 pt-3 border-t border-white/8">
-        {/* PWA Install */}
+        {/* APK Install */}
         {!isInstalled && (
           <div className="px-4 mb-4">
             <button
-              onClick={installApp}
+              onClick={() => {
+                const link = document.createElement('a');
+                link.href = '/JYSchool.apk';
+                link.download = 'JYSchool.apk';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+              }}
               className="w-full flex items-center gap-2 justify-center py-2 px-3 bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white rounded-lg shadow-md transition-all font-bold text-sm cursor-pointer shadow-indigo-500/20"
             >
               <Smartphone className="w-4 h-4" /> Install App
