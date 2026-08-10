@@ -218,8 +218,8 @@ export const FinancePage: React.FC = () => {
       }
     } catch (_) {}
 
-    // Fetch page 1 to get pagination info
-    const firstRes: any = await api.get('/api/students?limit=1000&page=1', { timeout: 60000 });
+    // Fetch page 1 to get pagination info. Use limit=100 to trigger backend cache and avoid Vercel 10s timeout
+    const firstRes: any = await api.get('/api/students?limit=100&page=1', { timeout: 60000 });
     
     // axios interceptor might unwrap to an array directly, or keep it wrapped.
     let firstPayload = firstRes?.data;
@@ -239,7 +239,7 @@ export const FinancePage: React.FC = () => {
     if (totalPages > 1) {
       const pagePromises = [];
       for (let p = 2; p <= totalPages; p++) {
-        pagePromises.push(api.get(`/api/students?limit=1000&page=${p}`, { timeout: 60000 }));
+        pagePromises.push(api.get(`/api/students?limit=100&page=${p}`, { timeout: 60000 }));
       }
       const pageResults = await Promise.allSettled(pagePromises);
       pageResults.forEach((r: any) => {
