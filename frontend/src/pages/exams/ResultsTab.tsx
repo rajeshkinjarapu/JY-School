@@ -104,36 +104,63 @@ export const ResultsTab: React.FC<{ exams: any[] }> = ({ exams }) => {
     try {
       const { default: jsPDF } = await import('jspdf');
       const { default: autoTable } = await import('jspdf-autotable');
-      // Use portrait as requested by user
+
       const doc = new jsPDF('p', 'mm', 'a4');
-      const title = `Examination Results - ${selectedExam?.name}`;
-      const subtitle = `Class: ${results[0]?.className}`;
+      const pageWidth = doc.internal.pageSize.getWidth(); // 210mm
+      const pageHeight = doc.internal.pageSize.getHeight(); // 297mm
+
+      // Header Card / School Name Banner
+      doc.setFillColor(248, 250, 252); // #F8FAFC
+      doc.roundedRect(12, 12, pageWidth - 24, 26, 3, 3, 'F');
+      doc.setDrawColor(226, 232, 240); // #E2E8F0
+      doc.roundedRect(12, 12, pageWidth - 24, 26, 3, 3, 'D');
+
+      // Title & Subtitle
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(15);
+      doc.setTextColor(30, 41, 59); // #1E293B
+      doc.text('JY SCHOOL', 18, 21);
+
+      doc.setFontSize(9.5);
+      doc.setTextColor(79, 70, 229); // #4F46E5
+      doc.text('EXAMINATION RESULTS SUMMARY', 18, 28);
+
+      // Metadata info on top right of banner
+      const examNameStr = selectedExam?.name || 'Examination';
+      const classNameStr = results[0]?.className || 'Class';
+      const dateStr = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(9);
+      doc.setTextColor(51, 65, 85); // #334155
+      doc.text(`Exam: ${examNameStr}`, pageWidth - 18, 20, { align: 'right' });
       
-      doc.setFontSize(18);
-      doc.text(title, 14, 20);
-      doc.setFontSize(12);
-      doc.setTextColor(100);
-      doc.text(subtitle, 14, 28);
-      
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8.5);
+      doc.setTextColor(100, 116, 139); // #64748B
+      doc.text(`Class: ${classNameStr}   |   Date: ${dateStr}   |   Total: ${results.length} Students`, pageWidth - 18, 27, { align: 'right' });
+
+      // Table Headers
+      const subjectsList = results[0]?.marks || [];
       const head = [[
-        'Rank', 
-        'Student Name', 
-        'Roll No', 
-        ...results[0]?.marks.map((m: any) => {
+        'Rank',
+        'Student Name',
+        'Roll No',
+        ...subjectsList.map((m: any) => {
           const sub = String(m.subject).toUpperCase();
           if (sub.includes('MATH')) return 'MAT';
           if (sub.includes('PHYS')) return 'PHY';
           if (sub.includes('CHEM')) return 'CHE';
           if (sub.includes('BIOL')) return 'BIO';
           if (sub.includes('ENG')) return 'ENG';
-          return sub.length > 4 ? sub.substring(0, 3) : sub;
-        }) || [], 
-        'Total', 
-        '%', 
+          return sub.length > 4 ? sub.substring(0, 4) : sub;
+        }),
+        'Total',
+        '%',
         'Grade'
       ]];
-      
-      const body = results.map(student => [
+
+      const body = results.map((student) => [
         student.rank,
         student.name,
         student.rollNo || '-',
@@ -143,25 +170,92 @@ export const ResultsTab: React.FC<{ exams: any[] }> = ({ exams }) => {
         student.grade || '-'
       ]);
 
+      // Dynamic vertical padding based on row count to ensure perfect fitting on A4 page
+      const totalRows = results.length;
+      let dynamicPadding = 2.5;
+      let dynamicFontSize = 8.5;
+      if (totalRows > 25) {
+        dynamicPadding = 1.8;
+        dynamicFontSize = 8;
+      } else if (totalRows < 15) {
+        dynamicPadding = 3.2;
+        dynamicFontSize = 9;
+      }
+
       autoTable(doc, {
-        startY: 35,
+        startY: 42,
         head: head,
         body: body,
-        theme: 'grid',
-        headStyles: { fillColor: [139, 92, 246], textColor: 255, fontStyle: 'bold', halign: 'center', minCellHeight: 10, fontSize: 10 }, 
-        bodyStyles: { halign: 'center', textColor: 40, minCellHeight: 9 },
-        columnStyles: {
-          1: { halign: 'left', fontStyle: 'bold', cellWidth: 55 }, // Give name more width so it doesn't wrap
-          2: { cellWidth: 20 } // Ensure Roll No has enough width
+        theme: 'striped',
+        headStyles: {
+          fillColor: [79, 70, 229], // Indigo #4F46E5
+          textColor: 255,
+          fontStyle: 'bold',
+          halign: 'center',
+          valign: 'middle',
+          minCellHeight: 8.5,
+          fontSize: 8.5
         },
-        styles: { fontSize: 8.5, cellPadding: 2.5, overflow: 'visible' }, // Use visible to prevent cutting off text
-        margin: { left: 10, right: 10, bottom: 15 } // Reduce side margins slightly to give more space
+        bodyStyles: {
+          halign: 'center',
+          valign: 'middle',
+          textColor: 30,
+          fontSize: dynamicFontSize,
+          cellPadding: dynamicPadding
+        },
+        alternateRowStyles: {
+          fillColor: [248, 250, 252] // Zebra striping
+        },
+        columnStyles: {
+          0: { cellWidth: 14, halign: 'center', fontStyle: 'bold' }, // Rank
+          1: { halign: 'left', fontStyle: 'bold', cellWidth: 52 }, // Student Name
+          2: { cellWidth: 22, halign: 'center' }, // Roll No
+        },
+        didParseCell: (data) => {
+          // Highlight Top Ranks
+          if (data.section === 'body' && data.column.index === 0) {
+            const rankVal = Number(data.cell.raw);
+            if (rankVal === 1) {
+              data.cell.styles.fillColor = [254, 240, 138]; // Yellow-200
+              data.cell.styles.textColor = [113, 63, 18];
+            } else if (rankVal === 2) {
+              data.cell.styles.fillColor = [241, 245, 249]; // Slate-100
+              data.cell.styles.textColor = [51, 65, 85];
+            } else if (rankVal === 3) {
+              data.cell.styles.fillColor = [254, 215, 170]; // Orange-200
+              data.cell.styles.textColor = [154, 52, 18];
+            }
+          }
+          // Highlight Total & Percentage
+          if (data.section === 'body' && data.column.index === head[0].length - 3) {
+            data.cell.styles.fontStyle = 'bold';
+            data.cell.styles.textColor = [67, 56, 202]; // Indigo-700
+          }
+          if (data.section === 'body' && data.column.index === head[0].length - 2) {
+            data.cell.styles.fontStyle = 'bold';
+            data.cell.styles.textColor = [22, 101, 52]; // Green-800
+          }
+        },
+        margin: { left: 12, right: 12, top: 42, bottom: 16 },
+        didDrawPage: (data) => {
+          const totalPages = (doc as any).internal.getNumberOfPages();
+          const currentPage = data.pageNumber;
+          
+          doc.setDrawColor(226, 232, 240);
+          doc.line(12, pageHeight - 12, pageWidth - 12, pageHeight - 12);
+
+          doc.setFont('helvetica', 'normal');
+          doc.setFontSize(8);
+          doc.setTextColor(148, 163, 184); // #94A3B8
+          doc.text('JY School Management System • Exam Results Report', 12, pageHeight - 7);
+          doc.text(`Page ${currentPage} of ${totalPages}`, pageWidth - 12, pageHeight - 7, { align: 'right' });
+        }
       });
-      
+
       const selectedClass = selectedExam?.classes?.find((c: any) => c.id === selectedClassId);
-      const classNameStr = selectedClass ? `${selectedClass.name}${selectedClass.section || ''}` : `Class`;
-      const fileName = `${classNameStr} - Results - ${selectedExam?.name || 'Exam'}.pdf`;
-      
+      const classNameClean = selectedClass ? `${selectedClass.name}${selectedClass.section || ''}` : `Class`;
+      const fileName = `${classNameClean}_Results_${(selectedExam?.name || 'Exam').replace(/[^a-zA-Z0-9]/g, '_')}.pdf`;
+
       doc.save(fileName);
       toast.success('PDF downloaded successfully!', { id: toastId });
     } catch (e: any) {
@@ -225,7 +319,7 @@ export const ResultsTab: React.FC<{ exams: any[] }> = ({ exams }) => {
             </div>
           </div>
 
-          {/* Desktop Only Print & Export PDF buttons */}
+          {/* Desktop Only Print & Export PDF buttons (Single Instance) */}
           {results.length > 0 && (
             <div className="hidden md:flex items-center gap-3 shrink-0 no-print">
               <button
@@ -265,7 +359,7 @@ export const ResultsTab: React.FC<{ exams: any[] }> = ({ exams }) => {
             <div className="absolute top-0 right-0 w-64 h-64 bg-white/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 no-print" />
             <div className="absolute bottom-0 left-0 w-40 h-40 bg-black/20 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2 no-print" />
             
-            <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div className="relative z-10 flex items-center justify-between">
               <div>
                 <h2 className="text-2xl sm:text-3xl font-black tracking-tight mb-2 flex items-center gap-2 sm:gap-3 print-title whitespace-nowrap">
                   <Award className="w-7 h-7 sm:w-8 sm:h-8 text-yellow-300 no-print shrink-0" />
@@ -275,27 +369,6 @@ export const ResultsTab: React.FC<{ exams: any[] }> = ({ exams }) => {
                   <span className="bg-white/20 px-2 sm:px-3 py-1 rounded-lg backdrop-blur-sm border border-white/10 whitespace-nowrap">{selectedExam?.name}</span>
                   <span className="bg-white/20 px-2 sm:px-3 py-1 rounded-lg backdrop-blur-sm border border-white/10 whitespace-nowrap">{results[0]?.className}</span>
                 </div>
-              </div>
-
-              {/* Desktop Only Print & Export PDF buttons inside banner */}
-              <div className="hidden md:flex items-center gap-3 no-print">
-                <button
-                  type="button"
-                  onClick={handlePrint}
-                  className="flex items-center gap-2 px-4 py-2.5 bg-white/20 hover:bg-white/30 backdrop-blur-md text-white font-bold rounded-xl border border-white/30 transition-all shadow-md active:scale-95 text-xs sm:text-sm cursor-pointer"
-                >
-                  <Printer className="w-4 h-4" />
-                  <span>Print</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={handleDownloadPDF}
-                  disabled={isDownloading}
-                  className="flex items-center gap-2 px-4 py-2.5 bg-white text-violet-700 hover:bg-violet-50 font-bold rounded-xl transition-all shadow-lg active:scale-95 text-xs sm:text-sm cursor-pointer disabled:opacity-50"
-                >
-                  <Download className="w-4 h-4" />
-                  <span>{isDownloading ? 'Exporting...' : 'Export PDF'}</span>
-                </button>
               </div>
             </div>
           </div>
