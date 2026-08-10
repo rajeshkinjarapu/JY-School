@@ -6,17 +6,12 @@ export const initNativeMobileApp = async () => {
   if (!Capacitor.isNativePlatform()) return;
 
   try {
-    // 1. Configure Native Status Bar (Dark theme, matches app title bar)
+    // 1. Configure Native Status Bar
+    // We use a dark color and overlay: false so the OS pushes the WebView down automatically.
+    // This perfectly prevents the notch from overlapping the UI without needing CSS hacks.
     await StatusBar.setStyle({ style: Style.Dark });
     await StatusBar.setBackgroundColor({ color: '#0f172a' });
-    // Force overlay to true so CSS safe-area-insets can work
-    await StatusBar.setOverlaysWebView({ overlay: true });
-    
-    // Add safe area padding to root to prevent notch overlap on all pages
-    const root = document.getElementById('root');
-    if (root) {
-      root.style.paddingTop = 'max(env(safe-area-inset-top), 40px)';
-    }
+    await StatusBar.setOverlaysWebView({ overlay: false });
   } catch (e) {
     console.warn('Native status bar setup skipped:', e);
   }
