@@ -15,6 +15,7 @@ interface GeneratedPaper {
 interface Answer {
   qNo: number;
   answer: string;
+  subject?: string;
 }
 
 export const AnswerKeyManager = () => {
@@ -71,15 +72,27 @@ export const AnswerKeyManager = () => {
     return Array.from(classSet).sort();
   }, [papers]);
 
-  // Extract subjects
+  // Extract subjects from headings in paper content
   const subjects = useMemo(() => {
     const subjectSet = new Set<string>();
     papers.forEach(p => {
       const cMatch = p.examName.match(/(\d+(th|st|nd|rd)\s+Class)/i);
       const c = cMatch ? cMatch[1] : 'General';
+      
       if (!selectedClass || c === selectedClass) {
-        if (p.examSubject) subjectSet.add(p.examSubject);
-        else subjectSet.add('All Subjects / Grand Test');
+        // Extract headings like "## Biology"
+        const headingRegex = /^##\s*(.+)$/gm;
+        let match;
+        let foundHeading = false;
+        while ((match = headingRegex.exec(p.content)) !== null) {
+          subjectSet.add(match[1].trim());
+          foundHeading = true;
+        }
+        
+        // Fallback to examSubject if no headings found
+        if (!foundHeading && p.examSubject) {
+          subjectSet.add(p.examSubject);
+        }
       }
     });
     return Array.from(subjectSet).sort();
@@ -98,17 +111,32 @@ export const AnswerKeyManager = () => {
     });
   }, [papers, selectedClass, selectedSubject]);
 
-  const parseQuestionCount = (content: string): number => {
+  const parseQuestionsWithSubjects = (content: string): { qNo: number, subject: string }[] => {
     const lines = content.split('\n');
-    let maxQ = 0;
+    let currentSubject = 'General';
+    const questions: { qNo: number, subject: string }[] = [];
+    
     for (const line of lines) {
+      const headingMatch = line.match(/^##\s*(.+)/);
+      if (headingMatch) {
+        currentSubject = headingMatch[1].trim();
+        continue;
+      }
+      
       const match = line.match(/^(\d+)[\.\)]\s/);
       if (match) {
         const num = parseInt(match[1], 10);
-        if (num > maxQ) maxQ = num;
+        questions.push({ qNo: num, subject: currentSubject });
       }
     }
-    return maxQ > 0 ? maxQ : 20;
+    
+    // Sort and remove duplicates in case of bad formatting
+    const unique = new Map();
+    questions.forEach(q => {
+      if (!unique.has(q.qNo)) unique.set(q.qNo, q);
+    });
+    
+    return Array.from(unique.values()).sort((a, b) => a.qNo - b.qNo);
   };
 
   const loadPaperAndAnswerKey = async (paperId: string) => {
@@ -118,11 +146,12 @@ export const AnswerKeyManager = () => {
       const paper = papers.find(p => p.id === paperId);
       if (!paper) return;
 
-      const numQuestions = parseQuestionCount(paper.content);
+      const parsedQuestions = parseQuestionsWithSubjects(paper.content);
       
-      const initialAnswers: Answer[] = Array.from({ length: numQuestions }, (_, i) => ({
-        qNo: i + 1,
-        answer: ''
+      const initialAnswers: Answer[] = parsedQuestions.map(q => ({
+        qNo: q.qNo,
+        answer: '',
+        subject: q.subject
       }));
 
       try {
@@ -329,10 +358,11 @@ ${selectedPaper.content}`;
                   </tr>
                 </thead>
                 <tbody>
-                  {answers.map((ans, idx) => (
+                  {answers.filter(a => !selectedSubject || selectedSubject === 'All Subjects' || selectedSubject === 'All Subjects / Grand Test' || a.subject === selectedSubject).map((ans, idx) => (
                     <tr key={ans.qNo} className={`border-b border-slate-100 hover:bg-slate-50/50 transition-colors ${idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/30'}`}>
                       <td className="py-3 px-6 text-sm font-black text-slate-700 text-center border-r border-slate-100">
                         {ans.qNo}
+                        {ans.subject && selectedSubject === '' && <div className="text-[9px] font-bold text-slate-400 leading-tight mt-0.5 max-w-[80px] mx-auto truncate" title={ans.subject}>{ans.subject}</div>}
                       </td>
                       <td className="py-3 px-6">
                         <div className="relative max-w-[200px]">
