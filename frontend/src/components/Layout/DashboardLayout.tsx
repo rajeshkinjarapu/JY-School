@@ -110,7 +110,7 @@ export const DashboardLayout: React.FC = () => {
 
   if (hideSidebar) {
     return (
-      <div style={{ height: '100dvh', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
         <MobileNotificationToast />
         <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
         <Header onMenuClick={() => setSidebarOpen(true)} title={getPageTitle(location.pathname)} />
@@ -126,7 +126,7 @@ export const DashboardLayout: React.FC = () => {
   return (
     <div
       className="flex overflow-hidden bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 dark:from-[#1e1b4b] dark:via-[#2e1065] dark:to-[#312e81]"
-      style={{ height: '100dvh' }}
+      style={{ height: '100%' }}
     >
       <MobileNotificationToast />
       <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />

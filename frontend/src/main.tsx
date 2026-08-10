@@ -10,6 +10,7 @@ import { ThemeProvider } from './contexts/ThemeContext';
 import { Toaster } from 'react-hot-toast';
 
 import { registerSW } from 'virtual:pwa-register';
+import { Capacitor } from '@capacitor/core';
 
 const updateSW = registerSW({
   onNeedRefresh() {
@@ -34,6 +35,10 @@ try {
 
 const isDesktop = window.innerWidth > 1024;
 const isFastModeEnabled = isDesktop || isSuperAdmin;
+
+if (Capacitor.isNativePlatform()) {
+  document.body.classList.add('is-native');
+}
 
 const queryClient = new QueryClient({
   defaultOptions: {

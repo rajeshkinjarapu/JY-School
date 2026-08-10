@@ -92,6 +92,12 @@
   ::-webkit-scrollbar-track  { background:transparent; }
   ::-webkit-scrollbar-thumb  { background:rgba(148,163,184,.35); border-radius:99px; }
   ::-webkit-scrollbar-thumb:hover { background:rgba(148,163,184,.65); }
+  
+  /* Fix for Capacitor Android/iOS notch across ALL pages */
+  body.is-native #root {
+    padding-top: max(env(safe-area-inset-top), 40px) !important;
+    background-color: #0f172a !important; /* Premium dark blue notch area */
+  }
 }
 
 /* ── Cards ─────────────────────────────────── */
