@@ -64,7 +64,11 @@ export const SavedPapersPage = ({ isEmbedded = false }: { isEmbedded?: boolean }
   const [search, setSearch] = useState('');
   
   // New States for Redesign
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
+  
+  // Inline Edit State
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingName, setEditingName] = useState('');
   const [selectedSubject, setSelectedSubject] = useState<string>('All');
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest' | 'az'>('newest');
   
@@ -97,10 +101,42 @@ export const SavedPapersPage = ({ isEmbedded = false }: { isEmbedded?: boolean }
       toast.success('Paper deleted successfully!');
       setPapers(prev => prev.filter(p => p.id !== deleteId));
       setDeleteId(null);
-    } catch {
-      toast.error('Failed to delete paper.');
+    } catch (error: any) {
+      toast.error('Failed to delete paper');
     } finally {
       setDeleting(false);
+    }
+  };
+
+  const handleRename = async (id: string) => {
+    if (!editingName.trim()) {
+      setEditingId(null);
+      return;
+    }
+    const paper = papers.find(p => p.id === id);
+    if (!paper) return;
+    
+    if (paper.examName === editingName.trim()) {
+      setEditingId(null);
+      return;
+    }
+
+    try {
+      const payload = { 
+        examName: editingName.trim(), 
+        examSubject: paper.examSubject || '', 
+        examDate: paper.examDate || '', 
+        time: paper.time || '', 
+        instructions: paper.instructions || '', 
+        content: paper.content || '' 
+      };
+      await api.put(`/api/generated-papers/${id}`, payload);
+      toast.success('Paper renamed successfully!');
+      setPapers(prev => prev.map(p => p.id === id ? { ...p, examName: editingName.trim() } : p));
+      setEditingId(null);
+    } catch (err) {
+      toast.error('Failed to rename paper');
+      setEditingId(null);
     }
   };
 
@@ -317,9 +353,25 @@ export const SavedPapersPage = ({ isEmbedded = false }: { isEmbedded?: boolean }
                           </span>
                         </div>
                         
-                        <h3 className="text-[15px] font-bold text-slate-800 leading-tight mb-2 line-clamp-2" title={paper.examName}>
-                          {paper.examName}
-                        </h3>
+                        <div className="group/name relative">
+                          {editingId === paper.id ? (
+                            <input 
+                              value={editingName} 
+                              onChange={e => setEditingName(e.target.value)} 
+                              onKeyDown={e => { if (e.key === 'Enter') handleRename(paper.id); else if (e.key === 'Escape') setEditingId(null); }}
+                              onBlur={() => handleRename(paper.id)}
+                              autoFocus
+                              className="w-full px-2 py-1 border border-indigo-500 rounded text-[15px] font-bold text-slate-800 leading-tight mb-2 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                            />
+                          ) : (
+                            <h3 className="text-[15px] font-bold text-slate-800 leading-tight mb-2 pr-6" title={paper.examName}>
+                              {paper.examName}
+                              <button onClick={(e) => { e.stopPropagation(); setEditingId(paper.id); setEditingName(paper.examName); }} className="absolute right-0 top-0 opacity-0 group-hover/name:opacity-100 text-indigo-500 hover:text-indigo-700 transition-opacity p-1 bg-white rounded-md shadow-sm border border-slate-200">
+                                <Edit2 className="w-3.5 h-3.5" />
+                              </button>
+                            </h3>
+                          )}
+                        </div>
                         
                         <div className="flex flex-wrap gap-3 mt-auto pt-4 text-[11px] font-semibold text-slate-500">
                           <span className="flex items-center gap-1.5 bg-slate-50 px-2 py-1 rounded-md border border-slate-100"><Calendar className="w-3.5 h-3.5 text-slate-400" /> {paper.examDate || '—'}</span>
@@ -350,48 +402,66 @@ export const SavedPapersPage = ({ isEmbedded = false }: { isEmbedded?: boolean }
                 })}
               </div>
             ) : (
-              /* Sleek List View */
-              <div className="bg-white border border-slate-200/60 rounded-[2rem] shadow-sm overflow-hidden">
+              /* Sleek List View - Full Table Format */
+              <div className="bg-white rounded-[1rem] shadow-sm overflow-hidden">
                 <div className="overflow-x-auto">
-                  <table className="w-full text-left border-collapse">
+                  <table className="w-full text-left border-collapse border border-slate-300">
                     <thead>
-                      <tr className="bg-slate-50/50 text-[11px] font-black uppercase tracking-wider text-slate-400 border-b border-slate-100">
-                        <th className="px-6 py-4 rounded-tl-[2rem]">Paper Name</th>
-                        <th className="px-6 py-4">Subject</th>
-                        <th className="px-6 py-4">Date & Time</th>
-                        <th className="px-6 py-4">Created On</th>
-                        <th className="px-6 py-4 text-right rounded-tr-[2rem]">Actions</th>
+                      <tr className="bg-slate-100 text-[12px] font-black uppercase tracking-wider text-slate-600">
+                        <th className="px-5 py-3 border border-slate-300">Paper Name</th>
+                        <th className="px-5 py-3 border border-slate-300">Subject</th>
+                        <th className="px-5 py-3 border border-slate-300">Date & Time</th>
+                        <th className="px-5 py-3 border border-slate-300 text-center">Marks</th>
+                        <th className="px-5 py-3 border border-slate-300 text-center">Created On</th>
+                        <th className="px-5 py-3 border border-slate-300 text-center">Actions</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-100">
+                    <tbody className="divide-y divide-slate-200">
                       {filtered.map(paper => {
                         const colors = getSubjectColor(paper.examSubject || 'Default');
                         return (
-                          <tr key={paper.id} className="hover:bg-slate-50/50 transition-colors group">
-                            <td className="px-6 py-4">
-                              <div className="font-extrabold text-[13px] text-slate-800">{paper.examName}</div>
+                          <tr key={paper.id} className="hover:bg-indigo-50/30 transition-colors">
+                            <td className="px-5 py-3 border border-slate-300">
+                              {editingId === paper.id ? (
+                                <input 
+                                  value={editingName} 
+                                  onChange={e => setEditingName(e.target.value)} 
+                                  onKeyDown={e => { if (e.key === 'Enter') handleRename(paper.id); else if (e.key === 'Escape') setEditingId(null); }}
+                                  onBlur={() => handleRename(paper.id)}
+                                  autoFocus
+                                  className="w-full px-2 py-1.5 border border-indigo-500 rounded text-[13px] font-extrabold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                                />
+                              ) : (
+                                <div className="font-extrabold text-[13px] text-slate-800 flex items-center justify-between group/name">
+                                  <span>{paper.examName}</span>
+                                  <button onClick={() => { setEditingId(paper.id); setEditingName(paper.examName); }} className="opacity-0 group-hover/name:opacity-100 text-indigo-500 hover:bg-indigo-100 p-1.5 rounded-lg transition-all" title="Rename Paper">
+                                    <Edit2 className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
+                              )}
                             </td>
-                            <td className="px-6 py-4">
+                            <td className="px-5 py-3 border border-slate-300">
                               <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider ${colors.bg} ${colors.text} ${colors.border} border shadow-sm`}>
                                 {paper.examSubject || 'General'}
                               </span>
                             </td>
-                            <td className="px-6 py-4 text-[13px] font-bold text-slate-600">
+                            <td className="px-5 py-3 border border-slate-300 text-[13px] font-bold text-slate-600">
                               <div className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5 text-slate-400" /> {paper.examDate || '—'}</div>
-                              <div className="flex items-center gap-1.5 text-slate-500 text-[11px] mt-1"><Clock className="w-3 h-3 text-slate-400" /> {paper.time || '—'}</div>
+                              <div className="flex items-center gap-1.5 text-slate-500 text-[11px] mt-1"><Clock className="w-3 h-3 text-slate-400" /> {paper.time || '—'} mins</div>
                             </td>
-                            <td className="px-6 py-4 text-[12px] font-bold text-slate-400">
+                            <td className="px-5 py-3 border border-slate-300 text-center font-black text-slate-700 text-[13px]">
+                              100
+                            </td>
+                            <td className="px-5 py-3 border border-slate-300 text-[12px] font-bold text-slate-500 text-center">
                               {formatDate(paper.createdAt)}
                             </td>
-                            <td className="px-6 py-4">
-                              <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity translate-x-2 group-hover:translate-x-0 duration-200">
-                                <button onClick={() => setPreviewPaper(paper)} className="p-2 text-slate-400 hover:text-slate-800 hover:bg-slate-100 rounded-xl transition-all" title="Preview"><Eye className="w-4 h-4" /></button>
-                                <button onClick={() => handlePrint(paper)} className="p-2 text-slate-400 hover:text-slate-800 hover:bg-slate-100 rounded-xl transition-all" title="Print"><Printer className="w-4 h-4" /></button>
-                                <button onClick={() => handleDownloadPDF(paper)} className="p-2 text-slate-400 hover:text-slate-800 hover:bg-slate-100 rounded-xl transition-all" title="Download"><Download className="w-4 h-4" /></button>
-                                <div className="w-px h-5 bg-slate-200 mx-1"></div>
-                                <button onClick={() => navigate(`/question-bank/generator?id=${paper.id}`)} className="p-2 text-indigo-500 hover:bg-indigo-50 rounded-xl transition-all" title="Edit"><Edit2 className="w-4 h-4" /></button>
-                                <button onClick={() => handleDuplicate(paper)} className="p-2 text-emerald-500 hover:bg-emerald-50 rounded-xl transition-all" title="Duplicate"><Copy className="w-4 h-4" /></button>
-                                <button onClick={() => setDeleteId(paper.id)} className="p-2 text-rose-500 hover:bg-rose-50 rounded-xl transition-all" title="Delete"><Trash2 className="w-4 h-4" /></button>
+                            <td className="px-5 py-3 border border-slate-300">
+                              <div className="flex items-center justify-center gap-2">
+                                <button onClick={() => setPreviewPaper(paper)} className="p-2 text-slate-600 hover:text-white hover:bg-slate-800 rounded-lg shadow-sm border border-slate-200 transition-all bg-white flex items-center gap-1 text-[11px] font-bold" title="Preview"><Eye className="w-3.5 h-3.5" /> <span className="hidden xl:inline">View</span></button>
+                                <button onClick={() => handlePrint(paper)} className="p-2 text-sky-600 hover:text-white hover:bg-sky-500 rounded-lg shadow-sm border border-sky-100 transition-all bg-sky-50 flex items-center gap-1 text-[11px] font-bold" title="Print"><Printer className="w-3.5 h-3.5" /> <span className="hidden xl:inline">Print</span></button>
+                                <button onClick={() => handleDownloadPDF(paper)} className="p-2 text-violet-600 hover:text-white hover:bg-violet-500 rounded-lg shadow-sm border border-violet-100 transition-all bg-violet-50 flex items-center gap-1 text-[11px] font-bold" title="Download"><Download className="w-3.5 h-3.5" /> <span className="hidden xl:inline">PDF</span></button>
+                                <button onClick={() => navigate(`/question-bank/generator?id=${paper.id}`)} className="p-2 text-indigo-600 hover:text-white hover:bg-indigo-600 rounded-lg shadow-sm border border-indigo-100 transition-all bg-indigo-50 flex items-center gap-1 text-[11px] font-bold" title="Edit Content"><Edit2 className="w-3.5 h-3.5" /> <span className="hidden xl:inline">Edit</span></button>
+                                <button onClick={() => setDeleteId(paper.id)} className="p-2 text-rose-500 hover:text-white hover:bg-rose-500 rounded-lg shadow-sm border border-rose-100 transition-all bg-rose-50 flex items-center gap-1 text-[11px] font-bold" title="Delete"><Trash2 className="w-3.5 h-3.5" /> <span className="hidden xl:inline">Delete</span></button>
                               </div>
                             </td>
                           </tr>
