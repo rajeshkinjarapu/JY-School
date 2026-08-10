@@ -150,7 +150,7 @@ export const StudentMobileDashboard: React.FC<{ data: any }> = ({ data }) => {
 
       {/* ── Hero Header ───────────────────────────── */}
       <div className="relative overflow-hidden pb-6"
-        style={{ background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4338ca 100%)', paddingTop: 'max(env(safe-area-inset-top, 0px), 1.25rem)' }}>
+        style={{ background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4338ca 100%)', paddingTop: 'max(env(safe-area-inset-top), 40px)' }}>
 
         {/* Decorative circles */}
         <div className="absolute -top-12 -right-12 w-48 h-48 rounded-full opacity-20"
