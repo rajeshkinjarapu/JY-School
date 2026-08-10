@@ -1,11 +1,12 @@
 import { Router } from 'express';
 import { authenticate } from '../middlewares/auth';
-import { getConversations, getConversation, sendMessage, getUnreadCount } from '../controllers/messages.controller';
+import { getConversations, getConversation, sendMessage, getUnreadCount, getChatUsers } from '../controllers/messages.controller';
 
 const router = Router();
 
 router.use(authenticate);
 
+router.get('/users', getChatUsers);
 router.get('/conversations', getConversations);
 router.get('/unread-count', getUnreadCount);
 router.get('/conversation/:userId', getConversation);

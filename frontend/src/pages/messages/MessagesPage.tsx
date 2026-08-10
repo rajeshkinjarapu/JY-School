@@ -157,7 +157,7 @@ export const MessagesPage: React.FC = () => {
 
   const fetchUsers = async () => {
     try {
-      const res: any = await api.get('/api/users', { params: { search: userSearch } });
+      const res: any = await api.get('/api/messages/users', { params: { search: userSearch } });
       const raw = Array.isArray(res.data) ? res.data : (res.data?.data || res.data?.users || []);
       const list = Array.isArray(raw) ? raw.filter((u: any) => u.id !== user?.id) : [];
       setUsersList(list);
@@ -187,8 +187,8 @@ export const MessagesPage: React.FC = () => {
   return (
     <div className="flex flex-col h-full bg-[#0b141a] w-full overflow-hidden" style={{ minHeight: 'calc(100vh - 64px)' }}>
       
-      {/* Official WhatsApp Signature Teal/Green Header (NO EXTRA PLUS BUTTON) */}
-      <div className="bg-[#008069] text-white px-3.5 py-3 flex items-center justify-between shadow-md shrink-0 border-b border-[#006e5a]">
+      {/* Custom Signature Header (NO EXTRA PLUS BUTTON) */}
+      <div className="bg-[#0f172a] text-white px-3.5 py-3 flex items-center justify-between shadow-md shrink-0 border-b border-slate-800">
         <div className="flex items-center gap-3 min-w-0">
           <button 
             onClick={() => window.dispatchEvent(new CustomEvent('toggleSidebar'))} 
@@ -197,12 +197,12 @@ export const MessagesPage: React.FC = () => {
             <Menu className="w-5 h-5" />
           </button>
 
-          <div className="p-1.5 bg-white/10 backdrop-blur-md rounded-xl border border-white/20 shadow-inner flex items-center justify-center shrink-0">
-            <MessageSquare className="w-4 h-4 text-white" />
+          <div className="p-1.5 bg-indigo-500/20 backdrop-blur-md rounded-xl border border-indigo-500/30 shadow-inner flex items-center justify-center shrink-0">
+            <MessageSquare className="w-4 h-4 text-indigo-400" />
           </div>
 
           <h1 className="text-base sm:text-lg font-black text-white tracking-tight truncate drop-shadow-sm">
-            JY WhatsApp Messenger
+            JY Messenger
           </h1>
         </div>
       </div>
@@ -225,10 +225,10 @@ export const MessagesPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Single WhatsApp + New Chat Icon */}
+            {/* Single Plus / New Chat Icon */}
             <button
               onClick={() => setShowNewChatModal(true)}
-              className="p-2 rounded-full bg-[#00a884] hover:bg-[#029071] text-white transition-all shadow-md active:scale-95 flex items-center justify-center cursor-pointer shrink-0"
+              className="p-2 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white transition-all shadow-md active:scale-95 flex items-center justify-center cursor-pointer shrink-0"
               title="Start New Chat"
             >
               <Plus className="w-4.5 h-4.5" />

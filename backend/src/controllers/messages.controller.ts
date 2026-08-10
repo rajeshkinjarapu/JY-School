@@ -5,6 +5,20 @@ import { prisma } from '../utils/prisma';
 import { successResponse } from '../utils/response';
 import { emitToUser } from '../socket';
 
+export const getChatUsers = async (req: AuthRequest, res: Response): Promise<void> => {
+  const search = (req.query.search as string) || '';
+  const where: any = { isActive: true };
+  if (search) {
+    where.name = { contains: search };
+  }
+  const users = await prisma.user.findMany({
+    where,
+    select: { id: true, name: true, role: true, photoUrl: true },
+    orderBy: { name: 'asc' },
+  });
+  successResponse(res, users, 'Chat users fetched');
+};
+
 export const getConversations = async (req: AuthRequest, res: Response): Promise<void> => {
   const userId = req.user!.id;
 
