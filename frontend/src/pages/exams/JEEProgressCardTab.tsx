@@ -6,7 +6,7 @@ import { jsPDF } from 'jspdf';
 import { toJpeg } from 'html-to-image';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
-import { triggerDownloadNotification } from "../../../utils/downloadNotification";
+import { triggerDownloadNotification } from "../../utils/downloadNotification";
 import toast from 'react-hot-toast';
 import { ProgressCardTemplate } from '../../components/Exams/ProgressCardTemplate';
 import { LoadingSpinner } from '../../components/UI/LoadingSpinner';

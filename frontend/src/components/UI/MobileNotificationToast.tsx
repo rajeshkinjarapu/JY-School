@@ -129,7 +129,7 @@ export const MobileNotificationToast: React.FC = () => {
     touchStartRef.current = null;
   };
 
-  if (!activeToast) return null;
+  if (!activeToast && !modalData) return null;
 
   const getTypeIcon = (type: string) => {
     switch (type) {
@@ -151,7 +151,9 @@ export const MobileNotificationToast: React.FC = () => {
   };
 
   return (
-    <div 
+    <>
+    {activeToast && (
+      <div 
       className="fixed top-3 left-3 right-3 sm:left-auto sm:right-5 sm:w-96 z-[100] animate-bounce-in"
       style={{
         transform: `translateX(${swipeOffset}px)`,
@@ -198,6 +200,7 @@ export const MobileNotificationToast: React.FC = () => {
         </button>
       </div>
     </div>
+    )}
     
     {/* Full Details Modal */}
     {modalData && (

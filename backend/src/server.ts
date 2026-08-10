@@ -12,7 +12,7 @@ dotenv.config();
 import { initSocket } from './socket';
 import { errorHandler } from './middlewares/errorHandler';
 import { rateLimiter } from './middlewares/rateLimiter';
-import { auditNotificationMiddleware } from './middlewares/auditNotification';
+// Removed auditNotificationMiddleware import
 
 // Routes
 import authRoutes from './routes/auth';
@@ -76,7 +76,7 @@ app.use(morgan('dev'));
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use(rateLimiter);
-app.use(auditNotificationMiddleware as any);
+// app.use(auditNotificationMiddleware as any); // Disabled to prevent duplicate generic notifications
 
 // Static files (uploads)
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
