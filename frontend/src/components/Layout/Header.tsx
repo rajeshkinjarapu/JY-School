@@ -41,8 +41,11 @@ export const Header: React.FC<HeaderProps> = ({ onMenuClick, title, forceShow, h
 
   return (
     <header
-      className={`print:hidden lg:hidden sticky top-0 z-30 flex items-center justify-between gap-3 px-3.5 py-2.5 shadow-lg shadow-black/30`}
-      style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e1b4b 60%, #0f172a 100%)' }}
+      className={`print:hidden lg:hidden sticky top-0 z-30 flex items-center justify-between gap-3 px-3.5 pb-2.5 shadow-lg shadow-black/30`}
+      style={{ 
+        background: 'linear-gradient(135deg, #0f172a 0%, #1e1b4b 60%, #0f172a 100%)',
+        paddingTop: 'calc(env(safe-area-inset-top, 0px) + 10px)'
+      }}
     >
       {/* Left: Hamburger + Home + Back + Page Title */}
       <div className="flex items-center gap-1.5 min-w-0">
