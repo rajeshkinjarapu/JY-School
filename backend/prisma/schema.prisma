@@ -528,6 +528,17 @@ model GeneratedPaper {
   content      String   @db.Text
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+  
+  answerKey    AnswerKey?
+}
+
+model AnswerKey {
+  id           String   @id @default(uuid())
+  paperId      String   @unique
+  paper        GeneratedPaper @relation(fields: [paperId], references: [id], onDelete: Cascade)
+  answers      String   @db.Text // JSON string representing Q.No and Answer
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 }
 
 model SlipTest {

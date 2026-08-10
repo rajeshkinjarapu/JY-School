@@ -412,6 +412,43 @@ export const ExamPaperGeneratorPage = () => {
     loadPaper();
   }, [paperId]);
 
+  const autoGenerateAnswerKey = async (id: string, paperContent: string) => {
+    if (!geminiApiKey) return;
+    
+    try {
+      const prompt = `Extract the correct answers for the following multiple choice questions if possible. 
+Return ONLY a valid JSON array of objects, where each object has "qNo" (number) and "answer" (string, e.g. "A", "B", "C", "D" or the exact text). 
+If a question doesn't have a clear answer marked, leave "answer" as "".
+Example: [{"qNo": 1, "answer": "A"}, {"qNo": 2, "answer": "B"}]
+
+Questions:
+${paperContent}`;
+      
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: { temperature: 0.1, responseMimeType: "application/json" }
+        })
+      });
+      
+      const data = await response.json();
+      if (data.candidates && data.candidates[0].content.parts[0].text) {
+         let text = data.candidates[0].content.parts[0].text;
+         let answers = JSON.parse(text);
+         
+         await api.post('/api/answer-keys', {
+            paperId: id,
+            answers: answers
+         });
+         toast.success('Answer Key auto-generated successfully!', { icon: '🤖' });
+      }
+    } catch(err) {
+      console.error("Auto generate answer key failed:", err);
+    }
+  };
+
   const handleSave = async () => {
     let finalExamName = examName;
     if (!paperId) {
@@ -431,9 +468,11 @@ export const ExamPaperGeneratorPage = () => {
       if (paperId) {
         await api.put(`/api/generated-papers/${paperId}`, payload);
         toast.success('Paper updated successfully!', { id: 'save' });
+        autoGenerateAnswerKey(paperId, content);
       } else {
         const res = await api.post('/api/generated-papers', payload);
         toast.success('Paper saved! You can now find it in Saved Papers.', { id: 'save' });
+        autoGenerateAnswerKey(res.data.id, content);
         navigate(`/question-bank/exam-generator?id=${res.data.id}`, { replace: true });
       }
     } catch (err) {

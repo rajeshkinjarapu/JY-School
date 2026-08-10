@@ -6,7 +6,7 @@ import {
   LayoutDashboard, Users, GraduationCap, School, BookOpen,
   CalendarCheck, ClipboardList, PenTool, Calendar, CreditCard,
   Megaphone, MessageSquare, BarChart3, Settings, LogOut,
-  Shield, FileText, UserCheck, X, ChevronDown, Smartphone, MapPin, Target, Briefcase, Bus, Database
+  Shield, FileText, UserCheck, X, ChevronDown, Smartphone, MapPin, Target, Briefcase, Bus, Database, Key
 } from 'lucide-react';
 import { usePWA } from '../../hooks/usePWA';
 import { getPhotoUrl } from '../../utils/photo';
@@ -43,6 +43,7 @@ const NAV_COLORS: Record<string, { text: string; bg: string; glow: string }> = {
   Settings:      { text: '#94a3b8', bg: 'rgba(100,116,139,0.18)',glow: '0 0 12px rgba(100,116,139,.5)' },
   'Office Tools':{ text: '#67e8f9', bg: 'rgba(6,182,212,0.18)', glow: '0 0 12px rgba(6,182,212,.5)' },
   'Question Bank':{ text: '#6366f1', bg: 'rgba(99,102,241,0.18)', glow: '0 0 12px rgba(99,102,241,.5)' },
+  'Answer Key':  { text: '#fca5a5', bg: 'rgba(239,68,68,0.18)',   glow: '0 0 12px rgba(239,68,68,.5)'   },
   Transport:     { text: '#fcd34d', bg: 'rgba(251,191,36,0.18)', glow: '0 0 12px rgba(251,191,36,.5)' },
   Roles:         { text: '#a5b4fc', bg: 'rgba(99,102,241,0.15)', glow: '0 0 12px rgba(99,102,241,.4)'  },
   'Total Students': { text: '#67e8f9', bg: 'rgba(6,182,212,0.18)',   glow: '0 0 12px rgba(6,182,212,.5)'   },
@@ -104,6 +105,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
       { to: '/teacher-attendance',label: 'My Attendance',  icon: UserCheck     },
       { to: '/homework',          label: 'Homework',       icon: BookOpen      },
       { to: '/exams',             label: 'Examination',    icon: PenTool       },
+      { to: '/answer-key',        label: 'Answer Key',     icon: Key           },
       { to: '/timetable',         label: 'Timetable',      icon: Calendar      },
       
       { to: '/leave', label: 'Leave',          icon: UserCheck     },

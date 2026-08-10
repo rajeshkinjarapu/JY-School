@@ -102,6 +102,7 @@ const TransportDashboard = lazy(routeImports['/transport']);
 const TransportRoutesPage = lazy(() => import('../pages/transport/RoutesPage'));
 const TransportVehiclesPage = lazy(() => import('../pages/transport/VehiclesPage'));
 const TransportStudentsPage = lazy(() => import('../pages/transport/StudentTransportPage'));
+const AnswerKeyManager = lazy(() => import('../components/QuestionBank/AnswerKeyManager').then((mod) => ({ default: mod.AnswerKeyManager })));
 
 const AttendanceWrapper = () => {
   const { user } = useAuth();
@@ -575,6 +576,14 @@ export const router = createBrowserRouter([
           </ProtectedRoute>
         ),
       },
+      {
+        path: 'answer-key',
+        element: withSuspense(
+          <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN', 'TEACHER']}>
+            <AnswerKeyManager />
+          </ProtectedRoute>
+        ),
+      },
     ],
   },
   {
@@ -583,4 +592,3 @@ export const router = createBrowserRouter([
   },
 ]);
 export default router;
-
