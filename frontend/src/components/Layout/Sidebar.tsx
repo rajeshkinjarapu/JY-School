@@ -136,7 +136,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
   const renderContent = () => (
     <div className="flex flex-col h-full">
       {/* Logo */}
-      <div className="px-5 pt-[calc(env(safe-area-inset-top,0px)+1.5rem)] pb-5 border-b border-white/8">
+      <div className="px-5 pt-6 pb-5 border-b border-white/8">
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 rounded-full flex items-center justify-center shrink-0 bg-white overflow-hidden shadow-sm"
             style={{ boxShadow: '0 4px 16px rgba(99,102,241,.5)' }}>
@@ -251,7 +251,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
       <aside className={`fixed inset-y-0 left-0 z-50 w-[260px] shrink-0 transform transition-transform duration-300 ease-out lg:relative lg:translate-x-0 ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}
         style={sidebarStyle}>
         <button onClick={() => setIsOpen(false)}
-          className="lg:hidden absolute top-[calc(env(safe-area-inset-top,0px)+1rem)] right-4 p-1.5 rounded-lg text-slate-500 hover:text-white hover:bg-white/10 transition-all cursor-pointer">
+          className="lg:hidden absolute top-4 right-4 p-1.5 rounded-lg text-slate-500 hover:text-white hover:bg-white/10 transition-all cursor-pointer">
           <X className="w-4 h-4" />
         </button>
         {renderContent()}

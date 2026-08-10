@@ -19,10 +19,7 @@ git push
 ```bash
 cd /root/JY-School
 git pull
-cd frontend
-npm install
-npm run build
-cd ../backend
+cd backend
 npm install
 pm2 restart all
 ```

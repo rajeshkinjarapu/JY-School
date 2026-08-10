@@ -149,7 +149,7 @@ export const StudentMobileDashboard: React.FC<{ data: any }> = ({ data }) => {
     <div className="flex flex-col min-h-screen bg-gray-50 relative overflow-x-hidden">
 
       {/* ── Hero Header ───────────────────────────── */}
-      <div className="relative overflow-hidden pb-6 pt-safe"
+      <div className="relative overflow-hidden pb-6"
         style={{ background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4338ca 100%)' }}>
 
         {/* Decorative circles */}
