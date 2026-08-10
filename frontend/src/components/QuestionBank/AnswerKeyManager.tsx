@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Key, Save, CheckCircle2, AlertTriangle, FileText, ChevronDown, ListOrdered } from 'lucide-react';
+import { Key, Save, CheckCircle2, AlertTriangle, FileText, ChevronDown, ListOrdered, Sparkles } from 'lucide-react';
 import { api } from '../../api/axios';
 import toast from 'react-hot-toast';
 
@@ -28,6 +28,9 @@ export const AnswerKeyManager = () => {
   const [answers, setAnswers] = useState<Answer[]>([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [isGeneratingAI, setIsGeneratingAI] = useState(false);
+
+  const geminiApiKey = typeof window !== 'undefined' ? localStorage.getItem('jy_gemini_api_key') : '';
 
   useEffect(() => {
     fetchPapers();
@@ -169,6 +172,65 @@ export const AnswerKeyManager = () => {
     }
   };
 
+  const handleAIGenerate = async () => {
+    if (!selectedPaperId || !selectedPaper) return;
+    if (!geminiApiKey) {
+      toast.error('Gemini API Key is missing. Please set it in Exam Generator settings.', { id: 'ai-gen' });
+      return;
+    }
+
+    try {
+      setIsGeneratingAI(true);
+      toast.loading('AI is reading the paper...', { id: 'ai-gen' });
+      
+      const prompt = `Extract the correct answers for the following multiple choice questions if possible. 
+Return ONLY a valid JSON array of objects, where each object has "qNo" (number) and "answer" (string, e.g. "A", "B", "C", "D" or the exact text). 
+If a question doesn't have a clear answer marked, leave "answer" as "".
+Example: [{"qNo": 1, "answer": "A"}, {"qNo": 2, "answer": "B"}]
+
+Questions:
+${selectedPaper.content}`;
+      
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: { temperature: 0.1, responseMimeType: "application/json" }
+        })
+      });
+      
+      const data = await response.json();
+      if (data.candidates && data.candidates[0].content.parts[0].text) {
+         let text = data.candidates[0].content.parts[0].text;
+         let aiAnswers: Answer[] = JSON.parse(text);
+         
+         // Merge AI answers into current answers
+         setAnswers(prev => {
+           const newAnswers = [...prev];
+           aiAnswers.forEach(aiA => {
+             const index = newAnswers.findIndex(a => a.qNo === aiA.qNo);
+             if (index !== -1 && aiA.answer) {
+               newAnswers[index] = { ...newAnswers[index], answer: aiA.answer };
+             } else if (index === -1) {
+               newAnswers.push(aiA);
+             }
+           });
+           return newAnswers.sort((a, b) => a.qNo - b.qNo);
+         });
+         
+         toast.success('Answers generated! Please review and click Save.', { id: 'ai-gen', icon: '🤖' });
+      } else {
+        toast.error('Failed to parse AI response.', { id: 'ai-gen' });
+      }
+    } catch(err) {
+      console.error("AI Gen Error:", err);
+      toast.error('Failed to generate answers.', { id: 'ai-gen' });
+    } finally {
+      setIsGeneratingAI(false);
+    }
+  };
+
   const handleAnswerChange = (qNo: number, value: string) => {
     setAnswers(prev => prev.map(a => a.qNo === qNo ? { ...a, answer: value } : a));
   };
@@ -303,7 +365,15 @@ export const AnswerKeyManager = () => {
             </div>
             
             {/* Save Button at Bottom */}
-            <div className="p-6 bg-slate-50 border-t border-slate-200 flex justify-end">
+            <div className="p-6 bg-slate-50 border-t border-slate-200 flex justify-end gap-3">
+              <button
+                onClick={handleAIGenerate}
+                disabled={!selectedPaperId || isGeneratingAI}
+                className="flex items-center gap-2 px-6 py-3 bg-white border border-slate-200 text-indigo-600 rounded-xl font-bold shadow-sm hover:bg-slate-50 hover:border-indigo-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isGeneratingAI ? <div className="w-4 h-4 border-2 border-indigo-200 border-t-indigo-600 rounded-full animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                AI Auto Generate
+              </button>
               <button
                 onClick={handleSave}
                 disabled={!selectedPaperId || saving}
@@ -313,6 +383,7 @@ export const AnswerKeyManager = () => {
                 Save Answer Key
               </button>
             </div>
+
             
           </div>
         )}
