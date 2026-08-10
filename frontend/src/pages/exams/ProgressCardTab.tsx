@@ -245,58 +245,21 @@ export const ProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
 
     const toastId = toast.loading(`Preparing card for ${studentName}...`);
 
-    const parentContainer = document.getElementById('progress-cards-print-container');
-    const origDisplay = parentContainer?.style.display || '';
-    const origPos = parentContainer?.style.position || '';
-    const origZ = parentContainer?.style.zIndex || '';
-    const origTop = parentContainer?.style.top || '';
-    const origLeft = parentContainer?.style.left || '';
-
-    if (parentContainer) {
-      parentContainer.classList.remove('hidden');
-      parentContainer.style.display = 'flex';
-      parentContainer.style.position = 'fixed';
-      parentContainer.style.top = '0';
-      parentContainer.style.left = '0';
-      parentContainer.style.zIndex = '-9999';
-    }
-    const origElDisplay = el.style.display;
-    el.style.display = 'flex';
-    await new Promise(r => setTimeout(r, 400));
-
     let blob: Blob | null = null;
     try {
-      const canvas = await html2canvas(el, {
-        scale: 2,
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: '#ffffff',
-        logging: false,
-      });
-      blob = await new Promise<Blob | null>(resolve =>
-        canvas.toBlob(resolve, 'image/jpeg', 0.92)
-      );
+      const pdf = await generatePDFForElement(el, studentName);
+      blob = pdf.output('blob');
     } catch (e) {
-      console.error('Image generation failed:', e);
-    } finally {
-      el.style.display = origElDisplay;
-      if (parentContainer) {
-        parentContainer.classList.add('hidden');
-        parentContainer.style.display = origDisplay;
-        parentContainer.style.position = origPos;
-        parentContainer.style.zIndex = origZ;
-        parentContainer.style.top = origTop;
-        parentContainer.style.left = origLeft;
-      }
+      console.error('PDF generation failed:', e);
     }
 
     if (!blob) {
-      toast.error('Failed to generate card image.', { id: toastId });
+      toast.error('Failed to generate card PDF.', { id: toastId });
       return;
     }
 
     const cleanName = (studentName || 'Student').replace(/[^a-zA-Z0-9_-]/g, '_');
-    const fileName = `${cleanName}_ProgressCard.jpg`;
+    const fileName = `${cleanName}_ProgressCard.pdf`;
     
     toast.dismiss(toastId);
     
