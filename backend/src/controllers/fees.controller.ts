@@ -318,7 +318,7 @@ export const createPayment = async (req: AuthRequest, res: Response, next: NextF
       title: notifTitle,
       message: notifMsg,
       type: 'FEES',
-      link: '/fees'
+      link: `/students/${studentId}/pay-fee`
     });
 
     // Notify Admin
@@ -327,7 +327,7 @@ export const createPayment = async (req: AuthRequest, res: Response, next: NextF
       title: notifTitle,
       message: notifMsg,
       type: 'FEES',
-      link: '/fees'
+      link: `/students/${studentId}/pay-fee`
     });
 
     // Notify Student / Parent
@@ -337,7 +337,7 @@ export const createPayment = async (req: AuthRequest, res: Response, next: NextF
         title: notifTitle,
         message: notifMsg,
         type: 'FEES',
-        link: '/student-fees'
+        link: '/finance'
       });
     }
 
@@ -348,7 +348,7 @@ export const createPayment = async (req: AuthRequest, res: Response, next: NextF
         title: notifTitle,
         message: notifMsg,
         type: 'FEES',
-        link: '/fees'
+        link: `/students/${studentId}/pay-fee`
       });
     }
   } catch (error) {
