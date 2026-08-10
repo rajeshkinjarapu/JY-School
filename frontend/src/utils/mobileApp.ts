@@ -1,6 +1,7 @@
 import { StatusBar, Style } from '@capacitor/status-bar';
 
 import { Capacitor } from '@capacitor/core';
+import { App as CapacitorApp } from '@capacitor/app';
 
 export const initNativeMobileApp = async () => {
   if (!Capacitor.isNativePlatform()) return;
@@ -12,7 +13,20 @@ export const initNativeMobileApp = async () => {
     await StatusBar.setStyle({ style: Style.Dark });
     await StatusBar.setBackgroundColor({ color: '#0f172a' });
     await StatusBar.setOverlaysWebView({ overlay: false });
+
+    // 2. Hardware Back Button Handling
+    CapacitorApp.addListener('backButton', (data) => {
+      // If we are at the root dashboard, exit the app
+      if (window.location.pathname === '/dashboard' || window.location.pathname === '/') {
+        CapacitorApp.exitApp();
+      } else if (data.canGoBack) {
+        window.history.back();
+      } else {
+        window.history.back(); // Fallback to browser history
+      }
+    });
+
   } catch (e) {
-    console.warn('Native status bar setup skipped:', e);
+    console.warn('Native mobile app setup skipped or failed:', e);
   }
 };
