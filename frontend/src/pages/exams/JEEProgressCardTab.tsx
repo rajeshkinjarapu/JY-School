@@ -6,6 +6,7 @@ import { jsPDF } from 'jspdf';
 import { toJpeg } from 'html-to-image';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
+import { triggerDownloadNotification } from "../../../utils/downloadNotification";
 import toast from 'react-hot-toast';
 import { ProgressCardTemplate } from '../../components/Exams/ProgressCardTemplate';
 import { LoadingSpinner } from '../../components/UI/LoadingSpinner';
@@ -198,8 +199,9 @@ export const JEEProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
     const toastId = toast.loading(`Generating PDF for ${studentName}...`);
     try {
       const pdf = await generatePDFForElement(el, studentName);
-      pdf.save(`${studentName}_ProgressCard.pdf`);
-      toast.success('Downloaded successfully!', { id: toastId });
+      pdf.save(`${studentName}_JEE_ProgressCard.pdf`);
+      toast.success("Downloaded successfully!", { id: toastId });
+      triggerDownloadNotification("⬇️ Download Complete", `JEE Progress Card for ${studentName} has been saved.`);
     } catch (e: any) {
       console.error(e);
       toast.error('Failed to generate PDF.', { id: toastId });
@@ -380,9 +382,10 @@ export const JEEProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
       }
 
       toast.loading('Zipping files...', { id: loadingToastId });
-      const content = await zip.generateAsync({ type: 'blob' });
-      saveAs(content, `ProgressCards_${selectedExam?.name}_${selectedClassId}.zip`);
-      toast.success('ZIP Downloaded successfully!', { id: loadingToastId });
+      const content = await zip.generateAsync({ type: "blob" });
+      saveAs(content, `JEE_ProgressCards_${studentsData.length}.zip`);
+      toast.success("Downloaded all progress cards successfully!", { id: loadingToastId });
+      triggerDownloadNotification("⬇️ Download Complete", `All ${studentsData.length} JEE progress cards have been downloaded.`);
     } catch (e: any) {
       console.error('Zip generation error:', e);
       toast.error(`Failed to generate zip: ${e.message}`, { id: loadingToastId });

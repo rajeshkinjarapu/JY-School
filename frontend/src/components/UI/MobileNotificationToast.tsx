@@ -17,6 +17,7 @@ export const MobileNotificationToast: React.FC = () => {
   const [activeToast, setActiveToast] = useState<ToastNotification | null>(null);
   const [modalData, setModalData] = useState<ToastNotification | null>(null);
   const prevCountRef = useRef<number>(-1);
+  const lastShownIdRef = useRef<string | null>(null);
   const navigate = useNavigate();
 
   const triggerNativeNotification = (item: ToastNotification) => {
@@ -55,7 +56,8 @@ export const MobileNotificationToast: React.FC = () => {
       // Check if unread count increased or new unread items exist
       if (prevCountRef.current !== -1 && unreadCount > prevCountRef.current) {
         const newestUnread = list.find(n => !(n as any).isRead);
-        if (newestUnread) {
+        if (newestUnread && newestUnread.id !== lastShownIdRef.current) {
+          lastShownIdRef.current = newestUnread.id;
           playNotificationChime();
           setActiveToast(newestUnread);
           triggerNativeNotification(newestUnread);
@@ -91,8 +93,11 @@ export const MobileNotificationToast: React.FC = () => {
         createdAt: new Date().toISOString()
       };
       
-      playNotificationChime();
-      setActiveToast(newToast);
+      if (newToast.id !== lastShownIdRef.current) {
+        lastShownIdRef.current = newToast.id;
+        playNotificationChime();
+        setActiveToast(newToast);
+      }
     };
 
     window.addEventListener('appPushNotification', handleLivePush);

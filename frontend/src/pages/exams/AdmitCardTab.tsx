@@ -22,6 +22,7 @@ import { jsPDF } from "jspdf";
 import { toJpeg } from "html-to-image";
 import JSZip from "jszip";
 import { saveAs } from "file-saver";
+import { triggerDownloadNotification } from "../../../utils/downloadNotification";
 import toast from "react-hot-toast";
 import { useAuth } from "../../hooks/useAuth";
 import { AdmitCardTemplate } from "../../components/Exams/AdmitCardTemplate";
@@ -169,6 +170,7 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
       const pdf = await generatePDFForElement(el, studentName);
       pdf.save(`${studentName}_AdmitCard.pdf`);
       toast.success("Downloaded successfully!", { id: toastId });
+      triggerDownloadNotification("⬇️ Download Complete", `Admit Card for ${studentName} has been saved.`);
     } catch (e: any) {
       console.error("PDF Generation Error:", e);
       const errorMsg = e.message || "Failed to generate PDF. Please try again.";
@@ -251,8 +253,11 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
       }
 
       const content = await zip.generateAsync({ type: "blob" });
-      saveAs(content, `AdmitCards_${selectedClassId}.zip`);
-      toast.success("Downloaded successfully!", { id: loadingToastId });
+      saveAs(content, `AdmitCards_${students.length}.zip`);
+      toast.success("Downloaded all admit cards successfully!", {
+        id: loadingToastId,
+      });
+      triggerDownloadNotification("⬇️ Download Complete", `All ${students.length} admit cards have been downloaded.`);
     } catch (e: any) {
       console.error("Zip/PDF generation error:", e);
       const errorMsg =

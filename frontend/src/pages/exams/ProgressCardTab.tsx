@@ -6,6 +6,7 @@ import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
+import { triggerDownloadNotification } from "../../../utils/downloadNotification";
 import toast from 'react-hot-toast';
 import { ProgressCardTemplate } from '../../components/Exams/ProgressCardTemplate';
 import { LoadingSpinner } from '../../components/UI/LoadingSpinner';
@@ -222,7 +223,8 @@ export const ProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
     try {
       const pdf = await generatePDFForElement(el, studentName);
       pdf.save(`${studentName}_ProgressCard.pdf`);
-      toast.success('Downloaded successfully!', { id: toastId });
+      toast.success("Downloaded successfully!", { id: toastId });
+      triggerDownloadNotification("⬇️ Download Complete", `Progress Card for ${studentName} has been saved.`);
     } catch (e: any) {
       console.error(e);
       toast.error('Failed to generate PDF.', { id: toastId });
@@ -406,9 +408,10 @@ export const ProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
       }
 
       toast.loading('Zipping files...', { id: loadingToastId });
-      const content = await zip.generateAsync({ type: 'blob' });
-      saveAs(content, `ProgressCards_${selectedExam?.name}_${selectedClassId}.zip`);
-      toast.success('ZIP Downloaded successfully!', { id: loadingToastId });
+      const content = await zip.generateAsync({ type: "blob" });
+      saveAs(content, `ProgressCards_${studentsData.length}.zip`);
+      toast.success("Downloaded all progress cards successfully!", { id: loadingToastId });
+      triggerDownloadNotification("⬇️ Download Complete", `All ${studentsData.length} progress cards have been downloaded.`);
     } catch (e: any) {
       console.error('Zip generation error:', e);
       toast.error(`Failed to generate zip: ${e.message}`, { id: loadingToastId });
