@@ -119,11 +119,11 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
       const hasOptions = block.includes('(A)') && block.includes('(B)') && block.includes('(C)') && block.includes('(D)');
       
       let renderHeading = null;
-      const headingMatch = block.match(/^##\s+(.*)/);
+      const headingMatch = block.match(/^##\s*(.*)/);
       if (headingMatch) {
          renderHeading = headingMatch[1].trim();
          // If the block only contains the heading, render it immediately
-         const remainingBlock = block.replace(/^##\s+.*\n?/, '').trim();
+         const remainingBlock = block.replace(/^##\s*.*\n?/, '').trim();
          if (!remainingBlock) {
              elements.push(
                <div key={`heading-${i}`} className="w-full text-center my-3 break-before-auto" style={{ marginBottom }}>
@@ -144,7 +144,7 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
           {!hasOptions ? (
             (() => {
               // Strip the heading from the block before rendering
-              const contentToRender = renderHeading ? block.replace(/^##\s+.*\n?/, '') : block;
+              const contentToRender = renderHeading ? block.replace(/^##\s*.*\n?/, '') : block;
               const qNumMatch2 = contentToRender.match(/^(\d+)\.\s*/);
               if (qNumMatch2) {
                 const num = qNumMatch2[1];
@@ -166,7 +166,7 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
           ) : (
             (() => {
               // Strip heading if options block
-              const contentToRender = renderHeading ? block.replace(/^##\s+.*\n?/, '') : block;
+              const contentToRender = renderHeading ? block.replace(/^##\s*.*\n?/, '') : block;
               const optARegex = /\(A\)\s*(.*?)(?=\(B\)|$)/s;
               const optBRegex = /\(B\)\s*(.*?)(?=\(C\)|$)/s;
               const optCRegex = /\(C\)\s*(.*?)(?=\(D\)|$)/s;

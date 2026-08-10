@@ -57,7 +57,7 @@ const getSubjectColor = (subject: string) => {
 
 import { PageHeader } from '../../components/UI/PageHeader';
 
-const SavedPapersPage = () => {
+export const SavedPapersPage = ({ isEmbedded = false }: { isEmbedded?: boolean }) => {
   const navigate = useNavigate();
   const [papers, setPapers] = useState<GeneratedPaper[]>([]);
   const [loading, setLoading] = useState(true);
@@ -192,23 +192,23 @@ const SavedPapersPage = () => {
   };
 
   return (
-    <div className="flex flex-col h-full bg-slate-100" style={{ minHeight: 'calc(100vh - 64px)' }}>
-      <PageHeader 
-        title="Saved AI Papers" 
-        icon={<BookOpen className="w-5 h-5" />} 
-        action={
-          <button
-            onClick={() => navigate('/question-bank/generator')}
-            className="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-xl font-bold shadow-lg text-sm hover:-translate-y-0.5 transition-all duration-200"
-          >
-            <Plus className="w-4 h-4" />
-            New Paper
-          </button>
-        }
-      />
-      <div className="flex-1 overflow-auto p-3 sm:p-4 animate-fade-in pb-16">
-
-      <div className="max-w-7xl mx-auto">
+    <div className={isEmbedded ? "w-full h-full flex flex-col" : "flex flex-col h-full bg-slate-100"} style={isEmbedded ? {} : { minHeight: 'calc(100vh - 64px)' }}>
+      {!isEmbedded && (
+        <PageHeader 
+          title="Saved AI Papers" 
+          icon={<BookOpen className="w-5 h-5" />} 
+          action={
+            <button
+              onClick={() => navigate('/question-bank/generator')}
+              className="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-xl font-bold shadow-lg text-sm hover:-translate-y-0.5 transition-all duration-200"
+            >
+              <Plus className="w-4 h-4" />
+              New Paper
+            </button>
+          }
+        />
+      )}
+      <div className={`flex-1 overflow-auto ${isEmbedded ? 'p-0' : 'p-3 sm:p-4'} animate-fade-in pb-16`}>
         {/* Controls Bar */}
         <div className="bg-white/70 backdrop-blur-xl border border-slate-200/60 p-4 rounded-3xl mb-6 shadow-sm flex flex-col xl:flex-row xl:items-center gap-4 justify-between">
           <div className="flex flex-col sm:flex-row sm:items-center gap-4 flex-1">
