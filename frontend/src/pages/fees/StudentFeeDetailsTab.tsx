@@ -1,8 +1,10 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Printer, Download, Users, MessageCircle, X, Share2, Copy, Eye } from 'lucide-react';
+import { Printer, Download, Receipt, FileText, CheckCircle, Smartphone, Calculator, Plus, Share2, Upload, Search, Users, MessageCircle, X, Copy, Eye } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
+import { saveAs } from 'file-saver';
 import { toBlob } from 'html-to-image';
+import { shareFileNatively } from '../../utils/nativeShare';
 import toast from 'react-hot-toast';
 
 interface StudentFeeDetailsProps {
@@ -266,24 +268,13 @@ export const StudentFeeDetailsTab: React.FC<StudentFeeDetailsProps> = ({ student
 
         const cleanPhone = reminderStudent.phone.replace(/\D/g, '');
         const fullPhone = cleanPhone.length === 10 ? `91${cleanPhone}` : cleanPhone;
-        const textMessage = encodeURIComponent(
-          `Dear Parent of *${reminderStudent.name}*,\nThis is a reminder from *SRI VENKATESWARA JY SCHOOL*.\nPlease find the fee reminder attached.\nKindly clear the dues at the earliest.`
-        );
-        const waUrl = `https://wa.me/${fullPhone}?text=${textMessage}`;
+        const textMessage = `Dear Parent of *${reminderStudent.name}*,\nThis is a reminder from *SRI VENKATESWARA JY SCHOOL*.\nPlease find the fee reminder attached.\nKindly clear the dues at the earliest.`;
+        
+        const fileName = `Fee_Reminder_${reminderStudent.id}.png`;
+        const didShare = await shareFileNatively(blob, fileName, textMessage);
 
-        const file = new File([blob], `Fee_Reminder_${reminderStudent.id}.png`, { type: 'image/png' });
-
-        const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-        // Try Native Share (Works on Mobile)
-        if (isMobileDevice && navigator.canShare && navigator.canShare({ files: [file] })) {
-          await navigator.share({
-            files: [file],
-            title: 'Fee Reminder',
-            text: 'Please find your fee reminder attached.',
-          });
-          toast.success('Shared successfully!');
-        } else {
-          // Fallback for Desktop: Copy to clipboard and open WA Web
+        if (!didShare) {
+          // Desktop Fallback
           try {
             await navigator.clipboard.write([
               new ClipboardItem({ 'image/png': blob })
@@ -292,7 +283,7 @@ export const StudentFeeDetailsTab: React.FC<StudentFeeDetailsProps> = ({ student
           } catch (e) {
             toast.error('Could not copy image automatically. Please screenshot the card.');
           }
-          window.open(waUrl, '_blank');
+          window.open(`https://wa.me/${fullPhone}?text=${encodeURIComponent(textMessage)}`, '_blank');
         }
       }
     } catch (err) {

@@ -7,6 +7,7 @@ import html2canvas from 'html2canvas';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
 import { triggerDownloadNotification } from "../../utils/downloadNotification";
+import { shareFileNatively } from '../../utils/nativeShare';
 import toast from 'react-hot-toast';
 import { ProgressCardTemplate } from '../../components/Exams/ProgressCardTemplate';
 import { LoadingSpinner } from '../../components/UI/LoadingSpinner';
@@ -296,22 +297,19 @@ export const ProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
 
     const cleanName = (studentName || 'Student').replace(/[^a-zA-Z0-9_-]/g, '_');
     const fileName = `${cleanName}_ProgressCard.jpg`;
-    const imageFile = new File([blob], fileName, { type: 'image/jpeg' });
-
-    // Try native file share directly (no canShare pre-check - works on some Android browsers over HTTP)
-    if (navigator.share) {
-      try {
-        toast.dismiss(toastId);
-        await navigator.share({ files: [imageFile] });
-        return; // success - file shared natively
-      } catch (shareErr: any) {
-        if (shareErr.name === 'AbortError') return; // user cancelled
-        console.warn('Native file share not supported, trying server upload...', shareErr);
-        toast.loading(`Uploading card for ${studentName}...`, { id: toastId });
-      }
+    
+    toast.dismiss(toastId);
+    
+    // 1. Try fully native sharing (Image file attached directly!)
+    const shareText = `Progress Card for *${studentName}*`;
+    const didShareNatively = await shareFileNatively(blob, fileName, shareText);
+    
+    if (didShareNatively) {
+      return; // Success! They shared the actual image file natively
     }
 
-    // Fallback: upload image to server → share link via WhatsApp
+    // 2. Fallback: upload image to server → share link via WhatsApp Web
+    toast.loading(`Uploading card for ${studentName}...`, { id: toastId });
     const formData = new FormData();
     formData.append('file', blob, fileName);
     let imgUrl = '';
@@ -328,7 +326,7 @@ export const ProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
 
     if (imgUrl) {
       const fullUrl = imgUrl.startsWith('http') ? imgUrl : `${window.location.origin}${imgUrl}`;
-      const msg = `Progress Card for *${studentName}*:\n${fullUrl}`;
+      const msg = `${shareText}:\n${fullUrl}`;
       window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_system');
       toast.success('Opening WhatsApp...');
     } else {

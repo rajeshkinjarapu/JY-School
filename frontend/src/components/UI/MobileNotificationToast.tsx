@@ -1,8 +1,10 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { Bell, X, ShieldAlert, UserCheck, AlertTriangle, FileText, Award, Calendar, BookOpen } from 'lucide-react';
+import { Bell, ShieldAlert, FileText, AlertTriangle, Award, Calendar, BookOpen, X } from 'lucide-react';
 import api from '../../api/axios';
 import { playNotificationChime } from '../../utils/sound';
 import { useNavigate } from 'react-router-dom';
+import { Capacitor } from '@capacitor/core';
+import { LocalNotifications } from '@capacitor/local-notifications';
 
 interface ToastNotification {
   id: string;
@@ -14,15 +16,26 @@ interface ToastNotification {
 }
 
 export const MobileNotificationToast: React.FC = () => {
-  const [activeToast, setActiveToast] = useState<ToastNotification | null>(null);
   const [modalData, setModalData] = useState<ToastNotification | null>(null);
   const prevCountRef = useRef<number>(-1);
   const lastShownIdRef = useRef<string | null>(null);
   const navigate = useNavigate();
 
-  const triggerNativeNotification = (item: ToastNotification) => {
+  const triggerNativeNotification = async (item: ToastNotification) => {
     try {
-      if (typeof window !== 'undefined' && 'Notification' in window) {
+      if (Capacitor.isNativePlatform()) {
+        await LocalNotifications.schedule({
+          notifications: [
+            {
+              title: item.title,
+              body: item.message,
+              id: Math.floor(Math.random() * 1000000),
+              schedule: { at: new Date(Date.now() + 50) },
+              smallIcon: 'ic_launcher_foreground',
+            }
+          ]
+        });
+      } else if (typeof window !== 'undefined' && 'Notification' in window) {
         if (Notification.permission === 'granted') {
           new Notification(item.title, {
             body: item.message,
@@ -53,33 +66,26 @@ export const MobileNotificationToast: React.FC = () => {
       const list: ToastNotification[] = data.notifications || [];
       const unreadCount: number = data.unreadCount || 0;
 
-      // Check if unread count increased or new unread items exist
       if (prevCountRef.current !== -1 && unreadCount > prevCountRef.current) {
         const newestUnread = list.find(n => !(n as any).isRead);
         if (newestUnread && newestUnread.id !== lastShownIdRef.current) {
           lastShownIdRef.current = newestUnread.id;
           playNotificationChime();
-          setActiveToast(newestUnread);
           triggerNativeNotification(newestUnread);
         }
       }
       prevCountRef.current = unreadCount;
-    } catch (e) {
-      // Quiet catch
-    }
+    } catch (e) {}
   };
 
   useEffect(() => {
-    // Request permission on mount
     if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'default') {
       Notification.requestPermission().catch(() => {});
     }
 
-    // Polling fallback
     checkNewNotifications();
     const interval = setInterval(checkNewNotifications, 10000); 
     
-    // Live Push listener from Capacitor
     const handleLivePush = (e: any) => {
       const pushData = e.detail;
       const title = pushData.title || pushData.notification?.title || 'New Notification';
@@ -96,40 +102,36 @@ export const MobileNotificationToast: React.FC = () => {
       if (newToast.id !== lastShownIdRef.current) {
         lastShownIdRef.current = newToast.id;
         playNotificationChime();
-        setActiveToast(newToast);
+        triggerNativeNotification(newToast);
       }
     };
 
     window.addEventListener('appPushNotification', handleLivePush);
 
+    let localNotifListener: any = null;
+    if (Capacitor.isNativePlatform()) {
+      LocalNotifications.addListener('localNotificationActionPerformed', (notification) => {
+        const item = {
+          id: String(notification.notification.id),
+          title: notification.notification.title || '',
+          message: notification.notification.body || '',
+          type: 'INFO',
+          createdAt: new Date().toISOString()
+        };
+        setModalData(item);
+      }).then(l => localNotifListener = l);
+    }
+
     return () => {
       clearInterval(interval);
       window.removeEventListener('appPushNotification', handleLivePush);
+      if (localNotifListener) {
+        localNotifListener.remove();
+      }
     };
   }, []);
 
-  const [swipeOffset, setSwipeOffset] = useState(0);
-  const touchStartRef = useRef<number | null>(null);
-
-  const handleTouchStart = (e: React.TouchEvent) => {
-    touchStartRef.current = e.touches[0].clientX;
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (touchStartRef.current === null) return;
-    const currentX = e.touches[0].clientX;
-    setSwipeOffset(currentX - touchStartRef.current);
-  };
-
-  const handleTouchEnd = () => {
-    if (Math.abs(swipeOffset) > 100) {
-      setActiveToast(null);
-    }
-    setSwipeOffset(0);
-    touchStartRef.current = null;
-  };
-
-  if (!activeToast && !modalData) return null;
+  if (!modalData) return null;
 
   const getTypeIcon = (type: string) => {
     switch (type) {
@@ -152,57 +154,6 @@ export const MobileNotificationToast: React.FC = () => {
 
   return (
     <>
-    {activeToast && (
-      <div 
-      className="fixed top-3 left-3 right-3 sm:left-auto sm:right-5 sm:w-96 z-[100] animate-bounce-in"
-      style={{
-        transform: `translateX(${swipeOffset}px)`,
-        transition: touchStartRef.current !== null ? 'none' : 'transform 0.3s ease, opacity 0.3s ease',
-        opacity: Math.abs(swipeOffset) > 100 ? 0 : 1 - (Math.abs(swipeOffset) / 250)
-      }}
-      onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={handleTouchEnd}
-    >
-      <div 
-        onClick={() => {
-          setModalData(activeToast);
-          setActiveToast(null);
-        }}
-        className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 border-2 border-indigo-500/40 text-white rounded-2xl p-3.5 shadow-2xl backdrop-blur-xl flex items-start gap-3 cursor-pointer hover:border-indigo-400 transition-all active:scale-[0.98]"
-      >
-        <div className="p-2 rounded-xl bg-white/10 border border-white/20 shrink-0 shadow-inner">
-          {getTypeIcon(activeToast.type)}
-        </div>
-
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center justify-between gap-1">
-            <span className="text-[10px] font-extrabold uppercase tracking-widest text-indigo-300">
-              Notification Alert
-            </span>
-            <span className="text-[10px] text-gray-400 font-bold">Just now</span>
-          </div>
-          <h4 className="text-xs font-black text-white mt-0.5 truncate">{activeToast.title}</h4>
-          <p className="text-xs font-medium text-gray-300 mt-0.5 line-clamp-2 leading-snug">
-            {activeToast.message}
-          </p>
-        </div>
-
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            setActiveToast(null);
-          }}
-          className="p-1 rounded-lg text-white/60 hover:text-white hover:bg-white/10 shrink-0"
-        >
-          <X className="w-4 h-4" />
-        </button>
-      </div>
-    </div>
-    )}
-    
-    {/* Full Details Modal */}
     {modalData && (
       <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 sm:p-6">
         <div 
