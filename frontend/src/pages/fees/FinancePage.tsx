@@ -202,70 +202,83 @@ export const FinancePage: React.FC = () => {
     }
   };
 
-  const fetchHeavyData = async () => {
+  // Helper to get all students with pagination — cached for 5 min
+  const fetchAllStudents = async (): Promise<any[]> => {
+    const CACHE_KEY = 'jy_students_cache';
+    const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+    // Return from memory cache if fresh
+    try {
+      const raw = localStorage.getItem(CACHE_KEY);
+      if (raw) {
+        const { data, ts } = JSON.parse(raw);
+        if (Date.now() - ts < CACHE_TTL && Array.isArray(data) && data.length > 0) {
+          return data;
+        }
+      }
+    } catch (_) {}
+
+    // Fetch page 1 to get pagination info
+    const firstRes: any = await api.get('/api/students?limit=1000&page=1', { timeout: 60000 });
+    const firstPayload = firstRes?.data?.data || [];
+    const pagination = firstRes?.data?.pagination || {};
+    const totalPages: number = pagination.totalPages || 1;
+
+    let allStudents: any[] = Array.isArray(firstPayload) ? firstPayload : [];
+
+    if (totalPages > 1) {
+      const pagePromises = [];
+      for (let p = 2; p <= totalPages; p++) {
+        pagePromises.push(api.get(`/api/students?limit=1000&page=${p}`, { timeout: 60000 }));
+      }
+      const pageResults = await Promise.allSettled(pagePromises);
+      pageResults.forEach((r: any) => {
+        if (r.status === 'fulfilled') {
+          const d = r.value?.data?.data || r.value?.data || [];
+          if (Array.isArray(d)) allStudents = [...allStudents, ...d];
+        }
+      });
+    }
+
+    // Save to localStorage cache with timestamp
+    try {
+      localStorage.setItem(CACHE_KEY, JSON.stringify({ data: allStudents, ts: Date.now() }));
+    } catch (_) {}
+
+    return allStudents;
+  };
+
+  const fetchHeavyData = async (silent = false) => {
     try {
       const isStudent = user?.role === 'STUDENT';
 
-      // Always fetch students fresh — fetch ALL pages if needed
-      let allStudents: any[] = [];
-      if (!isStudent) {
-        try {
-          // First fetch with large limit to get total count
-          const firstRes: any = await api.get('/api/students?limit=1000&page=1', { timeout: 60000 });
-          const firstPayload = firstRes?.data?.data || firstRes?.data || [];
-          const pagination = firstRes?.data?.pagination || {};
-          const totalPages = pagination.totalPages || 1;
-
-          allStudents = Array.isArray(firstPayload) ? firstPayload : [];
-
-          // Fetch remaining pages if more than 1 page
-          if (totalPages > 1) {
-            const pagePromises = [];
-            for (let p = 2; p <= totalPages; p++) {
-              pagePromises.push(api.get(`/api/students?limit=1000&page=${p}`, { timeout: 60000 }));
-            }
-            const pageResults = await Promise.allSettled(pagePromises);
-            pageResults.forEach((r: any) => {
-              if (r.status === 'fulfilled') {
-                const d = r.value?.data?.data || r.value?.data || [];
-                if (Array.isArray(d)) allStudents = [...allStudents, ...d];
-              }
-            });
-          }
-        } catch (studErr: any) {
-          console.error('Failed to load students:', studErr);
-          toast.error('Failed to load students: ' + (studErr?.message || 'Network error'));
-        }
-      }
-
-      const [payRes]: any = await Promise.allSettled([
+      // Run students & payments in parallel
+      const [studResult, payRes]: any = await Promise.allSettled([
+        isStudent ? Promise.resolve([]) : fetchAllStudents(),
         api.get('/api/fees/payments?limit=5000'),
       ]);
 
       let paymentArray: any[] = [];
 
       if (payRes.status === 'rejected') {
-        console.error('Failed to load payments:', payRes.reason);
-        toast.error('Failed to load payments: ' + (payRes.reason?.message || 'Network error'));
-      }
-
-      if (payRes.status === 'fulfilled') {
+        if (!silent) toast.error('Failed to load payments: ' + (payRes.reason?.message || 'Network error'));
+      } else if (payRes.status === 'fulfilled') {
         let payload = payRes.value?.data || payRes.value || [];
-        if (payload && payload.success && Array.isArray(payload.data)) {
-          payload = payload.data;
-        } else if (payload && Array.isArray(payload.data)) {
-          payload = payload.data;
-        }
+        if (payload && payload.success && Array.isArray(payload.data)) payload = payload.data;
+        else if (payload && Array.isArray(payload.data)) payload = payload.data;
         paymentArray = Array.isArray(payload) ? payload : [];
         setPayments(paymentArray);
       }
 
-      if (allStudents.length > 0) {
-        setStudents(allStudents);
+      if (studResult.status === 'fulfilled') {
+        const allStudents: any[] = studResult.value || [];
+        if (allStudents.length > 0) setStudents(allStudents);
+      } else {
+        if (!silent) toast.error('Failed to load students');
       }
 
       const cached = JSON.parse(localStorage.getItem('fin_dashboard_cache') || '{}');
-      localStorage.setItem('fin_dashboard_cache', JSON.stringify({ ...cached, payments: paymentArray, students: allStudents }));
+      localStorage.setItem('fin_dashboard_cache', JSON.stringify({ ...cached, payments: paymentArray }));
     } catch(e) { console.error('fetchHeavyData error:', e); }
   };
 
@@ -279,21 +292,27 @@ export const FinancePage: React.FC = () => {
     setHeavyLoading(false);
   };
 
-  // Load cache instantly on mount — no spinner, no wait
+  // Load cache INSTANTLY on mount — no spinner, no wait
   useEffect(() => {
     try {
+      // Load students from dedicated cache
+      const studentCacheRaw = localStorage.getItem('jy_students_cache');
+      if (studentCacheRaw) {
+        const { data } = JSON.parse(studentCacheRaw);
+        if (Array.isArray(data) && data.length > 0) setStudents(data);
+      }
+      // Load other fin data from dashboard cache
       const cached = localStorage.getItem('fin_dashboard_cache');
       if (cached) {
         const parsed = JSON.parse(cached);
         if (parsed.payments) setPayments(parsed.payments);
-        if (parsed.students && parsed.students.length > 0) setStudents(parsed.students);
         if (parsed.structures) setStructures(parsed.structures);
         if (parsed.classes) setClasses(parsed.classes);
       }
     } catch(e) {}
   }, []);
 
-  // Fetch fresh data in background when tab changes — NO blocking spinner
+  // Fetch fresh data in background when tab changes — show cache FIRST, refresh silently
   useEffect(() => {
     if (activeTab === 'home') return;
 
@@ -301,19 +320,15 @@ export const FinancePage: React.FC = () => {
     const needsHeavy = ['transaction', 'student-fee-details', 'class-wise-fee-report'].includes(activeTab);
 
     if (needsBase && !baseDataLoaded) {
-      setBaseLoading(true);
       fetchBaseData().then(() => {
         setBaseDataLoaded(true);
-        setBaseLoading(false);
       });
     }
 
-    // Always re-fetch students when class-wise-fee-report tab opens
     if (needsHeavy) {
-      setHeavyLoading(true);
-      fetchHeavyData().then(() => {
+      // Silent background refresh — cache shown instantly, fresh data loads quietly
+      fetchHeavyData(true).then(() => {
         setHeavyDataLoaded(true);
-        setHeavyLoading(false);
       });
     }
   }, [user, activeTab]);
