@@ -224,7 +224,7 @@ export const createPayment = async (req: AuthRequest, res: Response, next: NextF
       user: true,
       class: {
         include: {
-          teachers: { select: { userId: true } }
+          classTeacher: { select: { userId: true } }
         }
       }
     } 
@@ -341,19 +341,15 @@ export const createPayment = async (req: AuthRequest, res: Response, next: NextF
       });
     }
 
-    // Notify Class Teacher(s)
-    if (student.class?.teachers) {
-      for (const t of student.class.teachers) {
-        if (t.userId) {
-          createSystemNotification({
-            userId: t.userId,
-            title: notifTitle,
-            message: notifMsg,
-            type: 'FEES',
-            link: '/fees'
-          });
-        }
-      }
+    // Notify Class Teacher
+    if (student.class?.classTeacher?.userId) {
+      createSystemNotification({
+        userId: student.class.classTeacher.userId,
+        title: notifTitle,
+        message: notifMsg,
+        type: 'FEES',
+        link: '/fees'
+      });
     }
   } catch (error) {
     console.error('Failed to send fee notifications/SMS:', error);
