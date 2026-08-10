@@ -33,10 +33,11 @@ export const getGeneratedPaperById = async (req: Request, res: Response) => {
 
 export const createGeneratedPaper = async (req: Request, res: Response) => {
   try {
-    const { examName, examSubject, examDate, time, instructions, content } = req.body;
+    const { examName, examClass, examSubject, examDate, time, instructions, content } = req.body;
     const paper = await prisma.generatedPaper.create({
       data: {
         examName,
+        examClass,
         examSubject,
         examDate,
         time,
@@ -54,12 +55,13 @@ export const createGeneratedPaper = async (req: Request, res: Response) => {
 export const updateGeneratedPaper = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { examName, examSubject, examDate, time, instructions, content } = req.body;
+    const { examName, examClass, examSubject, examDate, time, instructions, content } = req.body;
     
     const paper = await prisma.generatedPaper.update({
       where: { id },
       data: {
         examName,
+        examClass,
         examSubject,
         examDate,
         time,

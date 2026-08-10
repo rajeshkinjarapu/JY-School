@@ -450,21 +450,13 @@ ${paperContent}`;
   };
 
   const handleSave = async () => {
-    let finalExamName = examName;
-    if (!paperId) {
-      const userTitle = window.prompt("Enter a Title/Name for this Exam Paper to save:", examName);
-      if (userTitle === null) return; 
-      if (userTitle.trim()) {
-        finalExamName = userTitle.trim();
-        setExamName(finalExamName);
-      }
-    }
+    let finalExamName = examName || 'Untitled Exam';
 
     setIsSaving(true);
     toast.loading(paperId ? 'Updating paper...' : 'Saving paper...', { id: 'save' });
     try {
       const serializedContent = serializeContent();
-      const payload = { examName: finalExamName, examSubject: '', examDate, time, instructions, content: serializedContent };
+      const payload = { examName: finalExamName, examClass, examSubject: '', examDate, time, instructions, content: serializedContent };
       if (paperId) {
         await api.put(`/api/generated-papers/${paperId}`, payload);
         toast.success('Paper updated successfully!', { id: 'save' });

@@ -6,6 +6,7 @@ import toast from 'react-hot-toast';
 interface GeneratedPaper {
   id: string;
   examName: string;
+  examClass?: string;
   examSubject: string;
   examDate: string;
   time: string;
@@ -57,16 +58,17 @@ export const AnswerKeyManager = () => {
     }
   };
 
-  // Extract classes from examName (e.g. "6th Class")
+  // Extract classes
   const classes = useMemo(() => {
     const classSet = new Set<string>();
     papers.forEach(p => {
-      // Very basic extraction or just group by first part of name if it contains "Class"
-      const match = p.examName.match(/(\d+(th|st|nd|rd)\s+Class)/i);
-      if (match) {
-        classSet.add(match[1]);
+      if (p.examClass) {
+        classSet.add(p.examClass);
       } else {
-        classSet.add('General');
+        // Fallback for old papers
+        const match = p.examName.match(/(\d+(th|st|nd|rd)\s+Class)/i);
+        if (match) classSet.add(match[1]);
+        else classSet.add('General');
       }
     });
     return Array.from(classSet).sort();
@@ -76,8 +78,13 @@ export const AnswerKeyManager = () => {
   const subjects = useMemo(() => {
     const subjectSet = new Set<string>();
     papers.forEach(p => {
-      const cMatch = p.examName.match(/(\d+(th|st|nd|rd)\s+Class)/i);
-      const c = cMatch ? cMatch[1] : 'General';
+      let c = 'General';
+      if (p.examClass) {
+        c = p.examClass;
+      } else {
+        const cMatch = p.examName.match(/(\d+(th|st|nd|rd)\s+Class)/i);
+        c = cMatch ? cMatch[1] : 'General';
+      }
       
       if (!selectedClass || c === selectedClass) {
         // Extract headings like "## Biology"
@@ -100,8 +107,13 @@ export const AnswerKeyManager = () => {
 
   const filteredPapers = useMemo(() => {
     return papers.filter(p => {
-      const cMatch = p.examName.match(/(\d+(th|st|nd|rd)\s+Class)/i);
-      const c = cMatch ? cMatch[1] : 'General';
+      let c = 'General';
+      if (p.examClass) {
+        c = p.examClass;
+      } else {
+        const cMatch = p.examName.match(/(\d+(th|st|nd|rd)\s+Class)/i);
+        c = cMatch ? cMatch[1] : 'General';
+      }
       
       const classMatch = selectedClass ? c === selectedClass : true;
       

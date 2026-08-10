@@ -521,6 +521,7 @@ model QuestionPaper {
 model GeneratedPaper {
   id           String   @id @default(uuid())
   examName     String
+  examClass    String?
   examSubject  String
   examDate     String
   time         String

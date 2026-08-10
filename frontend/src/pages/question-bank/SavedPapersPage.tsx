@@ -12,6 +12,7 @@ import { jsPDF } from 'jspdf';
 interface GeneratedPaper {
   id: string;
   examName: string;
+  examClass?: string;
   examSubject: string;
   examDate: string;
   time: string;
@@ -69,6 +70,7 @@ export const SavedPapersPage = ({ isEmbedded = false }: { isEmbedded?: boolean }
   // Inline Edit State
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState('');
+  const [selectedClass, setSelectedClass] = useState<string>('All');
   const [selectedSubject, setSelectedSubject] = useState<string>('All');
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest' | 'az'>('newest');
   
@@ -80,6 +82,19 @@ export const SavedPapersPage = ({ isEmbedded = false }: { isEmbedded?: boolean }
   useEffect(() => {
     fetchPapers();
   }, []);
+
+  const classes = useMemo(() => {
+    const classSet = new Set<string>();
+    papers.forEach(p => {
+      if (p.examClass) {
+        classSet.add(p.examClass);
+      } else {
+        const match = p.examName.match(/(\d+(th|st|nd|rd)\s+Class)/i);
+        if (match) classSet.add(match[1]);
+      }
+    });
+    return Array.from(classSet).sort();
+  }, [papers]);
 
   const fetchPapers = async () => {
     try {
@@ -205,13 +220,25 @@ export const SavedPapersPage = ({ isEmbedded = false }: { isEmbedded?: boolean }
   // Filter & Sort Logic
   const uniqueSubjects = ['All', ...Array.from(new Set(papers.map(p => p.examSubject).filter(Boolean)))].sort();
 
-  let filtered = papers.filter(p => {
-    const matchesSearch = p.examName.toLowerCase().includes(search.toLowerCase()) || p.examSubject.toLowerCase().includes(search.toLowerCase());
-    const matchesSubject = selectedSubject === 'All' || p.examSubject === selectedSubject;
-    return matchesSearch && matchesSubject;
-  });
+  const filteredPapers = useMemo(() => {
+    return papers.filter(p => {
+      let cMatchStr = '';
+      if (p.examClass) {
+        cMatchStr = p.examClass;
+      } else {
+        const cMatch = p.examName.match(/(\d+(th|st|nd|rd)\s+Class)/i);
+        cMatchStr = cMatch ? cMatch[1] : '';
+      }
+      
+      const classMatch = selectedClass === 'All' ? true : cMatchStr === selectedClass;
+      const subjMatch = selectedSubject === 'All' || p.examSubject === selectedSubject;
+      const searchMatch = p.examName.toLowerCase().includes(search.toLowerCase()) || p.examSubject.toLowerCase().includes(search.toLowerCase());
+      
+      return classMatch && subjMatch && searchMatch;
+    });
+  }, [papers, search, selectedSubject, selectedClass]);
 
-  filtered = filtered.sort((a, b) => {
+  const filtered = filteredPapers.sort((a, b) => {
     if (sortOrder === 'newest') return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     if (sortOrder === 'oldest') return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
     if (sortOrder === 'az') return a.examName.localeCompare(b.examName);
@@ -279,6 +306,15 @@ export const SavedPapersPage = ({ isEmbedded = false }: { isEmbedded?: boolean }
           </div>
 
           <div className="flex items-center gap-3 shrink-0">
+            <select
+              value={selectedClass}
+              onChange={(e) => setSelectedClass(e.target.value)}
+              className="appearance-none pl-4 pr-10 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 cursor-pointer min-w-[140px]"
+            >
+              <option value="All">All Classes</option>
+              {classes.map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
+            
             <select 
               value={sortOrder}
               onChange={(e) => setSortOrder(e.target.value as any)}
