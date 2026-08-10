@@ -21,6 +21,7 @@ export const QuestionBankDashboard = () => {
     { title: 'Saved AI Papers', description: 'View and edit saved papers', icon: FileText, color: 'from-sky-600 to-cyan-500' },
     { title: 'Paper Generator', description: 'Generate question papers', icon: FileText, color: 'from-blue-600 to-indigo-600' },
     { title: 'Answer Keys', description: 'Manage answer keys', icon: Key, color: 'from-teal-600 to-teal-400' },
+    { title: 'Exam Paper Generator', description: 'Generate AI papers for any subject', icon: Sparkles, color: 'from-indigo-600 to-purple-500' },
     { title: 'Navodaya Paper Generator', description: 'Navodaya Mathematics', icon: CheckCircle, color: 'from-orange-600 to-orange-400' },
     { title: 'Reports', description: 'Question bank reports', icon: PieChart, color: 'from-purple-600 to-purple-400' },
     { title: 'Settings', description: 'Question bank settings', icon: Settings, color: 'from-gray-700 to-gray-500' },
@@ -43,6 +44,7 @@ export const QuestionBankDashboard = () => {
                 if (tool.title === 'Questions') navigate('/question-bank/questions');
                 else if (tool.title === 'Paper Generator') navigate('/question-bank/papers/new');
                 else if (tool.title === 'AI Paper Generator') navigate('/question-bank/generator');
+                else if (tool.title === 'Exam Paper Generator') navigate('/question-bank/exam-generator');
                 else if (tool.title === 'Saved AI Papers') navigate('/question-bank/saved-papers');
                 else if (tool.title === 'Navodaya Paper Generator') navigate('/question-bank/navodaya-generator');
                 else if (tool.title === 'Dashboard') navigate('/question-bank');
