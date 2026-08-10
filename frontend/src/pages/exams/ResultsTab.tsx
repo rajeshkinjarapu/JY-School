@@ -185,7 +185,7 @@ export const ResultsTab: React.FC<{ exams: any[] }> = ({ exams }) => {
 
       {/* Header Selection */}
       {!isTeacher && (
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white/60 dark:bg-slate-900/50 backdrop-blur-md p-6 rounded-3xl border border-white/20 shadow-[0_8px_30px_rgb(0,0,0,0.04)] print:hidden gap-4 no-print animate-fade-in-up">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center bg-white/60 dark:bg-slate-900/50 backdrop-blur-md p-6 rounded-3xl border border-white/20 shadow-[0_8px_30px_rgb(0,0,0,0.04)] print:hidden gap-4 no-print animate-fade-in-up">
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full sm:w-auto">
             <div className="bg-gradient-to-br from-blue-500 to-indigo-600 p-3.5 rounded-2xl shadow-lg shadow-indigo-500/30 text-white shrink-0 hidden sm:block">
               <Award className="w-6 h-6" />
@@ -224,6 +224,29 @@ export const ResultsTab: React.FC<{ exams: any[] }> = ({ exams }) => {
               )}
             </div>
           </div>
+
+          {/* Desktop Only Print & Export PDF buttons */}
+          {results.length > 0 && (
+            <div className="hidden md:flex items-center gap-3 shrink-0 no-print">
+              <button
+                type="button"
+                onClick={handlePrint}
+                className="flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-slate-800 hover:bg-indigo-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold rounded-xl border border-indigo-200 dark:border-indigo-800 transition-all shadow-sm active:scale-95 text-xs cursor-pointer"
+              >
+                <Printer className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                <span>Print</span>
+              </button>
+              <button
+                type="button"
+                onClick={handleDownloadPDF}
+                disabled={isDownloading}
+                className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white font-bold rounded-xl transition-all shadow-md active:scale-95 text-xs cursor-pointer disabled:opacity-50"
+              >
+                <Download className="w-4 h-4" />
+                <span>{isDownloading ? 'Exporting...' : 'Export PDF'}</span>
+              </button>
+            </div>
+          )}
         </div>
       )}
 
@@ -242,7 +265,7 @@ export const ResultsTab: React.FC<{ exams: any[] }> = ({ exams }) => {
             <div className="absolute top-0 right-0 w-64 h-64 bg-white/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 no-print" />
             <div className="absolute bottom-0 left-0 w-40 h-40 bg-black/20 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2 no-print" />
             
-            <div className="relative z-10 flex items-center justify-between">
+            <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
               <div>
                 <h2 className="text-2xl sm:text-3xl font-black tracking-tight mb-2 flex items-center gap-2 sm:gap-3 print-title whitespace-nowrap">
                   <Award className="w-7 h-7 sm:w-8 sm:h-8 text-yellow-300 no-print shrink-0" />
@@ -252,6 +275,27 @@ export const ResultsTab: React.FC<{ exams: any[] }> = ({ exams }) => {
                   <span className="bg-white/20 px-2 sm:px-3 py-1 rounded-lg backdrop-blur-sm border border-white/10 whitespace-nowrap">{selectedExam?.name}</span>
                   <span className="bg-white/20 px-2 sm:px-3 py-1 rounded-lg backdrop-blur-sm border border-white/10 whitespace-nowrap">{results[0]?.className}</span>
                 </div>
+              </div>
+
+              {/* Desktop Only Print & Export PDF buttons inside banner */}
+              <div className="hidden md:flex items-center gap-3 no-print">
+                <button
+                  type="button"
+                  onClick={handlePrint}
+                  className="flex items-center gap-2 px-4 py-2.5 bg-white/20 hover:bg-white/30 backdrop-blur-md text-white font-bold rounded-xl border border-white/30 transition-all shadow-md active:scale-95 text-xs sm:text-sm cursor-pointer"
+                >
+                  <Printer className="w-4 h-4" />
+                  <span>Print</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={handleDownloadPDF}
+                  disabled={isDownloading}
+                  className="flex items-center gap-2 px-4 py-2.5 bg-white text-violet-700 hover:bg-violet-50 font-bold rounded-xl transition-all shadow-lg active:scale-95 text-xs sm:text-sm cursor-pointer disabled:opacity-50"
+                >
+                  <Download className="w-4 h-4" />
+                  <span>{isDownloading ? 'Exporting...' : 'Export PDF'}</span>
+                </button>
               </div>
             </div>
           </div>
