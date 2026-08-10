@@ -69,30 +69,12 @@ export const create = async (req: AuthRequest, res: Response): Promise<void> => 
       if (r && r.trim()) {
         createSystemNotification({
           role: r.trim(),
-          title: `📢 ${title}`,
-          message: content.length > 100 ? content.substring(0, 97) + '...' : content,
+          title: `📢 New Announcement`,
+          message: `${title}`,
           type: 'ANNOUNCEMENT',
           link: '/dashboard'
         });
       }
-    }
-    
-    // Trigger FCM Push Notifications
-    if (rolesList.length > 0) {
-      const usersToNotify = await prisma.user.findMany({
-        where: {
-          role: { in: rolesList.map(r => r.trim()) },
-          deviceToken: { not: null }
-        },
-        select: { deviceToken: true }
-      });
-      
-      const { sendPushNotification } = await import('../utils/firebase');
-      const tokens = usersToNotify.map(u => u.deviceToken as string).filter(Boolean);
-      
-      tokens.forEach(token => {
-        sendPushNotification(token, `📢 ${title}`, content.length > 100 ? content.substring(0, 97) + '...' : content);
-      });
     }
   } catch (e) {
     console.error('Failed to send Announcement notification:', e);

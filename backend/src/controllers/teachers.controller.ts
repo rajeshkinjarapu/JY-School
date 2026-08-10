@@ -6,6 +6,7 @@ import { successResponse, paginatedResponse } from '../utils/response';
 import { generateEmployeeId } from '../utils/helpers';
 import bcrypt from 'bcryptjs';
 import * as XLSX from 'xlsx';
+import { createSystemNotification } from './notifications.controller';
 
 export const getAll = async (req: AuthRequest, res: Response): Promise<void> => {
   const page = parseInt(req.query.page as string) || 1;
@@ -78,6 +79,21 @@ export const create = async (req: AuthRequest, res: Response, next: NextFunction
     include: { user: { select: { id: true, name: true, email: true } } },
   });
 
+  createSystemNotification({
+    role: 'SUPER_ADMIN',
+    title: `👨‍🏫 New Teacher Added`,
+    message: `${name} has been added to the faculty.`,
+    type: 'INFO',
+    link: `/teachers/${teacher.id}`
+  });
+  createSystemNotification({
+    role: 'ADMIN',
+    title: `👨‍🏫 New Teacher Added`,
+    message: `${name} has been added to the faculty.`,
+    type: 'INFO',
+    link: `/teachers/${teacher.id}`
+  });
+
   successResponse(res, teacher, 'Teacher created', 201);
 };
 
@@ -93,6 +109,21 @@ export const update = async (req: AuthRequest, res: Response, next: NextFunction
     where: { id },
     data: { qualification, specialization, canEditStudents: canEditStudents !== undefined ? canEditStudents : undefined },
     include: { user: { select: { id: true, name: true, email: true, phone: true, photoUrl: true } } },
+  });
+
+  createSystemNotification({
+    role: 'SUPER_ADMIN',
+    title: `👨‍🏫 Teacher Updated`,
+    message: `${name || teacher.employeeId}'s profile was updated.`,
+    type: 'INFO',
+    link: `/teachers/${teacher.id}`
+  });
+  createSystemNotification({
+    role: 'ADMIN',
+    title: `👨‍🏫 Teacher Updated`,
+    message: `${name || teacher.employeeId}'s profile was updated.`,
+    type: 'INFO',
+    link: `/teachers/${teacher.id}`
   });
 
   successResponse(res, updated, 'Teacher updated');

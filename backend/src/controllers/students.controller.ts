@@ -13,6 +13,7 @@ import AdmZip from 'adm-zip';
 import path from 'path';
 import fs from 'fs';
 import { clearDashboardCache } from './dashboard.controller';
+import { createSystemNotification } from './notifications.controller';
 
 export const getAll = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
@@ -125,6 +126,22 @@ export const create = async (req: Request, res: Response, next: NextFunction): P
 
   cache.delPattern('students:list:*');
   clearDashboardCache();
+
+  createSystemNotification({
+    role: 'SUPER_ADMIN',
+    title: `🎓 New Student Joined`,
+    message: `${name} has been admitted.`,
+    type: 'INFO',
+    link: `/students/${student.id}`
+  });
+  createSystemNotification({
+    role: 'ADMIN',
+    title: `🎓 New Student Joined`,
+    message: `${name} has been admitted.`,
+    type: 'INFO',
+    link: `/students/${student.id}`
+  });
+
   successResponse(res, student, 'Student created', 201);
 };
 
@@ -185,6 +202,22 @@ export const update = async (req: AuthRequest, res: Response, next: NextFunction
 
   cache.delPattern('students:list:*');
   clearDashboardCache();
+
+  createSystemNotification({
+    role: 'SUPER_ADMIN',
+    title: `🎓 Student Updated`,
+    message: `Profile of ${name || student.user.name} was updated.`,
+    type: 'INFO',
+    link: `/students/${student.id}`
+  });
+  createSystemNotification({
+    role: 'ADMIN',
+    title: `🎓 Student Updated`,
+    message: `Profile of ${name || student.user.name} was updated.`,
+    type: 'INFO',
+    link: `/students/${student.id}`
+  });
+
   successResponse(res, updated, 'Student updated');
 };
 
@@ -212,6 +245,14 @@ export const changeName = async (req: AuthRequest, res: Response, next: NextFunc
     },
   });
 
+  createSystemNotification({
+    role: 'SUPER_ADMIN',
+    title: `🎓 Student Name Changed`,
+    message: `${student.user.name} changed name to ${name}.`,
+    type: 'INFO',
+    link: `/students/${student.id}`
+  });
+
   successResponse(res, updatedStudent, 'Student name updated');
 };
 
@@ -233,6 +274,14 @@ export const changeClass = async (req: AuthRequest, res: Response, next: NextFun
       user: { select: { id: true, name: true, email: true, phone: true, photoUrl: true } },
       class: true,
     },
+  });
+
+  createSystemNotification({
+    role: 'SUPER_ADMIN',
+    title: `🎓 Student Class Changed`,
+    message: `${student.user?.name || 'A student'}'s section was updated.`,
+    type: 'INFO',
+    link: `/students/${student.id}`
   });
 
   successResponse(res, updated, 'Student section/class updated');

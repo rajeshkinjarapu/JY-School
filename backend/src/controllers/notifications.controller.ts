@@ -198,6 +198,36 @@ export const createSystemNotification = async (data: {
         url: data.link || '/dashboard',
       }
     ).catch(e => console.error('Web push dispatch error:', e));
+    
+    // --- Master FCM Push Notification Hook ---
+    try {
+      const { sendPushNotification } = await import('../utils/firebase');
+      let usersToNotify = [];
+      
+      if (data.userId) {
+        usersToNotify = await prisma.user.findMany({
+          where: { id: data.userId, deviceToken: { not: null } },
+          select: { deviceToken: true }
+        });
+      } else if (data.role) {
+        usersToNotify = await prisma.user.findMany({
+          where: { role: data.role, deviceToken: { not: null } },
+          select: { deviceToken: true }
+        });
+      }
+
+      const tokens = usersToNotify.map(u => u.deviceToken as string).filter(Boolean);
+      tokens.forEach(token => {
+        sendPushNotification(
+          token, 
+          data.title, 
+          data.message.length > 100 ? data.message.substring(0, 97) + '...' : data.message
+        );
+      });
+    } catch (fcmError) {
+      console.error('Master FCM Dispatch Error:', fcmError);
+    }
+
   } catch (e) {
     console.error('Failed to create system notification:', e);
   }
