@@ -220,11 +220,21 @@ export const FinancePage: React.FC = () => {
 
     // Fetch page 1 to get pagination info
     const firstRes: any = await api.get('/api/students?limit=1000&page=1', { timeout: 60000 });
-    const firstPayload = firstRes?.data?.data || [];
-    const pagination = firstRes?.data?.pagination || {};
+    
+    // axios interceptor might unwrap to an array directly, or keep it wrapped.
+    let firstPayload = firstRes?.data;
+    if (firstPayload && !Array.isArray(firstPayload) && Array.isArray(firstPayload.data)) {
+      firstPayload = firstPayload.data;
+    } else if (!Array.isArray(firstPayload) && Array.isArray(firstRes?.data?.data)) {
+      firstPayload = firstRes.data.data;
+    }
+    if (!Array.isArray(firstPayload)) firstPayload = [];
+
+    // Extract pagination from either unwrapped .meta or wrapped .pagination
+    const pagination = firstRes?.data?.meta || firstRes?.data?.pagination || {};
     const totalPages: number = pagination.totalPages || 1;
 
-    let allStudents: any[] = Array.isArray(firstPayload) ? firstPayload : [];
+    let allStudents: any[] = firstPayload;
 
     if (totalPages > 1) {
       const pagePromises = [];
@@ -234,7 +244,9 @@ export const FinancePage: React.FC = () => {
       const pageResults = await Promise.allSettled(pagePromises);
       pageResults.forEach((r: any) => {
         if (r.status === 'fulfilled') {
-          const d = r.value?.data?.data || r.value?.data || [];
+          let d = r.value?.data;
+          if (d && !Array.isArray(d) && Array.isArray(d.data)) d = d.data;
+          else if (!Array.isArray(d) && Array.isArray(r.value?.data?.data)) d = r.value.data.data;
           if (Array.isArray(d)) allStudents = [...allStudents, ...d];
         }
       });
