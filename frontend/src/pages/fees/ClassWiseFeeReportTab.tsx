@@ -348,7 +348,7 @@ export const ClassWiseFeeReportTab: React.FC<ClassWiseFeeReportTabProps> = ({ st
                 </thead>
                 <tbody className="divide-y divide-gray-100">
                   {classData.rows.length === 0
-                    ? <tr><td colSpan={7} className="px-6 py-8 text-center text-gray-500 font-medium">No students found.</td></tr>
+                    ? <tr><td colSpan={7} className="px-4 py-8 text-center text-gray-500 font-medium">No students found. (Loaded: {students.length})</td></tr>
                     : classData.rows.map((row: any) => (
                       <tr key={row.studentId} className="hover:bg-gray-50/50 transition-colors">
                         <td className="px-5 py-3 text-gray-500 font-medium">{row.sno}</td>
