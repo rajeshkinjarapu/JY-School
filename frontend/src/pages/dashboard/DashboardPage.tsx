@@ -14,7 +14,7 @@ import {
   FileText, Award, ArrowUpRight, Clock, Activity,
   PieChart as PieChartIcon, TrendingUp, BarChart3,
   BookOpen, CheckCircle2, XCircle, Megaphone, Star,
-  ChevronRight, Zap, Target, BookMarked, UserCheck, PenTool, CreditCard,
+  ChevronRight, Zap, Target, BookMarked, UserCheck, PenTool, CreditCard, Key
 } from 'lucide-react';
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid,
@@ -504,7 +504,7 @@ const TeacherView: React.FC<{ data: any }> = ({ data }) => {
         {[
           { label: 'Daily Attendance', value: 'Mark', icon: UserCheck, gradient: 'linear-gradient(135deg,#0ea5e9 0%,#2563eb 100%)', glow: 'rgba(255,255,255,0.2)', sub: 'Students Attendance', link: '/attendance' },
           { label: 'Total Students', value: data.totalStudents || 0, icon: Users, gradient: 'linear-gradient(135deg,#8b5cf6 0%,#6d28d9 100%)', glow: 'rgba(255,255,255,0.2)', sub: 'Across all classes', link: '/students' },
-          { label: "Today's Att.", value: `${rate}%`, icon: Clock, gradient: 'linear-gradient(135deg,#10b981 0%,#059669 100%)', glow: 'rgba(255,255,255,0.2)', sub: `${present}P · ${absent}A`, link: '/teacher-attendance' },
+          { label: 'Answer Key', value: 'Manage', icon: Key, gradient: 'linear-gradient(135deg,#f43f5e 0%,#be123c 100%)', glow: 'rgba(255,255,255,0.2)', sub: 'Update answers', link: '/answer-key' },
           { label: 'My Timetable', value: 'View', icon: School, gradient: 'linear-gradient(135deg,#f59e0b 0%,#d97706 100%)', glow: 'rgba(255,255,255,0.2)', sub: 'Weekly Schedule', link: '/timetable' },
           { label: 'Marks Entry', value: 'Enter', icon: PenTool, gradient: 'linear-gradient(135deg,#ec4899 0%,#e11d48 100%)', glow: 'rgba(255,255,255,0.2)', sub: 'Update grades', onClick: () => handleOpenMarksModal('MARKS') },
           { label: 'Results', value: 'View', icon: Award, gradient: 'linear-gradient(135deg,#10b981 0%,#059669 100%)', glow: 'rgba(255,255,255,0.2)', sub: 'View all results', onClick: () => handleOpenMarksModal('RESULTS') },

@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Key, Save, CheckCircle2, AlertTriangle, FileText, ChevronDown } from 'lucide-react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { Key, Save, CheckCircle2, AlertTriangle, FileText, ChevronDown, ListOrdered } from 'lucide-react';
 import { api } from '../../api/axios';
 import toast from 'react-hot-toast';
 
@@ -19,7 +19,12 @@ interface Answer {
 
 export const AnswerKeyManager = () => {
   const [papers, setPapers] = useState<GeneratedPaper[]>([]);
+  
+  // Filters
+  const [selectedClass, setSelectedClass] = useState<string>('');
+  const [selectedSubject, setSelectedSubject] = useState<string>('');
   const [selectedPaperId, setSelectedPaperId] = useState<string>('');
+  
   const [answers, setAnswers] = useState<Answer[]>([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -48,6 +53,48 @@ export const AnswerKeyManager = () => {
     }
   };
 
+  // Extract classes from examName (e.g. "6th Class")
+  const classes = useMemo(() => {
+    const classSet = new Set<string>();
+    papers.forEach(p => {
+      // Very basic extraction or just group by first part of name if it contains "Class"
+      const match = p.examName.match(/(\d+(th|st|nd|rd)\s+Class)/i);
+      if (match) {
+        classSet.add(match[1]);
+      } else {
+        classSet.add('General');
+      }
+    });
+    return Array.from(classSet).sort();
+  }, [papers]);
+
+  // Extract subjects
+  const subjects = useMemo(() => {
+    const subjectSet = new Set<string>();
+    papers.forEach(p => {
+      const cMatch = p.examName.match(/(\d+(th|st|nd|rd)\s+Class)/i);
+      const c = cMatch ? cMatch[1] : 'General';
+      if (!selectedClass || c === selectedClass) {
+        if (p.examSubject) subjectSet.add(p.examSubject);
+        else subjectSet.add('All Subjects / Grand Test');
+      }
+    });
+    return Array.from(subjectSet).sort();
+  }, [papers, selectedClass]);
+
+  const filteredPapers = useMemo(() => {
+    return papers.filter(p => {
+      const cMatch = p.examName.match(/(\d+(th|st|nd|rd)\s+Class)/i);
+      const c = cMatch ? cMatch[1] : 'General';
+      const subj = p.examSubject || 'All Subjects / Grand Test';
+      
+      const classMatch = selectedClass ? c === selectedClass : true;
+      const subjMatch = selectedSubject ? subj === selectedSubject : true;
+      
+      return classMatch && subjMatch;
+    });
+  }, [papers, selectedClass, selectedSubject]);
+
   const parseQuestionCount = (content: string): number => {
     const lines = content.split('\n');
     let maxQ = 0;
@@ -58,7 +105,7 @@ export const AnswerKeyManager = () => {
         if (num > maxQ) maxQ = num;
       }
     }
-    return maxQ > 0 ? maxQ : 20; // Default to 20 if no questions detected
+    return maxQ > 0 ? maxQ : 20;
   };
 
   const loadPaperAndAnswerKey = async (paperId: string) => {
@@ -79,7 +126,6 @@ export const AnswerKeyManager = () => {
         const res = await api.get(`/api/answer-keys/${paperId}`);
         if (res.data && res.data.answers) {
           const dbAnswers: Answer[] = res.data.answers;
-          // Merge db answers with initial answers
           dbAnswers.forEach(dbA => {
             const index = initialAnswers.findIndex(ia => ia.qNo === dbA.qNo);
             if (index !== -1) {
@@ -117,55 +163,74 @@ export const AnswerKeyManager = () => {
       });
       toast.success('Answer Key saved successfully!', { id: 'save-ak' });
     } catch (error) {
-      toast.error('Failed to save answer key', { id: 'save-ak' });
+      toast.error('Failed to save answer key. Make sure the database is updated!', { id: 'save-ak' });
     } finally {
       setSaving(false);
     }
   };
 
   const handleAnswerChange = (qNo: number, value: string) => {
-    setAnswers(prev => prev.map(a => a.qNo === qNo ? { ...a, answer: value.toUpperCase() } : a));
+    setAnswers(prev => prev.map(a => a.qNo === qNo ? { ...a, answer: value } : a));
   };
 
   const selectedPaper = papers.find(p => p.id === selectedPaperId);
 
   return (
     <div className="flex flex-col h-full bg-[#f8fafc] animate-fade-in pb-16 min-h-[80vh] rounded-[2rem] border border-slate-200 shadow-sm overflow-hidden">
-      <div className="bg-white/80 backdrop-blur-xl border-b border-slate-200/80 p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      
+      {/* Header & Filters */}
+      <div className="bg-white/80 backdrop-blur-xl border-b border-slate-200/80 p-6 flex flex-col gap-5">
         <div>
           <h2 className="text-2xl font-black text-slate-800 flex items-center gap-2">
             <Key className="w-6 h-6 text-indigo-500" />
             Answer Key Manager
           </h2>
-          <p className="text-sm font-bold text-slate-500 mt-1">Select an exam paper to view or edit its answer key.</p>
+          <p className="text-sm font-bold text-slate-500 mt-1">Select class, subject, and exam paper to view or edit the answer key.</p>
         </div>
-        <div className="flex items-center gap-3">
+        
+        <div className="flex flex-wrap items-center gap-4">
           <div className="relative">
+            <select
+              value={selectedClass}
+              onChange={(e) => { setSelectedClass(e.target.value); setSelectedPaperId(''); }}
+              className="appearance-none pl-4 pr-10 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 min-w-[150px] cursor-pointer"
+            >
+              <option value="">All Classes</option>
+              {classes.map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
+            <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+          </div>
+
+          <div className="relative">
+            <select
+              value={selectedSubject}
+              onChange={(e) => { setSelectedSubject(e.target.value); setSelectedPaperId(''); }}
+              className="appearance-none pl-4 pr-10 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 min-w-[150px] cursor-pointer"
+            >
+              <option value="">All Subjects</option>
+              {subjects.map(s => <option key={s} value={s}>{s}</option>)}
+            </select>
+            <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+          </div>
+
+          <div className="relative flex-1 min-w-[250px]">
             <select
               value={selectedPaperId}
               onChange={(e) => setSelectedPaperId(e.target.value)}
-              className="appearance-none pl-10 pr-10 py-3 bg-white border border-slate-200 rounded-2xl text-sm font-bold text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 min-w-[250px] cursor-pointer"
+              className="appearance-none w-full pl-10 pr-10 py-2.5 bg-white border border-indigo-200 rounded-xl text-sm font-bold text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 cursor-pointer"
             >
               <option value="">Select Exam Paper...</option>
-              {papers.map(p => (
-                <option key={p.id} value={p.id}>{p.examName} ({p.examSubject || 'General'})</option>
+              {filteredPapers.map(p => (
+                <option key={p.id} value={p.id}>{p.examName} {p.examSubject ? `(${p.examSubject})` : ''}</option>
               ))}
             </select>
-            <FileText className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <FileText className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-indigo-400" />
             <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
           </div>
-          
-          <button
-            onClick={handleSave}
-            disabled={!selectedPaperId || saving}
-            className="flex items-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-2xl font-bold shadow-xl shadow-indigo-600/20 hover:bg-indigo-700 hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {saving ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Save className="w-4 h-4" />}
-            Save Key
-          </button>
         </div>
       </div>
 
+      {/* Main Content */}
       <div className="p-6 overflow-auto">
         {loading ? (
           <div className="flex flex-col items-center justify-center py-20">
@@ -181,32 +246,74 @@ export const AnswerKeyManager = () => {
             <p className="text-sm text-slate-400 mt-1">Please select an exam paper from the dropdown above.</p>
           </div>
         ) : (
-          <div className="bg-white border border-slate-200 rounded-[2rem] p-6 shadow-sm">
-            <div className="flex items-center gap-3 mb-6 p-4 bg-indigo-50/50 rounded-2xl border border-indigo-100">
-              <AlertTriangle className="w-5 h-5 text-indigo-500" />
-              <p className="text-sm font-bold text-slate-700">
-                Found <span className="text-indigo-600 font-black">{answers.length}</span> questions for <span className="font-black text-slate-900">{selectedPaper?.examName}</span>. 
-                Enter the correct option (A, B, C, D) or the exact answer text below.
-              </p>
+          <div className="bg-white border border-slate-200 rounded-[1.5rem] shadow-sm overflow-hidden max-w-4xl mx-auto">
+            <div className="flex items-center justify-between p-5 bg-indigo-50/50 border-b border-indigo-100">
+              <div className="flex items-center gap-3">
+                <ListOrdered className="w-5 h-5 text-indigo-500" />
+                <p className="text-sm font-bold text-slate-700">
+                  <span className="text-indigo-600 font-black">{answers.length}</span> questions found for <span className="font-black text-slate-900">{selectedPaper?.examName}</span>.
+                </p>
+              </div>
             </div>
             
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-              {answers.map((ans) => (
-                <div key={ans.qNo} className="flex flex-col gap-1.5 group">
-                  <label className="text-[11px] font-black uppercase tracking-wider text-slate-500 pl-1 flex justify-between items-center">
-                    <span>Q {ans.qNo}</span>
-                    {ans.answer && <CheckCircle2 className="w-3 h-3 text-emerald-500" />}
-                  </label>
-                  <input
-                    type="text"
-                    value={ans.answer}
-                    onChange={(e) => handleAnswerChange(ans.qNo, e.target.value)}
-                    placeholder="Ans"
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-800 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 focus:bg-white transition-all text-center"
-                  />
-                </div>
-              ))}
+            {/* Table View */}
+            <div className="w-full overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-slate-50 border-b border-slate-200">
+                    <th className="py-3 px-6 text-xs font-black uppercase tracking-wider text-slate-500 w-24 text-center border-r border-slate-200">Q.No</th>
+                    <th className="py-3 px-6 text-xs font-black uppercase tracking-wider text-slate-500">Correct Answer Option</th>
+                    <th className="py-3 px-6 text-xs font-black uppercase tracking-wider text-slate-500 w-20 text-center">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {answers.map((ans, idx) => (
+                    <tr key={ans.qNo} className={`border-b border-slate-100 hover:bg-slate-50/50 transition-colors ${idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/30'}`}>
+                      <td className="py-3 px-6 text-sm font-black text-slate-700 text-center border-r border-slate-100">
+                        {ans.qNo}
+                      </td>
+                      <td className="py-3 px-6">
+                        <div className="relative max-w-[200px]">
+                          <select
+                            value={ans.answer}
+                            onChange={(e) => handleAnswerChange(ans.qNo, e.target.value)}
+                            className="appearance-none w-full pl-4 pr-10 py-2 bg-white border border-slate-200 rounded-lg text-sm font-bold text-slate-800 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 cursor-pointer"
+                          >
+                            <option value="">- Select -</option>
+                            <option value="A">A</option>
+                            <option value="B">B</option>
+                            <option value="C">C</option>
+                            <option value="D">D</option>
+                            <option value="BONUS">BONUS / ADD SCORE</option>
+                          </select>
+                          <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                        </div>
+                      </td>
+                      <td className="py-3 px-6 text-center">
+                        {ans.answer ? (
+                          <CheckCircle2 className="w-5 h-5 text-emerald-500 mx-auto" />
+                        ) : (
+                          <div className="w-5 h-5 rounded-full border-2 border-slate-200 mx-auto" />
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
+            
+            {/* Save Button at Bottom */}
+            <div className="p-6 bg-slate-50 border-t border-slate-200 flex justify-end">
+              <button
+                onClick={handleSave}
+                disabled={!selectedPaperId || saving}
+                className="flex items-center gap-2 px-8 py-3 bg-indigo-600 text-white rounded-xl font-bold shadow-xl shadow-indigo-600/20 hover:bg-indigo-700 hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {saving ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Save className="w-4 h-4" />}
+                Save Answer Key
+              </button>
+            </div>
+            
           </div>
         )}
       </div>
