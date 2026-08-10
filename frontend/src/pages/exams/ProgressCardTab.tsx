@@ -307,35 +307,28 @@ export const ProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
     if (didShareNatively) {
       return; // Success! They shared the actual image file natively
     }
-
-    // 2. Fallback: upload image to server → share link via WhatsApp Web
-    toast.loading(`Uploading card for ${studentName}...`, { id: toastId });
-    const formData = new FormData();
-    formData.append('file', blob, fileName);
-    let imgUrl = '';
+    // 2. Fallback: No link sharing! We download the image and open WhatsApp.
+    toast.loading(`Preparing card for ${studentName}...`, { id: toastId });
+    
+    // Attempt to copy image to clipboard (works on some devices)
     try {
-      const uploadRes = await api.post('/api/uploads/share', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
-      imgUrl = uploadRes.data?.data?.url || uploadRes.data?.url || '';
+      const clipboardItem = new ClipboardItem({ [blob.type]: blob });
+      await navigator.clipboard.write([clipboardItem]);
+      toast.success('Image copied! Just PASTE it in WhatsApp.', { id: toastId });
     } catch (err) {
-      console.warn('Image upload failed', err);
-    }
-
-    toast.dismiss(toastId);
-
-    if (imgUrl) {
-      const fullUrl = imgUrl.startsWith('http') ? imgUrl : `${window.location.origin}${imgUrl}`;
-      const msg = `${shareText}:\n${fullUrl}`;
-      window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_system');
-      toast.success('Opening WhatsApp...');
-    } else {
+      // If clipboard fails, just download the image
       const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
       a.download = fileName;
       a.click();
-      toast.success('Image downloaded! Attach it in WhatsApp.');
+      toast.success('Image downloaded! Attach it in WhatsApp.', { id: toastId });
     }
+
+    // Open WhatsApp
+    const msg = `${shareText}`;
+    setTimeout(() => {
+      window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_system');
+    }, 1000);
   };
 
   const handleDownloadAll = async () => {
