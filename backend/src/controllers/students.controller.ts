@@ -127,17 +127,18 @@ export const create = async (req: Request, res: Response, next: NextFunction): P
   cache.delPattern('students:list:*');
   clearDashboardCache();
 
+  const creatorName = req.user?.name || 'System';
   createSystemNotification({
     role: 'SUPER_ADMIN',
     title: `🎓 New Student Joined`,
-    message: `${name} has been admitted.`,
+    message: `${creatorName} admitted new student ${name} (Class: ${student.class ? `${student.class.name}-${student.class.section}` : 'N/A'}).`,
     type: 'INFO',
     link: `/students/${student.id}`
   });
   createSystemNotification({
     role: 'ADMIN',
     title: `🎓 New Student Joined`,
-    message: `${name} has been admitted.`,
+    message: `${creatorName} admitted new student ${name} (Class: ${student.class ? `${student.class.name}-${student.class.section}` : 'N/A'}).`,
     type: 'INFO',
     link: `/students/${student.id}`
   });
@@ -203,17 +204,18 @@ export const update = async (req: AuthRequest, res: Response, next: NextFunction
   cache.delPattern('students:list:*');
   clearDashboardCache();
 
+  const updaterName = req.user?.name || 'System';
   createSystemNotification({
     role: 'SUPER_ADMIN',
     title: `🎓 Student Updated`,
-    message: `Profile of ${name || student.user.name} was updated.`,
+    message: `${updaterName} updated profile of student ${name || student.user.name} (Class: ${updated.class ? `${updated.class.name}-${updated.class.section}` : 'N/A'}).`,
     type: 'INFO',
     link: `/students/${student.id}`
   });
   createSystemNotification({
     role: 'ADMIN',
     title: `🎓 Student Updated`,
-    message: `Profile of ${name || student.user.name} was updated.`,
+    message: `${updaterName} updated profile of student ${name || student.user.name} (Class: ${updated.class ? `${updated.class.name}-${updated.class.section}` : 'N/A'}).`,
     type: 'INFO',
     link: `/students/${student.id}`
   });

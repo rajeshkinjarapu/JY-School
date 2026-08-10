@@ -78,6 +78,30 @@ export const createGatePass = async (req: AuthRequest, res: Response, next: Next
       },
     });
 
+    try {
+      const { createSystemNotification } = await import('./notifications.controller');
+      const reqName = gatePass.student ? gatePass.student.user?.name : user.name;
+      const typeStr = gatePass.requestType === 'STUDENT' ? 'Student' : 'Staff';
+      const className = gatePass.student?.class ? ` (Class ${gatePass.student.class.name}-${gatePass.student.class.section})` : '';
+      
+      const adminMsg = `New Gate Pass request (#${slipNumber}) from ${typeStr}: ${reqName}${className} for ${reason}.`;
+      
+      createSystemNotification({
+        role: 'ADMIN',
+        title: '🎫 Gate Pass Request',
+        message: adminMsg,
+        type: 'GATEPASS',
+        link: '/office-tools/gate-pass'
+      });
+      createSystemNotification({
+        role: 'SUPER_ADMIN',
+        title: '🎫 Gate Pass Request',
+        message: adminMsg,
+        type: 'GATEPASS',
+        link: '/office-tools/gate-pass'
+      });
+    } catch (e) {}
+
     successResponse(res, gatePass, 'Gate pass requested successfully', 201);
   } catch (error) {
     next(error);

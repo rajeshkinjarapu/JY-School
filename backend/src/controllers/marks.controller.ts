@@ -136,17 +136,27 @@ export const bulkCreate = async (req: AuthRequest, res: Response, next: NextFunc
     if (results.length > 0 && marks[0]) {
       const examInfo = await prisma.exam.findUnique({ where: { id: marks[0].examId } });
       const teacherName = req.user?.name || 'A Teacher';
+      const examName = examInfo?.name || 'Exam';
+      let className = 'a class';
+      
+      // Try to get class name from student
+      const firstStudentId = marks[0]?.studentId;
+      if (firstStudentId) {
+        const s = await prisma.student.findUnique({ where: { id: firstStudentId }, include: { class: true }});
+        if (s?.class) className = `${s.class.name}-${s.class.section}`;
+      }
+
       createSystemNotification({
         role: 'ADMIN',
-        title: '📝 Marks Entry / Freeze',
-        message: `Teacher ${teacherName} entered/updated marks for ${examInfo?.name || 'Exam'}.`,
+        title: '📝 Marks Entry Updated',
+        message: `${teacherName} entered/updated marks for ${examName} in class ${className}.`,
         type: 'MARKS',
         link: '/exams',
       });
       createSystemNotification({
         role: 'SUPER_ADMIN',
-        title: '📝 Marks Entry / Freeze',
-        message: `Teacher ${teacherName} entered/updated marks for ${examInfo?.name || 'Exam'}.`,
+        title: '📝 Marks Entry Updated',
+        message: `${teacherName} entered/updated marks for ${examName} in class ${className}.`,
         type: 'MARKS',
         link: '/exams',
       });

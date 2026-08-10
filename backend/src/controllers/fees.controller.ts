@@ -309,8 +309,9 @@ export const createPayment = async (req: AuthRequest, res: Response, next: NextF
     const studentName = student.user?.name || 'Student';
     const className = student.class ? `${student.class.name}-${student.class.section}` : '';
     const receiptNo = createdPayments[0]?.receiptNo || '';
-    const notifTitle = `Fee Payment Received: ₹${totalAmount}`;
-    const notifMsg = `Fee payment of ₹${totalAmount} received for ${studentName}${className ? ` (${className})` : ''}. Receipt: #${receiptNo}`;
+    const recorderName = req.user?.name || 'System';
+    const notifTitle = `💰 Fee Payment Received: ₹${totalAmount}`;
+    const notifMsg = `Fee payment of ₹${totalAmount} received for student ${studentName}${className ? ` in class ${className}` : ''}. \n\nReceipt: #${receiptNo}\nPayment Method: ${method}\nRecorded by: ${recorderName}.`;
 
     // Notify Super Admin
     createSystemNotification({

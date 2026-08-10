@@ -114,6 +114,31 @@ export const createHomework = async (req: AuthRequest, res: Response, next: Next
       console.error('Failed to dispatch homework notifications:', err);
     }
 
+    // Also notify Admins so they know what happened
+    try {
+      const { createSystemNotification } = await import('./notifications.controller');
+      const author = req.user?.name || 'A Teacher';
+      const className = hw.class ? `${hw.class.name}-${hw.class.section}` : 'a class';
+      const subjectName = hw.subject?.name || 'a subject';
+      
+      const adminMsg = `${author} assigned homework "${title}" to ${className} for ${subjectName} (Due: ${new Date(dueDate).toLocaleDateString()}).`;
+      
+      createSystemNotification({
+        role: 'ADMIN',
+        title: '📚 New Homework Assigned',
+        message: adminMsg,
+        type: 'HOMEWORK',
+        link: '/homework'
+      });
+      createSystemNotification({
+        role: 'SUPER_ADMIN',
+        title: '📚 New Homework Assigned',
+        message: adminMsg,
+        type: 'HOMEWORK',
+        link: '/homework'
+      });
+    } catch (e) {}
+
     successResponse(res, hw, 'Homework created', 201);
   } catch (e) { next(e); }
 };

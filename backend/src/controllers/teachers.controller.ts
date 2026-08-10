@@ -79,17 +79,18 @@ export const create = async (req: AuthRequest, res: Response, next: NextFunction
     include: { user: { select: { id: true, name: true, email: true } } },
   });
 
+  const creatorName = req.user?.name || 'System';
   createSystemNotification({
     role: 'SUPER_ADMIN',
     title: `👨‍🏫 New Teacher Added`,
-    message: `${name} has been added to the faculty.`,
+    message: `${creatorName} added ${name} to the faculty (Subject: ${specialization || 'N/A'}).`,
     type: 'INFO',
     link: `/teachers/${teacher.id}`
   });
   createSystemNotification({
     role: 'ADMIN',
     title: `👨‍🏫 New Teacher Added`,
-    message: `${name} has been added to the faculty.`,
+    message: `${creatorName} added ${name} to the faculty (Subject: ${specialization || 'N/A'}).`,
     type: 'INFO',
     link: `/teachers/${teacher.id}`
   });
@@ -111,17 +112,18 @@ export const update = async (req: AuthRequest, res: Response, next: NextFunction
     include: { user: { select: { id: true, name: true, email: true, phone: true, photoUrl: true } } },
   });
 
+  const updaterName = req.user?.name || 'System';
   createSystemNotification({
     role: 'SUPER_ADMIN',
     title: `👨‍🏫 Teacher Updated`,
-    message: `${name || teacher.employeeId}'s profile was updated.`,
+    message: `${updaterName} updated profile of teacher ${name || teacher.employeeId}.`,
     type: 'INFO',
     link: `/teachers/${teacher.id}`
   });
   createSystemNotification({
     role: 'ADMIN',
     title: `👨‍🏫 Teacher Updated`,
-    message: `${name || teacher.employeeId}'s profile was updated.`,
+    message: `${updaterName} updated profile of teacher ${name || teacher.employeeId}.`,
     type: 'INFO',
     link: `/teachers/${teacher.id}`
   });
