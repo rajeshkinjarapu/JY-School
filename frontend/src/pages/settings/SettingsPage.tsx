@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import api from '../../api/axios';
 import { LoadingSpinner } from '../../components/UI/LoadingSpinner';
 import { Badge } from '../../components/UI/Badge';
-import { Trash2, AlertTriangle, Shield, CheckCircle, Save, Settings as SettingsIcon, Users, UserX, Database, Eye, School, CalendarDays, Search } from 'lucide-react';
+import { Trash2, AlertTriangle, Shield, CheckCircle, Save, Settings as SettingsIcon, Users, UserX, Database, Eye, School, CalendarDays, Search, Plus } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { PageHeader } from '../../components/UI/PageHeader';
 import { useOutletContext } from 'react-router-dom';
