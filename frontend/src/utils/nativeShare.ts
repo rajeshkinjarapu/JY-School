@@ -30,7 +30,6 @@ export const shareFileNatively = async (blob: Blob, fileName: string, text: stri
       // 3. Trigger Native Share Sheet with the saved file URI
       await Share.share({
         title: fileName,
-        text: text,
         url: savedFile.uri,
         dialogTitle: 'Share with WhatsApp or others'
       });
@@ -41,7 +40,6 @@ export const shareFileNatively = async (blob: Blob, fileName: string, text: stri
       if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
         await navigator.share({
           title: fileName,
-          text: text,
           files: [file]
         });
         return true;
