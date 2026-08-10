@@ -5,7 +5,7 @@ const config: CapacitorConfig = {
   appName: 'JY School ERP',
   webDir: 'dist',
   server: {
-    url: 'http://148.113.8.82:19999',
+    url: 'https://jy-school.vercel.app',
     cleartext: true, // Allow live HTTP connections to VPS
   },
   android: {
