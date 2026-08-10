@@ -21,7 +21,7 @@
     "@capacitor/keyboard": "^8.0.5",
     "@capacitor/local-notifications": "^8.1.1",
     "@capacitor/push-notifications": "^8.1.1",
-    "@capacitor/share": "^8.0.2",
+    "@capacitor/share": "^8.0.1",
     "@capacitor/filesystem": "^8.1.0",
     "@capacitor/status-bar": "^8.0.3",
     "@dnd-kit/core": "^6.3.1",
