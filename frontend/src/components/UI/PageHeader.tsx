@@ -9,8 +9,13 @@ interface PageHeaderProps {
 }
 
 export const PageHeader: React.FC<PageHeaderProps> = ({ title, icon, action }) => {
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 1024;
+  
   return (
-    <div className="relative overflow-hidden flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-gradient-to-r from-indigo-900 via-blue-800 to-indigo-900 px-3 py-3 sm:px-8 sm:py-3 shadow-md border-b border-indigo-900/50 shrink-0">
+    <div 
+      className="relative overflow-hidden flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-gradient-to-r from-indigo-900 via-blue-800 to-indigo-900 px-3 py-3 sm:px-8 shadow-md border-b border-indigo-900/50 shrink-0"
+      style={{ paddingTop: isMobile ? 'max(env(safe-area-inset-top), 40px)' : undefined }}
+    >
       <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
       <div className="absolute bottom-0 left-20 w-40 h-40 bg-blue-500/20 rounded-full blur-2xl pointer-events-none"></div>
       
