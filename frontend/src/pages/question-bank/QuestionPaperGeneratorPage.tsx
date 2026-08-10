@@ -24,11 +24,9 @@ export const QuestionPaperGeneratorPage = () => {
   const [instructions, setInstructions] = useState<string>(() => 
     localStorage.getItem('jy_exam_instructions') || 'Answer all questions.\nEach question carries equal marks.\nRead questions carefully before answering.'
   );
-  const [logoBase64, setLogoBase64] = useState<string>(() => {
-    return localStorage.getItem('jy_school_logo') || '';
-  });
+  const [examClass, setExamClass] = useState<string>(() => localStorage.getItem('jy_exam_class') || '10th Class');
   
-  // AI Modal State
+  // Settings State
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
   const [aiSourceType, setAiSourceType] = useState('text');
   const [aiInput, setAiInput] = useState('');
@@ -604,7 +602,7 @@ export const QuestionPaperGeneratorPage = () => {
               examName={examName}
               examDate={examDate}
               examSubject={examSubject}
-              logoBase64={logoBase64}
+              logoBase64="/logo.png?v=1"
               maxMarks={maxMarks}
               time={time}
               instructions={instructions.split('\n').filter(i => i.trim() !== '')}
@@ -777,31 +775,17 @@ export const QuestionPaperGeneratorPage = () => {
                 </div>
               </div>
               <div className="pt-2 border-t border-slate-100">
-                <label className="block text-sm font-medium text-slate-700 mb-1">School Logo</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Class</label>
                 <input
-                  type="file"
-                  accept="image/*"
+                  type="text"
+                  value={examClass}
                   onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) {
-                      const reader = new FileReader();
-                      reader.onload = (event) => {
-                        const result = event.target?.result as string;
-                        setLogoBase64(result);
-                        localStorage.setItem('jy_school_logo', result);
-                      };
-                      reader.readAsDataURL(file);
-                    }
+                    setExamClass(e.target.value);
+                    localStorage.setItem('jy_exam_class', e.target.value);
                   }}
-                  className="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                  placeholder="e.g. 10th Class"
+                  className="w-full rounded-lg border-slate-200 bg-white border p-2.5 text-sm focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
                 />
-                {logoBase64 && (
-                  <div className="mt-2 relative inline-block">
-                    <img src={logoBase64} alt="Logo" className="h-12 object-contain border rounded" />
-                    <button onClick={() => { setLogoBase64(''); localStorage.removeItem('jy_school_logo'); }} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 w-5 h-5 flex items-center justify-center text-xs">X</button>
-                  </div>
-                )}
-                <p className="text-xs text-slate-500 mt-1">Stored locally in your browser.</p>
               </div>
               <div className="grid grid-cols-2 gap-6 pt-2 border-t border-slate-100">
                 <div>
