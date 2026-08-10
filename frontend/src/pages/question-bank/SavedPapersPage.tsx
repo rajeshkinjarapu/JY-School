@@ -411,7 +411,6 @@ export const SavedPapersPage = ({ isEmbedded = false }: { isEmbedded?: boolean }
                         
                         <div className="flex flex-wrap gap-3 mt-auto pt-4 text-[11px] font-semibold text-slate-500">
                           <span className="flex items-center gap-1.5 bg-slate-50 px-2 py-1 rounded-md border border-slate-100"><Calendar className="w-3.5 h-3.5 text-slate-400" /> {paper.examDate || '—'}</span>
-                          <span className="flex items-center gap-1.5 bg-slate-50 px-2 py-1 rounded-md border border-slate-100"><Clock className="w-3.5 h-3.5 text-slate-400" /> {paper.time || '—'} mins</span>
                         </div>
                       </div>
 
@@ -446,7 +445,7 @@ export const SavedPapersPage = ({ isEmbedded = false }: { isEmbedded?: boolean }
                       <tr className="bg-slate-100 text-[12px] font-black uppercase tracking-wider text-slate-600">
                         <th className="px-5 py-3 border border-slate-300">Paper Name</th>
                         <th className="px-5 py-3 border border-slate-300">Subject</th>
-                        <th className="px-5 py-3 border border-slate-300">Date & Time</th>
+                        <th className="px-5 py-3 border border-slate-300">Date</th>
                         <th className="px-5 py-3 border border-slate-300 text-center">Marks</th>
                         <th className="px-5 py-3 border border-slate-300 text-center">Created On</th>
                         <th className="px-5 py-3 border border-slate-300 text-center">Actions</th>
@@ -483,10 +482,9 @@ export const SavedPapersPage = ({ isEmbedded = false }: { isEmbedded?: boolean }
                             </td>
                             <td className="px-5 py-3 border border-slate-300 text-[13px] font-bold text-slate-600">
                               <div className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5 text-slate-400" /> {paper.examDate || '—'}</div>
-                              <div className="flex items-center gap-1.5 text-slate-500 text-[11px] mt-1"><Clock className="w-3 h-3 text-slate-400" /> {paper.time || '—'} mins</div>
                             </td>
                             <td className="px-5 py-3 border border-slate-300 text-center font-black text-slate-700 text-[13px]">
-                              100
+                              {paper.time || '100'}
                             </td>
                             <td className="px-5 py-3 border border-slate-300 text-[12px] font-bold text-slate-500 text-center">
                               {formatDate(paper.createdAt)}
