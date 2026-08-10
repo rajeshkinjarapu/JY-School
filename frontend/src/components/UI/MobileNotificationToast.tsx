@@ -72,9 +72,34 @@ export const MobileNotificationToast: React.FC = () => {
       Notification.requestPermission().catch(() => {});
     }
 
+    // Polling fallback
     checkNewNotifications();
-    const interval = setInterval(checkNewNotifications, 10000); // Check every 10 seconds
-    return () => clearInterval(interval);
+    const interval = setInterval(checkNewNotifications, 10000); 
+    
+    // Live Push listener from Capacitor
+    const handleLivePush = (e: any) => {
+      const pushData = e.detail;
+      const title = pushData.title || pushData.notification?.title || 'New Notification';
+      const body = pushData.body || pushData.notification?.body || '';
+      
+      const newToast: ToastNotification = {
+        id: pushData.id || Date.now().toString(),
+        title: title,
+        message: body,
+        type: 'INFO',
+        createdAt: new Date().toISOString()
+      };
+      
+      playNotificationChime();
+      setActiveToast(newToast);
+    };
+
+    window.addEventListener('appPushNotification', handleLivePush);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('appPushNotification', handleLivePush);
+    };
   }, []);
 
   const [swipeOffset, setSwipeOffset] = useState(0);

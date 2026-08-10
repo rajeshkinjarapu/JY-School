@@ -57,6 +57,7 @@ export const registerPushNotifications = async (userId: string, tokenStr: string
     // Show us the notification payload if the app is open on our device
     PushNotifications.addListener('pushNotificationReceived', (notification) => {
       console.log('Push received: ' + JSON.stringify(notification));
+      window.dispatchEvent(new CustomEvent('appPushNotification', { detail: notification }));
     });
 
     // Method called when tapping on a notification
