@@ -315,7 +315,7 @@ export const QuestionPaperGeneratorPage = () => {
         payload.imageMimeType = aiImageMimeType;
       }
 
-      const response = await api.post('/api/questions/import-ai', payload);
+      const response = await api.post('/api/questions/import-ai', payload, { timeout: 120000 });
 
       const questions = response.data.questions || [];
       
@@ -530,10 +530,10 @@ export const QuestionPaperGeneratorPage = () => {
       </div>
 
       {/* Main Dual Layout Content */}
-      <div className="flex-1 flex overflow-hidden print:overflow-visible h-[calc(100vh-80px)] print:h-auto">
+      <div className="flex-1 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden print:overflow-visible h-[calc(100vh-80px)] print:h-auto custom-scrollbar">
         
         {/* Left Side: Editor (Hidden on Print) */}
-        <div className="w-1/2 p-6 overflow-y-auto border-r border-slate-200 bg-white print:hidden custom-scrollbar">
+        <div className="w-full lg:w-1/2 min-h-[50vh] lg:min-h-0 flex-shrink-0 lg:flex-shrink p-6 overflow-y-auto border-r border-slate-200 bg-white print:hidden custom-scrollbar">
           <div className="h-full flex flex-col pb-20">
             <h3 className="font-semibold text-slate-700 border-b pb-2 mb-4 flex justify-between items-center">
               <span>Question Content (LaTeX Support)</span>
@@ -575,7 +575,7 @@ export const QuestionPaperGeneratorPage = () => {
         </div>
 
         {/* Right Side: Live Preview (Full Width on Print) */}
-        <div className="w-1/2 overflow-y-auto bg-slate-100 print:w-full print:bg-white custom-scrollbar flex flex-col relative">
+        <div className="w-full lg:w-1/2 min-h-[60vh] lg:min-h-0 flex-shrink-0 lg:flex-shrink overflow-y-auto bg-slate-100 print:w-full print:bg-white custom-scrollbar flex flex-col relative">
           <div className="sticky top-0 z-10 bg-slate-100/80 backdrop-blur-md border-b border-slate-200 px-6 py-3 flex justify-between items-center print:hidden">
             <h3 className="font-semibold text-slate-700 flex items-center gap-2">
               Live Preview

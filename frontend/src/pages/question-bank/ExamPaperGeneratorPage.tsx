@@ -304,7 +304,7 @@ export const ExamPaperGeneratorPage = () => {
         payload.imageMimeType = aiImageMimeType;
       }
 
-      const response = await api.post('/api/questions/import-ai', payload);
+      const response = await api.post('/api/questions/import-ai', payload, { timeout: 120000 });
 
       const questions = response.data.questions || [];
       
@@ -421,7 +421,7 @@ export const ExamPaperGeneratorPage = () => {
     toast.loading(paperId ? 'Updating paper...' : 'Saving paper...', { id: 'save' });
     try {
       const serializedContent = serializeContent();
-      const payload = { examName: finalExamName, examDate, time, instructions, content: serializedContent };
+      const payload = { examName: finalExamName, examSubject: '', examDate, time, instructions, content: serializedContent };
       if (paperId) {
         await api.put(`/api/generated-papers/${paperId}`, payload);
         toast.success('Paper updated successfully!', { id: 'save' });
@@ -513,10 +513,10 @@ export const ExamPaperGeneratorPage = () => {
         </div>
 
         {/* Main Dual Layout Content */}
-        <div className="flex-1 flex overflow-hidden print:overflow-visible h-[calc(100vh-140px)] print:h-auto max-w-[1920px] mx-auto w-full px-4 py-4 gap-4 print:p-0 print:gap-0">
+        <div className="flex-1 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden h-[calc(100vh-140px)] print:h-auto max-w-[1920px] mx-auto w-full px-4 py-4 gap-4 print:p-0 print:gap-0 custom-scrollbar">
           
           {/* Left Side: Editor (Hidden on Print) */}
-          <div className="w-5/12 bg-white rounded-3xl border border-slate-200/80 shadow-xl shadow-slate-200/20 flex flex-col print:hidden overflow-hidden transition-all z-10">
+          <div className="w-full lg:w-5/12 min-h-[50vh] lg:min-h-0 flex-shrink-0 lg:flex-shrink bg-white rounded-3xl border border-slate-200/80 shadow-xl shadow-slate-200/20 flex flex-col print:hidden overflow-hidden transition-all z-10">
             <div className="px-5 py-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center flex-shrink-0">
               <h3 className="font-bold text-slate-800 flex items-center gap-2">
                 <FileText className="w-4 h-4 text-indigo-500" />
@@ -565,7 +565,7 @@ export const ExamPaperGeneratorPage = () => {
           </div>
 
           {/* Right Side: Live Preview */}
-          <div className="w-7/12 bg-slate-200/50 rounded-3xl border border-slate-200/80 shadow-inner flex flex-col overflow-hidden print:w-full print:bg-white print:border-none print:shadow-none print:rounded-none transition-all z-10">
+          <div className="w-full lg:w-7/12 min-h-[60vh] lg:min-h-0 flex-shrink-0 lg:flex-shrink bg-slate-200/50 rounded-3xl border border-slate-200/80 shadow-inner flex flex-col overflow-hidden print:w-full print:bg-white print:border-none print:shadow-none print:rounded-none transition-all z-10">
             <div className="px-5 py-4 border-b border-slate-200/80 bg-white/80 backdrop-blur-md flex justify-between items-center print:hidden z-20 flex-shrink-0">
               <h3 className="font-bold text-slate-800 flex items-center gap-2">
                 Live Preview
