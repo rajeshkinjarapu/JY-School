@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ChevronLeft, Sparkles, Upload, Save, Printer, FileText, Settings, Maximize, X, Wand2, BookOpen, ImagePlus } from 'lucide-react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { LiveLatexPreview } from '../../components/QuestionBank/LiveLatexPreview';
 import type { FloatingImage } from '../../components/QuestionBank/LiveLatexPreview';
@@ -22,13 +22,13 @@ export const QuestionPaperGeneratorPage = () => {
   
   // Paper Settings State
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [examName, setExamName] = useState<string>(() => localStorage.getItem('jy_exam_name') || 'FINAL EXAMINATION');
+  const [examName, setExamName] = useState<string>(() => localStorage.getItem('jy_exam_name') || 'JEE Paper Generator');
   const [examSubject, setExamSubject] = useState<string>(() => localStorage.getItem('jy_exam_subject') || 'GRAND TEST');
   const [examDate, setExamDate] = useState<string>(() => localStorage.getItem('jy_exam_date') || '');
   const [maxMarks, setMaxMarks] = useState('100');
-  const [time, setTime] = useState<string>(() => localStorage.getItem('jy_exam_marks') || '75');
+  const [time, setTime] = useState<string>(() => localStorage.getItem('jy_exam_marks') || '180');
   const [instructions, setInstructions] = useState<string>(() => 
-    localStorage.getItem('jy_exam_instructions') || 'Answer all questions.\nEach question carries equal marks.\nRead questions carefully before answering.'
+    localStorage.getItem('jy_exam_instructions') || '1. All questions are compulsory.\n2. Each question carries equal marks.\n3. There is negative marking for incorrect answers.'
   );
   const [examClass, setExamClass] = useState<string>(() => localStorage.getItem('jy_exam_class') || '10th Class');
   
@@ -56,7 +56,7 @@ export const QuestionPaperGeneratorPage = () => {
   const [deepseekApiKey, setDeepseekApiKey] = useState<string>(() => {
     return localStorage.getItem('jy_deepseek_api_key') || '';
   });
-  const [isDoubleColumn, setIsDoubleColumn] = useState(false);
+
   
   // Editor State
   const [content, setContent] = useState(
@@ -470,7 +470,7 @@ export const QuestionPaperGeneratorPage = () => {
   return (
     <div ref={containerRef} className="flex flex-col h-full bg-gray-50/50 print:block" style={{ minHeight: 'calc(100vh - 64px)' }}>
       <PageHeader 
-        title="AI Paper Generator" 
+        title="JEE Paper Generator" 
         icon={<FileText className="w-5 h-5 text-white" />} 
       />
 
@@ -630,20 +630,6 @@ export const QuestionPaperGeneratorPage = () => {
             <h3 className="font-semibold text-slate-700 flex items-center gap-2">
               Live Preview
             </h3>
-            <div className="flex bg-slate-200 rounded-lg p-1">
-              <button 
-                onClick={() => setIsDoubleColumn(false)}
-                className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${!isDoubleColumn ? 'bg-white shadow text-blue-600' : 'text-slate-600 hover:text-slate-800'}`}
-              >
-                Single View
-              </button>
-              <button 
-                onClick={() => setIsDoubleColumn(true)}
-                className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${isDoubleColumn ? 'bg-white shadow text-blue-600' : 'text-slate-600 hover:text-slate-800'}`}
-              >
-                Double View
-              </button>
-            </div>
           </div>
           <div className="flex justify-center p-8 print:p-0">
             <div className="paper-zoom origin-top transition-transform">
@@ -656,7 +642,7 @@ export const QuestionPaperGeneratorPage = () => {
               maxMarks={maxMarks}
               time={time}
               instructions={instructions.split('\n').filter(i => i.trim() !== '')}
-              isDoubleColumn={isDoubleColumn}
+              isDoubleColumn={false}
               inlineImages={inlineImages}
               onImageUpdate={(id, updates) => setInlineImages(prev => ({ ...prev, [id]: { ...prev[id], ...updates } }))}
               onImageDelete={(id) => {

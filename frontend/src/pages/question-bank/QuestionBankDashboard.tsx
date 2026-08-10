@@ -10,8 +10,8 @@ import { PageHeader } from '../../components/UI/PageHeader';
 export const QuestionBankDashboard = () => {
   const navigate = useNavigate();
   const tools = [
-    { title: 'AI Paper Generator', description: 'Dual-layout paper creator', icon: FileUp, color: 'from-blue-700 to-indigo-500' },
-    { title: 'Exam Paper Generator', description: 'Generate AI papers for any subject', icon: Sparkles, color: 'from-indigo-600 to-purple-500' },
+    { title: 'JEE Paper Generator', description: 'Dual-layout paper creator', icon: FileUp, color: 'from-blue-700 to-indigo-500' },
+    { title: 'Exam Paper Generator', description: 'Generate AI papers for any subject', icon: Sparkles, color: 'from-purple-600 to-blue-600' },
     { title: 'Navodaya Paper Generator', description: 'Navodaya Mathematics', icon: CheckCircle, color: 'from-orange-600 to-orange-400' },
   ];
 
@@ -29,11 +29,8 @@ export const QuestionBankDashboard = () => {
             <div 
               key={index}
               onClick={() => {
-                if (tool.title === 'Questions') navigate('/question-bank/questions');
-                else if (tool.title === 'Paper Generator') navigate('/question-bank/papers/new');
-                else if (tool.title === 'AI Paper Generator') navigate('/question-bank/generator');
-                else if (tool.title === 'Exam Paper Generator') navigate('/question-bank/exam-generator');
-                else if (tool.title === 'Saved AI Papers') navigate('/question-bank/saved-papers');
+                if (tool.title === 'Exam Paper Generator') navigate('/question-bank/exam-generator');
+                else if (tool.title === 'JEE Paper Generator') navigate('/question-bank/generator');
                 else if (tool.title === 'Navodaya Paper Generator') navigate('/question-bank/navodaya-generator');
                 else if (tool.title === 'Dashboard') navigate('/question-bank');
               }}

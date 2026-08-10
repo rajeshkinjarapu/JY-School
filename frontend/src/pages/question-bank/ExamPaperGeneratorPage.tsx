@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ChevronLeft, Sparkles, Upload, Save, Printer, FileText, Settings, Maximize, X, Wand2, BookOpen, ImagePlus, LayoutTemplate } from 'lucide-react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { LiveLatexPreview } from '../../components/QuestionBank/LiveLatexPreview';
 import type { FloatingImage } from '../../components/QuestionBank/LiveLatexPreview';
@@ -56,7 +56,7 @@ export const ExamPaperGeneratorPage = () => {
     return localStorage.getItem('jy_deepseek_api_key') || '';
   });
   
-  const [isDoubleColumn, setIsDoubleColumn] = useState(false);
+
   
   // Editor State
   const [content, setContent] = useState(
@@ -620,20 +620,6 @@ export const ExamPaperGeneratorPage = () => {
               <h3 className="font-bold text-slate-800 flex items-center gap-2">
                 Live Preview
               </h3>
-              <div className="flex bg-slate-100 rounded-xl p-1 shadow-inner border border-slate-200/60">
-                <button 
-                  onClick={() => setIsDoubleColumn(false)}
-                  className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-all ${!isDoubleColumn ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-500 hover:text-slate-700'}`}
-                >
-                  Single View
-                </button>
-                <button 
-                  onClick={() => setIsDoubleColumn(true)}
-                  className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-all ${isDoubleColumn ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-500 hover:text-slate-700'}`}
-                >
-                  Double View
-                </button>
-              </div>
             </div>
             
             <div className="flex-1 overflow-y-auto custom-scrollbar flex justify-center p-8 print:p-0 relative">
@@ -647,7 +633,7 @@ export const ExamPaperGeneratorPage = () => {
                   maxMarks={maxMarks}
                   time={time}
                   instructions={instructions.split('\n').filter(i => i.trim() !== '')}
-                  isDoubleColumn={isDoubleColumn}
+                  isDoubleColumn={false}
                   inlineImages={inlineImages}
                   onImageUpdate={(id, updates) => setInlineImages(prev => ({ ...prev, [id]: { ...prev[id], ...updates } }))}
                   onImageDelete={(id) => {

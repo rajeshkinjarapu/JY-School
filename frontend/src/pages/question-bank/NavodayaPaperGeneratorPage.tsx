@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ChevronLeft, Sparkles, Upload, Save, Printer, FileText, Settings, Maximize, X, Wand2, BookOpen, ImagePlus } from 'lucide-react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { LiveLatexPreview } from '../../components/QuestionBank/LiveLatexPreview';
 import type { FloatingImage } from '../../components/QuestionBank/LiveLatexPreview';
@@ -54,8 +54,6 @@ export const NavodayaPaperGeneratorPage = () => {
   const [deepseekApiKey, setDeepseekApiKey] = useState<string>(() => {
     return localStorage.getItem('jy_deepseek_api_key') || '';
   });
-  const [isDoubleColumn, setIsDoubleColumn] = useState(false);
-  
   // Editor State
   const [content, setContent] = useState(
     '1. What is 25% of 200?\n(A) 25\n(B) 50\n(C) 75\n(D) 100\n\n2. Solve for x: $2x + 5 = 15$\n(A) 2\n(B) 4\n(C) 5\n(D) 10\n\n3. The perimeter of a rectangle is 40 cm. If its length is 12 cm, what is its breadth?\n(A) 8 cm\n(B) 10 cm\n(C) 12 cm\n(D) 16 cm'
@@ -606,20 +604,6 @@ export const NavodayaPaperGeneratorPage = () => {
             <h3 className="font-semibold text-slate-700 flex items-center gap-2">
               Live Preview
             </h3>
-            <div className="flex bg-slate-200 rounded-lg p-1">
-              <button 
-                onClick={() => setIsDoubleColumn(false)}
-                className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${!isDoubleColumn ? 'bg-white shadow text-blue-600' : 'text-slate-600 hover:text-slate-800'}`}
-              >
-                Single View
-              </button>
-              <button 
-                onClick={() => setIsDoubleColumn(true)}
-                className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${isDoubleColumn ? 'bg-white shadow text-blue-600' : 'text-slate-600 hover:text-slate-800'}`}
-              >
-                Double View
-              </button>
-            </div>
           </div>
           <div className="flex justify-center p-8 print:p-0">
             <div className="paper-zoom origin-top transition-transform">
@@ -632,7 +616,7 @@ export const NavodayaPaperGeneratorPage = () => {
               maxMarks={maxMarks}
               time={time}
               instructions={instructions.split('\n').filter(i => i.trim() !== '')}
-              isDoubleColumn={isDoubleColumn}
+              isDoubleColumn={false}
               inlineImages={inlineImages}
               onImageUpdate={(id, updates) => setInlineImages(prev => ({ ...prev, [id]: { ...prev[id], ...updates } }))}
               onImageDelete={(id) => {
