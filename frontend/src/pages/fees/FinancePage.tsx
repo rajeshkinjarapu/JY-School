@@ -205,63 +205,68 @@ export const FinancePage: React.FC = () => {
   const fetchHeavyData = async () => {
     try {
       const isStudent = user?.role === 'STUDENT';
-      const [payRes, studRes]: any = await Promise.allSettled([
-        api.get('/api/fees/payments?limit=5000'),
-        isStudent ? Promise.resolve({ data: [] }) : api.get('/api/students?limit=5000', { timeout: 60000 }),
-      ]);
 
-      let paymentArray = payments;
-      let newStudents = students;
+      // Always fetch students fresh — fetch ALL pages if needed
+      let allStudents: any[] = [];
+      if (!isStudent) {
+        try {
+          // First fetch with large limit to get total count
+          const firstRes: any = await api.get('/api/students?limit=1000&page=1', { timeout: 60000 });
+          const firstPayload = firstRes?.data?.data || firstRes?.data || [];
+          const pagination = firstRes?.data?.pagination || {};
+          const totalPages = pagination.totalPages || 1;
 
-      if (payRes.status === 'rejected') {
-        console.error("Failed to load payments:", payRes.reason);
-        toast.error("Failed to load payments: " + (payRes.reason?.message || "Network error"));
+          allStudents = Array.isArray(firstPayload) ? firstPayload : [];
+
+          // Fetch remaining pages if more than 1 page
+          if (totalPages > 1) {
+            const pagePromises = [];
+            for (let p = 2; p <= totalPages; p++) {
+              pagePromises.push(api.get(`/api/students?limit=1000&page=${p}`, { timeout: 60000 }));
+            }
+            const pageResults = await Promise.allSettled(pagePromises);
+            pageResults.forEach((r: any) => {
+              if (r.status === 'fulfilled') {
+                const d = r.value?.data?.data || r.value?.data || [];
+                if (Array.isArray(d)) allStudents = [...allStudents, ...d];
+              }
+            });
+          }
+        } catch (studErr: any) {
+          console.error('Failed to load students:', studErr);
+          toast.error('Failed to load students: ' + (studErr?.message || 'Network error'));
+        }
       }
 
-      if (studRes.status === 'rejected') {
-        console.error("Failed to load students:", studRes.reason);
-        toast.error("Failed to load students: " + (studRes.reason?.message || "Network error"));
+      const [payRes]: any = await Promise.allSettled([
+        api.get('/api/fees/payments?limit=5000'),
+      ]);
+
+      let paymentArray: any[] = [];
+
+      if (payRes.status === 'rejected') {
+        console.error('Failed to load payments:', payRes.reason);
+        toast.error('Failed to load payments: ' + (payRes.reason?.message || 'Network error'));
       }
 
       if (payRes.status === 'fulfilled') {
         let payload = payRes.value?.data || payRes.value || [];
         if (payload && payload.success && Array.isArray(payload.data)) {
-           payload = payload.data;
+          payload = payload.data;
         } else if (payload && Array.isArray(payload.data)) {
-           payload = payload.data;
+          payload = payload.data;
         }
         paymentArray = Array.isArray(payload) ? payload : [];
         setPayments(paymentArray);
       }
 
-      if (studRes.status === 'fulfilled') {
-        let payload = studRes.value?.data || studRes.value || [];
-        if (payload && payload.data && Array.isArray(payload.data)) {
-           payload = payload.data;
-        } else if (payload && payload.success && Array.isArray(payload.data)) {
-           payload = payload.data;
-        } else if (payload && Array.isArray(payload.data)) {
-           payload = payload.data;
-        }
-        newStudents = Array.isArray(payload) ? payload : [];
-        
-        // Direct fallback if empty array returned from limit query
-        if (newStudents.length === 0 && !isStudent) {
-          try {
-            const fallbackRes: any = await api.get('/api/students', { timeout: 60000 });
-            const fbData = fallbackRes?.data?.data || fallbackRes?.data || fallbackRes || [];
-            if (Array.isArray(fbData) && fbData.length > 0) {
-              newStudents = fbData;
-            }
-          } catch(err) {}
-        }
-        
-        setStudents(newStudents);
+      if (allStudents.length > 0) {
+        setStudents(allStudents);
       }
 
       const cached = JSON.parse(localStorage.getItem('fin_dashboard_cache') || '{}');
-      localStorage.setItem('fin_dashboard_cache', JSON.stringify({ ...cached, payments: paymentArray, students: newStudents }));
-    } catch(e) {}
+      localStorage.setItem('fin_dashboard_cache', JSON.stringify({ ...cached, payments: paymentArray, students: allStudents }));
+    } catch(e) { console.error('fetchHeavyData error:', e); }
   };
 
   const fetchData = async () => {
@@ -302,7 +307,9 @@ export const FinancePage: React.FC = () => {
         setBaseLoading(false);
       });
     }
-    if (needsHeavy && (!heavyDataLoaded || students.length === 0)) {
+
+    // Always re-fetch students when class-wise-fee-report tab opens
+    if (needsHeavy) {
       setHeavyLoading(true);
       fetchHeavyData().then(() => {
         setHeavyDataLoaded(true);
