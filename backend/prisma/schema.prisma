@@ -46,7 +46,6 @@ model User {
   pushSubscriptions PushSubscription[]
   notifications    Notification[]
   transportStaff   TransportStaff?
-  notifications    Notification[]
 
   @@index([email])
   @@index([role])
