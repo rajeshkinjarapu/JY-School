@@ -512,12 +512,13 @@ ${paperContent}`;
                       : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
                   }`}
                 >
-                  <Icon className="w-4 h-4" />
-                  {tab.label}
-                </button>
-              );
-            })}
+                <Icon className="w-4 h-4" />
+                {tab.label}
+              </button>
+            );
+          })}
           </div>
+        </div>
         )}
 
         {activeTab === 'landing' && (
