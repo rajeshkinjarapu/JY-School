@@ -412,6 +412,7 @@ export const QuestionPaperGeneratorPage = () => {
   // Load paper from DB if editing
   useEffect(() => {
     if (!paperId) return;
+    setActiveTab('generator');
     const loadPaper = async () => {
       try {
         toast.loading('Loading paper...', { id: 'load' });

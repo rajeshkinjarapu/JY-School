@@ -388,6 +388,7 @@ export const NavodayaPaperGeneratorPage = () => {
 
   useEffect(() => {
     if (!paperId) return;
+    setActiveTab('generator');
     const loadPaper = async () => {
       try {
         toast.loading('Loading paper...', { id: 'load' });

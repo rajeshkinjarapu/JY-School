@@ -104,7 +104,14 @@ export const SavedPapersPage = ({ isEmbedded = false, editPath }: { isEmbedded?:
             setIsGeneratingPDF(true);
             const element = document.getElementById('paper-preview-container');
             if (element) {
-              const canvas = await html2canvas(element, { scale: 2 });
+              const canvas = await html2canvas(element, { 
+                scale: 2,
+                useCORS: true,
+                onclone: (doc) => {
+                  const el = doc.getElementById('paper-preview-container');
+                  if (el) el.classList.remove('paper-zoom', 'transition-transform');
+                }
+              });
               const imgData = canvas.toDataURL('image/png');
               const pdf = new jsPDF('p', 'mm', 'a4');
               const pdfWidth = pdf.internal.pageSize.getWidth();
@@ -265,21 +272,23 @@ export const SavedPapersPage = ({ isEmbedded = false, editPath }: { isEmbedded?:
   return (
     <div className={isEmbedded ? "w-full h-full flex flex-col" : "flex flex-col h-full bg-slate-100"} style={isEmbedded ? {} : { minHeight: 'calc(100vh - 64px)' }}>
       {!isEmbedded && (
-        <PageHeader 
-          title="Saved AI Papers" 
-          icon={<BookOpen className="w-5 h-5" />} 
-          action={
-            <button
-              onClick={() => navigate(basePath)}
-              className="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-xl font-bold shadow-lg text-sm hover:-translate-y-0.5 transition-all duration-200"
-            >
-              <Plus className="w-4 h-4" />
-              New Paper
-            </button>
-          }
-        />
+        <div className="print:hidden">
+          <PageHeader 
+            title="Saved AI Papers" 
+            icon={<BookOpen className="w-5 h-5" />} 
+            action={
+              <button
+                onClick={() => navigate(basePath)}
+                className="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-xl font-bold shadow-lg text-sm hover:-translate-y-0.5 transition-all duration-200"
+              >
+                <Plus className="w-4 h-4" />
+                New Paper
+              </button>
+            }
+          />
+        </div>
       )}
-      <div className={`flex-1 overflow-auto ${isEmbedded ? 'p-0' : 'p-3 sm:p-4'} animate-fade-in pb-16`}>
+      <div className={`flex-1 overflow-auto ${isEmbedded ? 'p-0' : 'p-3 sm:p-4'} animate-fade-in pb-16 print:hidden`}>
         {/* Controls Bar */}
         <div className="bg-white/70 backdrop-blur-xl border border-slate-200/60 p-4 rounded-3xl mb-6 shadow-sm flex flex-col xl:flex-row xl:items-center gap-4 justify-between">
           <div className="flex flex-col sm:flex-row sm:items-center gap-4 flex-1">
@@ -520,8 +529,8 @@ export const SavedPapersPage = ({ isEmbedded = false, editPath }: { isEmbedded?:
 
       {/* Quick Preview Modal */}
       {previewPaper && (
-        <div className="fixed inset-0 z-[100] bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6 animate-fade-in print:bg-white print:p-0">
-          <div className="bg-slate-100 rounded-[2.5rem] shadow-2xl w-full max-w-5xl max-h-[95vh] flex flex-col overflow-hidden animate-scale-in border border-slate-100 print:shadow-none print:border-none print:rounded-none print:w-full print:max-w-none print:h-auto print:max-h-none print:overflow-visible">
+        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-md flex items-center justify-center p-4 print:static print:inset-auto print:p-0 print:bg-white print:block sm:p-6 sm:pb-8">
+          <div className="bg-slate-200/50 rounded-[2rem] shadow-2xl w-full max-w-5xl h-full flex flex-col overflow-hidden border border-slate-200/50 print:border-none print:shadow-none print:w-full print:max-w-none print:h-auto print:rounded-none animate-scale-in print:overflow-visible">
             <div className="px-8 py-5 border-b border-slate-200 bg-white flex items-start justify-between flex-shrink-0 print:hidden z-10">
               <div>
                 <div className="flex items-center gap-3 mb-2">
