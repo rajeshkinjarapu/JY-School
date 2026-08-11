@@ -255,13 +255,11 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
         {/* Header Section */}
         <div className="mb-3 border-b-2 border-black pb-2">
           <div className="flex items-center justify-center relative mb-2">
-            {logoBase64 && (
-              <img 
-                src={logoBase64} 
-                alt="Logo" 
-                className="absolute left-0 mt-2 w-24 h-24 object-contain"
-              />
-            )}
+            <img 
+              src={logoBase64 || '/logo.png'} 
+              alt="Logo" 
+              className="absolute left-0 mt-2 w-24 h-24 object-contain"
+            />
             <div className="text-center mt-1">
               <h1 className="text-[1.65rem] font-bold uppercase tracking-wider mb-1 whitespace-nowrap">SRI VENKATESWARA JY SCHOOL</h1>
               <h2 className="text-sm font-semibold mb-1">(IIT-JEE/NEET Foundation – Olympiads)</h2>
