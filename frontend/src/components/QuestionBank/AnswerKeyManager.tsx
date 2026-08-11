@@ -269,6 +269,10 @@ ${selectedPaper.content}`;
       if (data.candidates && data.candidates[0].content.parts[0].text) {
          let text = data.candidates[0].content.parts[0].text;
          let cleanText = text.replace(/```json/gi, '').replace(/```/g, '').trim();
+         const match = cleanText.match(/\[[\s\S]*\]/);
+         if (match) {
+           cleanText = match[0];
+         }
          let aiAnswers: Answer[] = JSON.parse(cleanText);
          
          // Merge AI answers into current answers
@@ -317,14 +321,31 @@ ${selectedPaper.content}`;
         </div>
         
         <div className="flex flex-wrap items-center gap-4">
+          <div className="relative flex-1 min-w-[250px] flex items-center gap-3">
+            <div className="relative flex-1">
+              <select
+                value={selectedPaperId}
+                onChange={(e) => { setSelectedPaperId(e.target.value); }}
+                className="appearance-none w-full pl-10 pr-10 py-2.5 bg-white border border-indigo-200 rounded-xl text-sm font-bold text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 cursor-pointer"
+              >
+                <option value="">Select Exam Paper...</option>
+                {filteredPapers.map(p => (
+                  <option key={p.id} value={p.id}>{p.examName}</option>
+                ))}
+              </select>
+              <FileText className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-indigo-400" />
+              <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+            </div>
+          </div>
+          
           <div className="relative">
             <select
               value={selectedClass}
-              onChange={(e) => { setSelectedClass(e.target.value); setSelectedPaperId(''); }}
+              onChange={(e) => { setSelectedClass(e.target.value); }}
               className="appearance-none pl-4 pr-10 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 min-w-[150px] cursor-pointer"
             >
               <option value="">All Classes</option>
-              {classes.map(c => <option key={c} value={c}>{c}</option>)}
+              {classes.filter(c => c !== 'General').map(c => <option key={c} value={c}>{c}</option>)}
             </select>
             <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
           </div>
@@ -332,7 +353,7 @@ ${selectedPaper.content}`;
           <div className="relative">
             <select
               value={selectedSubject}
-              onChange={(e) => { setSelectedSubject(e.target.value); setSelectedPaperId(''); }}
+              onChange={(e) => { setSelectedSubject(e.target.value); }}
               className="appearance-none pl-4 pr-10 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 min-w-[150px] cursor-pointer"
             >
               <option value="">All Subjects</option>
@@ -341,31 +362,25 @@ ${selectedPaper.content}`;
             <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
           </div>
 
-          <div className="relative flex-1 min-w-[250px] flex items-center gap-3">
-            <div className="relative flex-1">
-              <select
-                value={selectedPaperId}
-                onChange={(e) => setSelectedPaperId(e.target.value)}
-                className="appearance-none w-full pl-10 pr-10 py-2.5 bg-white border border-indigo-200 rounded-xl text-sm font-bold text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 cursor-pointer"
-              >
-                <option value="">Select Exam Paper...</option>
-                {filteredPapers.map(p => (
-                  <option key={p.id} value={p.id}>{p.examName} {p.examSubject ? `(${p.examSubject})` : ''}</option>
-                ))}
-              </select>
-              <FileText className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-indigo-400" />
-              <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-            </div>
-            
+          <div className="flex items-center gap-2 shrink-0 ml-auto">
             {selectedPaperId && (
-              <button
-                onClick={handleAIGenerate}
-                disabled={isGeneratingAI}
-                className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-violet-600 to-indigo-600 text-white rounded-xl font-bold shadow-sm shadow-indigo-500/25 hover:shadow-md hover:shadow-indigo-500/30 hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
-              >
-                {isGeneratingAI ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Sparkles className="w-4 h-4" />}
-                <span className="hidden sm:inline">AI Auto Generate</span>
-              </button>
+              <>
+                <button
+                  onClick={handleAIGenerate}
+                  disabled={isGeneratingAI}
+                  className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-violet-600 to-indigo-600 text-white rounded-xl font-bold shadow-sm shadow-indigo-500/25 hover:shadow-md hover:shadow-indigo-500/30 hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
+                >
+                  {isGeneratingAI ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                  <span className="hidden sm:inline">AI Auto Generate</span>
+                </button>
+                <button
+                  onClick={() => window.print()}
+                  className="flex items-center gap-2 px-5 py-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl font-bold shadow-sm hover:bg-slate-50 hover:text-slate-800 transition-all print:hidden"
+                >
+                  <Printer className="w-4 h-4" />
+                  Print
+                </button>
+              </>
             )}
           </div>
         </div>
@@ -445,14 +460,7 @@ ${selectedPaper.content}`;
             </div>
             
             {/* Save Button at Bottom */}
-            <div className="p-6 bg-slate-50 border-t border-slate-200 flex flex-wrap items-center justify-between gap-3">
-              <button
-                onClick={() => window.print()}
-                className="flex items-center gap-2 px-6 py-3 bg-white border border-slate-200 text-slate-600 rounded-xl font-bold shadow-sm hover:bg-slate-50 hover:text-slate-800 transition-all print:hidden"
-              >
-                <Printer className="w-4 h-4" />
-                Print Answer Key
-              </button>
+            <div className="p-6 bg-slate-50 border-t border-slate-200 flex flex-wrap items-center justify-center gap-3">
               
               <button
                 onClick={handleSave}

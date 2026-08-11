@@ -812,3 +812,10 @@ model PushSubscription {
   @@index([userId])
 }
 
+model AnswerKey {
+  id        String   @id @default(uuid())
+  paperId   String   @unique
+  answers   String   @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

@@ -15,7 +15,7 @@ export const NavodayaPaperGeneratorPage = () => {
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
   const paperId = searchParams.get('id');
-  const [activeTab, setActiveTab] = useState<'generator' | 'saved' | 'answer-key'>('generator');
+  const [activeTab, setActiveTab] = useState<'landing' | 'generator' | 'saved' | 'answer-key'>(paperId ? 'generator' : 'landing');
   const [isSaving, setIsSaving] = useState(false);
   
   // Paper Settings State
@@ -449,8 +449,15 @@ export const NavodayaPaperGeneratorPage = () => {
       />
       
       {/* Navigation Tabs */}
-      <div className="px-6 border-b border-slate-200 bg-white print:hidden">
-        <div className="flex gap-6 max-w-[1920px] mx-auto">
+      {activeTab !== 'landing' && (
+        <div className="px-6 border-b border-slate-200 bg-white print:hidden">
+          <div className="flex gap-6 max-w-[1920px] mx-auto">
+            <button
+              onClick={() => { setActiveTab('landing'); navigate('.', { replace: true }); }}
+              className="flex items-center gap-2 px-1 py-4 border-b-2 font-bold transition-all text-sm border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300"
+            >
+              <ChevronLeft className="w-4 h-4" /> Home
+            </button>
           {[
             { id: 'generator', label: 'Generator', icon: FileText },
             { id: 'saved', label: 'Saved Papers', icon: FileText },
@@ -473,8 +480,47 @@ export const NavodayaPaperGeneratorPage = () => {
               </button>
             );
           })}
+          </div>
         </div>
-      </div>
+      )}
+
+      {activeTab === 'landing' && (
+        <div className="flex-1 p-8 max-w-5xl mx-auto w-full flex flex-col items-center justify-center animate-fade-in">
+          <div className="text-center mb-12">
+            <h1 className="text-4xl font-black text-slate-800 tracking-tight">Navodaya Paper Hub</h1>
+            <p className="text-slate-500 mt-3 text-lg font-medium">What would you like to do today?</p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full">
+            {/* Box 1 */}
+            <button onClick={() => setActiveTab('generator')} className="group flex flex-col items-center p-8 bg-white rounded-3xl border border-slate-200 hover:border-indigo-300 hover:shadow-2xl hover:shadow-indigo-500/10 transition-all text-center hover:-translate-y-1">
+              <div className="w-20 h-20 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-indigo-600 group-hover:text-white transition-all shadow-sm">
+                <FileText className="w-10 h-10" />
+              </div>
+              <h3 className="text-xl font-black text-slate-800 mb-2">Paper Generator</h3>
+              <p className="text-sm text-slate-500 font-medium">Create a new Navodaya exam paper from scratch or using AI.</p>
+            </button>
+
+            {/* Box 2 */}
+            <button onClick={() => setActiveTab('saved')} className="group flex flex-col items-center p-8 bg-white rounded-3xl border border-slate-200 hover:border-emerald-300 hover:shadow-2xl hover:shadow-emerald-500/10 transition-all text-center hover:-translate-y-1">
+              <div className="w-20 h-20 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-emerald-500 group-hover:text-white transition-all shadow-sm">
+                <BookOpen className="w-10 h-10" />
+              </div>
+              <h3 className="text-xl font-black text-slate-800 mb-2">Saved Papers</h3>
+              <p className="text-sm text-slate-500 font-medium">View, edit, or print your previously generated Navodaya papers.</p>
+            </button>
+
+            {/* Box 3 */}
+            <button onClick={() => setActiveTab('answer-key')} className="group flex flex-col items-center p-8 bg-white rounded-3xl border border-slate-200 hover:border-amber-300 hover:shadow-2xl hover:shadow-amber-500/10 transition-all text-center hover:-translate-y-1">
+              <div className="w-20 h-20 bg-amber-50 text-amber-500 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-amber-500 group-hover:text-white transition-all shadow-sm">
+                <Key className="w-10 h-10" />
+              </div>
+              <h3 className="text-xl font-black text-slate-800 mb-2">Answer Keys</h3>
+              <p className="text-sm text-slate-500 font-medium">Manage and auto-generate answer keys for your papers.</p>
+            </button>
+          </div>
+        </div>
+      )}
 
       {activeTab === 'saved' && (
         <div className="flex-1 p-4 max-w-[1920px] mx-auto w-full">
