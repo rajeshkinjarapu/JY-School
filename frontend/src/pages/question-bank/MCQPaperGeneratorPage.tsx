@@ -623,19 +623,27 @@ export const MCQPaperGeneratorPage = () => {
             </h3>
             
             <div className="flex gap-2 mt-4 overflow-x-auto pb-2 custom-scrollbar">
-              {(selectedSubjects.length > 0 ? selectedSubjects : ['General']).map(subj => (
-                <button
-                  key={subj}
-                  onClick={() => setActiveSubjectTab(subj)}
-                  className={`px-4 py-2 rounded-lg font-medium text-sm transition-all whitespace-nowrap flex-shrink-0 ${
-                    activeSubjectTab === subj 
-                      ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20' 
-                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                  }`}
-                >
-                  {subj}
-                </button>
-              ))}
+              {(selectedSubjects.length > 0 ? selectedSubjects : ['General']).map(subj => {
+                const hasContent = subjectContents[subj] && subjectContents[subj].trim() !== '';
+                return (
+                  <button
+                    key={subj}
+                    onClick={() => setActiveSubjectTab(subj)}
+                    className={`px-4 py-2 rounded-lg font-medium text-sm transition-all whitespace-nowrap flex-shrink-0 flex items-center gap-1.5 border ${
+                      activeSubjectTab === subj 
+                        ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-500/20' 
+                        : hasContent
+                          ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100/80 shadow-sm'
+                          : 'bg-slate-100 text-slate-600 border-transparent hover:bg-slate-200'
+                    }`}
+                  >
+                    {subj}
+                    {hasContent && (
+                      <span className={`w-1.5 h-1.5 rounded-full ${activeSubjectTab === subj ? 'bg-white' : 'bg-emerald-500'}`} />
+                    )}
+                  </button>
+                );
+              })}
             </div>
             
             <textarea
