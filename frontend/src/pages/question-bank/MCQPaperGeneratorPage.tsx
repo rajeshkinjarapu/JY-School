@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ChevronLeft, Sparkles, Upload, Save, Printer, FileText, Settings, Maximize, X, Wand2, BookOpen, ImagePlus } from 'lucide-react';
+import { ChevronLeft, Sparkles, Upload, Save, Printer, FileText, Settings, Maximize, X, Wand2, BookOpen, ImagePlus, HelpCircle } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { LiveLatexPreview } from '../../components/QuestionBank/LiveLatexPreview';
@@ -18,6 +18,7 @@ export const MCQPaperGeneratorPage = () => {
   
   // Paper Settings State
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isLatexHelpOpen, setIsLatexHelpOpen] = useState(false);
   const [examName, setExamName] = useState<string>(() => localStorage.getItem('mcq_exam_name') || 'GRAND TEST');
   const [examClass, setExamClass] = useState<string>(() => localStorage.getItem('mcq_exam_class') || '10th Class');
   const [selectedSubjects, setSelectedSubjects] = useState<string[]>(() => {
@@ -612,6 +613,12 @@ export const MCQPaperGeneratorPage = () => {
                 >
                   <Wand2 className="w-3.5 h-3.5" /> Auto-Align Format
                 </button>
+                <button 
+                  onClick={() => setIsLatexHelpOpen(true)}
+                  className="px-3 py-1.5 bg-amber-50 text-amber-700 text-xs font-bold rounded-lg hover:bg-amber-100 transition-colors flex items-center gap-1.5 border border-amber-200 shadow-sm ml-1"
+                >
+                  <HelpCircle className="w-3.5 h-3.5" /> Formatting Guide
+                </button>
               </div>
             </h3>
             
@@ -996,6 +1003,69 @@ export const MCQPaperGeneratorPage = () => {
                 className="px-6 py-2 bg-blue-600 text-white font-medium rounded-xl hover:bg-blue-700 transition-colors shadow-sm"
               >
                 Save Settings
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* LaTeX Help Modal */}
+      {isLatexHelpOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setIsLatexHelpOpen(false)}></div>
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl relative z-10 overflow-hidden flex flex-col max-h-[90vh]">
+            <div className="flex justify-between items-center p-6 border-b border-slate-100 bg-slate-50/50">
+              <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+                <HelpCircle className="text-amber-500 w-6 h-6" /> LaTeX Formatting Guide
+              </h2>
+              <button onClick={() => setIsLatexHelpOpen(false)} className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="p-6 space-y-6 overflow-y-auto custom-scrollbar text-sm text-slate-700">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                  <h3 className="font-bold text-slate-800 mb-2 border-b pb-1">Text Formatting</h3>
+                  <ul className="space-y-3 font-mono">
+                    <li><span className="text-blue-600">\textbf&#123;Bold Text&#125;</span> &rarr; <strong>Bold Text</strong></li>
+                    <li><span className="text-blue-600">\textit&#123;Italic Text&#125;</span> &rarr; <em>Italic Text</em></li>
+                    <li><span className="text-blue-600">\underline&#123;Underline&#125;</span> &rarr; <u>Underline</u></li>
+                  </ul>
+                </div>
+                
+                <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                  <h3 className="font-bold text-slate-800 mb-2 border-b pb-1">Math & Equations</h3>
+                  <ul className="space-y-3 font-mono">
+                    <li>Inline math: <span className="text-blue-600">$x^2 + y^2 = z^2$</span></li>
+                    <li>Fractions: <span className="text-blue-600">$\frac&#123;1&#125;&#123;2&#125;$</span></li>
+                    <li>Roots: <span className="text-blue-600">$\sqrt&#123;x&#125;$</span></li>
+                    <li>Angles: <span className="text-blue-600">$45^\circ$</span></li>
+                  </ul>
+                </div>
+              </div>
+              
+              <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                <h3 className="font-bold text-slate-800 mb-2 border-b pb-1">Inserting Images</h3>
+                <p className="mb-2">Click the <strong>Insert Image</strong> button above the editor. An image code will be inserted automatically.</p>
+                <div className="font-mono text-blue-600 bg-white p-2 rounded border border-slate-200">
+                  [IMG:123456789]
+                </div>
+                <p className="mt-2 text-xs text-slate-500">You can drag and drop this code block anywhere in the text to position the image.</p>
+              </div>
+              
+              <div className="bg-blue-50 text-blue-800 p-4 rounded-xl border border-blue-100">
+                <h3 className="font-bold mb-1">Tip: Auto-Align Format</h3>
+                <p>Use the <strong>Auto-Align Format</strong> button to automatically fix the spacing and alignment of all multiple-choice options (A, B, C, D) in your text.</p>
+              </div>
+            </div>
+            
+            <div className="px-6 py-4 border-t border-slate-100 bg-slate-50 flex justify-end">
+              <button 
+                onClick={() => setIsLatexHelpOpen(false)}
+                className="px-6 py-2 bg-slate-800 text-white font-medium rounded-xl hover:bg-slate-900 transition-colors shadow-sm"
+              >
+                Close
               </button>
             </div>
           </div>
