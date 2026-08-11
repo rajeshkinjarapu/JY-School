@@ -205,7 +205,7 @@ export const NavodayaPaperGeneratorPage = () => {
           formData.append('apiKey', geminiApiKey);
         }
 
-        const response = await api.post('/api/question-bank/questions/import-docx', formData, {
+        const response = await api.post('/api/questions/import-docx', formData, {
           headers: { 'Content-Type': 'multipart/form-data' },
           timeout: 120000, 
         });
