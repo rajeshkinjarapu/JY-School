@@ -30,7 +30,8 @@ const parseQuestionsWithSubjects = (content: string): { qNo: number, subject: st
       continue;
     }
     
-    const match = line.match(/^(\d+)[\.\)]\s/);
+    // Match optional whitespace, followed by numbers, followed by dot or parenthesis
+    const match = line.match(/^\s*(\d+)[\.\)]/);
     if (match) {
       const num = parseInt(match[1], 10);
       questions.push({ qNo: num, subject: currentSubject });
@@ -583,7 +584,7 @@ ${rawText}`;
                       {answers.filter(a => isMatch(a.subject || '', selectedSubject)).map((ans, idx) => (
                         <tr key={ans.qNo} className={`border-b border-slate-100 hover:bg-slate-50/50 transition-colors ${idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/30'}`}>
                           <td className="py-3 px-6 text-sm font-black text-slate-700 text-center border-r border-slate-100">
-                            {ans.qNo}
+                            {idx + 1}
                             {ans.subject && selectedSubject === '' && <div className="text-[9px] font-bold text-slate-400 leading-tight mt-0.5 max-w-[80px] mx-auto truncate" title={ans.subject}>{ans.subject}</div>}
                           </td>
                           <td className="py-3 px-6">
