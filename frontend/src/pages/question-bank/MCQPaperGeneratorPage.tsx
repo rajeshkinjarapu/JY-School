@@ -56,9 +56,10 @@ export const MCQPaperGeneratorPage = () => {
   const [deepseekApiKey, setDeepseekApiKey] = useState<string>(() => localStorage.getItem('jy_deepseek_api_key') || '');
   
   // Editor State
-  const [content, setContent] = useState(
-    '1. What is 25% of 200?\n(A) 25\n(B) 50\n(C) 75\n(D) 100\n\n2. Solve for x: $2x + 5 = 15$\n(A) 2\n(B) 4\n(C) 5\n(D) 10\n\n3. The perimeter of a rectangle is 40 cm. If its length is 12 cm, what is its breadth?\n(A) 8 cm\n(B) 10 cm\n(C) 12 cm\n(D) 16 cm'
-  );
+  const [subjectContents, setSubjectContents] = useState<Record<string, string>>({
+    'Telugu': '1. What is 25% of 200?\n(A) 25\n(B) 50\n(C) 75\n(D) 100\n\n2. Solve for x: $2x + 5 = 15$\n(A) 2\n(B) 4\n(C) 5\n(D) 10\n\n3. The perimeter of a rectangle is 40 cm. If its length is 12 cm, what is its breadth?\n(A) 8 cm\n(B) 10 cm\n(C) 12 cm\n(D) 16 cm'
+  });
+  const [activeSubjectTab, setActiveSubjectTab] = useState<string>('Telugu');
   const [isGenerating, setIsGenerating] = useState(false);
   const containerRef = React.useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -118,29 +119,45 @@ export const MCQPaperGeneratorPage = () => {
   };
 
   const serializeContent = (): string => {
-    if (Object.keys(inlineImages).length === 0) return content;
-    const cleanContent = content.replace(/\[IMG:([a-z0-9]+)\]/g, '');
-    return cleanContent + '\n<!--INLINE_IMAGES:' + JSON.stringify(inlineImages) + '-->';
+    const data = {
+      subjectContents,
+      inlineImages
+    };
+    return "<!--MCQ_DATA_V2-->\n" + JSON.stringify(data);
   };
 
-  const deserializeContent = (raw: string): { text: string; images: Record<string, FloatingImage> } => {
+  const deserializeContent = (raw: string): { textData: Record<string, string>; images: Record<string, FloatingImage> } => {
+    if (raw.startsWith("<!--MCQ_DATA_V2-->\n")) {
+      try {
+        const jsonStr = raw.replace("<!--MCQ_DATA_V2-->\n", "");
+        const parsed = JSON.parse(jsonStr);
+        return { textData: parsed.subjectContents || {}, images: parsed.inlineImages || {} };
+      } catch (e) {
+        console.error("Failed to parse V2 data", e);
+      }
+    }
+
+    // Legacy format
     const imgMatch = raw.match(/\n<!--INLINE_IMAGES:(.*?)-->$/);
+    let migratedImages: Record<string, FloatingImage> = {};
+    let textContent = raw;
+    
     if (imgMatch) {
       try {
         const parsed = JSON.parse(imgMatch[1]);
-        const migrated: Record<string, FloatingImage> = {};
         for (const [id, val] of Object.entries(parsed)) {
           if (typeof val === 'string') {
-            migrated[id] = { dataUrl: val, x: 50, y: 50, width: 200, height: 200 };
+            migratedImages[id] = { dataUrl: val, x: 50, y: 50, width: 200, height: 200 };
           } else {
-            migrated[id] = val as FloatingImage;
+            migratedImages[id] = val as FloatingImage;
           }
         }
-        const text = raw.substring(0, raw.indexOf('\n<!--INLINE_IMAGES:'));
-        return { text: text.replace(/\[IMG:([a-z0-9]+)\]/g, ''), images: migrated };
-      } catch { return { text: raw, images: {} }; }
+        textContent = raw.substring(0, raw.indexOf('\n<!--INLINE_IMAGES:'));
+      } catch { }
     }
-    return { text: raw.replace(/\[IMG:([a-z0-9]+)\]/g, ''), images: {} };
+    
+    textContent = textContent.replace(/\[IMG:([a-z0-9]+)\]/g, '');
+    return { textData: { 'General': textContent }, images: migratedImages };
   };
 
   const handlePrint = () => {
@@ -404,8 +421,18 @@ export const MCQPaperGeneratorPage = () => {
         setExamDate(p.examDate || '');
         setTime(p.time || '');
         setInstructions(p.instructions || '');
-        const { text, images } = deserializeContent(p.content || '');
-        setContent(text);
+        const { textData, images } = deserializeContent(p.content || '');
+        setSubjectContents(textData);
+        if (p.examSubject) {
+          const loadedSubjects = p.examSubject.split(', ');
+          if (loadedSubjects.length > 0 && loadedSubjects[0] !== '') {
+            setActiveSubjectTab(loadedSubjects[0]);
+          } else if (Object.keys(textData).length > 0) {
+            setActiveSubjectTab(Object.keys(textData)[0]);
+          }
+        } else if (Object.keys(textData).length > 0) {
+          setActiveSubjectTab(Object.keys(textData)[0]);
+        }
         setInlineImages(images);
         toast.success('Paper loaded!', { id: 'load' });
       } catch {
@@ -565,13 +592,30 @@ export const MCQPaperGeneratorPage = () => {
                 </button>
               </div>
             </h3>
+            
+            <div className="flex gap-2 mt-4 overflow-x-auto pb-2 custom-scrollbar">
+              {(selectedSubjects.length > 0 ? selectedSubjects : ['General']).map(subj => (
+                <button
+                  key={subj}
+                  onClick={() => setActiveSubjectTab(subj)}
+                  className={`px-4 py-2 rounded-lg font-medium text-sm transition-all whitespace-nowrap flex-shrink-0 ${
+                    activeSubjectTab === subj 
+                      ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20' 
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  }`}
+                >
+                  {subj}
+                </button>
+              ))}
+            </div>
+            
             <textarea
               ref={textareaRef}
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
+              value={subjectContents[activeSubjectTab] || ''}
+              onChange={(e) => setSubjectContents(prev => ({ ...prev, [activeSubjectTab]: e.target.value }))}
               onPaste={handleEditorPaste}
-              className="flex-1 w-full rounded-xl border-slate-200 bg-slate-50 border p-5 font-mono text-base leading-relaxed focus:ring-2 focus:ring-blue-500/20 outline-none resize-none min-h-[400px]"
-              placeholder="1. Question text&#10;(A) Option A&#10;(B) Option B&#10;(C) Option C&#10;(D) Option D&#10;&#10;Tip: You can paste images directly (Ctrl+V) or click 'Insert Image'!"
+              className="flex-1 w-full mt-2 rounded-xl border-slate-200 bg-slate-50 border p-5 font-mono text-base leading-relaxed focus:ring-2 focus:ring-blue-500/20 outline-none resize-none min-h-[400px]"
+              placeholder={`Enter questions for ${activeSubjectTab}...\n1. Question text\n(A) Option A\n(B) Option B\n(C) Option C\n(D) Option D`}
             />
           </div>
         </div>
@@ -587,11 +631,11 @@ export const MCQPaperGeneratorPage = () => {
           <div className="flex justify-center p-8 print:p-0">
             <div className="paper-zoom origin-top transition-transform">
             <LiveLatexPreview 
-              content={content}
+              subjectContents={subjectContents}
               examName={examName}
               examDate={examDate}
               examSubject={examClass}
-              selectedSubjects={selectedSubjects}
+              selectedSubjects={selectedSubjects.length > 0 ? selectedSubjects : ['General']}
               logoBase64={logoBase64}
               maxMarks={maxMarks}
               time={time}

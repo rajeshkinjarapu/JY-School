@@ -12,8 +12,7 @@ export interface FloatingImage {
   height: number;
 }
 
-interface LiveLatexPreviewProps {
-  content: string;
+  subjectContents: Record<string, string>;
   examName: string;
   maxMarks: string;
   time: string;
@@ -29,7 +28,7 @@ interface LiveLatexPreviewProps {
 }
 
 export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
-  content,
+  subjectContents,
   examName,
   maxMarks,
   time,
@@ -106,51 +105,33 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
   };
 
   const parseBlocks = () => {
-    const rawBlocks = content.split(/(\n\n+)/);
+    const elements: JSX.Element[] = [];
     
-    // Count total questions to distribute subjects evenly
-    let totalQuestions = 0;
-    for (let i = 0; i < rawBlocks.length; i += 2) {
-      if (rawBlocks[i].match(/^(\d+)\./)) totalQuestions++;
-    }
-    
-    const elements = [];
-    
-    for (let i = 0; i < rawBlocks.length; i += 2) {
-      const block = rawBlocks[i];
-      if (block.trim() === '') continue; // Skip pure whitespace blocks
+    selectedSubjects.forEach(subject => {
+      const subjectText = subjectContents[subject];
+      if (!subjectText || subjectText.trim() === '') return;
       
-      const separator = i + 1 < rawBlocks.length ? rawBlocks[i + 1] : '';
-      // A standard break is 2 newlines. Any extra newlines (3, 4, etc.) add significant space for writing answers.
-      const extraNewlines = Math.max(0, (separator.match(/\n/g) || []).length - 2);
-      const marginBottom = extraNewlines > 0 ? `calc(0.75rem + ${extraNewlines * 3}rem)` : '0.75rem';
+      const rawBlocks = subjectText.split(/(\n\n+)/);
+      
+      // Add subject heading
+      elements.push(
+        <div key={`heading-${subject}`} className="w-full text-center my-3 break-before-auto">
+          <h3 className="font-bold text-[13pt] underline underline-offset-4 uppercase">{subject}</h3>
+        </div>
+      );
+      
+      for (let i = 0; i < rawBlocks.length; i += 2) {
+        const block = rawBlocks[i];
+        if (block.trim() === '') continue; // Skip pure whitespace blocks
+        
+        const separator = i + 1 < rawBlocks.length ? rawBlocks[i + 1] : '';
+        const extraNewlines = Math.max(0, (separator.match(/\n/g) || []).length - 2);
+        const marginBottom = extraNewlines > 0 ? `calc(0.75rem + ${extraNewlines * 3}rem)` : '0.75rem';
 
-      const hasOptions = block.includes('(A)') && block.includes('(B)') && block.includes('(C)') && block.includes('(D)');
+        const hasOptions = block.includes('(A)') && block.includes('(B)') && block.includes('(C)') && block.includes('(D)');
 
-      let renderHeading = null;
-      let questionNumber = 0;
-      const qNumMatch = block.match(/^(\d+)\./);
-      if (qNumMatch) {
-        questionNumber = parseInt(qNumMatch[1], 10);
-        if (selectedSubjects.length > 0 && totalQuestions > 0) {
-          const questionsPerSubject = Math.ceil(totalQuestions / selectedSubjects.length);
-          if ((questionNumber - 1) % questionsPerSubject === 0) {
-            const subjectIndex = Math.floor((questionNumber - 1) / questionsPerSubject);
-            if (subjectIndex < selectedSubjects.length) {
-              renderHeading = selectedSubjects[subjectIndex];
-            }
-          }
-        }
-      }
-
-      const blockContent = (
-        <>
-          {renderHeading && (
-            <div className="w-full text-center my-3 break-before-auto">
-              <h3 className="font-bold text-[13pt] underline underline-offset-4 uppercase">{renderHeading}</h3>
-            </div>
-          )}
-
+        const blockContent = (
+          <React.Fragment key={`${subject}-${i}`}>
           {!hasOptions ? (
             (() => {
               const qNumMatch2 = block.match(/^(\d+)\.\s*/);
@@ -232,15 +213,17 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
               );
             })()
           )}
-        </>
-      );
-      
-      elements.push(
-        <div key={i} style={{ marginBottom }}>
-          {blockContent}
-        </div>
-      );
-    }
+          </React.Fragment>
+        );
+
+        elements.push(
+          <div key={`${subject}-block-${i}`} className="w-full relative group" style={{ marginBottom }}>
+            {blockContent}
+          </div>
+        );
+      }
+    });
+    
     return elements;
   };
 
