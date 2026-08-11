@@ -523,8 +523,71 @@ ${rawText}`;
   return (
     <div className="flex flex-col h-full bg-[#f8fafc] animate-fade-in pb-16 min-h-[80vh] rounded-[2rem] border border-slate-200 shadow-sm overflow-hidden">
       
+      {/* Dynamic Print CSS */}
+      <style dangerouslySetInnerHTML={{__html: `
+        @media print {
+          /* Hide UI wrappers */
+          html, body {
+            background: #fff !important;
+            color: #000 !important;
+          }
+          header, nav, aside, footer, button, .print\\:hidden, .no-print {
+            display: none !important;
+          }
+          /* Expand containers */
+          .flex-col, .bg-[#f8fafc], .rounded-\\[2rem\\], .border {
+            border: none !important;
+            box-shadow: none !important;
+            background: transparent !important;
+            border-radius: 0 !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            height: auto !important;
+            min-height: 0 !important;
+          }
+          .max-w-4xl {
+            max-width: 100% !important;
+            width: 100% !important;
+            margin: 0 auto !important;
+          }
+          /* Print table styling */
+          table {
+            border-collapse: collapse !important;
+            width: 100% !important;
+            margin-top: 15px !important;
+          }
+          th, td {
+            border: 1.5px solid #000 !important;
+            padding: 10px !important;
+            text-align: center !important;
+            vertical-align: middle !important;
+            font-size: 14px !important;
+          }
+          th {
+            background-color: #f8fafc !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+            font-weight: 800 !important;
+          }
+          td {
+            font-weight: 700 !important;
+          }
+        }
+      `}} />
+      
+      {/* Print-only Header */}
+      <div className="hidden print:block mb-8 text-center border-b-2 border-slate-900 pb-4">
+        <h1 className="text-3xl font-black uppercase tracking-wider text-slate-900">JY SCHOOL</h1>
+        <h2 className="text-xl font-bold uppercase tracking-wide text-slate-700 mt-1">ANSWER KEY</h2>
+        <div className="grid grid-cols-3 gap-4 mt-6 text-sm text-slate-800 font-bold border-t border-slate-200 pt-4">
+          <div><span className="text-slate-500 font-medium">Exam Name:</span> {selectedPaper?.examName}</div>
+          <div><span className="text-slate-500 font-medium">Class:</span> {selectedClass || selectedPaper?.examClass || 'General'}</div>
+          <div><span className="text-slate-500 font-medium">Subject:</span> {selectedSubject || selectedPaper?.examSubject || 'General'}</div>
+        </div>
+      </div>
+
       {/* Header & Filters */}
-      <div className="bg-white/80 backdrop-blur-xl border-b border-slate-200/80 p-6 flex flex-col gap-5">
+      <div className="bg-white/80 backdrop-blur-xl border-b border-slate-200/80 p-6 flex flex-col gap-5 print:hidden">
 
         <div className="flex flex-wrap items-center gap-4">
           <div className="relative">
@@ -657,7 +720,7 @@ ${rawText}`;
                       <tr className="bg-slate-50 border-b border-slate-200">
                         <th className="py-3 px-6 text-xs font-black uppercase tracking-wider text-slate-500 w-24 text-center border-r border-slate-200">Q.No</th>
                         <th className="py-3 px-6 text-xs font-black uppercase tracking-wider text-slate-500">Correct Answer Option</th>
-                        <th className="py-3 px-6 text-xs font-black uppercase tracking-wider text-slate-500 w-20 text-center">Status</th>
+                        <th className="py-3 px-6 text-xs font-black uppercase tracking-wider text-slate-500 w-20 text-center print:hidden">Status</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -668,7 +731,7 @@ ${rawText}`;
                             {ans.subject && selectedSubject === '' && <div className="text-[9px] font-bold text-slate-400 leading-tight mt-0.5 max-w-[80px] mx-auto truncate" title={ans.subject}>{ans.subject}</div>}
                           </td>
                           <td className="py-3 px-6">
-                            <div className="relative max-w-[200px]">
+                            <div className="relative max-w-[200px] print:hidden mx-auto">
                               <select
                                 value={ans.answer}
                                 onChange={(e) => handleAnswerChange(ans.qNo, e.target.value)}
@@ -683,8 +746,9 @@ ${rawText}`;
                               </select>
                               <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
                             </div>
+                            <span className="hidden print:block font-bold text-center text-lg">{ans.answer || '-'}</span>
                           </td>
-                          <td className="py-3 px-6 text-center">
+                          <td className="py-3 px-6 text-center print:hidden">
                             {ans.answer ? (
                               <CheckCircle2 className="w-5 h-5 text-emerald-500 mx-auto" />
                             ) : (
