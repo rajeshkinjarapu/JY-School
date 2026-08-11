@@ -259,7 +259,7 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
               <img 
                 src={logoBase64} 
                 alt="Logo" 
-                className="absolute left-0 w-24 h-24 object-contain"
+                className="absolute left-0 mt-2 w-24 h-24 object-contain"
               />
             )}
             <div className="text-center mt-1">
