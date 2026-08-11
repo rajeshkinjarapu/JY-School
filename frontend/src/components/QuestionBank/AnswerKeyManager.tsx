@@ -46,9 +46,9 @@ const parseQuestionsWithSubjects = (content: string): { qNo: number, subject: st
 };
 
 const getRawContentText = (content: string): string => {
-  if (content && content.startsWith("<!--MCQ_DATA_V2-->\n")) {
+  if (content && content.includes("<!--MCQ_DATA_V2-->")) {
     try {
-      const jsonStr = content.replace("<!--MCQ_DATA_V2-->\n", "");
+      const jsonStr = content.replace("<!--MCQ_DATA_V2-->", "").trim();
       const parsed = JSON.parse(jsonStr);
       const subjectContents = parsed.subjectContents || {};
       return Object.entries(subjectContents)
@@ -82,11 +82,20 @@ export const AnswerKeyManager = ({ prefilledPaperId }: { prefilledPaperId?: stri
   const isAdminOrSuperAdmin = user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN';
   const [papers, setPapers] = useState<GeneratedPaper[]>([]);
   
+  // Helper for flexible subject matching
+  const isMatch = (qSubj: string, selSubj: string) => {
+    if (!selSubj) return true;
+    const qSub = (qSubj || '').toLowerCase().trim();
+    const sSub = selSubj.toLowerCase().trim();
+    return qSub === sSub || qSub.includes(sSub) || sSub.includes(qSub);
+  };
+  
   // Filters
   const [selectedClass, setSelectedClass] = useState<string>('');
   const [selectedSubject, setSelectedSubject] = useState<string>('');
   const [selectedPaperId, setSelectedPaperId] = useState<string>('');
   
+  const [manualCount, setManualCount] = useState<number>(50);
   const [answers, setAnswers] = useState<Answer[]>([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -405,6 +414,29 @@ ${rawText}`;
     setAnswers(prev => prev.map(a => a.qNo === qNo ? { ...a, answer: value } : a));
   };
 
+  const handleAddManualQuestions = (count: number) => {
+    const startNum = answers.length > 0 ? Math.max(...answers.map(a => a.qNo)) + 1 : 1;
+    const newAnswers = [...answers];
+    for (let i = 0; i < count; i++) {
+      newAnswers.push({
+        qNo: startNum + i,
+        answer: '',
+        subject: selectedSubject || 'General'
+      });
+    }
+    setAnswers(newAnswers.sort((a, b) => a.qNo - b.qNo));
+    toast.success(`Added ${count} questions manually!`);
+  };
+
+  const handleAddSingleQuestion = () => {
+    const nextNum = answers.length > 0 ? Math.max(...answers.map(a => a.qNo)) + 1 : 1;
+    setAnswers(prev => [...prev, {
+      qNo: nextNum,
+      answer: '',
+      subject: selectedSubject || 'General'
+    }]);
+  };
+
   const selectedPaper = papers.find(p => p.id === selectedPaperId);
 
   return (
@@ -507,65 +539,103 @@ ${rawText}`;
               </div>
             </div>
             
-            {/* Table View */}
-            <div className="w-full overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="bg-slate-50 border-b border-slate-200">
-                    <th className="py-3 px-6 text-xs font-black uppercase tracking-wider text-slate-500 w-24 text-center border-r border-slate-200">Q.No</th>
-                    <th className="py-3 px-6 text-xs font-black uppercase tracking-wider text-slate-500">Correct Answer Option</th>
-                    <th className="py-3 px-6 text-xs font-black uppercase tracking-wider text-slate-500 w-20 text-center">Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {answers.filter(a => !selectedSubject || (a.subject || '').toLowerCase() === selectedSubject.toLowerCase()).map((ans, idx) => (
-                    <tr key={ans.qNo} className={`border-b border-slate-100 hover:bg-slate-50/50 transition-colors ${idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/30'}`}>
-                      <td className="py-3 px-6 text-sm font-black text-slate-700 text-center border-r border-slate-100">
-                        {ans.qNo}
-                        {ans.subject && selectedSubject === '' && <div className="text-[9px] font-bold text-slate-400 leading-tight mt-0.5 max-w-[80px] mx-auto truncate" title={ans.subject}>{ans.subject}</div>}
-                      </td>
-                      <td className="py-3 px-6">
-                        <div className="relative max-w-[200px]">
-                          <select
-                            value={ans.answer}
-                            onChange={(e) => handleAnswerChange(ans.qNo, e.target.value)}
-                            className="appearance-none w-full pl-4 pr-10 py-2 bg-white border border-slate-200 rounded-lg text-sm font-bold text-slate-800 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 cursor-pointer"
-                          >
-                            <option value="">- Select -</option>
-                            <option value="A">A</option>
-                            <option value="B">B</option>
-                            <option value="C">C</option>
-                            <option value="D">D</option>
-                            <option value="BONUS">BONUS / ADD SCORE</option>
-                          </select>
-                          <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-                        </div>
-                      </td>
-                      <td className="py-3 px-6 text-center">
-                        {ans.answer ? (
-                          <CheckCircle2 className="w-5 h-5 text-emerald-500 mx-auto" />
-                        ) : (
-                          <div className="w-5 h-5 rounded-full border-2 border-slate-200 mx-auto" />
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            
-            {/* Save Button at Bottom */}
-            <div className="p-6 bg-slate-50 border-t border-slate-200 flex flex-wrap items-center justify-center gap-3">
-              
-              <button
-                onClick={handleSave}
-                disabled={!selectedPaperId || saving}
-                className="flex items-center gap-2 px-8 py-3 bg-indigo-600 text-white rounded-xl font-bold shadow-xl shadow-indigo-600/20 hover:bg-indigo-700 hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed print:hidden"
-              >
-                {saving ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Save className="w-4 h-4" />}
-                Save Answer Key
-              </button>
-            </div>
+            {answers.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-16 px-6 text-center bg-slate-50">
+                <AlertTriangle className="w-12 h-12 text-amber-500 mb-3" />
+                <h3 className="text-lg font-black text-slate-800">No questions found automatically</h3>
+                <p className="text-sm text-slate-500 mt-1 max-w-md">
+                  We couldn't automatically read any multiple choice questions from this paper. You can generate the question table rows manually below.
+                </p>
+                
+                <div className="flex items-center gap-3 mt-6">
+                  <div className="flex items-center border border-slate-200 rounded-xl bg-white px-3 py-2 shadow-sm">
+                    <span className="text-xs font-bold text-slate-500 mr-2">Number of Questions:</span>
+                    <input
+                      type="number"
+                      min="1"
+                      max="200"
+                      value={manualCount}
+                      onChange={(e) => setManualCount(Math.max(1, parseInt(e.target.value) || 1))}
+                      className="w-16 font-bold text-sm text-slate-700 outline-none text-center"
+                    />
+                  </div>
+                  <button
+                    onClick={() => handleAddManualQuestions(manualCount)}
+                    className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm rounded-xl shadow-md transition-all flex items-center gap-1.5"
+                  >
+                    + Add Questions Manually
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <>
+                {/* Table View */}
+                <div className="w-full overflow-x-auto">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="bg-slate-50 border-b border-slate-200">
+                        <th className="py-3 px-6 text-xs font-black uppercase tracking-wider text-slate-500 w-24 text-center border-r border-slate-200">Q.No</th>
+                        <th className="py-3 px-6 text-xs font-black uppercase tracking-wider text-slate-500">Correct Answer Option</th>
+                        <th className="py-3 px-6 text-xs font-black uppercase tracking-wider text-slate-500 w-20 text-center">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {answers.filter(a => isMatch(a.subject || '', selectedSubject)).map((ans, idx) => (
+                        <tr key={ans.qNo} className={`border-b border-slate-100 hover:bg-slate-50/50 transition-colors ${idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/30'}`}>
+                          <td className="py-3 px-6 text-sm font-black text-slate-700 text-center border-r border-slate-100">
+                            {ans.qNo}
+                            {ans.subject && selectedSubject === '' && <div className="text-[9px] font-bold text-slate-400 leading-tight mt-0.5 max-w-[80px] mx-auto truncate" title={ans.subject}>{ans.subject}</div>}
+                          </td>
+                          <td className="py-3 px-6">
+                            <div className="relative max-w-[200px]">
+                              <select
+                                value={ans.answer}
+                                onChange={(e) => handleAnswerChange(ans.qNo, e.target.value)}
+                                className="appearance-none w-full pl-4 pr-10 py-2 bg-white border border-slate-200 rounded-lg text-sm font-bold text-slate-800 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 cursor-pointer"
+                              >
+                                <option value="">- Select -</option>
+                                <option value="A">A</option>
+                                <option value="B">B</option>
+                                <option value="C">C</option>
+                                <option value="D">D</option>
+                                <option value="BONUS">BONUS / ADD SCORE</option>
+                              </select>
+                              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                            </div>
+                          </td>
+                          <td className="py-3 px-6 text-center">
+                            {ans.answer ? (
+                              <CheckCircle2 className="w-5 h-5 text-emerald-500 mx-auto" />
+                            ) : (
+                              <div className="w-5 h-5 rounded-full border-2 border-slate-200 mx-auto" />
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                
+                {/* Save & Add Row Buttons at Bottom */}
+                <div className="p-6 bg-slate-50 border-t border-slate-200 flex flex-wrap items-center justify-between gap-3">
+                  <button
+                    onClick={handleAddSingleQuestion}
+                    className="flex items-center gap-2 px-5 py-2.5 bg-white border border-slate-200 text-indigo-600 rounded-xl font-bold hover:bg-slate-50 hover:text-slate-800 transition-all print:hidden"
+                  >
+                    + Add Question Row
+                  </button>
+                  
+                  <button
+                    onClick={handleSave}
+                    disabled={!selectedPaperId || saving}
+                    className="flex items-center gap-2 px-8 py-3 bg-indigo-600 text-white rounded-xl font-bold shadow-xl shadow-indigo-600/20 hover:bg-indigo-700 hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed print:hidden"
+                  >
+                    {saving ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Save className="w-4 h-4" />}
+                    Save Answer Key
+                  </button>
+                </div>
+              </>
+            )}
 
             
           </div>
