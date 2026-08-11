@@ -62,6 +62,34 @@ const getRawContentText = (content: string): string => {
   return content || '';
 };
 
+const getSubjectContentText = (content: string, subject: string): string => {
+  if (!subject) return getRawContentText(content);
+  
+  if (content && content.includes("<!--MCQ_DATA_V2-->")) {
+    try {
+      const jsonStr = content.replace("<!--MCQ_DATA_V2-->", "").trim();
+      const parsed = JSON.parse(jsonStr);
+      const subjectContents = parsed.subjectContents || {};
+      const key = Object.keys(subjectContents).find(k => k.toLowerCase() === subject.toLowerCase());
+      if (key) {
+        return subjectContents[key] || '';
+      }
+      return '';
+    } catch (e) {
+      console.error("Error parsing V2 data in getSubjectContentText", e);
+    }
+  }
+  
+  const escapedSubj = subject.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const regex = new RegExp(`##\\s*${escapedSubj}\\s*\\n([\\s\\S]*?)(?:\\n##|$)`, 'i');
+  const match = content.match(regex);
+  if (match) {
+    return match[1].trim();
+  }
+  
+  return content || '';
+};
+
 interface GeneratedPaper {
   id: string;
   examName: string;
@@ -131,7 +159,7 @@ export const AnswerKeyManager = ({ prefilledPaperId }: { prefilledPaperId?: stri
     } else {
       setAnswers([]);
     }
-  }, [selectedPaperId]);
+  }, [selectedPaperId, selectedSubject]);
 
   const fetchPapers = async () => {
     try {
@@ -233,19 +261,30 @@ export const AnswerKeyManager = ({ prefilledPaperId }: { prefilledPaperId?: stri
       const paper = papers.find(p => p.id === paperId);
       if (!paper) return;
 
-      const parsedQuestions = parseQuestionsWithSubjects(paper.content);
+      const subjectText = getSubjectContentText(paper.content, selectedSubject);
+      const parsedQuestions = parseQuestionsWithSubjects(subjectText);
       
       const initialAnswers: Answer[] = parsedQuestions.map(q => ({
         qNo: q.qNo,
         answer: '',
-        subject: (q.subject && q.subject !== 'General') ? q.subject : paper.examSubject
+        subject: selectedSubject || 'General'
       }));
 
+      let hasAnswersInDB = false;
       try {
         const res = await api.get(`/api/answer-keys/${paperId}`);
         if (res.data && res.data.answers) {
           const dbAnswers: Answer[] = res.data.answers;
-          dbAnswers.forEach(dbA => {
+          
+          const filteredDbAnswers = dbAnswers.filter(dbA => 
+            !selectedSubject || (dbA.subject || '').toLowerCase() === selectedSubject.toLowerCase()
+          );
+          
+          if (filteredDbAnswers.length > 0 && filteredDbAnswers.some(a => a.answer)) {
+            hasAnswersInDB = true;
+          }
+          
+          filteredDbAnswers.forEach(dbA => {
             const index = initialAnswers.findIndex(ia => ia.qNo === dbA.qNo);
             if (index !== -1) {
               initialAnswers[index].answer = dbA.answer || '';
@@ -279,14 +318,14 @@ export const AnswerKeyManager = ({ prefilledPaperId }: { prefilledPaperId?: stri
       setIsGeneratingAI(true);
       toast.loading('AI is reading the paper to auto-generate answers...', { id: 'ai-gen' });
       
-      const rawText = getRawContentText(paper.content);
+      const subjectText = getSubjectContentText(paper.content, selectedSubject);
       const prompt = `Extract the correct answers for the following multiple choice questions if possible. 
 Return ONLY a valid JSON array of objects, where each object has "qNo" (number) and "answer" (string, e.g. "A", "B", "C", "D" or the exact text). 
 If a question doesn't have a clear answer marked, leave "answer" as "".
 Example: [{"qNo": 1, "answer": "A"}, {"qNo": 2, "answer": "B"}]
 
 Questions:
-${rawText}`;
+${subjectText}`;
       
       const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`, {
         method: 'POST',
@@ -310,8 +349,8 @@ ${rawText}`;
          setAnswers(prev => {
            const newAnswers = [...prev];
            aiAnswers.forEach(aiA => {
-             const index = newAnswers.findIndex(a => a.qNo === aiA.qNo);
-             if (index !== -1 && aiA.answer) {
+             const index = aiA.qNo - 1;
+             if (index >= 0 && index < newAnswers.length && aiA.answer) {
                newAnswers[index] = { ...newAnswers[index], answer: aiA.answer };
              }
            });
@@ -385,19 +424,16 @@ ${rawText}`;
          }
          let aiAnswers: Answer[] = JSON.parse(cleanText);
          
-         // Merge AI answers into current answers
          setAnswers(prev => {
-           const newAnswers = [...prev];
-           aiAnswers.forEach(aiA => {
-             const index = newAnswers.findIndex(a => a.qNo === aiA.qNo);
-             if (index !== -1 && aiA.answer) {
-               newAnswers[index] = { ...newAnswers[index], answer: aiA.answer };
-             } else if (index === -1) {
-               newAnswers.push(aiA);
-             }
-           });
-           return newAnswers.sort((a, b) => a.qNo - b.qNo);
-         });
+            const newAnswers = [...prev];
+            aiAnswers.forEach(aiA => {
+              const index = aiA.qNo - 1;
+              if (index >= 0 && index < newAnswers.length && aiA.answer) {
+                newAnswers[index] = { ...newAnswers[index], answer: aiA.answer };
+              }
+            });
+            return newAnswers.sort((a, b) => a.qNo - b.qNo);
+          });
          
          toast.success('Answers generated! Please review and click Save.', { id: 'ai-gen', icon: '🤖' });
       } else {
