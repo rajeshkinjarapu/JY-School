@@ -59,9 +59,7 @@ export const QuestionPaperGeneratorPage = () => {
 
   
   // Editor State
-  const [content, setContent] = useState(
-    '1. What is the capital of France?\n(A) London\n(B) Paris\n(C) Berlin\n(D) Madrid\n\n2. Solve for x: $2x + 5 = 15$\n(A) 2\n(B) 4\n(C) 5\n(D) 10\n\n3. Which of the following is the quadratic formula?\n(A) $x = \\frac{b}{2a}$\n(B) $x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$\n(C) $x = mc^2$\n(D) $x = y + c$'
-  );
+  const [content, setContent] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const containerRef = React.useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -450,7 +448,7 @@ export const QuestionPaperGeneratorPage = () => {
     toast.loading(paperId ? 'Updating paper...' : 'Saving paper...', { id: 'save' });
     try {
       const serializedContent = serializeContent();
-      const payload = { examName: finalExamName, examSubject, examDate, time, instructions, content: serializedContent };
+      const payload = { examName: finalExamName, examSubject: finalExamName, examDate, time, instructions, content: serializedContent };
       if (paperId) {
         await api.put(`/api/generated-papers/${paperId}`, payload);
         toast.success('Paper updated successfully!', { id: 'save' });
@@ -470,23 +468,16 @@ export const QuestionPaperGeneratorPage = () => {
   return (
     <div ref={containerRef} className="flex flex-col h-full bg-gray-50/50 print:block" style={{ minHeight: 'calc(100vh - 64px)' }}>
       <PageHeader 
-        title="JEE Paper Generator" 
+        title={
+          activeTab === 'landing' ? "JEE Paper Hub" :
+          activeTab === 'generator' ? "JEE Paper Generator" :
+          activeTab === 'saved' ? "Saved JEE Papers" :
+          "Answer Key Manager"
+        } 
         icon={<FileText className="w-5 h-5 text-white" />} 
       />
 
-      {/* Navigation Tabs */}
-      {activeTab !== 'landing' && (
-        <div className="px-6 border-b border-slate-200 bg-white print:hidden">
-          <div className="flex gap-6 max-w-[1920px] mx-auto">
-            <button
-              onClick={() => { setActiveTab('landing'); navigate('.', { replace: true }); }}
-              className="flex items-center gap-2 px-1 py-4 border-b-2 font-bold transition-all text-sm border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300"
-            >
-              <ChevronLeft className="w-4 h-4" /> Home
-            </button>
-          </div>
-      </div>
-      )}
+      {/* Navigation Tabs Removed */}
 
       {activeTab === 'landing' && (
         <div className="flex-1 p-8 max-w-5xl mx-auto w-full flex flex-col items-center justify-center animate-fade-in">
@@ -847,16 +838,7 @@ export const QuestionPaperGeneratorPage = () => {
                       className="w-full rounded-xl border-slate-200 bg-white border p-3 text-sm font-bold text-slate-700 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all shadow-sm"
                     />
                   </div>
-                  <div>
-                    <label className="block text-[13px] font-black text-slate-700 mb-1.5 uppercase tracking-wide">Subject</label>
-                    <input
-                      type="text"
-                      value={examSubject}
-                      onChange={(e) => setExamSubject(e.target.value)}
-                      className="w-full rounded-xl border-slate-200 bg-white border p-3 text-sm font-bold text-slate-700 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all shadow-sm"
-                      placeholder="e.g. Physics, Chemistry, Maths"
-                    />
-                  </div>
+
                   <div>
                     <label className="block text-[13px] font-black text-slate-700 mb-1.5 uppercase tracking-wide">Date</label>
                     <input

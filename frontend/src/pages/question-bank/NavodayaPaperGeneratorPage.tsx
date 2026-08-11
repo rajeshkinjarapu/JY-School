@@ -55,9 +55,7 @@ export const NavodayaPaperGeneratorPage = () => {
     return localStorage.getItem('jy_deepseek_api_key') || '';
   });
   // Editor State
-  const [content, setContent] = useState(
-    '1. What is 25% of 200?\n(A) 25\n(B) 50\n(C) 75\n(D) 100\n\n2. Solve for x: $2x + 5 = 15$\n(A) 2\n(B) 4\n(C) 5\n(D) 10\n\n3. The perimeter of a rectangle is 40 cm. If its length is 12 cm, what is its breadth?\n(A) 8 cm\n(B) 10 cm\n(C) 12 cm\n(D) 16 cm'
-  );
+  const [content, setContent] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const containerRef = React.useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -425,7 +423,7 @@ export const NavodayaPaperGeneratorPage = () => {
     toast.loading(paperId ? 'Updating paper...' : 'Saving paper...', { id: 'save' });
     try {
       const serializedContent = serializeContent();
-      const payload = { examName: finalExamName, examSubject, examDate, time, instructions, content: serializedContent };
+      const payload = { examName: finalExamName, examSubject: finalExamName, examDate, time, instructions, content: serializedContent };
       if (paperId) {
         await api.put(`/api/generated-papers/${paperId}`, payload);
         toast.success('Paper updated successfully!', { id: 'save' });
@@ -444,23 +442,16 @@ export const NavodayaPaperGeneratorPage = () => {
   return (
     <div ref={containerRef} className="flex flex-col h-full bg-gray-50/50 print:block" style={{ minHeight: 'calc(100vh - 64px)' }}>
       <PageHeader 
-        title="Navodaya Paper Generator" 
+        title={
+          activeTab === 'landing' ? "Navodaya Paper Hub" :
+          activeTab === 'generator' ? "Navodaya Paper Generator" :
+          activeTab === 'saved' ? "Saved Navodaya Papers" :
+          "Answer Key Manager"
+        } 
         icon={<FileText className="w-5 h-5 text-white" />} 
       />
       
-      {/* Navigation Tabs */}
-      {activeTab !== 'landing' && (
-        <div className="px-6 border-b border-slate-200 bg-white print:hidden">
-          <div className="flex gap-6 max-w-[1920px] mx-auto">
-            <button
-              onClick={() => { setActiveTab('landing'); navigate('.', { replace: true }); }}
-              className="flex items-center gap-2 px-1 py-4 border-b-2 font-bold transition-all text-sm border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300"
-            >
-              <ChevronLeft className="w-4 h-4" /> Home
-            </button>
-          </div>
-        </div>
-      )}
+      {/* Navigation Tabs Removed */}
 
       {activeTab === 'landing' && (
         <div className="flex-1 p-8 max-w-5xl mx-auto w-full flex flex-col items-center justify-center animate-fade-in">

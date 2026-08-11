@@ -312,14 +312,7 @@ ${selectedPaper.content}`;
       
       {/* Header & Filters */}
       <div className="bg-white/80 backdrop-blur-xl border-b border-slate-200/80 p-6 flex flex-col gap-5">
-        <div>
-          <h2 className="text-2xl font-black text-slate-800 flex items-center gap-2">
-            <Key className="w-6 h-6 text-indigo-500" />
-            Answer Key Manager
-          </h2>
-          <p className="text-sm font-bold text-slate-500 mt-1">Select class, subject, and exam paper to view or edit the answer key.</p>
-        </div>
-        
+
         <div className="flex flex-wrap items-center gap-4">
           <div className="relative flex-1 min-w-[250px] flex items-center gap-3">
             <div className="relative flex-1">

@@ -59,9 +59,7 @@ export const ExamPaperGeneratorPage = () => {
 
   
   // Editor State
-  const [content, setContent] = useState(
-    '1. What is the capital of France?\n(A) London\n(B) Paris\n(C) Berlin\n(D) Madrid\n\n2. Solve for x: $2x + 5 = 15$\n(A) 2\n(B) 4\n(C) 5\n(D) 10'
-  );
+  const [content, setContent] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const containerRef = React.useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -456,7 +454,7 @@ ${paperContent}`;
     toast.loading(paperId ? 'Updating paper...' : 'Saving paper...', { id: 'save' });
     try {
       const serializedContent = serializeContent();
-      const payload = { examName: finalExamName, examClass, examSubject: '', examDate, time, instructions, content: serializedContent };
+      const payload = { examName: finalExamName, examClass, examSubject: finalExamName, examDate, time, instructions, content: serializedContent };
       if (paperId) {
         await api.put(`/api/generated-papers/${paperId}`, payload);
         toast.success('Paper updated successfully!', { id: 'save' });
@@ -481,23 +479,16 @@ ${paperContent}`;
       
       <div className="relative z-10 flex flex-col h-full">
         <PageHeader 
-          title="Exam Paper Generator" 
+          title={
+            activeTab === 'landing' ? "Exam Paper Hub" :
+            activeTab === 'generator' ? "Exam Paper Generator" :
+            activeTab === 'saved' ? "Saved Papers" :
+            "Answer Key Manager"
+          } 
           icon={<LayoutTemplate className="w-5 h-5 text-indigo-600" />} 
         />
         
-        {/* Navigation Tabs */}
-        {activeTab !== 'landing' && (
-          <div className="px-6 border-b border-slate-200 bg-white/50 backdrop-blur-sm print:hidden">
-            <div className="flex gap-6 max-w-[1920px] mx-auto">
-              <button
-                onClick={() => { setActiveTab('landing'); navigate('.', { replace: true }); }}
-                className="flex items-center gap-2 px-1 py-4 border-b-2 font-bold transition-all text-sm border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300"
-              >
-                <ChevronLeft className="w-4 h-4" /> Home
-              </button>
-            </div>
-        </div>
-        )}
+        {/* Navigation Tabs Removed */}
 
         {activeTab === 'landing' && (
           <div className="flex-1 p-8 max-w-5xl mx-auto w-full flex flex-col items-center justify-center animate-fade-in">
