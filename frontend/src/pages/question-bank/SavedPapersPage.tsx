@@ -313,9 +313,16 @@ const SavedPapersPage = () => {
                     >
                       {/* Full colorful gradient header */}
                       <div className={`bg-gradient-to-br ${colors.gradient} px-4 py-4 flex-shrink-0`}>
-                        <span className="inline-block px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider bg-white/20 text-white border border-white/30 mb-2">
-                          {paper.examSubject || 'General'}
-                        </span>
+                        <div className="flex flex-wrap gap-1.5 mb-2">
+                          {paper.examClass && (
+                            <span className="inline-block px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider bg-black/20 text-white border border-black/10">
+                              {paper.examClass}
+                            </span>
+                          )}
+                          <span className="inline-block px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider bg-white/20 text-white border border-white/30">
+                            {paper.examSubject || 'General'}
+                          </span>
+                        </div>
                         <h3 className="text-[14px] font-black text-white leading-tight line-clamp-2" title={paper.examName}>
                           {paper.examName}
                         </h3>
@@ -370,9 +377,16 @@ const SavedPapersPage = () => {
                               <div className="font-extrabold text-[13px] text-slate-800">{paper.examName}</div>
                             </td>
                             <td className="px-6 py-4">
-                              <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider ${colors.bg} ${colors.text} ${colors.border} border shadow-sm`}>
-                                {paper.examSubject || 'General'}
-                              </span>
+                              <div className="flex flex-wrap gap-1.5">
+                                {paper.examClass && (
+                                  <span className="px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider bg-slate-100 text-slate-600 border-slate-200 border shadow-sm">
+                                    {paper.examClass}
+                                  </span>
+                                )}
+                                <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider ${colors.bg} ${colors.text} ${colors.border} border shadow-sm`}>
+                                  {paper.examSubject || 'General'}
+                                </span>
+                              </div>
                             </td>
                             <td className="px-6 py-4 text-[13px] font-bold text-slate-600">
                               <div className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5 text-slate-400" /> {paper.examDate || '—'}</div>
