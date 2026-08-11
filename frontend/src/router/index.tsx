@@ -99,6 +99,7 @@ const TransportDashboard = lazy(routeImports['/transport']);
 const TransportRoutesPage = lazy(() => import('../pages/transport/RoutesPage'));
 const TransportVehiclesPage = lazy(() => import('../pages/transport/VehiclesPage'));
 const TransportStudentsPage = lazy(() => import('../pages/transport/StudentTransportPage'));
+const AnswerKeyPage = lazy(() => import('../pages/question-bank/AnswerKeyPage'));
 
 
 const AttendanceWrapper = () => {
@@ -532,6 +533,14 @@ export const router = createBrowserRouter([
         element: withSuspense(
           <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN', 'TEACHER']}>
             <FeeReminderPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'answer-key',
+        element: withSuspense(
+          <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN', 'TEACHER']}>
+            <AnswerKeyPage />
           </ProtectedRoute>
         ),
       },

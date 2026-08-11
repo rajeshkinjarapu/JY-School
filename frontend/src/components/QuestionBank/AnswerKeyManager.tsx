@@ -27,6 +27,7 @@ export const AnswerKeyManager = ({ prefilledPaperId }: { prefilledPaperId?: stri
   const [selectedSubject, setSelectedSubject] = useState<string>('');
   const [selectedPaperId, setSelectedPaperId] = useState<string>('');
   
+  const [selectedSection, setSelectedSection] = useState<string>('');
   const [answers, setAnswers] = useState<Answer[]>([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -134,6 +135,12 @@ export const AnswerKeyManager = ({ prefilledPaperId }: { prefilledPaperId?: stri
       
       const classMatch = selectedClass ? c === selectedClass : true;
       
+      let sectionMatch = true;
+      if (selectedSection) {
+        const sectionRegex = new RegExp(`\\b${selectedSection}\\b|-${selectedSection}\\b`, 'i');
+        sectionMatch = sectionRegex.test(p.examName) || (p.examClass ? sectionRegex.test(p.examClass) : false);
+      }
+      
       let subjMatch = true;
       if (selectedSubject && selectedSubject !== 'All Subjects' && selectedSubject !== 'All Subjects / Grand Test') {
         const escapedSubject = selectedSubject.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -143,9 +150,9 @@ export const AnswerKeyManager = ({ prefilledPaperId }: { prefilledPaperId?: stri
         subjMatch = hasHeading || isExamSubject;
       }
       
-      return classMatch && subjMatch;
+      return classMatch && sectionMatch && subjMatch;
     });
-  }, [papers, selectedClass, selectedSubject]);
+  }, [papers, selectedClass, selectedSection, selectedSubject]);
 
   const parseQuestionsWithSubjects = (content: string): { qNo: number, subject: string }[] => {
     const lines = content.split('\n');
@@ -210,10 +217,67 @@ export const AnswerKeyManager = ({ prefilledPaperId }: { prefilledPaperId?: stri
       }
 
       setAnswers(initialAnswers.sort((a, b) => a.qNo - b.qNo));
+
+      // Auto-trigger AI generation if no saved answers exist
+      if (!hasAnswersInDB && initialAnswers.length > 0) {
+        autoGenerateAI(paper, initialAnswers);
+      }
     } catch (error) {
       toast.error('Failed to load answer key data');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const autoGenerateAI = async (paper: GeneratedPaper, currentAnswers: Answer[]) => {
+    if (!geminiApiKey) return;
+    try {
+      setIsGeneratingAI(true);
+      toast.loading('AI is reading the paper to auto-generate answers...', { id: 'ai-gen' });
+      
+      const prompt = `Extract the correct answers for the following multiple choice questions if possible. 
+Return ONLY a valid JSON array of objects, where each object has "qNo" (number) and "answer" (string, e.g. "A", "B", "C", "D" or the exact text). 
+If a question doesn't have a clear answer marked, leave "answer" as "".
+Example: [{"qNo": 1, "answer": "A"}, {"qNo": 2, "answer": "B"}]
+
+Questions:
+${paper.content}`;
+      
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: { temperature: 0.1, responseMimeType: "application/json" }
+        })
+      });
+      
+      const data = await response.json();
+      if (data.candidates && data.candidates[0].content.parts[0].text) {
+         let text = data.candidates[0].content.parts[0].text;
+         let cleanText = text.replace(/```json/gi, '').replace(/```/g, '').trim();
+         const match = cleanText.match(/\[[\s\S]*\]/);
+         if (match) {
+           cleanText = match[0];
+         }
+         let aiAnswers: Answer[] = JSON.parse(cleanText);
+         
+         setAnswers(prev => {
+           const newAnswers = [...prev];
+           aiAnswers.forEach(aiA => {
+             const index = newAnswers.findIndex(a => a.qNo === aiA.qNo);
+             if (index !== -1 && aiA.answer) {
+               newAnswers[index] = { ...newAnswers[index], answer: aiA.answer };
+             }
+           });
+           return newAnswers.sort((a, b) => a.qNo - b.qNo);
+         });
+         toast.success('AI Auto-generated answers! Please review and save.', { id: 'ai-gen', icon: '🤖' });
+      }
+    } catch(err) {
+      console.error("AI Auto-gen error:", err);
+    } finally {
+      setIsGeneratingAI(false);
     }
   };
 
@@ -351,6 +415,21 @@ ${selectedPaper.content}`;
             >
               <option value="">All Subjects</option>
               {subjects.map(s => <option key={s} value={s}>{s}</option>)}
+            </select>
+            <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+          </div>
+
+          <div className="relative">
+            <select
+              value={selectedSection}
+              onChange={(e) => { setSelectedSection(e.target.value); }}
+              className="appearance-none pl-4 pr-10 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 min-w-[120px] cursor-pointer"
+            >
+              <option value="">All Sections</option>
+              <option value="A">Section A</option>
+              <option value="B">Section B</option>
+              <option value="C">Section C</option>
+              <option value="D">Section D</option>
             </select>
             <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
           </div>
