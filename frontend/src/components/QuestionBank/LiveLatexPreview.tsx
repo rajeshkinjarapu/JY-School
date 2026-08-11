@@ -211,16 +211,16 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
               const qRest = qMatch ? questionText.substring(qMatch[0].length) : questionText;
 
               return (
-                <div className="mb-5 break-inside-avoid text-[11pt] leading-snug">
-                  <div className="mb-1 flex whitespace-pre-wrap" style={{ gap: '0.4em' }}>
+                <div className="mb-1 break-inside-avoid text-[11pt] leading-snug">
+                  <div className="mb-0.5 flex whitespace-pre-wrap" style={{ gap: '0.4em' }}>
                     <strong className="flex-shrink-0">{qNum}.</strong>
                     <div dangerouslySetInnerHTML={{ __html: renderLatex(qRest) }} />
                   </div>
                   <div className={`ml-6 pr-4 ${optionsLayout}`}>
-                    <div className="flex"><span className="mr-2 font-bold">(A)</span> <span dangerouslySetInnerHTML={{ __html: renderLatex(optA) }} /></div>
-                    <div className="flex"><span className="mr-2 font-bold">(B)</span> <span dangerouslySetInnerHTML={{ __html: renderLatex(optB) }} /></div>
-                    <div className="flex"><span className="mr-2 font-bold">(C)</span> <span dangerouslySetInnerHTML={{ __html: renderLatex(optC) }} /></div>
-                    <div className="flex"><span className="mr-2 font-bold">(D)</span> <span dangerouslySetInnerHTML={{ __html: renderLatex(optD) }} /></div>
+                    <div className="flex"><span className="mr-1.5 font-bold">(A)</span> <span dangerouslySetInnerHTML={{ __html: renderLatex(optA) }} /></div>
+                    <div className="flex"><span className="mr-1.5 font-bold">(B)</span> <span dangerouslySetInnerHTML={{ __html: renderLatex(optB) }} /></div>
+                    <div className="flex"><span className="mr-1.5 font-bold">(C)</span> <span dangerouslySetInnerHTML={{ __html: renderLatex(optC) }} /></div>
+                    <div className="flex"><span className="mr-1.5 font-bold">(D)</span> <span dangerouslySetInnerHTML={{ __html: renderLatex(optD) }} /></div>
                   </div>
                 </div>
               );
