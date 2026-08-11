@@ -235,7 +235,8 @@ export const MCQPaperGeneratorPage = () => {
         }
 
         let generatedText = '\n\n';
-        const lines = content.split('\n');
+        const currentContent = subjectContents[activeSubjectTab] || '';
+        const lines = currentContent.split('\n');
         let maxQ = 0;
         for (const line of lines) {
           const match = line.match(/^(\d+)\.\s/);
@@ -254,7 +255,10 @@ export const MCQPaperGeneratorPage = () => {
           generatedText += '\n';
         });
 
-        setContent(prev => prev.trim() + generatedText);
+        setSubjectContents(prev => ({ 
+          ...prev, 
+          [activeSubjectTab]: (prev[activeSubjectTab] || '').trim() + generatedText 
+        }));
         toast.success(`✅ ${questions.length} questions extracted from Word document!`, { id: toastId });
         setIsAiModalOpen(false);
       } catch (err: any) {
@@ -337,7 +341,8 @@ export const MCQPaperGeneratorPage = () => {
       }
 
       let generatedText = '\n\n';
-      const lines = content.split('\n');
+      const currentContent = subjectContents[activeSubjectTab] || '';
+      const lines = currentContent.split('\n');
       let maxQ = 0;
       for (const line of lines) {
         const match = line.match(/^(\d+)\.\s/);
@@ -356,7 +361,10 @@ export const MCQPaperGeneratorPage = () => {
         generatedText += '\n';
       });
 
-      setContent(content.trim() + generatedText);
+      setSubjectContents(prev => ({ 
+        ...prev, 
+        [activeSubjectTab]: (prev[activeSubjectTab] || '').trim() + generatedText 
+      }));
       setIsGenerating(false);
       setAiImageBase64('');
       setAiImageMimeType('');
@@ -369,7 +377,8 @@ export const MCQPaperGeneratorPage = () => {
   };
 
   const autoFormatText = () => {
-    const lines = content.split('\n');
+    const currentContent = subjectContents[activeSubjectTab] || '';
+    const lines = currentContent.split('\n');
     let formatted = [];
     
     for (let i = 0; i < lines.length; i++) {
@@ -402,7 +411,10 @@ export const MCQPaperGeneratorPage = () => {
       formatted.push(line);
     }
     
-    setContent(formatted.join('\n'));
+    setSubjectContents(prev => ({
+      ...prev,
+      [activeSubjectTab]: formatted.join('\n')
+    }));
     toast.success("Auto-formatted text!");
   };
 
