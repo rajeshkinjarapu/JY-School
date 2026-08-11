@@ -550,6 +550,16 @@ ${rawText}`;
             width: 100% !important;
             margin: 0 auto !important;
           }
+          /* Flex display for columns */
+          .print\\:flex-row {
+            display: flex !important;
+            flex-direction: row !important;
+            gap: 40px !important;
+            width: 100% !important;
+          }
+          .print\\:flex-1 {
+            flex: 1 !important;
+          }
           /* Print table styling */
           table {
             border-collapse: collapse !important;
@@ -558,10 +568,10 @@ ${rawText}`;
           }
           th, td {
             border: 1.5px solid #000 !important;
-            padding: 10px !important;
+            padding: 8px !important;
             text-align: center !important;
             vertical-align: middle !important;
-            font-size: 14px !important;
+            font-size: 13px !important;
           }
           th {
             background-color: #f8fafc !important;
@@ -576,7 +586,7 @@ ${rawText}`;
       `}} />
       
       {/* Print-only Header */}
-      <div className="hidden print:block mb-8 text-center border-b-2 border-slate-900 pb-4">
+      <div className="hidden print:block mb-6 text-center border-b-2 border-slate-900 pb-4">
         <h1 className="text-3xl font-black uppercase tracking-wider text-slate-900">JY SCHOOL</h1>
         <h2 className="text-xl font-bold uppercase tracking-wide text-slate-700 mt-1">ANSWER KEY</h2>
         <div className="grid grid-cols-3 gap-4 mt-6 text-sm text-slate-800 font-bold border-t border-slate-200 pt-4">
@@ -674,7 +684,7 @@ ${rawText}`;
           </div>
         ) : (
           <div className="bg-white border border-slate-200 rounded-[1.5rem] shadow-sm overflow-hidden max-w-4xl mx-auto">
-            <div className="flex items-center justify-between p-5 bg-indigo-50/50 border-b border-indigo-100">
+            <div className="flex items-center justify-between p-5 bg-indigo-50/50 border-b border-indigo-100 print:hidden">
               <div className="flex items-center gap-3">
                 <ListOrdered className="w-5 h-5 text-indigo-500" />
                 <p className="text-sm font-bold text-slate-700">
@@ -713,8 +723,51 @@ ${rawText}`;
               </div>
             ) : (
               <>
-                {/* Table View */}
-                <div className="w-full overflow-x-auto">
+                {/* Two-column Print Table (Visible in Print Only) */}
+                <div className="hidden print:flex-row print:flex-1 print:gap-10 w-full">
+                  {/* Left Column: Questions 1 to 13 */}
+                  <div className="print:flex-1">
+                    <table className="w-full border-collapse">
+                      <thead>
+                        <tr className="bg-slate-50">
+                          <th className="w-24">Q.No</th>
+                          <th>Correct Option</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {answers.filter(a => isMatch(a.subject || '', selectedSubject)).slice(0, 13).map((ans, idx) => (
+                          <tr key={ans.qNo} className={idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/30'}>
+                            <td className="text-center font-bold">{idx + 1}</td>
+                            <td className="text-center font-extrabold text-lg">{ans.answer || '-'}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Right Column: Questions 14 to 25 */}
+                  <div className="print:flex-1">
+                    <table className="w-full border-collapse">
+                      <thead>
+                        <tr className="bg-slate-50">
+                          <th className="w-24">Q.No</th>
+                          <th>Correct Option</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {answers.filter(a => isMatch(a.subject || '', selectedSubject)).slice(13).map((ans, idx) => (
+                          <tr key={ans.qNo} className={idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/30'}>
+                            <td className="text-center font-bold">{idx + 14}</td>
+                            <td className="text-center font-extrabold text-lg">{ans.answer || '-'}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                {/* Table View (Screen Only) */}
+                <div className="w-full overflow-x-auto print:hidden">
                   <table className="w-full text-left border-collapse">
                     <thead>
                       <tr className="bg-slate-50 border-b border-slate-200">
