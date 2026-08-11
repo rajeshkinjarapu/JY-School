@@ -458,28 +458,6 @@ export const NavodayaPaperGeneratorPage = () => {
             >
               <ChevronLeft className="w-4 h-4" /> Home
             </button>
-          {[
-            { id: 'generator', label: 'Generator', icon: FileText },
-            { id: 'saved', label: 'Saved Papers', icon: FileText },
-            { id: 'answer-key', label: 'Answer Key', icon: Key }
-          ].map(tab => {
-            const Icon = tab.icon;
-            const isActive = activeTab === tab.id;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id as any)}
-                className={`flex items-center gap-2 px-1 py-4 border-b-2 font-bold transition-all text-sm ${
-                  isActive 
-                    ? 'border-indigo-600 text-indigo-600' 
-                    : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
-                }`}
-              >
-                <Icon className="w-4 h-4" />
-                {tab.label}
-              </button>
-            );
-          })}
           </div>
         </div>
       )}
