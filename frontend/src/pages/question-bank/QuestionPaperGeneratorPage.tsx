@@ -599,7 +599,7 @@ export const QuestionPaperGeneratorPage = () => {
       </div>
 
       {/* Main Dual Layout Content */}
-      <div className="flex-1 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden print:overflow-visible h-[calc(100vh-80px)] print:h-auto custom-scrollbar">
+      <div className="flex-1 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden print:overflow-visible h-[calc(100vh-80px)] print:h-auto custom-scrollbar print:block">
         
         {/* Left Side: Editor (Hidden on Print) */}
         <div className="w-full lg:w-1/2 min-h-[50vh] lg:min-h-0 flex-shrink-0 lg:flex-shrink p-6 overflow-y-auto border-r border-slate-200 bg-white print:hidden custom-scrollbar">
@@ -644,14 +644,14 @@ export const QuestionPaperGeneratorPage = () => {
         </div>
 
         {/* Right Side: Live Preview (Full Width on Print) */}
-        <div className="w-full lg:w-1/2 min-h-[60vh] lg:min-h-0 flex-shrink-0 lg:flex-shrink overflow-y-auto bg-slate-100 print:w-full print:bg-white custom-scrollbar flex flex-col relative">
+        <div className="w-full lg:w-1/2 min-h-[60vh] lg:min-h-0 flex-shrink-0 lg:flex-shrink bg-slate-100 flex flex-col print:w-full print:bg-white transition-all duration-300 relative print:block print:overflow-visible">
           <div className="sticky top-0 z-10 bg-slate-100/80 backdrop-blur-md border-b border-slate-200 px-6 py-3 flex justify-between items-center print:hidden">
             <h3 className="font-semibold text-slate-700 flex items-center gap-2">
               Live Preview
             </h3>
           </div>
-          <div className="flex justify-center p-8 print:p-0">
-            <div className="paper-zoom origin-top transition-transform">
+          <div className="flex-1 overflow-y-auto custom-scrollbar flex justify-center p-8 print:p-0 relative print:block print:overflow-visible">
+            <div className="paper-zoom origin-top transition-transform print:block print:overflow-visible">
             <LiveLatexPreview 
               content={content}
               examName={examName}

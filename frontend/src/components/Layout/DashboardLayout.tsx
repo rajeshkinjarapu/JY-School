@@ -119,11 +119,11 @@ export const DashboardLayout: React.FC = () => {
 
   if (hideSidebar) {
     return (
-      <div style={{ height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+      <div className="print:h-auto print:overflow-visible" style={{ minHeight: '100vh', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
         <MobileNotificationToast />
         <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
         <Header onMenuClick={() => setSidebarOpen(true)} title={getPageTitle(location.pathname)} />
-        <main style={{ flex: 1, overflow: 'hidden' }} className="pb-4">
+        <main className="pb-4 print:overflow-visible" style={{ flex: 1, overflow: 'hidden' }}>
           <PullToRefresh onRefresh={async () => {
             await new Promise(r => setTimeout(r, 600));
             window.location.reload();
@@ -139,15 +139,15 @@ export const DashboardLayout: React.FC = () => {
 
   return (
     <div
-      className="flex overflow-hidden bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 dark:from-[#1e1b4b] dark:via-[#2e1065] dark:to-[#312e81]"
-      style={{ height: '100%' }}
+      className="flex overflow-hidden print:overflow-visible print:h-auto print:min-h-0 bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 dark:from-[#1e1b4b] dark:via-[#2e1065] dark:to-[#312e81]"
+      style={{ minHeight: '100vh' }}
     >
       <MobileNotificationToast />
       <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
-      <div className="flex flex-col flex-1 overflow-hidden min-w-0">
+      <div className="flex flex-col flex-1 overflow-hidden min-w-0 print:overflow-visible">
         <Header onMenuClick={() => setSidebarOpen(true)} title={getPageTitle(location.pathname)} />
         <main
-          className="flex-1 overflow-hidden pb-4"
+          className="flex-1 overflow-hidden print:overflow-visible pb-4"
         >
           <PullToRefresh onRefresh={async () => {
             await new Promise(r => setTimeout(r, 600));

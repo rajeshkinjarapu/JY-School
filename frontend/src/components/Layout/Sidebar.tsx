@@ -257,7 +257,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden"
           onClick={() => setIsOpen(false)} />
       )}
-      <aside className={`fixed inset-y-0 left-0 z-50 w-[260px] shrink-0 transform transition-transform duration-300 ease-out lg:relative lg:translate-x-0 ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}
+      <aside className={`print:hidden fixed inset-y-0 left-0 z-50 w-[260px] shrink-0 transform transition-transform duration-300 ease-out lg:relative lg:translate-x-0 ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}
         style={sidebarStyle}>
         <button onClick={() => setIsOpen(false)}
           className="lg:hidden absolute top-4 right-4 p-1.5 rounded-lg text-slate-500 hover:text-white hover:bg-white/10 transition-all cursor-pointer">

@@ -612,7 +612,7 @@ ${paperContent}`;
         </div>
 
         {/* Main Dual Layout Content */}
-        <div className="flex-1 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden h-[calc(100vh-140px)] print:h-auto max-w-[1920px] mx-auto w-full px-4 py-4 gap-4 print:p-0 print:gap-0 custom-scrollbar">
+        <div className="flex-1 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden h-[calc(100vh-140px)] print:h-auto max-w-[1920px] mx-auto w-full px-4 py-4 gap-4 print:p-0 print:gap-0 custom-scrollbar print:block print:overflow-visible">
           
           {/* Left Side: Editor (Hidden on Print) */}
           <div className="w-full lg:w-5/12 min-h-[50vh] lg:min-h-0 flex-shrink-0 lg:flex-shrink bg-white rounded-3xl border border-slate-200/80 shadow-xl shadow-slate-200/20 flex flex-col print:hidden overflow-hidden transition-all z-10">
@@ -664,15 +664,15 @@ ${paperContent}`;
           </div>
 
           {/* Right Side: Live Preview */}
-          <div className="w-full lg:w-7/12 min-h-[60vh] lg:min-h-0 flex-shrink-0 lg:flex-shrink bg-slate-200/50 rounded-3xl border border-slate-200/80 shadow-inner flex flex-col overflow-hidden print:w-full print:bg-white print:border-none print:shadow-none print:rounded-none transition-all z-10">
+          <div className="w-full lg:w-7/12 min-h-[60vh] lg:min-h-0 flex-shrink-0 lg:flex-shrink bg-slate-200/50 rounded-3xl border border-slate-200/80 shadow-inner flex flex-col overflow-hidden print:w-full print:bg-white print:border-none print:shadow-none print:rounded-none transition-all z-10 print:block print:overflow-visible">
             <div className="px-5 py-4 border-b border-slate-200/80 bg-white/80 backdrop-blur-md flex justify-between items-center print:hidden z-20 flex-shrink-0">
               <h3 className="font-bold text-slate-800 flex items-center gap-2">
                 Live Preview
               </h3>
             </div>
             
-            <div className="flex-1 overflow-y-auto custom-scrollbar flex justify-center p-8 print:p-0 relative">
-              <div className="paper-zoom origin-top transition-transform h-max w-full flex justify-center">
+            <div className="flex-1 overflow-y-auto custom-scrollbar flex justify-center p-8 print:p-0 relative print:block print:overflow-visible">
+              <div className="paper-zoom origin-top transition-transform h-max w-full flex justify-center print:block print:overflow-visible">
                 <LiveLatexPreview 
                   content={content}
                   examName={examName}
