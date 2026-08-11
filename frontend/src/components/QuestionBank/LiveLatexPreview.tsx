@@ -116,7 +116,7 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
       
       // Add subject heading
       elements.push(
-        <div key={`heading-${subject}`} className="w-full text-center my-3 break-before-auto">
+        <div id={`preview-subject-${subject}`} key={`heading-${subject}`} className="w-full text-center my-3 break-before-auto">
           <h3 className="font-bold text-[13pt] underline underline-offset-4 uppercase">{subject}</h3>
         </div>
       );

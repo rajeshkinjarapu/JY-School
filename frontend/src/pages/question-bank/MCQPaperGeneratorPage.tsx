@@ -454,6 +454,16 @@ export const MCQPaperGeneratorPage = () => {
     loadPaper();
   }, [paperId]);
 
+  // Auto-scroll Live Preview to active subject when tab changes
+  useEffect(() => {
+    if (activeSubjectTab) {
+      const el = document.getElementById(`preview-subject-${activeSubjectTab}`);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+  }, [activeSubjectTab]);
+
   const handleSave = async () => {
     let finalExamName = examName;
     if (!paperId) {

@@ -89,6 +89,13 @@ const SavedPapersPage = () => {
     }
   };
 
+  const getGeneratorPath = (paper: any) => {
+    if (paper?.content?.startsWith('<!--MCQ_DATA_V2-->')) {
+      return `/question-bank/mcq-generator?id=${paper.id}`;
+    }
+    return `/question-bank/generator?id=${paper.id}`;
+  };
+
   const handleDelete = async () => {
     if (!deleteId) return;
     setDeleting(true);
@@ -329,7 +336,7 @@ const SavedPapersPage = () => {
                         <button onClick={() => handleDownloadPDF(paper)} className="col-span-1 flex items-center justify-center p-2 bg-violet-100 text-violet-600 rounded-xl hover:bg-violet-600 hover:text-white transition-all duration-200" title="Download PDF">
                           <Download className="w-3.5 h-3.5" />
                         </button>
-                        <button onClick={() => navigate(`/question-bank/generator?id=${paper.id}`)} className="col-span-1 flex items-center justify-center p-2 bg-indigo-100 text-indigo-600 rounded-xl hover:bg-indigo-600 hover:text-white transition-all duration-200" title="Edit">
+                        <button onClick={() => navigate(getGeneratorPath(paper))} className="col-span-1 flex items-center justify-center p-2 bg-indigo-100 text-indigo-600 rounded-xl hover:bg-indigo-600 hover:text-white transition-all duration-200" title="Edit">
                           <Edit2 className="w-3.5 h-3.5" />
                         </button>
                         <button onClick={() => setDeleteId(paper.id)} className="col-span-1 flex items-center justify-center p-2 bg-rose-100 text-rose-500 rounded-xl hover:bg-rose-500 hover:text-white transition-all duration-200" title="Delete">
@@ -380,7 +387,7 @@ const SavedPapersPage = () => {
                                 <button onClick={() => handlePrint(paper)} className="p-2 text-slate-400 hover:text-slate-800 hover:bg-slate-100 rounded-xl transition-all" title="Print"><Printer className="w-4 h-4" /></button>
                                 <button onClick={() => handleDownloadPDF(paper)} className="p-2 text-slate-400 hover:text-slate-800 hover:bg-slate-100 rounded-xl transition-all" title="Download"><Download className="w-4 h-4" /></button>
                                 <div className="w-px h-5 bg-slate-200 mx-1"></div>
-                                <button onClick={() => navigate(`/question-bank/generator?id=${paper.id}`)} className="p-2 text-indigo-500 hover:bg-indigo-50 rounded-xl transition-all" title="Edit"><Edit2 className="w-4 h-4" /></button>
+                                <button onClick={() => navigate(getGeneratorPath(paper))} className="p-2 text-indigo-500 hover:bg-indigo-50 rounded-xl transition-all" title="Edit"><Edit2 className="w-4 h-4" /></button>
                                 <button onClick={() => handleDuplicate(paper)} className="p-2 text-emerald-500 hover:bg-emerald-50 rounded-xl transition-all" title="Duplicate"><Copy className="w-4 h-4" /></button>
                                 <button onClick={() => setDeleteId(paper.id)} className="p-2 text-rose-500 hover:bg-rose-50 rounded-xl transition-all" title="Delete"><Trash2 className="w-4 h-4" /></button>
                               </div>
@@ -427,7 +434,7 @@ const SavedPapersPage = () => {
               <button onClick={() => handlePrint(previewPaper)} className="px-6 py-3 bg-white border border-slate-200 text-slate-700 font-black rounded-2xl hover:bg-slate-50 shadow-sm flex items-center gap-2 hover:-translate-y-0.5 transition-transform">
                 <Printer className="w-4 h-4" /> Print Paper
               </button>
-              <button onClick={() => { setPreviewPaper(null); navigate(`/question-bank/generator?id=${previewPaper.id}`); }} className="px-6 py-3 bg-indigo-600 text-white font-black rounded-2xl hover:bg-indigo-700 shadow-xl shadow-indigo-600/20 flex items-center gap-2 hover:-translate-y-0.5 transition-transform">
+              <button onClick={() => { setPreviewPaper(null); navigate(getGeneratorPath(previewPaper)); }} className="px-6 py-3 bg-indigo-600 text-white font-black rounded-2xl hover:bg-indigo-700 shadow-xl shadow-indigo-600/20 flex items-center gap-2 hover:-translate-y-0.5 transition-transform">
                 <Edit2 className="w-4 h-4" /> Open in Editor
               </button>
             </div>

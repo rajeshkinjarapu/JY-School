@@ -600,7 +600,8 @@ export const QuestionPaperGeneratorPage = () => {
           <div className="flex justify-center p-8 print:p-0">
             <div className="paper-zoom origin-top transition-transform">
             <LiveLatexPreview 
-              content={content}
+              subjectContents={{ 'General': content }}
+              selectedSubjects={['General']}
               examName={examName}
               examDate={examDate}
               examSubject={examSubject}
