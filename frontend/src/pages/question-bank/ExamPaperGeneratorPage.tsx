@@ -8,7 +8,7 @@ import { api } from '../../api/axios';
 
 import { PageHeader } from '../../components/UI/PageHeader';
 
-import { SavedPapersPage } from './SavedPapersPage';
+import SavedPapersPage from './SavedPapersPage';
 import { AnswerKeyManager } from '../../components/QuestionBank/AnswerKeyManager';
 
 export const ExamPaperGeneratorPage = () => {
@@ -534,6 +534,7 @@ ${paperContent}`;
         {activeTab === 'saved' && (
           <div className="flex-1 p-4 max-w-[1920px] mx-auto w-full">
             <div className="bg-white rounded-3xl shadow-sm border border-slate-200 h-full overflow-hidden">
+              {/* @ts-ignore */}
               <SavedPapersPage isEmbedded={true} />
             </div>
           </div>
