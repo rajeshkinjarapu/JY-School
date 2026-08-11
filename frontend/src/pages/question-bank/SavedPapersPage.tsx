@@ -333,53 +333,59 @@ const SavedPapersPage = () => {
         ) : (
           <>
             {viewMode === 'grid' ? (
-              /* Dense Colorful Grid View */
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              /* Sleek White Card Grid View */
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
                 {filtered.map(paper => {
                   const colors = getSubjectColor(paper.examSubject || 'Default');
                   return (
                     <div
                       key={paper.id}
-                      className="group rounded-2xl shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden flex flex-col"
+                      className="group bg-white rounded-3xl shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden flex flex-col border border-slate-100"
                     >
-                      {/* Full colorful gradient header */}
-                      <div className={`bg-gradient-to-br ${colors.gradient} px-4 py-4 flex-shrink-0`}>
-                        <div className="flex flex-wrap gap-1.5 mb-2">
+                      {/* Accent Top Bar */}
+                      <div className={`h-1.5 w-full bg-gradient-to-r ${colors.gradient}`}></div>
+                      
+                      {/* Card Content Header */}
+                      <div className="p-5 flex-shrink-0 flex flex-col flex-1">
+                        <div className="flex flex-wrap gap-2 mb-3">
                           {paper.examClass && (
-                            <span className="inline-block px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider bg-black/20 text-white border border-black/10">
+                            <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider bg-slate-100 text-slate-600">
                               {paper.examClass}
                             </span>
                           )}
-                          <span className="inline-block px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider bg-white/20 text-white border border-white/30">
+                          <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider ${colors.bg} ${colors.text} border ${colors.border}`}>
                             {paper.examSubject || 'General'}
                           </span>
                         </div>
-                        <h3 className="text-[14px] font-black text-white leading-tight line-clamp-2" title={paper.examName}>
+                        <h3 
+                          className="text-[15px] font-bold text-slate-800 leading-snug line-clamp-2 capitalize lowercase" 
+                          title={paper.examName}
+                        >
                           {paper.examName}
                         </h3>
-                        <div className="flex flex-wrap gap-2 mt-2 text-[10px] font-bold text-white/80">
-                          <span className="flex items-center gap-1"><Calendar className="w-3 h-3" /> {paper.examDate || '—'}</span>
-                          <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {paper.time || '—'} mins</span>
-                          {paper.examClass && <span className="flex items-center gap-1 bg-white/20 px-1.5 py-0.5 rounded-md border border-white/30">{paper.examClass}</span>}
+                        
+                        <div className="flex flex-wrap gap-4 mt-auto pt-4 text-[11px] font-semibold text-slate-500">
+                          <span className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5 text-slate-400" /> {paper.examDate || '—'}</span>
+                          <span className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5 text-slate-400" /> {paper.time || '—'} mins</span>
                         </div>
                       </div>
 
-                      {/* Card Action Buttons */}
-                      <div className="bg-white px-3 py-2.5 grid grid-cols-5 gap-1.5">
-                        <button onClick={() => setPreviewPaper(paper)} className="col-span-1 flex items-center justify-center p-2 bg-slate-100 text-slate-600 rounded-xl hover:bg-slate-800 hover:text-white transition-all duration-200" title="Preview">
-                          <Eye className="w-3.5 h-3.5" />
+                      {/* Card Action Buttons (Unified Neutral -> Color on Hover) */}
+                      <div className="px-4 py-3 bg-slate-50/50 border-t border-slate-100 grid grid-cols-5 gap-2">
+                        <button onClick={() => setPreviewPaper(paper)} className="col-span-1 flex items-center justify-center p-2 rounded-xl text-slate-400 bg-transparent hover:bg-slate-200 hover:text-slate-800 transition-all duration-200" title="Preview">
+                          <Eye className="w-4 h-4" />
                         </button>
-                        <button onClick={() => handlePrint(paper)} className="col-span-1 flex items-center justify-center p-2 bg-sky-100 text-sky-600 rounded-xl hover:bg-sky-600 hover:text-white transition-all duration-200" title="Print">
-                          <Printer className="w-3.5 h-3.5" />
+                        <button onClick={() => handlePrint(paper)} className="col-span-1 flex items-center justify-center p-2 rounded-xl text-slate-400 bg-transparent hover:bg-sky-100 hover:text-sky-600 transition-all duration-200" title="Print">
+                          <Printer className="w-4 h-4" />
                         </button>
-                        <button onClick={() => handleDownloadPDF(paper)} className="col-span-1 flex items-center justify-center p-2 bg-violet-100 text-violet-600 rounded-xl hover:bg-violet-600 hover:text-white transition-all duration-200" title="Download PDF">
-                          <Download className="w-3.5 h-3.5" />
+                        <button onClick={() => handleDownloadPDF(paper)} className="col-span-1 flex items-center justify-center p-2 rounded-xl text-slate-400 bg-transparent hover:bg-violet-100 hover:text-violet-600 transition-all duration-200" title="Download PDF">
+                          <Download className="w-4 h-4" />
                         </button>
-                        <button onClick={() => navigate(getGeneratorPath(paper))} className="col-span-1 flex items-center justify-center p-2 bg-indigo-100 text-indigo-600 rounded-xl hover:bg-indigo-600 hover:text-white transition-all duration-200" title="Edit">
-                          <Edit2 className="w-3.5 h-3.5" />
+                        <button onClick={() => navigate(getGeneratorPath(paper))} className="col-span-1 flex items-center justify-center p-2 rounded-xl text-slate-400 bg-transparent hover:bg-indigo-100 hover:text-indigo-600 transition-all duration-200" title="Edit">
+                          <Edit2 className="w-4 h-4" />
                         </button>
-                        <button onClick={() => setDeleteId(paper.id)} className="col-span-1 flex items-center justify-center p-2 bg-rose-100 text-rose-500 rounded-xl hover:bg-rose-500 hover:text-white transition-all duration-200" title="Delete">
-                          <Trash2 className="w-3.5 h-3.5" />
+                        <button onClick={() => setDeleteId(paper.id)} className="col-span-1 flex items-center justify-center p-2 rounded-xl text-slate-400 bg-transparent hover:bg-rose-100 hover:text-rose-500 transition-all duration-200" title="Delete">
+                          <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
                     </div>
@@ -406,7 +412,7 @@ const SavedPapersPage = () => {
                         return (
                           <tr key={paper.id} className="hover:bg-slate-50/50 transition-colors group">
                             <td className="px-6 py-4">
-                              <div className="font-extrabold text-[13px] text-slate-800">{paper.examName}</div>
+                              <div className="font-bold text-[14px] text-slate-800 capitalize lowercase">{paper.examName}</div>
                             </td>
                             <td className="px-6 py-4">
                               <div className="flex flex-wrap gap-1.5">
