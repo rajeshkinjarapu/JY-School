@@ -17,6 +17,33 @@ const isSubjectMatch = (questionSubj: string, filterSubj: string) => {
   return qSub === fSub;
 };
 
+const parseQuestionsWithSubjects = (content: string): { qNo: number, subject: string }[] => {
+  const lines = content.split('\n');
+  let currentSubject = 'General';
+  const questions: { qNo: number, subject: string }[] = [];
+  
+  for (const line of lines) {
+    const headingMatch = line.match(/^##\s*(.+)/);
+    if (headingMatch) {
+      currentSubject = headingMatch[1].trim();
+      continue;
+    }
+    
+    const match = line.match(/^(\d+)[\.\)]\s/);
+    if (match) {
+      const num = parseInt(match[1], 10);
+      questions.push({ qNo: num, subject: currentSubject });
+    }
+  }
+  
+  const unique = new Map();
+  questions.forEach(q => {
+    if (!unique.has(q.qNo)) unique.set(q.qNo, q);
+  });
+  
+  return Array.from(unique.values()).sort((a, b) => a.qNo - b.qNo);
+};
+
 interface GeneratedPaper {
   id: string;
   examName: string;
@@ -43,7 +70,6 @@ export const AnswerKeyManager = ({ prefilledPaperId }: { prefilledPaperId?: stri
   const [selectedSubject, setSelectedSubject] = useState<string>('');
   const [selectedPaperId, setSelectedPaperId] = useState<string>('');
   
-  const [selectedSection, setSelectedSection] = useState<string>('');
   const [answers, setAnswers] = useState<Answer[]>([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -123,49 +149,17 @@ export const AnswerKeyManager = ({ prefilledPaperId }: { prefilledPaperId?: stri
       
       const classMatch = selectedClass ? c === selectedClass : true;
       
-      let sectionMatch = true;
-      if (selectedSection) {
-        const sectionRegex = new RegExp(`\\b${selectedSection}\\b|-${selectedSection}\\b`, 'i');
-        sectionMatch = sectionRegex.test(p.examName) || (p.examClass ? sectionRegex.test(p.examClass) : false);
-      }
-      
       let subjMatch = true;
       if (selectedSubject) {
         const qList = parseQuestionsWithSubjects(p.content);
         subjMatch = qList.some(q => isSubjectMatch(q.subject, selectedSubject));
       }
       
-      return classMatch && sectionMatch && subjMatch;
+      return classMatch && subjMatch;
     });
-  }, [papers, selectedClass, selectedSection, selectedSubject]);
+  }, [papers, selectedClass, selectedSubject]);
 
-  const parseQuestionsWithSubjects = (content: string): { qNo: number, subject: string }[] => {
-    const lines = content.split('\n');
-    let currentSubject = 'General';
-    const questions: { qNo: number, subject: string }[] = [];
-    
-    for (const line of lines) {
-      const headingMatch = line.match(/^##\s*(.+)/);
-      if (headingMatch) {
-        currentSubject = headingMatch[1].trim();
-        continue;
-      }
-      
-      const match = line.match(/^(\d+)[\.\)]\s/);
-      if (match) {
-        const num = parseInt(match[1], 10);
-        questions.push({ qNo: num, subject: currentSubject });
-      }
-    }
-    
-    // Sort and remove duplicates in case of bad formatting
-    const unique = new Map();
-    questions.forEach(q => {
-      if (!unique.has(q.qNo)) unique.set(q.qNo, q);
-    });
-    
-    return Array.from(unique.values()).sort((a, b) => a.qNo - b.qNo);
-  };
+
 
   const loadPaperAndAnswerKey = async (paperId: string) => {
     try {
@@ -387,21 +381,6 @@ ${selectedPaper.content}`;
             <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
           </div>
 
-          <div className="relative">
-            <select
-              value={selectedSection}
-              onChange={(e) => { setSelectedSection(e.target.value); }}
-              className="appearance-none pl-4 pr-10 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 min-w-[120px] cursor-pointer"
-            >
-              <option value="">Select Section...</option>
-              <option value="A">Section A</option>
-              <option value="B">Section B</option>
-              <option value="C">Section C</option>
-              <option value="D">Section D</option>
-            </select>
-            <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-          </div>
-
           <div className="relative flex-1 min-w-[250px] flex items-center gap-3">
             <div className="relative flex-1">
               <select
@@ -410,15 +389,11 @@ ${selectedPaper.content}`;
                 className="appearance-none w-full pl-10 pr-10 py-2.5 bg-white border border-indigo-200 rounded-xl text-sm font-bold text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 cursor-pointer"
               >
                 <option value="">Select Examination...</option>
-                {filteredPapers.map(p => {
-                  const classStr = p.examClass || 'General';
-                  const dateStr = p.examDate || formatDate(p.createdAt);
-                  return (
-                    <option key={p.id} value={p.id}>
-                      {p.examName} ({classStr} - {dateStr})
-                    </option>
-                  );
-                })}
+                {filteredPapers.map(p => (
+                  <option key={p.id} value={p.id}>
+                    {p.examName}
+                  </option>
+                ))}
               </select>
               <FileText className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-indigo-400" />
               <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
