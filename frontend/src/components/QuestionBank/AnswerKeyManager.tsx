@@ -18,7 +18,8 @@ const isSubjectMatch = (questionSubj: string, filterSubj: string) => {
 };
 
 const parseQuestionsWithSubjects = (content: string): { qNo: number, subject: string }[] => {
-  const lines = content.split('\n');
+  const rawText = getRawContentText(content);
+  const lines = rawText.split('\n');
   let currentSubject = 'General';
   const questions: { qNo: number, subject: string }[] = [];
   
@@ -42,6 +43,22 @@ const parseQuestionsWithSubjects = (content: string): { qNo: number, subject: st
   });
   
   return Array.from(unique.values()).sort((a, b) => a.qNo - b.qNo);
+};
+
+const getRawContentText = (content: string): string => {
+  if (content && content.startsWith("<!--MCQ_DATA_V2-->\n")) {
+    try {
+      const jsonStr = content.replace("<!--MCQ_DATA_V2-->\n", "");
+      const parsed = JSON.parse(jsonStr);
+      const subjectContents = parsed.subjectContents || {};
+      return Object.entries(subjectContents)
+        .map(([subj, text]) => `## ${subj}\n${text}`)
+        .join('\n\n');
+    } catch (e) {
+      console.error("Failed to parse V2 data in AnswerKeyManager", e);
+    }
+  }
+  return content || '';
 };
 
 interface GeneratedPaper {
@@ -186,7 +203,8 @@ export const AnswerKeyManager = ({ prefilledPaperId }: { prefilledPaperId?: stri
         
         let examSubjectMatches = dbSubject.includes(selSub);
         
-        const qList = parseQuestionsWithSubjects(p.content);
+        const rawText = getRawContentText(p.content);
+        const qList = parseQuestionsWithSubjects(rawText);
         const contentHeadingMatches = qList.some(q => q.subject.toLowerCase() === selSub);
         
         subjMatch = examSubjectMatches || contentHeadingMatches;
@@ -251,13 +269,14 @@ export const AnswerKeyManager = ({ prefilledPaperId }: { prefilledPaperId?: stri
       setIsGeneratingAI(true);
       toast.loading('AI is reading the paper to auto-generate answers...', { id: 'ai-gen' });
       
+      const rawText = getRawContentText(paper.content);
       const prompt = `Extract the correct answers for the following multiple choice questions if possible. 
 Return ONLY a valid JSON array of objects, where each object has "qNo" (number) and "answer" (string, e.g. "A", "B", "C", "D" or the exact text). 
 If a question doesn't have a clear answer marked, leave "answer" as "".
 Example: [{"qNo": 1, "answer": "A"}, {"qNo": 2, "answer": "B"}]
 
 Questions:
-${paper.content}`;
+${rawText}`;
       
       const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`, {
         method: 'POST',
@@ -328,13 +347,14 @@ ${paper.content}`;
       setIsGeneratingAI(true);
       toast.loading('AI is reading the paper...', { id: 'ai-gen' });
       
+      const rawText = getRawContentText(selectedPaper.content);
       const prompt = `Extract the correct answers for the following multiple choice questions if possible. 
 Return ONLY a valid JSON array of objects, where each object has "qNo" (number) and "answer" (string, e.g. "A", "B", "C", "D" or the exact text). 
 If a question doesn't have a clear answer marked, leave "answer" as "".
 Example: [{"qNo": 1, "answer": "A"}, {"qNo": 2, "answer": "B"}]
 
 Questions:
-${selectedPaper.content}`;
+${rawText}`;
       
       const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`, {
         method: 'POST',
