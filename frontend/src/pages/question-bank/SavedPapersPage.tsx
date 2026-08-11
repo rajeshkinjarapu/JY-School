@@ -244,7 +244,7 @@ const SavedPapersPage = () => {
           </div>
         }
       />
-      <div className="flex-1 overflow-auto p-3 sm:p-4 animate-fade-in pb-16">
+      <div className="flex-1 overflow-auto p-4 sm:p-6 animate-fade-in">
 
       <div className="max-w-7xl mx-auto">
         {/* Controls Bar */}
@@ -262,22 +262,7 @@ const SavedPapersPage = () => {
               />
             </div>
 
-            {/* Subject Filter Chips */}
-            <div className="flex items-center gap-2 overflow-x-auto hide-scrollbar pb-1 sm:pb-0">
-              {uniqueSubjects.map(sub => (
-                <button
-                  key={sub}
-                  onClick={() => setSelectedSubject(sub)}
-                  className={`px-4 py-2.5 rounded-2xl text-xs font-black whitespace-nowrap transition-all duration-200 ${
-                    selectedSubject === sub 
-                    ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20' 
-                    : 'bg-white text-slate-500 border border-slate-200 shadow-sm hover:bg-slate-50 hover:text-slate-700'
-                  }`}
-                >
-                  {sub}
-                </button>
-              ))}
-            </div>
+
           </div>
 
           <div className="flex items-center gap-3 shrink-0">
