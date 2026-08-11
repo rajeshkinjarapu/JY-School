@@ -663,7 +663,8 @@ export const MCQPaperGeneratorPage = () => {
               subjectContents={subjectContents}
               examName={examName}
               examDate={examDate}
-              examSubject={examClass}
+              examClass={examClass}
+              examSubject={selectedSubjects.join(', ')}
               selectedSubjects={selectedSubjects.length > 0 ? selectedSubjects : ['General']}
               logoBase64={logoBase64}
               maxMarks={maxMarks}
