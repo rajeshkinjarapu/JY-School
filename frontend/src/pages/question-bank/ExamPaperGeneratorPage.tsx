@@ -478,15 +478,17 @@ ${paperContent}`;
       <div className="absolute top-0 left-0 right-0 h-64 bg-gradient-to-b from-indigo-50/50 to-transparent pointer-events-none print:hidden z-0" />
       
       <div className="relative z-10 flex flex-col h-full">
-        <PageHeader 
-          title={
-            activeTab === 'landing' ? "Exam Paper Hub" :
-            activeTab === 'generator' ? "Exam Paper Generator" :
-            activeTab === 'saved' ? "Saved Papers" :
-            "Answer Key Manager"
-          } 
-          icon={<LayoutTemplate className="w-5 h-5 text-indigo-600" />} 
-        />
+        <div className="print:hidden">
+          <PageHeader 
+            title={
+              activeTab === 'landing' ? "Exam Paper Hub" :
+              activeTab === 'generator' ? "Exam Paper Generator" :
+              activeTab === 'saved' ? "Saved Papers" :
+              "Answer Key Manager"
+            } 
+            icon={<LayoutTemplate className="w-5 h-5 text-indigo-600" />} 
+          />
+        </div>
         
         {/* Navigation Tabs Removed */}
 

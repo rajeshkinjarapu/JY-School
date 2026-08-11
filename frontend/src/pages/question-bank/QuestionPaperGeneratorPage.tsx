@@ -467,15 +467,17 @@ export const QuestionPaperGeneratorPage = () => {
 
   return (
     <div ref={containerRef} className="flex flex-col h-full bg-gray-50/50 print:block" style={{ minHeight: 'calc(100vh - 64px)' }}>
-      <PageHeader 
-        title={
-          activeTab === 'landing' ? "JEE Paper Hub" :
-          activeTab === 'generator' ? "JEE Paper Generator" :
-          activeTab === 'saved' ? "Saved JEE Papers" :
-          "Answer Key Manager"
-        } 
-        icon={<FileText className="w-5 h-5 text-white" />} 
-      />
+      <div className="print:hidden">
+        <PageHeader 
+          title={
+            activeTab === 'landing' ? "JEE Paper Hub" :
+            activeTab === 'generator' ? "JEE Paper Generator" :
+            activeTab === 'saved' ? "Saved JEE Papers" :
+            "Answer Key Manager"
+          } 
+          icon={<FileText className="w-5 h-5 text-white" />} 
+        />
+      </div>
 
       {/* Navigation Tabs Removed */}
 
