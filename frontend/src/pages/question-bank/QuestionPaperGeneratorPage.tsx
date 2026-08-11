@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ChevronLeft, Sparkles, Upload, Save, Printer, FileText, Settings, Maximize, X, Wand2, BookOpen, ImagePlus, Key } from 'lucide-react';
-import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
+import { ChevronLeft, Sparkles, Upload, Save, Printer, FileText, Settings, Maximize, X, Wand2, BookOpen, ImagePlus } from 'lucide-react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { LiveLatexPreview } from '../../components/QuestionBank/LiveLatexPreview';
 import type { FloatingImage } from '../../components/QuestionBank/LiveLatexPreview';
@@ -8,31 +8,27 @@ import { api } from '../../api/axios';
 
 import { PageHeader } from '../../components/UI/PageHeader';
 
-import { SavedPapersPage } from './SavedPapersPage';
-import { AnswerKeyManager } from '../../components/QuestionBank/AnswerKeyManager';
-
 export const QuestionPaperGeneratorPage = () => {
-  const location = useLocation();
-  const searchParams = new URLSearchParams(location.search);
-  const paperId = searchParams.get('id');
-
-  const [activeTab, setActiveTab] = useState<'landing' | 'generator' | 'saved' | 'answer-key'>(paperId ? 'generator' : 'landing');
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const paperId = searchParams.get('id');
   const [isSaving, setIsSaving] = useState(false);
   
   // Paper Settings State
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [examName, setExamName] = useState<string>(() => localStorage.getItem('jy_exam_name') || 'JEE Paper Generator');
+  const [examName, setExamName] = useState<string>(() => localStorage.getItem('jy_exam_name') || 'FINAL EXAMINATION');
   const [examSubject, setExamSubject] = useState<string>(() => localStorage.getItem('jy_exam_subject') || 'GRAND TEST');
   const [examDate, setExamDate] = useState<string>(() => localStorage.getItem('jy_exam_date') || '');
   const [maxMarks, setMaxMarks] = useState('100');
-  const [time, setTime] = useState<string>(() => localStorage.getItem('jy_exam_marks') || '180');
+  const [time, setTime] = useState<string>(() => localStorage.getItem('jy_exam_marks') || '75');
   const [instructions, setInstructions] = useState<string>(() => 
-    localStorage.getItem('jy_exam_instructions') || '1. All questions are compulsory.\n2. Each question carries equal marks.\n3. There is negative marking for incorrect answers.'
+    localStorage.getItem('jy_exam_instructions') || 'Answer all questions.\nEach question carries equal marks.\nRead questions carefully before answering.'
   );
-  const [examClass, setExamClass] = useState<string>(() => localStorage.getItem('jy_exam_class') || '10th Class');
+  const [logoBase64, setLogoBase64] = useState<string>(() => {
+    return localStorage.getItem('jy_school_logo') || '';
+  });
   
-  // Settings State
+  // AI Modal State
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
   const [aiSourceType, setAiSourceType] = useState('text');
   const [aiInput, setAiInput] = useState('');
@@ -56,10 +52,12 @@ export const QuestionPaperGeneratorPage = () => {
   const [deepseekApiKey, setDeepseekApiKey] = useState<string>(() => {
     return localStorage.getItem('jy_deepseek_api_key') || '';
   });
-
+  const [isDoubleColumn, setIsDoubleColumn] = useState(false);
   
   // Editor State
-  const [content, setContent] = useState('');
+  const [content, setContent] = useState(
+    '1. What is the capital of France?\n(A) London\n(B) Paris\n(C) Berlin\n(D) Madrid\n\n2. Solve for x: $2x + 5 = 15$\n(A) 2\n(B) 4\n(C) 5\n(D) 10\n\n3. Which of the following is the quadratic formula?\n(A) $x = \\frac{b}{2a}$\n(B) $x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$\n(C) $x = mc^2$\n(D) $x = y + c$'
+  );
   const [isGenerating, setIsGenerating] = useState(false);
   const containerRef = React.useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -319,7 +317,7 @@ export const QuestionPaperGeneratorPage = () => {
         payload.imageMimeType = aiImageMimeType;
       }
 
-      const response = await api.post('/api/questions/import-ai', payload, { timeout: 120000 });
+      const response = await api.post('/api/questions/import-ai', payload);
 
       const questions = response.data.questions || [];
       
@@ -412,7 +410,6 @@ export const QuestionPaperGeneratorPage = () => {
   // Load paper from DB if editing
   useEffect(() => {
     if (!paperId) return;
-    setActiveTab('generator');
     const loadPaper = async () => {
       try {
         toast.loading('Loading paper...', { id: 'load' });
@@ -449,7 +446,7 @@ export const QuestionPaperGeneratorPage = () => {
     toast.loading(paperId ? 'Updating paper...' : 'Saving paper...', { id: 'save' });
     try {
       const serializedContent = serializeContent();
-      const payload = { examName: finalExamName, examSubject: finalExamName, examDate, time, instructions, content: serializedContent };
+      const payload = { examName: finalExamName, examSubject, examDate, time, instructions, content: serializedContent };
       if (paperId) {
         await api.put(`/api/generated-papers/${paperId}`, payload);
         toast.success('Paper updated successfully!', { id: 'save' });
@@ -468,75 +465,11 @@ export const QuestionPaperGeneratorPage = () => {
 
   return (
     <div ref={containerRef} className="flex flex-col h-full bg-gray-50/50 print:block" style={{ minHeight: 'calc(100vh - 64px)' }}>
-      <div className="print:hidden">
-        <PageHeader 
-          title={
-            activeTab === 'landing' ? "JEE Paper Hub" :
-            activeTab === 'generator' ? "JEE Paper Generator" :
-            activeTab === 'saved' ? "Saved JEE Papers" :
-            "Answer Key Manager"
-          } 
-          icon={<FileText className="w-5 h-5 text-white" />} 
-        />
-      </div>
-
-      {/* Navigation Tabs Removed */}
-
-      {activeTab === 'landing' && (
-        <div className="flex-1 p-8 max-w-5xl mx-auto w-full flex flex-col items-center justify-center animate-fade-in">
-          <div className="text-center mb-12">
-            <h1 className="text-4xl font-black text-slate-800 tracking-tight">JEE Paper Hub</h1>
-            <p className="text-slate-500 mt-3 text-lg font-medium">What would you like to do today?</p>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full">
-            {/* Box 1 */}
-            <button onClick={() => setActiveTab('generator')} className="group flex flex-col items-center p-8 bg-white rounded-3xl border border-slate-200 hover:border-indigo-300 hover:shadow-2xl hover:shadow-indigo-500/10 transition-all text-center hover:-translate-y-1">
-              <div className="w-20 h-20 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-indigo-600 group-hover:text-white transition-all shadow-sm">
-                <FileText className="w-10 h-10" />
-              </div>
-              <h3 className="text-xl font-black text-slate-800 mb-2">Paper Generator</h3>
-              <p className="text-sm text-slate-500 font-medium">Create a new JEE exam paper from scratch or using AI.</p>
-            </button>
-
-            {/* Box 2 */}
-            <button onClick={() => setActiveTab('saved')} className="group flex flex-col items-center p-8 bg-white rounded-3xl border border-slate-200 hover:border-emerald-300 hover:shadow-2xl hover:shadow-emerald-500/10 transition-all text-center hover:-translate-y-1">
-              <div className="w-20 h-20 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-emerald-500 group-hover:text-white transition-all shadow-sm">
-                <BookOpen className="w-10 h-10" />
-              </div>
-              <h3 className="text-xl font-black text-slate-800 mb-2">Saved Papers</h3>
-              <p className="text-sm text-slate-500 font-medium">View, edit, or print your previously generated JEE papers.</p>
-            </button>
-
-            {/* Box 3 */}
-            <button onClick={() => setActiveTab('answer-key')} className="group flex flex-col items-center p-8 bg-white rounded-3xl border border-slate-200 hover:border-amber-300 hover:shadow-2xl hover:shadow-amber-500/10 transition-all text-center hover:-translate-y-1">
-              <div className="w-20 h-20 bg-amber-50 text-amber-500 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-amber-500 group-hover:text-white transition-all shadow-sm">
-                <Key className="w-10 h-10" />
-              </div>
-              <h3 className="text-xl font-black text-slate-800 mb-2">Answer Keys</h3>
-              <p className="text-sm text-slate-500 font-medium">Manage and auto-generate answer keys for your JEE papers.</p>
-            </button>
-          </div>
-        </div>
-      )}
-
-
-      {activeTab === 'saved' && (
-        <div className="flex-1 p-4 max-w-[1920px] mx-auto w-full">
-          <div className="bg-white rounded-3xl shadow-sm border border-slate-200 h-full overflow-hidden">
-            <SavedPapersPage isEmbedded={true} />
-          </div>
-        </div>
-      )}
-
-      {activeTab === 'answer-key' && (
-        <div className="flex-1 p-4 max-w-[1920px] mx-auto w-full">
-          <AnswerKeyManager prefilledPaperId={paperId} />
-        </div>
-      )}
-
-      {activeTab === 'generator' && (
-        <>
+      <PageHeader 
+        title="AI Paper Generator" 
+        icon={<FileText className="w-5 h-5 text-white" />} 
+      />
+      
       {/* Actions Toolbar */}
       <div className="bg-white border-b border-slate-200 px-4 py-3 flex flex-wrap items-center justify-between gap-3 print:hidden shadow-sm z-10">
         <div className="flex items-center gap-2">
@@ -551,7 +484,7 @@ export const QuestionPaperGeneratorPage = () => {
         
         <div className="flex items-center gap-3">
           <button
-            onClick={() => setActiveTab('saved')}
+            onClick={() => navigate('/question-bank/saved-papers')}
             className="p-2 bg-slate-100 text-slate-700 rounded-xl hover:bg-slate-200 transition-all flex items-center gap-2 text-sm font-medium"
             title="Saved Papers"
           >
@@ -599,10 +532,10 @@ export const QuestionPaperGeneratorPage = () => {
       </div>
 
       {/* Main Dual Layout Content */}
-      <div className="flex-1 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden print:overflow-visible h-[calc(100vh-80px)] print:h-auto custom-scrollbar print:block">
+      <div className="flex-1 flex overflow-hidden print:overflow-visible h-[calc(100vh-80px)] print:h-auto">
         
         {/* Left Side: Editor (Hidden on Print) */}
-        <div className="w-full lg:w-1/2 min-h-[50vh] lg:min-h-0 flex-shrink-0 lg:flex-shrink p-6 overflow-y-auto border-r border-slate-200 bg-white print:hidden custom-scrollbar">
+        <div className="w-1/2 p-6 overflow-y-auto border-r border-slate-200 bg-white print:hidden custom-scrollbar">
           <div className="h-full flex flex-col pb-20">
             <h3 className="font-semibold text-slate-700 border-b pb-2 mb-4 flex justify-between items-center">
               <span>Question Content (LaTeX Support)</span>
@@ -644,24 +577,38 @@ export const QuestionPaperGeneratorPage = () => {
         </div>
 
         {/* Right Side: Live Preview (Full Width on Print) */}
-        <div className="w-full lg:w-1/2 min-h-[60vh] lg:min-h-0 flex-shrink-0 lg:flex-shrink bg-slate-100 flex flex-col print:w-full print:bg-white transition-all duration-300 relative print:block print:overflow-visible">
+        <div className="w-1/2 overflow-y-auto bg-slate-100 print:w-full print:bg-white custom-scrollbar flex flex-col relative">
           <div className="sticky top-0 z-10 bg-slate-100/80 backdrop-blur-md border-b border-slate-200 px-6 py-3 flex justify-between items-center print:hidden">
             <h3 className="font-semibold text-slate-700 flex items-center gap-2">
               Live Preview
             </h3>
+            <div className="flex bg-slate-200 rounded-lg p-1">
+              <button 
+                onClick={() => setIsDoubleColumn(false)}
+                className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${!isDoubleColumn ? 'bg-white shadow text-blue-600' : 'text-slate-600 hover:text-slate-800'}`}
+              >
+                Single View
+              </button>
+              <button 
+                onClick={() => setIsDoubleColumn(true)}
+                className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${isDoubleColumn ? 'bg-white shadow text-blue-600' : 'text-slate-600 hover:text-slate-800'}`}
+              >
+                Double View
+              </button>
+            </div>
           </div>
-          <div className="flex-1 overflow-y-auto custom-scrollbar flex justify-center p-8 print:p-0 relative print:block print:overflow-visible">
-            <div className="paper-zoom origin-top transition-transform print:block print:overflow-visible">
+          <div className="flex justify-center p-8 print:p-0">
+            <div className="paper-zoom origin-top transition-transform">
             <LiveLatexPreview 
               content={content}
               examName={examName}
               examDate={examDate}
-              examClass={examClass}
-              logoBase64="/logo.png?v=1"
+              examSubject={examSubject}
+              logoBase64={logoBase64}
               maxMarks={maxMarks}
               time={time}
               instructions={instructions.split('\n').filter(i => i.trim() !== '')}
-              isDoubleColumn={false}
+              isDoubleColumn={isDoubleColumn}
               inlineImages={inlineImages}
               onImageUpdate={(id, updates) => setInlineImages(prev => ({ ...prev, [id]: { ...prev[id], ...updates } }))}
               onImageDelete={(id) => {
@@ -677,8 +624,6 @@ export const QuestionPaperGeneratorPage = () => {
         </div>
 
       </div>
-      </>
-      )}
 
       {/* AI Generate Modal */}
       {isAiModalOpen && (
@@ -798,85 +743,97 @@ export const QuestionPaperGeneratorPage = () => {
 
       {/* Settings Modal */}
       {isSettingsOpen && (
-        <div className="fixed inset-0 z-[200] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6 animate-fade-in">
-          <div className="bg-white rounded-[2rem] w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden border border-slate-100">
-            <div className="px-8 py-5 border-b border-slate-100 flex justify-between items-center bg-white flex-shrink-0">
-              <h2 className="font-black text-xl text-slate-800 flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600">
-                  <Settings className="w-5 h-5" />
-                </div>
-                Paper Settings
+        <div className="fixed inset-0 z-[200] bg-black/50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50 flex-shrink-0">
+              <h2 className="font-bold text-lg text-slate-800 flex items-center gap-2">
+                <Settings className="w-5 h-5 text-blue-600" /> Paper Settings
               </h2>
-              <button onClick={() => setIsSettingsOpen(false)} className="p-2 hover:bg-slate-100 text-slate-400 hover:text-slate-700 rounded-full transition-colors">
-                <X className="w-6 h-6" />
+              <button onClick={() => setIsSettingsOpen(false)} className="p-2 hover:bg-slate-200 rounded-full transition-colors">
+                <X className="w-5 h-5 text-slate-500" />
               </button>
             </div>
             
-            <div className="p-8 space-y-6 overflow-y-auto flex-1 custom-scrollbar bg-slate-50/30">
-              
-              <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm space-y-5">
-                <h3 className="font-bold text-slate-800 mb-4 flex items-center gap-2 border-b border-slate-50 pb-3"><BookOpen className="w-4 h-4 text-indigo-500" /> Basic Information</h3>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                  <div className="lg:col-span-2">
-                    <label className="block text-[13px] font-black text-slate-700 mb-1.5 uppercase tracking-wide">Exam Name</label>
-                    <input
-                      type="text"
-                      value={examName}
-                      onChange={(e) => setExamName(e.target.value)}
-                      className="w-full rounded-xl border-slate-200 bg-white border p-3 text-sm font-bold text-slate-700 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all shadow-sm"
-                      placeholder="e.g. JEE Mains Grand Test"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[13px] font-black text-slate-700 mb-1.5 uppercase tracking-wide">Class</label>
-                    <input
-                      type="text"
-                      value={examClass}
-                      onChange={(e) => {
-                        setExamClass(e.target.value);
-                        localStorage.setItem('jy_exam_class', e.target.value);
-                      }}
-                      placeholder="e.g. 11th Class"
-                      className="w-full rounded-xl border-slate-200 bg-white border p-3 text-sm font-bold text-slate-700 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all shadow-sm"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-[13px] font-black text-slate-700 mb-1.5 uppercase tracking-wide">Date</label>
-                    <input
-                      type="text"
-                      value={examDate}
-                      onChange={(e) => setExamDate(e.target.value)}
-                      placeholder="DD/MM/YYYY"
-                      className="w-full rounded-xl border-slate-200 bg-white border p-3 text-sm font-bold text-slate-700 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all shadow-sm"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[13px] font-black text-slate-700 mb-1.5 uppercase tracking-wide">Marks</label>
-                    <input
-                      type="text"
-                      value={time}
-                      onChange={(e) => setTime(e.target.value)}
-                      placeholder="e.g. 300"
-                      className="w-full rounded-xl border-slate-200 bg-white border p-3 text-sm font-bold text-slate-700 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all shadow-sm"
-                    />
-                  </div>
+            <div className="p-6 space-y-5 overflow-y-auto flex-1 custom-scrollbar">
+              <div className="grid grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Class</label>
+                  <input
+                    type="text"
+                    value={examSubject}
+                    onChange={(e) => setExamSubject(e.target.value)}
+                    className="w-full rounded-lg border-slate-200 bg-white border p-2.5 text-sm focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Date</label>
+                  <input
+                    type="text"
+                    value={examDate}
+                    onChange={(e) => setExamDate(e.target.value)}
+                    placeholder="DD/MM/YYYY"
+                    className="w-full rounded-lg border-slate-200 bg-white border p-2.5 text-sm focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
+                  />
                 </div>
               </div>
-
-              <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
-                <label className="block text-[13px] font-black text-slate-700 mb-2 uppercase tracking-wide">General Instructions (One per line)</label>
+              <div className="pt-2 border-t border-slate-100">
+                <label className="block text-sm font-medium text-slate-700 mb-1">School Logo</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      const reader = new FileReader();
+                      reader.onload = (event) => {
+                        const result = event.target?.result as string;
+                        setLogoBase64(result);
+                        localStorage.setItem('jy_school_logo', result);
+                      };
+                      reader.readAsDataURL(file);
+                    }
+                  }}
+                  className="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                />
+                {logoBase64 && (
+                  <div className="mt-2 relative inline-block">
+                    <img src={logoBase64} alt="Logo" className="h-12 object-contain border rounded" />
+                    <button onClick={() => { setLogoBase64(''); localStorage.removeItem('jy_school_logo'); }} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 w-5 h-5 flex items-center justify-center text-xs">X</button>
+                  </div>
+                )}
+                <p className="text-xs text-slate-500 mt-1">Stored locally in your browser.</p>
+              </div>
+              <div className="grid grid-cols-2 gap-6 pt-2 border-t border-slate-100">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Exam Name</label>
+                  <input
+                    type="text"
+                    value={examName}
+                    onChange={(e) => setExamName(e.target.value)}
+                    className="w-full rounded-lg border-slate-200 bg-white border p-2.5 text-sm focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Marks</label>
+                  <input
+                    type="text"
+                    value={time}
+                    onChange={(e) => setTime(e.target.value)}
+                    className="w-full rounded-lg border-slate-200 bg-white border p-2.5 text-sm focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">General Instructions (One per line)</label>
                 <textarea
                   value={instructions}
                   onChange={(e) => setInstructions(e.target.value)}
-                  className="w-full rounded-xl border-slate-200 bg-white border p-4 text-sm font-medium text-slate-600 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none resize-none h-32 transition-all shadow-sm leading-relaxed"
+                  className="w-full rounded-lg border-slate-200 bg-white border p-2.5 text-sm focus:ring-2 focus:ring-blue-500/20 outline-none resize-none h-24 transition-all"
                   placeholder="Enter each instruction on a new line..."
                 />
               </div>
-
-              <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
-                <h4 className="font-black text-slate-800 flex items-center gap-2 mb-4 border-b border-slate-50 pb-3">
+              <div className="pt-4 border-t border-slate-100">
+                <h4 className="font-medium text-slate-700 flex items-center gap-2 mb-3">
                   <Sparkles className="w-4 h-4 text-purple-500" />
                   AI Model Configuration
                 </h4>

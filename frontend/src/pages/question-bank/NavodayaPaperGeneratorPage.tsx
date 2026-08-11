@@ -1,21 +1,17 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ChevronLeft, Sparkles, Upload, Save, Printer, FileText, Settings, Maximize, X, Wand2, BookOpen, ImagePlus, Key } from 'lucide-react';
-import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
+import { ChevronLeft, Sparkles, Upload, Save, Printer, FileText, Settings, Maximize, X, Wand2, BookOpen, ImagePlus } from 'lucide-react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { LiveLatexPreview } from '../../components/QuestionBank/LiveLatexPreview';
 import type { FloatingImage } from '../../components/QuestionBank/LiveLatexPreview';
 import { api } from '../../api/axios';
 
 import { PageHeader } from '../../components/UI/PageHeader';
-import { SavedPapersPage } from './SavedPapersPage';
-import { AnswerKeyManager } from '../../components/QuestionBank/AnswerKeyManager';
 
 export const NavodayaPaperGeneratorPage = () => {
   const navigate = useNavigate();
-  const location = useLocation();
-  const searchParams = new URLSearchParams(location.search);
+  const [searchParams] = useSearchParams();
   const paperId = searchParams.get('id');
-  const [activeTab, setActiveTab] = useState<'landing' | 'generator' | 'saved' | 'answer-key'>(paperId ? 'generator' : 'landing');
   const [isSaving, setIsSaving] = useState(false);
   
   // Paper Settings State
@@ -28,9 +24,11 @@ export const NavodayaPaperGeneratorPage = () => {
   const [instructions, setInstructions] = useState<string>(() => 
     localStorage.getItem('navodaya_exam_instructions') || 'Answer all questions.\nEach question carries equal marks.\nRead questions carefully before answering.'
   );
-  const [examClass, setExamClass] = useState<string>(() => localStorage.getItem('navodaya_exam_class') || '6th Class');
+  const [logoBase64, setLogoBase64] = useState<string>(() => {
+    return localStorage.getItem('jy_school_logo') || ''; // Keeping same school heading
+  });
   
-  // Settings State
+  // AI Modal State
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
   const [aiSourceType, setAiSourceType] = useState('text');
   const [aiInput, setAiInput] = useState('');
@@ -54,8 +52,12 @@ export const NavodayaPaperGeneratorPage = () => {
   const [deepseekApiKey, setDeepseekApiKey] = useState<string>(() => {
     return localStorage.getItem('jy_deepseek_api_key') || '';
   });
+  const [isDoubleColumn, setIsDoubleColumn] = useState(false);
+  
   // Editor State
-  const [content, setContent] = useState('');
+  const [content, setContent] = useState(
+    '1. What is 25% of 200?\n(A) 25\n(B) 50\n(C) 75\n(D) 100\n\n2. Solve for x: $2x + 5 = 15$\n(A) 2\n(B) 4\n(C) 5\n(D) 10\n\n3. The perimeter of a rectangle is 40 cm. If its length is 12 cm, what is its breadth?\n(A) 8 cm\n(B) 10 cm\n(C) 12 cm\n(D) 16 cm'
+  );
   const [isGenerating, setIsGenerating] = useState(false);
   const containerRef = React.useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -306,7 +308,7 @@ export const NavodayaPaperGeneratorPage = () => {
         payload.imageMimeType = aiImageMimeType;
       }
 
-      const response = await api.post('/api/questions/import-ai', payload, { timeout: 120000 });
+      const response = await api.post('/api/questions/import-ai', payload);
 
       const questions = response.data.questions || [];
       
@@ -388,7 +390,6 @@ export const NavodayaPaperGeneratorPage = () => {
 
   useEffect(() => {
     if (!paperId) return;
-    setActiveTab('generator');
     const loadPaper = async () => {
       try {
         toast.loading('Loading paper...', { id: 'load' });
@@ -424,7 +425,7 @@ export const NavodayaPaperGeneratorPage = () => {
     toast.loading(paperId ? 'Updating paper...' : 'Saving paper...', { id: 'save' });
     try {
       const serializedContent = serializeContent();
-      const payload = { examName: finalExamName, examSubject: finalExamName, examDate, time, instructions, content: serializedContent };
+      const payload = { examName: finalExamName, examSubject, examDate, time, instructions, content: serializedContent };
       if (paperId) {
         await api.put(`/api/generated-papers/${paperId}`, payload);
         toast.success('Paper updated successfully!', { id: 'save' });
@@ -442,74 +443,11 @@ export const NavodayaPaperGeneratorPage = () => {
 
   return (
     <div ref={containerRef} className="flex flex-col h-full bg-gray-50/50 print:block" style={{ minHeight: 'calc(100vh - 64px)' }}>
-      <div className="print:hidden">
-        <PageHeader 
-          title={
-            activeTab === 'landing' ? "Navodaya Paper Hub" :
-            activeTab === 'generator' ? "Navodaya Paper Generator" :
-            activeTab === 'saved' ? "Saved Navodaya Papers" :
-            "Answer Key Manager"
-          } 
-          icon={<FileText className="w-5 h-5 text-white" />} 
-        />
-      </div>
+      <PageHeader 
+        title="Navodaya Paper Generator" 
+        icon={<FileText className="w-5 h-5 text-white" />} 
+      />
       
-      {/* Navigation Tabs Removed */}
-
-      {activeTab === 'landing' && (
-        <div className="flex-1 p-8 max-w-5xl mx-auto w-full flex flex-col items-center justify-center animate-fade-in">
-          <div className="text-center mb-12">
-            <h1 className="text-4xl font-black text-slate-800 tracking-tight">Navodaya Paper Hub</h1>
-            <p className="text-slate-500 mt-3 text-lg font-medium">What would you like to do today?</p>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full">
-            {/* Box 1 */}
-            <button onClick={() => setActiveTab('generator')} className="group flex flex-col items-center p-8 bg-white rounded-3xl border border-slate-200 hover:border-indigo-300 hover:shadow-2xl hover:shadow-indigo-500/10 transition-all text-center hover:-translate-y-1">
-              <div className="w-20 h-20 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-indigo-600 group-hover:text-white transition-all shadow-sm">
-                <FileText className="w-10 h-10" />
-              </div>
-              <h3 className="text-xl font-black text-slate-800 mb-2">Paper Generator</h3>
-              <p className="text-sm text-slate-500 font-medium">Create a new Navodaya exam paper from scratch or using AI.</p>
-            </button>
-
-            {/* Box 2 */}
-            <button onClick={() => setActiveTab('saved')} className="group flex flex-col items-center p-8 bg-white rounded-3xl border border-slate-200 hover:border-emerald-300 hover:shadow-2xl hover:shadow-emerald-500/10 transition-all text-center hover:-translate-y-1">
-              <div className="w-20 h-20 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-emerald-500 group-hover:text-white transition-all shadow-sm">
-                <BookOpen className="w-10 h-10" />
-              </div>
-              <h3 className="text-xl font-black text-slate-800 mb-2">Saved Papers</h3>
-              <p className="text-sm text-slate-500 font-medium">View, edit, or print your previously generated Navodaya papers.</p>
-            </button>
-
-            {/* Box 3 */}
-            <button onClick={() => setActiveTab('answer-key')} className="group flex flex-col items-center p-8 bg-white rounded-3xl border border-slate-200 hover:border-amber-300 hover:shadow-2xl hover:shadow-amber-500/10 transition-all text-center hover:-translate-y-1">
-              <div className="w-20 h-20 bg-amber-50 text-amber-500 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-amber-500 group-hover:text-white transition-all shadow-sm">
-                <Key className="w-10 h-10" />
-              </div>
-              <h3 className="text-xl font-black text-slate-800 mb-2">Answer Keys</h3>
-              <p className="text-sm text-slate-500 font-medium">Manage and auto-generate answer keys for your papers.</p>
-            </button>
-          </div>
-        </div>
-      )}
-
-      {activeTab === 'saved' && (
-        <div className="flex-1 p-4 max-w-[1920px] mx-auto w-full">
-          <div className="bg-white rounded-3xl shadow-sm border border-slate-200 h-full overflow-hidden">
-            <SavedPapersPage isEmbedded={true} />
-          </div>
-        </div>
-      )}
-
-      {activeTab === 'answer-key' && (
-        <div className="flex-1 p-4 max-w-[1920px] mx-auto w-full">
-          <AnswerKeyManager prefilledPaperId={paperId} />
-        </div>
-      )}
-
-      {activeTab === 'generator' && (
-        <>
       {/* Actions Toolbar */}
       <div className="bg-white border-b border-slate-200 px-4 py-3 flex flex-wrap items-center justify-between gap-3 print:hidden shadow-sm z-10">
         <div className="flex items-center gap-2">
@@ -524,7 +462,7 @@ export const NavodayaPaperGeneratorPage = () => {
         
         <div className="flex items-center gap-3">
           <button
-            onClick={() => setActiveTab('saved')}
+            onClick={() => navigate('/question-bank/saved-papers')}
             className="p-2 bg-slate-100 text-slate-700 rounded-xl hover:bg-slate-200 transition-all flex items-center gap-2 text-sm font-medium"
             title="Saved Papers"
           >
@@ -572,10 +510,10 @@ export const NavodayaPaperGeneratorPage = () => {
       </div>
 
       {/* Main Dual Layout Content */}
-      <div className="flex-1 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden print:overflow-visible h-[calc(100vh-80px)] print:h-auto custom-scrollbar print:block">
+      <div className="flex-1 flex overflow-hidden print:overflow-visible h-[calc(100vh-80px)] print:h-auto">
         
         {/* Left Side: Editor (Hidden on Print) */}
-        <div className="w-full lg:w-1/2 min-h-[50vh] lg:min-h-0 flex-shrink-0 lg:flex-shrink p-6 overflow-y-auto border-r border-slate-200 bg-white print:hidden custom-scrollbar">
+        <div className="w-1/2 p-6 overflow-y-auto border-r border-slate-200 bg-white print:hidden custom-scrollbar">
           <div className="h-full flex flex-col pb-20">
             <h3 className="font-semibold text-slate-700 border-b pb-2 mb-4 flex justify-between items-center">
               <span>Question Content (LaTeX Support)</span>
@@ -617,24 +555,38 @@ export const NavodayaPaperGeneratorPage = () => {
         </div>
 
         {/* Right Side: Live Preview */}
-        <div className="w-full lg:w-1/2 min-h-[60vh] lg:min-h-0 flex-shrink-0 lg:flex-shrink bg-slate-100 flex flex-col print:w-full print:bg-white transition-all duration-300 relative print:block print:overflow-visible">
+        <div className="w-1/2 overflow-y-auto bg-slate-100 print:w-full print:bg-white custom-scrollbar flex flex-col relative">
           <div className="sticky top-0 z-10 bg-slate-100/80 backdrop-blur-md border-b border-slate-200 px-6 py-3 flex justify-between items-center print:hidden">
             <h3 className="font-semibold text-slate-700 flex items-center gap-2">
               Live Preview
             </h3>
+            <div className="flex bg-slate-200 rounded-lg p-1">
+              <button 
+                onClick={() => setIsDoubleColumn(false)}
+                className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${!isDoubleColumn ? 'bg-white shadow text-blue-600' : 'text-slate-600 hover:text-slate-800'}`}
+              >
+                Single View
+              </button>
+              <button 
+                onClick={() => setIsDoubleColumn(true)}
+                className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${isDoubleColumn ? 'bg-white shadow text-blue-600' : 'text-slate-600 hover:text-slate-800'}`}
+              >
+                Double View
+              </button>
+            </div>
           </div>
-          <div className="flex-1 overflow-y-auto custom-scrollbar flex justify-center p-8 print:p-0 relative print:block print:overflow-visible">
-            <div className="paper-zoom origin-top transition-transform print:block print:overflow-visible">
+          <div className="flex justify-center p-8 print:p-0">
+            <div className="paper-zoom origin-top transition-transform">
             <LiveLatexPreview 
               content={content}
               examName={examName}
               examDate={examDate}
-              examClass={examClass}
-              logoBase64="/logo.png?v=1"
+              examSubject={examSubject}
+              logoBase64={logoBase64}
               maxMarks={maxMarks}
               time={time}
               instructions={instructions.split('\n').filter(i => i.trim() !== '')}
-              isDoubleColumn={false}
+              isDoubleColumn={isDoubleColumn}
               inlineImages={inlineImages}
               onImageUpdate={(id, updates) => setInlineImages(prev => ({ ...prev, [id]: { ...prev[id], ...updates } }))}
               onImageDelete={(id) => {
@@ -650,8 +602,6 @@ export const NavodayaPaperGeneratorPage = () => {
         </div>
 
       </div>
-      </>
-      )}
 
       {/* AI Generate Modal */}
       {isAiModalOpen && (
@@ -805,17 +755,31 @@ export const NavodayaPaperGeneratorPage = () => {
                 </div>
               </div>
               <div className="pt-2 border-t border-slate-100">
-                <label className="block text-sm font-medium text-slate-700 mb-1">Class</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">School Logo</label>
                 <input
-                  type="text"
-                  value={examClass}
+                  type="file"
+                  accept="image/*"
                   onChange={(e) => {
-                    setExamClass(e.target.value);
-                    localStorage.setItem('navodaya_exam_class', e.target.value);
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      const reader = new FileReader();
+                      reader.onload = (event) => {
+                        const result = event.target?.result as string;
+                        setLogoBase64(result);
+                        localStorage.setItem('jy_school_logo', result);
+                      };
+                      reader.readAsDataURL(file);
+                    }
                   }}
-                  placeholder="e.g. 6th Class"
-                  className="w-full rounded-lg border-slate-200 bg-white border p-2.5 text-sm focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
+                  className="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                 />
+                {logoBase64 && (
+                  <div className="mt-2 relative inline-block">
+                    <img src={logoBase64} alt="Logo" className="h-12 object-contain border rounded" />
+                    <button onClick={() => { setLogoBase64(''); localStorage.removeItem('jy_school_logo'); }} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 w-5 h-5 flex items-center justify-center text-xs">X</button>
+                  </div>
+                )}
+                <p className="text-xs text-slate-500 mt-1">Stored locally in your browser.</p>
               </div>
               <div className="grid grid-cols-2 gap-6 pt-2 border-t border-slate-100">
                 <div>
