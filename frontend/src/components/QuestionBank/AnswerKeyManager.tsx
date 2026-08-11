@@ -148,11 +148,27 @@ export const AnswerKeyManager = ({ prefilledPaperId }: { prefilledPaperId?: stri
       }
       
       const classMatch = selectedClass ? c === selectedClass : true;
-      
       let subjMatch = true;
       if (selectedSubject) {
+        // 1. Check if the database column examSubject matches or contains it
+        const dbSubject = (p.examSubject || '').toLowerCase();
+        const selSub = selectedSubject.toLowerCase();
+        
+        let examSubjectMatches = dbSubject.includes(selSub);
+        
+        // Handle Science match
+        if (selSub === 'science') {
+          examSubjectMatches = examSubjectMatches || 
+            ['science', 'biology', 'physics', 'chemistry', 'natural science', 'physical science', 'general science'].some(s => dbSubject.includes(s));
+        } else if (selSub === 'maths') {
+          examSubjectMatches = examSubjectMatches || dbSubject.includes('math');
+        }
+        
+        // 2. Check if any question heading in the content matches
         const qList = parseQuestionsWithSubjects(p.content);
-        subjMatch = qList.some(q => isSubjectMatch(q.subject, selectedSubject));
+        const contentHeadingMatches = qList.some(q => isSubjectMatch(q.subject, selectedSubject));
+        
+        subjMatch = examSubjectMatches || contentHeadingMatches;
       }
       
       return classMatch && subjMatch;
