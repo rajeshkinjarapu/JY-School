@@ -71,10 +71,7 @@ const ExamListPage = lazy(routeImports['/exams']);
 const CreateExamPage = lazy(routeImports['/exams/create']);
 const MarksEntryPage = lazy(() => import('../pages/exams/MarksEntryPage'));
 const ReportCardPage = lazy(() => import('../pages/exams/ReportCardPage'));
-const PaperGeneratorDashboard = lazy(() => import('../pages/paper-generator/Dashboard').then((mod) => ({ default: mod.Dashboard })));
-const QuestionBankPage = lazy(() => import('../pages/paper-generator/QuestionBank').then((mod) => ({ default: mod.QuestionBank })));
-const PaperBuilderPage = lazy(() => import('../pages/paper-generator/PaperBuilder').then((mod) => ({ default: mod.PaperBuilder })));
-const PaperDetailPage = lazy(() => import('../pages/paper-generator/PaperDetail').then((mod) => ({ default: mod.PaperDetail })));
+
 const TimetablePage = lazy(routeImports['/timetable']);
 const FinancePage = lazy(routeImports['/finance']);
 const FeePaymentsPage = lazy(routeImports['/fee-payment']);
@@ -96,13 +93,13 @@ const FeeReminderPage = lazy(() => import('../pages/fees/FeeReminderPage'));
 const QuestionBankDashboard = lazy(routeImports['/question-bank']);
 const QuestionPaperGeneratorPage = lazy(() => import('../pages/question-bank/QuestionPaperGeneratorPage'));
 const NavodayaPaperGeneratorPage = lazy(() => import('../pages/question-bank/NavodayaPaperGeneratorPage'));
-const ExamPaperGeneratorPage = lazy(() => import('../pages/question-bank/ExamPaperGeneratorPage'));
+
 const SavedPapersPage = lazy(() => import('../pages/question-bank/SavedPapersPage'));
 const TransportDashboard = lazy(routeImports['/transport']);
 const TransportRoutesPage = lazy(() => import('../pages/transport/RoutesPage'));
 const TransportVehiclesPage = lazy(() => import('../pages/transport/VehiclesPage'));
 const TransportStudentsPage = lazy(() => import('../pages/transport/StudentTransportPage'));
-const AnswerKeyManager = lazy(() => import('../components/QuestionBank/AnswerKeyManager').then((mod) => ({ default: mod.AnswerKeyManager })));
+
 
 const AttendanceWrapper = () => {
   const { user } = useAuth();
@@ -309,22 +306,6 @@ export const router = createBrowserRouter([
         element: withSuspense(<StudentAdmitCardViewPage />),
       },
       {
-        path: 'question-bank/dashboard',
-        element: withSuspense(
-          <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN', 'TEACHER']}>
-            <PaperGeneratorDashboard />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: 'question-bank/questions',
-        element: withSuspense(
-          <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN', 'TEACHER']}>
-            <QuestionBankPage />
-          </ProtectedRoute>
-        ),
-      },
-      {
         path: 'question-bank/generator',
         element: (
           <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN', 'TEACHER']}>
@@ -340,30 +321,7 @@ export const router = createBrowserRouter([
           </ProtectedRoute>
         ),
       },
-      {
-        path: 'question-bank/exam-generator',
-        element: (
-          <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN', 'TEACHER']}>
-            <ExamPaperGeneratorPage />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: 'question-bank/papers/new',
-        element: withSuspense(
-          <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN', 'TEACHER']}>
-            <PaperBuilderPage />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: 'question-bank/papers/:id',
-        element: withSuspense(
-          <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN', 'TEACHER']}>
-            <PaperDetailPage />
-          </ProtectedRoute>
-        ),
-      },
+
       {
         path: 'timetable',
         element: withSuspense(<TimetablePage />),
@@ -448,14 +406,7 @@ export const router = createBrowserRouter([
           </ProtectedRoute>
         ),
       },
-      {
-        path: 'question-bank/exam-generator',
-        element: withSuspense(
-          <ProtectedRoute allowedRoles={['SUPER_ADMIN']}>
-            <ExamPaperGeneratorPage />
-          </ProtectedRoute>
-        ),
-      },
+
       {
         path: 'question-bank/saved-papers',
         element: withSuspense(
@@ -576,14 +527,7 @@ export const router = createBrowserRouter([
           </ProtectedRoute>
         ),
       },
-      {
-        path: 'answer-key',
-        element: withSuspense(
-          <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN', 'TEACHER']}>
-            <AnswerKeyManager />
-          </ProtectedRoute>
-        ),
-      },
+
     ],
   },
   {

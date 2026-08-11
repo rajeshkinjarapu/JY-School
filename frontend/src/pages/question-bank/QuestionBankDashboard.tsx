@@ -10,20 +10,9 @@ import { PageHeader } from '../../components/UI/PageHeader';
 export const QuestionBankDashboard = () => {
   const navigate = useNavigate();
   const tools = [
-    { title: 'Dashboard', description: 'Overview and analytics', icon: LayoutDashboard, color: 'from-blue-600 to-blue-400' },
-    { title: 'Questions', description: 'Manage all questions', icon: HelpCircle, color: 'from-indigo-600 to-indigo-400' },
-    { title: 'Subjects', description: 'Manage subjects', icon: BookOpen, color: 'from-fuchsia-600 to-fuchsia-400' },
-    { title: 'Chapters', description: 'Manage chapters', icon: FolderTree, color: 'from-rose-600 to-rose-400' },
-    { title: 'Topics', description: 'Manage topics', icon: List, color: 'from-emerald-600 to-emerald-400' },
-    { title: 'Difficulty Levels', description: 'Configure difficulty levels', icon: BarChart, color: 'from-amber-500 to-yellow-400' },
-    { title: 'Question Types', description: 'Configure question types', icon: Type, color: 'from-violet-600 to-violet-400' },
     { title: 'AI Paper Generator', description: 'Dual-layout paper creator', icon: FileUp, color: 'from-blue-700 to-indigo-500' },
     { title: 'Saved AI Papers', description: 'View and edit saved papers', icon: FileText, color: 'from-sky-600 to-cyan-500' },
-    { title: 'Paper Generator', description: 'Generate question papers', icon: FileText, color: 'from-blue-600 to-indigo-600' },
-    { title: 'Answer Keys', description: 'Manage answer keys', icon: Key, color: 'from-teal-600 to-teal-400' },
     { title: 'Navodaya Paper Generator', description: 'Navodaya Mathematics', icon: CheckCircle, color: 'from-orange-600 to-orange-400' },
-    { title: 'Reports', description: 'Question bank reports', icon: PieChart, color: 'from-purple-600 to-purple-400' },
-    { title: 'Settings', description: 'Question bank settings', icon: Settings, color: 'from-gray-700 to-gray-500' },
   ];
 
   return (
