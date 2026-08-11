@@ -13,6 +13,7 @@ export const QuestionBankDashboard = () => {
     { title: 'AI Paper Generator', description: 'Dual-layout paper creator', icon: FileUp, color: 'from-blue-700 to-indigo-500' },
     { title: 'Saved AI Papers', description: 'View and edit saved papers', icon: FileText, color: 'from-sky-600 to-cyan-500' },
     { title: 'Navodaya Paper Generator', description: 'Navodaya Mathematics', icon: CheckCircle, color: 'from-orange-600 to-orange-400' },
+    { title: 'MCQ Paper Generator', description: 'Custom MCQ Papers', icon: List, color: 'from-emerald-600 to-emerald-400' },
   ];
 
   return (
@@ -34,6 +35,7 @@ export const QuestionBankDashboard = () => {
                 else if (tool.title === 'AI Paper Generator') navigate('/question-bank/generator');
                 else if (tool.title === 'Saved AI Papers') navigate('/question-bank/saved-papers');
                 else if (tool.title === 'Navodaya Paper Generator') navigate('/question-bank/navodaya-generator');
+                else if (tool.title === 'MCQ Paper Generator') navigate('/question-bank/mcq-generator');
                 else if (tool.title === 'Dashboard') navigate('/question-bank');
               }}
               className="group relative bg-white/90 backdrop-blur-md border-2 border-indigo-100 shadow-xl shadow-indigo-200/50 hover:border-indigo-400 rounded-3xl p-6 shadow-sm hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 cursor-pointer overflow-hidden flex flex-col justify-between min-h-[160px]"
