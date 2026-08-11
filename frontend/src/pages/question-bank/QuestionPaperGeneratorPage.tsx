@@ -577,7 +577,7 @@ export const QuestionPaperGeneratorPage = () => {
         </div>
 
         {/* Right Side: Live Preview (Full Width on Print) */}
-        <div className="w-1/2 overflow-y-auto bg-slate-100 print:w-full print:bg-white custom-scrollbar flex flex-col relative">
+        <div className="w-1/2 overflow-y-auto bg-slate-100 print:w-full print:bg-white custom-scrollbar flex flex-col relative print:overflow-visible">
           <div className="sticky top-0 z-10 bg-slate-100/80 backdrop-blur-md border-b border-slate-200 px-6 py-3 flex justify-between items-center print:hidden">
             <h3 className="font-semibold text-slate-700 flex items-center gap-2">
               Live Preview
