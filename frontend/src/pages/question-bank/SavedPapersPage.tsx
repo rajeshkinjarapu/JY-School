@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { 
   FileText, Edit2, Trash2, Plus, Search, Calendar, 
   BookOpen, Clock, ChevronLeft, AlertTriangle, 
@@ -58,8 +58,10 @@ const getSubjectColor = (subject: string) => {
 
 import { PageHeader } from '../../components/UI/PageHeader';
 
-export const SavedPapersPage = ({ isEmbedded = false }: { isEmbedded?: boolean }) => {
+export const SavedPapersPage = ({ isEmbedded = false, editPath }: { isEmbedded?: boolean, editPath?: string }) => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const basePath = editPath || (location.pathname.startsWith('/question-bank/') && !location.pathname.includes('saved-papers') ? location.pathname : '/question-bank/generator');
   const [papers, setPapers] = useState<GeneratedPaper[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -262,7 +264,7 @@ export const SavedPapersPage = ({ isEmbedded = false }: { isEmbedded?: boolean }
           icon={<BookOpen className="w-5 h-5" />} 
           action={
             <button
-              onClick={() => navigate('/question-bank/generator')}
+              onClick={() => navigate(basePath)}
               className="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-xl font-bold shadow-lg text-sm hover:-translate-y-0.5 transition-all duration-200"
             >
               <Plus className="w-4 h-4" />
@@ -358,7 +360,7 @@ export const SavedPapersPage = ({ isEmbedded = false }: { isEmbedded?: boolean }
             <p className="text-lg font-black text-slate-700">No papers found</p>
             <p className="text-sm text-slate-400 mt-1 mb-6 font-medium">Try adjusting your search or filters.</p>
             <button
-              onClick={() => navigate('/question-bank/generator')}
+              onClick={() => navigate(basePath)}
               className="px-6 py-2.5 bg-indigo-50 text-indigo-600 rounded-xl text-sm font-bold hover:bg-indigo-100 transition-colors"
             >
               Create New Paper
@@ -425,7 +427,7 @@ export const SavedPapersPage = ({ isEmbedded = false }: { isEmbedded?: boolean }
                         <button onClick={() => handleDownloadPDF(paper)} className="col-span-1 flex items-center justify-center p-2.5 bg-violet-50 border border-violet-100 text-violet-600 rounded-xl hover:bg-violet-500 hover:text-white hover:border-violet-500 transition-all duration-200 shadow-sm" title="Download PDF">
                           <Download className="w-4 h-4" />
                         </button>
-                        <button onClick={() => navigate(`/question-bank/generator?id=${paper.id}`)} className="col-span-1 flex items-center justify-center p-2.5 bg-indigo-50 border border-indigo-100 text-indigo-600 rounded-xl hover:bg-indigo-600 hover:text-white hover:border-indigo-600 transition-all duration-200 shadow-sm" title="Edit">
+                        <button onClick={() => navigate(`${basePath}?id=${paper.id}`)} className="col-span-1 flex items-center justify-center p-2.5 bg-indigo-50 border border-indigo-100 text-indigo-600 rounded-xl hover:bg-indigo-600 hover:text-white hover:border-indigo-600 transition-all duration-200 shadow-sm" title="Edit">
                           <Edit2 className="w-4 h-4" />
                         </button>
                         <button onClick={() => setDeleteId(paper.id)} className="col-span-1 flex items-center justify-center p-2.5 bg-rose-50 border border-rose-100 text-rose-500 rounded-xl hover:bg-rose-500 hover:text-white hover:border-rose-500 transition-all duration-200 shadow-sm" title="Delete">
@@ -494,7 +496,7 @@ export const SavedPapersPage = ({ isEmbedded = false }: { isEmbedded?: boolean }
                                 <button onClick={() => setPreviewPaper(paper)} className="p-2 text-slate-600 hover:text-white hover:bg-slate-800 rounded-lg shadow-sm border border-slate-200 transition-all bg-white flex items-center gap-1 text-[11px] font-bold" title="Preview"><Eye className="w-3.5 h-3.5" /> <span className="hidden xl:inline">View</span></button>
                                 <button onClick={() => handlePrint(paper)} className="p-2 text-sky-600 hover:text-white hover:bg-sky-500 rounded-lg shadow-sm border border-sky-100 transition-all bg-sky-50 flex items-center gap-1 text-[11px] font-bold" title="Print"><Printer className="w-3.5 h-3.5" /> <span className="hidden xl:inline">Print</span></button>
                                 <button onClick={() => handleDownloadPDF(paper)} className="p-2 text-violet-600 hover:text-white hover:bg-violet-500 rounded-lg shadow-sm border border-violet-100 transition-all bg-violet-50 flex items-center gap-1 text-[11px] font-bold" title="Download"><Download className="w-3.5 h-3.5" /> <span className="hidden xl:inline">PDF</span></button>
-                                <button onClick={() => navigate(`/question-bank/generator?id=${paper.id}`)} className="p-2 text-indigo-600 hover:text-white hover:bg-indigo-600 rounded-lg shadow-sm border border-indigo-100 transition-all bg-indigo-50 flex items-center gap-1 text-[11px] font-bold" title="Edit Content"><Edit2 className="w-3.5 h-3.5" /> <span className="hidden xl:inline">Edit</span></button>
+                                <button onClick={() => navigate(`${basePath}?id=${paper.id}`)} className="p-2 text-indigo-600 hover:text-white hover:bg-indigo-600 rounded-lg shadow-sm border border-indigo-100 transition-all bg-indigo-50 flex items-center gap-1 text-[11px] font-bold" title="Edit Content"><Edit2 className="w-3.5 h-3.5" /> <span className="hidden xl:inline">Edit</span></button>
                                 <button onClick={() => setDeleteId(paper.id)} className="p-2 text-rose-500 hover:text-white hover:bg-rose-500 rounded-lg shadow-sm border border-rose-100 transition-all bg-rose-50 flex items-center gap-1 text-[11px] font-bold" title="Delete"><Trash2 className="w-3.5 h-3.5" /> <span className="hidden xl:inline">Delete</span></button>
                               </div>
                             </td>
@@ -540,7 +542,7 @@ export const SavedPapersPage = ({ isEmbedded = false }: { isEmbedded?: boolean }
               <button onClick={() => handlePrint(previewPaper)} className="px-6 py-3 bg-white border border-slate-200 text-slate-700 font-black rounded-2xl hover:bg-slate-50 shadow-sm flex items-center gap-2 hover:-translate-y-0.5 transition-transform">
                 <Printer className="w-4 h-4" /> Print Paper
               </button>
-              <button onClick={() => { setPreviewPaper(null); navigate(`/question-bank/generator?id=${previewPaper.id}`); }} className="px-6 py-3 bg-indigo-600 text-white font-black rounded-2xl hover:bg-indigo-700 shadow-xl shadow-indigo-600/20 flex items-center gap-2 hover:-translate-y-0.5 transition-transform">
+              <button onClick={() => { setPreviewPaper(null); navigate(`${basePath}?id=${previewPaper.id}`); }} className="px-6 py-3 bg-indigo-600 text-white font-black rounded-2xl hover:bg-indigo-700 shadow-xl shadow-indigo-600/20 flex items-center gap-2 hover:-translate-y-0.5 transition-transform">
                 <Edit2 className="w-4 h-4" /> Open in Editor
               </button>
             </div>

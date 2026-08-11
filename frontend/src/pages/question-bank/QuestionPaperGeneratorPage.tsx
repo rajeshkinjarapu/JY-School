@@ -512,7 +512,7 @@ export const QuestionPaperGeneratorPage = () => {
 
       {activeTab === 'answer-key' && (
         <div className="flex-1 p-4 max-w-[1920px] mx-auto w-full">
-          <AnswerKeyManager />
+          <AnswerKeyManager prefilledPaperId={paperId} />
         </div>
       )}
 
@@ -532,7 +532,7 @@ export const QuestionPaperGeneratorPage = () => {
         
         <div className="flex items-center gap-3">
           <button
-            onClick={() => navigate('/question-bank/saved-papers')}
+            onClick={() => setActiveTab('saved')}
             className="p-2 bg-slate-100 text-slate-700 rounded-xl hover:bg-slate-200 transition-all flex items-center gap-2 text-sm font-medium"
             title="Saved Papers"
           >
@@ -779,83 +779,94 @@ export const QuestionPaperGeneratorPage = () => {
 
       {/* Settings Modal */}
       {isSettingsOpen && (
-        <div className="fixed inset-0 z-[200] bg-black/50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
-            <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50 flex-shrink-0">
-              <h2 className="font-bold text-lg text-slate-800 flex items-center gap-2">
-                <Settings className="w-5 h-5 text-blue-600" /> Paper Settings
+        <div className="fixed inset-0 z-[200] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6 animate-fade-in">
+          <div className="bg-white rounded-[2rem] w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden border border-slate-100">
+            <div className="px-8 py-5 border-b border-slate-100 flex justify-between items-center bg-white flex-shrink-0">
+              <h2 className="font-black text-xl text-slate-800 flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600">
+                  <Settings className="w-5 h-5" />
+                </div>
+                Paper Settings
               </h2>
-              <button onClick={() => setIsSettingsOpen(false)} className="p-2 hover:bg-slate-200 rounded-full transition-colors">
-                <X className="w-5 h-5 text-slate-500" />
+              <button onClick={() => setIsSettingsOpen(false)} className="p-2 hover:bg-slate-100 text-slate-400 hover:text-slate-700 rounded-full transition-colors">
+                <X className="w-6 h-6" />
               </button>
             </div>
             
-            <div className="p-6 space-y-5 overflow-y-auto flex-1 custom-scrollbar">
-              <div className="grid grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Class</label>
-                  <input
-                    type="text"
-                    value={examSubject}
-                    onChange={(e) => setExamSubject(e.target.value)}
-                    className="w-full rounded-lg border-slate-200 bg-white border p-2.5 text-sm focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Date</label>
-                  <input
-                    type="text"
-                    value={examDate}
-                    onChange={(e) => setExamDate(e.target.value)}
-                    placeholder="DD/MM/YYYY"
-                    className="w-full rounded-lg border-slate-200 bg-white border p-2.5 text-sm focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
-                  />
+            <div className="p-8 space-y-6 overflow-y-auto flex-1 custom-scrollbar bg-slate-50/30">
+              
+              <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm space-y-5">
+                <h3 className="font-bold text-slate-800 mb-4 flex items-center gap-2 border-b border-slate-50 pb-3"><BookOpen className="w-4 h-4 text-indigo-500" /> Basic Information</h3>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                  <div className="lg:col-span-2">
+                    <label className="block text-[13px] font-black text-slate-700 mb-1.5 uppercase tracking-wide">Exam Name</label>
+                    <input
+                      type="text"
+                      value={examName}
+                      onChange={(e) => setExamName(e.target.value)}
+                      className="w-full rounded-xl border-slate-200 bg-white border p-3 text-sm font-bold text-slate-700 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all shadow-sm"
+                      placeholder="e.g. JEE Mains Grand Test"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[13px] font-black text-slate-700 mb-1.5 uppercase tracking-wide">Class</label>
+                    <input
+                      type="text"
+                      value={examClass}
+                      onChange={(e) => {
+                        setExamClass(e.target.value);
+                        localStorage.setItem('jy_exam_class', e.target.value);
+                      }}
+                      placeholder="e.g. 11th Class"
+                      className="w-full rounded-xl border-slate-200 bg-white border p-3 text-sm font-bold text-slate-700 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all shadow-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[13px] font-black text-slate-700 mb-1.5 uppercase tracking-wide">Subject</label>
+                    <input
+                      type="text"
+                      value={examSubject}
+                      onChange={(e) => setExamSubject(e.target.value)}
+                      className="w-full rounded-xl border-slate-200 bg-white border p-3 text-sm font-bold text-slate-700 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all shadow-sm"
+                      placeholder="e.g. Physics, Chemistry, Maths"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[13px] font-black text-slate-700 mb-1.5 uppercase tracking-wide">Date</label>
+                    <input
+                      type="text"
+                      value={examDate}
+                      onChange={(e) => setExamDate(e.target.value)}
+                      placeholder="DD/MM/YYYY"
+                      className="w-full rounded-xl border-slate-200 bg-white border p-3 text-sm font-bold text-slate-700 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all shadow-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[13px] font-black text-slate-700 mb-1.5 uppercase tracking-wide">Marks</label>
+                    <input
+                      type="text"
+                      value={time}
+                      onChange={(e) => setTime(e.target.value)}
+                      placeholder="e.g. 300"
+                      className="w-full rounded-xl border-slate-200 bg-white border p-3 text-sm font-bold text-slate-700 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all shadow-sm"
+                    />
+                  </div>
                 </div>
               </div>
-              <div className="pt-2 border-t border-slate-100">
-                <label className="block text-sm font-medium text-slate-700 mb-1">Class</label>
-                <input
-                  type="text"
-                  value={examClass}
-                  onChange={(e) => {
-                    setExamClass(e.target.value);
-                    localStorage.setItem('jy_exam_class', e.target.value);
-                  }}
-                  placeholder="e.g. 10th Class"
-                  className="w-full rounded-lg border-slate-200 bg-white border p-2.5 text-sm focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-6 pt-2 border-t border-slate-100">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Exam Name</label>
-                  <input
-                    type="text"
-                    value={examName}
-                    onChange={(e) => setExamName(e.target.value)}
-                    className="w-full rounded-lg border-slate-200 bg-white border p-2.5 text-sm focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Marks</label>
-                  <input
-                    type="text"
-                    value={time}
-                    onChange={(e) => setTime(e.target.value)}
-                    className="w-full rounded-lg border-slate-200 bg-white border p-2.5 text-sm focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
-                  />
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">General Instructions (One per line)</label>
+
+              <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
+                <label className="block text-[13px] font-black text-slate-700 mb-2 uppercase tracking-wide">General Instructions (One per line)</label>
                 <textarea
                   value={instructions}
                   onChange={(e) => setInstructions(e.target.value)}
-                  className="w-full rounded-lg border-slate-200 bg-white border p-2.5 text-sm focus:ring-2 focus:ring-blue-500/20 outline-none resize-none h-24 transition-all"
+                  className="w-full rounded-xl border-slate-200 bg-white border p-4 text-sm font-medium text-slate-600 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none resize-none h-32 transition-all shadow-sm leading-relaxed"
                   placeholder="Enter each instruction on a new line..."
                 />
               </div>
-              <div className="pt-4 border-t border-slate-100">
-                <h4 className="font-medium text-slate-700 flex items-center gap-2 mb-3">
+
+              <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
+                <h4 className="font-black text-slate-800 flex items-center gap-2 mb-4 border-b border-slate-50 pb-3">
                   <Sparkles className="w-4 h-4 text-purple-500" />
                   AI Model Configuration
                 </h4>

@@ -523,7 +523,7 @@ ${paperContent}`;
 
         {activeTab === 'answer-key' && (
           <div className="flex-1 p-4 max-w-[1920px] mx-auto w-full">
-            <AnswerKeyManager />
+            <AnswerKeyManager prefilledPaperId={paperId} />
           </div>
         )}
 
@@ -546,7 +546,7 @@ ${paperContent}`;
           
           <div className="flex items-center gap-2.5">
             <button
-              onClick={() => navigate('/question-bank/saved-papers')}
+              onClick={() => setActiveTab('saved')}
               className="px-4 py-2 bg-white text-slate-700 rounded-xl border border-slate-200 hover:border-slate-300 hover:bg-slate-50 shadow-sm transition-all flex items-center gap-2 text-sm font-bold"
               title="Saved Papers"
             >

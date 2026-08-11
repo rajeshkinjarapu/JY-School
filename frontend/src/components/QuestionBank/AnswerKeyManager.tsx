@@ -19,7 +19,7 @@ interface Answer {
   subject?: string;
 }
 
-export const AnswerKeyManager = () => {
+export const AnswerKeyManager = ({ prefilledPaperId }: { prefilledPaperId?: string | null }) => {
   const [papers, setPapers] = useState<GeneratedPaper[]>([]);
   
   // Filters
@@ -37,6 +37,23 @@ export const AnswerKeyManager = () => {
   useEffect(() => {
     fetchPapers();
   }, []);
+
+  useEffect(() => {
+    if (prefilledPaperId && papers.length > 0 && !selectedPaperId) {
+      setSelectedPaperId(prefilledPaperId);
+      const paper = papers.find(p => p.id === prefilledPaperId);
+      if (paper) {
+        let c = 'General';
+        if (paper.examClass) {
+          c = paper.examClass;
+        } else {
+          const cMatch = paper.examName.match(/(\d+(th|st|nd|rd)\s+Class)/i);
+          c = cMatch ? cMatch[1] : 'General';
+        }
+        setSelectedClass(c);
+      }
+    }
+  }, [prefilledPaperId, papers]);
 
   useEffect(() => {
     if (selectedPaperId) {
