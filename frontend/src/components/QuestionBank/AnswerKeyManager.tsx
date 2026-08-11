@@ -189,7 +189,7 @@ export const AnswerKeyManager = ({ prefilledPaperId }: { prefilledPaperId?: stri
       const initialAnswers: Answer[] = parsedQuestions.map(q => ({
         qNo: q.qNo,
         answer: '',
-        subject: q.subject
+        subject: (q.subject && q.subject !== 'General') ? q.subject : paper.examSubject
       }));
 
       try {
