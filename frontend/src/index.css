@@ -238,14 +238,17 @@
   
   @page { margin: 0; }
   
-  body { -webkit-print-color-adjust: exact; print-color-adjust: exact; background: white !important; background-image: none !important; margin: 0; padding: 0; overflow: visible !important; height: auto !important; }
-  html, body { background: white !important; background-image: none !important; height: auto !important; min-height: 100% !important; overflow: visible !important; }
+  body { -webkit-print-color-adjust: exact; print-color-adjust: exact; background: white !important; background-image: none !important; margin: 0; padding: 0; overflow: visible !important; height: auto !important; min-height: 0 !important; }
+  html, body { background: white !important; background-image: none !important; height: auto !important; min-height: 0 !important; overflow: visible !important; }
   
-  #root, [id="main-content"], .bg-gradient-to-br, [class*="bg-slate-"] { 
+  #root, [id="main-content"], .bg-gradient-to-br, [class*="bg-slate-"], #a4-preview-paper { 
     background: white !important; 
     background-image: none !important; 
     height: auto !important; 
+    min-height: 0 !important;
     overflow: visible !important; 
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
   .h-screen, .min-h-screen { height: auto !important; min-height: 0 !important; }
   .overflow-hidden, .overflow-y-auto, .overflow-x-hidden { overflow: visible !important; }
