@@ -20,7 +20,6 @@ export interface LiveLatexPreviewProps {
   instructions: string[];
   examDate?: string;
   examSubject?: string;
-  examClass?: string;
   selectedSubjects?: string[];
   logoBase64?: string;
   isDoubleColumn?: boolean;
@@ -37,7 +36,6 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
   instructions,
   examDate = '',
   examSubject = '',
-  examClass = '',
   selectedSubjects = [],
   logoBase64 = '',
   isDoubleColumn = false,
@@ -275,11 +273,7 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
           
           <div className="flex flex-col text-[11pt] font-medium mt-2 px-1 gap-1">
             <div className="flex justify-between items-center">
-              <div className="flex gap-4">
-                {examClass && <span><span className="font-bold">Class:</span> {examClass}</span>}
-                {examSubject && <span><span className="font-bold">Subject:</span> {examSubject}</span>}
-                {!examClass && !examSubject && <span><span className="font-bold">Class:</span> _______________</span>}
-              </div>
+              <div><span className="font-bold">Class:</span> {examSubject || '_______________'}</div>
               <div><span className="font-bold">Marks:</span> {time || '75'}</div>
             </div>
             <div className="flex justify-between items-center">
