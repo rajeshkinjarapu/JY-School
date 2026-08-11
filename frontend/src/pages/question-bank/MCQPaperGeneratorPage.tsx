@@ -8,7 +8,7 @@ import { api } from '../../api/axios';
 
 import { PageHeader } from '../../components/UI/PageHeader';
 
-const AVAILABLE_SUBJECTS = ['Telugu', 'Hindi', 'English', 'Maths', 'Biology', 'Physics', 'Chemistry', 'Social'];
+const AVAILABLE_SUBJECTS = ['Telugu', 'Hindi', 'English', 'Maths', 'Science', 'Biology', 'Physics', 'Chemistry', 'Social'];
 
 export const MCQPaperGeneratorPage = () => {
   const navigate = useNavigate();

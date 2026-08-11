@@ -2,6 +2,20 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Key, Save, CheckCircle2, AlertTriangle, FileText, ChevronDown, ListOrdered, Sparkles, Printer } from 'lucide-react';
 import { api } from '../../api/axios';
 import toast from 'react-hot-toast';
+import { useAuth } from '../../hooks/useAuth';
+
+const isSubjectMatch = (questionSubj: string, filterSubj: string) => {
+  if (!filterSubj) return true;
+  const qSub = (questionSubj || '').toLowerCase().trim();
+  const fSub = filterSubj.toLowerCase().trim();
+  if (fSub === 'science') {
+    return ['science', 'biology', 'physics', 'chemistry', 'natural science', 'physical science', 'general science'].includes(qSub);
+  }
+  if (fSub === 'maths') {
+    return qSub.includes('math') || qSub.includes('arithmetic');
+  }
+  return qSub === fSub;
+};
 
 interface GeneratedPaper {
   id: string;
@@ -20,6 +34,8 @@ interface Answer {
 }
 
 export const AnswerKeyManager = ({ prefilledPaperId }: { prefilledPaperId?: string | null }) => {
+  const { user } = useAuth();
+  const isAdminOrSuperAdmin = user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN';
   const [papers, setPapers] = useState<GeneratedPaper[]>([]);
   
   // Filters
@@ -92,36 +108,8 @@ export const AnswerKeyManager = ({ prefilledPaperId }: { prefilledPaperId?: stri
     return Array.from(classSet).sort();
   }, [papers]);
 
-  // Extract subjects from headings in paper content
-  const subjects = useMemo(() => {
-    const subjectSet = new Set<string>();
-    papers.forEach(p => {
-      let c = 'General';
-      if (p.examClass) {
-        c = p.examClass;
-      } else {
-        const cMatch = p.examName.match(/(\d+(th|st|nd|rd)\s+Class)/i);
-        c = cMatch ? cMatch[1] : 'General';
-      }
-      
-      if (!selectedClass || c === selectedClass) {
-        // Extract headings like "## Biology"
-        const headingRegex = /^##\s*(.+)$/gm;
-        let match;
-        let foundHeading = false;
-        while ((match = headingRegex.exec(p.content)) !== null) {
-          subjectSet.add(match[1].trim());
-          foundHeading = true;
-        }
-        
-        // Fallback to examSubject if no headings found
-        if (!foundHeading && p.examSubject) {
-          subjectSet.add(p.examSubject);
-        }
-      }
-    });
-    return Array.from(subjectSet).sort();
-  }, [papers, selectedClass]);
+  // Standard Subject list
+  const subjects = ['Telugu', 'Hindi', 'English', 'Maths', 'Science', 'Social'];
 
   const filteredPapers = useMemo(() => {
     return papers.filter(p => {
@@ -142,12 +130,9 @@ export const AnswerKeyManager = ({ prefilledPaperId }: { prefilledPaperId?: stri
       }
       
       let subjMatch = true;
-      if (selectedSubject && selectedSubject !== 'All Subjects' && selectedSubject !== 'All Subjects / Grand Test') {
-        const escapedSubject = selectedSubject.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        const headingRegex = new RegExp(`^##\\s*${escapedSubject}\\s*$`, 'im');
-        const hasHeading = headingRegex.test(p.content);
-        const isExamSubject = p.examSubject === selectedSubject;
-        subjMatch = hasHeading || isExamSubject;
+      if (selectedSubject) {
+        const qList = parseQuestionsWithSubjects(p.content);
+        subjMatch = qList.some(q => isSubjectMatch(q.subject, selectedSubject));
       }
       
       return classMatch && sectionMatch && subjMatch;
@@ -218,8 +203,8 @@ export const AnswerKeyManager = ({ prefilledPaperId }: { prefilledPaperId?: stri
 
       setAnswers(initialAnswers.sort((a, b) => a.qNo - b.qNo));
 
-      // Auto-trigger AI generation if no saved answers exist
-      if (!hasAnswersInDB && initialAnswers.length > 0) {
+      // Auto-trigger AI generation if no saved answers exist (Only for Admins/SuperAdmins)
+      if (!hasAnswersInDB && initialAnswers.length > 0 && isAdminOrSuperAdmin) {
         autoGenerateAI(paper, initialAnswers);
       }
     } catch (error) {
@@ -378,30 +363,13 @@ ${selectedPaper.content}`;
       <div className="bg-white/80 backdrop-blur-xl border-b border-slate-200/80 p-6 flex flex-col gap-5">
 
         <div className="flex flex-wrap items-center gap-4">
-          <div className="relative flex-1 min-w-[250px] flex items-center gap-3">
-            <div className="relative flex-1">
-              <select
-                value={selectedPaperId}
-                onChange={(e) => { setSelectedPaperId(e.target.value); }}
-                className="appearance-none w-full pl-10 pr-10 py-2.5 bg-white border border-indigo-200 rounded-xl text-sm font-bold text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 cursor-pointer"
-              >
-                <option value="">Select Exam Paper...</option>
-                {filteredPapers.map(p => (
-                  <option key={p.id} value={p.id}>{p.examName}</option>
-                ))}
-              </select>
-              <FileText className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-indigo-400" />
-              <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-            </div>
-          </div>
-          
           <div className="relative">
             <select
               value={selectedClass}
               onChange={(e) => { setSelectedClass(e.target.value); }}
               className="appearance-none pl-4 pr-10 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 min-w-[150px] cursor-pointer"
             >
-              <option value="">All Classes</option>
+              <option value="">Select Class...</option>
               {classes.filter(c => c !== 'General').map(c => <option key={c} value={c}>{c}</option>)}
             </select>
             <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
@@ -413,7 +381,7 @@ ${selectedPaper.content}`;
               onChange={(e) => { setSelectedSubject(e.target.value); }}
               className="appearance-none pl-4 pr-10 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 min-w-[150px] cursor-pointer"
             >
-              <option value="">All Subjects</option>
+              <option value="">Select Subject...</option>
               {subjects.map(s => <option key={s} value={s}>{s}</option>)}
             </select>
             <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
@@ -425,7 +393,7 @@ ${selectedPaper.content}`;
               onChange={(e) => { setSelectedSection(e.target.value); }}
               className="appearance-none pl-4 pr-10 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 min-w-[120px] cursor-pointer"
             >
-              <option value="">All Sections</option>
+              <option value="">Select Section...</option>
               <option value="A">Section A</option>
               <option value="B">Section B</option>
               <option value="C">Section C</option>
@@ -434,8 +402,31 @@ ${selectedPaper.content}`;
             <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
           </div>
 
+          <div className="relative flex-1 min-w-[250px] flex items-center gap-3">
+            <div className="relative flex-1">
+              <select
+                value={selectedPaperId}
+                onChange={(e) => { setSelectedPaperId(e.target.value); }}
+                className="appearance-none w-full pl-10 pr-10 py-2.5 bg-white border border-indigo-200 rounded-xl text-sm font-bold text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 cursor-pointer"
+              >
+                <option value="">Select Examination...</option>
+                {filteredPapers.map(p => {
+                  const classStr = p.examClass || 'General';
+                  const dateStr = p.examDate || formatDate(p.createdAt);
+                  return (
+                    <option key={p.id} value={p.id}>
+                      {p.examName} ({classStr} - {dateStr})
+                    </option>
+                  );
+                })}
+              </select>
+              <FileText className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-indigo-400" />
+              <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+            </div>
+          </div>
+
           <div className="flex items-center gap-2 shrink-0 ml-auto">
-            {selectedPaperId && (
+            {selectedPaperId && isAdminOrSuperAdmin && (
               <>
                 <button
                   onClick={handleAIGenerate}
@@ -495,7 +486,7 @@ ${selectedPaper.content}`;
                   </tr>
                 </thead>
                 <tbody>
-                  {answers.filter(a => !selectedSubject || selectedSubject === 'All Subjects' || selectedSubject === 'All Subjects / Grand Test' || a.subject === selectedSubject).map((ans, idx) => (
+                  {answers.filter(a => isSubjectMatch(a.subject || '', selectedSubject)).map((ans, idx) => (
                     <tr key={ans.qNo} className={`border-b border-slate-100 hover:bg-slate-50/50 transition-colors ${idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/30'}`}>
                       <td className="py-3 px-6 text-sm font-black text-slate-700 text-center border-r border-slate-100">
                         {ans.qNo}
