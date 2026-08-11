@@ -581,7 +581,7 @@ export const MCQPaperGeneratorPage = () => {
       </div>
 
       {/* Main Dual Layout Content */}
-      <div className="flex-1 flex overflow-hidden print:overflow-visible h-[calc(100vh-80px)] print:h-auto">
+      <div className="flex-1 flex overflow-hidden print:overflow-visible h-[calc(100vh-80px)] print:h-auto print:block">
         
         {/* Left Side: Editor (Hidden on Print) */}
         <div className="w-1/2 p-6 overflow-y-auto border-r border-slate-200 bg-white print:hidden custom-scrollbar">
@@ -643,7 +643,7 @@ export const MCQPaperGeneratorPage = () => {
         </div>
 
         {/* Right Side: Live Preview */}
-        <div className="w-1/2 overflow-y-auto bg-slate-100 print:w-full print:bg-white custom-scrollbar flex flex-col relative print:overflow-visible">
+        <div className="w-1/2 overflow-y-auto bg-slate-100 print:w-full print:bg-white custom-scrollbar flex flex-col relative print:overflow-visible print:block">
           <div className="sticky top-0 z-10 bg-slate-100/80 backdrop-blur-md border-b border-slate-200 px-6 py-3 flex justify-between items-center print:hidden">
             <h3 className="font-semibold text-slate-700 flex items-center gap-2">
               Live Preview
