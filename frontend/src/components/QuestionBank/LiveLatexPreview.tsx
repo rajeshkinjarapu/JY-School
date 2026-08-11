@@ -127,7 +127,7 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
         
         const separator = i + 1 < rawBlocks.length ? rawBlocks[i + 1] : '';
         const extraNewlines = Math.max(0, (separator.match(/\n/g) || []).length - 2);
-        const marginBottom = extraNewlines > 0 ? `calc(0.75rem + ${extraNewlines * 3}rem)` : '0.75rem';
+        const marginBottom = extraNewlines > 0 ? `calc(0.4rem + ${extraNewlines * 3}rem)` : '0.4rem';
 
         const hasOptions = block.includes('(A)') && block.includes('(B)') && block.includes('(C)') && block.includes('(D)');
 
