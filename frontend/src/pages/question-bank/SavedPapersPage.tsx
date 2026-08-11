@@ -72,6 +72,7 @@ const SavedPapersPage = () => {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [previewPaper, setPreviewPaper] = useState<GeneratedPaper | null>(null);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   useEffect(() => {
     fetchPapers();
@@ -204,13 +205,43 @@ const SavedPapersPage = () => {
         title="Saved AI Papers" 
         icon={<BookOpen className="w-5 h-5" />} 
         action={
-          <button
-            onClick={() => navigate('/question-bank/generator')}
-            className="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-xl font-bold shadow-lg text-sm hover:-translate-y-0.5 transition-all duration-200"
-          >
-            <Plus className="w-4 h-4" />
-            New Paper
-          </button>
+          <div className="relative">
+            <button
+              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+              className="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-xl font-bold shadow-lg text-sm hover:-translate-y-0.5 transition-all duration-200"
+            >
+              <Plus className="w-4 h-4" />
+              New Paper
+            </button>
+            {isDropdownOpen && (
+              <>
+                <div className="fixed inset-0 z-10" onClick={() => setIsDropdownOpen(false)} />
+                <div className="absolute right-0 mt-2 w-60 bg-white border border-slate-200 rounded-2xl shadow-xl z-20 py-2 animate-in fade-in slide-in-from-top-2 duration-200">
+                  <button
+                    onClick={() => { setIsDropdownOpen(false); navigate('/question-bank/generator'); }}
+                    className="w-full text-left px-4 py-3 hover:bg-slate-50 flex flex-col transition-all"
+                  >
+                    <span className="font-black text-sm text-slate-800">AI Paper Generator</span>
+                    <span className="text-[11px] text-slate-400 font-bold mt-0.5">Dual-layout paper creator</span>
+                  </button>
+                  <button
+                    onClick={() => { setIsDropdownOpen(false); navigate('/question-bank/mcq-generator'); }}
+                    className="w-full text-left px-4 py-3 hover:bg-slate-50 flex flex-col border-t border-slate-100 transition-all"
+                  >
+                    <span className="font-black text-sm text-slate-800">MCQ Paper Generator</span>
+                    <span className="text-[11px] text-slate-400 font-bold mt-0.5">Custom MCQ papers creator</span>
+                  </button>
+                  <button
+                    onClick={() => { setIsDropdownOpen(false); navigate('/question-bank/navodaya-generator'); }}
+                    className="w-full text-left px-4 py-3 hover:bg-slate-50 flex flex-col border-t border-slate-100 transition-all"
+                  >
+                    <span className="font-black text-sm text-slate-800">Navodaya Paper Generator</span>
+                    <span className="text-[11px] text-slate-400 font-bold mt-0.5">Navodaya Mathematics creator</span>
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
         }
       />
       <div className="flex-1 overflow-auto p-3 sm:p-4 animate-fade-in pb-16">
