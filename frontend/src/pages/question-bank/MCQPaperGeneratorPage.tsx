@@ -461,7 +461,7 @@ export const MCQPaperGeneratorPage = () => {
     );
   };
 
-  const combinedClassSubject = examClass + (selectedSubjects.length > 0 ? ` - ${selectedSubjects.join(', ')}` : '');
+  const combinedClassSubject = examClass;
 
   return (
     <div ref={containerRef} className="flex flex-col h-full bg-gray-50/50 print:block" style={{ minHeight: 'calc(100vh - 64px)' }}>
@@ -590,7 +590,8 @@ export const MCQPaperGeneratorPage = () => {
               content={content}
               examName={examName}
               examDate={examDate}
-              examSubject={combinedClassSubject}
+              examSubject={examClass}
+              selectedSubjects={selectedSubjects}
               logoBase64={logoBase64}
               maxMarks={maxMarks}
               time={time}
@@ -802,6 +803,17 @@ export const MCQPaperGeneratorPage = () => {
                   />
                 </div>
               </div>
+
+              <div className="pt-4 mt-2 border-t border-slate-100">
+                <label className="block text-sm font-medium text-slate-700 mb-1">Instructions (One per line)</label>
+                <textarea
+                  value={instructions}
+                  onChange={(e) => setInstructions(e.target.value)}
+                  rows={3}
+                  className="w-full rounded-lg border-slate-200 bg-white border p-2.5 text-sm focus:ring-2 focus:ring-blue-500/20 outline-none transition-all resize-none"
+                  placeholder="Enter instructions here..."
+                />
+              </div>
               
               <div className="pt-4 border-t border-slate-100">
                 <h4 className="font-medium text-slate-700 flex items-center gap-2 mb-3">
@@ -911,6 +923,7 @@ export const MCQPaperGeneratorPage = () => {
                   localStorage.setItem('mcq_exam_subjects', JSON.stringify(selectedSubjects));
                   localStorage.setItem('mcq_exam_date', examDate);
                   localStorage.setItem('mcq_exam_marks', time);
+                  localStorage.setItem('mcq_exam_instructions', instructions);
                   setIsSettingsOpen(false);
                   toast.success('Settings saved!');
                 }}
