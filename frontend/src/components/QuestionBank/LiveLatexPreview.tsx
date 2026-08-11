@@ -211,16 +211,16 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
               const qRest = qMatch ? questionText.substring(qMatch[0].length) : questionText;
 
               return (
-                <div className="mb-1 break-inside-avoid text-[11pt] leading-snug">
-                  <div className="mb-0.5 flex whitespace-pre-wrap" style={{ gap: '0.4em' }}>
+                <div className="mb-5 break-inside-avoid text-[11pt] leading-snug">
+                  <div className="mb-1 flex whitespace-pre-wrap" style={{ gap: '0.4em' }}>
                     <strong className="flex-shrink-0">{qNum}.</strong>
                     <div dangerouslySetInnerHTML={{ __html: renderLatex(qRest) }} />
                   </div>
                   <div className={`ml-6 pr-4 ${optionsLayout}`}>
-                    <div className="flex"><span className="mr-1.5 font-medium">(A)</span> <span dangerouslySetInnerHTML={{ __html: renderLatex(optA) }} /></div>
-                    <div className="flex"><span className="mr-1.5 font-medium">(B)</span> <span dangerouslySetInnerHTML={{ __html: renderLatex(optB) }} /></div>
-                    <div className="flex"><span className="mr-1.5 font-medium">(C)</span> <span dangerouslySetInnerHTML={{ __html: renderLatex(optC) }} /></div>
-                    <div className="flex"><span className="mr-1.5 font-medium">(D)</span> <span dangerouslySetInnerHTML={{ __html: renderLatex(optD) }} /></div>
+                    <div className="flex"><span className="mr-2 font-bold">(A)</span> <span dangerouslySetInnerHTML={{ __html: renderLatex(optA) }} /></div>
+                    <div className="flex"><span className="mr-2 font-bold">(B)</span> <span dangerouslySetInnerHTML={{ __html: renderLatex(optB) }} /></div>
+                    <div className="flex"><span className="mr-2 font-bold">(C)</span> <span dangerouslySetInnerHTML={{ __html: renderLatex(optC) }} /></div>
+                    <div className="flex"><span className="mr-2 font-bold">(D)</span> <span dangerouslySetInnerHTML={{ __html: renderLatex(optD) }} /></div>
                   </div>
                 </div>
               );
@@ -273,14 +273,14 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
               />
             )}
             <div className="text-center">
-              <h1 className="text-2xl font-bold uppercase tracking-wider mb-1">SRI VENKATESWARA JY SCHOOL</h1>
-              <h2 className="text-sm font-semibold mb-1">(IIT-JEE/NEET Foundation – Olympiads)</h2>
-              <p className="text-xs">Opp. Hero Showroom, SVL Paradise Campus, Narasannapeta</p>
+              <h1 className="text-[26px] leading-tight font-extrabold uppercase tracking-wider mb-1">SRI VENKATESWARA JY SCHOOL</h1>
+              <h2 className="text-[15px] font-bold mb-1">(IIT-JEE/NEET Foundation – Olympiads)</h2>
+              <p className="text-xs font-medium">Opp. Hero Showroom, SVL Paradise Campus, Narasannapeta</p>
             </div>
           </div>
           
-          <div className="text-center mt-2 mb-2">
-             <h3 className="text-lg font-bold uppercase">{examName || 'EXAMINATION'}</h3>
+          <div className="text-center mt-3 mb-3">
+             <h3 className="text-xl font-extrabold uppercase tracking-wide">{examName || 'EXAMINATION'}</h3>
           </div>
           
           <div className="flex flex-col text-[11pt] font-medium mt-2 px-1 gap-1">
