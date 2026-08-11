@@ -329,6 +329,7 @@ const SavedPapersPage = () => {
                         <div className="flex flex-wrap gap-2 mt-2 text-[10px] font-bold text-white/80">
                           <span className="flex items-center gap-1"><Calendar className="w-3 h-3" /> {paper.examDate || '—'}</span>
                           <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {paper.time || '—'} mins</span>
+                          {paper.examClass && <span className="flex items-center gap-1 bg-white/20 px-1.5 py-0.5 rounded-md border border-white/30">{paper.examClass}</span>}
                         </div>
                       </div>
 
