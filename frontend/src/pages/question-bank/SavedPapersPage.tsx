@@ -8,6 +8,8 @@ import {
 import toast from 'react-hot-toast';
 import { api } from '../../api/axios';
 import { jsPDF } from 'jspdf';
+import html2canvas from 'html2canvas';
+import { LiveLatexPreview } from '../../components/QuestionBank/LiveLatexPreview';
 
 interface GeneratedPaper {
   id: string;
@@ -80,10 +82,47 @@ export const SavedPapersPage = ({ isEmbedded = false, editPath }: { isEmbedded?:
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [previewPaper, setPreviewPaper] = useState<GeneratedPaper | null>(null);
+  
+  // Auto-actions (Print, PDF)
+  const [autoAction, setAutoAction] = useState<'print' | 'pdf' | null>(null);
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
 
   useEffect(() => {
     fetchPapers();
   }, []);
+
+  useEffect(() => {
+    if (previewPaper && autoAction) {
+      if (autoAction === 'print') {
+        setTimeout(() => {
+          window.print();
+          setAutoAction(null);
+        }, 500);
+      } else if (autoAction === 'pdf') {
+        setTimeout(async () => {
+          try {
+            setIsGeneratingPDF(true);
+            const element = document.getElementById('paper-preview-container');
+            if (element) {
+              const canvas = await html2canvas(element, { scale: 2 });
+              const imgData = canvas.toDataURL('image/png');
+              const pdf = new jsPDF('p', 'mm', 'a4');
+              const pdfWidth = pdf.internal.pageSize.getWidth();
+              const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+              pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+              pdf.save(`${previewPaper.examName.replace(/\s+/g, '_')}.pdf`);
+              toast.success('PDF downloaded successfully!');
+            }
+          } catch (err) {
+            toast.error('Failed to generate PDF');
+          } finally {
+            setIsGeneratingPDF(false);
+            setAutoAction(null);
+          }
+        }, 800);
+      }
+    }
+  }, [previewPaper, autoAction]);
 
   const classes = useMemo(() => {
     const classSet = new Set<string>();
@@ -177,46 +216,13 @@ export const SavedPapersPage = ({ isEmbedded = false, editPath }: { isEmbedded?:
   };
 
   const handleDownloadPDF = (paper: GeneratedPaper) => {
-    const doc = new jsPDF();
-    doc.setFontSize(16);
-    doc.text(paper.examName, 105, 20, { align: 'center' });
-    doc.setFontSize(12);
-    doc.text(`Subject: ${paper.examSubject}  |  Duration: ${paper.time} mins`, 105, 30, { align: 'center' });
-    
-    doc.setFontSize(10);
-    const splitText = doc.splitTextToSize(removeHtmlTags(paper.content), 180);
-    doc.text(splitText, 15, 45);
-    
-    doc.save(`${paper.examName.replace(/\s+/g, '_')}.pdf`);
-    toast.success('PDF downloaded!');
+    setPreviewPaper(paper);
+    setAutoAction('pdf');
   };
 
   const handlePrint = (paper: GeneratedPaper) => {
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) return toast.error('Pop-up blocked');
-    
-    printWindow.document.write(`
-      <html>
-        <head>
-          <title>${paper.examName}</title>
-          <style>
-            body { font-family: Arial, sans-serif; padding: 40px; line-height: 1.6; }
-            h1 { text-align: center; }
-            .meta { text-align: center; font-style: italic; margin-bottom: 30px; border-bottom: 1px solid #ccc; padding-bottom: 10px; }
-            .content { max-width: 800px; margin: 0 auto; }
-          </style>
-        </head>
-        <body>
-          <h1>${paper.examName}</h1>
-          <div class="meta">Subject: ${paper.examSubject} | Duration: ${paper.time} mins</div>
-          <div class="content">${paper.content}</div>
-          <script>
-            window.onload = () => { window.print(); window.setTimeout(() => window.close(), 500); }
-          </script>
-        </body>
-      </html>
-    `);
-    printWindow.document.close();
+    setPreviewPaper(paper);
+    setAutoAction('print');
   };
 
   // Filter & Sort Logic
@@ -514,9 +520,9 @@ export const SavedPapersPage = ({ isEmbedded = false, editPath }: { isEmbedded?:
 
       {/* Quick Preview Modal */}
       {previewPaper && (
-        <div className="fixed inset-0 z-[100] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6 animate-fade-in">
-          <div className="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden animate-scale-in border border-slate-100">
-            <div className="px-8 py-6 border-b border-slate-100 flex items-start justify-between bg-slate-50/50">
+        <div className="fixed inset-0 z-[100] bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6 animate-fade-in print:bg-white print:p-0">
+          <div className="bg-slate-100 rounded-[2.5rem] shadow-2xl w-full max-w-5xl max-h-[95vh] flex flex-col overflow-hidden animate-scale-in border border-slate-100 print:shadow-none print:border-none print:rounded-none print:w-full print:max-w-none print:h-auto print:max-h-none print:overflow-visible">
+            <div className="px-8 py-5 border-b border-slate-200 bg-white flex items-start justify-between flex-shrink-0 print:hidden z-10">
               <div>
                 <div className="flex items-center gap-3 mb-2">
                   <span className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider shadow-sm border ${getSubjectColor(previewPaper.examSubject || 'Default').bg} ${getSubjectColor(previewPaper.examSubject || 'Default').text} ${getSubjectColor(previewPaper.examSubject || 'Default').border}`}>
@@ -526,23 +532,48 @@ export const SavedPapersPage = ({ isEmbedded = false, editPath }: { isEmbedded?:
                 </div>
                 <h2 className="text-2xl font-black text-slate-900 mt-2">{previewPaper.examName}</h2>
               </div>
-              <button onClick={() => setPreviewPaper(null)} className="p-2.5 bg-white hover:bg-rose-50 hover:text-rose-600 text-slate-500 rounded-2xl transition-colors border border-slate-200 shadow-sm group">
-                <X className="w-5 h-5 group-hover:rotate-90 transition-transform" />
-              </button>
+              <div className="flex items-center gap-3">
+                <button onClick={() => setPreviewPaper(null)} className="p-2.5 bg-white hover:bg-rose-50 hover:text-rose-600 text-slate-500 rounded-2xl transition-colors border border-slate-200 shadow-sm group">
+                  <X className="w-5 h-5 group-hover:rotate-90 transition-transform" />
+                </button>
+              </div>
             </div>
             
-            <div className="flex-1 overflow-y-auto p-8 custom-scrollbar bg-white">
-              <div 
-                className="prose prose-slate max-w-none prose-headings:font-black prose-headings:text-slate-800 prose-p:text-slate-600 prose-p:font-medium prose-p:text-sm prose-a:text-indigo-600"
-                dangerouslySetInnerHTML={{ __html: previewPaper.content }}
-              />
+            <div className="flex-1 overflow-y-auto p-4 custom-scrollbar flex justify-center bg-slate-200/50 print:bg-white print:p-0 relative print:overflow-visible">
+               {isGeneratingPDF && (
+                 <div className="absolute inset-0 z-50 bg-white/50 backdrop-blur-sm flex items-center justify-center">
+                    <div className="bg-white px-6 py-4 rounded-2xl shadow-xl flex items-center gap-3 font-bold text-indigo-600">
+                      <div className="w-5 h-5 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+                      Generating PDF...
+                    </div>
+                 </div>
+               )}
+               <div id="paper-preview-container" className="paper-zoom origin-top transition-transform h-max w-full flex justify-center print:w-full">
+                 <LiveLatexPreview 
+                    content={previewPaper.content}
+                    examName={previewPaper.examName}
+                    examDate={previewPaper.examDate}
+                    examClass={previewPaper.examClass || ''}
+                    logoBase64="/logo.png?v=1"
+                    maxMarks={100}
+                    time={previewPaper.time}
+                    instructions={(previewPaper.instructions || '').split('\n').filter(i => i.trim() !== '')}
+                    isDoubleColumn={false}
+                    inlineImages={{}}
+                    onImageUpdate={() => {}}
+                    onImageDelete={() => {}}
+                 />
+               </div>
             </div>
             
-            <div className="p-6 border-t border-slate-100 bg-slate-50/80 flex justify-end gap-3 backdrop-blur-md">
-              <button onClick={() => handlePrint(previewPaper)} className="px-6 py-3 bg-white border border-slate-200 text-slate-700 font-black rounded-2xl hover:bg-slate-50 shadow-sm flex items-center gap-2 hover:-translate-y-0.5 transition-transform">
-                <Printer className="w-4 h-4" /> Print Paper
+            <div className="p-6 border-t border-slate-100 bg-white flex justify-end gap-3 flex-shrink-0 z-10 print:hidden">
+              <button onClick={() => { setAutoAction('pdf'); }} disabled={isGeneratingPDF} className="px-6 py-3 bg-white border border-slate-200 text-slate-700 font-black rounded-2xl hover:bg-slate-50 shadow-sm flex items-center gap-2 hover:-translate-y-0.5 transition-transform disabled:opacity-50">
+                <Download className="w-4 h-4" /> PDF
               </button>
-              <button onClick={() => { setPreviewPaper(null); navigate(`${basePath}?id=${previewPaper.id}`); }} className="px-6 py-3 bg-indigo-600 text-white font-black rounded-2xl hover:bg-indigo-700 shadow-xl shadow-indigo-600/20 flex items-center gap-2 hover:-translate-y-0.5 transition-transform">
+              <button onClick={() => { setAutoAction('print'); }} disabled={isGeneratingPDF} className="px-6 py-3 bg-white border border-slate-200 text-slate-700 font-black rounded-2xl hover:bg-slate-50 shadow-sm flex items-center gap-2 hover:-translate-y-0.5 transition-transform disabled:opacity-50">
+                <Printer className="w-4 h-4" /> Print
+              </button>
+              <button onClick={() => { setPreviewPaper(null); navigate(`${basePath}?id=${previewPaper.id}`); }} className="px-6 py-3 bg-indigo-600 text-white font-black rounded-2xl hover:bg-indigo-700 shadow-xl shadow-indigo-600/20 flex items-center gap-2 hover:-translate-y-0.5 transition-transform disabled:opacity-50">
                 <Edit2 className="w-4 h-4" /> Open in Editor
               </button>
             </div>
