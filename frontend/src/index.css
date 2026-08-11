@@ -95,6 +95,7 @@
   
   /* Fix for Capacitor Android/iOS notch across ALL pages */
   body.is-native #root {
+    padding-top: env(safe-area-inset-top) !important;
     background-color: #0f172a !important; /* Premium dark blue notch area */
   }
 }
