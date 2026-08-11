@@ -567,32 +567,53 @@ ${rawText}`;
             margin-top: 15px !important;
           }
           th, td {
-            border: 1.5px solid #000 !important;
-            padding: 8px !important;
+            border: 2px solid #000 !important;
+            padding: 10px 8px !important;
             text-align: center !important;
             vertical-align: middle !important;
-            font-size: 13px !important;
           }
           th {
-            background-color: #f8fafc !important;
+            background-color: #1e3a8a !important;
+            color: #ffffff !important;
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
-            font-weight: 800 !important;
+            font-weight: 900 !important;
+            font-size: 13px !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.05em !important;
           }
           td {
-            font-weight: 700 !important;
+            font-weight: 900 !important;
+            color: #000000 !important;
+            font-size: 14px !important;
           }
         }
       `}} />
       
       {/* Print-only Header */}
-      <div className="hidden print:block mb-6 text-center border-b-2 border-slate-900 pb-4">
-        <h1 className="text-3xl font-black uppercase tracking-wider text-slate-900">JY SCHOOL</h1>
-        <h2 className="text-xl font-bold uppercase tracking-wide text-slate-700 mt-1">ANSWER KEY</h2>
-        <div className="grid grid-cols-3 gap-4 mt-6 text-sm text-slate-800 font-bold border-t border-slate-200 pt-4">
-          <div><span className="text-slate-500 font-medium">Exam Name:</span> {selectedPaper?.examName}</div>
-          <div><span className="text-slate-500 font-medium">Class:</span> {selectedClass || selectedPaper?.examClass || 'General'}</div>
-          <div><span className="text-slate-500 font-medium">Subject:</span> {selectedSubject || selectedPaper?.examSubject || 'General'}</div>
+      <div className="hidden print:block mb-8 text-center border-b-4 border-slate-900 pb-5">
+        {/* Colorful Title Banner */}
+        <div className="text-white py-4 px-4 rounded-2xl mb-5" style={{ backgroundColor: '#1e3a8a', color: '#ffffff', WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact', textAlign: 'center' }}>
+          <h1 className="text-3xl font-extrabold uppercase tracking-widest" style={{ margin: 0, fontSize: '26px' }}>JY SCHOOL</h1>
+          <h2 className="text-xs font-bold tracking-widest mt-1 opacity-90" style={{ margin: '4px 0 0 0', fontSize: '11px', textTransform: 'uppercase' }}>OFFICIAL ANSWER KEY</h2>
+        </div>
+        
+        {/* Info Rows - Single Line Exam Name! */}
+        <div className="text-left space-y-2.5 text-black font-extrabold px-2">
+          <div className="border-b-2 border-slate-800 pb-2">
+            <span className="text-slate-700 font-extrabold text-xs uppercase tracking-wide mr-2">EXAMINATION:</span>
+            <span className="text-slate-900 text-lg font-black uppercase">{selectedPaper?.examName}</span>
+          </div>
+          <div className="flex justify-between border-b-2 border-slate-800 pb-2">
+            <div>
+              <span className="text-slate-700 font-extrabold text-xs uppercase tracking-wide mr-2">CLASS:</span>
+              <span className="text-slate-900 text-base font-black uppercase">{selectedClass || selectedPaper?.examClass || 'General'}</span>
+            </div>
+            <div>
+              <span className="text-slate-700 font-extrabold text-xs uppercase tracking-wide mr-2">SUBJECT:</span>
+              <span className="text-slate-900 text-base font-black uppercase">{selectedSubject || selectedPaper?.examSubject || 'General'}</span>
+            </div>
+          </div>
         </div>
       </div>
 
