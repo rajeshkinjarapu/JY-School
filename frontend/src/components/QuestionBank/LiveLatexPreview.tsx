@@ -12,6 +12,7 @@ export interface FloatingImage {
   height: number;
 }
 
+export interface LiveLatexPreviewProps {
   subjectContents: Record<string, string>;
   examName: string;
   maxMarks: string;
@@ -249,7 +250,7 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
           flex-wrap: wrap;
         }
       `}</style>
-      <div className="py-6 px-10 font-serif lining-nums tabular-nums">
+      <div className="pt-0 pb-6 px-10 font-serif lining-nums tabular-nums">
         
         {/* Header Section */}
         <div className="mb-3 border-b-2 border-black pb-2">
@@ -258,11 +259,11 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
               <img 
                 src={logoBase64} 
                 alt="Logo" 
-                className="absolute left-0 w-20 h-20 object-contain"
+                className="absolute left-0 w-24 h-24 object-contain"
               />
             )}
-            <div className="text-center">
-              <h1 className="text-2xl font-bold uppercase tracking-wider mb-1">SRI VENKATESWARA JY SCHOOL</h1>
+            <div className="text-center mt-1">
+              <h1 className="text-[1.65rem] font-bold uppercase tracking-wider mb-1 whitespace-nowrap">SRI VENKATESWARA JY SCHOOL</h1>
               <h2 className="text-sm font-semibold mb-1">(IIT-JEE/NEET Foundation – Olympiads)</h2>
               <p className="text-xs">Opp. Hero Showroom, SVL Paradise Campus, Narasannapeta</p>
             </div>
