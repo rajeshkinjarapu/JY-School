@@ -134,8 +134,39 @@ export const AnswerKeyManager = ({ prefilledPaperId }: { prefilledPaperId?: stri
     return Array.from(classSet).sort();
   }, [papers]);
 
-  // Standard Subject list
-  const subjects = ['Telugu', 'Hindi', 'English', 'Maths', 'Science', 'Social'];
+  // Extract subjects from headings and examSubject column in papers
+  const subjects = useMemo(() => {
+    const subjectSet = new Set<string>();
+    papers.forEach(p => {
+      let c = 'General';
+      if (p.examClass) {
+        c = p.examClass;
+      } else {
+        const cMatch = p.examName.match(/(\d+(th|st|nd|rd)\s+Class)/i);
+        c = cMatch ? cMatch[1] : 'General';
+      }
+      
+      if (!selectedClass || c === selectedClass) {
+        // 1. Parse headings from content
+        const headingRegex = /^##\s*(.+)$/gm;
+        let match;
+        while ((match = headingRegex.exec(p.content)) !== null) {
+          subjectSet.add(match[1].trim());
+        }
+        
+        // 2. Split and add individual subjects from examSubject column
+        if (p.examSubject) {
+          p.examSubject.split(',').forEach(s => {
+            const trimmed = s.trim();
+            if (trimmed && trimmed !== '') {
+              subjectSet.add(trimmed);
+            }
+          });
+        }
+      }
+    });
+    return Array.from(subjectSet).sort();
+  }, [papers, selectedClass]);
 
   const filteredPapers = useMemo(() => {
     return papers.filter(p => {
@@ -150,23 +181,13 @@ export const AnswerKeyManager = ({ prefilledPaperId }: { prefilledPaperId?: stri
       const classMatch = selectedClass ? c === selectedClass : true;
       let subjMatch = true;
       if (selectedSubject) {
-        // 1. Check if the database column examSubject matches or contains it
         const dbSubject = (p.examSubject || '').toLowerCase();
         const selSub = selectedSubject.toLowerCase();
         
         let examSubjectMatches = dbSubject.includes(selSub);
         
-        // Handle Science match
-        if (selSub === 'science') {
-          examSubjectMatches = examSubjectMatches || 
-            ['science', 'biology', 'physics', 'chemistry', 'natural science', 'physical science', 'general science'].some(s => dbSubject.includes(s));
-        } else if (selSub === 'maths') {
-          examSubjectMatches = examSubjectMatches || dbSubject.includes('math');
-        }
-        
-        // 2. Check if any question heading in the content matches
         const qList = parseQuestionsWithSubjects(p.content);
-        const contentHeadingMatches = qList.some(q => isSubjectMatch(q.subject, selectedSubject));
+        const contentHeadingMatches = qList.some(q => q.subject.toLowerCase() === selSub);
         
         subjMatch = examSubjectMatches || contentHeadingMatches;
       }
@@ -477,7 +498,7 @@ ${selectedPaper.content}`;
                   </tr>
                 </thead>
                 <tbody>
-                  {answers.filter(a => isSubjectMatch(a.subject || '', selectedSubject)).map((ans, idx) => (
+                  {answers.filter(a => !selectedSubject || (a.subject || '').toLowerCase() === selectedSubject.toLowerCase()).map((ans, idx) => (
                     <tr key={ans.qNo} className={`border-b border-slate-100 hover:bg-slate-50/50 transition-colors ${idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/30'}`}>
                       <td className="py-3 px-6 text-sm font-black text-slate-700 text-center border-r border-slate-100">
                         {ans.qNo}
