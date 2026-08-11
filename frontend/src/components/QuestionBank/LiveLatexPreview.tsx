@@ -1,8 +1,6 @@
 import React from 'react';
 import katex from 'katex';
 import 'katex/dist/katex.min.css';
-// Mandali Telugu font
-const mandaliFontLink = "https://fonts.googleapis.com/css2?family=Mandali&display=swap";
 
 import { Rnd } from 'react-rnd';
 
@@ -233,17 +231,10 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
   return (
     <div 
       className="bg-white text-black print:bg-white print:m-0 shadow-2xl print:shadow-none mx-auto border border-gray-300 print:border-none relative" 
-      style={{ width: '210mm', minHeight: '297mm', boxSizing: 'border-box', fontFamily: "'Mandali', serif" }}
+      style={{ width: '210mm', minHeight: '297mm', boxSizing: 'border-box' }}
       id="a4-preview-paper"
     >
-      <link rel="stylesheet" href={mandaliFontLink} />
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Mandali&display=swap');
-        #a4-preview-paper, #a4-preview-paper * {
-          font-family: 'Mandali', serif !important;
-          -webkit-print-color-adjust: exact;
-          print-color-adjust: exact;
-        }
         .katex-display {
           overflow-x: auto;
           overflow-y: hidden;
@@ -258,32 +249,8 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
           display: inline-flex !important;
           flex-wrap: wrap;
         }
-        @media print {
-          * {
-            background: white !important;
-            background-color: white !important;
-            color: black !important;
-            -webkit-print-color-adjust: exact;
-            print-color-adjust: exact;
-          }
-          #a4-preview-paper {
-            background: white !important;
-            background-color: white !important;
-            color: black !important;
-            box-shadow: none !important;
-            border: none !important;
-            margin: 0 !important;
-            padding: 0 !important;
-            width: 210mm !important;
-            min-height: auto !important;
-          }
-          body, html {
-            background: white !important;
-            background-color: white !important;
-          }
-        }
       `}</style>
-      <div className="pt-0 pb-6 px-10 lining-nums tabular-nums" style={{ fontFamily: "'Mandali', serif" }}>
+      <div className="pt-0 pb-6 px-10 font-serif lining-nums tabular-nums">
         
         {/* Header Section */}
         <div className="mb-3 border-b-2 border-black pb-2">
