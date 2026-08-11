@@ -426,13 +426,13 @@ export const MCQPaperGeneratorPage = () => {
         toast.loading('Loading paper...', { id: 'load' });
         const res = await api.get(`/api/generated-papers/${paperId}`);
         const p = res.data;
-        setExamName(p.examName || examName);
-        setExamClass(p.examClass || examClass);
+        setExamName(p.examName || '');
+        setExamClass(p.examClass ?? '');  // Always use DB value - never localStorage fallback
         if (p.examSubject) {
            setSelectedSubjects(p.examSubject.split(', '));
         }
-        setExamDate(p.examDate || examDate);
-        setTime(p.time || time);
+        setExamDate(p.examDate || '');
+        setTime(p.time || '');
         setInstructions(p.instructions || '');
         const { textData, images } = deserializeContent(p.content || '');
         setSubjectContents(textData);
