@@ -347,16 +347,13 @@ const SavedPapersPage = () => {
                       
                       {/* Card Content Header */}
                       <div className="p-5 flex-shrink-0 flex flex-col flex-1">
-                        <div className="flex flex-wrap gap-2 mb-3">
-                          {paper.examClass && (
+                        {paper.examClass && (
+                          <div className="flex flex-wrap gap-2 mb-3">
                             <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider bg-slate-100 text-slate-600">
                               {paper.examClass}
                             </span>
-                          )}
-                          <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider ${colors.bg} ${colors.text} border ${colors.border}`}>
-                            {paper.examSubject || 'General'}
-                          </span>
-                        </div>
+                          </div>
+                        )}
                         <h3 
                           className="text-[15px] font-bold text-slate-800 leading-snug line-clamp-2 capitalize lowercase" 
                           title={paper.examName}
