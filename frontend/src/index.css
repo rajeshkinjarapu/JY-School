@@ -250,7 +250,7 @@
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
-  .h-screen, .min-h-screen { height: auto !important; min-height: 0 !important; }
+  .h-screen, .min-h-screen, .h-full { height: auto !important; min-height: 0 !important; max-height: none !important; }
   .overflow-hidden, .overflow-y-auto, .overflow-x-hidden { overflow: visible !important; }
 }
 
