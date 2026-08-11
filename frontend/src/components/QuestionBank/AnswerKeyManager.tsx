@@ -124,6 +124,7 @@ export const AnswerKeyManager = ({ prefilledPaperId }: { prefilledPaperId?: stri
   const [selectedSubject, setSelectedSubject] = useState<string>('');
   const [selectedPaperId, setSelectedPaperId] = useState<string>('');
   
+  const [allAnswers, setAllAnswers] = useState<Answer[]>([]);
   const [manualCount, setManualCount] = useState<number>(50);
   const [answers, setAnswers] = useState<Answer[]>([]);
   const [loading, setLoading] = useState(false);
@@ -154,12 +155,24 @@ export const AnswerKeyManager = ({ prefilledPaperId }: { prefilledPaperId?: stri
   }, [prefilledPaperId, papers]);
 
   useEffect(() => {
+    setAllAnswers([]);
+  }, [selectedPaperId]);
+
+  useEffect(() => {
     if (selectedPaperId) {
-      loadPaperAndAnswerKey(selectedPaperId);
+      if (allAnswers.length > 0) {
+        const currentSubjectAnswers = allAnswers.filter(a => 
+          isMatch(a.subject || '', selectedSubject)
+        );
+        setAnswers(currentSubjectAnswers.sort((a, b) => a.qNo - b.qNo));
+      } else {
+        loadPaperAndAnswerKey(selectedPaperId);
+      }
     } else {
       setAnswers([]);
+      setAllAnswers([]);
     }
-  }, [selectedPaperId, selectedSubject]);
+  }, [selectedPaperId, selectedSubject, allAnswers.length]);
 
   const fetchPapers = async () => {
     try {
@@ -261,13 +274,13 @@ export const AnswerKeyManager = ({ prefilledPaperId }: { prefilledPaperId?: stri
       const paper = papers.find(p => p.id === paperId);
       if (!paper) return;
 
-      const subjectText = getSubjectContentText(paper.content, selectedSubject);
-      const parsedQuestions = parseQuestionsWithSubjects(subjectText);
+      const rawText = getRawContentText(paper.content);
+      const allParsedQuestions = parseQuestionsWithSubjects(rawText);
       
-      const initialAnswers: Answer[] = parsedQuestions.map(q => ({
+      const initialAllAnswers: Answer[] = allParsedQuestions.map(q => ({
         qNo: q.qNo,
         answer: '',
-        subject: selectedSubject || 'General'
+        subject: q.subject || 'General'
       }));
 
       let hasAnswersInDB = false;
@@ -276,20 +289,19 @@ export const AnswerKeyManager = ({ prefilledPaperId }: { prefilledPaperId?: stri
         if (res.data && res.data.answers) {
           const dbAnswers: Answer[] = res.data.answers;
           
-          const filteredDbAnswers = dbAnswers.filter(dbA => 
-            !selectedSubject || (dbA.subject || '').toLowerCase() === selectedSubject.toLowerCase()
-          );
-          
-          if (filteredDbAnswers.length > 0 && filteredDbAnswers.some(a => a.answer)) {
+          if (dbAnswers.length > 0 && dbAnswers.some(a => a.answer)) {
             hasAnswersInDB = true;
           }
           
-          filteredDbAnswers.forEach(dbA => {
-            const index = initialAnswers.findIndex(ia => ia.qNo === dbA.qNo);
+          dbAnswers.forEach(dbA => {
+            const index = initialAllAnswers.findIndex(ia => 
+              ia.qNo === dbA.qNo && 
+              (ia.subject || '').toLowerCase() === (dbA.subject || '').toLowerCase()
+            );
             if (index !== -1) {
-              initialAnswers[index].answer = dbA.answer || '';
+              initialAllAnswers[index].answer = dbA.answer || '';
             } else {
-              initialAnswers.push(dbA);
+              initialAllAnswers.push(dbA);
             }
           });
         }
@@ -299,11 +311,16 @@ export const AnswerKeyManager = ({ prefilledPaperId }: { prefilledPaperId?: stri
         }
       }
 
-      setAnswers(initialAnswers.sort((a, b) => a.qNo - b.qNo));
+      setAllAnswers(initialAllAnswers);
+      
+      const currentSubjectAnswers = initialAllAnswers.filter(a => 
+        isMatch(a.subject || '', selectedSubject)
+      );
+      setAnswers(currentSubjectAnswers.sort((a, b) => a.qNo - b.qNo));
 
       // Auto-trigger AI generation if no saved answers exist (Only for Admins/SuperAdmins)
-      if (!hasAnswersInDB && initialAnswers.length > 0 && isAdminOrSuperAdmin) {
-        autoGenerateAI(paper, initialAnswers);
+      if (!hasAnswersInDB && currentSubjectAnswers.length > 0 && isAdminOrSuperAdmin) {
+        autoGenerateAI(paper, currentSubjectAnswers);
       }
     } catch (error) {
       toast.error('Failed to load answer key data');
@@ -349,9 +366,16 @@ ${subjectText}`;
          setAnswers(prev => {
            const newAnswers = [...prev];
            aiAnswers.forEach(aiA => {
-             const index = aiA.qNo - 1;
-             if (index >= 0 && index < newAnswers.length && aiA.answer) {
+             const index = newAnswers.findIndex(a => a.qNo === aiA.qNo);
+             if (index !== -1 && aiA.answer) {
                newAnswers[index] = { ...newAnswers[index], answer: aiA.answer };
+               
+               // Also update allAnswers
+               setAllAnswers(all => all.map(a => 
+                 (a.qNo === aiA.qNo && isMatch(a.subject || '', selectedSubject))
+                   ? { ...a, answer: aiA.answer }
+                   : a
+               ));
              }
            });
            return newAnswers.sort((a, b) => a.qNo - b.qNo);
@@ -375,7 +399,7 @@ ${subjectText}`;
       toast.loading('Saving Answer Key...', { id: 'save-ak' });
       await api.post('/api/answer-keys', {
         paperId: selectedPaperId,
-        answers: answers
+        answers: allAnswers
       });
       toast.success('Answer Key saved successfully!', { id: 'save-ak' });
     } catch (error) {
@@ -427,9 +451,16 @@ ${rawText}`;
          setAnswers(prev => {
             const newAnswers = [...prev];
             aiAnswers.forEach(aiA => {
-              const index = aiA.qNo - 1;
-              if (index >= 0 && index < newAnswers.length && aiA.answer) {
+              const index = newAnswers.findIndex(a => a.qNo === aiA.qNo);
+              if (index !== -1 && aiA.answer) {
                 newAnswers[index] = { ...newAnswers[index], answer: aiA.answer };
+                
+                // Also update allAnswers
+                setAllAnswers(all => all.map(a => 
+                  (a.qNo === aiA.qNo && isMatch(a.subject || '', selectedSubject))
+                    ? { ...a, answer: aiA.answer }
+                    : a
+                ));
               }
             });
             return newAnswers.sort((a, b) => a.qNo - b.qNo);
@@ -449,29 +480,42 @@ ${rawText}`;
 
   const handleAnswerChange = (qNo: number, value: string) => {
     setAnswers(prev => prev.map(a => a.qNo === qNo ? { ...a, answer: value } : a));
+    setAllAnswers(prev => prev.map(a => 
+      (a.qNo === qNo && isMatch(a.subject || '', selectedSubject))
+        ? { ...a, answer: value }
+        : a
+    ));
   };
 
   const handleAddManualQuestions = (count: number) => {
     const startNum = answers.length > 0 ? Math.max(...answers.map(a => a.qNo)) + 1 : 1;
     const newAnswers = [...answers];
+    const newAllAnswers = [...allAnswers];
+    
     for (let i = 0; i < count; i++) {
-      newAnswers.push({
+      const q = {
         qNo: startNum + i,
         answer: '',
         subject: selectedSubject || 'General'
-      });
+      };
+      newAnswers.push(q);
+      newAllAnswers.push(q);
     }
+    
     setAnswers(newAnswers.sort((a, b) => a.qNo - b.qNo));
+    setAllAnswers(newAllAnswers);
     toast.success(`Added ${count} questions manually!`);
   };
 
   const handleAddSingleQuestion = () => {
     const nextNum = answers.length > 0 ? Math.max(...answers.map(a => a.qNo)) + 1 : 1;
-    setAnswers(prev => [...prev, {
+    const q = {
       qNo: nextNum,
       answer: '',
       subject: selectedSubject || 'General'
-    }]);
+    };
+    setAnswers(prev => [...prev, q]);
+    setAllAnswers(prev => [...prev, q]);
   };
 
   const selectedPaper = papers.find(p => p.id === selectedPaperId);
