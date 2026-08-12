@@ -28,6 +28,7 @@ export const api = axios.create({
   timeout: 30000, // 30 seconds for mobile network reliability
   headers: {
     'Content-Type': 'application/json',
+    'ngrok-skip-browser-warning': '69420',
   },
 });
 
