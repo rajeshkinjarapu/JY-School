@@ -9,8 +9,11 @@ const getApiUrl = () => {
       return ''; 
     }
     const isCapacitor = !!(window as any).Capacitor || window.location.protocol === 'capacitor:';
-    if (host.includes('railway.app') || host === 'localhost' || host === '127.0.0.1' || isCapacitor) {
+    if (host.includes('railway.app') || host === 'localhost' || host === '127.0.0.1') {
       return 'http://localhost:5000';
+    }
+    if (isCapacitor) {
+      return 'https://apply-promenade-prologue.ngrok-free.dev';
     }
   }
   

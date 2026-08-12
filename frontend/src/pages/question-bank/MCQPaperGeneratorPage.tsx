@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ChevronLeft, Sparkles, Upload, Save, Printer, FileText, Settings, Maximize, X, Wand2, BookOpen, ImagePlus, HelpCircle } from 'lucide-react';
+import { ChevronLeft, Sparkles, Upload, Save, Printer, FileText, Settings, Maximize, X, Wand2, BookOpen, ImagePlus, HelpCircle, PenTool, Eye } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { LiveLatexPreview } from '../../components/QuestionBank/LiveLatexPreview';
@@ -62,6 +62,7 @@ export const MCQPaperGeneratorPage = () => {
   });
   const [activeSubjectTab, setActiveSubjectTab] = useState<string>('Telugu');
   const [isGenerating, setIsGenerating] = useState(false);
+  const [mobileTab, setMobileTab] = useState<'editor' | 'preview'>('editor');
   const containerRef = React.useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -548,17 +549,17 @@ export const MCQPaperGeneratorPage = () => {
           >
             <Maximize className="w-5 h-5" />
           </button>
-          <div className="w-px h-6 bg-slate-200 mx-1"></div>
+          <div className="w-px h-6 bg-slate-200 mx-1 hidden md:block"></div>
           <button
             onClick={() => setIsSettingsOpen(true)}
-            className="px-4 py-2 bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 rounded-xl font-medium transition-all flex items-center gap-2"
+            className="px-4 py-2 bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 rounded-xl font-medium transition-all items-center gap-2 hidden md:flex"
           >
             <Settings className="w-4 h-4" />
             Paper Settings
           </button>
           <button
             onClick={() => setIsAiModalOpen(true)}
-            className="px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl hover:shadow-lg hover:shadow-purple-500/30 font-medium transition-all flex items-center gap-2"
+            className="px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl hover:shadow-lg hover:shadow-purple-500/30 font-medium transition-all items-center gap-2 hidden md:flex"
           >
             <Sparkles className="w-4 h-4" />
             ✨ AI Generate
@@ -569,11 +570,11 @@ export const MCQPaperGeneratorPage = () => {
             className="px-4 py-2 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 font-medium transition-all flex items-center gap-2 disabled:opacity-60"
           >
             <Save className="w-4 h-4" />
-            {isSaving ? 'Saving...' : paperId ? 'Update Paper' : 'Save Paper'}
+            <span className="hidden sm:inline">{isSaving ? 'Saving...' : paperId ? 'Update Paper' : 'Save Paper'}</span>
           </button>
           <button
             onClick={handlePrint}
-            className="px-4 py-2 bg-slate-800 text-white rounded-xl hover:bg-slate-900 font-medium transition-all flex items-center gap-2"
+            className="px-4 py-2 bg-slate-800 text-white rounded-xl hover:bg-slate-900 font-medium transition-all items-center gap-2 hidden md:flex"
           >
             <Printer className="w-4 h-4" />
             Print A4
@@ -585,11 +586,26 @@ export const MCQPaperGeneratorPage = () => {
       <div className="flex-1 flex overflow-hidden print:overflow-visible h-[calc(100vh-80px)] print:h-auto print:block">
         
         {/* Left Side: Editor (Hidden on Print) */}
-        <div className="w-1/2 p-6 overflow-y-auto border-r border-slate-200 bg-white print:hidden custom-scrollbar">
+        <div className={`w-full md:w-1/2 p-4 md:p-6 overflow-y-auto border-r border-slate-200 bg-white print:hidden custom-scrollbar pb-24 md:pb-6 ${mobileTab === 'editor' ? 'block' : 'hidden md:block'}`}>
           <div className="h-full flex flex-col pb-20">
+            {/* Mobile Action Buttons */}
+            <div className="flex md:hidden gap-3 mb-6 mt-2">
+              <button
+                onClick={() => setIsSettingsOpen(true)}
+                className="flex-1 py-3 bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 rounded-xl font-bold transition-all flex justify-center items-center gap-2 shadow-sm"
+              >
+                <Settings className="w-5 h-5" /> Settings
+              </button>
+              <button
+                onClick={() => setIsAiModalOpen(true)}
+                className="flex-1 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl hover:shadow-lg hover:shadow-purple-500/30 font-bold transition-all flex justify-center items-center gap-2"
+              >
+                <Sparkles className="w-5 h-5" /> AI Generate
+              </button>
+            </div>
             <h3 className="font-semibold text-slate-700 border-b pb-2 mb-4 flex justify-between items-center">
               <span>Question Content (LaTeX Support)</span>
-              <div className="flex gap-2">
+              <div className="flex gap-2 flex-wrap md:flex-nowrap">
                 <input 
                   type="file" 
                   ref={imageInputRef} 
@@ -597,9 +613,9 @@ export const MCQPaperGeneratorPage = () => {
                   onChange={handleImageUploadForEditor} 
                   className="hidden" 
                 />
-                <span className="text-xs text-slate-500 bg-white/80 px-2 py-1 rounded-md border border-slate-100 flex items-center gap-1.5 shadow-sm">
+                <span className="text-xs text-slate-500 bg-white/80 px-2 py-1 rounded-md border border-slate-100 items-center gap-1.5 shadow-sm hidden md:flex">
                   <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-500"><path d="M12 9v2m0 4v.01M5.05 19h13.9c1.66 0 3-1.34 3-3V8c0-1.66-1.34-3-3-3H5.05c-1.66 0-3 1.34-3 3v8c0 1.66 1.34 3 3 3z"/></svg>
-                  Tip: Press Enter 3-4 times to leave empty space for answers
+                  Tip: Press Enter 3-4 times to leave empty space
                 </span>
                 <button 
                   onClick={() => imageInputRef.current?.click()}
@@ -658,12 +674,19 @@ export const MCQPaperGeneratorPage = () => {
         </div>
 
         {/* Right Side: Live Preview */}
-        <div className="w-1/2 overflow-y-auto bg-slate-100 print:w-full print:bg-white custom-scrollbar flex flex-col relative print:overflow-visible print:block">
-          <div className="sticky top-0 z-10 bg-slate-100/80 backdrop-blur-md border-b border-slate-200 px-6 py-3 flex justify-between items-center print:hidden">
+        <div className={`w-full md:w-1/2 overflow-y-auto bg-slate-100 print:w-full print:bg-white custom-scrollbar flex flex-col relative print:overflow-visible print:block pb-24 md:pb-0 ${mobileTab === 'preview' ? 'block' : 'hidden md:block'}`}>
+          <div className="sticky top-0 z-10 bg-slate-100/80 backdrop-blur-md border-b border-slate-200 px-4 py-3 flex justify-between items-center print:hidden">
             <h3 className="font-semibold text-slate-700 flex items-center gap-2">
               Live Preview
             </h3>
-            {/* Double View toggle removed as requested */}
+            <div className="flex items-center gap-2 md:hidden">
+              <button
+                onClick={handlePrint}
+                className="px-3 py-1.5 bg-slate-800 text-white rounded-lg text-sm font-medium transition-all flex items-center gap-1.5"
+              >
+                <Printer className="w-4 h-4" /> PDF
+              </button>
+            </div>
           </div>
           <div className="flex justify-center p-8 print:p-0">
             <div className="paper-zoom origin-top transition-transform">
@@ -694,11 +717,36 @@ export const MCQPaperGeneratorPage = () => {
 
       </div>
 
+      {/* Mobile Bottom Navigation */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 flex justify-between items-center px-2 py-2 pb-[env(safe-area-inset-bottom,0px)] z-50 shadow-[0_-4px_10px_rgba(0,0,0,0.05)]">
+        <button 
+          onClick={() => setMobileTab('editor')}
+          className={`flex-1 flex flex-col items-center justify-center p-2 rounded-xl transition-colors ${mobileTab === 'editor' ? 'text-blue-600 bg-blue-50' : 'text-slate-500 hover:bg-slate-50'}`}
+        >
+          <div className="w-6 h-6 mb-1"><PenTool className="w-full h-full" /></div>
+          <span className="text-[10px] font-bold">Edit</span>
+        </button>
+        <button 
+          onClick={() => setMobileTab('preview')}
+          className={`flex-1 flex flex-col items-center justify-center p-2 rounded-xl transition-colors ${mobileTab === 'preview' ? 'text-emerald-600 bg-emerald-50' : 'text-slate-500 hover:bg-slate-50'}`}
+        >
+          <div className="w-6 h-6 mb-1"><Eye className="w-full h-full" /></div>
+          <span className="text-[10px] font-bold">Preview</span>
+        </button>
+        <button 
+          onClick={() => setIsSettingsOpen(true)}
+          className={`flex-1 flex flex-col items-center justify-center p-2 rounded-xl transition-colors text-slate-500 hover:bg-slate-50`}
+        >
+          <div className="w-6 h-6 mb-1"><Settings className="w-full h-full" /></div>
+          <span className="text-[10px] font-bold">Settings</span>
+        </button>
+      </div>
+
       {/* AI Generate Modal */}
       {isAiModalOpen && (
-        <div className="fixed inset-0 z-[200] bg-black/50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
-            <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+        <div className="fixed inset-0 z-[200] bg-black/50 flex items-center justify-center p-0 md:p-4">
+          <div className="bg-white md:rounded-2xl w-full h-full md:h-auto md:max-w-2xl flex flex-col shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50 flex-shrink-0">
               <h2 className="font-bold text-lg text-slate-800 flex items-center gap-2">
                 <Sparkles className="w-5 h-5 text-purple-600" /> AI Generate
               </h2>
@@ -707,7 +755,7 @@ export const MCQPaperGeneratorPage = () => {
               </button>
             </div>
             
-            <div className="p-6 space-y-6">
+            <div className="p-4 md:p-6 space-y-6 overflow-y-auto flex-1 custom-scrollbar pb-24 md:pb-6">
               {/* Source Tabs */}
               <div className="flex gap-2 p-1 bg-slate-100 rounded-lg">
                 <button 
@@ -787,7 +835,7 @@ export const MCQPaperGeneratorPage = () => {
               </div>
             </div>
             
-            <div className="px-6 py-4 border-t border-slate-100 bg-slate-50 flex justify-end gap-3">
+            <div className="px-6 py-4 border-t border-slate-100 bg-slate-50 flex justify-end gap-3 flex-shrink-0 pb-[max(1rem,env(safe-area-inset-bottom,0px))]">
               <button 
                 onClick={() => setIsAiModalOpen(false)}
                 className="px-6 py-2 bg-white border border-slate-300 text-slate-700 font-medium rounded-xl hover:bg-slate-50 transition-colors shadow-sm"
@@ -812,8 +860,8 @@ export const MCQPaperGeneratorPage = () => {
 
       {/* Settings Modal */}
       {isSettingsOpen && (
-        <div className="fixed inset-0 z-[200] bg-black/50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 z-[200] bg-black/50 flex items-center justify-center p-0 md:p-4">
+          <div className="bg-white md:rounded-2xl w-full h-full md:max-w-2xl md:max-h-[90vh] flex flex-col shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
             <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50 flex-shrink-0">
               <h2 className="font-bold text-lg text-slate-800 flex items-center gap-2">
                 <Settings className="w-5 h-5 text-blue-600" /> Paper Settings
@@ -996,7 +1044,7 @@ export const MCQPaperGeneratorPage = () => {
               </div>
             </div>
             
-            <div className="px-6 py-4 border-t border-slate-100 bg-slate-50 flex justify-end">
+            <div className="px-6 py-4 border-t border-slate-100 bg-slate-50 flex justify-end pb-[max(1rem,env(safe-area-inset-bottom,0px))] flex-shrink-0">
               <button 
                 onClick={() => {
                   localStorage.setItem('mcq_exam_name', examName);
