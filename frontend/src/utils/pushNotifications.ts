@@ -27,6 +27,23 @@ export const registerPushNotifications = async (userId: string, tokenStr: string
     await PushNotifications.register();
     isRegistered = true;
 
+    // Create a notification channel for Android (required for high priority banner/heads-up notifications)
+    if (Capacitor.getPlatform() === 'android') {
+      try {
+        await PushNotifications.createChannel({
+          id: 'default',
+          name: 'Important Notifications',
+          description: 'Used for important alerts and banners',
+          importance: 5, // 5 = MAX (Heads-up banner)
+          visibility: 1, // 1 = PUBLIC (Show on lock screen)
+          sound: 'default',
+          vibration: true,
+        });
+      } catch (e) {
+        console.error('Error creating push channel', e);
+      }
+    }
+
     // Clear old listeners to avoid duplicates on re-renders
     await PushNotifications.removeAllListeners();
 

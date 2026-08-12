@@ -23,10 +23,20 @@ export const sendPushNotification = async (token: string, title: string, body: s
   if (!token) return;
 
   try {
-    const message = {
+    const message: admin.messaging.Message = {
       notification: {
         title,
         body,
+      },
+      android: {
+        priority: 'high',
+        notification: {
+          sound: 'default',
+          channelId: 'default', // Using a default channel, ensure it matches app if needed
+          defaultSound: true,
+          defaultVibrateTimings: true,
+          priority: 'max'
+        }
       },
       data: data || {},
       token,
