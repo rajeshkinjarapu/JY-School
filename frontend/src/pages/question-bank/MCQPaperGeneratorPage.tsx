@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ChevronLeft, Sparkles, Upload, Save, Printer, FileText, Settings, Maximize, X, Wand2, BookOpen, ImagePlus, HelpCircle, PenTool, Eye } from 'lucide-react';
+import { ChevronLeft, Sparkles, Upload, Save, Printer, FileText, Settings, Maximize, X, Wand2, BookOpen, ImagePlus, HelpCircle, PenTool, Eye, ZoomIn, ZoomOut } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { LiveLatexPreview } from '../../components/QuestionBank/LiveLatexPreview';
@@ -15,6 +15,7 @@ export const MCQPaperGeneratorPage = () => {
   const [searchParams] = useSearchParams();
   const paperId = searchParams.get('id');
   const [isSaving, setIsSaving] = useState(false);
+  const [zoomLevel, setZoomLevel] = useState(0.48);
   
   // Paper Settings State
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -671,15 +672,23 @@ export const MCQPaperGeneratorPage = () => {
         </div>
 
         {/* Right Side: Live Preview */}
-        <div className={`w-full md:w-1/2 overflow-y-auto bg-slate-100 print:w-full print:bg-white custom-scrollbar flex flex-col relative print:overflow-visible print:block pb-24 md:pb-0 ${mobileTab === 'preview' ? 'block' : 'hidden md:block'}`}>
-          <div className="sticky top-0 z-10 bg-slate-100/80 backdrop-blur-md border-b border-slate-200 px-4 py-3 flex justify-between items-center print:hidden">
+        <div className={`w-full md:w-1/2 overflow-y-auto bg-slate-100 print:w-full print:bg-white custom-scrollbar flex flex-col relative print:overflow-visible print:block pb-40 md:pb-0 ${mobileTab === 'preview' ? 'block' : 'hidden md:block'}`}>
+          
+          {/* Mobile Zoom Controls */}
+          <div className="md:hidden sticky top-0 z-10 bg-slate-100/90 backdrop-blur-md px-4 py-2 flex justify-end gap-3 items-center print:hidden border-b border-slate-200">
+            <button onClick={() => setZoomLevel(z => Math.max(0.2, z - 0.05))} className="p-2 bg-white rounded-full shadow-sm text-slate-600 hover:bg-slate-50"><ZoomOut size={16}/></button>
+            <span className="text-xs font-bold text-slate-700 w-10 text-center">{Math.round(zoomLevel * 100)}%</span>
+            <button onClick={() => setZoomLevel(z => Math.min(1.5, z + 0.05))} className="p-2 bg-white rounded-full shadow-sm text-slate-600 hover:bg-slate-50"><ZoomIn size={16}/></button>
+          </div>
+
+          <div className="hidden md:flex sticky top-0 z-10 bg-slate-100/80 backdrop-blur-md border-b border-slate-200 px-4 py-3 justify-between items-center print:hidden">
             <h3 className="font-semibold text-slate-700 flex items-center gap-2">
               Live Preview
             </h3>
             {/* PDF button removed from here - moved to top header */}
           </div>
           <div className="flex justify-center p-2 md:p-8 print:p-0">
-            <div className="paper-zoom-mobile md:paper-zoom origin-top transition-transform w-full md:w-auto">
+            <div className="paper-zoom-mobile md:paper-zoom origin-top transition-transform w-full md:w-auto" style={{ transform: window.innerWidth <= 768 ? `scale(${zoomLevel})` : undefined }}>
             <LiveLatexPreview 
               subjectContents={subjectContents}
               examName={examName}
@@ -1123,9 +1132,8 @@ export const MCQPaperGeneratorPage = () => {
         
         @media (max-width: 768px) {
           .paper-zoom-mobile {
-             transform: scale(0.48) !important;
              transform-origin: top center !important;
-             margin-bottom: -110%;
+             margin-bottom: -150%;
              width: 100% !important;
           }
         }
