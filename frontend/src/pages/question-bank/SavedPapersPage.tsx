@@ -206,7 +206,7 @@ const SavedPapersPage = () => {
         title="Saved AI Papers" 
         icon={<BookOpen className="w-5 h-5" />} 
         action={
-          <div className="relative">
+          <div className="relative hidden md:block">
             <button
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
               className="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-xl font-bold shadow-lg text-sm hover:-translate-y-0.5 transition-all duration-200"
@@ -336,8 +336,8 @@ const SavedPapersPage = () => {
                                 {paper.examClass}
                               </span>
                             )}
-                            {paper.examClass && <span className="text-slate-300 text-[10px]">•</span>}
-                            <span className="text-[10px] font-black uppercase tracking-wider text-slate-500">
+                            {paper.examClass && <span className="text-slate-300 text-[10px] hidden md:inline">•</span>}
+                            <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 hidden md:inline truncate max-w-[150px]">
                                {paper.examSubject || 'General'}
                             </span>
                           </div>
