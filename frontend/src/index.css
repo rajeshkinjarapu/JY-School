@@ -245,6 +245,11 @@
     box-shadow: none !important;
   }
   
+  #a4-preview-paper {
+    border: none !important;
+    outline: none !important;
+  }
+  
   body { background: white !important; background-image: none !important; margin: 0; padding: 0; overflow: visible !important; min-height: 100% !important; }
   html { background: white !important; background-image: none !important; min-height: 100% !important; overflow: visible !important; color: black !important; }
   
