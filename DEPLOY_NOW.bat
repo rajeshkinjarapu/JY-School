@@ -10,16 +10,16 @@ echo  Step 1: Connecting to VPS Server...
 echo  Step 2: Pulling latest code from GitHub...
 echo  Step 3: Building and restarting...
 echo.
-echo  PASSWORD: cJkg_-jnt-xoUxVB
+echo  PASSWORD: 6wfSXeFv6gi75yb7
 echo  (If asked for password, RIGHT-CLICK to paste, then ENTER)
 echo.
 echo  =====================================================
-ssh -o StrictHostKeyChecking=no root@148.113.8.82 -p 20046 "cd /root/JY-School && git pull origin main && cd backend && npm install && npm run build && cd ../frontend && npm install && npm run build && pm2 restart all"
+ssh -o StrictHostKeyChecking=no root@148.113.9.103 -p 20046 "cd /root/JY-School && git pull origin main && cd backend && npm install && npm run build && cd ../frontend && npm install && npm run build && pm2 restart all"
 echo.
 if %errorlevel% == 0 (
     echo  =====================================================
     echo   SUCCESS! Website is LIVE at:
-    echo   http://148.113.8.82:19999
+    echo   http://148.113.9.103:19999
     echo  =====================================================
 ) else (
     echo  =====================================================
