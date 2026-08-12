@@ -154,7 +154,7 @@ export const getResults = async (req: AuthRequest, res: Response, next: NextFunc
         studentId: s.id,
         name: s.user.name,
         photo: s.user.photoUrl,
-        mobile: s.fatherMobile || s.motherMobile || s.user.phone || '-',
+        mobile: (s as any).fatherMobile || (s as any).motherMobile || s.user.phone || '-',
         rollNo: s.rollNo || '-',
         className: s.class ? `${s.class.name} - ${s.class.section}` : '',
         marks: [],
@@ -360,7 +360,7 @@ export const sendMarksSMS = async (req: AuthRequest, res: Response, next: NextFu
     const { sendSMS } = await import('../utils/sms');
 
     for (const student of students) {
-      const parentMobile = student.fatherMobile || student.motherMobile || student.user?.phone;
+      const parentMobile = (student as any).fatherMobile || (student as any).motherMobile || student.user?.phone;
       if (!parentMobile) {
         failedCount++;
         continue;

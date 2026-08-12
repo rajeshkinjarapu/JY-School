@@ -49,7 +49,8 @@ export const create = async (req: AuthRequest, res: Response, next: NextFunction
       }).catch(() => {});
     }
 
-    return successResponse(res, subject, 'Subject created', 201);
+    successResponse(res, subject, 'Subject created', 201);
+    return;
   }
 
   // If no classId provided, create subject across all classes
@@ -80,12 +81,13 @@ export const create = async (req: AuthRequest, res: Response, next: NextFunction
     }
   }
 
-  return successResponse(
+  successResponse(
     res, 
     createdSubjects[0] || lastFoundSubject || { name: baseName }, 
     createdSubjects.length > 0 ? 'Subject created successfully across classes' : 'Subject already exists in all classes', 
     200
   );
+  return;
 };
 
 export const update = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {

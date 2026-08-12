@@ -127,7 +127,7 @@ export const create = async (req: Request, res: Response, next: NextFunction): P
   cache.delPattern('students:list:*');
   clearDashboardCache();
 
-  const creatorName = req.user?.name || 'System';
+  const creatorName = (req as any).user?.name || 'System';
   createSystemNotification({
     role: 'SUPER_ADMIN',
     title: `🎓 New Student Joined`,
@@ -281,7 +281,7 @@ export const changeClass = async (req: AuthRequest, res: Response, next: NextFun
   createSystemNotification({
     role: 'SUPER_ADMIN',
     title: `🎓 Student Class Changed`,
-    message: `${student.user?.name || 'A student'}'s section was updated.`,
+    message: `${updated.user?.name || 'A student'}'s section was updated.`,
     type: 'INFO',
     link: `/students/${student.id}`
   });

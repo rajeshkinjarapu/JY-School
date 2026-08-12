@@ -200,7 +200,7 @@ export const parseDocxWithGemini = async (req: Request, res: Response) => {
       mimeType,
       name: path.basename(filePath),
       displayName: req.file.originalname,
-    });
+    } as any);
 
     const fileUri = uploadedFile.uri;
     if (!fileUri) throw new Error('File upload to Gemini failed — no URI returned.');

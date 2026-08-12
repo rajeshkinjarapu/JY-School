@@ -19,7 +19,7 @@ const redisRequest = async (command: string[]): Promise<any> => {
       signal: AbortSignal.timeout(3000), // 3s timeout — never block API
     });
     if (!res.ok) return null;
-    const data = await res.json();
+    const data = (await res.json()) as any;
     return data?.result ?? null;
   } catch {
     return null; // Redis down? Fall through to DB silently

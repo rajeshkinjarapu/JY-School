@@ -9,7 +9,7 @@ import bcrypt from 'bcryptjs';
 export const saveDeviceToken = async (req: AuthRequest, res: Response): Promise<void> => {
   const { deviceToken } = req.body;
   if (!deviceToken) {
-    throw createError(400, 'Device token is required');
+    throw createError('Device token is required', 400);
   }
 
   await prisma.user.update({
