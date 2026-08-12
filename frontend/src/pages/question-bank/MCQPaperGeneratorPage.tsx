@@ -164,7 +164,14 @@ export const MCQPaperGeneratorPage = () => {
   };
 
   const handlePrint = () => {
-    window.print();
+    if (window.innerWidth <= 768 && mobileTab === 'editor') {
+      setMobileTab('preview');
+      setTimeout(() => {
+        window.print();
+      }, 300);
+    } else {
+      window.print();
+    }
   };
 
   const toggleFullScreen = () => {
