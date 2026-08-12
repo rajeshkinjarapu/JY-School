@@ -18,7 +18,7 @@ const getApiUrl = () => {
     return import.meta.env.VITE_API_URL;
   }
   
-  return 'http://148.113.9.103:19999';
+  return 'https://returns-enrolled-asks-lenders.trycloudflare.com';
 };
 
 const API_URL = getApiUrl();

@@ -27,7 +27,7 @@ export const MessagesPage: React.FC = () => {
     if (typeof window !== 'undefined') {
       const host = window.location.hostname;
       if (host.includes('vercel.app')) {
-        return 'http://148.113.9.103:19999';
+        return 'https://returns-enrolled-asks-lenders.trycloudflare.com';
       }
       if (host === 'localhost' || host === '127.0.0.1') {
         return 'http://localhost:5000';

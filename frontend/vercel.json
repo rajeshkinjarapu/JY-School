@@ -2,11 +2,11 @@
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "http://148.113.9.103:19999/api/$1"
+      "destination": "https://returns-enrolled-asks-lenders.trycloudflare.com/api/$1"
     },
     {
       "source": "/uploads/(.*)",
-      "destination": "http://148.113.9.103:19999/uploads/$1"
+      "destination": "https://returns-enrolled-asks-lenders.trycloudflare.com/uploads/$1"
     },
     {
       "source": "/(.*)",
