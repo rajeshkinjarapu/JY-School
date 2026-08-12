@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { 
   FileText, Edit2, Trash2, Plus, Search, Calendar, 
   BookOpen, Clock, ChevronLeft, AlertTriangle, 
-  Eye, Printer, Download, Copy, Grid, List, X 
+  Eye, Printer, Download, Copy, Grid, List, X, MoreVertical 
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { api } from '../../api/axios';
@@ -73,6 +73,7 @@ const SavedPapersPage = () => {
   const [deleting, setDeleting] = useState(false);
   const [previewPaper, setPreviewPaper] = useState<GeneratedPaper | null>(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
 
   useEffect(() => {
     fetchPapers();
@@ -244,53 +245,52 @@ const SavedPapersPage = () => {
           </div>
         }
       />
-      <div className="flex-1 overflow-auto p-4 sm:p-6 animate-fade-in">
+      <div className="flex-1 overflow-auto p-4 sm:p-6 animate-fade-in pb-24 lg:pb-6">
 
       <div className="max-w-7xl mx-auto">
         {/* Controls Bar */}
-        <div className="bg-white/70 backdrop-blur-xl border border-slate-200/60 p-4 rounded-3xl mb-6 shadow-sm flex flex-col xl:flex-row xl:items-center gap-4 justify-between">
-          <div className="flex flex-col sm:flex-row sm:items-center gap-4 flex-1">
-            {/* Search Bar */}
-            <div className="relative w-full sm:max-w-xs">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-              <input
-                type="text"
-                placeholder="Search papers..."
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 rounded-2xl bg-white border border-slate-200 shadow-sm text-sm font-bold text-slate-700 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all"
-              />
-            </div>
-
-
+        <div className="flex flex-col gap-3 mb-6">
+          <div className="relative w-full">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Search saved papers..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              className="w-full pl-10 pr-4 py-3 rounded-2xl bg-white border border-slate-200 shadow-sm text-sm font-bold text-slate-700 focus:outline-none focus:border-indigo-500 transition-all"
+            />
           </div>
-
-          <div className="flex items-center gap-3 shrink-0">
-            <select 
-              value={sortOrder}
-              onChange={(e) => setSortOrder(e.target.value as any)}
-              className="px-4 py-2.5 rounded-2xl bg-white border border-slate-200 text-sm font-bold text-slate-700 shadow-sm focus:outline-none focus:border-indigo-500 cursor-pointer"
-            >
-              <option value="newest">Newest First</option>
-              <option value="oldest">Oldest First</option>
-              <option value="az">A-Z Name</option>
-            </select>
-            
-            <div className="flex bg-slate-100/80 p-1.5 rounded-2xl shadow-inner border border-slate-200/50">
-              <button
-                onClick={() => setViewMode('grid')}
-                className={`p-2 rounded-xl transition-all ${viewMode === 'grid' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-400 hover:text-slate-600'}`}
-                title="Grid View"
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <select 
+                value={sortOrder}
+                onChange={(e) => setSortOrder(e.target.value as any)}
+                className="px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-xs font-bold text-slate-600 shadow-sm focus:outline-none focus:border-indigo-500 cursor-pointer"
               >
-                <Grid className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => setViewMode('list')}
-                className={`p-2 rounded-xl transition-all ${viewMode === 'list' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-400 hover:text-slate-600'}`}
-                title="List View"
-              >
-                <List className="w-4 h-4" />
-              </button>
+                <option value="newest">Newest First</option>
+                <option value="oldest">Oldest First</option>
+                <option value="az">A-Z Name</option>
+              </select>
+              
+              <div className="flex bg-slate-100 p-1 rounded-lg border border-slate-200/50">
+                <button
+                  onClick={() => setViewMode('grid')}
+                  className={`p-1.5 rounded-md transition-all ${viewMode === 'grid' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-400'}`}
+                  title="Grid View"
+                >
+                  <Grid className="w-3.5 h-3.5" />
+                </button>
+                <button
+                  onClick={() => setViewMode('list')}
+                  className={`p-1.5 rounded-md transition-all ${viewMode === 'list' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-400'}`}
+                  title="List View"
+                >
+                  <List className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
+            <div className="text-sm font-black text-slate-500">
+              Saved Papers · {papers.length}
             </div>
           </div>
         </div>
@@ -302,17 +302,15 @@ const SavedPapersPage = () => {
             <p className="text-sm font-bold text-slate-400">Loading papers...</p>
           </div>
         ) : filtered.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-24 bg-white/50 border border-slate-200 border-dashed rounded-3xl">
-            <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center shadow-sm mb-4">
-              <FileText className="w-8 h-8 text-slate-300" />
-            </div>
-            <p className="text-lg font-black text-slate-700">No papers found</p>
-            <p className="text-sm text-slate-400 mt-1 mb-6 font-medium">Try adjusting your search or filters.</p>
+          <div className="flex flex-col items-center justify-center py-20 bg-white border border-slate-200 border-dashed rounded-3xl text-center px-4">
+            <div className="text-5xl mb-4">📄</div>
+            <p className="text-lg font-black text-slate-800 mb-2">No Saved Papers</p>
+            <p className="text-sm text-slate-500 font-medium mb-6 max-w-[250px]">Create your first question paper using AI or the paper generator.</p>
             <button
-              onClick={() => navigate('/question-bank/generator')}
-              className="px-6 py-2.5 bg-indigo-50 text-indigo-600 rounded-xl text-sm font-bold hover:bg-indigo-100 transition-colors"
+              onClick={() => setIsDropdownOpen(true)}
+              className="px-6 py-3 bg-slate-900 text-white rounded-xl text-sm font-bold shadow-lg hover:-translate-y-0.5 transition-transform"
             >
-              Create New Paper
+              + Create New Paper
             </button>
           </div>
         ) : (
@@ -325,49 +323,75 @@ const SavedPapersPage = () => {
                   return (
                     <div
                       key={paper.id}
-                      className="group bg-white rounded-3xl shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden flex flex-col border border-slate-100"
+                      className="group bg-white rounded-2xl shadow-sm overflow-visible flex flex-col border border-slate-200 relative"
                     >
-                      {/* Accent Top Bar */}
-                      <div className={`h-1.5 w-full bg-gradient-to-r ${colors.gradient}`}></div>
+                      {/* Color Strip (Left Border) */}
+                      <div className={`absolute top-0 left-0 bottom-0 w-1.5 rounded-l-2xl bg-gradient-to-b ${colors.gradient}`}></div>
                       
-                      {/* Card Content Header */}
-                      <div className="p-5 flex-shrink-0 flex flex-col flex-1">
-                        {paper.examClass && (
-                          <div className="flex flex-wrap gap-2 mb-3">
-                            <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider bg-slate-100 text-slate-600">
-                              {paper.examClass}
+                      <div className="p-4 pl-6 flex flex-col flex-1">
+                        <div className="flex justify-between items-start mb-2 relative">
+                          <div className="flex gap-1.5 items-center">
+                            {paper.examClass && (
+                              <span className="text-[10px] font-black uppercase tracking-wider text-slate-500">
+                                {paper.examClass}
+                              </span>
+                            )}
+                            {paper.examClass && <span className="text-slate-300 text-[10px]">•</span>}
+                            <span className="text-[10px] font-black uppercase tracking-wider text-slate-500">
+                               {paper.examSubject || 'General'}
                             </span>
                           </div>
-                        )}
-                        <h3 
-                          className="text-[15px] font-bold text-slate-800 leading-snug line-clamp-2 capitalize lowercase" 
-                          title={paper.examName}
-                        >
+                          
+                          <div className="relative">
+                            <button 
+                              onClick={() => setActiveDropdown(activeDropdown === paper.id ? null : paper.id)}
+                              className="p-1 -mr-2 -mt-1 hover:bg-slate-100 rounded-lg text-slate-400 transition-colors"
+                            >
+                              <MoreVertical className="w-4 h-4" />
+                            </button>
+                            
+                            {activeDropdown === paper.id && (
+                              <>
+                                <div className="fixed inset-0 z-10" onClick={() => setActiveDropdown(null)}></div>
+                                <div className="absolute right-0 top-full mt-1 w-48 bg-white border border-slate-200 rounded-xl shadow-lg z-20 py-1.5 animate-in fade-in zoom-in-95">
+                                  <button onClick={() => { setActiveDropdown(null); navigate(getGeneratorPath(paper)); }} className="w-full text-left px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2">
+                                    <Edit2 className="w-4 h-4 text-slate-400" /> Edit
+                                  </button>
+                                  <button onClick={() => { setActiveDropdown(null); handleDuplicate(paper); }} className="w-full text-left px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2">
+                                    <Copy className="w-4 h-4 text-slate-400" /> Duplicate
+                                  </button>
+                                  <button onClick={() => { setActiveDropdown(null); handleDownloadPDF(paper); }} className="w-full text-left px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2">
+                                    <Download className="w-4 h-4 text-slate-400" /> Download PDF
+                                  </button>
+                                  <button onClick={() => { setActiveDropdown(null); handlePrint(paper); }} className="w-full text-left px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2">
+                                    <Printer className="w-4 h-4 text-slate-400" /> Print
+                                  </button>
+                                  <div className="h-px w-full bg-slate-100 my-1"></div>
+                                  <button onClick={() => { setActiveDropdown(null); setDeleteId(paper.id); }} className="w-full text-left px-4 py-2 text-sm font-bold text-rose-600 hover:bg-rose-50 flex items-center gap-2">
+                                    <Trash2 className="w-4 h-4" /> Delete
+                                  </button>
+                                </div>
+                              </>
+                            )}
+                          </div>
+                        </div>
+
+                        <h3 className="text-[15px] font-bold text-slate-800 leading-snug line-clamp-2 mb-3">
                           {paper.examName}
                         </h3>
                         
-                        <div className="flex flex-wrap gap-4 mt-auto pt-4 text-[11px] font-semibold text-slate-500">
-                          <span className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5 text-slate-400" /> {paper.examDate || '—'}</span>
-                          <span className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5 text-slate-400" /> {paper.time || '—'} mins</span>
+                        <div className="grid grid-cols-2 gap-y-2 text-[11px] font-semibold text-slate-500 mt-auto pt-2">
+                          <div className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5 text-slate-400" /> {paper.examDate || '—'}</div>
+                          <div className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5 text-slate-400" /> {paper.time || '—'} mins</div>
                         </div>
                       </div>
-
-                      {/* Card Action Buttons (Unified Neutral -> Color on Hover) */}
-                      <div className="px-4 py-3 bg-slate-50/50 border-t border-slate-100 grid grid-cols-5 gap-2">
-                        <button onClick={() => setPreviewPaper(paper)} className="col-span-1 flex items-center justify-center p-2 rounded-xl text-slate-400 bg-transparent hover:bg-slate-200 hover:text-slate-800 transition-all duration-200" title="Preview">
-                          <Eye className="w-4 h-4" />
-                        </button>
-                        <button onClick={() => handlePrint(paper)} className="col-span-1 flex items-center justify-center p-2 rounded-xl text-slate-400 bg-transparent hover:bg-sky-100 hover:text-sky-600 transition-all duration-200" title="Print">
-                          <Printer className="w-4 h-4" />
-                        </button>
-                        <button onClick={() => handleDownloadPDF(paper)} className="col-span-1 flex items-center justify-center p-2 rounded-xl text-slate-400 bg-transparent hover:bg-violet-100 hover:text-violet-600 transition-all duration-200" title="Download PDF">
-                          <Download className="w-4 h-4" />
-                        </button>
-                        <button onClick={() => navigate(getGeneratorPath(paper))} className="col-span-1 flex items-center justify-center p-2 rounded-xl text-slate-400 bg-transparent hover:bg-indigo-100 hover:text-indigo-600 transition-all duration-200" title="Edit">
-                          <Edit2 className="w-4 h-4" />
-                        </button>
-                        <button onClick={() => setDeleteId(paper.id)} className="col-span-1 flex items-center justify-center p-2 rounded-xl text-slate-400 bg-transparent hover:bg-rose-100 hover:text-rose-500 transition-all duration-200" title="Delete">
-                          <Trash2 className="w-4 h-4" />
+                      
+                      <div className="mt-auto border-t border-slate-100 p-3 pl-4 bg-slate-50/30 rounded-b-2xl">
+                        <button 
+                          onClick={() => setPreviewPaper(paper)} 
+                          className="w-full py-2.5 bg-white border border-slate-200 hover:bg-slate-50 hover:border-slate-300 text-slate-700 rounded-xl text-sm font-bold shadow-sm transition-all flex justify-center items-center gap-2"
+                        >
+                          <Eye className="w-4 h-4" /> View Paper
                         </button>
                       </div>
                     </div>
