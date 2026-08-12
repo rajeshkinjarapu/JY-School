@@ -603,7 +603,7 @@ export const MCQPaperGeneratorPage = () => {
                 <Sparkles className="w-5 h-5" /> AI Generate
               </button>
             </div>
-            <h3 className="font-semibold text-slate-700 border-b pb-2 mb-4 flex justify-between items-center">
+            <h3 className="font-semibold text-slate-700 border-b pb-2 mb-4 hidden md:flex justify-between items-center">
               <span>Question Content (LaTeX Support)</span>
               <div className="flex gap-2 flex-wrap md:flex-nowrap">
                 <input 
@@ -638,14 +638,14 @@ export const MCQPaperGeneratorPage = () => {
               </div>
             </h3>
             
-            <div className="flex gap-2 mt-4 overflow-x-auto pb-2 custom-scrollbar">
+            <div className="flex gap-1.5 mt-0 md:mt-4 overflow-x-auto pb-2 custom-scrollbar">
               {(selectedSubjects.length > 0 ? selectedSubjects : ['General']).map(subj => {
                 const hasContent = subjectContents[subj] && subjectContents[subj].trim() !== '';
                 return (
                   <button
                     key={subj}
                     onClick={() => setActiveSubjectTab(subj)}
-                    className={`px-4 py-2 rounded-lg font-medium text-sm transition-all whitespace-nowrap flex-shrink-0 flex items-center gap-1.5 border ${
+                    className={`px-3 py-1.5 md:px-4 md:py-2 rounded-lg font-medium text-xs md:text-sm transition-all whitespace-nowrap flex-shrink-0 flex items-center gap-1.5 border ${
                       activeSubjectTab === subj 
                         ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-500/20' 
                         : hasContent
@@ -682,14 +682,14 @@ export const MCQPaperGeneratorPage = () => {
             <div className="flex items-center gap-2 md:hidden">
               <button
                 onClick={handlePrint}
-                className="px-3 py-1.5 bg-slate-800 text-white rounded-lg text-sm font-medium transition-all flex items-center gap-1.5"
+                className="px-4 py-2 bg-gradient-to-r from-rose-500 to-pink-500 text-white rounded-lg text-sm font-bold shadow-md hover:shadow-lg transition-all flex items-center gap-1.5"
               >
                 <Printer className="w-4 h-4" /> PDF
               </button>
             </div>
           </div>
-          <div className="flex justify-center p-8 print:p-0">
-            <div className="paper-zoom origin-top transition-transform">
+          <div className="flex justify-center p-2 md:p-8 print:p-0">
+            <div className="paper-zoom-mobile md:paper-zoom origin-top transition-transform w-full md:w-auto">
             <LiveLatexPreview 
               subjectContents={subjectContents}
               examName={examName}
@@ -718,27 +718,27 @@ export const MCQPaperGeneratorPage = () => {
       </div>
 
       {/* Mobile Bottom Navigation */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 flex justify-between items-center px-2 py-2 pb-[env(safe-area-inset-bottom,0px)] z-50 shadow-[0_-4px_10px_rgba(0,0,0,0.05)]">
+      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 flex justify-between items-center px-4 py-3 pb-8 z-50 shadow-[0_-10px_30px_rgba(0,0,0,0.1)] rounded-t-3xl">
         <button 
           onClick={() => setMobileTab('editor')}
-          className={`flex-1 flex flex-col items-center justify-center p-2 rounded-xl transition-colors ${mobileTab === 'editor' ? 'text-blue-600 bg-blue-50' : 'text-slate-500 hover:bg-slate-50'}`}
+          className={`flex-1 flex flex-col items-center justify-center p-2 rounded-2xl transition-all ${mobileTab === 'editor' ? 'text-blue-600 bg-blue-50/80 scale-110' : 'text-slate-400 hover:bg-slate-50'}`}
         >
           <div className="w-6 h-6 mb-1"><PenTool className="w-full h-full" /></div>
-          <span className="text-[10px] font-bold">Edit</span>
+          <span className="text-[11px] font-black tracking-wide">Edit</span>
         </button>
         <button 
           onClick={() => setMobileTab('preview')}
-          className={`flex-1 flex flex-col items-center justify-center p-2 rounded-xl transition-colors ${mobileTab === 'preview' ? 'text-emerald-600 bg-emerald-50' : 'text-slate-500 hover:bg-slate-50'}`}
+          className={`flex-1 flex flex-col items-center justify-center p-2 rounded-2xl transition-all ${mobileTab === 'preview' ? 'text-emerald-600 bg-emerald-50/80 scale-110' : 'text-slate-400 hover:bg-slate-50'}`}
         >
           <div className="w-6 h-6 mb-1"><Eye className="w-full h-full" /></div>
-          <span className="text-[10px] font-bold">Preview</span>
+          <span className="text-[11px] font-black tracking-wide">Preview</span>
         </button>
         <button 
           onClick={() => setIsSettingsOpen(true)}
-          className={`flex-1 flex flex-col items-center justify-center p-2 rounded-xl transition-colors text-slate-500 hover:bg-slate-50`}
+          className={`flex-1 flex flex-col items-center justify-center p-2 rounded-2xl transition-all text-slate-400 hover:bg-slate-50 hover:text-slate-600`}
         >
           <div className="w-6 h-6 mb-1"><Settings className="w-full h-full" /></div>
-          <span className="text-[10px] font-bold">Settings</span>
+          <span className="text-[11px] font-black tracking-wide">Settings</span>
         </button>
       </div>
 
@@ -862,12 +862,12 @@ export const MCQPaperGeneratorPage = () => {
       {isSettingsOpen && (
         <div className="fixed inset-0 z-[200] bg-black/50 flex items-center justify-center p-0 md:p-4">
           <div className="bg-white md:rounded-2xl w-full h-full md:max-w-2xl md:max-h-[90vh] flex flex-col shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
-            <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50 flex-shrink-0">
-              <h2 className="font-bold text-lg text-slate-800 flex items-center gap-2">
-                <Settings className="w-5 h-5 text-blue-600" /> Paper Settings
+            <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-gradient-to-r from-blue-600 to-indigo-600 flex-shrink-0">
+              <h2 className="font-bold text-lg text-white flex items-center gap-2">
+                <Settings className="w-5 h-5 text-blue-200" /> Paper Settings
               </h2>
-              <button onClick={() => setIsSettingsOpen(false)} className="p-2 hover:bg-slate-200 rounded-full transition-colors">
-                <X className="w-5 h-5 text-slate-500" />
+              <button onClick={() => setIsSettingsOpen(false)} className="p-2 hover:bg-white/20 rounded-full transition-colors">
+                <X className="w-5 h-5 text-white" />
               </button>
             </div>
             
@@ -1130,6 +1130,16 @@ export const MCQPaperGeneratorPage = () => {
 
       <style>{`
         .paper-zoom { zoom: 0.8; }
+        
+        @media (max-width: 768px) {
+          .paper-zoom-mobile {
+             transform: scale(0.6) !important;
+             transform-origin: top center !important;
+             margin-bottom: -50%;
+             width: 100% !important;
+          }
+        }
+
         /* Firefox fallback */
         @-moz-document url-prefix() {
           .paper-zoom { transform: scale(0.8); transform-origin: top center; margin-bottom: -20%; }
@@ -1142,6 +1152,7 @@ export const MCQPaperGeneratorPage = () => {
         
         @media print {
           .paper-zoom { zoom: 1 !important; transform: none !important; margin: 0 !important; }
+          .paper-zoom-mobile { transform: none !important; margin: 0 !important; }
           @page { margin: 10mm; size: A4; }
           body { -webkit-print-color-adjust: exact; background: white; }
           #root { display: block !important; }
