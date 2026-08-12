@@ -24,8 +24,14 @@ export const MessagesPage: React.FC = () => {
 
   const getSocketUrl = () => {
     if (import.meta.env.VITE_SOCKET_URL) return import.meta.env.VITE_SOCKET_URL;
-    if (typeof window !== 'undefined' && window.location.hostname.includes('vercel.app')) {
-      return 'http://148.113.9.103:19999';
+    if (typeof window !== 'undefined') {
+      const host = window.location.hostname;
+      if (host.includes('vercel.app')) {
+        return 'http://148.113.9.103:19999';
+      }
+      if (host === 'localhost' || host === '127.0.0.1') {
+        return 'http://localhost:5000';
+      }
     }
     return window.location.origin;
   };

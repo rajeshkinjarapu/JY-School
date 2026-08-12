@@ -10,7 +10,7 @@ const getApiUrl = () => {
     }
     const isCapacitor = !!(window as any).Capacitor || window.location.protocol === 'capacitor:';
     if (host.includes('railway.app') || host === 'localhost' || host === '127.0.0.1' || isCapacitor) {
-      return 'http://148.113.9.103:19999';
+      return 'http://localhost:5000';
     }
   }
   
