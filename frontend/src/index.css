@@ -248,6 +248,12 @@
   #a4-preview-paper {
     border: none !important;
     outline: none !important;
+    box-shadow: none !important;
+    margin: 0 !important;
+  }
+  
+  ::-webkit-scrollbar {
+    display: none !important;
   }
   
   body { background: white !important; background-image: none !important; margin: 0; padding: 0; overflow: visible !important; min-height: 100% !important; }
