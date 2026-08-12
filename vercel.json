@@ -11,7 +11,7 @@
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "http://148.113.8.82:19999/api/$1"
+      "destination": "http://148.113.9.103:19999/api/$1"
     }
   ],
   "routes": [

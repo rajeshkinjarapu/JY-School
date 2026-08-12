@@ -10,7 +10,7 @@ const getApiUrl = () => {
     }
     const isCapacitor = !!(window as any).Capacitor || window.location.protocol === 'capacitor:';
     if (host.includes('railway.app') || host === 'localhost' || host === '127.0.0.1' || isCapacitor) {
-      return 'http://148.113.8.82:19998';
+      return 'http://148.113.9.103:19999';
     }
   }
   
@@ -18,7 +18,7 @@ const getApiUrl = () => {
     return import.meta.env.VITE_API_URL;
   }
   
-  return 'http://148.113.8.82:19998';
+  return 'http://148.113.9.103:19999';
 };
 
 const API_URL = getApiUrl();
