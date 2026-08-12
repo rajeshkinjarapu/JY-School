@@ -18,7 +18,7 @@ const getApiUrl = () => {
     return import.meta.env.VITE_API_URL;
   }
   
-  return 'https://returns-enrolled-asks-lenders.trycloudflare.com';
+  return 'https://country-uni-beauty-joins.trycloudflare.com';
 };
 
 const API_URL = getApiUrl();
