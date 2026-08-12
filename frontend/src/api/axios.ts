@@ -18,7 +18,7 @@ const getApiUrl = () => {
     return import.meta.env.VITE_API_URL;
   }
   
-  return 'https://country-uni-beauty-joins.trycloudflare.com';
+  return 'https://apply-promenade-prologue.ngrok-free.dev';
 };
 
 const API_URL = getApiUrl();

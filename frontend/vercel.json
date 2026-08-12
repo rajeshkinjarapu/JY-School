@@ -2,11 +2,11 @@
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "https://country-uni-beauty-joins.trycloudflare.com/api/$1"
+      "destination": "https://apply-promenade-prologue.ngrok-free.dev/api/$1"
     },
     {
       "source": "/uploads/(.*)",
-      "destination": "https://country-uni-beauty-joins.trycloudflare.com/uploads/$1"
+      "destination": "https://apply-promenade-prologue.ngrok-free.dev/uploads/$1"
     },
     {
       "source": "/(.*)",
