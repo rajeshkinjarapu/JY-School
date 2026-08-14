@@ -1399,7 +1399,7 @@ export const TimetablePage: React.FC = () => {
                   <option value="">Select Subject</option>
                   {subjects.map((s) => (
                     <option key={s.id} value={s.id}>
-                      {s.name} ({s.code})
+                      {s.name}
                     </option>
                   ))}
                 </select>
