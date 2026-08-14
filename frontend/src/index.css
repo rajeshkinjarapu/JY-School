@@ -256,31 +256,34 @@
     display: none !important;
   }
   
-  body { background: white !important; background-image: none !important; margin: 0; padding: 0; overflow: visible !important; min-height: 100% !important; }
-  html { background: white !important; background-image: none !important; min-height: 100% !important; overflow: visible !important; color: black !important; }
+  body { background: white !important; background-color: white !important; background-image: none !important; margin: 0; padding: 0; overflow: visible !important; min-height: 0 !important; height: auto !important; display: block !important; }
+  html { background: white !important; background-color: white !important; background-image: none !important; min-height: 0 !important; height: auto !important; overflow: visible !important; color: black !important; display: block !important; }
   
   /* Bulletproof fix for Chrome dark mode black canvas: force a white background on every page */
   body::before {
     content: '';
     position: fixed;
-    top: -100px; left: -100px; right: -100px; bottom: -100px;
+    top: 0; left: 0; right: 0; bottom: 0;
     background-color: white !important;
     z-index: -9999;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
   
-  #root, [id="main-content"], .bg-gradient-to-br, [class*="bg-slate-"] { 
+  #root, [id="main-content"], .bg-gradient-to-br, [class*="bg-slate-"], [class*="bg-gray-"], .dark\:bg-gray-950, .dark\:bg-gray-900, .bg-[#0f172a], .bg-[#0d1117] { 
     background: white !important; 
+    background-color: white !important;
     background-image: none !important; 
     height: auto !important; 
     min-height: 0 !important;
     overflow: visible !important; 
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
+    position: static !important;
   }
-  .h-screen, .min-h-screen, .h-full { height: auto !important; min-height: 0 !important; max-height: none !important; }
-  .overflow-hidden, .overflow-y-auto, .overflow-x-hidden { overflow: visible !important; }
+  .h-screen, .min-h-screen, .h-full, .max-h-screen { height: auto !important; min-height: 0 !important; max-height: none !important; position: static !important; }
+  .overflow-hidden, .overflow-y-auto, .overflow-x-hidden, .overflow-y-scroll { overflow: visible !important; }
+  .fixed, .absolute, .sticky { position: static !important; }
 }
 
 @page {

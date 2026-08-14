@@ -20,6 +20,12 @@ import {
   Wand2,
   RefreshCw,
   Printer,
+  Check,
+  Copy,
+  Download,
+  AlertTriangle,
+  CheckCircle,
+  Building,
 } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -57,7 +63,7 @@ const DAYS = [
 ];
 const CATEGORIES = ["PRIMARY", "HIGHER"] as const;
 
-/* ─── Subject color helper ─── */
+/* ─── Subject color & abbreviation helpers ─── */
 const SUBJECT_COLORS = [
   { bg: "#FEF2F2", text: "#B91C1C", border: "#FECACA" },
   { bg: "#EFF6FF", text: "#1D4ED8", border: "#BFDBFE" },
@@ -65,15 +71,55 @@ const SUBJECT_COLORS = [
   { bg: "#FFFBEB", text: "#B45309", border: "#FDE68A" },
   { bg: "#F5F3FF", text: "#6D28D9", border: "#DDD6FE" },
   { bg: "#FDF2F8", text: "#BE185D", border: "#FBCFE8" },
-  { bg: "#F0FDFA", text: "#0F766E", border: "#99F6E4" },
-  { bg: "#EEF2FF", text: "#4338CA", border: "#C7D2FE" },
-  { bg: "#FFF7ED", text: "#C2410C", border: "#FED7AA" },
-  { bg: "#F0FDF4", text: "#15803D", border: "#BBF7D0" },
 ];
+
+const SUBJECT_COLORS_MAPPING: Record<string, {bg: string, text: string, border: string}> = {
+  // Mathematics
+  "mathematics": { bg: "#dcfce7", text: "#166534", border: "#bbf7d0" }, // Green
+  "maths": { bg: "#dcfce7", text: "#166534", border: "#bbf7d0" }, 
+  "math": { bg: "#dcfce7", text: "#166534", border: "#bbf7d0" }, 
+  
+  // Science
+  "science": { bg: "#ccfbf1", text: "#115e59", border: "#99f6e4" }, // Teal/Blue
+  "physics": { bg: "#ccfbf1", text: "#115e59", border: "#99f6e4" }, 
+  "chemistry": { bg: "#ccfbf1", text: "#115e59", border: "#99f6e4" }, 
+  "biology": { bg: "#ccfbf1", text: "#115e59", border: "#99f6e4" }, 
+
+  // Languages
+  "english": { bg: "#fce7f3", text: "#9d174d", border: "#fbcfe8" }, // Pink
+  "hindi": { bg: "#fce7f3", text: "#9d174d", border: "#fbcfe8" },
+  "telugu": { bg: "#fce7f3", text: "#9d174d", border: "#fbcfe8" },
+  "languages": { bg: "#fce7f3", text: "#9d174d", border: "#fbcfe8" },
+  
+  // Physical Ed
+  "physical education": { bg: "#fef3c7", text: "#92400e", border: "#fde68a" }, // Amber
+  "physical ed": { bg: "#fef3c7", text: "#92400e", border: "#fde68a" },
+  "pt": { bg: "#fef3c7", text: "#92400e", border: "#fde68a" },
+  "sports": { bg: "#fef3c7", text: "#92400e", border: "#fde68a" },
+  
+  // Arts/History (Optionals)
+  "history": { bg: "#e0f2fe", text: "#0369a1", border: "#bae6fd" }, // Light Blue
+  "social": { bg: "#e0f2fe", text: "#0369a1", border: "#bae6fd" }, 
+  "social studies": { bg: "#e0f2fe", text: "#0369a1", border: "#bae6fd" }, 
+  "art": { bg: "#f3e8ff", text: "#6b21a8", border: "#e9d5ff" }, // Purple
+};
+
 const getColor = (name: string) => {
+  const normalized = name.toLowerCase().trim();
+  if (SUBJECT_COLORS_MAPPING[normalized]) return SUBJECT_COLORS_MAPPING[normalized];
   let h = 0;
   for (let i = 0; i < name.length; i++) h = name.charCodeAt(i) + ((h << 5) - h);
   return SUBJECT_COLORS[Math.abs(h) % SUBJECT_COLORS.length];
+};
+
+const abbreviateSubject = (name: string) => {
+  if (!name) return "";
+  if (name.length <= 4) return name;
+  const words = name.split(' ');
+  if (words.length > 1) {
+    return words.map(w => w[0]).join('').toUpperCase();
+  }
+  return name.substring(0, 4) + (name.length > 4 ? '.' : '');
 };
 
 export const TimetablePage: React.FC = () => {
@@ -234,6 +280,9 @@ export const TimetablePage: React.FC = () => {
     fetchBaseData();
     fetchConfigs();
   }, []);
+  useEffect(() => {
+    if (isAdmin && classes.length) loadAllSlots();
+  }, [isAdmin, classes]);
   useEffect(() => {
     if (isTeacher && user?.teacher?.id) {
       setSelectedTeacherId(user.teacher.id);
@@ -576,6 +625,33 @@ export const TimetablePage: React.FC = () => {
   ];
 
   /* ─── RENDER ─── */
+  const isConflicting = (slot: SlotData) => {
+    if (!slot.teacherId || !allSlots.length) return false;
+    // count how many slots this teacher has on this day at this period
+    let count = 0;
+    for (const s of allSlots) {
+      if (s.teacherId === slot.teacherId && s.day === slot.day && s.periodNumber === slot.periodNumber) {
+        count++;
+      }
+    }
+    return count > 1; // if > 1, the teacher is double-booked
+  };
+
+  const calculateTotalConflicts = () => {
+    if (!allSlots.length) return 0;
+    const map = new Map<string, number>();
+    allSlots.forEach(s => {
+      if (!s.teacherId) return;
+      const key = `${s.teacherId}-${s.day}-${s.periodNumber}`;
+      map.set(key, (map.get(key) || 0) + 1);
+    });
+    let conflicts = 0;
+    map.forEach(val => {
+      if (val > 1) conflicts += val; // counting total conflicting slots
+    });
+    return conflicts;
+  };
+
   return (
     <div className="flex flex-col h-full bg-gray-50/50 print-landscape" style={{ minHeight: 'calc(100vh - 64px)' }}>
       {/* ══ HEADER ══ */}
@@ -604,11 +680,67 @@ export const TimetablePage: React.FC = () => {
 
       <div className="flex-1 overflow-auto p-4 md:p-6 print:p-0">
         <div className="space-y-5 max-w-7xl mx-auto print:max-w-none print:w-full print:space-y-2">
-      {/* ══ FILTER BAR ══ */}
+      {/* ══ STATS PANEL (New) ══ */}
+      {!isTeacher && activeTab === "class" && (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 no-print mb-5">
+          <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm flex flex-col items-center justify-center text-center">
+            <span className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Total Classes</span>
+            <span className="text-3xl font-black text-gray-900">{classes.length || 0}</span>
+          </div>
+          <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm flex flex-col items-center justify-center text-center">
+            <span className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Teachers</span>
+            <span className="text-3xl font-black text-gray-900">{teachers.length || 0}</span>
+          </div>
+          <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm flex flex-col items-center justify-center text-center">
+            <span className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Free Periods</span>
+            <span className="text-3xl font-black text-gray-900">
+              {Math.max(0, (classes.length * Object.values(configs).flat().filter(c => !c.isBreak).length * DAYS.length) - allSlots.length)}
+            </span>
+          </div>
+          <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm flex flex-col items-center justify-center text-center">
+            <span className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Conflicts</span>
+            <span className={`text-3xl font-black ${calculateTotalConflicts() > 0 ? 'text-red-500' : 'text-emerald-500'}`}>
+              {calculateTotalConflicts()}
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* ══ ENHANCED TOOLBAR ══ */}
       {(activeTab === "class" || activeTab === "teacher") && (
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white p-4 rounded-2xl shadow-sm border border-gray-100 no-print">
-          <div className="flex items-center gap-3 flex-wrap">
-            <span className="text-[10px] font-extrabold uppercase text-gray-400 tracking-widest">
+        <div className="flex flex-col xl:flex-row items-center justify-between gap-4 bg-white p-3 rounded-2xl shadow-sm border border-gray-100 no-print mb-5">
+          <div className="flex items-center gap-2 flex-wrap w-full xl:w-auto">
+            {isAdmin && activeTab === "class" && (
+              <>
+                <button onClick={() => openSlotModal("Monday", 1)} className="px-4 py-2 bg-gray-50 hover:bg-gray-100 border border-gray-200 text-gray-700 rounded-lg text-sm font-bold flex items-center gap-2 transition-all">
+                  <Plus className="w-4 h-4" /> Add Class
+                </button>
+                <button className="px-4 py-2 bg-gray-50 hover:bg-gray-100 border border-gray-200 text-gray-700 rounded-lg text-sm font-bold flex items-center gap-2 transition-all">
+                  <Check className="w-4 h-4" /> Validate
+                </button>
+                <button className="px-4 py-2 bg-gray-50 hover:bg-gray-100 border border-gray-200 text-gray-700 rounded-lg text-sm font-bold flex items-center gap-2 transition-all">
+                  <Copy className="w-4 h-4" /> Duplicate
+                </button>
+                <button onClick={() => setActiveTab('workload')} className="px-4 py-2 bg-gray-50 hover:bg-gray-100 border border-gray-200 text-gray-700 rounded-lg text-sm font-bold flex items-center gap-2 transition-all">
+                  <BarChart3 className="w-4 h-4" /> Analytics
+                </button>
+                <button onClick={() => window.print()} className="px-4 py-2 bg-gray-50 hover:bg-gray-100 border border-gray-200 text-gray-700 rounded-lg text-sm font-bold flex items-center gap-2 transition-all">
+                  <Download className="w-4 h-4" /> Export
+                </button>
+                <button onClick={() => setActiveTab('settings')} className="px-4 py-2 bg-gray-50 hover:bg-gray-100 border border-gray-200 text-gray-700 rounded-lg text-sm font-bold flex items-center gap-2 transition-all">
+                  <Settings className="w-4 h-4" /> Settings
+                </button>
+              </>
+            )}
+            {isTeacher && (
+              <button onClick={() => window.print()} className="px-4 py-2 bg-gray-50 hover:bg-gray-100 border border-gray-200 text-gray-700 rounded-lg text-sm font-bold flex items-center gap-2 transition-all">
+                <Printer className="w-4 h-4 text-indigo-500" /> Print
+              </button>
+            )}
+          </div>
+          
+          <div className="flex items-center gap-3 w-full xl:w-auto bg-gray-50/50 p-2 rounded-xl border border-gray-100">
+            <span className="text-[10px] font-extrabold uppercase text-gray-400 tracking-widest px-2">
               Filter:
             </span>
             {isTeacher ? (
@@ -619,7 +751,7 @@ export const TimetablePage: React.FC = () => {
               <select
                 value={selectedClassId}
                 onChange={(e) => setSelectedClassId(e.target.value)}
-                className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm font-bold outline-none focus:ring-2 focus:ring-primary-500/20"
+                className="bg-white border border-gray-200 rounded-lg px-3 py-1.5 text-sm font-bold outline-none focus:ring-2 focus:ring-primary-500/20 shadow-sm"
               >
                 {classes.map((c) => (
                   <option key={c.id} value={c.id}>
@@ -632,7 +764,7 @@ export const TimetablePage: React.FC = () => {
               <select
                 value={selectedTeacherId}
                 onChange={(e) => setSelectedTeacherId(e.target.value)}
-                className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm font-bold outline-none focus:ring-2 focus:ring-primary-500/20"
+                className="bg-white border border-gray-200 rounded-lg px-3 py-1.5 text-sm font-bold outline-none focus:ring-2 focus:ring-primary-500/20 shadow-sm"
               >
                 {teachers.map((t) => (
                   <option key={t.id} value={t.id}>
@@ -640,40 +772,6 @@ export const TimetablePage: React.FC = () => {
                   </option>
                 ))}
               </select>
-            )}
-            {activeTab === "class" && (
-              <span className="text-[10px] font-bold px-2 py-1 rounded-full bg-primary-50 text-primary-700 dark:bg-primary-950/20 dark:text-primary-300 uppercase tracking-wide">
-                {getClassCategory()} Schedule
-              </span>
-            )}
-          </div>
-          <div className="flex items-center gap-2 w-full md:w-auto">
-            <button
-              onClick={() => window.print()}
-              className="px-3.5 py-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg text-xs font-bold flex items-center justify-center flex-1 md:flex-none gap-1.5 transition-all cursor-pointer"
-            >
-              <Printer className="w-4 h-4 text-indigo-500" />{" "}
-              <span className="hidden md:inline">Print</span>
-            </button>
-            {isAdmin && activeTab === "class" && (
-              <>
-                <button
-                  onClick={() => openSlotModal("Monday", 1)}
-                  className="btn-secondary flex items-center justify-center flex-1 md:flex-none gap-1.5 text-xs font-bold cursor-pointer"
-                >
-                  <Plus className="w-4 h-4" />{" "}
-                  <span className="hidden md:inline">Manual Add</span>
-                  <span className="md:hidden">Add</span>
-                </button>
-                <button
-                  onClick={() => setShowAutoModal(true)}
-                  className="btn-primary flex items-center justify-center flex-1 md:flex-none gap-1.5 text-xs font-bold cursor-pointer"
-                >
-                  <Wand2 className="w-4 h-4" />{" "}
-                  <span className="hidden md:inline">Auto Generate</span>
-                  <span className="md:hidden">Auto</span>
-                </button>
-              </>
             )}
           </div>
         </div>
@@ -740,12 +838,15 @@ export const TimetablePage: React.FC = () => {
                           </td>
                           {currentPeriods().map((period) => {
                             if (period.isBreak) {
+                              const isLunch = period.label.toLowerCase().includes("lunch");
                               return (
                                 <td
                                   key={period.periodNumber}
-                                  className="p-2 print:p-1 border-b border-l border-gray-100 dark:border-gray-800 text-center bg-amber-50/20 dark:bg-amber-950/5"
+                                  className={`p-2 print:p-1 border-b border-l border-gray-100 dark:border-gray-800 text-center ${isLunch ? 'bg-orange-50/40 dark:bg-orange-900/10' : 'bg-amber-50/20 dark:bg-amber-950/5'}`}
                                 >
-                                  <span className="text-[10px] print:text-[8px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wide">
+                                  <span className={`text-[10px] print:text-[8px] font-bold uppercase tracking-wide flex items-center justify-center gap-1 ${isLunch ? 'text-orange-600 dark:text-orange-400' : 'text-amber-600 dark:text-amber-400'}`}>
+                                    {isLunch && <span className="text-[12px]">🍽️</span>}
+                                    {!isLunch && <AlertTriangle className="w-3 h-3" />}
                                     {period.label}
                                   </span>
                                 </td>
@@ -756,31 +857,37 @@ export const TimetablePage: React.FC = () => {
                             );
                             if (slot) {
                               const color = getColor(slot.subject?.name || "");
+                              const conflict = isConflicting(slot);
                               return (
                                 <td
                                   key={period.periodNumber}
                                   className="p-1.5 print:p-0.5 border-b border-l border-gray-100 dark:border-gray-800"
                                 >
                                   <div
-                                    className="rounded-lg p-2.5 print:p-1.5 relative group cursor-pointer transition-all hover:scale-[1.02] border"
+                                    className={`rounded-lg p-2.5 print:p-1.5 relative group cursor-pointer transition-all hover:scale-[1.02] border ${conflict ? 'border-red-500 shadow-[0_0_8px_rgba(239,68,68,0.4)]' : ''}`}
                                     style={{
                                       backgroundColor: color.bg,
                                       color: color.text,
-                                      borderColor: color.border,
+                                      borderColor: conflict ? '#ef4444' : color.border,
                                     }}
                                     onClick={() =>
                                       isAdmin && openSlotModal(day, period.periodNumber, slot)
                                     }
                                   >
-                                    <div className="font-extrabold text-xs print:text-[9px] leading-tight truncate">
+                                    <div className="font-extrabold text-xs print:text-[9px] leading-tight truncate flex items-center gap-1 hidden md:flex">
+                                      {conflict && <AlertTriangle className="w-3 h-3 text-red-600" />}
                                       {slot.subject?.name}
                                     </div>
-                                    <div className="text-[10px] print:text-[8px] font-semibold opacity-80 mt-0.5 truncate">
+                                    <div className="font-extrabold text-xs print:text-[9px] leading-tight truncate flex items-center gap-1 md:hidden">
+                                      {conflict && <AlertTriangle className="w-3 h-3 text-red-600" />}
+                                      {abbreviateSubject(slot.subject?.name || "")}
+                                    </div>
+                                    <div className="text-[10px] print:text-[8px] font-semibold text-gray-500 mt-0.5 truncate">
                                       {slot.teacher?.user?.name}
                                     </div>
                                     {slot.room && (
-                                      <div className="text-[9px] print:text-[7px] font-bold opacity-60 mt-0.5 flex items-center gap-0.5 truncate">
-                                        <MapPin className="w-2.5 h-2.5 print:w-2 print:h-2" />
+                                      <div className="text-[9px] print:text-[7px] font-bold text-gray-400 mt-0.5 flex items-center gap-0.5 truncate">
+                                        <Building className="w-2.5 h-2.5 print:w-2 print:h-2" />
                                         {slot.room}
                                       </div>
                                     )}
