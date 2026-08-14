@@ -156,8 +156,7 @@ export const ResultsTab: React.FC<{ exams: any[] }> = ({ exams }) => {
           return sub.length > 4 ? sub.substring(0, 4) : sub;
         }),
         'Total',
-        '%',
-        'Grade'
+        '%'
       ]];
 
       const body = results.map((student) => [
@@ -166,8 +165,7 @@ export const ResultsTab: React.FC<{ exams: any[] }> = ({ exams }) => {
         student.rollNo || '-',
         ...student.marks.map((m: any) => m.obtained),
         student.total,
-        `${student.percentage}%`,
-        student.grade || '-'
+        `${student.percentage}%`
       ]);
 
       // Dynamic vertical padding based on row count to ensure perfect fitting on A4 page
@@ -230,13 +228,14 @@ export const ResultsTab: React.FC<{ exams: any[] }> = ({ exams }) => {
             }
           }
           // Highlight Total & Percentage
-          if (data.section === 'body' && data.column.index === head[0].length - 3) {
+          if (data.section === 'body' && data.column.index === head[0].length - 2) {
             data.cell.styles.fontStyle = 'bold';
             data.cell.styles.textColor = [67, 56, 202]; // Indigo-700
           }
-          if (data.section === 'body' && data.column.index === head[0].length - 2) {
+          if (data.section === 'body' && data.column.index === head[0].length - 1) {
             data.cell.styles.fontStyle = 'bold';
             data.cell.styles.textColor = [22, 101, 52]; // Green-800
+            data.cell.styles.minCellWidth = 16; // Ensure percentage doesn't wrap
           }
         },
         margin: { left: 12, right: 12, top: 42, bottom: 16 },
