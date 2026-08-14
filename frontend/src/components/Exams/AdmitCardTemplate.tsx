@@ -161,8 +161,8 @@ export const AdmitCardTemplate: React.FC<AdmitCardTemplateProps> = ({ student, e
     </div>
   );
 
-  const renderFooter = () => (
-    <div className="mt-auto m-6 p-5 rounded-lg border-2 border-slate-200 bg-slate-50 flex flex-col sm:flex-row justify-between items-end gap-6 relative">
+  const renderFooter = (isDoubleSidedBackPage = false) => (
+    <div className={`${isDoubleSidedBackPage ? '' : 'mt-auto'} m-6 p-5 rounded-lg border-2 border-slate-200 bg-slate-50 flex flex-col sm:flex-row justify-between items-end gap-6 relative`}>
       <div className="flex-1">
         <h5 className="text-[11px] font-black uppercase tracking-wider text-slate-900 mb-3 flex items-center gap-1.5">
           <span className="bg-slate-900 w-1.5 h-1.5 rounded-full"></span> Important Instructions
@@ -223,7 +223,7 @@ export const AdmitCardTemplate: React.FC<AdmitCardTemplateProps> = ({ student, e
               </div>
               <div className="flex-1 flex flex-col gap-6 p-6">
                 {renderExamSchedule()}
-                {renderFooter()}
+                {renderFooter(true)}
               </div>
             </div>
           </div>
