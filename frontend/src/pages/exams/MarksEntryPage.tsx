@@ -463,12 +463,22 @@ export const MarksEntryPage: React.FC = () => {
             <Lock className="w-4 h-4" />
             MARKS FROZEN
           </div>
-          <button
-            onClick={handleUnfreeze}
-            className="px-3 py-2.5 bg-red-50 text-red-600 border border-red-200 rounded-lg font-bold text-xs flex items-center justify-center gap-1.5 active:scale-95 transition-transform cursor-pointer"
-          >
-            <Unlock className="w-4 h-4" />
-          </button>
+          {isAdmin && (
+            <button
+              onClick={async () => {
+                if(window.confirm('Are you sure you want to unfreeze marks for this class?')) {
+                  try {
+                    await api.post(`/api/exams/${id}/freeze`, { classId, isFrozen: false });
+                    toast.success('Marks unfrozen successfully');
+                    window.location.reload();
+                  } catch(e) { toast.error('Failed to unfreeze marks'); }
+                }
+              }}
+              className="px-3 py-2.5 bg-red-50 text-red-600 border border-red-200 rounded-lg font-bold text-xs flex items-center justify-center gap-1.5 active:scale-95 transition-transform cursor-pointer"
+            >
+              <Unlock className="w-4 h-4" />
+            </button>
+          )}
         </div>
       )}
     </div>
