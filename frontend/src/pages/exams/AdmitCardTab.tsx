@@ -39,6 +39,7 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
   const [loading, setLoading] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [isDoubleSided, setIsDoubleSided] = useState(false);
 
   const selectedExam = exams.find((e) => e.id === selectedExamId);
   const selectedClass = selectedExam?.classes?.find(
@@ -55,6 +56,8 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
   const [examTitleOverride, setExamTitleOverride] = useState("");
   const [examCenterOverride, setExamCenterOverride] = useState("");
   const [schedule, setSchedule] = useState<any[]>([]);
+
+  const isFASaExam = selectedExam?.name?.toUpperCase().includes('FA') || selectedExam?.name?.toUpperCase().includes('SA');
 
   useEffect(() => {
     if (selectedExam) {
@@ -120,25 +123,35 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
     await new Promise((resolve) => setTimeout(resolve, 500));
     let pdf: any;
     try {
-      const imgData = await toJpeg(el, {
-        cacheBust: true,
-        pixelRatio: 2,
-        quality: 0.95,
-        backgroundColor: "#ffffff",
-      });
       pdf = new jsPDF("p", "mm", "a4");
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (el.offsetHeight * pdfWidth) / el.offsetWidth;
-      pdf.addImage(
-        imgData,
-        "JPEG",
-        0,
-        0,
-        pdfWidth,
-        pdfHeight,
-        undefined,
-        "FAST",
-      );
+      const pages = el.querySelectorAll('.admit-card-page');
+      
+      if (pages && pages.length > 0) {
+        for (let i = 0; i < pages.length; i++) {
+          const pageEl = pages[i] as HTMLElement;
+          const imgData = await toJpeg(pageEl, {
+            cacheBust: true,
+            pixelRatio: 2,
+            quality: 0.95,
+            backgroundColor: "#ffffff",
+          });
+          const pdfWidth = pdf.internal.pageSize.getWidth();
+          const pdfHeight = (pageEl.offsetHeight * pdfWidth) / pageEl.offsetWidth;
+          
+          if (i > 0) pdf.addPage();
+          pdf.addImage(imgData, "JPEG", 0, 0, pdfWidth, pdfHeight, undefined, "FAST");
+        }
+      } else {
+        const imgData = await toJpeg(el, {
+          cacheBust: true,
+          pixelRatio: 2,
+          quality: 0.95,
+          backgroundColor: "#ffffff",
+        });
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = (el.offsetHeight * pdfWidth) / el.offsetWidth;
+        pdf.addImage(imgData, "JPEG", 0, 0, pdfWidth, pdfHeight, undefined, "FAST");
+      }
     } catch (err) {
       el.style.display = originalDisplay;
       if (parentContainer) {
@@ -203,34 +216,40 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
 
       // Allow DOM to update and images to load (increased timeout)
       await new Promise((resolve) => setTimeout(resolve, 2500));
-
-      const templates = document.querySelectorAll(".admit-card-wrapper");
+      const templates = document.querySelectorAll(".admit-card-container");
 
       for (let i = 0; i < templates.length; i++) {
         const el = templates[i] as HTMLElement;
         const student = students[i];
 
         try {
-          const imgData = await toJpeg(el, {
-            cacheBust: true,
-            pixelRatio: 1.5,
-            backgroundColor: "#ffffff",
-          });
-
+          const pages = el.querySelectorAll('.admit-card-page');
           const pdf = new jsPDF("p", "mm", "a4");
-          const pdfWidth = pdf.internal.pageSize.getWidth();
-          const pdfHeight = (el.offsetHeight * pdfWidth) / el.offsetWidth;
 
-          pdf.addImage(
-            imgData,
-            "JPEG",
-            0,
-            0,
-            pdfWidth,
-            pdfHeight,
-            undefined,
-            "FAST",
-          );
+          if (pages && pages.length > 0) {
+            for (let p = 0; p < pages.length; p++) {
+              const pageEl = pages[p] as HTMLElement;
+              const imgData = await toJpeg(pageEl, {
+                cacheBust: true,
+                pixelRatio: 1.5,
+                backgroundColor: "#ffffff",
+              });
+              const pdfWidth = pdf.internal.pageSize.getWidth();
+              const pdfHeight = (pageEl.offsetHeight * pdfWidth) / pageEl.offsetWidth;
+              if (p > 0) pdf.addPage();
+              pdf.addImage(imgData, "JPEG", 0, 0, pdfWidth, pdfHeight, undefined, "FAST");
+            }
+          } else {
+            const imgData = await toJpeg(el, {
+              cacheBust: true,
+              pixelRatio: 1.5,
+              backgroundColor: "#ffffff",
+            });
+            const pdfWidth = pdf.internal.pageSize.getWidth();
+            const pdfHeight = (el.offsetHeight * pdfWidth) / el.offsetWidth;
+            pdf.addImage(imgData, "JPEG", 0, 0, pdfWidth, pdfHeight, undefined, "FAST");
+          }
+
           const fileName = `${student.user?.name || student.name || `Student_${i + 1}`}.pdf`;
           zip.file(fileName, pdf.output("blob"));
         } catch (err) {
@@ -433,6 +452,17 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
           )}
           {students.length > 0 && (
             <div className="flex items-center gap-2">
+              {isFASaExam && (
+                <label className="flex items-center gap-2 mr-2 cursor-pointer bg-white dark:bg-slate-800 border-2 border-indigo-200 dark:border-indigo-900/50 px-3 py-1.5 rounded-xl text-xs font-bold text-indigo-700 dark:text-indigo-400 hover:bg-indigo-50 transition-colors">
+                  <input
+                    type="checkbox"
+                    checked={isDoubleSided}
+                    onChange={(e) => setIsDoubleSided(e.target.checked)}
+                    className="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500"
+                  />
+                  Double Side PDF
+                </label>
+              )}
               <button
                 onClick={handleDownloadAll}
                 disabled={isDownloading}
@@ -794,7 +824,7 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
                 <div
                   key={student.id}
                   id={`admit-card-${idx}`}
-                  className="w-full flex justify-center bg-white"
+                  className="w-full flex justify-center bg-white admit-card-container"
                 >
                   <AdmitCardTemplate
                     student={student}
@@ -802,6 +832,7 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
                     examPlans={examPlans}
                     className={selectedClass?.name}
                     section={selectedClass?.section}
+                    doubleSided={isFASaExam && isDoubleSided}
                   />
                 </div>
               ))}
