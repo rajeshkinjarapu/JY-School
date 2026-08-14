@@ -913,7 +913,7 @@ export const JEEProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
               .print-area, .print-area * { visibility: visible; }
               .print-area { position: absolute; left: 0; top: 0; width: 100%; background: white !important; display: block !important; padding: 0 !important; margin: 0 !important; }
               html, body { height: 100%; background: white !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-              .progress-card-wrapper { page-break-after: always; break-after: page; page-break-inside: avoid; height: 100vh; display: flex; align-items: center; justify-content: center; }
+              .progress-card-wrapper { page-break-after: always; break-after: page; page-break-inside: avoid; display: block; }
               .progress-card-wrapper:last-child { page-break-after: auto; break-after: auto; }
             }
           `}} />
