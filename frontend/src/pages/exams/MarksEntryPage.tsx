@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link, useSearchParams } from 'react-router-dom';
 import api from '../../api/axios';
 import { LoadingSpinner } from '../../components/UI/LoadingSpinner';
-import { ArrowLeft, Save, Filter, BookOpen, User, CheckCircle2, Lock, Trash2 } from 'lucide-react';
+import { ArrowLeft, Save, Filter, BookOpen, User, CheckCircle2, Lock, Trash2, Unlock } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../hooks/useAuth';
 
