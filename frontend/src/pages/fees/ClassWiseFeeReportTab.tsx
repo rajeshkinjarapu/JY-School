@@ -1,6 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import { Search, Users, FileText, FileSpreadsheet, ArrowLeft, ChevronRight } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { shareFileNatively } from '../../../utils/nativeShare';
+import { Capacitor } from '@capacitor/core';
 
 const WhatsAppIcon = () => (
   <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
@@ -180,21 +182,25 @@ export const ClassWiseFeeReportTab: React.FC<ClassWiseFeeReportTabProps> = ({ st
       const blob = doc.output('blob');
       const file = new File([blob], fileName, { type: 'application/pdf' });
 
-      const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-      // 📱 MOBILE: Try Web Share API first
-      if (isMobileDevice && navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-        try {
-          // Android WhatsApp Bug: If both 'text' and 'files' are provided, WhatsApp ONLY shares the text and drops the file.
-          // Solution: Only pass 'files' and 'title'.
-          await navigator.share({
-            files: [file],
-            title: `${data.classInfo.name} - ${data.classInfo.section} Fee Report`
-          });
-          toast.dismiss(toastId);
-          return;
-        } catch (shareErr: any) {
-          if (shareErr.name === 'AbortError') { toast.dismiss(toastId); return; }
-          console.warn('Native share failed, falling back to server upload...', shareErr);
+      // 📱 MOBILE: Use Capacitor Native Share
+      if (Capacitor.isNativePlatform()) {
+        toast.dismiss(toastId);
+        const success = await shareFileNatively(blob, fileName, msg);
+        if (success) return;
+        // If it failed or was cancelled, continue to fallback
+      } else {
+        const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        if (isMobileDevice && navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+          try {
+            await navigator.share({
+              files: [file],
+              title: `${data.classInfo.name} - ${data.classInfo.section} Fee Report`
+            });
+            toast.dismiss(toastId);
+            return;
+          } catch (shareErr: any) {
+            if (shareErr.name === 'AbortError') { toast.dismiss(toastId); return; }
+          }
         }
       }
 
@@ -206,9 +212,12 @@ export const ClassWiseFeeReportTab: React.FC<ClassWiseFeeReportTabProps> = ({ st
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       
-      const pdfUrl = uploadRes.data.url || (uploadRes.data.data && uploadRes.data.data.url);
-      
+      let pdfUrl = uploadRes.data.url || (uploadRes.data.data && uploadRes.data.data.url);
       if (!pdfUrl) throw new Error('Failed to get PDF URL from server');
+      
+      if (pdfUrl.startsWith('/')) {
+        pdfUrl = window.location.origin + pdfUrl;
+      }
       
       const linkMsg = `${msg}\n\n*Fee Report PDF Link:*\n${pdfUrl}`;
       
@@ -218,7 +227,6 @@ export const ClassWiseFeeReportTab: React.FC<ClassWiseFeeReportTabProps> = ({ st
 
     } catch (err: any) {
       console.error('WhatsApp share error:', err);
-      // Final fallback: download PDF + open WhatsApp
       toast.dismiss(toastId);
       toast.success('Downloading PDF and opening WhatsApp...');
       doc.save(fileName);
