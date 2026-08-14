@@ -140,8 +140,22 @@ export const ResultsTab: React.FC<{ exams: any[] }> = ({ exams }) => {
       doc.setTextColor(51, 65, 85); 
       doc.text(`Class: ${classNameStr}   |   Date: ${dateStr}   |   Total: ${results.length} Students`, pageWidth - 16, 24, { align: 'right' });
 
+      // Sort subjects in specific order
+      const desiredOrder = ['TELUGU', 'HINDI', 'ENG', 'MATH', 'SCIENCE', 'SOCIAL'];
+      const sortMarks = (marks: any[]) => {
+        return [...marks].sort((a, b) => {
+          const aSub = String(a.subject).toUpperCase();
+          const bSub = String(b.subject).toUpperCase();
+          let aIndex = desiredOrder.findIndex(sub => aSub.includes(sub));
+          let bIndex = desiredOrder.findIndex(sub => bSub.includes(sub));
+          if (aIndex === -1) aIndex = 999;
+          if (bIndex === -1) bIndex = 999;
+          return aIndex - bIndex;
+        });
+      };
+
       // Table Headers
-      const subjectsList = results[0]?.marks || [];
+      const subjectsList = sortMarks(results[0]?.marks || []);
       const head = [[
         'Rank',
         'Student Name',
@@ -159,14 +173,17 @@ export const ResultsTab: React.FC<{ exams: any[] }> = ({ exams }) => {
         '%'
       ]];
 
-      const body = results.map((student) => [
-        student.rank,
-        student.name,
-        student.rollNo || '-',
-        ...student.marks.map((m: any) => m.obtained),
-        student.total,
-        `${student.percentage}%`
-      ]);
+      const body = results.map((student) => {
+        const sortedMarks = sortMarks(student.marks || []);
+        return [
+          student.rank,
+          student.name,
+          student.rollNo || '-',
+          ...sortedMarks.map((m: any) => m.obtained),
+          student.total,
+          `${student.percentage}%`
+        ];
+      });
 
       // Stretch the rows to fill the entire A4 page vertically.
       const totalRows = results.length || 1;
