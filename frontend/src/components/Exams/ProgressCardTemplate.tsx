@@ -98,7 +98,7 @@ export const ProgressCardTemplate: React.FC<ProgressCardTemplateProps> = ({
   };
 
   return (
-    <div className="w-[794px] h-[1123px] bg-white rounded-xl shadow-2xl flex flex-col relative overflow-hidden font-sans print:shadow-none mx-auto shrink-0" style={{ fontFamily: "'Segoe UI', 'Roboto', system-ui, -apple-system, sans-serif" }}>
+    <div className="w-[794px] h-[1123px] print:w-[210mm] print:h-[296mm] bg-white rounded-xl print:rounded-none shadow-2xl flex flex-col relative overflow-hidden font-sans print:shadow-none mx-auto shrink-0" style={{ fontFamily: "'Segoe UI', 'Roboto', system-ui, -apple-system, sans-serif" }}>
       <style>{`
         .jee-card { background: linear-gradient(145deg, #ffffff 0%, #fdfcf9 100%); height: 100%; display: flex; flex-direction: column; position: relative; border: 1px solid #f0e6d2; }
         .jee-card .top-bar { height: 10px; background: linear-gradient(90deg, #0b1a33 0%, #1a4a7a 30%, #f39c12 60%, #d4a017 100%); flex-shrink: 0; }

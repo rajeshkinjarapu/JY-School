@@ -906,6 +906,18 @@ export const JEEProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
 
           {/* Hidden Container for Printing & PDF Generation */}
           <div id="progress-cards-print-container" className="hidden print:flex print-area bg-gray-50 dark:bg-gray-900 p-0 flex-col items-center">
+            <style dangerouslySetInnerHTML={{__html: `
+            @media print {
+              @page { size: A4 portrait; margin: 0; }
+              body * { visibility: hidden; }
+              .print-area, .print-area * { visibility: visible; }
+              .print-area { position: absolute; left: 0; top: 0; width: 100%; background: white !important; display: block !important; padding: 0 !important; margin: 0 !important; }
+              html, body { height: 100%; background: white !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+              .progress-card-wrapper { page-break-after: always; break-after: page; page-break-inside: avoid; height: 100vh; display: flex; align-items: center; justify-content: center; }
+              .progress-card-wrapper:last-child { page-break-after: auto; break-after: auto; }
+            }
+          `}} />
+          
             {studentsData.map((data, idx) => (
               <div key={data.studentId} id={`progress-card-${idx}`} className="progress-card-wrapper justify-center bg-white hidden" style={{ width: '210mm' }}>
                 <ProgressCardTemplate data={data} exam={selectedExam} settings={selectedExam?.admitCardSettings} />
