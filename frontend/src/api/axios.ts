@@ -13,14 +13,14 @@ const getApiUrl = () => {
       return 'http://localhost:5000';
     }
     if (isCapacitor) {
-      return 'https://chamber-strained-occupier.ngrok-free.dev';
+      return 'https://jyschoolcom.duckdns.org';
     }
   }
   
   if (import.meta.env.VITE_API_URL) {
     return import.meta.env.VITE_API_URL;
   }
-  return 'https://chamber-strained-occupier.ngrok-free.dev';
+  return 'https://jyschoolcom.duckdns.org';
 };
 
 const API_URL = getApiUrl();
