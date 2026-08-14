@@ -174,12 +174,15 @@ export const ResultsTab: React.FC<{ exams: any[] }> = ({ exams }) => {
       const totalRows = results.length;
       let dynamicPadding = 2.5;
       let dynamicFontSize = 8.5;
-      if (totalRows > 25) {
-        dynamicPadding = 1.8;
-        dynamicFontSize = 8;
+      if (totalRows >= 30) {
+        dynamicPadding = 1.0;
+        dynamicFontSize = 7.0;
+      } else if (totalRows >= 20) {
+        dynamicPadding = 1.5;
+        dynamicFontSize = 7.5;
       } else if (totalRows < 15) {
         dynamicPadding = 3.2;
-        dynamicFontSize = 9;
+        dynamicFontSize = 9.0;
       }
 
       autoTable(doc, {
