@@ -224,46 +224,7 @@ export const MarksEntryPage: React.FC = () => {
           </div>
         </div>
         
-        {/* Desktop Save Button */}
-        {students.length > 0 && !isClassFrozen && (
-          <div className="hidden md:flex items-center gap-3 z-10">
-            <button onClick={() => handleSave(false)} className="px-6 py-2.5 bg-white/20 hover:bg-white/30 text-white rounded-xl font-bold text-sm shadow-sm transition-all flex items-center gap-2 backdrop-blur-md cursor-pointer border border-white/20">
-              <Save className="w-4 h-4" />
-              SAVE MARKS
-            </button>
-            <button onClick={() => handleSave(true)} className="px-6 py-2.5 bg-white text-indigo-700 hover:bg-indigo-50 rounded-xl font-bold text-sm shadow-xl transition-all flex items-center gap-2 cursor-pointer transform hover:-translate-y-0.5">
-              <Lock className="w-4 h-4" />
-              FREEZE MARKS
-            </button>
-            {isAdmin && (
-              <button onClick={handleClearMarks} className="px-6 py-2.5 bg-red-500 hover:bg-red-600 text-white rounded-xl font-bold text-sm shadow-xl transition-all flex items-center gap-2 cursor-pointer transform hover:-translate-y-0.5">
-                <Trash2 className="w-4 h-4" />
-                CLEAR MARKS
-              </button>
-            )}
-          </div>
-        )}
-        {isClassFrozen && (
-          <div className="hidden md:flex items-center gap-3 z-10">
-            <div className="px-6 py-2.5 bg-green-500/80 text-white rounded-xl font-bold text-sm shadow-sm flex items-center gap-2 backdrop-blur-md border border-white/20">
-              <Lock className="w-4 h-4" />
-              MARKS FROZEN
-            </div>
-            {isAdmin && (
-              <button onClick={async () => {
-                if(window.confirm('Are you sure you want to unfreeze marks for this class?')) {
-                  try {
-                    await api.post(`/api/exams/${id}/freeze`, { classId, isFrozen: false });
-                    toast.success('Marks unfrozen successfully');
-                    window.location.reload();
-                  } catch(e) { toast.error('Failed to unfreeze marks'); }
-                }
-              }} className="px-6 py-2.5 bg-yellow-500 hover:bg-yellow-600 text-white rounded-xl font-bold text-sm shadow-xl transition-all flex items-center gap-2 cursor-pointer">
-                UNFREEZE (ADMIN)
-              </button>
-            )}
-          </div>
-        )}
+        {/* Save/Freeze buttons have been moved to the bottom bar for all devices */}
       </div>
 
       {/* Main Content Area */}
@@ -418,49 +379,55 @@ export const MarksEntryPage: React.FC = () => {
       </div>
       </div>
 
-      {/* Mobile Sticky Save Bar — always at bottom */}
+      {/* Universal Sticky Save Bar — always at bottom */}
       {students.length > 0 && !isClassFrozen && (
         <div
-          className="md:hidden fixed bottom-0 left-0 right-0 z-[99] flex gap-2"
+          className="fixed bottom-0 left-0 right-0 lg:left-64 z-[99] flex gap-3 sm:gap-4 justify-center sm:justify-end"
           style={{
-            padding: '10px 12px',
-            paddingBottom: 'max(10px, env(safe-area-inset-bottom, 10px))',
+            padding: '12px 24px',
+            paddingBottom: 'max(12px, env(safe-area-inset-bottom, 12px))',
             background: 'rgba(255,255,255,0.92)',
             backdropFilter: 'blur(20px)',
             borderTop: '1px solid rgba(99,102,241,0.15)',
             boxShadow: '0 -8px 32px rgba(0,0,0,0.08)',
           }}
         >
+          {isAdmin && (
+            <button onClick={handleClearMarks} className="hidden sm:flex px-6 py-2.5 bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 rounded-xl font-bold text-sm transition-all items-center gap-2 cursor-pointer sm:mr-auto">
+              <Trash2 className="w-4 h-4" />
+              CLEAR MARKS
+            </button>
+          )}
           <button
             onClick={() => handleSave(false)}
-            className="flex-1 py-2.5 bg-indigo-50 text-indigo-600 border border-indigo-200 rounded-lg font-bold text-xs flex items-center justify-center gap-1.5 active:scale-95 transition-transform cursor-pointer"
+            className="flex-1 sm:flex-none sm:w-auto px-8 py-3 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 border border-indigo-200 rounded-xl font-bold text-sm sm:text-base flex items-center justify-center gap-2 active:scale-95 transition-all cursor-pointer"
           >
-            <Save className="w-4 h-4" />
+            <Save className="w-5 h-5" />
             SAVE MARKS
           </button>
           <button
             onClick={() => handleSave(true)}
-            className="flex-[1.5] py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg font-bold text-xs flex items-center justify-center gap-1.5 shadow-lg shadow-indigo-600/30 active:scale-95 transition-transform cursor-pointer"
+            className="flex-1 sm:flex-none sm:w-auto px-8 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-xl font-bold text-sm sm:text-base flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/30 active:scale-95 transition-all cursor-pointer"
           >
-            <Lock className="w-4 h-4" />
+            <Lock className="w-5 h-5" />
             FREEZE MARKS
           </button>
         </div>
       )}
       {students.length > 0 && isClassFrozen && (
         <div
-          className="md:hidden fixed bottom-0 left-0 right-0 z-[99] flex gap-2"
+          className="fixed bottom-0 left-0 right-0 lg:left-64 z-[99] flex gap-3 sm:gap-4 justify-center sm:justify-end"
           style={{
-            padding: '10px 12px',
-            paddingBottom: 'max(10px, env(safe-area-inset-bottom, 10px))',
+            padding: '12px 24px',
+            paddingBottom: 'max(12px, env(safe-area-inset-bottom, 12px))',
             background: 'rgba(255,255,255,0.92)',
             backdropFilter: 'blur(20px)',
             borderTop: '1px solid rgba(34,197,94,0.2)',
             boxShadow: '0 -8px 32px rgba(0,0,0,0.08)',
           }}
         >
-          <div className="flex-1 py-2.5 bg-green-500 text-white rounded-lg font-bold text-xs shadow-lg flex items-center justify-center gap-1.5">
-            <Lock className="w-4 h-4" />
+          <div className="flex-1 sm:flex-none px-8 py-3 bg-green-500 text-white rounded-xl font-bold text-sm sm:text-base shadow-lg flex items-center justify-center gap-2">
+            <Lock className="w-5 h-5" />
             MARKS FROZEN
           </div>
           {isAdmin && (
@@ -474,9 +441,10 @@ export const MarksEntryPage: React.FC = () => {
                   } catch(e) { toast.error('Failed to unfreeze marks'); }
                 }
               }}
-              className="px-3 py-2.5 bg-red-50 text-red-600 border border-red-200 rounded-lg font-bold text-xs flex items-center justify-center gap-1.5 active:scale-95 transition-transform cursor-pointer"
+              className="px-6 py-3 bg-yellow-500 hover:bg-yellow-600 text-white rounded-xl font-bold text-sm shadow-xl transition-all flex items-center gap-2 cursor-pointer"
             >
               <Unlock className="w-4 h-4" />
+              UNFREEZE (ADMIN)
             </button>
           )}
         </div>
