@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Search, Users, FileText, FileSpreadsheet, ArrowLeft, ChevronRight } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { shareFileNatively } from '../../../utils/nativeShare';
+import { shareFileNatively } from '../../utils/nativeShare';
 import { Capacitor } from '@capacitor/core';
 
 const WhatsAppIcon = () => (
@@ -182,55 +182,37 @@ export const ClassWiseFeeReportTab: React.FC<ClassWiseFeeReportTabProps> = ({ st
       const blob = doc.output('blob');
       const file = new File([blob], fileName, { type: 'application/pdf' });
 
-      // 📱 MOBILE: Use Capacitor Native Share
-      if (Capacitor.isNativePlatform()) {
+      // 1. Try fully native sharing (Works perfectly on PWA / Web / Capacitor)
+      const didShareNatively = await shareFileNatively(blob, fileName, msg);
+      
+      if (didShareNatively) {
         toast.dismiss(toastId);
-        const success = await shareFileNatively(blob, fileName, msg);
-        if (success) return;
-        // If it failed or was cancelled, continue to fallback
-      } else {
-        const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-        if (isMobileDevice && navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-          try {
-            await navigator.share({
-              files: [file],
-              title: `${data.classInfo.name} - ${data.classInfo.section} Fee Report`
-            });
-            toast.dismiss(toastId);
-            return;
-          } catch (shareErr: any) {
-            if (shareErr.name === 'AbortError') { toast.dismiss(toastId); return; }
-          }
-        }
+        return; // Success! They shared the actual file natively
       }
 
-      // 💻 DESKTOP or FALLBACK: Upload PDF to server and send link via WhatsApp
-      const formData = new FormData();
-      formData.append('file', blob, fileName);
-      
-      const uploadRes = await api.post('/api/uploads/document', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
-      
-      let pdfUrl = uploadRes.data.url || (uploadRes.data.data && uploadRes.data.data.url);
-      if (!pdfUrl) throw new Error('Failed to get PDF URL from server');
-      
-      if (pdfUrl.startsWith('/')) {
-        pdfUrl = window.location.origin + pdfUrl;
-      }
-      
-      const linkMsg = `${msg}\n\n*Fee Report PDF Link:*\n${pdfUrl}`;
-      
+      // 2. Fallback for Web-to-App APKs: No link sharing! We download the PDF and open WhatsApp.
       toast.dismiss(toastId);
-      toast.success('Opening WhatsApp with PDF link...');
-      window.open(`https://wa.me/${waNum}?text=${encodeURIComponent(linkMsg)}`, '_system');
+      const fallbackToastId = toast.loading('Preparing PDF...');
+
+      try {
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = fileName;
+        a.click();
+        toast.success('PDF downloaded! Please ATTACH it in WhatsApp.', { id: fallbackToastId });
+      } catch (err) {
+        toast.error('Failed to download PDF', { id: fallbackToastId });
+      }
+
+      // Open WhatsApp
+      setTimeout(() => {
+        window.open(`https://api.whatsapp.com/send?phone=${waNum}&text=${encodeURIComponent(msg)}`, '_system');
+      }, 1000);
 
     } catch (err: any) {
       console.error('WhatsApp share error:', err);
       toast.dismiss(toastId);
-      toast.success('Downloading PDF and opening WhatsApp...');
-      doc.save(fileName);
-      window.open(`https://wa.me/${waNum}?text=${encodeURIComponent(msg)}`, '_system');
+      toast.error('Failed to prepare PDF for WhatsApp');
     }
   };
 
