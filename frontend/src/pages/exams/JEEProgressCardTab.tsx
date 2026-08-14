@@ -151,8 +151,8 @@ export const JEEProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
     if (parentContainer) {
       parentContainer.classList.remove('hidden');
       parentContainer.style.display = 'flex';
-      // Keep in viewport but hide behind other content to fix mobile rendering issues
-      parentContainer.style.position = 'fixed';
+      // Use absolute instead of fixed to prevent viewport clipping by html-to-image
+      parentContainer.style.position = 'absolute';
       parentContainer.style.top = '0';
       parentContainer.style.left = '0';
       parentContainer.style.zIndex = '-9999';
@@ -905,7 +905,7 @@ export const JEEProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
           </div>
 
           {/* Hidden Container for Printing & PDF Generation */}
-          <div id="progress-cards-print-container" className="hidden print:flex print-area bg-gray-50 dark:bg-gray-900 p-0 flex-col items-center">
+          <div id="progress-cards-print-container" className="hidden print:flex print-area bg-white p-0 flex-col items-center">
             <style dangerouslySetInnerHTML={{__html: `
             @media print {
               @page { size: A4 portrait; margin: 0; }
