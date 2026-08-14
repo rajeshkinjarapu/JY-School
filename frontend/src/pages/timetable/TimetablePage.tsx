@@ -603,7 +603,7 @@ export const TimetablePage: React.FC = () => {
       )}
 
       <div className="flex-1 overflow-auto p-4 md:p-6 print:p-0">
-        <div className="space-y-5 max-w-7xl mx-auto print:max-w-none print:w-[297mm] print:h-auto">
+        <div className="space-y-5 max-w-7xl mx-auto print:max-w-none print:w-full print:space-y-2">
       {/* ══ FILTER BAR ══ */}
       {(activeTab === "class" || activeTab === "teacher") && (
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white p-4 rounded-2xl shadow-sm border border-gray-100 no-print">
@@ -688,7 +688,7 @@ export const TimetablePage: React.FC = () => {
           {activeTab === "class" && (
             <div className="px-4 md:px-0 md:bg-white md:dark:bg-gray-900 md:rounded-xl md:border md:border-gray-150 md:dark:border-gray-800 overflow-hidden md:p-4 print:p-0">
               {/* Print Only Header */}
-              <div className="hidden print:block text-center mb-6">
+              <div className="hidden print:block text-center mb-2">
                 <h1 className="text-2xl font-black text-indigo-700">
                   JY SCHOOL
                 </h1>
@@ -733,12 +733,12 @@ export const TimetablePage: React.FC = () => {
                         }
                       >
                         {/* Period label cell */}
-                        <td className="p-2.5 border-b border-gray-100 dark:border-gray-800 align-top">
-                          <div className="text-xs font-extrabold text-gray-700 dark:text-gray-200">
+                        <td className="p-2.5 print:p-1 border-b border-gray-100 dark:border-gray-800 align-top">
+                          <div className="text-xs print:text-[9px] font-extrabold text-gray-700 dark:text-gray-200">
                             {period.label}
                           </div>
-                          <div className="text-[10px] text-gray-400 font-semibold flex items-center gap-1 mt-0.5">
-                            <Clock className="w-3 h-3" /> {period.startTime} –{" "}
+                          <div className="text-[10px] print:text-[8px] text-gray-400 font-semibold flex items-center gap-1 mt-0.5">
+                            <Clock className="w-3 h-3 print:w-2 print:h-2" /> {period.startTime} –{" "}
                             {period.endTime}
                           </div>
                         </td>
@@ -748,9 +748,9 @@ export const TimetablePage: React.FC = () => {
                             return (
                               <td
                                 key={day}
-                                className="p-2 border-b border-l border-gray-100 dark:border-gray-800 text-center"
+                                className="p-2 print:p-1 border-b border-l border-gray-100 dark:border-gray-800 text-center"
                               >
-                                <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wide">
+                                <span className="text-[10px] print:text-[8px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wide">
                                   {period.label}
                                 </span>
                               </td>
@@ -764,10 +764,10 @@ export const TimetablePage: React.FC = () => {
                             return (
                               <td
                                 key={day}
-                                className="p-1.5 border-b border-l border-gray-100 dark:border-gray-800"
+                                className="p-1.5 print:p-0.5 border-b border-l border-gray-100 dark:border-gray-800"
                               >
                                 <div
-                                  className="rounded-lg p-2.5 relative group cursor-pointer transition-all hover:scale-[1.02] border"
+                                  className="rounded-lg p-2.5 print:p-1.5 relative group cursor-pointer transition-all hover:scale-[1.02] border"
                                   style={{
                                     backgroundColor: color.bg,
                                     color: color.text,
@@ -782,10 +782,10 @@ export const TimetablePage: React.FC = () => {
                                     )
                                   }
                                 >
-                                  <div className="font-extrabold text-xs leading-tight">
+                                  <div className="font-extrabold text-xs print:text-[9px] leading-tight">
                                     {slot.subject?.name}
                                   </div>
-                                  <div className="text-[10px] font-semibold opacity-80 mt-0.5">
+                                  <div className="text-[10px] print:text-[8px] font-semibold opacity-80 mt-0.5">
                                     {slot.teacher?.user?.name}
                                   </div>
                                   {slot.room && (
@@ -816,7 +816,7 @@ export const TimetablePage: React.FC = () => {
                               className="p-1.5 border-b border-l border-gray-100 dark:border-gray-800"
                             >
                               <div
-                                className={`rounded-lg border border-dashed border-gray-200 dark:border-gray-700 h-14 flex items-center justify-center ${isAdmin ? "cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/30 hover:border-primary-300 transition-all" : ""}`}
+                                className={`rounded-lg border border-dashed border-gray-200 dark:border-gray-700 h-14 print:h-8 flex items-center justify-center ${isAdmin ? "cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/30 hover:border-primary-300 transition-all" : ""}`}
                                 onClick={() =>
                                   isAdmin &&
                                   openSlotModal(day, period.periodNumber)

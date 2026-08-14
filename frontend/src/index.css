@@ -288,7 +288,7 @@
 }
 @page landscape-page {
   size: A4 landscape;
-  margin: 0;
+  margin: 5mm;
 }
 .print-landscape {
   page: landscape-page;
