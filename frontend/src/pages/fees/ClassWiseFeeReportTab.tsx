@@ -184,10 +184,11 @@ export const ClassWiseFeeReportTab: React.FC<ClassWiseFeeReportTabProps> = ({ st
       // 📱 MOBILE: Try Web Share API first
       if (isMobileDevice && navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
         try {
+          // Android WhatsApp Bug: If both 'text' and 'files' are provided, WhatsApp ONLY shares the text and drops the file.
+          // Solution: Only pass 'files' and 'title'.
           await navigator.share({
             files: [file],
-            title: `${data.classInfo.name} - ${data.classInfo.section} Fee Report`,
-            text: msg,
+            title: `${data.classInfo.name} - ${data.classInfo.section} Fee Report`
           });
           toast.dismiss(toastId);
           return;
