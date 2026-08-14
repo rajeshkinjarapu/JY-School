@@ -196,32 +196,32 @@ export const AdmitCardTemplate: React.FC<AdmitCardTemplateProps> = ({ student, e
 
   if (doubleSided) {
     return (
-      <div className="flex flex-row w-[297mm] h-[210mm] mx-auto admit-card-container">
-        {/* Left Side: Front Side */}
-        <div className="bg-white p-4 w-[148.5mm] h-[210mm] flex flex-col relative border-r border-dashed border-slate-300" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+      <div className="flex flex-col gap-8 w-[297mm] mx-auto admit-card-container">
+        {/* Page 1: Front Side */}
+        <div className="admit-card-wrapper admit-card-page bg-white p-6 w-[297mm] h-[210mm] flex flex-col relative" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
           <Watermark />
           <div className="w-full h-full flex-1 border-4 border-slate-900 p-1 relative flex flex-col z-10 bg-transparent">
             <div className="w-full flex-1 border border-slate-900 flex flex-col bg-white/95 relative">
-              {renderHeader(true)}
+              {renderHeader(false)}
               {renderTitleBadges()}
-              <div className="flex-1 flex flex-col gap-4 p-4">
+              <div className="flex-1 flex flex-col gap-6 p-6">
                 {renderCandidateDetails()}
               </div>
             </div>
           </div>
         </div>
 
-        {/* Right Side: Back Side */}
-        <div className="bg-white p-4 w-[148.5mm] h-[210mm] flex flex-col relative" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+        {/* Page 2: Back Side */}
+        <div className="admit-card-wrapper admit-card-page bg-white p-6 w-[297mm] h-[210mm] flex flex-col relative" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
           <Watermark />
           <div className="w-full h-full flex-1 border-4 border-slate-900 p-1 relative flex flex-col z-10 bg-transparent">
             <div className="w-full flex-1 border border-slate-900 flex flex-col bg-white/95 relative">
-              <div className="flex flex-col items-center py-4 border-b border-slate-200">
-                <h3 className="text-sm font-bold text-slate-800 uppercase tracking-widest text-center">
+              <div className="flex flex-col items-center py-6 border-b border-slate-200">
+                <h3 className="text-lg font-bold text-slate-800 uppercase tracking-widest text-center">
                   {settings.examTitleOverride || `${exam?.name}`}
                 </h3>
               </div>
-              <div className="flex-1 flex flex-col gap-4 p-4">
+              <div className="flex-1 flex flex-col gap-6 p-6">
                 {renderExamSchedule()}
                 {renderFooter(true)}
               </div>

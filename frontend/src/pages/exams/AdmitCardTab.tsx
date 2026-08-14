@@ -126,15 +126,34 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
       const isLandscape = isFASaExam && isDoubleSided;
       pdf = new jsPDF(isLandscape ? "l" : "p", "mm", "a4");
       
-      const imgData = await toJpeg(el, {
-        cacheBust: true,
-        pixelRatio: 2,
-        quality: 0.95,
-        backgroundColor: "#ffffff",
-      });
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (el.offsetHeight * pdfWidth) / el.offsetWidth;
-      pdf.addImage(imgData, "JPEG", 0, 0, pdfWidth, pdfHeight, undefined, "FAST");
+      const pages = el.querySelectorAll('.admit-card-page');
+      
+      if (pages && pages.length > 0) {
+        for (let i = 0; i < pages.length; i++) {
+          const pageEl = pages[i] as HTMLElement;
+          const imgData = await toJpeg(pageEl, {
+            cacheBust: true,
+            pixelRatio: 2,
+            quality: 0.95,
+            backgroundColor: "#ffffff",
+          });
+          const pdfWidth = pdf.internal.pageSize.getWidth();
+          const pdfHeight = (pageEl.offsetHeight * pdfWidth) / pageEl.offsetWidth;
+          
+          if (i > 0) pdf.addPage();
+          pdf.addImage(imgData, "JPEG", 0, 0, pdfWidth, pdfHeight, undefined, "FAST");
+        }
+      } else {
+        const imgData = await toJpeg(el, {
+          cacheBust: true,
+          pixelRatio: 2,
+          quality: 0.95,
+          backgroundColor: "#ffffff",
+        });
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = (el.offsetHeight * pdfWidth) / el.offsetWidth;
+        pdf.addImage(imgData, "JPEG", 0, 0, pdfWidth, pdfHeight, undefined, "FAST");
+      }
     } catch (err) {
       el.style.display = originalDisplay;
       if (parentContainer) {
@@ -208,15 +227,31 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
         try {
           const isLandscape = isFASaExam && isDoubleSided;
           const pdf = new jsPDF(isLandscape ? "l" : "p", "mm", "a4");
+          const pages = el.querySelectorAll('.admit-card-page');
 
-          const imgData = await toJpeg(el, {
-            cacheBust: true,
-            pixelRatio: 1.5,
-            backgroundColor: "#ffffff",
-          });
-          const pdfWidth = pdf.internal.pageSize.getWidth();
-          const pdfHeight = (el.offsetHeight * pdfWidth) / el.offsetWidth;
-          pdf.addImage(imgData, "JPEG", 0, 0, pdfWidth, pdfHeight, undefined, "FAST");
+          if (pages && pages.length > 0) {
+            for (let p = 0; p < pages.length; p++) {
+              const pageEl = pages[p] as HTMLElement;
+              const imgData = await toJpeg(pageEl, {
+                cacheBust: true,
+                pixelRatio: 1.5,
+                backgroundColor: "#ffffff",
+              });
+              const pdfWidth = pdf.internal.pageSize.getWidth();
+              const pdfHeight = (pageEl.offsetHeight * pdfWidth) / pageEl.offsetWidth;
+              if (p > 0) pdf.addPage();
+              pdf.addImage(imgData, "JPEG", 0, 0, pdfWidth, pdfHeight, undefined, "FAST");
+            }
+          } else {
+            const imgData = await toJpeg(el, {
+              cacheBust: true,
+              pixelRatio: 1.5,
+              backgroundColor: "#ffffff",
+            });
+            const pdfWidth = pdf.internal.pageSize.getWidth();
+            const pdfHeight = (el.offsetHeight * pdfWidth) / el.offsetWidth;
+            pdf.addImage(imgData, "JPEG", 0, 0, pdfWidth, pdfHeight, undefined, "FAST");
+          }
 
           const fileName = `${student.user?.name || student.name || `Student_${i + 1}`}.pdf`;
           zip.file(fileName, pdf.output("blob"));
