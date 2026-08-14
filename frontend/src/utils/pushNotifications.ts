@@ -52,17 +52,11 @@ export const registerPushNotifications = async (userId: string, tokenStr: string
       console.log('Push registration success, token: ' + token.value);
       // Send token to backend
       try {
-        await fetch(`${import.meta.env.VITE_API_URL}/users/device-token`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${tokenStr}`
-          },
-          body: JSON.stringify({ deviceToken: token.value })
-        });
-        console.log('Token successfully sent to backend.');
-      } catch (e) {
-        console.error('Error sending token to backend', e);
+        const { default: api } = await import('../api/axios');
+        await api.post('/api/users/device-token', { deviceToken: token.value });
+        console.log('Successfully saved device token to backend');
+      } catch (err) {
+        console.error('Failed to save device token to backend', err);
       }
     });
 
