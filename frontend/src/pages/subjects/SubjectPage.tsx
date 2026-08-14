@@ -177,10 +177,6 @@ export const SubjectPage: React.FC = () => {
                       <div className="w-9 h-9 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center text-white font-black text-sm sm:text-xl shadow-inner border border-white/30">
                         {abbr}
                       </div>
-                      <div className="flex items-center gap-1 text-white/90 text-[10px] sm:text-xs font-bold bg-white/20 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full">
-                        <Users className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-                        {entries.length} {entries.length === 1 ? 'Class' : 'Classes'}
-                      </div>
                     </div>
                     <div className="mt-2.5 sm:mt-3 relative z-10">
                       <h3 className="text-white font-black text-sm sm:text-lg leading-tight drop-shadow-sm truncate">{subjectName}</h3>

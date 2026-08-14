@@ -709,139 +709,115 @@ export const TimetablePage: React.FC = () => {
                 <table className="w-full border-collapse min-w-[800px]">
                   <thead>
                     <tr>
-                      <th className="p-3 text-left text-[10px] font-extrabold uppercase tracking-widest text-gray-400 bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-800 w-32">
-                        Period / Time
+                      <th className="p-3 text-left text-[10px] font-extrabold uppercase tracking-widest text-gray-400 bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-800 w-24 print:w-16">
+                        Day \ Period
                       </th>
-                      {DAYS.map((d) => (
+                      {currentPeriods().map((period) => (
                         <th
-                          key={d}
-                          className="p-3 text-center text-[10px] font-extrabold uppercase tracking-widest text-gray-400 bg-gray-50 dark:bg-gray-800/50 border-b border-l border-gray-200 dark:border-gray-800"
+                          key={period.periodNumber}
+                          className={`p-3 text-center text-[10px] font-extrabold uppercase tracking-widest text-gray-400 bg-gray-50 dark:bg-gray-800/50 border-b border-l border-gray-200 dark:border-gray-800 ${period.isBreak ? "bg-amber-50/50 dark:bg-amber-950/10" : ""}`}
                         >
-                          {d}
+                          <div className="text-xs print:text-[9px] font-extrabold text-gray-700 dark:text-gray-200">{period.label}</div>
+                          <div className="text-[9px] print:text-[7px] text-gray-400 font-semibold mt-0.5">{period.startTime} – {period.endTime}</div>
                         </th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
-                    {currentPeriods().map((period) => (
-                      <tr
-                        key={period.periodNumber}
-                        className={
-                          period.isBreak
-                            ? "bg-amber-50/50 dark:bg-amber-950/10"
-                            : ""
-                        }
-                      >
-                        {/* Period label cell */}
-                        <td className="p-2.5 print:p-1 border-b border-gray-100 dark:border-gray-800 align-top">
-                          <div className="text-xs print:text-[9px] font-extrabold text-gray-700 dark:text-gray-200">
-                            {period.label}
-                          </div>
-                          <div className="text-[10px] print:text-[8px] text-gray-400 font-semibold flex items-center gap-1 mt-0.5">
-                            <Clock className="w-3 h-3 print:w-2 print:h-2" /> {period.startTime} –{" "}
-                            {period.endTime}
-                          </div>
+                    {currentPeriods().length === 0 ? (
+                      <tr>
+                        <td colSpan={7} className="p-12 text-center text-sm text-gray-400">
+                          No period configuration found. Go to <strong>Period Settings</strong> tab to set up periods first.
                         </td>
-                        {/* Day cells */}
-                        {DAYS.map((day) => {
-                          if (period.isBreak) {
-                            return (
-                              <td
-                                key={day}
-                                className="p-2 print:p-1 border-b border-l border-gray-100 dark:border-gray-800 text-center"
-                              >
-                                <span className="text-[10px] print:text-[8px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wide">
-                                  {period.label}
-                                </span>
-                              </td>
+                      </tr>
+                    ) : (
+                      DAYS.map((day) => (
+                        <tr key={day}>
+                          <td className="p-2.5 print:p-1 border-b border-gray-100 dark:border-gray-800 align-middle">
+                            <div className="text-xs print:text-[9px] font-extrabold text-gray-700 dark:text-gray-200 uppercase tracking-wider">
+                              {day}
+                            </div>
+                          </td>
+                          {currentPeriods().map((period) => {
+                            if (period.isBreak) {
+                              return (
+                                <td
+                                  key={period.periodNumber}
+                                  className="p-2 print:p-1 border-b border-l border-gray-100 dark:border-gray-800 text-center bg-amber-50/20 dark:bg-amber-950/5"
+                                >
+                                  <span className="text-[10px] print:text-[8px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wide">
+                                    {period.label}
+                                  </span>
+                                </td>
+                              );
+                            }
+                            const slot = (classTimetable[day] || []).find(
+                              (s) => s.periodNumber === period.periodNumber,
                             );
-                          }
-                          const slot = (classTimetable[day] || []).find(
-                            (s) => s.periodNumber === period.periodNumber,
-                          );
-                          if (slot) {
-                            const color = getColor(slot.subject?.name || "");
+                            if (slot) {
+                              const color = getColor(slot.subject?.name || "");
+                              return (
+                                <td
+                                  key={period.periodNumber}
+                                  className="p-1.5 print:p-0.5 border-b border-l border-gray-100 dark:border-gray-800"
+                                >
+                                  <div
+                                    className="rounded-lg p-2.5 print:p-1.5 relative group cursor-pointer transition-all hover:scale-[1.02] border"
+                                    style={{
+                                      backgroundColor: color.bg,
+                                      color: color.text,
+                                      borderColor: color.border,
+                                    }}
+                                    onClick={() =>
+                                      isAdmin && openSlotModal(day, period.periodNumber, slot)
+                                    }
+                                  >
+                                    <div className="font-extrabold text-xs print:text-[9px] leading-tight truncate">
+                                      {slot.subject?.name}
+                                    </div>
+                                    <div className="text-[10px] print:text-[8px] font-semibold opacity-80 mt-0.5 truncate">
+                                      {slot.teacher?.user?.name}
+                                    </div>
+                                    {slot.room && (
+                                      <div className="text-[9px] print:text-[7px] font-bold opacity-60 mt-0.5 flex items-center gap-0.5 truncate">
+                                        <MapPin className="w-2.5 h-2.5 print:w-2 print:h-2" />
+                                        {slot.room}
+                                      </div>
+                                    )}
+                                    {isAdmin && (
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleDeleteSlot(slot.id);
+                                        }}
+                                        className="absolute top-1 right-1 p-0.5 rounded bg-white/80 opacity-0 group-hover:opacity-100 transition-opacity hover:text-red-500 cursor-pointer no-print"
+                                        title="Delete"
+                                      >
+                                        <Trash2 className="w-3 h-3" />
+                                      </button>
+                                    )}
+                                  </div>
+                                </td>
+                              );
+                            }
                             return (
                               <td
-                                key={day}
+                                key={period.periodNumber}
                                 className="p-1.5 print:p-0.5 border-b border-l border-gray-100 dark:border-gray-800"
                               >
                                 <div
-                                  className="rounded-lg p-2.5 print:p-1.5 relative group cursor-pointer transition-all hover:scale-[1.02] border"
-                                  style={{
-                                    backgroundColor: color.bg,
-                                    color: color.text,
-                                    borderColor: color.border,
-                                  }}
-                                  onClick={() =>
-                                    isAdmin &&
-                                    openSlotModal(
-                                      day,
-                                      period.periodNumber,
-                                      slot,
-                                    )
-                                  }
+                                  className={`rounded-lg border border-dashed border-gray-200 dark:border-gray-700 h-14 print:h-8 flex items-center justify-center ${isAdmin ? "cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/30 hover:border-primary-300 transition-all" : ""}`}
+                                  onClick={() => isAdmin && openSlotModal(day, period.periodNumber)}
                                 >
-                                  <div className="font-extrabold text-xs print:text-[9px] leading-tight">
-                                    {slot.subject?.name}
-                                  </div>
-                                  <div className="text-[10px] print:text-[8px] font-semibold opacity-80 mt-0.5">
-                                    {slot.teacher?.user?.name}
-                                  </div>
-                                  {slot.room && (
-                                    <div className="text-[9px] font-bold opacity-60 mt-0.5 flex items-center gap-0.5">
-                                      <MapPin className="w-2.5 h-2.5" />
-                                      {slot.room}
-                                    </div>
-                                  )}
                                   {isAdmin && (
-                                    <button
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleDeleteSlot(slot.id);
-                                      }}
-                                      className="absolute top-1 right-1 p-0.5 rounded bg-white/80 opacity-0 group-hover:opacity-100 transition-opacity hover:text-red-500 cursor-pointer"
-                                      title="Delete"
-                                    >
-                                      <Trash2 className="w-3 h-3" />
-                                    </button>
+                                    <Plus className="w-4 h-4 text-gray-300 no-print" />
                                   )}
                                 </div>
                               </td>
                             );
-                          }
-                          return (
-                            <td
-                              key={day}
-                              className="p-1.5 border-b border-l border-gray-100 dark:border-gray-800"
-                            >
-                              <div
-                                className={`rounded-lg border border-dashed border-gray-200 dark:border-gray-700 h-14 print:h-8 flex items-center justify-center ${isAdmin ? "cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/30 hover:border-primary-300 transition-all" : ""}`}
-                                onClick={() =>
-                                  isAdmin &&
-                                  openSlotModal(day, period.periodNumber)
-                                }
-                              >
-                                {isAdmin && (
-                                  <Plus className="w-4 h-4 text-gray-300" />
-                                )}
-                              </div>
-                            </td>
-                          );
-                        })}
-                      </tr>
-                    ))}
-                    {currentPeriods().length === 0 && (
-                      <tr>
-                        <td
-                          colSpan={7}
-                          className="p-12 text-center text-sm text-gray-400"
-                        >
-                          No period configuration found. Go to{" "}
-                          <strong>Period Settings</strong> tab to set up periods
-                          first.
-                        </td>
-                      </tr>
+                          })}
+                        </tr>
+                      ))
                     )}
                   </tbody>
                 </table>
@@ -993,102 +969,89 @@ export const TimetablePage: React.FC = () => {
                 <table className="w-full border-collapse min-w-[800px]">
                   <thead>
                     <tr>
-                      <th className="p-3 text-left text-[10px] font-extrabold uppercase tracking-widest text-gray-400 bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-800 w-32">
-                        Period / Time
+                      <th className="p-3 text-left text-[10px] font-extrabold uppercase tracking-widest text-gray-400 bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-800 w-24 print:w-16">
+                        Day \ Period
                       </th>
-                      {DAYS.map((d) => (
+                      {(configs[activeCategory] || []).map((period) => (
                         <th
-                          key={d}
-                          className="p-3 text-center text-[10px] font-extrabold uppercase tracking-widest text-gray-400 bg-gray-50 dark:bg-gray-800/50 border-b border-l border-gray-200 dark:border-gray-800"
+                          key={period.periodNumber}
+                          className={`p-3 text-center text-[10px] font-extrabold uppercase tracking-widest text-gray-400 bg-gray-50 dark:bg-gray-800/50 border-b border-l border-gray-200 dark:border-gray-800 ${period.isBreak ? "bg-amber-50/50 dark:bg-amber-950/10" : ""}`}
                         >
-                          {d}
+                          <div className="text-xs print:text-[9px] font-extrabold text-gray-700 dark:text-gray-200">{period.label}</div>
+                          <div className="text-[9px] print:text-[7px] text-gray-400 font-semibold mt-0.5">{period.startTime} – {period.endTime}</div>
                         </th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
-                    {(configs[activeCategory] || []).map((period) => (
-                      <tr
-                        key={period.periodNumber}
-                        className={
-                          period.isBreak
-                            ? "bg-amber-50/50 dark:bg-amber-950/10"
-                            : ""
-                        }
-                      >
-                        <td className="p-2.5 border-b border-gray-100 dark:border-gray-800 align-top">
-                          <div className="text-xs font-extrabold text-gray-700 dark:text-gray-200">
-                            {period.label}
-                          </div>
-                          <div className="text-[10px] text-gray-400 font-semibold flex items-center gap-1 mt-0.5">
-                            <Clock className="w-3 h-3" /> {period.startTime} –{" "}
-                            {period.endTime}
-                          </div>
+                    {(configs[activeCategory] || []).length === 0 ? (
+                      <tr>
+                        <td colSpan={7} className="p-12 text-center text-sm text-gray-400">
+                          No period config for {activeCategory}. Set up in <strong>Period Settings</strong>.
                         </td>
-                        {DAYS.map((day) => {
-                          if (period.isBreak) {
-                            return (
-                              <td
-                                key={day}
-                                className="p-2 border-b border-l border-gray-100 dark:border-gray-800 text-center"
-                              >
-                                <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase">
-                                  {period.label}
-                                </span>
-                              </td>
-                            );
-                          }
-                          const slot = (teacherTimetable[day] || []).find(
-                            (s) => s.periodNumber === period.periodNumber,
-                          );
-                          if (slot) {
-                            const color = getColor(slot.subject?.name || "");
-                            return (
-                              <td
-                                key={day}
-                                className="p-1.5 border-b border-l border-gray-100 dark:border-gray-800"
-                              >
-                                <div
-                                  className="rounded-lg p-2.5 border"
-                                  style={{
-                                    backgroundColor: color.bg,
-                                    color: color.text,
-                                    borderColor: color.border,
-                                  }}
+                      </tr>
+                    ) : (
+                      DAYS.map((day) => (
+                        <tr key={day}>
+                          <td className="p-2.5 print:p-1 border-b border-gray-100 dark:border-gray-800 align-middle">
+                            <div className="text-xs print:text-[9px] font-extrabold text-gray-700 dark:text-gray-200 uppercase tracking-wider">
+                              {day}
+                            </div>
+                          </td>
+                          {(configs[activeCategory] || []).map((period) => {
+                            if (period.isBreak) {
+                              return (
+                                <td
+                                  key={period.periodNumber}
+                                  className="p-2 print:p-1 border-b border-l border-gray-100 dark:border-gray-800 text-center bg-amber-50/20 dark:bg-amber-950/5"
                                 >
-                                  <div className="font-extrabold text-xs">
-                                    {slot.subject?.name}
+                                  <span className="text-[10px] print:text-[8px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wide">
+                                    {period.label}
+                                  </span>
+                                </td>
+                              );
+                            }
+                            const slot = (teacherTimetable[day] || []).find(
+                              (s) => s.periodNumber === period.periodNumber,
+                            );
+                            if (slot) {
+                              const color = getColor(slot.subject?.name || "");
+                              return (
+                                <td
+                                  key={period.periodNumber}
+                                  className="p-1.5 print:p-0.5 border-b border-l border-gray-100 dark:border-gray-800"
+                                >
+                                  <div
+                                    className="rounded-lg p-2.5 print:p-1.5 border"
+                                    style={{
+                                      backgroundColor: color.bg,
+                                      color: color.text,
+                                      borderColor: color.border,
+                                    }}
+                                  >
+                                    <div className="font-extrabold text-xs print:text-[9px] truncate">
+                                      {slot.subject?.name}
+                                    </div>
+                                    <div className="text-[10px] print:text-[8px] font-semibold opacity-80 mt-0.5 truncate">
+                                      🏫 {slot.class?.name}-{slot.class?.section}
+                                    </div>
                                   </div>
-                                  <div className="text-[10px] font-semibold opacity-80 mt-0.5">
-                                    🏫 {slot.class?.name}-{slot.class?.section}
-                                  </div>
+                                </td>
+                              );
+                            }
+                            return (
+                              <td
+                                key={period.periodNumber}
+                                className="p-1.5 print:p-0.5 border-b border-l border-gray-100 dark:border-gray-800"
+                              >
+                                <div className="rounded-lg border border-dashed border-gray-200 dark:border-gray-700 h-14 print:h-8 flex items-center justify-center text-[10px] text-gray-300">
+                                  Free
                                 </div>
                               </td>
                             );
-                          }
-                          return (
-                            <td
-                              key={day}
-                              className="p-1.5 border-b border-l border-gray-100 dark:border-gray-800"
-                            >
-                              <div className="rounded-lg border border-dashed border-gray-200 dark:border-gray-700 h-14 flex items-center justify-center text-[10px] text-gray-300">
-                                Free
-                              </div>
-                            </td>
-                          );
-                        })}
-                      </tr>
-                    ))}
-                    {(configs[activeCategory] || []).length === 0 && (
-                      <tr>
-                        <td
-                          colSpan={7}
-                          className="p-12 text-center text-sm text-gray-400"
-                        >
-                          No period config for {activeCategory}. Set up in{" "}
-                          <strong>Period Settings</strong>.
-                        </td>
-                      </tr>
+                          })}
+                        </tr>
+                      ))
                     )}
                   </tbody>
                 </table>

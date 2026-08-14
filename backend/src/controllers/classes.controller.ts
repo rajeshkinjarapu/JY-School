@@ -71,6 +71,18 @@ export const create = async (req: AuthRequest, res: Response, next: NextFunction
   const cls = await prisma.class.create({
     data: { name, section: section || '', academicYear, capacity: capacity || 40, classTeacherId: classTeacherId || null },
   });
+
+  // Auto-assign existing subjects
+  const existingSubjects = await prisma.subject.findMany({ distinct: ['name'], select: { name: true, code: true } });
+  if (existingSubjects.length > 0) {
+    const subjectsToCreate = existingSubjects.map(sub => ({
+      name: sub.name,
+      code: `${sub.code.split('_')[0]}_${cls.id.slice(-4)}`,
+      classId: cls.id
+    }));
+    await prisma.subject.createMany({ data: subjectsToCreate });
+  }
+
   successResponse(res, cls, 'Class created', 201);
 };
 
@@ -248,9 +260,21 @@ export const bulkImport = async (req: AuthRequest, res: Response, next: NextFunc
           continue;
         }
 
-        await prisma.class.create({
+        const createdCls = await prisma.class.create({
           data: { name, section, academicYear, capacity },
         });
+
+        // Auto-assign existing subjects
+        const existingSubjects = await prisma.subject.findMany({ distinct: ['name'], select: { name: true, code: true } });
+        if (existingSubjects.length > 0) {
+          const subjectsToCreate = existingSubjects.map(sub => ({
+            name: sub.name,
+            code: `${sub.code.split('_')[0]}_${createdCls.id.slice(-4)}`,
+            classId: createdCls.id
+          }));
+          await prisma.subject.createMany({ data: subjectsToCreate });
+        }
+
         success++;
       } catch (e: any) {
         failed.push({ row, reason: e.message });
