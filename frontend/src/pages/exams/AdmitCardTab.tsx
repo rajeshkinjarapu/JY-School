@@ -123,35 +123,18 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
     await new Promise((resolve) => setTimeout(resolve, 500));
     let pdf: any;
     try {
-      pdf = new jsPDF("p", "mm", "a4");
-      const pages = el.querySelectorAll('.admit-card-page');
+      const isLandscape = isFASaExam && isDoubleSided;
+      pdf = new jsPDF(isLandscape ? "l" : "p", "mm", "a4");
       
-      if (pages && pages.length > 0) {
-        for (let i = 0; i < pages.length; i++) {
-          const pageEl = pages[i] as HTMLElement;
-          const imgData = await toJpeg(pageEl, {
-            cacheBust: true,
-            pixelRatio: 2,
-            quality: 0.95,
-            backgroundColor: "#ffffff",
-          });
-          const pdfWidth = pdf.internal.pageSize.getWidth();
-          const pdfHeight = (pageEl.offsetHeight * pdfWidth) / pageEl.offsetWidth;
-          
-          if (i > 0) pdf.addPage();
-          pdf.addImage(imgData, "JPEG", 0, 0, pdfWidth, pdfHeight, undefined, "FAST");
-        }
-      } else {
-        const imgData = await toJpeg(el, {
-          cacheBust: true,
-          pixelRatio: 2,
-          quality: 0.95,
-          backgroundColor: "#ffffff",
-        });
-        const pdfWidth = pdf.internal.pageSize.getWidth();
-        const pdfHeight = (el.offsetHeight * pdfWidth) / el.offsetWidth;
-        pdf.addImage(imgData, "JPEG", 0, 0, pdfWidth, pdfHeight, undefined, "FAST");
-      }
+      const imgData = await toJpeg(el, {
+        cacheBust: true,
+        pixelRatio: 2,
+        quality: 0.95,
+        backgroundColor: "#ffffff",
+      });
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (el.offsetHeight * pdfWidth) / el.offsetWidth;
+      pdf.addImage(imgData, "JPEG", 0, 0, pdfWidth, pdfHeight, undefined, "FAST");
     } catch (err) {
       el.style.display = originalDisplay;
       if (parentContainer) {
@@ -209,7 +192,7 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
         printArea.style.position = "absolute";
         printArea.style.left = "-9999px";
         printArea.style.top = "0";
-        printArea.style.width = "210mm";
+        printArea.style.width = (isFASaExam && isDoubleSided) ? "297mm" : "210mm";
         printArea.style.zIndex = "-9999";
         printArea.style.visibility = "visible";
       }
@@ -223,32 +206,17 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
         const student = students[i];
 
         try {
-          const pages = el.querySelectorAll('.admit-card-page');
-          const pdf = new jsPDF("p", "mm", "a4");
+          const isLandscape = isFASaExam && isDoubleSided;
+          const pdf = new jsPDF(isLandscape ? "l" : "p", "mm", "a4");
 
-          if (pages && pages.length > 0) {
-            for (let p = 0; p < pages.length; p++) {
-              const pageEl = pages[p] as HTMLElement;
-              const imgData = await toJpeg(pageEl, {
-                cacheBust: true,
-                pixelRatio: 1.5,
-                backgroundColor: "#ffffff",
-              });
-              const pdfWidth = pdf.internal.pageSize.getWidth();
-              const pdfHeight = (pageEl.offsetHeight * pdfWidth) / pageEl.offsetWidth;
-              if (p > 0) pdf.addPage();
-              pdf.addImage(imgData, "JPEG", 0, 0, pdfWidth, pdfHeight, undefined, "FAST");
-            }
-          } else {
-            const imgData = await toJpeg(el, {
-              cacheBust: true,
-              pixelRatio: 1.5,
-              backgroundColor: "#ffffff",
-            });
-            const pdfWidth = pdf.internal.pageSize.getWidth();
-            const pdfHeight = (el.offsetHeight * pdfWidth) / el.offsetWidth;
-            pdf.addImage(imgData, "JPEG", 0, 0, pdfWidth, pdfHeight, undefined, "FAST");
-          }
+          const imgData = await toJpeg(el, {
+            cacheBust: true,
+            pixelRatio: 1.5,
+            backgroundColor: "#ffffff",
+          });
+          const pdfWidth = pdf.internal.pageSize.getWidth();
+          const pdfHeight = (el.offsetHeight * pdfWidth) / el.offsetWidth;
+          pdf.addImage(imgData, "JPEG", 0, 0, pdfWidth, pdfHeight, undefined, "FAST");
 
           const fileName = `${student.user?.name || student.name || `Student_${i + 1}`}.pdf`;
           zip.file(fileName, pdf.output("blob"));
