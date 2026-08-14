@@ -13,7 +13,7 @@ const getApiUrl = () => {
       return 'http://localhost:5000';
     }
     if (isCapacitor) {
-      return 'https://apply-promenade-prologue.ngrok-free.dev';
+      return 'https://jy-school.vercel.app';
     }
   }
   
