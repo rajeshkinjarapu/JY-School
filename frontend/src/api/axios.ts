@@ -13,14 +13,14 @@ const getApiUrl = () => {
       return 'http://localhost:5000';
     }
     if (isCapacitor) {
-      return 'https://jy-school.vercel.app';
+      return 'https://apply-promenade-prologue.ngrok-free.dev';
     }
   }
   
   if (import.meta.env.VITE_API_URL) {
     return import.meta.env.VITE_API_URL;
   }
-  return 'https://charge-please-enhance-tonight.trycloudflare.com';
+  return 'https://apply-promenade-prologue.ngrok-free.dev';
 };
 
 const API_URL = getApiUrl();
