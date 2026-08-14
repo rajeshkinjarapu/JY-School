@@ -2,11 +2,11 @@
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "https://apply-promenade-prologue.ngrok-free.dev/api/$1"
+      "destination": "http://148.113.9.103:5000/api/$1"
     },
     {
       "source": "/uploads/(.*)",
-      "destination": "https://apply-promenade-prologue.ngrok-free.dev/uploads/$1"
+      "destination": "http://148.113.9.103:5000/uploads/$1"
     },
     {
       "source": "/(.*)",

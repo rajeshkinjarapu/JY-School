@@ -3,10 +3,10 @@ import axios from 'axios';
 const getApiUrl = () => {
   if (typeof window !== 'undefined') {
     const host = window.location.hostname;
-    // Vercel rewrites strip custom headers like ngrok-skip-browser-warning, causing 403 Forbidden.
-    // ALWAYS use the absolute ngrok URL to prevent this.
+    // If accessing via Vercel or DuckDNS (HTTPS), use relative URLs for API to avoid mixed content.
+    // Vercel rewrites will proxy these to the backend.
     if (host.includes('vercel.app') || host.includes('duckdns.org')) {
-      return 'https://apply-promenade-prologue.ngrok-free.dev'; 
+      return ''; 
     }
     const isCapacitor = !!(window as any).Capacitor || window.location.protocol === 'capacitor:';
     if (host.includes('railway.app') || host === 'localhost' || host === '127.0.0.1') {
