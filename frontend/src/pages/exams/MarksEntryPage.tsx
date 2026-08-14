@@ -421,10 +421,10 @@ export const MarksEntryPage: React.FC = () => {
       {/* Mobile Sticky Save Bar — always at bottom */}
       {students.length > 0 && !isClassFrozen && (
         <div
-          className="md:hidden fixed bottom-0 left-0 right-0 z-50 flex gap-3"
+          className="md:hidden sticky bottom-0 left-0 right-0 z-50 flex gap-2 mt-auto"
           style={{
-            padding: '12px 16px',
-            paddingBottom: 'max(12px, env(safe-area-inset-bottom, 12px))',
+            padding: '10px 12px',
+            paddingBottom: 'max(10px, env(safe-area-inset-bottom, 10px))',
             background: 'rgba(255,255,255,0.92)',
             backdropFilter: 'blur(20px)',
             borderTop: '1px solid rgba(99,102,241,0.15)',
@@ -433,36 +433,42 @@ export const MarksEntryPage: React.FC = () => {
         >
           <button
             onClick={() => handleSave(false)}
-            className="flex-1 py-3.5 bg-indigo-50 text-indigo-600 border border-indigo-200 rounded-xl font-bold text-sm flex items-center justify-center gap-2 active:scale-95 transition-transform cursor-pointer"
+            className="flex-1 py-2.5 bg-indigo-50 text-indigo-600 border border-indigo-200 rounded-lg font-bold text-xs flex items-center justify-center gap-1.5 active:scale-95 transition-transform cursor-pointer"
           >
-            <Save className="w-5 h-5" />
+            <Save className="w-4 h-4" />
             SAVE DRAFT
           </button>
           <button
             onClick={() => handleSave(true)}
-            className="flex-[2] py-3.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/30 active:scale-95 transition-transform cursor-pointer"
+            className="flex-[1.5] py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg font-bold text-xs flex items-center justify-center gap-1.5 shadow-lg shadow-indigo-600/30 active:scale-95 transition-transform cursor-pointer"
           >
-            <Lock className="w-5 h-5" />
+            <Lock className="w-4 h-4" />
             FREEZE MARKS
           </button>
         </div>
       )}
       {students.length > 0 && isClassFrozen && (
         <div
-          className="md:hidden fixed bottom-0 left-0 right-0 z-50 flex gap-3"
+          className="md:hidden sticky bottom-0 left-0 right-0 z-50 flex gap-2 mt-auto"
           style={{
-            padding: '12px 16px',
-            paddingBottom: 'max(12px, env(safe-area-inset-bottom, 12px))',
+            padding: '10px 12px',
+            paddingBottom: 'max(10px, env(safe-area-inset-bottom, 10px))',
             background: 'rgba(255,255,255,0.92)',
             backdropFilter: 'blur(20px)',
             borderTop: '1px solid rgba(34,197,94,0.2)',
             boxShadow: '0 -8px 32px rgba(0,0,0,0.08)',
           }}
         >
-          <div className="flex-1 py-3.5 bg-green-50 border border-green-200 text-green-700 rounded-xl font-bold text-sm flex items-center justify-center gap-2">
-            <Lock className="w-5 h-5" />
+          <div className="flex-1 py-2.5 bg-green-500 text-white rounded-lg font-bold text-xs shadow-lg flex items-center justify-center gap-1.5">
+            <Lock className="w-4 h-4" />
             MARKS FROZEN
           </div>
+          <button
+            onClick={handleUnfreeze}
+            className="px-3 py-2.5 bg-red-50 text-red-600 border border-red-200 rounded-lg font-bold text-xs flex items-center justify-center gap-1.5 active:scale-95 transition-transform cursor-pointer"
+          >
+            <Unlock className="w-4 h-4" />
+          </button>
         </div>
       )}
     </div>
