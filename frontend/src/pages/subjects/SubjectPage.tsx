@@ -57,9 +57,8 @@ export const SubjectPage: React.FC = () => {
     fetchData();
   }, []);
 
-  // Group subjects by name
   const groupedSubjects = subjects.reduce((acc: Record<string, any[]>, sub: any) => {
-    const key = sub.name?.trim() || 'Unknown';
+    const key = (sub.name?.trim() || 'Unknown').toUpperCase();
     if (!acc[key]) acc[key] = [];
     acc[key].push(sub);
     return acc;

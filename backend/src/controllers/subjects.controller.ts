@@ -30,11 +30,11 @@ export const create = async (req: AuthRequest, res: Response, next: NextFunction
     return next(createError('Subject name is required', 400));
   }
 
-  const baseName = name.trim();
-  const baseCode = code || baseName.toUpperCase().replace(/\s+/g, '_');
+  const baseName = name.trim().toUpperCase();
+  const baseCode = code || baseName.replace(/\s+/g, '_');
 
   if (classId) {
-    const existing = await prisma.subject.findFirst({ where: { name: baseName, classId } });
+    const existing = await prisma.subject.findFirst({ where: { name: { equals: baseName, mode: 'insensitive' }, classId } });
     if (existing) {
       return next(createError('Subject already exists in this class', 409));
     }
@@ -63,7 +63,7 @@ export const create = async (req: AuthRequest, res: Response, next: NextFunction
   let lastFoundSubject = null;
 
   for (const cls of allClasses) {
-    const existing = await prisma.subject.findFirst({ where: { name: baseName, classId: cls.id } });
+    const existing = await prisma.subject.findFirst({ where: { name: { equals: baseName, mode: 'insensitive' }, classId: cls.id } });
     if (!existing) {
       const subCode = `${baseCode}_${cls.id.slice(-4)}`;
       const sub = await prisma.subject.create({
@@ -93,11 +93,12 @@ export const create = async (req: AuthRequest, res: Response, next: NextFunction
 export const update = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   const id = req.params.id as string;
   const { name, code } = req.body;
+  const newName = name ? name.trim().toUpperCase() : undefined;
 
   const existing = await prisma.subject.findUnique({ where: { id } });
   if (!existing) return next(createError('Subject not found', 404));
 
-  const subject = await prisma.subject.update({ where: { id }, data: { name, code } });
+  const subject = await prisma.subject.update({ where: { id }, data: { name: newName, code } });
   successResponse(res, subject, 'Subject updated');
 };
 
