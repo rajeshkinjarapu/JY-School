@@ -20,8 +20,7 @@ const getApiUrl = () => {
   if (import.meta.env.VITE_API_URL) {
     return import.meta.env.VITE_API_URL;
   }
-  
-  return 'https://apply-promenade-prologue.ngrok-free.dev';
+  return 'https://charge-please-enhance-tonight.trycloudflare.com';
 };
 
 const API_URL = getApiUrl();
