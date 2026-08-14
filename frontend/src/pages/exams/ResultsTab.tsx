@@ -182,7 +182,7 @@ export const ResultsTab: React.FC<{ exams: any[] }> = ({ exams }) => {
         startY: 29,
         head: head,
         body: body,
-        theme: 'striped',
+        theme: 'grid',
         headStyles: {
           fillColor: [79, 70, 229], // Indigo #4F46E5
           textColor: 255,
@@ -208,20 +208,6 @@ export const ResultsTab: React.FC<{ exams: any[] }> = ({ exams }) => {
           2: { cellWidth: 22, halign: 'center' }, // Roll No
         },
         didParseCell: (data) => {
-          // Highlight Top Ranks
-          if (data.section === 'body' && data.column.index === 0) {
-            const rankVal = Number(data.cell.raw);
-            if (rankVal === 1) {
-              data.cell.styles.fillColor = [254, 240, 138]; // Yellow-200
-              data.cell.styles.textColor = [113, 63, 18];
-            } else if (rankVal === 2) {
-              data.cell.styles.fillColor = [241, 245, 249]; // Slate-100
-              data.cell.styles.textColor = [51, 65, 85];
-            } else if (rankVal === 3) {
-              data.cell.styles.fillColor = [254, 215, 170]; // Orange-200
-              data.cell.styles.textColor = [154, 52, 18];
-            }
-          }
           // Highlight Total & Percentage
           if (data.section === 'body' && data.column.index === head[0].length - 2) {
             data.cell.styles.fontStyle = 'bold';
