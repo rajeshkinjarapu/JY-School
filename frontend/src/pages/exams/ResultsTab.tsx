@@ -109,21 +109,21 @@ export const ResultsTab: React.FC<{ exams: any[] }> = ({ exams }) => {
       const pageWidth = doc.internal.pageSize.getWidth(); // 210mm
       const pageHeight = doc.internal.pageSize.getHeight(); // 297mm
 
-      // Header Card / School Name Banner
+      // Header Card / School Name Banner (Super Compact)
       doc.setFillColor(248, 250, 252); // #F8FAFC
-      doc.roundedRect(12, 12, pageWidth - 24, 26, 3, 3, 'F');
-      doc.setDrawColor(226, 232, 240); // #E2E8F0
-      doc.roundedRect(12, 12, pageWidth - 24, 26, 3, 3, 'D');
+      doc.setDrawColor(203, 213, 225); // #CBD5E1
+      doc.setLineWidth(0.5);
+      doc.roundedRect(12, 12, pageWidth - 24, 14, 2, 2, 'FD'); // Reduced height from 18 to 14
 
       // Title & Subtitle
       doc.setFont('helvetica', 'bold');
-      doc.setFontSize(15);
-      doc.setTextColor(30, 41, 59); // #1E293B
-      doc.text('JY SCHOOL', 18, 21);
+      doc.setFontSize(16);
+      doc.setTextColor(15, 23, 42); // #0F172A - Very Dark Slate
+      doc.text('JY SCHOOL', 16, 18);
 
-      doc.setFontSize(9.5);
-      doc.setTextColor(79, 70, 229); // #4F46E5
-      doc.text('EXAMINATION RESULTS SUMMARY', 18, 28);
+      doc.setFontSize(10);
+      doc.setTextColor(67, 56, 202); // #4338CA - Dark Indigo
+      doc.text('EXAMINATION RESULTS SUMMARY', 16, 24);
 
       // Metadata info on top right of banner
       const examNameStr = selectedExam?.name || 'Examination';
@@ -131,14 +131,14 @@ export const ResultsTab: React.FC<{ exams: any[] }> = ({ exams }) => {
       const dateStr = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
 
       doc.setFont('helvetica', 'bold');
-      doc.setFontSize(9);
-      doc.setTextColor(51, 65, 85); // #334155
-      doc.text(`Exam: ${examNameStr}`, pageWidth - 18, 20, { align: 'right' });
+      doc.setFontSize(10);
+      doc.setTextColor(15, 23, 42); 
+      doc.text(`Exam: ${examNameStr}`, pageWidth - 16, 18, { align: 'right' });
       
-      doc.setFont('helvetica', 'normal');
+      doc.setFont('helvetica', 'bold');
       doc.setFontSize(8.5);
-      doc.setTextColor(100, 116, 139); // #64748B
-      doc.text(`Class: ${classNameStr}   |   Date: ${dateStr}   |   Total: ${results.length} Students`, pageWidth - 18, 27, { align: 'right' });
+      doc.setTextColor(51, 65, 85); 
+      doc.text(`Class: ${classNameStr}   |   Date: ${dateStr}   |   Total: ${results.length} Students`, pageWidth - 16, 24, { align: 'right' });
 
       // Table Headers
       const subjectsList = results[0]?.marks || [];
@@ -168,23 +168,18 @@ export const ResultsTab: React.FC<{ exams: any[] }> = ({ exams }) => {
         `${student.percentage}%`
       ]);
 
-      // Dynamic vertical padding based on row count to ensure perfect fitting on A4 page
-      const totalRows = results.length;
-      let dynamicPadding = 2.5;
-      let dynamicFontSize = 8.5;
-      if (totalRows >= 30) {
-        dynamicPadding = 1.0;
-        dynamicFontSize = 7.0;
-      } else if (totalRows >= 20) {
-        dynamicPadding = 1.5;
-        dynamicFontSize = 7.5;
-      } else if (totalRows < 15) {
-        dynamicPadding = 3.2;
-        dynamicFontSize = 9.0;
-      }
+      // Stretch the rows to fill the entire A4 page vertically.
+      const totalRows = results.length || 1;
+      // Page height is 297mm. StartY is 29mm. Bottom margin is 16mm. Head is ~9mm.
+      // Available height for body = 297 - 29 - 16 - 9 = 243mm.
+      const dynamicRowHeight = 243 / totalRows;
+      
+      let dynamicFontSize = 9.0;
+      if (totalRows >= 30) dynamicFontSize = 7.0;
+      else if (totalRows >= 20) dynamicFontSize = 8.0;
 
       autoTable(doc, {
-        startY: 42,
+        startY: 29,
         head: head,
         body: body,
         theme: 'striped',
@@ -202,7 +197,7 @@ export const ResultsTab: React.FC<{ exams: any[] }> = ({ exams }) => {
           valign: 'middle',
           textColor: 30,
           fontSize: dynamicFontSize,
-          cellPadding: dynamicPadding
+          minCellHeight: dynamicRowHeight
         },
         alternateRowStyles: {
           fillColor: [248, 250, 252] // Zebra striping
@@ -235,7 +230,6 @@ export const ResultsTab: React.FC<{ exams: any[] }> = ({ exams }) => {
           if (data.section === 'body' && data.column.index === head[0].length - 1) {
             data.cell.styles.fontStyle = 'bold';
             data.cell.styles.textColor = [22, 101, 52]; // Green-800
-            data.cell.styles.minCellWidth = 16; // Ensure percentage doesn't wrap
           }
         },
         margin: { left: 12, right: 12, top: 42, bottom: 16 },
