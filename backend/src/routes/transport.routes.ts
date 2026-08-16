@@ -6,16 +6,13 @@ const router = Router();
 
 router.use(authenticate);
 
-// Super admin & admin only
-router.use(authorize('SUPER_ADMIN', 'ADMIN'));
-
 router.get('/vehicles', getVehicles);
-router.post('/vehicles', createVehicle);
+router.post('/vehicles', authorize('SUPER_ADMIN', 'ADMIN'), createVehicle);
 
 router.get('/routes', getRoutes);
-router.post('/routes', createRoute);
+router.post('/routes', authorize('SUPER_ADMIN', 'ADMIN'), createRoute);
 
-router.get('/students', getStudentTransports);
-router.post('/students', assignStudentTransport);
+router.get('/students', authorize('SUPER_ADMIN', 'ADMIN'), getStudentTransports);
+router.post('/students', authorize('SUPER_ADMIN', 'ADMIN'), assignStudentTransport);
 
 export default router;

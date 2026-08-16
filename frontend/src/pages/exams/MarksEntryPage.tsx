@@ -382,7 +382,7 @@ export const MarksEntryPage: React.FC = () => {
       {/* Universal Sticky Save Bar — always at bottom */}
       {students.length > 0 && !isClassFrozen && (
         <div
-          className="fixed bottom-0 left-0 right-0 lg:left-64 z-[99] flex gap-3 sm:gap-4 justify-center sm:justify-end"
+          className="sticky bottom-0 left-0 right-0 z-[99] flex gap-3 sm:gap-4 justify-center sm:justify-end mt-auto"
           style={{
             padding: '12px 24px',
             paddingBottom: 'max(12px, env(safe-area-inset-bottom, 12px))',
@@ -416,7 +416,7 @@ export const MarksEntryPage: React.FC = () => {
       )}
       {students.length > 0 && isClassFrozen && (
         <div
-          className="fixed bottom-0 left-0 right-0 lg:left-64 z-[99] flex gap-3 sm:gap-4 justify-center sm:justify-end"
+          className="sticky bottom-0 left-0 right-0 z-[99] flex gap-3 sm:gap-4 justify-center sm:justify-end mt-auto"
           style={{
             padding: '12px 24px',
             paddingBottom: 'max(12px, env(safe-area-inset-bottom, 12px))',
