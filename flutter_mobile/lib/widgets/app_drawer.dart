@@ -25,6 +25,8 @@ import '../screens/notifications_screen.dart';
 import '../screens/study_materials_screen.dart';
 import '../screens/students_screen.dart';
 import '../screens/teachers_screen.dart';
+import '../screens/classes_screen.dart';
+import '../screens/subjects_screen.dart';
 
 class AppDrawer extends StatefulWidget {
   final String currentRoute;
@@ -163,14 +165,14 @@ class _AppDrawerState extends State<AppDrawer> {
                       title: 'Classes',
                       routeName: 'classes',
                       isActive: widget.currentRoute == 'classes',
-                      onTap: () {},
+                      onTap: () => _navigateTo(const ClassesScreen(), 'classes'),
                     ),
                     _buildDrawerItem(
                       icon: Icons.menu_book_rounded,
                       title: 'Subjects',
                       routeName: 'subjects',
                       isActive: widget.currentRoute == 'subjects',
-                      onTap: () {},
+                      onTap: () => _navigateTo(const SubjectsScreen(), 'subjects'),
                     ),
                     _buildDrawerItem(
                       icon: Icons.how_to_reg_rounded,

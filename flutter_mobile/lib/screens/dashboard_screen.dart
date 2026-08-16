@@ -13,6 +13,10 @@ import 'teacher_homework_screen.dart';
 import 'teacher_marks_screen.dart';
 import 'profile_screen.dart';
 import '../widgets/app_drawer.dart';
+import 'students_screen.dart';
+import 'teachers_screen.dart';
+import 'classes_screen.dart';
+import 'subjects_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -212,18 +216,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         _buildQuickMetrics(userRole),
-                        const SizedBox(height: 32),
-
-                        Text(
-                          userRole == 'STUDENT' ? 'Academic Portal' : 
-                          userRole == 'TEACHER' ? 'Teacher Toolkit' : 'Admin Operations',
-                          style: GoogleFonts.outfit(
-                            fontSize: 22,
-                            fontWeight: FontWeight.bold,
-                            color: const Color(0xFF1E293B),
+                        
+                        if (userRole == 'SUPER_ADMIN' || userRole == 'ADMIN') ...[
+                          const SizedBox(height: 16),
+                        ] else ...[
+                          const SizedBox(height: 32),
+                          Text(
+                            userRole == 'STUDENT' ? 'Academic Portal' : 'Teacher Toolkit',
+                            style: GoogleFonts.outfit(
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                              color: const Color(0xFF1E293B),
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 16),
+                          const SizedBox(height: 16),
+                        ],
 
                         _buildMenuGrid(userRole),
                         const SizedBox(height: 30),
@@ -750,6 +757,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
             icon: Icons.people_outline,
             gradientStart: const Color(0xFF7B66FF),
             gradientEnd: const Color(0xFF9080FF),
+            onTap: () {
+              Navigator.push(context, MaterialPageRoute(builder: (context) => const StudentsScreen()));
+            },
           ),
           _buildAdminStatCard(
             title: 'TOTAL TEACHERS',
@@ -758,6 +768,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
             icon: Icons.school_outlined,
             gradientStart: const Color(0xFF2DD38A),
             gradientEnd: const Color(0xFF4EEB9E),
+            onTap: () {
+              Navigator.push(context, MaterialPageRoute(builder: (context) => const TeachersScreen()));
+            },
           ),
           _buildAdminStatCard(
             title: 'TOTAL CLASSES',
@@ -766,6 +779,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
             icon: Icons.domain,
             gradientStart: const Color(0xFFFBB117),
             gradientEnd: const Color(0xFFFFC648),
+            onTap: () {
+              Navigator.push(context, MaterialPageRoute(builder: (context) => const ClassesScreen()));
+            },
           ),
           _buildAdminStatCard(
             title: 'TOTAL REVENUE',
@@ -774,6 +790,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
             icon: Icons.account_balance_wallet_outlined,
             gradientStart: const Color(0xFFFF4E6A),
             gradientEnd: const Color(0xFFFF7286),
+            onTap: () {
+              Navigator.push(context, MaterialPageRoute(builder: (context) => const FeesScreen()));
+            },
           ),
         ],
       );
@@ -787,24 +806,27 @@ class _DashboardScreenState extends State<DashboardScreen> {
     required IconData icon,
     required Color gradientStart,
     required Color gradientEnd,
+    VoidCallback? onTap,
   }) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [gradientStart, gradientEnd],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: gradientStart.withOpacity(0.3),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [gradientStart, gradientEnd],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
           ),
-        ],
-      ),
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: [
+            BoxShadow(
+              color: gradientStart.withOpacity(0.3),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1094,18 +1116,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFCBD5E1),
+                    color: Colors.white.withOpacity(0.2),
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(icon, color: const Color(0xFF1E293B), size: 24),
+                  child: Icon(icon, color: Colors.white, size: 24),
                 ),
                 Container(
                   padding: const EdgeInsets.all(4),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFCBD5E1),
+                    color: Colors.white.withOpacity(0.2),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.arrow_outward, color: const Color(0xFF1E293B), size: 16),
+                  child: const Icon(Icons.arrow_outward, color: Colors.white, size: 16),
                 ),
               ],
             ),
@@ -1113,18 +1135,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
             Text(
               subtitle,
               style: GoogleFonts.outfit(
-                color: const Color(0xFF1E293B),
-                fontSize: 10,
+                color: Colors.white,
+                fontSize: 11,
                 fontWeight: FontWeight.w800,
                 letterSpacing: 0.5,
               ),
             ),
-            const SizedBox(height: 2),
+            const SizedBox(height: 4),
             Text(
               title,
               style: GoogleFonts.outfit(
-                color: const Color(0xFF1E293B),
-                fontSize: 22,
+                color: Colors.white,
+                fontSize: 26,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -1135,7 +1157,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   width: 4,
                   height: 4,
                   decoration: const BoxDecoration(
-                    color: const Color(0xFF1E293B),
+                    color: Colors.white,
                     shape: BoxShape.circle,
                   ),
                 ),
@@ -1143,7 +1165,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 Text(
                   bottomText,
                   style: GoogleFonts.poppins(
-                    color: const Color(0xFF1E293B).withOpacity(0.9),
+                    color: Colors.white.withOpacity(0.9),
                     fontSize: 10,
                     fontWeight: FontWeight.w500,
                   ),
