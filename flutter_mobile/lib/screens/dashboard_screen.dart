@@ -258,299 +258,157 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildHeader(String name, String role, String metaLabel, String metaValue) {
-    if (role == 'SUPER_ADMIN' || role == 'ADMIN') {
-      return Container(
-        width: double.infinity,
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              Color(0xFF2E2A66), // Match image deep purple/blue
-              Color(0xFF222854),
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-        ),
-        child: SafeArea(
-          bottom: false,
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Custom App Bar Area
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        IconButton(
-                          icon: const Icon(Icons.menu, color: Colors.white),
-                          onPressed: () => _scaffoldKey.currentState?.openDrawer(),
-                        ),
-                        const SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.all(6),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: const Icon(Icons.home_outlined, color: Colors.white, size: 20),
-                        ),
-                        const SizedBox(width: 12),
-                        Text(
-                          'Dashboard',
-                          style: GoogleFonts.outfit(
-                            color: Colors.white,
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.notifications_none, color: Colors.white),
-                      onPressed: () {}, 
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 24),
-                
-                // Profile Section
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Container(
-                                width: 8,
-                                height: 8,
-                                decoration: const BoxDecoration(
-                                  color: Color(0xFF8B5CF6),
-                                  shape: BoxShape.circle,
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Text(
-                                _getGreeting(),
-                                style: GoogleFonts.poppins(
-                                  color: const Color(0xFF8B5CF6),
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                  letterSpacing: 1.5,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            name,
-                            style: GoogleFonts.outfit(
-                              color: Colors.white,
-                              fontSize: 28,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            '${role.replaceAll('_', ' ')} • JY School',
-                            style: GoogleFonts.poppins(
-                              color: Colors.white70,
-                              fontSize: 13,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.08),
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(color: Colors.white.withOpacity(0.1)),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Icon(Icons.calendar_today_outlined, color: Colors.white70, size: 14),
-                                const SizedBox(width: 8),
-                                Text(
-                                  _getFormattedDate(),
-                                  style: GoogleFonts.poppins(
-                                    color: Colors.white70,
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          )
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.push(context, MaterialPageRoute(builder: (context) => const ProfileScreen()));
-                      },
-                      child: Container(
-                        width: 80,
-                        height: 80,
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: Colors.white.withOpacity(0.2), width: 2),
-                          image: DecorationImage(
-                            image: NetworkImage('https://ui-avatars.com/api/?name=${Uri.encodeComponent(name)}&background=6366F1&color=fff&size=150'),
-                            fit: BoxFit.cover,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                )
-              ],
-            ),
-          ),
-        ),
-      );
-    }
-    
     return Container(
       width: double.infinity,
       decoration: const BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            Color(0xFFF8FAFC), // Dark Indigo
-            Color(0xFFE2E8F0), // Dark slate
+            Color(0xFF2E2A66), // Match image deep purple/blue
+            Color(0xFF222854),
           ],
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-        ),
-        borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(40),
-          bottomRight: Radius.circular(40),
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
       ),
       child: SafeArea(
         bottom: false,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Custom App Bar Area
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    'JY SCHOOL',
-                    style: GoogleFonts.outfit(
-                      color: const Color(0xFF1E293B),
-                      fontSize: 20,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 1.2,
-                    ),
+                  Row(
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.menu, color: Colors.white),
+                        onPressed: () => _scaffoldKey.currentState?.openDrawer(),
+                      ),
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Icon(Icons.home_outlined, color: Colors.white, size: 20),
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        'Dashboard',
+                        style: GoogleFonts.outfit(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
                   ),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFE2E8F0),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: const Color(0xFFE2E8F0)),
-                    ),
-                    child: IconButton(
-                      icon: const Icon(Icons.menu_rounded, color: const Color(0xFF1E293B)),
-                      onPressed: () => _scaffoldKey.currentState?.openDrawer(),
-                      tooltip: 'Open Menu',
-                    ),
-                  )
+                  IconButton(
+                    icon: const Icon(Icons.notifications_none, color: Colors.white),
+                    onPressed: () {}, 
+                  ),
                 ],
               ),
-              const SizedBox(height: 28),
-
+              const SizedBox(height: 24),
+              
+              // Profile Section
               Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              width: 8,
+                              height: 8,
+                              decoration: const BoxDecoration(
+                                color: Color(0xFF8B5CF6),
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              _getGreeting(),
+                              style: GoogleFonts.poppins(
+                                color: const Color(0xFF8B5CF6),
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 1.5,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          name,
+                          style: GoogleFonts.outfit(
+                            color: Colors.white,
+                            fontSize: 28,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '${role.replaceAll('_', ' ')} • JY School',
+                          style: GoogleFonts.poppins(
+                            color: Colors.white70,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.08),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(color: Colors.white.withOpacity(0.1)),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.calendar_today_outlined, color: Colors.white70, size: 14),
+                              const SizedBox(width: 8),
+                              Text(
+                                _getFormattedDate(),
+                                style: GoogleFonts.poppins(
+                                  color: Colors.white70,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 16),
                   GestureDetector(
                     onTap: () {
                       Navigator.push(context, MaterialPageRoute(builder: (context) => const ProfileScreen()));
                     },
                     child: Container(
-                      width: 72,
-                      height: 72,
+                      width: 80,
+                      height: 80,
                       decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [Color(0xFF818CF8), Color(0xFFC084FC)],
-                        ),
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(0xFF6366F1).withOpacity(0.3),
-                            blurRadius: 15,
-                            spreadRadius: 1,
-                          )
-                        ],
-                      ),
-                      child: Center(
-                        child: Text(
-                          name.isNotEmpty ? name[0].toUpperCase() : 'U',
-                          style: GoogleFonts.outfit(
-                            color: const Color(0xFF1E293B),
-                            fontSize: 28,
-                            fontWeight: FontWeight.bold,
-                          ),
+                        color: Colors.white.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: Colors.white.withOpacity(0.2), width: 2),
+                        image: DecorationImage(
+                          image: NetworkImage('https://ui-avatars.com/api/?name=${Uri.encodeComponent(name)}&background=6366F1&color=fff&size=150'),
+                          fit: BoxFit.cover,
                         ),
                       ),
                     ),
                   ),
-                  const SizedBox(width: 20),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          role == 'STUDENT' ? 'Student Portal' : 
-                          role == 'TEACHER' ? 'Teacher Portal' : 'Admin Portal',
-                          style: GoogleFonts.poppins(
-                            color: const Color(0xFF64748B),
-                            fontSize: 14,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          name,
-                          style: GoogleFonts.outfit(
-                            color: const Color(0xFF1E293B),
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 0.5,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFE2E8F0),
-                                borderRadius: BorderRadius.circular(30),
-                                border: Border.all(color: const Color(0xFFE2E8F0)),
-                              ),
-                              child: Text(
-                                '$metaLabel: $metaValue',
-                                style: GoogleFonts.poppins(
-                                  color: const Color(0xFFC084FC),
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                          ],
-                        )
-                      ],
-                    ),
-                  )
                 ],
               )
             ],
@@ -748,7 +606,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         crossAxisCount: 2,
         crossAxisSpacing: 16,
         mainAxisSpacing: 16,
-        childAspectRatio: 0.95,
+        childAspectRatio: 1.8,
         children: [
           _buildAdminStatCard(
             title: 'TOTAL STUDENTS',
@@ -851,7 +709,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 8),
           Text(
             title,
             style: GoogleFonts.outfit(
@@ -894,8 +752,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
         ],
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildMenuGrid(String role) {
     if (role == 'STUDENT') {
@@ -905,6 +764,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         crossAxisCount: 2,
         crossAxisSpacing: 16,
         mainAxisSpacing: 16,
+        childAspectRatio: 1.8,
         children: [
           _buildNavigationCard(
             icon: Icons.calendar_month_rounded,
@@ -964,6 +824,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         crossAxisCount: 2,
         crossAxisSpacing: 16,
         mainAxisSpacing: 16,
+        childAspectRatio: 1.8,
         children: [
           _buildNavigationCard(
             icon: Icons.how_to_reg_rounded,
@@ -1023,7 +884,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         crossAxisCount: 2,
         crossAxisSpacing: 16,
         mainAxisSpacing: 16,
-        childAspectRatio: 0.95,
+        childAspectRatio: 1.8,
         children: [
           _buildAdminActionCard(
             title: 'Fees',
@@ -1131,7 +992,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 8),
             Text(
               subtitle,
               style: GoogleFonts.outfit(
@@ -1177,7 +1038,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ),
     );
   }
-
   Widget _buildNavigationCard({
     required IconData icon,
     required Color color,
@@ -1185,65 +1045,72 @@ class _DashboardScreenState extends State<DashboardScreen> {
     required String subtitle,
     required VoidCallback onTap,
   }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: const Color(0xFF1E293B),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          )
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              color.withOpacity(0.8),
+              color,
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
           borderRadius: BorderRadius.circular(24),
-          child: Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
+          boxShadow: [
+            BoxShadow(
+              color: color.withOpacity(0.3),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Container(
-                  padding: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: color.withOpacity(0.12),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: color.withOpacity(0.2)),
+                    color: Colors.white.withOpacity(0.2),
+                    shape: BoxShape.circle,
                   ),
-                  child: Icon(
-                    icon,
-                    color: color,
-                    size: 26,
-                  ),
+                  child: Icon(icon, color: Colors.white, size: 24),
                 ),
-                const SizedBox(height: 18),
-                Text(
-                  title,
-                  style: GoogleFonts.outfit(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: const Color(0xFF1E293B),
+                Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    shape: BoxShape.circle,
                   ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  subtitle,
-                  style: GoogleFonts.poppins(
-                    fontSize: 11,
-                    color: const Color(0xFF94A3B8),
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                  child: const Icon(Icons.arrow_outward, color: Colors.white, size: 16),
                 ),
               ],
             ),
-          ),
+            const SizedBox(height: 8),
+            Text(
+              subtitle.toUpperCase(),
+              style: GoogleFonts.outfit(
+                color: Colors.white,
+                fontSize: 11,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 0.5,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              title,
+              style: GoogleFonts.outfit(
+                color: Colors.white,
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
         ),
       ),
     );

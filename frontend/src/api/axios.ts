@@ -13,14 +13,14 @@ const getApiUrl = () => {
       return 'http://localhost:5000';
     }
     if (isCapacitor) {
-      return 'https://chamber-strained-occupier.ngrok-free.dev';
+      return 'https://retouch-buckskin-overgrown.ngrok-free.dev';
     }
   }
   
   if (import.meta.env.VITE_API_URL) {
     return import.meta.env.VITE_API_URL;
   }
-  return 'https://chamber-strained-occupier.ngrok-free.dev';
+  return 'https://retouch-buckskin-overgrown.ngrok-free.dev';
 };
 
 const API_URL = getApiUrl();

@@ -79,13 +79,14 @@ class _LoginScreenState extends State<LoginScreen> {
           // 1. Background Gradient
           Container(
             decoration: const BoxDecoration(
-              gradient: RadialGradient(
+              gradient: LinearGradient(
                 colors: [
-                  Color(0xFFF8FAFC), // Deep Indigo
-                  Color(0xFFE2E8F0), // Dark Slate
+                  Color(0xFF6366F1), // Indigo 500
+                  Color(0xFFD946EF), // Fuchsia 500
+                  Color(0xFFF43F5E), // Rose 500
                 ],
-                radius: 1.5,
-                center: Alignment.center,
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
               ),
             ),
           ),
@@ -95,12 +96,11 @@ class _LoginScreenState extends State<LoginScreen> {
             top: size.height * 0.1,
             left: -50,
             child: Container(
-              key: const ValueKey('blob1'),
               width: 250,
               height: 250,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: const Color(0xFF6366F1).withOpacity(0.35), // Indigo Glow
+                color: const Color(0xFFFACC15).withOpacity(0.4), // Yellow glow
               ),
               child: BackdropFilter(
                 filter: ImageFilter.blur(sigmaX: 70, sigmaY: 70),
@@ -112,32 +112,14 @@ class _LoginScreenState extends State<LoginScreen> {
             bottom: size.height * 0.15,
             right: -60,
             child: Container(
-              key: const ValueKey('blob2'),
               width: 300,
               height: 300,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: const Color(0xFFD946EF).withOpacity(0.25), // Fuchsia Glow
+                color: const Color(0xFF22D3EE).withOpacity(0.4), // Cyan glow
               ),
               child: BackdropFilter(
                 filter: ImageFilter.blur(sigmaX: 80, sigmaY: 80),
-                child: Container(color: Colors.transparent),
-              ),
-            ),
-          ),
-          Positioned(
-            top: size.height * 0.45,
-            left: size.width * 0.2,
-            child: Container(
-              key: const ValueKey('blob3'),
-              width: 150,
-              height: 150,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: const Color(0xFFF43F5E).withOpacity(0.2), // Rose Glow
-              ),
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 60, sigmaY: 60),
                 child: Container(color: Colors.transparent),
               ),
             ),
@@ -155,30 +137,27 @@ class _LoginScreenState extends State<LoginScreen> {
                     
                     // Logo Header
                     Container(
-                      width: 90,
-                      height: 90,
+                      width: 120,
+                      height: 120,
                       decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            const Color(0xFF818CF8), // Light Indigo
-                            const Color(0xFFF472B6), // Light Pink
-                          ],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFF6366F1).withOpacity(0.5),
+                            color: Colors.white.withOpacity(0.6),
                             blurRadius: 25,
-                            spreadRadius: 2,
+                            spreadRadius: 5,
                           )
                         ],
                       ),
-                      child: const Icon(
-                        Icons.school_rounded,
-                        size: 52,
-                        color: const Color(0xFF1E293B),
+                      child: ClipOval(
+                        child: Container(
+                          color: Colors.white,
+                          padding: const EdgeInsets.all(8),
+                          child: Image.asset(
+                            'assets/images/logo.png',
+                            fit: BoxFit.contain,
+                          ),
+                        ),
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -188,7 +167,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       style: GoogleFonts.outfit(
                         fontSize: 34,
                         fontWeight: FontWeight.w900,
-                        color: const Color(0xFF1E293B),
+                        color: Colors.white,
                         letterSpacing: 2.0,
                         shadows: [
                           const Shadow(
@@ -208,13 +187,13 @@ class _LoginScreenState extends State<LoginScreen> {
                         filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
                         child: Container(
                           padding: const EdgeInsets.all(28.0),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFE2E8F0),
-                            borderRadius: BorderRadius.circular(32),
-                            border: Border.all(
-                              color: const Color(0xFFE2E8F0),
-                              width: 1.5,
-                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.95),
+                              borderRadius: BorderRadius.circular(32),
+                              border: Border.all(
+                                color: Colors.white.withOpacity(0.5),
+                                width: 1.5,
+                              ),
                             boxShadow: [
                               BoxShadow(
                                 color: Colors.black.withOpacity(0.2),
@@ -403,7 +382,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     Text(
                       'Having trouble logging in? Contact Administrator',
                       style: GoogleFonts.poppins(
-                        color: const Color(0xFF64748B),
+                        color: Colors.white.withOpacity(0.9),
                         fontWeight: FontWeight.w500,
                         fontSize: 13,
                       ),
@@ -412,7 +391,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     Text(
                       '© ${DateTime.now().year} JY Education. All rights reserved.',
                       style: GoogleFonts.poppins(
-                        color: const Color(0xFF94A3B8),
+                        color: Colors.white.withOpacity(0.7),
                         fontSize: 11,
                       ),
                     ),
