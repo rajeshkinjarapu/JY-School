@@ -146,11 +146,8 @@ export const ExamListPage: React.FC = () => {
   const fetchExams = async () => {
     try {
       const res: any = await api.get('/api/exams?limit=500');
-      const list = res.data || res || [];
+      const list = Array.isArray(res) ? res : (res?.data || []);
       setExams(list);
-      if (list.length > 0 && !selectedExamId) {
-        setSelectedExamId(list[0].id);
-      }
     } catch (e) {
       toast.error('Failed to load exams');
     }

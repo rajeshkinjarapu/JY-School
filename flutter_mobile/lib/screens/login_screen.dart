@@ -1,445 +1,507 @@
+﻿import 'dart:math';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/api_service.dart';
 import 'dashboard_screen.dart';
 
+// ═══════════════════════════════════════════════════════
+//  JY SCHOOL – LOGIN SCREEN  (Complete Redesign)
+// ═══════════════════════════════════════════════════════
+
+class _RoleItem {
+  final String label;
+  final IconData icon;
+  final Color color;
+  const _RoleItem(this.label, this.icon, this.color);
+}
+
+class _Particle {
+  late double x, y, radius, opacity, dx, dy;
+  _Particle({required Random rand}) {
+    x = rand.nextDouble(); y = rand.nextDouble();
+    radius = rand.nextDouble() * 4 + 2;
+    opacity = rand.nextDouble() * 0.28 + 0.05;
+    dx = (rand.nextDouble() - 0.5) * 0.0005;
+    dy = (rand.nextDouble() - 0.5) * 0.0005;
+  }
+}
+
+class _AnimatedParticle extends StatefulWidget {
+  final _Particle particle;
+  const _AnimatedParticle({required this.particle});
+  @override
+  State<_AnimatedParticle> createState() => _AnimatedParticleState();
+}
+
+class _AnimatedParticleState extends State<_AnimatedParticle>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _ctrl;
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: Duration(milliseconds: 5000 + Random().nextInt(5000)),
+    )..repeat(reverse: true);
+  }
+  @override
+  void dispose() { _ctrl.dispose(); super.dispose(); }
+  @override
+  Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+    final p = widget.particle;
+    return AnimatedBuilder(
+      animation: _ctrl,
+      builder: (_, __) {
+        final t = _ctrl.value;
+        final cx = (p.x + p.dx * t * 1000).clamp(0.0, 1.0);
+        final cy = (p.y + p.dy * t * 1000).clamp(0.0, 1.0);
+        return Positioned(
+          left: cx * size.width - p.radius,
+          top: cy * size.height - p.radius,
+          child: Container(
+            width: p.radius * 2, height: p.radius * 2,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.white.withOpacity(p.opacity),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+// ─────────────────────── LoginScreen Widget ───────────────────────────────
+
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
-
   @override
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
-  
-  bool _showPassword = false;
-  bool _isSubmitting = false;
-  String? _errorMessage;
+  final _emailCtrl = TextEditingController();
+  final _passCtrl  = TextEditingController();
+  bool _showPass = false;
+  bool _loading  = false;
+  String? _error;
+  int _roleIdx = 0;
+
+  final _roles = [
+    _RoleItem('Student', Icons.school_rounded,                 Color(0xFF6366F1)),
+    _RoleItem('Teacher', Icons.person_rounded,                 Color(0xFF0EA5E9)),
+    _RoleItem('Parent',  Icons.family_restroom_rounded,        Color(0xFF10B981)),
+    _RoleItem('Admin',   Icons.admin_panel_settings_rounded,   Color(0xFFF59E0B)),
+  ];
+
+  final _gradients = [
+    [Color(0xFF4F46E5), Color(0xFF7C3AED), Color(0xFFDB2777)],
+    [Color(0xFF0369A1), Color(0xFF0EA5E9), Color(0xFF06B6D4)],
+    [Color(0xFF065F46), Color(0xFF059669), Color(0xFF34D399)],
+    [Color(0xFF92400E), Color(0xFFD97706), Color(0xFFFBBF24)],
+  ];
+
+  late AnimationController _bgCtrl, _cardCtrl, _pulseCtrl;
+  late Animation<double>   _bgAnim, _slideAnim, _fadeAnim, _pulseAnim;
+  final _particles = <_Particle>[];
+  final _rand = Random();
+
+  @override
+  void initState() {
+    super.initState();
+    _bgCtrl   = AnimationController(vsync: this, duration: const Duration(seconds: 8))..repeat(reverse: true);
+    _bgAnim   = Tween(begin: 0.0, end: 1.0).animate(CurvedAnimation(parent: _bgCtrl,   curve: Curves.easeInOut));
+    _cardCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 900))..forward();
+    _slideAnim = Tween(begin: 60.0, end: 0.0).animate(CurvedAnimation(parent: _cardCtrl, curve: Curves.easeOutCubic));
+    _fadeAnim  = Tween(begin: 0.0,  end: 1.0).animate(CurvedAnimation(parent: _cardCtrl, curve: Curves.easeOut));
+    _pulseCtrl = AnimationController(vsync: this, duration: const Duration(seconds: 2))..repeat(reverse: true);
+    _pulseAnim = Tween(begin: 1.0, end: 1.1).animate(CurvedAnimation(parent: _pulseCtrl, curve: Curves.easeInOut));
+    for (int i = 0; i < 16; i++) _particles.add(_Particle(rand: _rand));
+  }
 
   @override
   void dispose() {
-    _emailController.dispose();
-    _passwordController.dispose();
+    _emailCtrl.dispose(); _passCtrl.dispose();
+    _bgCtrl.dispose(); _cardCtrl.dispose(); _pulseCtrl.dispose();
     super.dispose();
   }
 
-  Future<void> _handleLogin() async {
+  Future<void> _login() async {
     if (!_formKey.currentState!.validate()) return;
-
-    setState(() {
-      _isSubmitting = true;
-      _errorMessage = null;
-    });
-
-    final email = _emailController.text.trim();
-    final password = _passwordController.text;
-
-    final result = await ApiService.login(email, password);
-
-    if (mounted) {
-      setState(() {
-        _isSubmitting = false;
-      });
-
-      if (result['success']) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Welcome back!',
-              style: GoogleFonts.poppins(fontWeight: FontWeight.w600, color: const Color(0xFF1E293B)),
-            ),
-            backgroundColor: const Color(0xFF10B981),
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          ),
-        );
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => const DashboardScreen()),
-        );
-      } else {
-        setState(() {
-          _errorMessage = result['message'];
-        });
-      }
+    setState(() { _loading = true; _error = null; });
+    final res = await ApiService.login(_emailCtrl.text.trim(), _passCtrl.text);
+    if (!mounted) return;
+    setState(() => _loading = false);
+    if (res['success'] == true) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Welcome back!', style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.w600)),
+        backgroundColor: const Color(0xFF10B981),
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.all(16),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      ));
+      Navigator.of(context).pushReplacement(PageRouteBuilder(
+        pageBuilder: (_, __, ___) => const DashboardScreen(),
+        transitionsBuilder: (_, a, __, c) => FadeTransition(opacity: a, child: c),
+        transitionDuration: const Duration(milliseconds: 500),
+      ));
+    } else {
+      setState(() => _error = res['message'] ?? 'Login failed. Please try again.');
     }
+  }
+
+  void _pickRole(int i) {
+    setState(() => _roleIdx = i);
+    _cardCtrl.reset(); _cardCtrl.forward();
   }
 
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
-    
+    final role = _roles[_roleIdx];
+    final grad = _gradients[_roleIdx];
+
     return Scaffold(
-      backgroundColor: const Color(0xFFE2E8F0), // Modern Dark Slate
-      body: Stack(
-        children: [
-          // 1. Background Gradient
-          Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  Color(0xFF6366F1), // Indigo 500
-                  Color(0xFFD946EF), // Fuchsia 500
-                  Color(0xFFF43F5E), // Rose 500
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
+      resizeToAvoidBottomInset: true,
+      body: AnimatedBuilder(
+        animation: _bgAnim,
+        builder: (_, __) => Container(
+          width: double.infinity, height: double.infinity,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Color.lerp(grad[0], grad[2], _bgAnim.value)!,
+                Color.lerp(grad[1], grad[0], _bgAnim.value)!,
+                Color.lerp(grad[2], grad[1], _bgAnim.value)!,
+              ],
+              begin: Alignment.topLeft, end: Alignment.bottomRight,
             ),
           ),
-
-          // 2. Glowing Background Blobs
-          Positioned(
-            top: size.height * 0.1,
-            left: -50,
-            child: Container(
-              width: 250,
-              height: 250,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: const Color(0xFFFACC15).withOpacity(0.4), // Yellow glow
-              ),
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 70, sigmaY: 70),
-                child: Container(color: Colors.transparent),
-              ),
+          child: Stack(children: [
+            ..._particles.map((p) => _AnimatedParticle(particle: p)),
+            Positioned(
+              top: -size.height * 0.12, right: -size.width * 0.2,
+              child: Container(width: size.width * 0.7, height: size.width * 0.7,
+                decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.white.withOpacity(0.07))),
             ),
-          ),
-          Positioned(
-            bottom: size.height * 0.15,
-            right: -60,
-            child: Container(
-              width: 300,
-              height: 300,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: const Color(0xFF22D3EE).withOpacity(0.4), // Cyan glow
-              ),
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 80, sigmaY: 80),
-                child: Container(color: Colors.transparent),
-              ),
+            Positioned(
+              bottom: -size.height * 0.1, left: -size.width * 0.15,
+              child: Container(width: size.width * 0.65, height: size.width * 0.65,
+                decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.white.withOpacity(0.06))),
             ),
-          ),
-
-          // 3. Main Content
-          SafeArea(
-            child: Center(
+            SafeArea(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const SizedBox(height: 20),
-                    
-                    // Logo Header
-                    Container(
-                      width: 120,
-                      height: 120,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.white.withOpacity(0.6),
-                            blurRadius: 25,
-                            spreadRadius: 5,
-                          )
-                        ],
-                      ),
-                      child: ClipOval(
-                        child: Container(
-                          color: Colors.white,
-                          padding: const EdgeInsets.all(8),
-                          child: Image.asset(
-                            'assets/images/logo.png',
-                            fit: BoxFit.contain,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    
-                    Text(
-                      'JY SCHOOL',
-                      style: GoogleFonts.outfit(
-                        fontSize: 34,
-                        fontWeight: FontWeight.w900,
-                        color: Colors.white,
-                        letterSpacing: 2.0,
-                        shadows: [
-                          const Shadow(
-                            color: Colors.black45,
-                            offset: Offset(0, 4),
-                            blurRadius: 10,
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 36),
-
-                    // 4. Glassmorphism Form Card
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(32),
-                      child: BackdropFilter(
-                        filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
-                        child: Container(
-                          padding: const EdgeInsets.all(28.0),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.95),
-                              borderRadius: BorderRadius.circular(32),
-                              border: Border.all(
-                                color: Colors.white.withOpacity(0.5),
-                                width: 1.5,
-                              ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.2),
-                                blurRadius: 30,
-                                offset: const Offset(0, 15),
-                              )
-                            ],
-                          ),
-                          child: Form(
-                            key: _formKey,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                Text(
-                                  'Student / Staff Login',
-                                  textAlign: TextAlign.center,
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 22,
-                                    fontWeight: FontWeight.bold,
-                                    color: const Color(0xFF1E293B),
-                                    letterSpacing: 0.5,
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  'Please sign in to your account',
-                                  textAlign: TextAlign.center,
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 13,
-                                    color: const Color(0xFF94A3B8), // Muted text
-                                  ),
-                                ),
-                                const SizedBox(height: 28),
-
-                                if (_errorMessage != null) ...[
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                                    decoration: BoxDecoration(
-                                      color: Colors.red.withOpacity(0.12),
-                                      borderRadius: BorderRadius.circular(16),
-                                      border: Border.all(color: Colors.red.withOpacity(0.35)),
-                                    ),
-                                    child: Row(
-                                      children: [
-                                        const Icon(Icons.error_outline_rounded, color: Color(0xFFF87171), size: 20),
-                                        const SizedBox(width: 10),
-                                        Expanded(
-                                          child: Text(
-                                            _errorMessage!,
-                                            style: GoogleFonts.poppins(
-                                              color: const Color(0xFFFCE7F3),
-                                              fontSize: 12.5,
-                                              fontWeight: FontWeight.w500,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  const SizedBox(height: 20),
-                                ],
-
-                                // Username Input Field
-                                TextFormField(
-                                  controller: _emailController,
-                                  keyboardType: TextInputType.emailAddress,
-                                  style: GoogleFonts.poppins(color: const Color(0xFF1E293B)),
-                                  decoration: _buildInputDecoration(
-                                    label: 'Username or Email',
-                                    icon: Icons.mail_outline_rounded,
-                                  ),
-                                  validator: (value) {
-                                    if (value == null || value.trim().isEmpty) {
-                                      return 'Please enter username';
-                                    }
-                                    return null;
-                                  },
-                                ),
-                                const SizedBox(height: 22),
-
-                                // Password Input Field
-                                TextFormField(
-                                  controller: _passwordController,
-                                  obscureText: !_showPassword,
-                                  style: GoogleFonts.poppins(color: const Color(0xFF1E293B)),
-                                  decoration: _buildInputDecoration(
-                                    label: 'Password',
-                                    icon: Icons.lock_outline_rounded,
-                                    suffixIcon: IconButton(
-                                      icon: Icon(
-                                        _showPassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-                                        color: const Color(0xFF94A3B8),
-                                        size: 22,
-                                      ),
-                                      onPressed: () {
-                                        setState(() {
-                                          _showPassword = !_showPassword;
-                                        });
-                                      },
-                                    ),
-                                  ),
-                                  validator: (value) {
-                                    if (value == null || value.isEmpty) {
-                                      return 'Please enter password';
-                                    }
-                                    return null;
-                                  },
-                                ),
-                                const SizedBox(height: 30),
-
-                                // Sign In Button with Elegant Shadow
-                                Container(
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(16),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: const Color(0xFF6366F1).withOpacity(0.4),
-                                        blurRadius: 20,
-                                        offset: const Offset(0, 6),
-                                      )
-                                    ],
-                                  ),
-                                  child: ElevatedButton(
-                                    onPressed: _isSubmitting ? null : _handleLogin,
-                                    style: ElevatedButton.styleFrom(
-                                      padding: EdgeInsets.zero,
-                                      backgroundColor: Colors.transparent,
-                                      shadowColor: Colors.transparent,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(16),
-                                      ),
-                                    ),
-                                    child: Ink(
-                                      decoration: BoxDecoration(
-                                        gradient: const LinearGradient(
-                                          colors: [
-                                            Color(0xFF6366F1), // Indigo
-                                            Color(0xFFD946EF), // Fuchsia
-                                          ],
-                                          begin: Alignment.centerLeft,
-                                          end: Alignment.centerRight,
-                                        ),
-                                        borderRadius: BorderRadius.circular(16),
-                                      ),
-                                      child: Container(
-                                        constraints: const BoxConstraints(minHeight: 56.0),
-                                        alignment: Alignment.center,
-                                        child: _isSubmitting
-                                            ? const SizedBox(
-                                                height: 24,
-                                                width: 24,
-                                                child: CircularProgressIndicator(
-                                                  color: const Color(0xFF1E293B),
-                                                  strokeWidth: 2.5,
-                                                ),
-                                              )
-                                            : Row(
-                                                mainAxisAlignment: MainAxisAlignment.center,
-                                                children: [
-                                                  Text(
-                                                    'Sign In',
-                                                    style: GoogleFonts.poppins(
-                                                      color: const Color(0xFF1E293B),
-                                                      fontSize: 16,
-                                                      fontWeight: FontWeight.bold,
-                                                      letterSpacing: 0.5,
-                                                    ),
-                                                  ),
-                                                  const SizedBox(width: 8),
-                                                  const Icon(Icons.arrow_forward_rounded, color: const Color(0xFF1E293B), size: 18),
-                                                ],
-                                              ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 36),
-                    
-                    // Footer Links
-                    Text(
-                      'Having trouble logging in? Contact Administrator',
-                      style: GoogleFonts.poppins(
-                        color: Colors.white.withOpacity(0.9),
-                        fontWeight: FontWeight.w500,
-                        fontSize: 13,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      '© ${DateTime.now().year} JY Education. All rights reserved.',
-                      style: GoogleFonts.poppins(
-                        color: Colors.white.withOpacity(0.7),
-                        fontSize: 11,
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                  ],
+                physics: const BouncingScrollPhysics(),
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(minHeight: size.height - MediaQuery.of(context).padding.top),
+                  child: IntrinsicHeight(child: Column(children: [
+                    _buildHero(grad),
+                    const SizedBox(height: 28),
+                    _buildRolePills(),
+                    const SizedBox(height: 22),
+                    _buildCard(role, grad),
+                    const Spacer(),
+                    _buildFooter(),
+                  ])),
                 ),
               ),
             ),
-          ),
-        ],
+          ]),
+        ),
       ),
     );
   }
 
-  InputDecoration _buildInputDecoration({
+  // ── Hero Section ──────────────────────────────────────────────────────────
+  Widget _buildHero(List<Color> grad) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 40, 24, 0),
+      child: Column(children: [
+        AnimatedBuilder(
+          animation: _pulseAnim,
+          builder: (_, child) => Transform.scale(scale: _pulseAnim.value, child: child),
+          child: Stack(alignment: Alignment.center, children: [
+            Container(
+              width: 108, height: 108,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white.withOpacity(0.35), width: 2.5),
+              ),
+            ),
+            Container(
+              width: 88, height: 88,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle, color: Colors.white,
+                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.28), blurRadius: 24, offset: const Offset(0, 10))],
+              ),
+              child: ClipOval(child: Padding(
+                padding: const EdgeInsets.all(10),
+                child: Image.asset('assets/images/logo.png', fit: BoxFit.contain,
+                  errorBuilder: (_, __, ___) => Icon(Icons.school_rounded, size: 42, color: grad[0]),
+                ),
+              )),
+            ),
+          ]),
+        ),
+        const SizedBox(height: 18),
+        Text('JY SCHOOL', style: GoogleFonts.outfit(
+          fontSize: 30, fontWeight: FontWeight.w900, color: Colors.white, letterSpacing: 4,
+          shadows: [Shadow(color: Colors.black.withOpacity(0.3), offset: const Offset(0, 3), blurRadius: 10)],
+        )),
+        const SizedBox(height: 6),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.18),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: Colors.white.withOpacity(0.3)),
+          ),
+          child: Text('EXCELLENCE IN EDUCATION', style: GoogleFonts.poppins(
+            fontSize: 10, fontWeight: FontWeight.w700, color: Colors.white, letterSpacing: 2,
+          )),
+        ),
+      ]),
+    );
+  }
+
+  // ── Role Pills ────────────────────────────────────────────────────────────
+  Widget _buildRolePills() {
+    return Column(children: [
+      Text('Login As', style: GoogleFonts.poppins(
+        color: Colors.white.withOpacity(0.85), fontSize: 13, fontWeight: FontWeight.w600, letterSpacing: 1,
+      )),
+      const SizedBox(height: 12),
+      Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: List.generate(_roles.length, (i) {
+          final r = _roles[i];
+          final active = i == _roleIdx;
+          return GestureDetector(
+            onTap: () => _pickRole(i),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 300), curve: Curves.easeOut,
+              margin: const EdgeInsets.symmetric(horizontal: 5),
+              padding: EdgeInsets.symmetric(horizontal: active ? 18 : 12, vertical: 10),
+              decoration: BoxDecoration(
+                color: active ? Colors.white : Colors.white.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(50),
+                border: Border.all(color: active ? Colors.transparent : Colors.white.withOpacity(0.3)),
+                boxShadow: active ? [BoxShadow(color: Colors.black.withOpacity(0.2), blurRadius: 12, offset: const Offset(0, 4))] : [],
+              ),
+              child: Row(mainAxisSize: MainAxisSize.min, children: [
+                Icon(r.icon, size: 16, color: active ? r.color : Colors.white),
+                if (active) ...[
+                  const SizedBox(width: 6),
+                  Text(r.label, style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.bold, color: r.color)),
+                ],
+              ]),
+            ),
+          );
+        }),
+      ),
+    ]);
+  }
+
+  // ── Login Card ────────────────────────────────────────────────────────────
+  Widget _buildCard(_RoleItem role, List<Color> grad) {
+    return AnimatedBuilder(
+      animation: _cardCtrl,
+      builder: (_, child) => Transform.translate(
+        offset: Offset(0, _slideAnim.value),
+        child: Opacity(opacity: _fadeAnim.value, child: child),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 0, 20, 28),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(30),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 22, sigmaY: 22),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.96),
+                borderRadius: BorderRadius.circular(30),
+                border: Border.all(color: Colors.white.withOpacity(0.7), width: 1.5),
+                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.17), blurRadius: 40, offset: const Offset(0, 16))],
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(28),
+                child: Form(key: _formKey, child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+                  // Header
+                  Row(children: [
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(color: role.color.withOpacity(0.12), borderRadius: BorderRadius.circular(14)),
+                      child: Icon(role.icon, color: role.color, size: 22),
+                    ),
+                    const SizedBox(width: 14),
+                    Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                      AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 300),
+                        child: Text('${role.label} Login', key: ValueKey(role.label),
+                          style: GoogleFonts.poppins(fontSize: 20, fontWeight: FontWeight.bold, color: const Color(0xFF0F172A))),
+                      ),
+                      Text('Access your JY School portal',
+                        style: GoogleFonts.poppins(fontSize: 12, color: const Color(0xFF64748B))),
+                    ]),
+                  ]),
+                  const SizedBox(height: 18),
+                  // Accent divider
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 400), height: 2,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(colors: [role.color.withOpacity(0.8), role.color.withOpacity(0.08)]),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  const SizedBox(height: 22),
+                  // Error Banner
+                  AnimatedSize(
+                    duration: const Duration(milliseconds: 300), curve: Curves.easeOut,
+                    child: _error != null
+                        ? Container(
+                            margin: const EdgeInsets.only(bottom: 16),
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFFEF2F2),
+                              borderRadius: BorderRadius.circular(14),
+                              border: Border.all(color: const Color(0xFFFCA5A5)),
+                            ),
+                            child: Row(children: [
+                              const Icon(Icons.error_rounded, color: Color(0xFFEF4444), size: 20),
+                              const SizedBox(width: 10),
+                              Expanded(child: Text(_error!, style: GoogleFonts.poppins(color: const Color(0xFF991B1B), fontSize: 13, fontWeight: FontWeight.w500))),
+                              GestureDetector(
+                                onTap: () => setState(() => _error = null),
+                                child: const Icon(Icons.close_rounded, color: Color(0xFFEF4444), size: 18),
+                              ),
+                            ]),
+                          )
+                        : const SizedBox.shrink(),
+                  ),
+                  // Email
+                  _field(ctrl: _emailCtrl, label: 'Username or Email', icon: Icons.person_outline_rounded,
+                    accent: role.color, kbType: TextInputType.emailAddress,
+                    validate: (v) => (v == null || v.trim().isEmpty) ? 'Please enter username or email' : null),
+                  const SizedBox(height: 16),
+                  // Password
+                  _field(ctrl: _passCtrl, label: 'Password', icon: Icons.lock_outline_rounded,
+                    accent: role.color, obscure: !_showPass,
+                    suffix: IconButton(
+                      icon: Icon(_showPass ? Icons.visibility_rounded : Icons.visibility_off_rounded,
+                        color: const Color(0xFF94A3B8), size: 22),
+                      onPressed: () => setState(() => _showPass = !_showPass),
+                    ),
+                    validate: (v) => (v == null || v.isEmpty) ? 'Please enter password' : null),
+                  const SizedBox(height: 26),
+                  // Button
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 400),
+                    height: 56,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(16),
+                      gradient: LinearGradient(colors: [grad[0], grad[1]], begin: Alignment.centerLeft, end: Alignment.centerRight),
+                      boxShadow: [BoxShadow(color: grad[0].withOpacity(0.42), blurRadius: 20, offset: const Offset(0, 8))],
+                    ),
+                    child: ElevatedButton(
+                      onPressed: _loading ? null : _login,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.transparent, shadowColor: Colors.transparent,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      ),
+                      child: _loading
+                          ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5))
+                          : Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                              Text('SIGN IN', style: GoogleFonts.poppins(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold, letterSpacing: 1.5)),
+                              const SizedBox(width: 10),
+                              const Icon(Icons.arrow_forward_rounded, color: Colors.white, size: 20),
+                            ]),
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                  // SSL note
+                  Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                    const Icon(Icons.lock_rounded, size: 13, color: Color(0xFF94A3B8)),
+                    const SizedBox(width: 5),
+                    Text('Secure SSL Encrypted Connection',
+                      style: GoogleFonts.poppins(fontSize: 11, color: const Color(0xFF94A3B8), fontWeight: FontWeight.w500)),
+                  ]),
+                ])),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ── Footer ────────────────────────────────────────────────────────────────
+  Widget _buildFooter() {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 24),
+      child: Column(children: [
+        Container(
+          margin: const EdgeInsets.symmetric(horizontal: 30),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.13),
+            borderRadius: BorderRadius.circular(50),
+            border: Border.all(color: Colors.white.withOpacity(0.22)),
+          ),
+          child: Row(mainAxisSize: MainAxisSize.min, children: [
+            const Icon(Icons.help_outline_rounded, color: Colors.white, size: 15),
+            const SizedBox(width: 7),
+            Text('Need help? Contact School Admin',
+              style: GoogleFonts.poppins(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600)),
+          ]),
+        ),
+        const SizedBox(height: 10),
+        Text('© ${DateTime.now().year} JY School · All Rights Reserved',
+          style: GoogleFonts.poppins(fontSize: 11, color: Colors.white.withOpacity(0.6))),
+      ]),
+    );
+  }
+
+  // ── Reusable Field ────────────────────────────────────────────────────────
+  Widget _field({
+    required TextEditingController ctrl,
     required String label,
     required IconData icon,
-    Widget? suffixIcon,
+    required Color accent,
+    TextInputType kbType = TextInputType.text,
+    bool obscure = false,
+    Widget? suffix,
+    String? Function(String?)? validate,
   }) {
-    return InputDecoration(
-      labelText: label,
-      labelStyle: GoogleFonts.poppins(color: const Color(0xFF94A3B8), fontSize: 14),
-      prefixIcon: Icon(icon, color: const Color(0xFF818CF8), size: 22),
-      suffixIcon: suffixIcon,
-      filled: true,
-      fillColor: Colors.white,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(16),
-        borderSide: BorderSide(color: const Color(0xFFE2E8F0)),
+    return TextFormField(
+      controller: ctrl,
+      keyboardType: kbType,
+      obscureText: obscure,
+      style: GoogleFonts.poppins(color: const Color(0xFF0F172A), fontWeight: FontWeight.w600, fontSize: 14.5),
+      validator: validate,
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: GoogleFonts.poppins(color: const Color(0xFF94A3B8), fontSize: 14, fontWeight: FontWeight.w500),
+        prefixIcon: Container(
+          margin: const EdgeInsets.only(left: 14, right: 8),
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(color: accent.withOpacity(0.1), borderRadius: BorderRadius.circular(10)),
+          child: Icon(icon, color: accent, size: 20),
+        ),
+        prefixIconConstraints: const BoxConstraints(minWidth: 0, minHeight: 0),
+        suffixIcon: suffix,
+        filled: true,
+        fillColor: const Color(0xFFF8FAFC),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+        border:            OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
+        enabledBorder:     OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
+        focusedBorder:     OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide(color: accent, width: 2)),
+        errorBorder:       OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0xFFEF4444), width: 1.5)),
+        focusedErrorBorder:OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0xFFEF4444), width: 2)),
+        errorStyle: GoogleFonts.poppins(color: const Color(0xFFEF4444), fontSize: 11, fontWeight: FontWeight.w500),
       ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(16),
-        borderSide: BorderSide(color: const Color(0xFFE2E8F0)),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(16),
-        borderSide: const BorderSide(color: Color(0xFF818CF8), width: 1.8),
-      ),
-      errorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(16),
-        borderSide: BorderSide(color: Colors.red.withOpacity(0.5), width: 1.5),
-      ),
-      focusedErrorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(16),
-        borderSide: const BorderSide(color: Colors.redAccent, width: 1.8),
-      ),
-      errorStyle: GoogleFonts.poppins(color: Colors.redAccent, fontSize: 11),
     );
   }
 }
