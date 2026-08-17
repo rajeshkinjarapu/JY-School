@@ -194,9 +194,6 @@ export const TeacherListPage: React.FC = () => {
                   <th className="px-5 py-4 border-r border-gray-100">
                     Mobile No
                   </th>
-                  <th className="px-5 py-4 text-center">
-                    Actions
-                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
@@ -264,7 +261,7 @@ export const TeacherListPage: React.FC = () => {
                           {teacher.qualification || "N/A"}
                         </span>
                       </td>
-                      <td className="px-5 py-4 border-r border-gray-100">
+                      <td className="px-5 py-4">
                         <div className="flex items-center gap-3 text-gray-700 text-sm font-medium whitespace-nowrap">
                           {teacher.user?.phone || "–"}
                           {teacher.user?.phone && (
@@ -278,25 +275,13 @@ export const TeacherListPage: React.FC = () => {
                           )}
                         </div>
                       </td>
-                      <td className="px-5 py-4 text-center">
-                        <div className="flex items-center justify-center gap-2">
-                          <Link to={`/teachers/${teacher.id}`} className="p-2 rounded-xl text-indigo-600 bg-indigo-50 hover:bg-indigo-600 hover:text-white transition-colors" title="View Profile">
-                            <Eye className="w-4 h-4" />
-                          </Link>
-                          {isSuperAdmin && (
-                            <button onClick={() => handleDelete(teacher.id)} className="p-2 rounded-xl text-red-500 bg-red-50 hover:bg-red-500 hover:text-white transition-colors" title="Delete Teacher">
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          )}
-                        </div>
-                      </td>
                     </tr>
                   );
                 })}
                 {teachers.length === 0 && (
                   <tr>
                     <td
-                      colSpan={7}
+                      colSpan={6}
                       className="py-12 text-center text-gray-400 font-semibold"
                     >
                       No teacher records found.
