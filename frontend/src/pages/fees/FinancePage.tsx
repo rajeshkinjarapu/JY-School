@@ -15,6 +15,7 @@ import {
 import toast from 'react-hot-toast';
 import { StudentFeeDetailsTab } from './StudentFeeDetailsTab';
 import { ClassWiseFeeReportTab } from './ClassWiseFeeReportTab';
+import { InstallmentReportTab } from './InstallmentReportTab';
 import { FeeStructurePage } from './FeeStructurePage';
 import { FeeSettingsTabs } from './FeeSettingsTabs';
 
@@ -328,8 +329,8 @@ export const FinancePage: React.FC = () => {
   useEffect(() => {
     if (activeTab === 'home') return;
 
-    const needsBase = ['fee-structure', 'transaction', 'student-fee-details', 'class-wise-fee-report'].includes(activeTab);
-    const needsHeavy = ['transaction', 'student-fee-details', 'class-wise-fee-report'].includes(activeTab);
+    const needsBase = ['fee-structure', 'transaction', 'student-fee-details', 'class-wise-fee-report', 'installment-report'].includes(activeTab);
+    const needsHeavy = ['transaction', 'student-fee-details', 'class-wise-fee-report', 'installment-report'].includes(activeTab);
 
     if (needsBase && !baseDataLoaded) {
       fetchBaseData().then(() => {
@@ -508,6 +509,7 @@ export const FinancePage: React.FC = () => {
     { key: 'fee-structure', label: 'Fee Structure', icon: Briefcase, gradient: 'from-violet-500 to-purple-600', desc: 'Class-wise fee configuration' },
     { key: 'student-fee-details', label: 'Student Fee Details', icon: Users, gradient: 'from-cyan-500 to-sky-600', desc: 'Student balances & dues' },
     { key: 'class-wise-fee-report', label: 'Class Wise Fee Report', icon: FileText, gradient: 'from-orange-500 to-amber-600', desc: 'Class-wise fee collection status' },
+    { key: 'installment-report', label: 'Payment Installment Log', icon: FileText, gradient: 'from-teal-500 to-emerald-600', desc: 'Chronological payments checklist' },
     { key: 'transaction', label: 'Transaction', icon: Receipt, gradient: 'from-fuchsia-500 to-purple-600', desc: 'All payment transactions' },
     { key: 'receipt', label: 'Receipt', icon: FileText, gradient: 'from-lime-500 to-green-600', desc: 'Fee receipts & invoices' },
     { key: 'report', label: 'Report', icon: TrendingUp, gradient: 'from-blue-500 to-indigo-600', desc: 'Financial analytics & reports' },
@@ -698,9 +700,9 @@ export const FinancePage: React.FC = () => {
               <FeeSettingsTabs type="fee-concession" data={feeConcessions} onRefresh={fetchBaseData} />
             )}
 
-              {/* ── 5. FEE STRUCTURE TAB ── */}
-            {activeTab === 'fee-structure' && <FeeStructurePage structures={structures} setStructures={setStructures} classes={classes} refresh={fetchData} />}
-            {activeTab === 'class-wise-fee-report' && <ClassWiseFeeReportTab classes={classes} students={students} payments={payments} structures={structures} />}
+            { activeTab === 'fee-structure' && <FeeStructurePage structures={structures} setStructures={setStructures} classes={classes} refresh={fetchData} />}
+            { activeTab === 'class-wise-fee-report' && <ClassWiseFeeReportTab classes={classes} students={students} payments={payments} structures={structures} />}
+            { activeTab === 'installment-report' && <InstallmentReportTab classes={classes} students={students} payments={payments} structures={structures} />}
 
             {/* ── 8. TRANSACTION TAB ── */}
             {activeTab === 'transaction' && (
