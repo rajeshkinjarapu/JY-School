@@ -36,19 +36,39 @@ export const shareFileNatively = async (blob: Blob, fileName: string, text: stri
       return true;
     } else {
       // PWA / Web fallback using Web Share API
-      const file = new File([blob], fileName, { type: blob.type });
-      if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-        await navigator.share({
-          title: fileName,
-          files: [file]
-        });
-        return true;
+      const file = new File([blob], fileName, { type: blob.type || 'application/pdf' });
+      if (navigator.share) {
+        // Try sharing with files and text
+        try {
+          if (navigator.canShare && !navigator.canShare({ files: [file] })) {
+             console.warn("Browser says it cannot share this file type, trying anyway...");
+          }
+          await navigator.share({
+            title: fileName,
+            text: text,
+            files: [file]
+          });
+          return true;
+        } catch (err: any) {
+           console.error("First share attempt failed", err);
+           // Sometimes text + file fails on certain Android versions, try only file
+           try {
+             await navigator.share({
+               title: fileName,
+               files: [file]
+             });
+             return true;
+           } catch (err2: any) {
+             console.error("Second share attempt failed", err2);
+             throw err2; // Let the outer catch handle it
+           }
+        }
       }
     }
   } catch (err: any) {
-    if (err.name !== 'AbortError' && err.message !== 'Share canceled') {
+    if (err.name !== 'AbortError' && err.message !== 'Share canceled' && !err.message?.includes('AbortError')) {
       console.error('Native share failed:', err);
-      toast.error('Failed to share file natively.');
+      toast.error('Failed to share file natively: ' + (err.message || 'Unknown error'));
     }
   }
   return false; // Share didn't happen or fell back
