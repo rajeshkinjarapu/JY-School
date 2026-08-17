@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import api from '../../api/axios';
 import { LoadingSpinner } from '../../components/UI/LoadingSpinner';
+import { PageHeader } from '../../components/UI/PageHeader';
 import { useAuth } from '../../hooks/useAuth';
 import toast from 'react-hot-toast';
 
