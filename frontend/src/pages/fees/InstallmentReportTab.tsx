@@ -149,20 +149,21 @@ export const InstallmentReportTab: React.FC<InstallmentReportTabProps> = ({
 
       // Table layout
       const tableHeaders = [
-        ['Roll No', 'Student Name', 'Total Fee', 'Total Paid', 'Balance', 'Inst-1 (Amount & Date)', 'Inst-2 (Amount & Date)', 'Inst-3 (Amount & Date)'],
+        ['S.No', 'Roll No', 'Student Name', 'Total Fee', 'Total Paid', 'Balance', 'Inst-1 (Amt & Date)', 'Inst-2 (Amt & Date)', 'Inst-3 (Amt & Date)'],
       ];
 
-      const tableRows = rows.map((r) => {
-        const inst1 = r.payments.length > 0 ? `Rs. ${r.payments[0].amount}\n(${r.payments[0].dateStr})` : '-';
-        const inst2 = r.payments.length > 1 ? `Rs. ${r.payments[1].amount}\n(${r.payments[1].dateStr})` : '-';
-        const inst3 = r.payments.length > 2 ? `Rs. ${r.payments[2].amount}\n(${r.payments[2].dateStr})` : '-';
+      const tableRows = rows.map((r, index) => {
+        const inst1 = r.payments.length > 0 ? `${r.payments[0].amount}\n(${r.payments[0].dateStr})` : '-';
+        const inst2 = r.payments.length > 1 ? `${r.payments[1].amount}\n(${r.payments[1].dateStr})` : '-';
+        const inst3 = r.payments.length > 2 ? `${r.payments[2].amount}\n(${r.payments[2].dateStr})` : '-';
 
         return [
+          index + 1,
           r.rollNo,
           r.name,
-          `Rs. ${r.totalFee.toLocaleString('en-IN')}`,
-          `Rs. ${r.totalPaid.toLocaleString('en-IN')}`,
-          `Rs. ${r.remaining.toLocaleString('en-IN')}`,
+          `${r.totalFee.toLocaleString('en-IN')}`,
+          `${r.totalPaid.toLocaleString('en-IN')}`,
+          `${r.remaining.toLocaleString('en-IN')}`,
           inst1,
           inst2,
           inst3
@@ -178,19 +179,20 @@ export const InstallmentReportTab: React.FC<InstallmentReportTabProps> = ({
         headStyles: { fillColor: [99, 102, 241], textColor: [255, 255, 255], fontStyle: 'bold', halign: 'center' },
         alternateRowStyles: { fillColor: [248, 250, 252] },
         columnStyles: {
-          0: { cellWidth: 22, halign: 'center', fontStyle: 'bold', textColor: [100, 116, 139] },
-          1: { cellWidth: 45, fontStyle: 'bold', textColor: [30, 41, 59] },
-          2: { cellWidth: 22, halign: 'right', textColor: [30, 41, 59] },
-          3: { cellWidth: 22, halign: 'right', fontStyle: 'bold', textColor: [5, 150, 105] }, // Emerald green
-          4: { cellWidth: 22, halign: 'right', fontStyle: 'bold', textColor: [225, 29, 72] }, // Rose red
-          5: { cellWidth: 45, halign: 'center', fontStyle: 'bold', textColor: [67, 56, 202] }, // Indigo
-          6: { cellWidth: 45, halign: 'center', fontStyle: 'bold', textColor: [67, 56, 202] },
-          7: { cellWidth: 45, halign: 'center', fontStyle: 'bold', textColor: [67, 56, 202] },
+          0: { cellWidth: 10, halign: 'center', fontStyle: 'bold', textColor: [100, 116, 139] },
+          1: { cellWidth: 26, halign: 'center', fontStyle: 'bold', textColor: [100, 116, 139] },
+          2: { cellWidth: 50, fontStyle: 'bold', textColor: [30, 41, 59] },
+          3: { cellWidth: 22, halign: 'right', textColor: [30, 41, 59] },
+          4: { cellWidth: 22, halign: 'right', fontStyle: 'bold', textColor: [5, 150, 105] }, // Emerald green
+          5: { cellWidth: 22, halign: 'right', fontStyle: 'bold', textColor: [225, 29, 72] }, // Rose red
+          6: { cellWidth: 38, halign: 'center', fontStyle: 'bold', textColor: [67, 56, 202] }, // Indigo
+          7: { cellWidth: 38, halign: 'center', fontStyle: 'bold', textColor: [67, 56, 202] },
+          8: { cellWidth: 38, halign: 'center', fontStyle: 'bold', textColor: [67, 56, 202] },
         },
         didParseCell: function(data: any) {
-          if (data.section === 'body' && data.column.index === 4) {
+          if (data.section === 'body' && data.column.index === 5) {
             // Make balance green if 0
-            if (data.cell.raw === 'Rs. 0') {
+            if (data.cell.raw === '0') {
               data.cell.styles.textColor = [5, 150, 105];
             }
           }
