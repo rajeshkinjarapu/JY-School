@@ -11,6 +11,8 @@ class StudentsScreen extends StatefulWidget {
 }
 
 class _StudentsScreenState extends State<StudentsScreen> {
+  List<dynamic> _classes = [];
+  String? _selectedClassId;
   List<dynamic> _students = [];
   bool _isLoading = true;
   String _errorMessage = '';
@@ -18,11 +20,53 @@ class _StudentsScreenState extends State<StudentsScreen> {
   @override
   void initState() {
     super.initState();
-    _fetchStudents();
+    _fetchInitialData();
   }
 
-  Future<void> _fetchStudents() async {
-    final result = await ApiService.getStudents(limit: 500);
+  Future<void> _fetchInitialData() async {
+    final classResult = await ApiService.getClasses();
+    if (mounted) {
+      if (classResult['success']) {
+        final classes = classResult['data'] as List<dynamic>? ?? [];
+        String? defaultClassId;
+        
+        if (classes.isNotEmpty) {
+          // Look for Nursery
+          final nursery = classes.firstWhere(
+            (c) => (c['name'] as String).toLowerCase().contains('nursery'),
+            orElse: () => null,
+          );
+          defaultClassId = nursery?['id'] ?? classes.first['id'];
+        }
+
+        setState(() {
+          _classes = classes;
+          _selectedClassId = defaultClassId;
+        });
+
+        if (defaultClassId != null) {
+          await _fetchStudents(defaultClassId);
+        } else {
+          setState(() {
+            _isLoading = false;
+          });
+        }
+      } else {
+        setState(() {
+          _errorMessage = classResult['message'] ?? 'Failed to load classes';
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _fetchStudents(String classId) async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = '';
+    });
+    
+    final result = await ApiService.getStudents(classId: classId, limit: 500);
     if (mounted) {
       if (result['success']) {
         setState(() {
@@ -41,17 +85,38 @@ class _StudentsScreenState extends State<StudentsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F7FE), // Light mode background
+      backgroundColor: const Color(0xFFF4F7FE),
+      appBar: AppBar(
+        title: Text(
+          'Students Directory',
+          style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
+        elevation: 0,
+        centerTitle: true,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+          onPressed: () => Navigator.pop(context),
+        ),
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF2E2A66), Color(0xFF222854)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
+      ),
       body: Column(
         children: [
-          _buildHeader(),
+          _buildFilters(),
           Expanded(
             child: _isLoading 
               ? const Center(child: CircularProgressIndicator(color: Color(0xFF6366F1)))
               : _errorMessage.isNotEmpty
                 ? Center(child: Text(_errorMessage, style: const TextStyle(color: Colors.red)))
                 : _students.isEmpty
-                  ? const Center(child: Text("No students found"))
+                  ? const Center(child: Text("No students found in this class"))
                   : SingleChildScrollView(
                       child: Container(
                         margin: const EdgeInsets.all(16),
@@ -81,79 +146,73 @@ class _StudentsScreenState extends State<StudentsScreen> {
                       ),
                     ),
           ),
-          _buildPagination(),
         ],
       ),
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildFilters() {
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 50, 16, 20),
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Color(0xFF8B5CF6), Color(0xFF6366F1)], // Premium Purple/Indigo
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-      ),
+      color: Colors.white,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Column(
         children: [
-          Row(
-            children: [
-              IconButton(
-                icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
-                onPressed: () => Navigator.pop(context), 
+          if (_classes.isNotEmpty)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF8FAFC),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFFE2E8F0)),
               ),
-              Expanded(
-                child: Container(
-                  height: 45,
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.15),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.white.withOpacity(0.3)),
-                  ),
-                  child: DropdownButtonHideUnderline(
-                    child: DropdownButton<String>(
-                      dropdownColor: const Color(0xFF6366F1),
-                      icon: const Icon(Icons.keyboard_arrow_down, color: Colors.white),
-                      isExpanded: true,
-                      value: 'All Classes',
-                      style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.w600),
-                      items: ['All Classes', 'Class 10', 'Class 9', 'Class 8'].map((String value) {
-                        return DropdownMenuItem<String>(
-                          value: value,
-                          child: Text(value),
-                        );
-                      }).toList(),
-                      onChanged: (String? newValue) {},
-                    ),
-                  ),
+              child: DropdownButtonHideUnderline(
+                child: DropdownButton<String>(
+                  isExpanded: true,
+                  value: _selectedClassId,
+                  hint: const Text('Select Class'),
+                  icon: const Icon(Icons.keyboard_arrow_down_rounded, color: Color(0xFF64748B)),
+                  items: _classes.map<DropdownMenuItem<String>>((c) {
+                    final className = '${c['name']} ${c['section'] ?? ''}'.trim();
+                    return DropdownMenuItem<String>(
+                      value: c['id'],
+                      child: Text(
+                        className,
+                        style: GoogleFonts.poppins(color: const Color(0xFF1E293B), fontWeight: FontWeight.w500),
+                      ),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    if (value != null && value != _selectedClassId) {
+                      setState(() {
+                        _selectedClassId = value;
+                      });
+                      _fetchStudents(value);
+                    }
+                  },
                 ),
               ),
-            ],
-          ),
-          const SizedBox(height: 16),
+            ),
+          const SizedBox(height: 12),
           // Search Bar
           Container(
             height: 45,
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: const Color(0xFFF8FAFC),
               borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))
-              ]
+              border: Border.all(color: const Color(0xFFE2E8F0)),
             ),
             child: TextField(
               style: const TextStyle(color: Color(0xFF1E293B)),
               decoration: InputDecoration(
                 hintText: 'Search student by name or ID...',
-                hintStyle: const TextStyle(color: Color(0xFF64748B)),
-                prefixIcon: const Icon(Icons.search, color: Color(0xFF64748B)),
+                hintStyle: const TextStyle(color: Color(0xFF94A3B8)),
+                prefixIcon: const Icon(Icons.search, color: Color(0xFF94A3B8)),
                 border: InputBorder.none,
                 contentPadding: const EdgeInsets.symmetric(vertical: 12),
               ),
+              onChanged: (value) {
+                // local search filter could go here
+              },
             ),
           ),
         ],
@@ -188,7 +247,11 @@ class _StudentsScreenState extends State<StudentsScreen> {
     final user = student['user'] ?? {};
     final classInfo = student['class'] ?? {};
     final name = user['name'] ?? 'Unknown';
-    final image = user['photoUrl'] ?? 'https://ui-avatars.com/api/?name=${Uri.encodeComponent(name)}&background=E2E8F0&color=1E293B';
+    final photoUrl = user['photoUrl'];
+    final image = photoUrl?.isNotEmpty == true
+        ? photoUrl
+        : 'https://ui-avatars.com/api/?name=${Uri.encodeComponent(name)}&background=E2E8F0&color=1E293B';
+        
     final className = '${classInfo['name'] ?? ''} ${classInfo['section'] ?? ''}'.trim();
     final rollNo = student['rollNo'] ?? 'N/A';
     final isEven = index % 2 == 0;
@@ -225,10 +288,10 @@ class _StudentsScreenState extends State<StudentsScreen> {
                       children: [
                         Text(
                           name,
-                          style: GoogleFonts.outfit(
+                          style: GoogleFonts.poppins(
                             color: const Color(0xFF1E293B),
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -236,7 +299,7 @@ class _StudentsScreenState extends State<StudentsScreen> {
                         Text(
                           rollNo,
                           style: GoogleFonts.poppins(
-                            color: const Color(0xFF64748B),
+                            color: const Color(0xFF94A3B8),
                             fontSize: 11,
                           ),
                         ),
@@ -251,103 +314,24 @@ class _StudentsScreenState extends State<StudentsScreen> {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF10B981).withOpacity(0.1),
+                  color: const Color(0xFF34D399).withOpacity(0.1),
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
-                  className.isEmpty ? 'N/A' : className,
+                  className,
                   style: GoogleFonts.poppins(
-                    color: const Color(0xFF10B981),
+                    color: const Color(0xFF059669),
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
                   ),
                   textAlign: TextAlign.center,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
                 ),
               ),
             ),
-            SizedBox(
-              width: 40,
-              child: Align(
-                alignment: Alignment.centerRight,
-                child: Container(
-                  padding: const EdgeInsets.all(6),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF6366F1).withOpacity(0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.arrow_forward_ios,
-                    color: Color(0xFF6366F1),
-                    size: 14,
-                  ),
-                ),
-              ),
-            ),
+            const SizedBox(width: 16),
+            const Icon(Icons.arrow_forward_ios, size: 14, color: Color(0xFF94A3B8)),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildPagination() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(top: BorderSide(color: Color(0xFFE2E8F0))),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            'Total: ${_students.length}',
-            style: GoogleFonts.poppins(
-              color: const Color(0xFF64748B),
-              fontSize: 13,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          Row(
-            children: [
-              _buildPageButton(Icons.chevron_left, false),
-              const SizedBox(width: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF6366F1).withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  '1 / 11',
-                  style: GoogleFonts.outfit(
-                    color: const Color(0xFF6366F1),
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              _buildPageButton(Icons.chevron_right, true),
-            ],
-          )
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPageButton(IconData icon, bool active) {
-    return Container(
-      padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-      ),
-      child: Icon(
-        icon,
-        color: active ? const Color(0xFF1E293B) : const Color(0xFFCBD5E1),
-        size: 20,
       ),
     );
   }

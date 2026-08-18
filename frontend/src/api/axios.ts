@@ -5,22 +5,17 @@ const getApiUrl = () => {
     const host = window.location.hostname;
     // If accessing via Vercel or DuckDNS (HTTPS), use relative URLs for API to avoid mixed content.
     // Vercel rewrites will proxy these to the backend.
-    if (host.includes('vercel.app') || host.includes('duckdns.org')) {
-      return ''; 
+    if (host.includes('vercel.app')) {
+      // NOTE: Update this to your current ngrok URL when using Vercel
+      return 'https://overcast-spoken-stuck.ngrok-free.dev';
     }
-    const isCapacitor = !!(window as any).Capacitor || window.location.protocol === 'capacitor:';
-    if (host.includes('railway.app') || host === 'localhost' || host === '127.0.0.1') {
-      return 'http://localhost:5000';
-    }
-    if (isCapacitor) {
-      return 'https://retouch-buckskin-overgrown.ngrok-free.dev';
+    
+    // For local development on network
+    if (host !== 'localhost' && host !== '127.0.0.1') {
+      return `http://${host}:5000`;
     }
   }
-  
-  if (import.meta.env.VITE_API_URL) {
-    return import.meta.env.VITE_API_URL;
-  }
-  return 'https://retouch-buckskin-overgrown.ngrok-free.dev';
+  return 'https://overcast-spoken-stuck.ngrok-free.dev';
 };
 
 const API_URL = getApiUrl();

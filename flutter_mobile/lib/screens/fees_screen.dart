@@ -113,7 +113,6 @@ class _FeesScreenState extends State<FeesScreen> with SingleTickerProviderStateM
       backgroundColor: const Color(0xFFF8FAFC),
       drawer: const AppDrawer(currentRoute: 'fees'),
       appBar: AppBar(
-        leading: const BackButton(),
         title: const Text(
           'Fees Summary',
           style: TextStyle(fontWeight: FontWeight.bold),

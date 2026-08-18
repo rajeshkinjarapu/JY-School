@@ -2,11 +2,11 @@
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "https://retouch-buckskin-overgrown.ngrok-free.dev/api/$1"
+      "destination": "https://overcast-spoken-stuck.ngrok-free.dev/api/$1"
     },
     {
       "source": "/uploads/(.*)",
-      "destination": "https://retouch-buckskin-overgrown.ngrok-free.dev/uploads/$1"
+      "destination": "https://overcast-spoken-stuck.ngrok-free.dev/uploads/$1"
     },
     {
       "source": "/(.*)",

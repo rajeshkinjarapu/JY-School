@@ -55,12 +55,20 @@ class _ClassesScreenState extends State<ClassesScreen> {
           'Classes',
           style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold),
         ),
-        backgroundColor: const Color(0xFF6366F1),
         elevation: 0,
         centerTitle: true,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
           onPressed: () => Navigator.pop(context),
+        ),
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF2E2A66), Color(0xFF222854)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
         ),
       ),
       body: _isLoading
@@ -75,7 +83,7 @@ class _ClassesScreenState extends State<ClassesScreen> {
                         crossAxisCount: 2,
                         crossAxisSpacing: 16,
                         mainAxisSpacing: 16,
-                        childAspectRatio: 0.85,
+                        childAspectRatio: 1.3, // Wider boxes to fit 10 on screen
                       ),
                       itemCount: _classes.length,
                       itemBuilder: (context, index) {
@@ -88,7 +96,6 @@ class _ClassesScreenState extends State<ClassesScreen> {
   Widget _buildClassCard(dynamic classData, int index) {
     final name = classData['name'] ?? 'Class';
     final section = classData['section'] ?? '';
-    final capacity = classData['capacity'] ?? 0;
     final counts = classData['_count'] ?? {};
     final studentsCount = counts['students'] ?? 0;
     
@@ -115,7 +122,7 @@ class _ClassesScreenState extends State<ClassesScreen> {
         children: [
           // Header Part with Color
           Container(
-            padding: const EdgeInsets.symmetric(vertical: 16),
+            padding: const EdgeInsets.symmetric(vertical: 12),
             decoration: BoxDecoration(
               color: color,
               borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
@@ -131,7 +138,7 @@ class _ClassesScreenState extends State<ClassesScreen> {
                   ),
                 ),
                 if (section.isNotEmpty) ...[
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 2),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
                     decoration: BoxDecoration(
@@ -154,18 +161,17 @@ class _ClassesScreenState extends State<ClassesScreen> {
           // Info Part
           Expanded(
             child: Padding(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       _buildMiniStat(Icons.groups_outlined, '$studentsCount', 'Students', color),
-                      _buildMiniStat(Icons.chair_alt_outlined, '$capacity', 'Capacity', Colors.grey.shade600),
                     ],
                   ),
-                  const Divider(color: Color(0xFFE2E8F0)),
+                  const Divider(color: Color(0xFFE2E8F0), height: 12),
                   Row(
                     children: [
                       Container(

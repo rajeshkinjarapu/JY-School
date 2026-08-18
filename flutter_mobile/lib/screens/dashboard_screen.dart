@@ -404,7 +404,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(color: Colors.white.withOpacity(0.2), width: 2),
                         image: DecorationImage(
-                          image: NetworkImage('https://ui-avatars.com/api/?name=${Uri.encodeComponent(name)}&background=6366F1&color=fff&size=150'),
+                          image: NetworkImage(
+                            _user?['photoUrl']?.isNotEmpty == true
+                                ? _user!['photoUrl']
+                                : 'https://ui-avatars.com/api/?name=${Uri.encodeComponent(name)}&background=6366F1&color=fff&size=150',
+                          ),
                           fit: BoxFit.cover,
                         ),
                       ),
@@ -607,7 +611,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         crossAxisCount: 2,
         crossAxisSpacing: 16,
         mainAxisSpacing: 16,
-        childAspectRatio: 1.8,
+        childAspectRatio: 1.3,
         children: [
           _buildAdminStatCard(
             title: 'TOTAL STUDENTS',
@@ -765,7 +769,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         crossAxisCount: 2,
         crossAxisSpacing: 16,
         mainAxisSpacing: 16,
-        childAspectRatio: 1.8,
+        childAspectRatio: 1.3,
         children: [
           _buildNavigationCard(
             icon: Icons.calendar_month_rounded,
@@ -825,7 +829,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         crossAxisCount: 2,
         crossAxisSpacing: 16,
         mainAxisSpacing: 16,
-        childAspectRatio: 1.8,
+        childAspectRatio: 1.3,
         children: [
           _buildNavigationCard(
             icon: Icons.how_to_reg_rounded,
@@ -885,7 +889,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         crossAxisCount: 2,
         crossAxisSpacing: 16,
         mainAxisSpacing: 16,
-        childAspectRatio: 1.8,
+        childAspectRatio: 1.3,
         children: [
           _buildAdminActionCard(
             title: 'Fees',

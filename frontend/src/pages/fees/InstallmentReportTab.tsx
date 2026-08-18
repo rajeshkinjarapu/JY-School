@@ -149,18 +149,17 @@ export const InstallmentReportTab: React.FC<InstallmentReportTabProps> = ({
 
       // Table layout
       const tableHeaders = [
-        ['S.No', 'Roll No', 'Student Name', 'Total Fee', 'Total Paid', 'Balance', 'Inst-1 (Amt & Date)', 'Inst-2 (Amt & Date)', 'Inst-3 (Amt & Date)'],
+        ['S.No', 'Roll No & Student Name', 'Total Fee', 'Total Paid', 'Balance', 'Inst-1 (Amt & Date)', 'Inst-2 (Amt & Date)', 'Inst-3 (Amt & Date)'],
       ];
 
       const tableRows = rows.map((r, index) => {
-        const inst1 = r.payments.length > 0 ? `${r.payments[0].amount}\n(${r.payments[0].dateStr})` : '-';
-        const inst2 = r.payments.length > 1 ? `${r.payments[1].amount}\n(${r.payments[1].dateStr})` : '-';
-        const inst3 = r.payments.length > 2 ? `${r.payments[2].amount}\n(${r.payments[2].dateStr})` : '-';
+        const inst1 = r.payments.length > 0 ? `${r.payments[0].amount} (${r.payments[0].dateStr})` : '-';
+        const inst2 = r.payments.length > 1 ? `${r.payments[1].amount} (${r.payments[1].dateStr})` : '-';
+        const inst3 = r.payments.length > 2 ? `${r.payments[2].amount} (${r.payments[2].dateStr})` : '-';
 
         return [
           index + 1,
-          r.rollNo,
-          r.name,
+          `${r.rollNo} - ${r.name}`,
           `${r.totalFee.toLocaleString('en-IN')}`,
           `${r.totalPaid.toLocaleString('en-IN')}`,
           `${r.remaining.toLocaleString('en-IN')}`,
@@ -175,19 +174,18 @@ export const InstallmentReportTab: React.FC<InstallmentReportTabProps> = ({
         body: tableRows,
         startY: 38,
         theme: 'grid',
-        styles: { fontSize: 8.5, cellPadding: 4, valign: 'middle', lineColor: [200, 200, 200], lineWidth: 0.1 },
+        styles: { fontSize: 8.5, cellPadding: 2, valign: 'middle', lineColor: [200, 200, 200], lineWidth: 0.1, overflow: 'hidden' },
         headStyles: { fillColor: [99, 102, 241], textColor: [255, 255, 255], fontStyle: 'bold', halign: 'center' },
         alternateRowStyles: { fillColor: [248, 250, 252] },
         columnStyles: {
           0: { cellWidth: 10, halign: 'center', fontStyle: 'bold', textColor: [100, 116, 139] },
-          1: { cellWidth: 26, halign: 'center', fontStyle: 'bold', textColor: [100, 116, 139] },
-          2: { cellWidth: 50, fontStyle: 'bold', textColor: [30, 41, 59] },
-          3: { cellWidth: 22, halign: 'right', textColor: [30, 41, 59] },
-          4: { cellWidth: 22, halign: 'right', fontStyle: 'bold', textColor: [5, 150, 105] }, // Emerald green
-          5: { cellWidth: 22, halign: 'right', fontStyle: 'bold', textColor: [225, 29, 72] }, // Rose red
-          6: { cellWidth: 38, halign: 'center', fontStyle: 'bold', textColor: [67, 56, 202] }, // Indigo
-          7: { cellWidth: 38, halign: 'center', fontStyle: 'bold', textColor: [67, 56, 202] },
-          8: { cellWidth: 38, halign: 'center', fontStyle: 'bold', textColor: [67, 56, 202] },
+          1: { cellWidth: 60, fontStyle: 'bold', textColor: [30, 41, 59] },
+          2: { cellWidth: 22, halign: 'right', textColor: [30, 41, 59] },
+          3: { cellWidth: 22, halign: 'right', fontStyle: 'bold', textColor: [5, 150, 105] }, // Emerald green
+          4: { cellWidth: 22, halign: 'right', fontStyle: 'bold', textColor: [225, 29, 72] }, // Rose red
+          5: { cellWidth: 40, halign: 'center', fontStyle: 'bold', textColor: [67, 56, 202] }, // Indigo
+          6: { cellWidth: 40, halign: 'center', fontStyle: 'bold', textColor: [67, 56, 202] },
+          7: { cellWidth: 40, halign: 'center', fontStyle: 'bold', textColor: [67, 56, 202] },
         },
         didParseCell: function(data: any) {
           if (data.section === 'body' && data.column.index === 5) {
@@ -217,7 +215,7 @@ export const InstallmentReportTab: React.FC<InstallmentReportTabProps> = ({
       const tableHeaders = ['Roll No', 'Student Name', 'Total Fee', 'Total Paid', 'Remaining Balance', 'Payment Logs Sequence'];
       const dataRows = rows.map((r) => {
         const paySequenceStr = r.payments
-          .map((p, idx) => `[Installment ${idx + 1}: Rs. ${p.amount} on ${p.dateStr}]`)
+          .map((p, idx) => `[Installment ${idx + 1}: ${p.amount} on ${p.dateStr}]`)
           .join(', ');
         return [
           r.rollNo,

@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiService {
-  static const String baseUrl = 'https://retouch-buckskin-overgrown.ngrok-free.dev';
+  static const String baseUrl = 'https://overcast-spoken-stuck.ngrok-free.dev';
 
   // Base headers for API requests
   static Map<String, String> _getHeaders({String? token}) {
@@ -235,6 +235,32 @@ class ApiService {
     }
   }
 
+  // Get students list
+  static Future<Map<String, dynamic>> getStudents({int limit = 500, String? classId}) async {
+    try {
+      final token = await getToken();
+      if (token == null) return {'success': false, 'message': 'No session token'};
+
+      String url = '$baseUrl/api/students?limit=$limit';
+      if (classId != null && classId.isNotEmpty) {
+        url += '&classId=$classId';
+      }
+
+      final response = await http.get(
+        Uri.parse(url),
+        headers: _getHeaders(token: token),
+      );
+
+      final Map<String, dynamic> data = jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        return {'success': true, 'data': data['data'] ?? data};
+      }
+      return {'success': false, 'message': data['message'] ?? 'Failed to get students'};
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: $e'};
+    }
+  }
+
   // Get school subjects list
   static Future<Map<String, dynamic>> getSubjects() async {
     try {
@@ -281,10 +307,6 @@ class ApiService {
     }
   }
 
-  // Get all students
-  static Future<Map<String, dynamic>> getStudents({int limit = 500}) async {
-    return _performGet('/api/students?limit=$limit', 'Failed to get students');
-  }
 
 
   // Get all teachers

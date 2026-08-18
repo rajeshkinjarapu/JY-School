@@ -66,166 +66,195 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final name = _user?['name'] ?? 'User Name';
     final email = _user?['email'] ?? 'user@email.com';
     final role = _user?['role'] ?? 'STUDENT';
-    
+    final photoUrl = _user?['photoUrl'];
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F7FE), // Dark slate
-      drawer: AppDrawer(currentRoute: 'profile'),
+      backgroundColor: const Color(0xFFF4F7FE),
+      drawer: const AppDrawer(currentRoute: 'profile'),
       appBar: AppBar(
-        leading: const BackButton(),
         title: Text(
           'My Profile',
-          style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+          style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white),
         ),
-        backgroundColor: const Color(0xFFE2E8F0),
-        foregroundColor: Colors.white,
         elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.white),
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF2E2A66), Color(0xFF222854)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
         child: Column(
           children: [
-            // Profile Card Header
-            Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: const Color(0xFF1E293B),
-                borderRadius: BorderRadius.circular(30),
-                border: Border.all(color: const Color(0xFFE2E8F0)),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.2),
-                    blurRadius: 20,
-                    offset: const Offset(0, 10),
-                  )
-                ],
-              ),
-              child: Column(
-                children: [
-                  Container(
-                    width: 100,
-                    height: 100,
+            // Top Colorful Background Section that overlaps with card
+            Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Container(
+                  height: 100,
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Color(0xFF2E2A66), Color(0xFF222854)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.only(
+                      bottomLeft: Radius.circular(40),
+                      bottomRight: Radius.circular(40),
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
+                  child: Container(
+                    padding: const EdgeInsets.all(24),
                     decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [Color(0xFF818CF8), Color(0xFFC084FC)],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      shape: BoxShape.circle,
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(30),
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(0xFF6366F1).withOpacity(0.4),
+                          color: const Color(0xFF6366F1).withOpacity(0.15),
                           blurRadius: 20,
-                          spreadRadius: 2,
+                          offset: const Offset(0, 10),
                         )
                       ],
                     ),
-                    child: Center(
-                      child: Text(
-                        name.isNotEmpty ? name[0].toUpperCase() : 'U',
-                        style: GoogleFonts.outfit(
-                          color: const Color(0xFF1E293B),
-                          fontSize: 40,
+                    child: Column(
+                      children: [
+                        Container(
+                          width: 100,
+                          height: 100,
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade200,
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white, width: 4),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFF6366F1).withOpacity(0.2),
+                                blurRadius: 15,
+                                spreadRadius: 2,
+                              )
+                            ],
+                            image: DecorationImage(
+                              image: NetworkImage(
+                                photoUrl?.isNotEmpty == true
+                                    ? photoUrl!
+                                    : 'https://ui-avatars.com/api/?name=${Uri.encodeComponent(name)}&background=6366F1&color=fff&size=150',
+                              ),
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        Text(
+                          name,
+                          style: GoogleFonts.outfit(
+                            color: const Color(0xFF1E293B),
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          email,
+                          style: GoogleFonts.poppins(
+                            color: const Color(0xFF64748B),
+                            fontSize: 14,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFF818CF8), Color(0xFF6366F1)],
+                            ),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            role.replaceAll('_', ' '),
+                            style: GoogleFonts.poppins(
+                              color: Colors.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              letterSpacing: 1,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24.0),
+              child: Column(
+                children: [
+                  // Role Specific Details
+                  if (role == 'STUDENT' && _user?['student'] != null)
+                    _buildDetailsCard('Student Information', [
+                      _buildDetailRow(Icons.class_rounded, 'Class', '${_user?['student']['class']?['name'] ?? ''} - ${_user?['student']['class']?['section'] ?? ''}'),
+                      _buildDetailRow(Icons.numbers_rounded, 'Roll Number', _user?['student']['rollNo']?.toString() ?? 'N/A'),
+                      _buildDetailRow(Icons.bloodtype_rounded, 'Blood Group', _user?['student']['bloodGroup'] ?? 'N/A'),
+                      _buildDetailRow(Icons.calendar_month_rounded, 'Date of Birth', _user?['student']['dateOfBirth']?.toString().split('T')[0] ?? 'N/A'),
+                    ]),
+
+                  if (role == 'TEACHER' && _user?['teacher'] != null)
+                    _buildDetailsCard('Teacher Information', [
+                      _buildDetailRow(Icons.subject_rounded, 'Specialization', _user?['teacher']['specialization'] ?? 'N/A'),
+                      _buildDetailRow(Icons.workspace_premium_rounded, 'Qualification', _user?['teacher']['qualification'] ?? 'N/A'),
+                      _buildDetailRow(Icons.work_history_rounded, 'Experience', '${_user?['teacher']['experienceYears'] ?? 0} Years'),
+                    ]),
+
+                  const SizedBox(height: 16),
+                  
+                  // System Settings Card
+                  _buildDetailsCard('System Settings', [
+                    _buildActionRow(Icons.language_rounded, 'Language', 'English'),
+                    _buildActionRow(Icons.notifications_active_rounded, 'Push Notifications', 'Enabled'),
+                    _buildActionRow(Icons.lock_rounded, 'Change Password', 'Tap to update', onTap: () {
+                      Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsScreen()));
+                    }),
+                  ]),
+
+                  const SizedBox(height: 32),
+                  
+                  // Logout Button
+                  SizedBox(
+                    width: double.infinity,
+                    height: 56,
+                    child: ElevatedButton.icon(
+                      onPressed: _handleLogout,
+                      icon: const Icon(Icons.logout_rounded, color: Colors.white),
+                      label: Text(
+                        'Sign Out',
+                        style: GoogleFonts.poppins(
+                          color: Colors.white,
+                          fontSize: 16,
                           fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFF87171),
+                        elevation: 4,
+                        shadowColor: const Color(0xFFF87171).withOpacity(0.5),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
                         ),
                       ),
                     ),
                   ),
-                  const SizedBox(height: 20),
-                  Text(
-                    name,
-                    style: GoogleFonts.outfit(
-                      color: const Color(0xFF1E293B),
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    email,
-                    style: GoogleFonts.poppins(
-                      color: const Color(0xFF64748B),
-                      fontSize: 14,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF6366F1).withOpacity(0.15),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: const Color(0xFF6366F1).withOpacity(0.3)),
-                    ),
-                    child: Text(
-                      role.toUpperCase(),
-                      style: GoogleFonts.poppins(
-                        color: const Color(0xFF818CF8),
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: 1,
-                      ),
-                    ),
-                  ),
+                  const SizedBox(height: 40),
                 ],
               ),
             ),
-            const SizedBox(height: 32),
-
-            // Role Specific Details
-            if (role == 'STUDENT' && _user?['student'] != null)
-              _buildDetailsCard('Student Information', [
-                _buildDetailRow(Icons.class_rounded, 'Class', '${_user?['student']['class']?['name'] ?? ''} - ${_user?['student']['class']?['section'] ?? ''}'),
-                _buildDetailRow(Icons.numbers_rounded, 'Roll Number', _user?['student']['rollNo']?.toString() ?? 'N/A'),
-                _buildDetailRow(Icons.bloodtype_rounded, 'Blood Group', _user?['student']['bloodGroup'] ?? 'N/A'),
-                _buildDetailRow(Icons.calendar_month_rounded, 'Date of Birth', _user?['student']['dateOfBirth']?.toString().split('T')[0] ?? 'N/A'),
-              ]),
-
-            if (role == 'TEACHER' && _user?['teacher'] != null)
-              _buildDetailsCard('Teacher Information', [
-                _buildDetailRow(Icons.subject_rounded, 'Specialization', _user?['teacher']['specialization'] ?? 'N/A'),
-                _buildDetailRow(Icons.workspace_premium_rounded, 'Qualification', _user?['teacher']['qualification'] ?? 'N/A'),
-                _buildDetailRow(Icons.work_history_rounded, 'Experience', '${_user?['teacher']['experienceYears'] ?? 0} Years'),
-              ]),
-
-            const SizedBox(height: 24),
-            
-            // System Settings Card
-            _buildDetailsCard('System Settings', [
-              _buildActionRow(Icons.language_rounded, 'Language', 'English'),
-              _buildActionRow(Icons.notifications_active_rounded, 'Push Notifications', 'Enabled'),
-              _buildActionRow(Icons.lock_rounded, 'Change Password', 'Tap to update', onTap: () {
-                Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsScreen()));
-              }),
-            ]),
-
-            const SizedBox(height: 40),
-            
-            // Logout Button
-            SizedBox(
-              width: double.infinity,
-              height: 56,
-              child: ElevatedButton.icon(
-                onPressed: _handleLogout,
-                icon: const Icon(Icons.logout_rounded, color: Color(0xFFF87171)),
-                label: Text(
-                  'Sign Out',
-                  style: GoogleFonts.poppins(
-                    color: const Color(0xFFF87171),
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red.withOpacity(0.1),
-                  foregroundColor: const Color(0xFFF87171),
-                  elevation: 0,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    side: BorderSide(color: Colors.red.withOpacity(0.3)),
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 20),
           ],
         ),
       ),

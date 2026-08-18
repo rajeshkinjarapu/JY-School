@@ -117,7 +117,6 @@ class _ExamsScreenState extends State<ExamsScreen> {
       backgroundColor: const Color(0xFFF4F7FE), // Match premium dark theme
       drawer: const AppDrawer(currentRoute: 'exams'),
       appBar: AppBar(
-        leading: const BackButton(),
         title: Text(
           'Exams & Grades',
           style: GoogleFonts.outfit(fontWeight: FontWeight.bold),

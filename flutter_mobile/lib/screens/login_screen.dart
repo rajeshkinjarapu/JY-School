@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/api_service.dart';
 import 'dashboard_screen.dart';
+import 'main_layout.dart';
 
 // ═══════════════════════════════════════════════════════
 //  JY SCHOOL – LOGIN SCREEN  (Complete Redesign)
@@ -144,7 +145,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       ));
       Navigator.of(context).pushReplacement(PageRouteBuilder(
-        pageBuilder: (_, __, ___) => const DashboardScreen(),
+        pageBuilder: (_, __, ___) => const MainLayout(),
         transitionsBuilder: (_, a, __, c) => FadeTransition(opacity: a, child: c),
         transitionDuration: const Duration(milliseconds: 500),
       ));

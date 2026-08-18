@@ -43,7 +43,6 @@ class _TransportScreenState extends State<TransportScreen> {
       backgroundColor: const Color(0xFFF4F7FE),
       drawer: AppDrawer(currentRoute: 'transport'),
       appBar: AppBar(
-        leading: const BackButton(),
         title: Text(
           'Transport Routes',
           style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
