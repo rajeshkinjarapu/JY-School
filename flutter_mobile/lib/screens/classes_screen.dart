@@ -30,7 +30,7 @@ class _ClassesScreenState extends State<ClassesScreen> {
   }
 
   Future<void> _fetchClasses() async {
-    final result = await ApiService.getClasses(limit: 100);
+    final result = await ApiService.getClasses();
     if (mounted) {
       if (result['success']) {
         setState(() {

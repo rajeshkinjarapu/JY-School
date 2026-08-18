@@ -128,12 +128,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
       final result = await ApiService.getAttendanceStats();
       if (mounted) {
         if (result['success']) {
-          final stats = result['data'] ?? {};
+          final data = result['data'] ?? {};
+          final attendanceSummary = data['todayAttendanceSummary'] ?? {};
           setState(() {
-            _teacherTotalStudents = int.tryParse(stats['totalStudents']?.toString() ?? '0') ?? 0;
-            _teacherTodayPresent = int.tryParse(stats['todayPresent']?.toString() ?? '0') ?? 0;
-            _teacherTodayAbsent = int.tryParse(stats['todayAbsent']?.toString() ?? '0') ?? 0;
-            _teacherAttendancePercent = double.tryParse(stats['attendancePercentage']?.toString() ?? '0.0') ?? 0.0;
+            _teacherTotalStudents = int.tryParse(data['totalStudents']?.toString() ?? '0') ?? 0;
+            _teacherTodayPresent = int.tryParse(attendanceSummary['present']?.toString() ?? '0') ?? 0;
+            _teacherTodayAbsent = int.tryParse(attendanceSummary['absent']?.toString() ?? '0') ?? 0;
+            _teacherAttendancePercent = double.tryParse(attendanceSummary['rate']?.toString() ?? '0.0') ?? 0.0;
             _isLoading = false;
           });
         } else {
@@ -151,9 +152,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
           setState(() {
             _adminTotalStudents = int.tryParse(stats['totalStudents']?.toString() ?? '0') ?? 0;
             _adminTotalTeachers = int.tryParse(stats['totalTeachers']?.toString() ?? '0') ?? 0;
-            _adminTotalClasses = int.tryParse(stats['totalClasses']?.toString() ?? '24') ?? 24; // Defaulting based on image if missing
-            _adminFeeCollected = double.tryParse(stats['feeCollection']?['collected']?.toString() ?? '6354150') ?? 6354150.0;
-            _adminFeePending = double.tryParse(stats['feeCollection']?['pending']?.toString() ?? '0') ?? 0.0;
+            _adminTotalClasses = int.tryParse(stats['totalClasses']?.toString() ?? '24') ?? 24; 
+            _adminFeeCollected = double.tryParse(stats['totalRevenue']?.toString() ?? '0') ?? 0.0;
+            _adminFeePending = 0.0; // API doesn't return pending directly in admin dashboard
             _isLoading = false;
           });
         } else {

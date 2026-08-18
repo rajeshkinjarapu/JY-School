@@ -64,7 +64,7 @@ class _TimetableScreenState extends State<TimetableScreen> with SingleTickerProv
       } else {
         // Admin or Teacher, fetch classes if not fetched
         if (_classes.isEmpty) {
-          final classesResult = await ApiService.getClasses(limit: 100);
+          final classesResult = await ApiService.getClasses();
           if (classesResult['success']) {
             _classes = classesResult['data'] ?? [];
             if (_classes.isNotEmpty && _selectedClassId == null) {

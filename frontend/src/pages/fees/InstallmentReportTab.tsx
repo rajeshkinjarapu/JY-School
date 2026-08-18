@@ -308,88 +308,98 @@ export const InstallmentReportTab: React.FC<InstallmentReportTabProps> = ({
 
           {/* Desktop Table View */}
           <div className="overflow-x-auto p-4">
-            <table className="w-full text-sm text-left border-collapse border border-gray-200 rounded-lg overflow-hidden shadow-sm">
-              <thead className="bg-gray-50 border-b border-gray-200 text-gray-600">
-                <tr>
-                  <th className="px-5 py-4 font-bold uppercase text-xs border border-gray-200 text-center bg-gray-100/50">Roll No</th>
-                  <th className="px-5 py-4 font-bold uppercase text-xs border border-gray-200 bg-gray-100/50">Student Name</th>
-                  <th className="px-5 py-4 font-bold uppercase text-xs text-right border border-gray-200 bg-gray-100/50">Total Fee</th>
-                  <th className="px-5 py-4 font-bold uppercase text-xs text-right border border-gray-200 bg-gray-100/50">Total Paid</th>
-                  <th className="px-5 py-4 font-bold uppercase text-xs text-right border border-gray-200 bg-gray-100/50">Remaining</th>
-                  <th className="px-5 py-4 font-bold uppercase text-xs border border-gray-200 bg-gray-100/50">Payment Installments Checklist</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {studentInstallmentData.rows.length === 0 ? (
-                  <tr>
-                    <td
-                      colSpan={6}
-                      className="px-5 py-12 text-center text-gray-400 font-semibold"
-                    >
-                      No student records found matching filter constraints.
-                    </td>
-                  </tr>
-                ) : (
-                  studentInstallmentData.rows.map((row) => (
-                    <tr
-                      key={row.rollNo}
-                      className="hover:bg-indigo-50/30 transition-colors bg-white"
-                    >
-                      <td className="px-5 py-4 font-mono text-xs font-bold text-gray-500 border border-gray-200 text-center">
-                        {row.rollNo}
-                      </td>
-                      <td className="px-5 py-4 font-bold text-gray-900 border border-gray-200">
-                        {row.name}
-                      </td>
-                      <td className="px-5 py-4 text-right font-bold text-gray-900 border border-gray-200 bg-gray-50/30">
-                        ₹{row.totalFee.toLocaleString('en-IN')}
-                      </td>
-                      <td className="px-5 py-4 text-right font-black text-emerald-600 border border-gray-200 bg-emerald-50/10">
-                        ₹{row.totalPaid.toLocaleString('en-IN')}
-                      </td>
-                      <td
-                        className={`px-5 py-4 text-right font-black border border-gray-200 ${
-                          row.remaining > 0 ? 'text-rose-600 bg-rose-50/10' : 'text-emerald-600 bg-emerald-50/10'
-                        }`}
-                      >
-                        ₹{row.remaining.toLocaleString('en-IN')}
-                      </td>
-                      <td className="px-5 py-4 border border-gray-200">
-                        <div className="flex flex-wrap gap-2 items-center">
-                          {row.payments.map((p, idx) => (
-                            <div
-                              key={p.id}
-                              className="px-3 py-1.5 bg-emerald-50 text-emerald-800 border border-emerald-250 rounded-xl text-xs flex flex-col justify-center gap-0.5 shadow-sm"
-                            >
-                              <div className="font-extrabold flex items-center gap-1.5">
-                                <span className="bg-emerald-600 text-white rounded-full w-4 h-4 flex items-center justify-center text-[9px] font-black">
-                                  {idx + 1}
-                                </span>
-                                ₹{p.amount.toLocaleString('en-IN')}
-                              </div>
-                              <div className="text-[10px] text-emerald-600 font-medium">
-                                {p.dateStr} · {p.method}
-                              </div>
-                            </div>
-                          ))}
-                          {row.payments.length === 0 && (
-                            <span className="text-xs text-gray-400 font-semibold italic">
-                              No payments recorded
-                            </span>
-                          )}
-                          {row.remaining > 0 && (
-                            <div className="px-3 py-1.5 bg-amber-50 text-amber-800 border border-amber-200 border-dashed rounded-xl text-xs flex items-center gap-1 font-bold">
-                              <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-                              Pending Installment
-                            </div>
-                          )}
-                        </div>
-                      </td>
+            {(() => {
+              const maxInstallments = Math.max(0, ...studentInstallmentData.rows.map(r => r.payments.length));
+              return (
+                <table className="w-full text-sm text-left border-collapse border border-black rounded-lg overflow-hidden shadow-sm">
+                  <thead className="bg-gray-50 border-b border-black text-gray-800">
+                    <tr>
+                      <th className="px-5 py-4 font-bold uppercase text-xs border border-black text-center bg-gray-100/50">Roll No</th>
+                      <th className="px-5 py-4 font-bold uppercase text-xs border border-black bg-gray-100/50">Student Name</th>
+                      <th className="px-5 py-4 font-bold uppercase text-xs text-right border border-black bg-gray-100/50">Total Fee</th>
+                      <th className="px-5 py-4 font-bold uppercase text-xs text-right border border-black bg-gray-100/50">Total Paid</th>
+                      <th className="px-5 py-4 font-bold uppercase text-xs text-right border border-black bg-gray-100/50">Remaining</th>
+                      {maxInstallments > 0 ? (
+                        Array.from({ length: maxInstallments }).map((_, i) => (
+                          <th key={i} className="px-5 py-4 font-bold uppercase text-xs border border-black text-center bg-gray-100/50 whitespace-nowrap">
+                            Installment {i + 1}
+                          </th>
+                        ))
+                      ) : (
+                        <th className="px-5 py-4 font-bold uppercase text-xs border border-black text-center bg-gray-100/50">
+                          Payment Installments
+                        </th>
+                      )}
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+                  </thead>
+                  <tbody className="divide-y divide-black">
+                    {studentInstallmentData.rows.length === 0 ? (
+                      <tr>
+                        <td
+                          colSpan={maxInstallments > 0 ? 5 + maxInstallments : 6}
+                          className="px-5 py-12 text-center text-gray-400 font-semibold border border-black"
+                        >
+                          No student records found matching filter constraints.
+                        </td>
+                      </tr>
+                    ) : (
+                      studentInstallmentData.rows.map((row) => (
+                        <tr
+                          key={row.rollNo}
+                          className="hover:bg-indigo-50/30 transition-colors bg-white"
+                        >
+                          <td className="px-5 py-4 font-mono text-xs font-bold text-gray-600 border border-black text-center">
+                            {row.rollNo}
+                          </td>
+                          <td className="px-5 py-4 font-bold text-gray-900 border border-black">
+                            {row.name}
+                          </td>
+                          <td className="px-5 py-4 text-right font-bold text-gray-900 border border-black bg-gray-50/30">
+                            ₹{row.totalFee.toLocaleString('en-IN')}
+                          </td>
+                          <td className="px-5 py-4 text-right font-black text-emerald-600 border border-black bg-emerald-50/10">
+                            ₹{row.totalPaid.toLocaleString('en-IN')}
+                          </td>
+                          <td
+                            className={`px-5 py-4 text-right font-black border border-black ${
+                              row.remaining > 0 ? 'text-rose-600 bg-rose-50/10' : 'text-emerald-600 bg-emerald-50/10'
+                            }`}
+                          >
+                            ₹{row.remaining.toLocaleString('en-IN')}
+                          </td>
+                          
+                          {maxInstallments > 0 ? (
+                            Array.from({ length: maxInstallments }).map((_, i) => {
+                              const p = row.payments[i];
+                              return (
+                                <td key={i} className="px-5 py-4 border border-black text-center">
+                                  {p ? (
+                                    <div className="inline-flex flex-col justify-center gap-0.5 px-3 py-1.5 bg-emerald-50 text-emerald-800 border border-emerald-250 rounded-xl text-xs shadow-sm">
+                                      <div className="font-extrabold flex justify-center items-center gap-1.5">
+                                        ₹{p.amount.toLocaleString('en-IN')}
+                                      </div>
+                                      <div className="text-[10px] text-emerald-600 font-medium whitespace-nowrap">
+                                        {p.dateStr} · {p.method}
+                                      </div>
+                                    </div>
+                                  ) : (
+                                    <span className="text-gray-400 font-bold">-</span>
+                                  )}
+                                </td>
+                              );
+                            })
+                          ) : (
+                            <td className="px-5 py-4 border border-black text-center text-xs text-gray-400 font-semibold italic">
+                              No payments recorded
+                            </td>
+                          )}
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              );
+            })()}
           </div>
         </div>
       ) : (

@@ -129,6 +129,7 @@ class ApiService {
     }
   }
 
+
   // Get student marks / exam results
   static Future<Map<String, dynamic>> getMarks(String studentId) async {
     try {
@@ -213,6 +214,27 @@ class ApiService {
     }
   }
 
+  // Get school classes list
+  static Future<Map<String, dynamic>> getClasses() async {
+    try {
+      final token = await getToken();
+      if (token == null) return {'success': false, 'message': 'No session token'};
+
+      final response = await http.get(
+        Uri.parse('$baseUrl/api/classes'),
+        headers: _getHeaders(token: token),
+      );
+
+      final Map<String, dynamic> data = jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        return {'success': true, 'data': data['data'] ?? data};
+      }
+      return {'success': false, 'message': data['message'] ?? 'Failed to get classes'};
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: $e'};
+    }
+  }
+
   // Get school subjects list
   static Future<Map<String, dynamic>> getSubjects() async {
     try {
@@ -264,10 +286,6 @@ class ApiService {
     return _performGet('/api/students?limit=$limit', 'Failed to get students');
   }
 
-  // Get all classes
-  static Future<Map<String, dynamic>> getClasses({int limit = 500}) async {
-    return _performGet('/api/classes?limit=$limit', 'Failed to get classes');
-  }
 
   // Get all teachers
   static Future<Map<String, dynamic>> getTeachers({int limit = 500}) async {
@@ -375,26 +393,6 @@ class ApiService {
     }
   }
 
-  // Get today's attendance stats dashboard summary
-  static Future<Map<String, dynamic>> getAttendanceStats() async {
-    try {
-      final token = await getToken();
-      if (token == null) return {'success': false, 'message': 'No session token'};
-
-      final response = await http.get(
-        Uri.parse('$baseUrl/api/attendance/dashboard-stats'),
-        headers: _getHeaders(token: token),
-      );
-
-      final dynamic decoded = jsonDecode(response.body);
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        return {'success': true, 'data': decoded is Map && decoded.containsKey('data') ? decoded['data'] : decoded};
-      }
-      return {'success': false, 'message': decoded is Map ? (decoded['message'] ?? 'Failed request') : 'Failed request'};
-    } catch (e) {
-      return {'success': false, 'message': 'Network error: $e'};
-    }
-  }
 
   // Get students list in a class
   static Future<Map<String, dynamic>> getClassStudents(String classId) async {
@@ -669,6 +667,12 @@ class ApiService {
     } catch (e) {
       return {'success': false, 'message': 'Network error: $e'};
     }
+  }
+
+
+  // Teacher Dashboard Stats
+  static Future<Map<String, dynamic>> getAttendanceStats() async {
+    return _performGet('/api/dashboard/teacher', 'Failed to get teacher dashboard stats');
   }
 
   // Logout method
