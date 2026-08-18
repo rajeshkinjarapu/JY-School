@@ -174,8 +174,8 @@ export const FinancePage: React.FC = () => {
     try {
       const isStudent = user?.role === 'STUDENT';
       const [structRes, classRes, groupsRes, headsRes, concessionsRes]: any = await Promise.allSettled([
-        isStudent ? Promise.resolve({ data: [] }) : api.get('/api/fees/structures?limit=5000'),
-        isStudent ? Promise.resolve({ data: [] }) : api.get('/api/classes?limit=5000'),
+        isStudent ? Promise.resolve({ data: [] }) : api.get('/api/fees/structures?limit=500'),
+        isStudent ? Promise.resolve({ data: [] }) : api.get('/api/classes?limit=500'),
         isStudent ? Promise.resolve({ data: [] }) : api.get('/api/fees/groups'),
         isStudent ? Promise.resolve({ data: [] }) : api.get('/api/fees/heads'),
         isStudent ? Promise.resolve({ data: [] }) : api.get('/api/fees/concessions'),
@@ -268,7 +268,7 @@ export const FinancePage: React.FC = () => {
       // Run students & payments in parallel
       const [studResult, payRes]: any = await Promise.allSettled([
         isStudent ? Promise.resolve([]) : fetchAllStudents(),
-        api.get('/api/fees/payments?limit=5000'),
+        api.get('/api/fees/payments?limit=500'),
       ]);
 
       let paymentArray: any[] = [];

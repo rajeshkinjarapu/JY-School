@@ -190,7 +190,7 @@ export const ExamListPage: React.FC = () => {
 
     try {
       // Fetch subjects to map names to IDs
-      const subjectsRes: any = await api.get('/api/subjects?limit=5000');
+      const subjectsRes: any = await api.get('/api/subjects?limit=500');
       const subjectsList = subjectsRes.data?.data || subjectsRes.data || [];
       const subjectMap = new Map(subjectsList.map((s: any) => [s.name.toLowerCase().trim(), s.id]));
 
