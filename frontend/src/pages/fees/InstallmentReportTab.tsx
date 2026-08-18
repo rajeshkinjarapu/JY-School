@@ -23,27 +23,37 @@ export const InstallmentReportTab: React.FC<InstallmentReportTabProps> = ({
   const studentInstallmentData = useMemo(() => {
     if (!selectedClassId) return null;
 
-    const classInfo = classes.find((c) => String(c.id) === String(selectedClassId));
-    if (!classInfo) return null;
+    let classInfo: any;
+    let classStudents: any[];
+    let classStructures: any[];
 
-    // Filter students belonging to the selected class
-    const classStudents = students.filter((s) => {
-      if (s.user && s.user.isActive === false) return false;
-      return String(s.classId || s.class?.id || '') === String(selectedClassId);
-    });
+    if (selectedClassId === 'ALL') {
+      classInfo = { name: 'All', section: 'Classes' };
+      classStudents = students.filter((s) => s.user?.isActive !== false);
+      classStructures = structures; // For ALL, use all structures
+    } else {
+      classInfo = classes.find((c) => String(c.id) === String(selectedClassId));
+      if (!classInfo) return null;
 
-    // Filter structures for this class or specific students in this class
-    const classStructures = structures.filter(
-      (st) =>
-        String(st.classId) === String(selectedClassId) ||
-        classStudents.some((s) => s.id === st.studentId)
-    );
+      // Filter students belonging to the selected class
+      classStudents = students.filter((s) => {
+        if (s.user && s.user.isActive === false) return false;
+        return String(s.classId || s.class?.id || '') === String(selectedClassId);
+      });
+
+      // Filter structures for this class or specific students in this class
+      classStructures = structures.filter(
+        (st) =>
+          String(st.classId) === String(selectedClassId) ||
+          classStudents.some((s) => s.id === st.studentId)
+      );
+    }
 
     // Compute installment rows
     const rows = classStudents.map((student) => {
       // Calculate Total Expected Fee from structures
       const studentSpecificStructs = classStructures.filter(
-        (st) => !st.studentId || st.studentId === student.id
+        (st) => (!st.studentId && st.classId === student.classId) || st.studentId === student.id
       );
       const totalFee = studentSpecificStructs.reduce(
         (sum, st) => sum + (Number(st.amount) || 0),
@@ -162,12 +172,25 @@ export const InstallmentReportTab: React.FC<InstallmentReportTabProps> = ({
         body: tableRows,
         startY: 38,
         theme: 'grid',
-        styles: { fontSize: 8.5, cellPadding: 3, valign: 'middle' },
-        headStyles: { fillColor: [30, 27, 75], textColor: [255, 255, 255], fontStyle: 'bold' },
-        alternateRowStyles: { fillColor: [249, 250, 251] },
+        styles: { fontSize: 8.5, cellPadding: 4, valign: 'middle', lineColor: [200, 200, 200], lineWidth: 0.1 },
+        headStyles: { fillColor: [99, 102, 241], textColor: [255, 255, 255], fontStyle: 'bold', halign: 'center' },
+        alternateRowStyles: { fillColor: [248, 250, 252] },
         columnStyles: {
-          5: { cellWidth: 100, fontStyle: 'bold' }, // Expand installments width
+          0: { cellWidth: 25, halign: 'center', fontStyle: 'bold', textColor: [100, 116, 139] },
+          1: { cellWidth: 50, fontStyle: 'bold', textColor: [30, 41, 59] },
+          2: { cellWidth: 25, halign: 'right', textColor: [30, 41, 59] },
+          3: { cellWidth: 25, halign: 'right', fontStyle: 'bold', textColor: [5, 150, 105] }, // Emerald green
+          4: { cellWidth: 25, halign: 'right', fontStyle: 'bold', textColor: [225, 29, 72] }, // Rose red
+          5: { cellWidth: 'auto', fontStyle: 'bold', textColor: [67, 56, 202] }, // Indigo
         },
+        didParseCell: function(data: any) {
+          if (data.section === 'body' && data.column.index === 4) {
+            // Make balance green if 0
+            if (data.cell.raw === 'Rs. 0') {
+              data.cell.styles.textColor = [5, 150, 105];
+            }
+          }
+        }
       });
 
       doc.save(`FeeInstallments_${classInfo.name}_${classInfo.section}.pdf`);
@@ -226,6 +249,7 @@ export const InstallmentReportTab: React.FC<InstallmentReportTabProps> = ({
             <option value="" disabled>
               Select a Class
             </option>
+            <option value="ALL">All Classes</option>
             {classes.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.name} - {c.section}
@@ -283,19 +307,19 @@ export const InstallmentReportTab: React.FC<InstallmentReportTabProps> = ({
           </div>
 
           {/* Desktop Table View */}
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm text-left border-collapse">
-              <thead className="bg-white border-b-2 border-indigo-50 text-gray-500">
+          <div className="overflow-x-auto p-4">
+            <table className="w-full text-sm text-left border-collapse border border-gray-200 rounded-lg overflow-hidden shadow-sm">
+              <thead className="bg-gray-50 border-b border-gray-200 text-gray-600">
                 <tr>
-                  <th className="px-5 py-4 font-bold uppercase text-xs">Roll No</th>
-                  <th className="px-5 py-4 font-bold uppercase text-xs">Student Name</th>
-                  <th className="px-5 py-4 font-bold uppercase text-xs text-right">Total Fee</th>
-                  <th className="px-5 py-4 font-bold uppercase text-xs text-right">Total Paid</th>
-                  <th className="px-5 py-4 font-bold uppercase text-xs text-right">Remaining</th>
-                  <th className="px-5 py-4 font-bold uppercase text-xs">Payment Installments Checklist</th>
+                  <th className="px-5 py-4 font-bold uppercase text-xs border border-gray-200 text-center bg-gray-100/50">Roll No</th>
+                  <th className="px-5 py-4 font-bold uppercase text-xs border border-gray-200 bg-gray-100/50">Student Name</th>
+                  <th className="px-5 py-4 font-bold uppercase text-xs text-right border border-gray-200 bg-gray-100/50">Total Fee</th>
+                  <th className="px-5 py-4 font-bold uppercase text-xs text-right border border-gray-200 bg-gray-100/50">Total Paid</th>
+                  <th className="px-5 py-4 font-bold uppercase text-xs text-right border border-gray-200 bg-gray-100/50">Remaining</th>
+                  <th className="px-5 py-4 font-bold uppercase text-xs border border-gray-200 bg-gray-100/50">Payment Installments Checklist</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-150">
+              <tbody className="divide-y divide-gray-200">
                 {studentInstallmentData.rows.length === 0 ? (
                   <tr>
                     <td
@@ -309,28 +333,28 @@ export const InstallmentReportTab: React.FC<InstallmentReportTabProps> = ({
                   studentInstallmentData.rows.map((row) => (
                     <tr
                       key={row.rollNo}
-                      className="hover:bg-indigo-50/20 transition-colors"
+                      className="hover:bg-indigo-50/30 transition-colors bg-white"
                     >
-                      <td className="px-5 py-4 font-mono text-xs font-bold text-gray-500">
+                      <td className="px-5 py-4 font-mono text-xs font-bold text-gray-500 border border-gray-200 text-center">
                         {row.rollNo}
                       </td>
-                      <td className="px-5 py-4 font-bold text-gray-900">
+                      <td className="px-5 py-4 font-bold text-gray-900 border border-gray-200">
                         {row.name}
                       </td>
-                      <td className="px-5 py-4 text-right font-bold text-gray-900">
+                      <td className="px-5 py-4 text-right font-bold text-gray-900 border border-gray-200 bg-gray-50/30">
                         ₹{row.totalFee.toLocaleString('en-IN')}
                       </td>
-                      <td className="px-5 py-4 text-right font-black text-emerald-600">
+                      <td className="px-5 py-4 text-right font-black text-emerald-600 border border-gray-200 bg-emerald-50/10">
                         ₹{row.totalPaid.toLocaleString('en-IN')}
                       </td>
                       <td
-                        className={`px-5 py-4 text-right font-black ${
-                          row.remaining > 0 ? 'text-rose-600' : 'text-emerald-600'
+                        className={`px-5 py-4 text-right font-black border border-gray-200 ${
+                          row.remaining > 0 ? 'text-rose-600 bg-rose-50/10' : 'text-emerald-600 bg-emerald-50/10'
                         }`}
                       >
                         ₹{row.remaining.toLocaleString('en-IN')}
                       </td>
-                      <td className="px-5 py-4">
+                      <td className="px-5 py-4 border border-gray-200">
                         <div className="flex flex-wrap gap-2 items-center">
                           {row.payments.map((p, idx) => (
                             <div

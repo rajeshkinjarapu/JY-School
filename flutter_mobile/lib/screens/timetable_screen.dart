@@ -15,6 +15,9 @@ class TimetableScreen extends StatefulWidget {
 class _TimetableScreenState extends State<TimetableScreen> with SingleTickerProviderStateMixin {
   late TabController _dayTabController;
   Map<String, dynamic> _timetable = {};
+  List<dynamic> _classes = [];
+  String? _selectedClassId;
+  String? _userRole;
   bool _isLoading = true;
   String? _errorMessage;
 
@@ -46,21 +49,47 @@ class _TimetableScreenState extends State<TimetableScreen> with SingleTickerProv
       }
 
       final user = jsonDecode(userString);
-      final classId = user['student']?['classId'];
-      if (classId == null) {
+      _userRole = user['role'];
+      
+      // If student, use their classId
+      if (_userRole == 'STUDENT') {
+        _selectedClassId = user['student']?['classId'];
+        if (_selectedClassId == null) {
+          setState(() {
+            _errorMessage = 'Class details not found for this profile';
+            _isLoading = false;
+          });
+          return;
+        }
+      } else {
+        // Admin or Teacher, fetch classes if not fetched
+        if (_classes.isEmpty) {
+          final classesResult = await ApiService.getClasses(limit: 100);
+          if (classesResult['success']) {
+            _classes = classesResult['data'] ?? [];
+            if (_classes.isNotEmpty && _selectedClassId == null) {
+              _selectedClassId = _classes.first['id'];
+            }
+          }
+        }
+      }
+
+      if (_selectedClassId == null) {
         setState(() {
-          _errorMessage = 'Class details not found for this profile';
+          _errorMessage = 'Please select a class';
           _isLoading = false;
         });
         return;
       }
 
-      final result = await ApiService.getTimetable(classId);
+      setState(() => _isLoading = true);
+      final result = await ApiService.getTimetable(_selectedClassId!);
 
       if (mounted) {
         if (result['success']) {
           setState(() {
             _timetable = result['data'] ?? {};
+            _errorMessage = null;
             _isLoading = false;
           });
         } else {
@@ -94,13 +123,51 @@ class _TimetableScreenState extends State<TimetableScreen> with SingleTickerProv
         backgroundColor: const Color(0xFFE2E8F0),
         foregroundColor: Colors.white,
         elevation: 0,
-        bottom: TabBar(
-          controller: _dayTabController,
-          isScrollable: true,
-          labelColor: const Color(0xFF818CF8),
-          unselectedLabelColor: const Color(0xFF94A3B8),
-          indicatorColor: const Color(0xFF818CF8),
-          tabs: _days.map((day) => Tab(text: day.substring(0, 3))).toList(),
+        bottom: PreferredSize(
+          preferredSize: Size.fromHeight(_userRole != 'STUDENT' ? 100 : 50),
+          child: Column(
+            children: [
+              if (_userRole != 'STUDENT')
+                Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButton<String>(
+                      isExpanded: true,
+                      value: _selectedClassId,
+                      icon: const Icon(Icons.keyboard_arrow_down, color: Color(0xFF6366F1)),
+                      style: GoogleFonts.outfit(color: const Color(0xFF1E293B), fontWeight: FontWeight.w600),
+                      items: _classes.map((dynamic classItem) {
+                        return DropdownMenuItem<String>(
+                          value: classItem['id'],
+                          child: Text('${classItem['name']} ${classItem['section'] ?? ''}'.trim()),
+                        );
+                      }).toList(),
+                      onChanged: (String? newValue) {
+                        if (newValue != null) {
+                          setState(() {
+                            _selectedClassId = newValue;
+                          });
+                          _fetchTimetable();
+                        }
+                      },
+                    ),
+                  ),
+                ),
+              TabBar(
+                controller: _dayTabController,
+                isScrollable: true,
+                labelColor: const Color(0xFF818CF8),
+                unselectedLabelColor: const Color(0xFF94A3B8),
+                indicatorColor: const Color(0xFF818CF8),
+                tabs: _days.map((day) => Tab(text: day.substring(0, 3))).toList(),
+              ),
+            ],
+          ),
         ),
       ),
       body: _isLoading
@@ -201,9 +268,16 @@ class _TimetableScreenState extends State<TimetableScreen> with SingleTickerProv
                                           margin: const EdgeInsets.only(bottom: 24),
                                           padding: const EdgeInsets.all(18),
                                           decoration: BoxDecoration(
-                                            color: const Color(0xFF1E293B),
+                                            color: Colors.white,
                                             borderRadius: BorderRadius.circular(20),
                                             border: Border.all(color: const Color(0xFFE2E8F0)),
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: Colors.black.withOpacity(0.02),
+                                                blurRadius: 8,
+                                                offset: const Offset(0, 4),
+                                              )
+                                            ]
                                           ),
                                           child: Column(
                                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -241,7 +315,7 @@ class _TimetableScreenState extends State<TimetableScreen> with SingleTickerProv
                                               const SizedBox(height: 6),
                                               Row(
                                                 children: [
-                                                  const Icon(Icons.person_outline_rounded, color: const Color(0xFF94A3B8), size: 14),
+                                                  const Icon(Icons.person_outline_rounded, color: Color(0xFF94A3B8), size: 14),
                                                   const SizedBox(width: 6),
                                                   Text(
                                                     teacherName,
@@ -255,7 +329,7 @@ class _TimetableScreenState extends State<TimetableScreen> with SingleTickerProv
                                               const SizedBox(height: 4),
                                               Row(
                                                 children: [
-                                                  const Icon(Icons.meeting_room_outlined, color: const Color(0xFF94A3B8), size: 14),
+                                                  const Icon(Icons.meeting_room_outlined, color: Color(0xFF94A3B8), size: 14),
                                                   const SizedBox(width: 6),
                                                   Text(
                                                     'Room: $room',

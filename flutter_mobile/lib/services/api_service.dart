@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiService {
-  static const String baseUrl = 'https://retouch-buckskin-overgrown.ngrok-free.dev';
+  static const String baseUrl = 'http://148.113.9.103:19999';
 
   // Base headers for API requests
   static Map<String, String> _getHeaders({String? token}) {
@@ -213,27 +213,6 @@ class ApiService {
     }
   }
 
-  // Get school classes list
-  static Future<Map<String, dynamic>> getClasses() async {
-    try {
-      final token = await getToken();
-      if (token == null) return {'success': false, 'message': 'No session token'};
-
-      final response = await http.get(
-        Uri.parse('$baseUrl/api/classes'),
-        headers: _getHeaders(token: token),
-      );
-
-      final Map<String, dynamic> data = jsonDecode(response.body);
-      if (response.statusCode == 200) {
-        return {'success': true, 'data': data['data'] ?? data};
-      }
-      return {'success': false, 'message': data['message'] ?? 'Failed to get classes'};
-    } catch (e) {
-      return {'success': false, 'message': 'Network error: $e'};
-    }
-  }
-
   // Get school subjects list
   static Future<Map<String, dynamic>> getSubjects() async {
     try {
@@ -256,13 +235,17 @@ class ApiService {
   }
 
   // Get exams list
-  static Future<Map<String, dynamic>> getExams() async {
+  static Future<Map<String, dynamic>> getExams({String classId = ''}) async {
     try {
       final token = await getToken();
       if (token == null) return {'success': false, 'message': 'No session token'};
 
+      final url = classId.isNotEmpty 
+          ? '$baseUrl/api/exams?classId=$classId' 
+          : '$baseUrl/api/exams';
+
       final response = await http.get(
-        Uri.parse('$baseUrl/api/exams'),
+        Uri.parse(url),
         headers: _getHeaders(token: token),
       );
 
@@ -274,6 +257,21 @@ class ApiService {
     } catch (e) {
       return {'success': false, 'message': 'Network error: $e'};
     }
+  }
+
+  // Get all students
+  static Future<Map<String, dynamic>> getStudents({int limit = 500}) async {
+    return _performGet('/api/students?limit=$limit', 'Failed to get students');
+  }
+
+  // Get all classes
+  static Future<Map<String, dynamic>> getClasses({int limit = 500}) async {
+    return _performGet('/api/classes?limit=$limit', 'Failed to get classes');
+  }
+
+  // Get all teachers
+  static Future<Map<String, dynamic>> getTeachers({int limit = 500}) async {
+    return _performGet('/api/teachers?limit=$limit', 'Failed to get teachers');
   }
 
   // Get class student attendance list
