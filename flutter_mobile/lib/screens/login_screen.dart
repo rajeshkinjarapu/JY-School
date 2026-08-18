@@ -1,4 +1,4 @@
-﻿import 'dart:math';
+import 'dart:math';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -161,8 +161,9 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
-    final role = _roles[_roleIdx];
-    final grad = _gradients[_roleIdx];
+    // Unified Theme (Green gradient)
+    final grad = [const Color(0xFF065F46), const Color(0xFF059669), const Color(0xFF34D399)];
+    final roleColor = const Color(0xFF10B981);
 
     return Scaffold(
       resizeToAvoidBottomInset: true,
@@ -199,10 +200,8 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                   constraints: BoxConstraints(minHeight: size.height - MediaQuery.of(context).padding.top),
                   child: IntrinsicHeight(child: Column(children: [
                     _buildHero(grad),
-                    const SizedBox(height: 28),
-                    _buildRolePills(),
-                    const SizedBox(height: 22),
-                    _buildCard(role, grad),
+                    const SizedBox(height: 38),
+                    _buildCard(roleColor),
                     const Spacer(),
                     _buildFooter(),
                   ])),
@@ -223,28 +222,9 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
         AnimatedBuilder(
           animation: _pulseAnim,
           builder: (_, child) => Transform.scale(scale: _pulseAnim.value, child: child),
-          child: Stack(alignment: Alignment.center, children: [
-            Container(
-              width: 108, height: 108,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(color: Colors.white.withOpacity(0.35), width: 2.5),
-              ),
-            ),
-            Container(
-              width: 88, height: 88,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle, color: Colors.white,
-                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.28), blurRadius: 24, offset: const Offset(0, 10))],
-              ),
-              child: ClipOval(child: Padding(
-                padding: const EdgeInsets.all(10),
-                child: Image.asset('assets/images/logo.png', fit: BoxFit.contain,
-                  errorBuilder: (_, __, ___) => Icon(Icons.school_rounded, size: 42, color: grad[0]),
-                ),
-              )),
-            ),
-          ]),
+          child: Image.asset('assets/images/logo.png', width: 110, height: 110, fit: BoxFit.contain,
+            errorBuilder: (_, __, ___) => const Icon(Icons.school_rounded, size: 80, color: Colors.white),
+          ),
         ),
         const SizedBox(height: 18),
         Text('JY SCHOOL', style: GoogleFonts.outfit(
@@ -267,46 +247,8 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
     );
   }
 
-  // ── Role Pills ────────────────────────────────────────────────────────────
-  Widget _buildRolePills() {
-    return Column(children: [
-      Text('Login As', style: GoogleFonts.poppins(
-        color: Colors.white.withOpacity(0.85), fontSize: 13, fontWeight: FontWeight.w600, letterSpacing: 1,
-      )),
-      const SizedBox(height: 12),
-      Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: List.generate(_roles.length, (i) {
-          final r = _roles[i];
-          final active = i == _roleIdx;
-          return GestureDetector(
-            onTap: () => _pickRole(i),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 300), curve: Curves.easeOut,
-              margin: const EdgeInsets.symmetric(horizontal: 5),
-              padding: EdgeInsets.symmetric(horizontal: active ? 18 : 12, vertical: 10),
-              decoration: BoxDecoration(
-                color: active ? Colors.white : Colors.white.withOpacity(0.15),
-                borderRadius: BorderRadius.circular(50),
-                border: Border.all(color: active ? Colors.transparent : Colors.white.withOpacity(0.3)),
-                boxShadow: active ? [BoxShadow(color: Colors.black.withOpacity(0.2), blurRadius: 12, offset: const Offset(0, 4))] : [],
-              ),
-              child: Row(mainAxisSize: MainAxisSize.min, children: [
-                Icon(r.icon, size: 16, color: active ? r.color : Colors.white),
-                if (active) ...[
-                  const SizedBox(width: 6),
-                  Text(r.label, style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.bold, color: r.color)),
-                ],
-              ]),
-            ),
-          );
-        }),
-      ),
-    ]);
-  }
-
   // ── Login Card ────────────────────────────────────────────────────────────
-  Widget _buildCard(_RoleItem role, List<Color> grad) {
+  Widget _buildCard(Color roleColor) {
     return AnimatedBuilder(
       animation: _cardCtrl,
       builder: (_, child) => Transform.translate(
@@ -333,16 +275,13 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                   Row(children: [
                     Container(
                       padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(color: role.color.withOpacity(0.12), borderRadius: BorderRadius.circular(14)),
-                      child: Icon(role.icon, color: role.color, size: 22),
+                      decoration: BoxDecoration(color: roleColor.withOpacity(0.12), borderRadius: BorderRadius.circular(14)),
+                      child: Icon(Icons.login_rounded, color: roleColor, size: 22),
                     ),
                     const SizedBox(width: 14),
                     Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 300),
-                        child: Text('${role.label} Login', key: ValueKey(role.label),
-                          style: GoogleFonts.poppins(fontSize: 20, fontWeight: FontWeight.bold, color: const Color(0xFF0F172A))),
-                      ),
+                      Text('Welcome Back',
+                        style: GoogleFonts.poppins(fontSize: 20, fontWeight: FontWeight.bold, color: const Color(0xFF0F172A))),
                       Text('Access your JY School portal',
                         style: GoogleFonts.poppins(fontSize: 12, color: const Color(0xFF64748B))),
                     ]),
@@ -352,7 +291,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                   AnimatedContainer(
                     duration: const Duration(milliseconds: 400), height: 2,
                     decoration: BoxDecoration(
-                      gradient: LinearGradient(colors: [role.color.withOpacity(0.8), role.color.withOpacity(0.08)]),
+                      gradient: LinearGradient(colors: [roleColor.withOpacity(0.8), roleColor.withOpacity(0.08)]),
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -383,12 +322,12 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                   ),
                   // Email
                   _field(ctrl: _emailCtrl, label: 'Username or Email', icon: Icons.person_outline_rounded,
-                    accent: role.color, kbType: TextInputType.emailAddress,
+                    accent: roleColor, kbType: TextInputType.emailAddress,
                     validate: (v) => (v == null || v.trim().isEmpty) ? 'Please enter username or email' : null),
                   const SizedBox(height: 16),
                   // Password
                   _field(ctrl: _passCtrl, label: 'Password', icon: Icons.lock_outline_rounded,
-                    accent: role.color, obscure: !_showPass,
+                    accent: roleColor, obscure: !_showPass,
                     suffix: IconButton(
                       icon: Icon(_showPass ? Icons.visibility_rounded : Icons.visibility_off_rounded,
                         color: const Color(0xFF94A3B8), size: 22),
@@ -398,12 +337,12 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                   const SizedBox(height: 26),
                   // Button
                   AnimatedContainer(
-                    duration: const Duration(milliseconds: 400),
-                    height: 56,
+                    duration: const Duration(milliseconds: 300),
+                    height: 54,
                     decoration: BoxDecoration(
+                      color: roleColor,
                       borderRadius: BorderRadius.circular(16),
-                      gradient: LinearGradient(colors: [grad[0], grad[1]], begin: Alignment.centerLeft, end: Alignment.centerRight),
-                      boxShadow: [BoxShadow(color: grad[0].withOpacity(0.42), blurRadius: 20, offset: const Offset(0, 8))],
+                      boxShadow: [BoxShadow(color: roleColor.withOpacity(0.3), blurRadius: 12, offset: const Offset(0, 6))],
                     ),
                     child: ElevatedButton(
                       onPressed: _loading ? null : _login,

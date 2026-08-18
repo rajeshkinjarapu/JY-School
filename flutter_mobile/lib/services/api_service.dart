@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiService {
-  static const String baseUrl = 'http://148.113.9.103:19999';
+  static const String baseUrl = 'https://retouch-buckskin-overgrown.ngrok-free.dev';
 
   // Base headers for API requests
   static Map<String, String> _getHeaders({String? token}) {

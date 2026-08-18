@@ -128,17 +128,16 @@ export const InstallmentReportTab: React.FC<InstallmentReportTabProps> = ({
       const doc = new jsPDF('l', 'mm', 'a4'); // Landscape for rich data rows
 
       // Header Banner
-      doc.setFillColor(30, 27, 75); // Indigo 900
-      doc.rect(0, 0, 297, 25, 'F');
+      // Removed dark blue background per user request
       
       doc.setFontSize(16);
-      doc.setTextColor(255, 255, 255);
+      doc.setTextColor(30, 41, 59); // Dark slate text
       doc.setFont('helvetica', 'bold');
-      doc.text('SRI VENKATESWARA JY SCHOOL', 148, 10, { align: 'center' });
+      doc.text('SRI VENKATESWARA JY SCHOOL', 148, 15, { align: 'center' });
       
       doc.setFontSize(10);
       doc.setFont('helvetica', 'normal');
-      doc.text('Installment Wise Student Payment Logs', 148, 17, { align: 'center' });
+      doc.text('Installment Wise Student Payment Logs', 148, 22, { align: 'center' });
 
       // Info row
       doc.setTextColor(50, 50, 50);
@@ -150,20 +149,23 @@ export const InstallmentReportTab: React.FC<InstallmentReportTabProps> = ({
 
       // Table layout
       const tableHeaders = [
-        ['Roll No', 'Student Name', 'Total Fee', 'Total Paid', 'Balance', 'Installments Check (Amount & Date)'],
+        ['Roll No', 'Student Name', 'Total Fee', 'Total Paid', 'Balance', 'Inst-1 (Amount & Date)', 'Inst-2 (Amount & Date)', 'Inst-3 (Amount & Date)'],
       ];
 
       const tableRows = rows.map((r) => {
-        const paySequenceStr = r.payments
-          .map((p, idx) => `${idx + 1}st: Rs. ${p.amount} (${p.dateStr})`)
-          .join('\n');
+        const inst1 = r.payments.length > 0 ? `Rs. ${r.payments[0].amount}\n(${r.payments[0].dateStr})` : '-';
+        const inst2 = r.payments.length > 1 ? `Rs. ${r.payments[1].amount}\n(${r.payments[1].dateStr})` : '-';
+        const inst3 = r.payments.length > 2 ? `Rs. ${r.payments[2].amount}\n(${r.payments[2].dateStr})` : '-';
+
         return [
           r.rollNo,
           r.name,
           `Rs. ${r.totalFee.toLocaleString('en-IN')}`,
           `Rs. ${r.totalPaid.toLocaleString('en-IN')}`,
           `Rs. ${r.remaining.toLocaleString('en-IN')}`,
-          paySequenceStr || 'No payment recorded',
+          inst1,
+          inst2,
+          inst3
         ];
       });
 
@@ -176,12 +178,14 @@ export const InstallmentReportTab: React.FC<InstallmentReportTabProps> = ({
         headStyles: { fillColor: [99, 102, 241], textColor: [255, 255, 255], fontStyle: 'bold', halign: 'center' },
         alternateRowStyles: { fillColor: [248, 250, 252] },
         columnStyles: {
-          0: { cellWidth: 25, halign: 'center', fontStyle: 'bold', textColor: [100, 116, 139] },
-          1: { cellWidth: 50, fontStyle: 'bold', textColor: [30, 41, 59] },
-          2: { cellWidth: 25, halign: 'right', textColor: [30, 41, 59] },
-          3: { cellWidth: 25, halign: 'right', fontStyle: 'bold', textColor: [5, 150, 105] }, // Emerald green
-          4: { cellWidth: 25, halign: 'right', fontStyle: 'bold', textColor: [225, 29, 72] }, // Rose red
-          5: { cellWidth: 'auto', fontStyle: 'bold', textColor: [67, 56, 202] }, // Indigo
+          0: { cellWidth: 22, halign: 'center', fontStyle: 'bold', textColor: [100, 116, 139] },
+          1: { cellWidth: 45, fontStyle: 'bold', textColor: [30, 41, 59] },
+          2: { cellWidth: 22, halign: 'right', textColor: [30, 41, 59] },
+          3: { cellWidth: 22, halign: 'right', fontStyle: 'bold', textColor: [5, 150, 105] }, // Emerald green
+          4: { cellWidth: 22, halign: 'right', fontStyle: 'bold', textColor: [225, 29, 72] }, // Rose red
+          5: { cellWidth: 45, halign: 'center', fontStyle: 'bold', textColor: [67, 56, 202] }, // Indigo
+          6: { cellWidth: 45, halign: 'center', fontStyle: 'bold', textColor: [67, 56, 202] },
+          7: { cellWidth: 45, halign: 'center', fontStyle: 'bold', textColor: [67, 56, 202] },
         },
         didParseCell: function(data: any) {
           if (data.section === 'body' && data.column.index === 4) {
