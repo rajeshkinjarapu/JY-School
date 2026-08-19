@@ -190,10 +190,19 @@ class _TeacherMarksScreenState extends State<TeacherMarksScreen> {
         leading: const BackButton(),
         title: Text(
           'Marks Entry',
-          style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+          style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white),
         ),
-        backgroundColor: const Color(0xFFE2E8F0),
-        foregroundColor: Colors.white,
+        iconTheme: const IconThemeData(color: Colors.white),
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF2E2A66), Color(0xFF222854)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
+        
         elevation: 0,
       ),
       body: _loadingSelectors
@@ -204,7 +213,7 @@ class _TeacherMarksScreenState extends State<TeacherMarksScreen> {
                 Container(
                   padding: const EdgeInsets.all(18),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF1E293B),
+                    color: Colors.white,
                     border: Border(bottom: BorderSide(color: const Color(0xFFE2E8F0))),
                   ),
                   child: Column(
@@ -305,7 +314,7 @@ class _TeacherMarksScreenState extends State<TeacherMarksScreen> {
                               ? Center(
                                   child: Text(
                                     'No students found in this class.',
-                                    style: GoogleFonts.poppins(color: const Color(0xFF94A3B8)),
+                                    style: GoogleFonts.poppins(color: const Color(0xFF475569)),
                                   ),
                                 )
                               : ListView.builder(
@@ -322,7 +331,7 @@ class _TeacherMarksScreenState extends State<TeacherMarksScreen> {
                                       margin: const EdgeInsets.only(bottom: 16),
                                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                                       decoration: BoxDecoration(
-                                        color: const Color(0xFF1E293B),
+                                        color: Colors.white,
                                         borderRadius: BorderRadius.circular(20),
                                         border: Border.all(color: const Color(0xFFE2E8F0)),
                                       ),
@@ -354,7 +363,7 @@ class _TeacherMarksScreenState extends State<TeacherMarksScreen> {
                                                 Text(
                                                   'Roll No: $rollNo',
                                                   style: GoogleFonts.poppins(
-                                                    color: const Color(0xFF94A3B8),
+                                                    color: const Color(0xFF475569),
                                                     fontSize: 12,
                                                   ),
                                                 ),
@@ -442,7 +451,7 @@ class _TeacherMarksScreenState extends State<TeacherMarksScreen> {
                                 ? const SizedBox(
                                     height: 24,
                                     width: 24,
-                                    child: CircularProgressIndicator(color: const Color(0xFF1E293B), strokeWidth: 2.5),
+                                    child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
                                   )
                                 : Text(
                                     'Submit Marks Roster',
@@ -466,17 +475,19 @@ class _TeacherMarksScreenState extends State<TeacherMarksScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
       decoration: BoxDecoration(
-        color: const Color(0xFF1E293B),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: const Color(0xFFE2E8F0)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(label, style: GoogleFonts.poppins(color: const Color(0xFF94A3B8), fontSize: 13, fontWeight: FontWeight.bold)),
+          Text(label, style: GoogleFonts.poppins(color: const Color(0xFF475569), fontSize: 13, fontWeight: FontWeight.bold)),
           DropdownButtonHideUnderline(child: child),
         ],
       ),
     );
   }
 }
+
+

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/api_service.dart';
+import '../services/notification_service.dart';
 import '../widgets/app_drawer.dart';
 
 class NotificationsScreen extends StatefulWidget {
@@ -58,12 +59,32 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         leading: const BackButton(),
         title: Text(
           'Notifications',
-          style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+          style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white),
         ),
-        backgroundColor: const Color(0xFFE2E8F0),
-        foregroundColor: Colors.white,
+        iconTheme: const IconThemeData(color: Colors.white),
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF2E2A66), Color(0xFF222854)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
+        
         elevation: 0,
         actions: [
+          IconButton(
+            icon: const Icon(Icons.notification_add_rounded, color: Color(0xFF818CF8)),
+            tooltip: 'Simulate Push Notification',
+            onPressed: () {
+              NotificationService().showTestNotification(
+                'New Homework Added',
+                'Mathematics chapter 5 exercises due tomorrow.',
+                'homework'
+              );
+            },
+          ),
           if (_notifications.isNotEmpty)
             IconButton(
               icon: const Icon(Icons.done_all_rounded, color: Color(0xFF10B981)),
@@ -156,7 +177,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             Text(
               date,
               style: GoogleFonts.poppins(
-                color: const Color(0xFF94A3B8),
+                color: const Color(0xFF475569),
                 fontSize: 10,
               ),
             ),
@@ -166,3 +187,5 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     );
   }
 }
+
+

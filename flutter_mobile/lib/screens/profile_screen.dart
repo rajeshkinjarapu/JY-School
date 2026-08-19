@@ -232,11 +232,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     height: 56,
                     child: ElevatedButton.icon(
                       onPressed: _handleLogout,
-                      icon: const Icon(Icons.logout_rounded, color: Colors.white),
+                      icon: const Icon(Icons.logout_rounded, color: const Color(0xFF64748B)),
                       label: Text(
                         'Sign Out',
                         style: GoogleFonts.poppins(
-                          color: Colors.white,
+                          color: const Color(0xFF1E293B),
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
                         ),
@@ -265,7 +265,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Container(
       margin: const EdgeInsets.only(bottom: 24),
       decoration: BoxDecoration(
-        color: const Color(0xFF1E293B),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(24),
         border: Border.all(color: const Color(0xFFE2E8F0)),
       ),
@@ -314,7 +314,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 Text(
                   label,
                   style: GoogleFonts.poppins(
-                    color: const Color(0xFF94A3B8),
+                    color: const Color(0xFF475569),
                     fontSize: 12,
                   ),
                 ),
@@ -364,7 +364,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             Text(
               trailing,
               style: GoogleFonts.poppins(
-                color: const Color(0xFF94A3B8),
+                color: const Color(0xFF475569),
                 fontSize: 12,
               ),
             ),
@@ -376,3 +376,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 }
+
+
+

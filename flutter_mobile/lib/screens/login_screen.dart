@@ -138,7 +138,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
     setState(() => _loading = false);
     if (res['success'] == true) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('Welcome back!', style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.w600)),
+        content: Text('Welcome back!', style: GoogleFonts.poppins(color: const Color(0xFF1E293B), fontWeight: FontWeight.w600)),
         backgroundColor: const Color(0xFF10B981),
         behavior: SnackBarBehavior.floating,
         margin: const EdgeInsets.all(16),
@@ -196,14 +196,15 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
             ),
             SafeArea(
               child: SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
+                physics: const ClampingScrollPhysics(),
                 child: ConstrainedBox(
                   constraints: BoxConstraints(minHeight: size.height - MediaQuery.of(context).padding.top),
                   child: IntrinsicHeight(child: Column(children: [
+                    const Spacer(),
                     _buildHero(grad),
                     const SizedBox(height: 38),
                     _buildCard(roleColor),
-                    const Spacer(),
+                    const Spacer(flex: 2),
                     _buildFooter(),
                   ])),
                 ),
@@ -224,7 +225,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
           animation: _pulseAnim,
           builder: (_, child) => Transform.scale(scale: _pulseAnim.value, child: child),
           child: Image.asset('assets/images/logo.png', width: 110, height: 110, fit: BoxFit.contain,
-            errorBuilder: (_, __, ___) => const Icon(Icons.school_rounded, size: 80, color: Colors.white),
+            errorBuilder: (_, __, ___) => const Icon(Icons.school_rounded, size: 80, color: const Color(0xFF64748B)),
           ),
         ),
         const SizedBox(height: 18),
@@ -354,9 +355,9 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                       child: _loading
                           ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5))
                           : Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                              Text('SIGN IN', style: GoogleFonts.poppins(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold, letterSpacing: 1.5)),
+                              Text('SIGN IN', style: GoogleFonts.poppins(color: const Color(0xFF1E293B), fontSize: 15, fontWeight: FontWeight.bold, letterSpacing: 1.5)),
                               const SizedBox(width: 10),
-                              const Icon(Icons.arrow_forward_rounded, color: Colors.white, size: 20),
+                              const Icon(Icons.arrow_forward_rounded, color: const Color(0xFF64748B), size: 20),
                             ]),
                     ),
                   ),
@@ -366,7 +367,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                     const Icon(Icons.lock_rounded, size: 13, color: Color(0xFF94A3B8)),
                     const SizedBox(width: 5),
                     Text('Secure SSL Encrypted Connection',
-                      style: GoogleFonts.poppins(fontSize: 11, color: const Color(0xFF94A3B8), fontWeight: FontWeight.w500)),
+                      style: GoogleFonts.poppins(fontSize: 11, color: const Color(0xFF475569), fontWeight: FontWeight.w500)),
                   ]),
                 ])),
               ),
@@ -399,7 +400,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
         ),
         const SizedBox(height: 10),
         Text('© ${DateTime.now().year} JY School · All Rights Reserved',
-          style: GoogleFonts.poppins(fontSize: 11, color: Colors.white.withOpacity(0.6))),
+          style: GoogleFonts.poppins(fontSize: 11, color: Colors.white.withOpacity(0.7))),
       ]),
     );
   }
@@ -423,7 +424,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
       validator: validate,
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: GoogleFonts.poppins(color: const Color(0xFF94A3B8), fontSize: 14, fontWeight: FontWeight.w500),
+        labelStyle: GoogleFonts.poppins(color: const Color(0xFF475569), fontSize: 14, fontWeight: FontWeight.w500),
         prefixIcon: Container(
           margin: const EdgeInsets.only(left: 14, right: 8),
           padding: const EdgeInsets.all(8),
@@ -445,3 +446,5 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
     );
   }
 }
+
+

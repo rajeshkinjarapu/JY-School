@@ -55,7 +55,16 @@ class _SubjectsScreenState extends State<SubjectsScreen> {
           'Subjects',
           style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold),
         ),
-        backgroundColor: const Color(0xFF6366F1),
+        iconTheme: const IconThemeData(color: Colors.white),
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF2E2A66), Color(0xFF222854)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
         elevation: 0,
         centerTitle: true,
         leading: IconButton(
@@ -198,3 +207,5 @@ class _SubjectsScreenState extends State<SubjectsScreen> {
     );
   }
 }
+
+

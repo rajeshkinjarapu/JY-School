@@ -59,10 +59,19 @@ class _GatePassScreenState extends State<GatePassScreen> {
         leading: const BackButton(),
         title: Text(
           'Gate Passes',
-          style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+          style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white),
         ),
-        backgroundColor: const Color(0xFFE2E8F0),
-        foregroundColor: Colors.white,
+        iconTheme: const IconThemeData(color: Colors.white),
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF2E2A66), Color(0xFF222854)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
+        
         elevation: 0,
         actions: [
           IconButton(
@@ -74,7 +83,7 @@ class _GatePassScreenState extends State<GatePassScreen> {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _showApplyGatePassSheet,
         backgroundColor: const Color(0xFF10B981),
-        icon: const Icon(Icons.add, color: const Color(0xFF1E293B)),
+        icon: const Icon(Icons.add, color: const Color(0xFF64748B)),
         label: Text(
           'Request Pass',
           style: GoogleFonts.poppins(color: const Color(0xFF1E293B), fontWeight: FontWeight.bold),
@@ -133,7 +142,7 @@ class _GatePassScreenState extends State<GatePassScreen> {
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: const Color(0xFF1E293B),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: const Color(0xFFE2E8F0)),
         boxShadow: [
@@ -186,7 +195,7 @@ class _GatePassScreenState extends State<GatePassScreen> {
           Text(
             'Reason',
             style: GoogleFonts.poppins(
-              color: const Color(0xFF94A3B8),
+              color: const Color(0xFF475569),
               fontSize: 12,
             ),
           ),
@@ -337,7 +346,7 @@ class _ApplyGatePassFormState extends State<_ApplyGatePassForm> {
                           ? 'Select Exit Time'
                           : _outTime!.format(context),
                       style: GoogleFonts.poppins(
-                        color: _outTime == null ? const Color(0xFF64748B) : Colors.white,
+                        color: _outTime == null ? const Color(0xFF64748B) : const Color(0xFF1E293B),
                         fontSize: 16,
                       ),
                     ),
@@ -354,7 +363,7 @@ class _ApplyGatePassFormState extends State<_ApplyGatePassForm> {
             style: GoogleFonts.poppins(color: const Color(0xFF1E293B)),
             decoration: InputDecoration(
               hintText: 'Reason for leaving early...',
-              hintStyle: GoogleFonts.poppins(color: const Color(0xFF94A3B8)),
+              hintStyle: GoogleFonts.poppins(color: const Color(0xFF475569)),
               filled: true,
               fillColor: const Color(0xFFE2E8F0),
               border: OutlineInputBorder(
@@ -385,7 +394,7 @@ class _ApplyGatePassFormState extends State<_ApplyGatePassForm> {
                 ),
               ),
               child: _isSubmitting
-                  ? const CircularProgressIndicator(color: const Color(0xFF1E293B))
+                  ? const CircularProgressIndicator(color: Colors.white)
                   : Text(
                       'Submit Request',
                       style: GoogleFonts.poppins(
@@ -402,3 +411,5 @@ class _ApplyGatePassFormState extends State<_ApplyGatePassForm> {
     );
   }
 }
+
+

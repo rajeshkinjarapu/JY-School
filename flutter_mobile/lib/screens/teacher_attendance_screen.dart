@@ -173,10 +173,19 @@ class _TeacherAttendanceScreenState extends State<TeacherAttendanceScreen> {
         leading: const BackButton(),
         title: Text(
           'Mark Attendance',
-          style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+          style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white),
         ),
-        backgroundColor: const Color(0xFFE2E8F0),
-        foregroundColor: Colors.white,
+        iconTheme: const IconThemeData(color: Colors.white),
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF2E2A66), Color(0xFF222854)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
+        
         elevation: 0,
       ),
       body: _loadingClasses
@@ -187,7 +196,7 @@ class _TeacherAttendanceScreenState extends State<TeacherAttendanceScreen> {
                 Container(
                   padding: const EdgeInsets.all(18),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF1E293B),
+                    color: Colors.white,
                     border: Border(bottom: BorderSide(color: const Color(0xFFE2E8F0))),
                   ),
                   child: Row(
@@ -197,7 +206,7 @@ class _TeacherAttendanceScreenState extends State<TeacherAttendanceScreen> {
                         child: Container(
                           padding: const EdgeInsets.symmetric(horizontal: 14),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF1E293B),
+                            color: Colors.white,
                             borderRadius: BorderRadius.circular(14),
                             border: Border.all(color: const Color(0xFFE2E8F0)),
                           ),
@@ -231,7 +240,7 @@ class _TeacherAttendanceScreenState extends State<TeacherAttendanceScreen> {
                         child: Container(
                           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF1E293B),
+                            color: Colors.white,
                             borderRadius: BorderRadius.circular(14),
                             border: Border.all(color: const Color(0xFFE2E8F0)),
                           ),
@@ -263,14 +272,14 @@ class _TeacherAttendanceScreenState extends State<TeacherAttendanceScreen> {
                           ? Center(
                               child: Text(
                                 _errorMessage!,
-                                style: GoogleFonts.poppins(color: const Color(0xFF94A3B8)),
+                                style: GoogleFonts.poppins(color: const Color(0xFF475569)),
                               ),
                             )
                           : _students.isEmpty
                               ? Center(
                                   child: Text(
                                     'No students enrolled in this class.',
-                                    style: GoogleFonts.poppins(color: const Color(0xFF94A3B8)),
+                                    style: GoogleFonts.poppins(color: const Color(0xFF475569)),
                                   ),
                                 )
                               : ListView.builder(
@@ -287,7 +296,7 @@ class _TeacherAttendanceScreenState extends State<TeacherAttendanceScreen> {
                                       margin: const EdgeInsets.only(bottom: 16),
                                       padding: const EdgeInsets.all(16),
                                       decoration: BoxDecoration(
-                                        color: const Color(0xFF1E293B),
+                                        color: Colors.white,
                                         borderRadius: BorderRadius.circular(20),
                                         border: Border.all(color: const Color(0xFFE2E8F0)),
                                       ),
@@ -323,7 +332,7 @@ class _TeacherAttendanceScreenState extends State<TeacherAttendanceScreen> {
                                                     Text(
                                                       'Roll No: $rollNo',
                                                       style: GoogleFonts.poppins(
-                                                        color: const Color(0xFF94A3B8),
+                                                        color: const Color(0xFF475569),
                                                         fontSize: 12,
                                                       ),
                                                     ),
@@ -393,7 +402,7 @@ class _TeacherAttendanceScreenState extends State<TeacherAttendanceScreen> {
                                 ? const SizedBox(
                                     height: 24,
                                     width: 24,
-                                    child: CircularProgressIndicator(color: const Color(0xFF1E293B), strokeWidth: 2.5),
+                                    child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
                                   )
                                 : Text(
                                     'Submit Attendance',
@@ -447,3 +456,5 @@ class _TeacherAttendanceScreenState extends State<TeacherAttendanceScreen> {
     );
   }
 }
+
+

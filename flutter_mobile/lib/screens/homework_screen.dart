@@ -86,10 +86,19 @@ class _HomeworkScreenState extends State<HomeworkScreen> {
         leading: const BackButton(),
         title: Text(
           'Daily Homework',
-          style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+          style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white),
         ),
-        backgroundColor: const Color(0xFFE2E8F0),
-        foregroundColor: Colors.white,
+        iconTheme: const IconThemeData(color: Colors.white),
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF2E2A66), Color(0xFF222854)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
+        
         elevation: 0,
       ),
       body: _isLoading
@@ -129,7 +138,7 @@ class _HomeworkScreenState extends State<HomeworkScreen> {
                       ? Center(
                           child: Text(
                             'No homework assigned today.',
-                            style: GoogleFonts.poppins(color: const Color(0xFF94A3B8), fontSize: 16),
+                            style: GoogleFonts.poppins(color: const Color(0xFF475569), fontSize: 16),
                           ),
                         )
                       : ListView.builder(
@@ -146,7 +155,7 @@ class _HomeworkScreenState extends State<HomeworkScreen> {
                             return Container(
                               margin: const EdgeInsets.only(bottom: 18),
                               decoration: BoxDecoration(
-                                color: const Color(0xFF1E293B),
+                                color: Colors.white,
                                 borderRadius: BorderRadius.circular(24),
                                 border: Border.all(color: const Color(0xFFE2E8F0)),
                               ),
@@ -213,7 +222,7 @@ class _HomeworkScreenState extends State<HomeworkScreen> {
                                           Text(
                                             'Assigned by: $teacherName',
                                             style: GoogleFonts.poppins(
-                                              color: const Color(0xFF94A3B8),
+                                              color: const Color(0xFF475569),
                                               fontSize: 11.5,
                                             ),
                                           ),
@@ -230,7 +239,7 @@ class _HomeworkScreenState extends State<HomeworkScreen> {
                                             Text(
                                               'INSTRUCTIONS',
                                               style: GoogleFonts.poppins(
-                                                color: const Color(0xFF94A3B8),
+                                                color: const Color(0xFF475569),
                                                 fontSize: 10,
                                                 fontWeight: FontWeight.bold,
                                                 letterSpacing: 0.5,
@@ -240,7 +249,7 @@ class _HomeworkScreenState extends State<HomeworkScreen> {
                                             Text(
                                               desc,
                                               style: GoogleFonts.poppins(
-                                                color: const Color(0xFF475569),
+                                                color: const Color(0xFF64748B),
                                                 fontSize: 14,
                                                 height: 1.5,
                                               ),
@@ -259,3 +268,5 @@ class _HomeworkScreenState extends State<HomeworkScreen> {
     );
   }
 }
+
+

@@ -42,10 +42,19 @@ class _MessagesScreenState extends State<MessagesScreen> {
         leading: const BackButton(),
         title: Text(
           'Messages',
-          style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+          style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white),
         ),
-        backgroundColor: const Color(0xFFE2E8F0),
-        foregroundColor: Colors.white,
+        iconTheme: const IconThemeData(color: Colors.white),
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF2E2A66), Color(0xFF222854)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
+        
         elevation: 0,
         actions: [
           IconButton(
@@ -218,10 +227,19 @@ class _ChatScreenState extends State<ChatScreen> {
       appBar: AppBar(
         title: Text(
           widget.userName,
-          style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+          style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white),
         ),
-        backgroundColor: const Color(0xFFE2E8F0),
-        foregroundColor: Colors.white,
+        iconTheme: const IconThemeData(color: Colors.white),
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF2E2A66), Color(0xFF222854)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
+        
         elevation: 0,
       ),
       body: Column(
@@ -259,7 +277,7 @@ class _ChatScreenState extends State<ChatScreen> {
                           child: Text(
                             msg['content'] ?? '',
                             style: GoogleFonts.poppins(
-                              color: const Color(0xFF1E293B),
+                              color: isMe ? Colors.white : const Color(0xFF1E293B),
                               fontSize: 14,
                             ),
                           ),
@@ -285,7 +303,7 @@ class _ChatScreenState extends State<ChatScreen> {
                       style: GoogleFonts.poppins(color: const Color(0xFF1E293B)),
                       decoration: InputDecoration(
                         hintText: 'Type a message...',
-                        hintStyle: GoogleFonts.poppins(color: const Color(0xFF94A3B8)),
+                        hintStyle: GoogleFonts.poppins(color: const Color(0xFF475569)),
                         filled: true,
                         fillColor: const Color(0xFFE2E8F0),
                         border: OutlineInputBorder(
@@ -305,7 +323,7 @@ class _ChatScreenState extends State<ChatScreen> {
                         color: Color(0xFF6366F1),
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(Icons.send_rounded, color: const Color(0xFF1E293B), size: 20),
+                      child: const Icon(Icons.send_rounded, color: const Color(0xFF64748B), size: 20),
                     ),
                   ),
                 ],
@@ -317,3 +335,5 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 }
+
+

@@ -46,10 +46,19 @@ class _SalaryScreenState extends State<SalaryScreen> {
         leading: const BackButton(),
         title: Text(
           'My Salary',
-          style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+          style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white),
         ),
-        backgroundColor: const Color(0xFFE2E8F0),
-        foregroundColor: Colors.white,
+        iconTheme: const IconThemeData(color: Colors.white),
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF2E2A66), Color(0xFF222854)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
+        
         elevation: 0,
         actions: [
           IconButton(
@@ -108,7 +117,7 @@ class _SalaryScreenState extends State<SalaryScreen> {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: const Color(0xFF1E293B),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: const Color(0xFFE2E8F0)),
       ),
@@ -148,7 +157,7 @@ class _SalaryScreenState extends State<SalaryScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        '₹${amount.toStringAsFixed(0)}',
+                        '?${amount.toStringAsFixed(0)}',
                         style: GoogleFonts.outfit(
                           color: const Color(0xFF1E293B),
                           fontSize: 24,
@@ -199,3 +208,5 @@ class _SalaryScreenState extends State<SalaryScreen> {
     );
   }
 }
+
+

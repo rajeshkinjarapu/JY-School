@@ -27,6 +27,13 @@ import '../screens/students_screen.dart';
 import '../screens/teachers_screen.dart';
 import '../screens/classes_screen.dart';
 import '../screens/subjects_screen.dart';
+import '../screens/settings_screen.dart';
+import '../screens/announcements_screen.dart';
+import '../screens/reports_screen.dart';
+import '../screens/hr_salary_screen.dart';
+import '../screens/office_tools_screen.dart';
+import '../screens/question_bank_screen.dart';
+import '../screens/answer_key_screen.dart';
 
 class AppDrawer extends StatefulWidget {
   final String currentRoute;
@@ -179,7 +186,7 @@ class _AppDrawerState extends State<AppDrawer> {
                       title: 'Attendance',
                       routeName: 'attendance_admin',
                       isActive: widget.currentRoute == 'attendance_admin',
-                      onTap: () {},
+                      onTap: () => _navigateTo(const AttendanceScreen(), 'attendance_admin'),
                     ),
                     _buildDrawerItem(
                       icon: Icons.description_outlined,
@@ -216,8 +223,158 @@ class _AppDrawerState extends State<AppDrawer> {
                       isActive: widget.currentRoute == 'fees',
                       onTap: () => _navigateTo(const FeesScreen(), 'fees'),
                     ),
+                    _buildDrawerItem(
+                      icon: Icons.campaign_outlined,
+                      title: 'Announcements',
+                      routeName: 'announcements',
+                      isActive: widget.currentRoute == 'announcements',
+                      onTap: () => _navigateTo(const AnnouncementsScreen(), 'announcements'),
+                    ),
+                    _buildDrawerItem(
+                      icon: Icons.message_outlined,
+                      title: 'Messages',
+                      routeName: 'messages',
+                      isActive: widget.currentRoute == 'messages',
+                      onTap: () => _navigateTo(const MessagesScreen(), 'messages'),
+                    ),
+                    _buildDrawerItem(
+                      icon: Icons.bar_chart_outlined,
+                      title: 'Reports',
+                      routeName: 'reports',
+                      isActive: widget.currentRoute == 'reports',
+                      onTap: () => _navigateTo(const ReportsScreen(), 'reports'),
+                    ),
+                    _buildDrawerItem(
+                      icon: Icons.monetization_on_outlined,
+                      title: 'HR Salary',
+                      routeName: 'hr_salary',
+                      isActive: widget.currentRoute == 'hr_salary',
+                      onTap: () => _navigateTo(const HrSalaryScreen(), 'hr_salary'),
+                    ),
+                    _buildDrawerItem(
+                      icon: Icons.co_present_outlined,
+                      title: 'Staff Attendance',
+                      routeName: 'staff_attendance',
+                      isActive: widget.currentRoute == 'staff_attendance',
+                      onTap: () => _navigateTo(const TeacherAttendanceScreen(), 'staff_attendance'),
+                    ),
+                    _buildDrawerItem(
+                      icon: Icons.menu_book_outlined,
+                      title: 'Homework',
+                      routeName: 'homework',
+                      isActive: widget.currentRoute == 'homework',
+                      onTap: () => _navigateTo(const HomeworkScreen(), 'homework'),
+                    ),
+                    if (role == 'SUPER_ADMIN') ...[
+                      _buildDrawerItem(
+                        icon: Icons.build_circle_outlined,
+                        title: 'Office Tools',
+                        routeName: 'office_tools',
+                        isActive: widget.currentRoute == 'office_tools',
+                        onTap: () => _navigateTo(const OfficeToolsScreen(), 'office_tools'),
+                      ),
+                      _buildDrawerItem(
+                        icon: Icons.library_books_outlined,
+                        title: 'Question Bank',
+                        routeName: 'question_bank',
+                        isActive: widget.currentRoute == 'question_bank',
+                        onTap: () => _navigateTo(const QuestionBankScreen(), 'question_bank'),
+                      ),
+                    ],
+                    _buildDrawerItem(
+                      icon: Icons.directions_bus_outlined,
+                      title: 'Transport',
+                      routeName: 'transport',
+                      isActive: widget.currentRoute == 'transport',
+                      onTap: () => _navigateTo(const TransportScreen(), 'transport'),
+                    ),
+                    _buildDrawerItem(
+                      icon: Icons.settings_outlined,
+                      title: 'Settings',
+                      routeName: 'settings',
+                      isActive: widget.currentRoute == 'settings',
+                      onTap: () => _navigateTo(const SettingsScreen(), 'settings'),
+                    ),
+                  ] else if (role == 'TEACHER') ...[
+                    _buildDrawerItem(
+                      icon: Icons.people_outline_rounded,
+                      title: 'Total Students',
+                      routeName: 'students',
+                      isActive: widget.currentRoute == 'students',
+                      onTap: () => _navigateTo(const StudentsScreen(), 'students'),
+                    ),
+                    _buildDrawerItem(
+                      icon: Icons.how_to_reg_rounded,
+                      title: 'Attendance',
+                      routeName: 'attendance',
+                      isActive: widget.currentRoute == 'attendance',
+                      onTap: () => _navigateTo(const TeacherAttendanceScreen(), 'attendance'),
+                    ),
+                    _buildDrawerItem(
+                      icon: Icons.key_outlined,
+                      title: 'Answer Key',
+                      routeName: 'answer_key',
+                      isActive: widget.currentRoute == 'answer_key',
+                      onTap: () => _navigateTo(const AnswerKeyScreen(), 'answer_key'),
+                    ),
+                    _buildDrawerItem(
+                      icon: Icons.menu_book_outlined,
+                      title: 'Homework',
+                      routeName: 'homework',
+                      isActive: widget.currentRoute == 'homework',
+                      onTap: () => _navigateTo(const TeacherHomeworkScreen(), 'homework'),
+                    ),
+                    _buildDrawerItem(
+                      icon: Icons.description_outlined,
+                      title: 'Examination',
+                      routeName: 'exams',
+                      isActive: widget.currentRoute == 'exams',
+                      onTap: () => _navigateTo(const TeacherMarksScreen(), 'exams'),
+                    ),
+                    _buildDrawerItem(
+                      icon: Icons.calendar_today_outlined,
+                      title: 'Timetable',
+                      routeName: 'timetable',
+                      isActive: widget.currentRoute == 'timetable',
+                      onTap: () => _navigateTo(const TimetableScreen(), 'timetable'),
+                    ),
+                    _buildDrawerItem(
+                      icon: Icons.person_off_outlined,
+                      title: 'Leave',
+                      routeName: 'leave',
+                      isActive: widget.currentRoute == 'leave',
+                      onTap: () => _navigateTo(const LeaveScreen(), 'leave'),
+                    ),
+                    _buildDrawerItem(
+                      icon: Icons.account_balance_wallet_outlined,
+                      title: 'My Salary',
+                      routeName: 'my_salary',
+                      isActive: widget.currentRoute == 'my_salary',
+                      onTap: () => _navigateTo(const SalaryScreen(), 'my_salary'),
+                    ),
+                    _buildDrawerItem(
+                      icon: Icons.campaign_outlined,
+                      title: 'Announcements',
+                      routeName: 'announcements',
+                      isActive: widget.currentRoute == 'announcements',
+                      onTap: () => _navigateTo(const AnnouncementsScreen(), 'announcements'),
+                    ),
+                    _buildDrawerItem(
+                      icon: Icons.message_outlined,
+                      title: 'Messages',
+                      routeName: 'messages',
+                      isActive: widget.currentRoute == 'messages',
+                      onTap: () => _navigateTo(const MessagesScreen(), 'messages'),
+                    ),
                   ] else if (role == 'STUDENT') ...[
-                     _buildDrawerItem(
+                    _buildDrawerItem(
+                      icon: Icons.grading_outlined,
+                      title: 'My Grades',
+                      routeName: 'my_grades',
+                      isActive: widget.currentRoute == 'my_grades',
+                      onTap: () => _navigateTo(const ExamsScreen(), 'my_grades'),
+                    ),
+                    _buildDrawerItem(
                       icon: Icons.calendar_month_outlined,
                       title: 'Attendance',
                       routeName: 'attendance',
@@ -225,20 +382,61 @@ class _AppDrawerState extends State<AppDrawer> {
                       onTap: () => _navigateTo(const AttendanceScreen(), 'attendance'),
                     ),
                     _buildDrawerItem(
+                      icon: Icons.calendar_today_outlined,
+                      title: 'Timetable',
+                      routeName: 'timetable',
+                      isActive: widget.currentRoute == 'timetable',
+                      onTap: () => _navigateTo(const TimetableScreen(), 'timetable'),
+                    ),
+                    _buildDrawerItem(
+                      icon: Icons.menu_book_outlined,
+                      title: 'Homework',
+                      routeName: 'homework',
+                      isActive: widget.currentRoute == 'homework',
+                      onTap: () => _navigateTo(const HomeworkScreen(), 'homework'),
+                    ),
+                    _buildDrawerItem(
                       icon: Icons.currency_rupee_outlined,
-                      title: 'Fees',
+                      title: 'My Fees',
                       routeName: 'fees',
                       isActive: widget.currentRoute == 'fees',
                       onTap: () => _navigateTo(const FeesScreen(), 'fees'),
                     ),
-                  ] else ...[
-                    // Teacher basic menu
-                     _buildDrawerItem(
-                      icon: Icons.how_to_reg_rounded,
-                      title: 'Mark Attendance',
-                      routeName: 'attendance',
-                      isActive: widget.currentRoute == 'attendance',
-                      onTap: () => _navigateTo(const TeacherAttendanceScreen(), 'attendance'),
+                    _buildDrawerItem(
+                      icon: Icons.campaign_outlined,
+                      title: 'Announcements',
+                      routeName: 'announcements',
+                      isActive: widget.currentRoute == 'announcements',
+                      onTap: () => _navigateTo(const AnnouncementsScreen(), 'announcements'),
+                    ),
+                    _buildDrawerItem(
+                      icon: Icons.message_outlined,
+                      title: 'Messages',
+                      routeName: 'messages',
+                      isActive: widget.currentRoute == 'messages',
+                      onTap: () => _navigateTo(const MessagesScreen(), 'messages'),
+                    ),
+                  ] else if (role == 'ACCOUNTANT') ...[
+                    _buildDrawerItem(
+                      icon: Icons.account_balance_wallet_outlined,
+                      title: 'Finance',
+                      routeName: 'fees',
+                      isActive: widget.currentRoute == 'fees',
+                      onTap: () => _navigateTo(const FeesScreen(), 'fees'),
+                    ),
+                    _buildDrawerItem(
+                      icon: Icons.campaign_outlined,
+                      title: 'Announcements',
+                      routeName: 'announcements',
+                      isActive: widget.currentRoute == 'announcements',
+                      onTap: () => _navigateTo(const AnnouncementsScreen(), 'announcements'),
+                    ),
+                    _buildDrawerItem(
+                      icon: Icons.message_outlined,
+                      title: 'Messages',
+                      routeName: 'messages',
+                      isActive: widget.currentRoute == 'messages',
+                      onTap: () => _navigateTo(const MessagesScreen(), 'messages'),
                     ),
                   ],
                 ],

@@ -19,6 +19,8 @@ dependencies:
   http: ^1.2.0
   shared_preferences: ^2.2.2
   jwt_decoder: ^2.0.1
+  flutter_local_notifications: ^17.1.2
+  url_launcher: ^6.2.5
 
 dev_dependencies:
   flutter_test:

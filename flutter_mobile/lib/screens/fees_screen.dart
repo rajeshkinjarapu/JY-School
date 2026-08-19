@@ -246,7 +246,7 @@ class _FeesScreenState extends State<FeesScreen> with SingleTickerProviderStateM
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          'Term: $term  •  Due Date: $dueDateStr',
+                          'Term: $term  �  Due Date: $dueDateStr',
                           style: TextStyle(
                             fontSize: 12,
                             color: Colors.blueGrey.shade500,
@@ -258,13 +258,13 @@ class _FeesScreenState extends State<FeesScreen> with SingleTickerProviderStateM
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            _buildBreakdownColumn('Original', '₹${originalAmount.toStringAsFixed(0)}'),
+                            _buildBreakdownColumn('Original', '?${originalAmount.toStringAsFixed(0)}'),
                             if (discount > 0)
-                              _buildBreakdownColumn('Discount', '₹${discount.toStringAsFixed(0)}', isDiscount: true),
-                            _buildBreakdownColumn('Paid', '₹${amountPaid.toStringAsFixed(0)}'),
+                              _buildBreakdownColumn('Discount', '?${discount.toStringAsFixed(0)}', isDiscount: true),
+                            _buildBreakdownColumn('Paid', '?${amountPaid.toStringAsFixed(0)}'),
                             _buildBreakdownColumn(
                               'Balance', 
-                              '₹${amountDue.toStringAsFixed(0)}', 
+                              '?${amountDue.toStringAsFixed(0)}', 
                               isBold: true,
                               textColor: amountDue > 0 ? const Color(0xFFEF4444) : const Color(0xFF1E293B)
                             ),
@@ -312,7 +312,7 @@ class _FeesScreenState extends State<FeesScreen> with SingleTickerProviderStateM
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: const Color(0xFF1E293B),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(24),
         border: Border.all(color: Colors.blueGrey.shade100),
       ),
@@ -333,7 +333,7 @@ class _FeesScreenState extends State<FeesScreen> with SingleTickerProviderStateM
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    '₹${_totalDues.toStringAsFixed(2)}',
+                    '?${_totalDues.toStringAsFixed(2)}',
                     style: const TextStyle(
                       fontSize: 28,
                       fontWeight: FontWeight.w900,
@@ -362,8 +362,8 @@ class _FeesScreenState extends State<FeesScreen> with SingleTickerProviderStateM
                     style: TextStyle(color: Color(0xFF64748B), fontSize: 13),
                   ),
                   Text(
-                    '₹${_totalPaid.toStringAsFixed(0)}',
-                    style: const TextStyle(color: Color(0xFF1E293B), fontWeight: FontWeight.bold, fontSize: 13),
+                    '?${_totalPaid.toStringAsFixed(0)}',
+                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
                   )
                 ],
               )
@@ -421,7 +421,7 @@ class _FeesScreenState extends State<FeesScreen> with SingleTickerProviderStateM
                 style: const TextStyle(fontSize: 12),
               ),
               trailing: Text(
-                '+ ₹${amountPaid.toStringAsFixed(0)}',
+                '+ ?${amountPaid.toStringAsFixed(0)}',
                 style: const TextStyle(
                   color: Color(0xFF10B981),
                   fontWeight: FontWeight.bold,
@@ -435,3 +435,5 @@ class _FeesScreenState extends State<FeesScreen> with SingleTickerProviderStateM
     );
   }
 }
+
+

@@ -2,10 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'screens/login_screen.dart';
 import 'screens/dashboard_screen.dart';
+import 'screens/main_layout.dart';
 import 'services/api_service.dart';
+import 'services/notification_service.dart';
 
-void main() {
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await NotificationService().initialize(navigatorKey);
   runApp(const MyApp());
 }
 
@@ -15,6 +20,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorKey: navigatorKey,
       title: 'JY School ERP',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
@@ -69,6 +75,6 @@ class _AuthCheckState extends State<AuthCheck> {
         ),
       );
     }
-    return _isAuthenticated ? const DashboardScreen() : const LoginScreen();
+    return _isAuthenticated ? const MainLayout() : const LoginScreen();
   }
 }

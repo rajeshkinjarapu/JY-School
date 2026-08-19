@@ -119,10 +119,19 @@ class _ExamsScreenState extends State<ExamsScreen> {
       appBar: AppBar(
         title: Text(
           'Exams & Grades',
-          style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+          style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white),
         ),
-        backgroundColor: const Color(0xFFE2E8F0),
-        foregroundColor: Colors.white,
+        iconTheme: const IconThemeData(color: Colors.white),
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF2E2A66), Color(0xFF222854)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
+        
         elevation: 0,
       ),
       body: _isLoading
@@ -170,7 +179,7 @@ class _ExamsScreenState extends State<ExamsScreen> {
       return Center(
         child: Text(
           'No exams created yet.',
-          style: GoogleFonts.poppins(color: const Color(0xFF94A3B8), fontSize: 16),
+          style: GoogleFonts.poppins(color: const Color(0xFF475569), fontSize: 16),
         ),
       );
     }
@@ -262,7 +271,7 @@ class _ExamsScreenState extends State<ExamsScreen> {
         ? Center(
             child: Text(
               'No exam results declared yet.',
-              style: GoogleFonts.poppins(color: const Color(0xFF94A3B8), fontSize: 16),
+              style: GoogleFonts.poppins(color: const Color(0xFF475569), fontSize: 16),
             ),
           )
         : ListView.builder(
@@ -287,7 +296,7 @@ class _ExamsScreenState extends State<ExamsScreen> {
               return Container(
                 margin: const EdgeInsets.only(bottom: 24),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF1E293B),
+                  color: Colors.white,
                   borderRadius: BorderRadius.circular(24),
                   border: Border.all(color: const Color(0xFFE2E8F0)),
                 ),
@@ -297,7 +306,7 @@ class _ExamsScreenState extends State<ExamsScreen> {
                     Container(
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF1E293B),
+                        color: Colors.white,
                         borderRadius: const BorderRadius.only(
                           topLeft: Radius.circular(24),
                           topRight: Radius.circular(24),
@@ -322,7 +331,7 @@ class _ExamsScreenState extends State<ExamsScreen> {
                                 Text(
                                   'Term: $term',
                                   style: GoogleFonts.poppins(
-                                    color: const Color(0xFF94A3B8),
+                                    color: const Color(0xFF475569),
                                     fontSize: 12,
                                   ),
                                 ),
@@ -415,7 +424,7 @@ class _ExamsScreenState extends State<ExamsScreen> {
                                     child: Text(
                                       max,
                                       style: GoogleFonts.poppins(
-                                        color: const Color(0xFF94A3B8),
+                                        color: const Color(0xFF475569),
                                         fontSize: 13,
                                       ),
                                     ),
@@ -453,7 +462,7 @@ class _ExamsScreenState extends State<ExamsScreen> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF1E293B).withOpacity(0.01),
+                        color: Colors.white.withOpacity(0.01),
                         borderRadius: const BorderRadius.only(
                           bottomLeft: Radius.circular(24),
                           bottomRight: Radius.circular(24),
@@ -465,7 +474,7 @@ class _ExamsScreenState extends State<ExamsScreen> {
                           Text(
                             'TOTAL SCORE',
                             style: GoogleFonts.poppins(
-                              color: const Color(0xFF94A3B8),
+                              color: const Color(0xFF475569),
                               fontSize: 12,
                               fontWeight: FontWeight.bold,
                               letterSpacing: 0.5,
@@ -497,7 +506,7 @@ class _ExamsScreenState extends State<ExamsScreen> {
         child: Text(
           text,
           style: GoogleFonts.poppins(
-            color: const Color(0xFF94A3B8),
+            color: const Color(0xFF475569),
             fontSize: 11,
             fontWeight: FontWeight.bold,
             letterSpacing: 0.5,
@@ -507,3 +516,5 @@ class _ExamsScreenState extends State<ExamsScreen> {
     );
   }
 }
+
+

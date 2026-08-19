@@ -138,10 +138,19 @@ class _TeacherHomeworkScreenState extends State<TeacherHomeworkScreen> {
         leading: const BackButton(),
         title: Text(
           'Post Homework',
-          style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+          style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white),
         ),
-        backgroundColor: const Color(0xFFE2E8F0),
-        foregroundColor: Colors.white,
+        iconTheme: const IconThemeData(color: Colors.white),
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF2E2A66), Color(0xFF222854)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
+        
         elevation: 0,
       ),
       body: _loadingSelectors
@@ -157,7 +166,7 @@ class _TeacherHomeworkScreenState extends State<TeacherHomeworkScreen> {
                     Container(
                       padding: const EdgeInsets.all(24),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF1E293B),
+                        color: Colors.white,
                         borderRadius: BorderRadius.circular(24),
                         border: Border.all(color: const Color(0xFFE2E8F0)),
                       ),
@@ -313,7 +322,7 @@ class _TeacherHomeworkScreenState extends State<TeacherHomeworkScreen> {
                             child: Container(
                               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                               decoration: BoxDecoration(
-                                color: const Color(0xFF1E293B),
+                                color: Colors.white,
                                 borderRadius: BorderRadius.circular(16),
                                 border: Border.all(color: const Color(0xFFE2E8F0)),
                               ),
@@ -326,11 +335,11 @@ class _TeacherHomeworkScreenState extends State<TeacherHomeworkScreen> {
                                       const SizedBox(width: 12),
                                       Text(
                                         dateStr,
-                                        style: GoogleFonts.poppins(
-                                          color: const Color(0xFF1E293B),
-                                          fontWeight: FontWeight.w600,
-                                          fontSize: 14,
-                                        ),
+                                          style: GoogleFonts.poppins(
+                                            color: const Color(0xFF1E293B),
+                                            fontWeight: FontWeight.w600,
+                                            fontSize: 14,
+                                          ),
                                       ),
                                     ],
                                   ),
@@ -380,15 +389,15 @@ class _TeacherHomeworkScreenState extends State<TeacherHomeworkScreen> {
                                 ? const SizedBox(
                                     height: 24,
                                     width: 24,
-                                    child: CircularProgressIndicator(color: const Color(0xFF1E293B), strokeWidth: 2.5),
+                                    child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
                                   )
                                 : Text(
                                     'Publish Homework',
-                                    style: GoogleFonts.poppins(
-                                      color: const Color(0xFF1E293B),
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                    ),
+                                      style: GoogleFonts.poppins(
+                                        color: const Color(0xFF1E293B),
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                   ),
                           ),
                         ),
@@ -405,7 +414,7 @@ class _TeacherHomeworkScreenState extends State<TeacherHomeworkScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       decoration: BoxDecoration(
-        color: const Color(0xFF1E293B),
+        color: const Color(0xFFE2E8F0),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: const Color(0xFFE2E8F0)),
       ),
@@ -444,3 +453,5 @@ class _TeacherHomeworkScreenState extends State<TeacherHomeworkScreen> {
     );
   }
 }
+
+

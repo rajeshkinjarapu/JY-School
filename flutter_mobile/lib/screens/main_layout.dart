@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'dashboard_screen.dart';
-import 'exams_screen.dart';
+import 'examination_dashboard_screen.dart';
 import 'fees_screen.dart';
 import 'transport_screen.dart';
 
@@ -18,7 +18,7 @@ class _MainLayoutState extends State<MainLayout> {
 
   final List<Widget> _screens = [
     const DashboardScreen(),
-    const ExamsScreen(),
+    const ExaminationDashboardScreen(),
     const FeesScreen(),
     const TransportScreen(),
   ];
@@ -85,3 +85,5 @@ class _MainLayoutState extends State<MainLayout> {
     );
   }
 }
+
+

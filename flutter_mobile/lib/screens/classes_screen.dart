@@ -132,7 +132,7 @@ class _ClassesScreenState extends State<ClassesScreen> {
                 Text(
                   name,
                   style: GoogleFonts.outfit(
-                    color: Colors.white,
+                    color: const Color(0xFF1E293B),
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
                   ),
@@ -148,7 +148,7 @@ class _ClassesScreenState extends State<ClassesScreen> {
                     child: Text(
                       'Sec: $section',
                       style: GoogleFonts.poppins(
-                        color: Colors.white,
+                        color: const Color(0xFF1E293B),
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
                       ),
@@ -234,3 +234,6 @@ class _ClassesScreenState extends State<ClassesScreen> {
     );
   }
 }
+
+
+

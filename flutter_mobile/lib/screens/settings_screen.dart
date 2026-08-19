@@ -63,10 +63,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
         leading: const BackButton(),
         title: Text(
           'Account Settings',
-          style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+          style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white),
         ),
-        backgroundColor: const Color(0xFFE2E8F0),
-        foregroundColor: Colors.white,
+        iconTheme: const IconThemeData(color: Colors.white),
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF2E2A66), Color(0xFF222854)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
+        
         elevation: 0,
       ),
       body: SingleChildScrollView(
@@ -127,7 +136,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                 ),
                 child: _isSubmitting
-                    ? const CircularProgressIndicator(color: const Color(0xFF1E293B))
+                    ? const CircularProgressIndicator(color: Colors.white)
                     : Text(
                         'Update Password',
                         style: GoogleFonts.poppins(
@@ -185,3 +194,5 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 }
+
+

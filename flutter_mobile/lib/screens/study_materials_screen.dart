@@ -53,10 +53,19 @@ class _StudyMaterialsScreenState extends State<StudyMaterialsScreen> with Single
         leading: const BackButton(),
         title: Text(
           'Study Materials',
-          style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+          style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white),
         ),
-        backgroundColor: const Color(0xFFE2E8F0),
-        foregroundColor: Colors.white,
+        iconTheme: const IconThemeData(color: Colors.white),
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF2E2A66), Color(0xFF222854)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
+        
         elevation: 0,
         actions: [
           IconButton(
@@ -129,7 +138,7 @@ class _StudyMaterialsScreenState extends State<StudyMaterialsScreen> with Single
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: const Color(0xFF1E293B),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: const Color(0xFFE2E8F0)),
       ),
@@ -173,7 +182,7 @@ class _StudyMaterialsScreenState extends State<StudyMaterialsScreen> with Single
             const SizedBox(height: 6),
             Text(
               'Added on $createdAt',
-              style: GoogleFonts.poppins(color: const Color(0xFF94A3B8), fontSize: 11),
+              style: GoogleFonts.poppins(color: const Color(0xFF475569), fontSize: 11),
             ),
           ],
         ),
@@ -189,3 +198,5 @@ class _StudyMaterialsScreenState extends State<StudyMaterialsScreen> with Single
     );
   }
 }
+
+

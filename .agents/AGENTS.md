@@ -1,1 +1,3 @@
 # Custom Rules
+
+- **Flutter App Design Protocol (Deep Check Required):** When designing any page or module (like Students, Teachers, etc.) in the Flutter app, ALWAYS first check the web app's (`frontend/src/pages/`) design deeply, page by page. Confirm exactly which UI options exist, what sub-pages they navigate to, what missing pages need to be created in Flutter, and what real API data is being loaded. After verifying the web app's full flow, design the Flutter screens to match the exact functionality (fetching real data, no dummy data) but with a significantly better, more modern, and premium mobile design. This deep check is an explicit order.

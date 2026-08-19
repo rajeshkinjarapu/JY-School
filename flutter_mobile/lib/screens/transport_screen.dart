@@ -45,10 +45,19 @@ class _TransportScreenState extends State<TransportScreen> {
       appBar: AppBar(
         title: Text(
           'Transport Routes',
-          style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+          style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white),
         ),
-        backgroundColor: const Color(0xFFE2E8F0),
-        foregroundColor: Colors.white,
+        iconTheme: const IconThemeData(color: Colors.white),
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF2E2A66), Color(0xFF222854)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
+        
         elevation: 0,
         actions: [
           IconButton(
@@ -96,7 +105,7 @@ class _TransportScreenState extends State<TransportScreen> {
     return Container(
       margin: const EdgeInsets.only(bottom: 20),
       decoration: BoxDecoration(
-        color: const Color(0xFF1E293B),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(24),
         border: Border.all(color: const Color(0xFFE2E8F0)),
         boxShadow: [
@@ -223,7 +232,7 @@ class _TransportScreenState extends State<TransportScreen> {
               decoration: BoxDecoration(
                 color: isFirst ? const Color(0xFF10B981) : const Color(0xFFEF4444),
                 shape: BoxShape.circle,
-                border: Border.all(color: const Color(0xFF1E293B), width: 2),
+                border: Border.all(color: Colors.white, width: 2),
               ),
             ),
             if (!isLast)
@@ -244,7 +253,7 @@ class _TransportScreenState extends State<TransportScreen> {
                 Text(
                   title,
                   style: GoogleFonts.poppins(
-                    color: const Color(0xFF94A3B8),
+                    color: const Color(0xFF475569),
                     fontSize: 10,
                     fontWeight: FontWeight.w600,
                   ),
@@ -278,3 +287,5 @@ class _TransportScreenState extends State<TransportScreen> {
     );
   }
 }
+
+

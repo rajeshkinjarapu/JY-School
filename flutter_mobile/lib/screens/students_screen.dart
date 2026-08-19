@@ -14,6 +14,8 @@ class _StudentsScreenState extends State<StudentsScreen> {
   List<dynamic> _classes = [];
   String? _selectedClassId;
   List<dynamic> _students = [];
+  List<dynamic> _filteredStudents = [];
+  String _searchQuery = '';
   bool _isLoading = true;
   String _errorMessage = '';
 
@@ -71,6 +73,8 @@ class _StudentsScreenState extends State<StudentsScreen> {
       if (result['success']) {
         setState(() {
           _students = result['data'] ?? [];
+          _filteredStudents = _students;
+          _runSearch(_searchQuery); // Apply existing search if any
           _isLoading = false;
         });
       } else {
@@ -80,6 +84,22 @@ class _StudentsScreenState extends State<StudentsScreen> {
         });
       }
     }
+  }
+
+  void _runSearch(String query) {
+    setState(() {
+      _searchQuery = query.toLowerCase();
+      if (_searchQuery.isEmpty) {
+        _filteredStudents = _students;
+      } else {
+        _filteredStudents = _students.where((student) {
+          final user = student['user'] ?? {};
+          final name = (user['name'] ?? '').toString().toLowerCase();
+          final rollNo = (student['rollNo'] ?? '').toString().toLowerCase();
+          return name.contains(_searchQuery) || rollNo.contains(_searchQuery);
+        }).toList();
+      }
+    });
   }
 
   @override
@@ -115,8 +135,8 @@ class _StudentsScreenState extends State<StudentsScreen> {
               ? const Center(child: CircularProgressIndicator(color: Color(0xFF6366F1)))
               : _errorMessage.isNotEmpty
                 ? Center(child: Text(_errorMessage, style: const TextStyle(color: Colors.red)))
-                : _students.isEmpty
-                  ? const Center(child: Text("No students found in this class"))
+                : _filteredStudents.isEmpty
+                  ? _buildEmptyState()
                   : SingleChildScrollView(
                       child: Container(
                         margin: const EdgeInsets.all(16),
@@ -137,8 +157,8 @@ class _StudentsScreenState extends State<StudentsScreen> {
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
                               _buildTableHeader(),
-                              ...List.generate(_students.length, (index) {
-                                return _buildTableRow(_students[index], index);
+                              ...List.generate(_filteredStudents.length, (index) {
+                                return _buildTableRow(_filteredStudents[index], index);
                               }),
                             ],
                           ),
@@ -210,9 +230,7 @@ class _StudentsScreenState extends State<StudentsScreen> {
                 border: InputBorder.none,
                 contentPadding: const EdgeInsets.symmetric(vertical: 12),
               ),
-              onChanged: (value) {
-                // local search filter could go here
-              },
+              onChanged: _runSearch,
             ),
           ),
         ],
@@ -299,7 +317,7 @@ class _StudentsScreenState extends State<StudentsScreen> {
                         Text(
                           rollNo,
                           style: GoogleFonts.poppins(
-                            color: const Color(0xFF94A3B8),
+                            color: const Color(0xFF475569),
                             fontSize: 11,
                           ),
                         ),
@@ -335,4 +353,24 @@ class _StudentsScreenState extends State<StudentsScreen> {
       ),
     );
   }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.search_off_rounded, size: 80, color: const Color(0xFF94A3B8).withOpacity(0.5)),
+          const SizedBox(height: 16),
+          Text(
+            _searchQuery.isNotEmpty ? 'No students found matching "$_searchQuery"' : 'No students found in this class.',
+            style: GoogleFonts.poppins(color: const Color(0xFF64748B), fontSize: 16),
+          ),
+        ],
+      ),
+    );
+  }
 }
+
+
+
+

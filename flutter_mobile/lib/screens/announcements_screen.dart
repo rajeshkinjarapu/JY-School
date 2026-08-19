@@ -48,10 +48,19 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
         leading: const BackButton(),
         title: Text(
           'Announcements',
-          style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+          style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white),
         ),
-        backgroundColor: const Color(0xFFE2E8F0),
-        foregroundColor: Colors.white,
+        iconTheme: const IconThemeData(color: Colors.white),
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF2E2A66), Color(0xFF222854)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
+        
         elevation: 0,
       ),
       body: _isLoading
@@ -91,7 +100,7 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
                       ? Center(
                           child: Text(
                             'No announcements yet.',
-                            style: GoogleFonts.poppins(color: const Color(0xFF94A3B8), fontSize: 16),
+                            style: GoogleFonts.poppins(color: const Color(0xFF475569), fontSize: 16),
                           ),
                         )
                       : ListView.builder(
@@ -109,7 +118,7 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
                             return Container(
                               margin: const EdgeInsets.only(bottom: 16),
                               decoration: BoxDecoration(
-                                color: const Color(0xFF1E293B),
+                                color: Colors.white,
                                 borderRadius: BorderRadius.circular(24),
                                 border: Border.all(color: const Color(0xFFE2E8F0)),
                               ),
@@ -144,7 +153,7 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
                                       child: Text(
                                         'By $author  •  $dateStr',
                                         style: GoogleFonts.poppins(
-                                          color: const Color(0xFF94A3B8),
+                                          color: const Color(0xFF475569),
                                           fontSize: 11,
                                         ),
                                       ),
@@ -155,7 +164,7 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
                                         child: Text(
                                           message,
                                           style: GoogleFonts.poppins(
-                                            color: const Color(0xFF475569),
+                                            color: const Color(0xFF64748B),
                                             fontSize: 14,
                                             height: 1.5,
                                           ),
@@ -206,3 +215,5 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
     }
   }
 }
+
+

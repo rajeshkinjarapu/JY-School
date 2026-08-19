@@ -118,10 +118,19 @@ class _TimetableScreenState extends State<TimetableScreen> with SingleTickerProv
         leading: const BackButton(),
         title: Text(
           'Class Timetable',
-          style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+          style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white),
         ),
-        backgroundColor: const Color(0xFFE2E8F0),
-        foregroundColor: Colors.white,
+        iconTheme: const IconThemeData(color: Colors.white),
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF2E2A66), Color(0xFF222854)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
+        
         elevation: 0,
         bottom: PreferredSize(
           preferredSize: Size.fromHeight(_userRole != 'STUDENT' ? 100 : 50),
@@ -215,7 +224,7 @@ class _TimetableScreenState extends State<TimetableScreen> with SingleTickerProv
                           ? Center(
                               child: Text(
                                 'No classes scheduled for $day.',
-                                style: GoogleFonts.poppins(color: const Color(0xFF94A3B8), fontSize: 16),
+                                style: GoogleFonts.poppins(color: const Color(0xFF475569), fontSize: 16),
                               ),
                             )
                           : ListView.builder(
@@ -251,7 +260,7 @@ class _TimetableScreenState extends State<TimetableScreen> with SingleTickerProv
                                             Text(
                                               endTime,
                                               style: GoogleFonts.poppins(
-                                                color: const Color(0xFF94A3B8),
+                                                color: const Color(0xFF475569),
                                                 fontSize: 11,
                                               ),
                                             ),
@@ -390,3 +399,5 @@ class _TimetableScreenState extends State<TimetableScreen> with SingleTickerProv
     );
   }
 }
+
+

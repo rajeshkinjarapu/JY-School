@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiService {
-  static const String baseUrl = 'https://overcast-spoken-stuck.ngrok-free.dev';
+  static const String baseUrl = 'https://paralyze-canteen-goon.ngrok-free.dev';
 
   // Base headers for API requests
   static Map<String, String> _getHeaders({String? token}) {
@@ -64,254 +64,105 @@ class ApiService {
 
   // Fetch student/staff profile
   static Future<Map<String, dynamic>> getMe() async {
-    try {
-      final token = await getToken();
-      if (token == null) return {'success': false, 'message': 'No session token'};
-
-      final response = await http.get(
-        Uri.parse('$baseUrl/api/auth/me'),
-        headers: _getHeaders(token: token),
-      );
-
-      final Map<String, dynamic> data = jsonDecode(response.body);
-      if (response.statusCode == 200) {
-        return {'success': true, 'data': data['data'] ?? data};
-      }
-      return {'success': false, 'message': data['message'] ?? 'Failed to get profile'};
-    } catch (e) {
-      return {'success': false, 'message': 'Network error: $e'};
-    }
+    return _performGet('/api/auth/me', 'Failed to get profile');
   }
 
   // Get student attendance
   static Future<Map<String, dynamic>> getAttendance(String studentId, {String? startDate, String? endDate}) async {
-    try {
-      final token = await getToken();
-      if (token == null) return {'success': false, 'message': 'No session token'};
-
-      String url = '$baseUrl/api/attendance/student?studentId=$studentId';
-      if (startDate != null) url += '&startDate=$startDate';
-      if (endDate != null) url += '&endDate=$endDate';
-
-      final response = await http.get(
-        Uri.parse(url),
-        headers: _getHeaders(token: token),
-      );
-
-      final Map<String, dynamic> data = jsonDecode(response.body);
-      if (response.statusCode == 200) {
-        return {'success': true, 'data': data['data'] ?? data};
-      }
-      return {'success': false, 'message': data['message'] ?? 'Failed to get attendance'};
-    } catch (e) {
-      return {'success': false, 'message': 'Network error: $e'};
-    }
+    String url = '/api/attendance/student?studentId=$studentId';
+    if (startDate != null) url += '&startDate=$startDate';
+    if (endDate != null) url += '&endDate=$endDate';
+    return _performGet(url, 'Failed to get attendance');
   }
 
   // Get student fee status
   static Future<Map<String, dynamic>> getFeeStatus(String studentId) async {
-    try {
-      final token = await getToken();
-      if (token == null) return {'success': false, 'message': 'No session token'};
-
-      final response = await http.get(
-        Uri.parse('$baseUrl/api/fees/student/$studentId'),
-        headers: _getHeaders(token: token),
-      );
-
-      final Map<String, dynamic> data = jsonDecode(response.body);
-      if (response.statusCode == 200) {
-        return {'success': true, 'data': data['data'] ?? data};
-      }
-      return {'success': false, 'message': data['message'] ?? 'Failed to get fee status'};
-    } catch (e) {
-      return {'success': false, 'message': 'Network error: $e'};
-    }
+    return _performGet('/api/fees/student/$studentId', 'Failed to get fee status');
   }
-
 
   // Get student marks / exam results
   static Future<Map<String, dynamic>> getMarks(String studentId) async {
-    try {
-      final token = await getToken();
-      if (token == null) return {'success': false, 'message': 'No session token'};
-
-      final response = await http.get(
-        Uri.parse('$baseUrl/api/marks/student/$studentId'),
-        headers: _getHeaders(token: token),
-      );
-
-      final Map<String, dynamic> data = jsonDecode(response.body);
-      if (response.statusCode == 200) {
-        return {'success': true, 'data': data['data'] ?? data};
-      }
-      return {'success': false, 'message': data['message'] ?? 'Failed to get results'};
-    } catch (e) {
-      return {'success': false, 'message': 'Network error: $e'};
-    }
+    return _performGet('/api/marks/student/$studentId', 'Failed to get results');
   }
 
   // Get class timetable
   static Future<Map<String, dynamic>> getTimetable(String classId) async {
-    try {
-      final token = await getToken();
-      if (token == null) return {'success': false, 'message': 'No session token'};
-
-      final response = await http.get(
-        Uri.parse('$baseUrl/api/timetable?classId=$classId'),
-        headers: _getHeaders(token: token),
-      );
-
-      final Map<String, dynamic> data = jsonDecode(response.body);
-      if (response.statusCode == 200) {
-        return {'success': true, 'data': data['data'] ?? data};
-      }
-      return {'success': false, 'message': data['message'] ?? 'Failed to get timetable'};
-    } catch (e) {
-      return {'success': false, 'message': 'Network error: $e'};
-    }
+    return _performGet('/api/timetable?classId=$classId', 'Failed to get timetable');
   }
 
   // Get school announcements
   static Future<Map<String, dynamic>> getAnnouncements() async {
-    try {
-      final token = await getToken();
-      if (token == null) return {'success': false, 'message': 'No session token'};
-
-      final response = await http.get(
-        Uri.parse('$baseUrl/api/announcements'),
-        headers: _getHeaders(token: token),
-      );
-
-      final Map<String, dynamic> data = jsonDecode(response.body);
-      if (response.statusCode == 200) {
-        return {'success': true, 'data': data['data'] ?? data};
-      }
-      return {'success': false, 'message': data['message'] ?? 'Failed to get announcements'};
-    } catch (e) {
-      return {'success': false, 'message': 'Network error: $e'};
-    }
+    return _performGet('/api/announcements', 'Failed to get announcements');
   }
 
   // Get homework list
   static Future<Map<String, dynamic>> getHomework() async {
-    try {
-      final token = await getToken();
-      if (token == null) return {'success': false, 'message': 'No session token'};
-
-      final response = await http.get(
-        Uri.parse('$baseUrl/api/homework'),
-        headers: _getHeaders(token: token),
-      );
-
-      final Map<String, dynamic> data = jsonDecode(response.body);
-      if (response.statusCode == 200) {
-        return {'success': true, 'data': data['data'] ?? data};
-      }
-      return {'success': false, 'message': data['message'] ?? 'Failed to get homework'};
-    } catch (e) {
-      return {'success': false, 'message': 'Network error: $e'};
-    }
+    return _performGet('/api/homework', 'Failed to get homework');
   }
 
   // Get school classes list
   static Future<Map<String, dynamic>> getClasses() async {
-    try {
-      final token = await getToken();
-      if (token == null) return {'success': false, 'message': 'No session token'};
-
-      final response = await http.get(
-        Uri.parse('$baseUrl/api/classes'),
-        headers: _getHeaders(token: token),
-      );
-
-      final Map<String, dynamic> data = jsonDecode(response.body);
-      if (response.statusCode == 200) {
-        return {'success': true, 'data': data['data'] ?? data};
-      }
-      return {'success': false, 'message': data['message'] ?? 'Failed to get classes'};
-    } catch (e) {
-      return {'success': false, 'message': 'Network error: $e'};
-    }
+    return _performGet('/api/classes', 'Failed to get classes');
   }
 
-  // Get students list
-  static Future<Map<String, dynamic>> getStudents({int limit = 500, String? classId}) async {
-    try {
-      final token = await getToken();
-      if (token == null) return {'success': false, 'message': 'No session token'};
-
-      String url = '$baseUrl/api/students?limit=$limit';
-      if (classId != null && classId.isNotEmpty) {
-        url += '&classId=$classId';
-      }
-
-      final response = await http.get(
-        Uri.parse(url),
-        headers: _getHeaders(token: token),
-      );
-
-      final Map<String, dynamic> data = jsonDecode(response.body);
-      if (response.statusCode == 200) {
-        return {'success': true, 'data': data['data'] ?? data};
-      }
-      return {'success': false, 'message': data['message'] ?? 'Failed to get students'};
-    } catch (e) {
-      return {'success': false, 'message': 'Network error: $e'};
+  // Get all students
+  static Future<Map<String, dynamic>> getStudents({String? classId, int limit = 50}) async {
+    String url = '/api/students?limit=$limit';
+    if (classId != null && classId.isNotEmpty) {
+      url += '&classId=$classId';
     }
+    return _performGet(url, 'Failed to get students');
+  }
+
+  // Get student by ID
+  static Future<Map<String, dynamic>> getStudentById(String id) async {
+    return _performGet('/api/students/$id', 'Failed to get student profile');
   }
 
   // Get school subjects list
   static Future<Map<String, dynamic>> getSubjects() async {
-    try {
-      final token = await getToken();
-      if (token == null) return {'success': false, 'message': 'No session token'};
-
-      final response = await http.get(
-        Uri.parse('$baseUrl/api/subjects'),
-        headers: _getHeaders(token: token),
-      );
-
-      final Map<String, dynamic> data = jsonDecode(response.body);
-      if (response.statusCode == 200) {
-        return {'success': true, 'data': data['data'] ?? data};
-      }
-      return {'success': false, 'message': data['message'] ?? 'Failed to get subjects'};
-    } catch (e) {
-      return {'success': false, 'message': 'Network error: $e'};
-    }
+    return _performGet('/api/subjects', 'Failed to get subjects');
   }
 
   // Get exams list
   static Future<Map<String, dynamic>> getExams({String classId = ''}) async {
-    try {
-      final token = await getToken();
-      if (token == null) return {'success': false, 'message': 'No session token'};
-
-      final url = classId.isNotEmpty 
-          ? '$baseUrl/api/exams?classId=$classId' 
-          : '$baseUrl/api/exams';
-
-      final response = await http.get(
-        Uri.parse(url),
-        headers: _getHeaders(token: token),
-      );
-
-      final Map<String, dynamic> data = jsonDecode(response.body);
-      if (response.statusCode == 200) {
-        return {'success': true, 'data': data['data'] ?? data};
-      }
-      return {'success': false, 'message': data['message'] ?? 'Failed to get exams'};
-    } catch (e) {
-      return {'success': false, 'message': 'Network error: $e'};
-    }
+    final url = classId.isNotEmpty ? '/api/exams?classId=$classId' : '/api/exams';
+    return _performGet(url, 'Failed to get exams');
   }
 
+  // Get all exams results
+  static Future<Map<String, dynamic>> getExamResults(String examId, {String classId = ''}) async {
+    String url = '/api/exams/$examId/results';
+    if (classId.isNotEmpty) {
+      url += '?classId=$classId';
+    }
+    return _performGet(url, 'Failed to get exam results');
+  }
+
+  // Get exam status overview
+  static Future<Map<String, dynamic>> getExamStatus() async {
+    return _performGet('/api/exams/status/all', 'Failed to get exam status');
+  }
+
+  // Send marks SMS
+  static Future<Map<String, dynamic>> sendMarksSMS(String examId, String classId, Map<String, dynamic> payload) async {
+    return _performPost('/api/exams/$examId/classes/$classId/send-sms', payload, 'Failed to send SMS');
+  }
 
 
   // Get all teachers
   static Future<Map<String, dynamic>> getTeachers({int limit = 500}) async {
     return _performGet('/api/teachers?limit=$limit', 'Failed to get teachers');
+  }
+
+  // Get teacher profile by ID
+  static Future<Map<String, dynamic>> getTeacherById(String id) async {
+    return _performGet('/api/teachers/$id', 'Failed to get teacher profile');
+  }
+
+  // Get classes assigned to a teacher
+  static Future<Map<String, dynamic>> getTeacherClasses(String id) async {
+    return _performGet('/api/teachers/$id/assigned-classes', 'Failed to get assigned classes');
   }
 
   // Get class student attendance list
@@ -418,86 +269,22 @@ class ApiService {
 
   // Get students list in a class
   static Future<Map<String, dynamic>> getClassStudents(String classId) async {
-    try {
-      final token = await getToken();
-      if (token == null) return {'success': false, 'message': 'No session token'};
-
-      final response = await http.get(
-        Uri.parse('$baseUrl/api/classes/$classId/students'),
-        headers: _getHeaders(token: token),
-      );
-
-      final dynamic decoded = jsonDecode(response.body);
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        return {'success': true, 'data': decoded is Map && decoded.containsKey('data') ? decoded['data'] : decoded};
-      }
-      return {'success': false, 'message': decoded is Map ? (decoded['message'] ?? 'Failed request') : 'Failed request'};
-    } catch (e) {
-      return {'success': false, 'message': 'Network error: $e'};
-    }
+    return _performGet('/api/classes/$classId/students', 'Failed request');
   }
 
   // Get all events and holidays
   static Future<Map<String, dynamic>> getEvents() async {
-    try {
-      final token = await getToken();
-      if (token == null) return {'success': false, 'message': 'No session token'};
-
-      final response = await http.get(
-        Uri.parse('$baseUrl/api/events'),
-        headers: _getHeaders(token: token),
-      );
-
-      final dynamic decoded = jsonDecode(response.body);
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        return {'success': true, 'data': decoded is Map && decoded.containsKey('data') ? decoded['data'] : decoded};
-      }
-      return {'success': false, 'message': decoded is Map ? (decoded['message'] ?? 'Failed request') : 'Failed request'};
-    } catch (e) {
-      return {'success': false, 'message': 'Network error: $e'};
-    }
+    return _performGet('/api/events', 'Failed request');
   }
 
   // Get transport routes
   static Future<Map<String, dynamic>> getTransportRoutes() async {
-    try {
-      final token = await getToken();
-      if (token == null) return {'success': false, 'message': 'No session token'};
-
-      final response = await http.get(
-        Uri.parse('$baseUrl/api/transport/routes'),
-        headers: _getHeaders(token: token),
-      );
-
-      final dynamic decoded = jsonDecode(response.body);
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        return {'success': true, 'data': decoded is Map && decoded.containsKey('data') ? decoded['data'] : decoded};
-      }
-      return {'success': false, 'message': decoded is Map ? (decoded['message'] ?? 'Failed request') : 'Failed request'};
-    } catch (e) {
-      return {'success': false, 'message': 'Network error: $e'};
-    }
+    return _performGet('/api/transport/routes', 'Failed request');
   }
 
   // Get my leave requests
   static Future<Map<String, dynamic>> getMyLeaves() async {
-    try {
-      final token = await getToken();
-      if (token == null) return {'success': false, 'message': 'No session token'};
-
-      final response = await http.get(
-        Uri.parse('$baseUrl/api/leave/my'),
-        headers: _getHeaders(token: token),
-      );
-
-      final dynamic decoded = jsonDecode(response.body);
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        return {'success': true, 'data': decoded is Map && decoded.containsKey('data') ? decoded['data'] : decoded};
-      }
-      return {'success': false, 'message': decoded is Map ? (decoded['message'] ?? 'Failed request') : 'Failed request'};
-    } catch (e) {
-      return {'success': false, 'message': 'Network error: $e'};
-    }
+    return _performGet('/api/leave/my', 'Failed request');
   }
 
   // Apply for leave
@@ -630,24 +417,41 @@ class ApiService {
     }
   }
 
-  // Generic GET Helper
+  // Generic GET Helper with Offline Caching
   static Future<Map<String, dynamic>> _performGet(String endpoint, String errorMsg) async {
     try {
       final token = await getToken();
       if (token == null) return {'success': false, 'message': 'No session token'};
 
-      final response = await http.get(
-        Uri.parse('$baseUrl$endpoint'),
-        headers: _getHeaders(token: token),
-      );
+      try {
+        final response = await http.get(
+          Uri.parse('$baseUrl$endpoint'),
+          headers: _getHeaders(token: token),
+        ).timeout(const Duration(seconds: 10));
 
-      final dynamic decoded = jsonDecode(response.body);
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        return {'success': true, 'data': decoded is Map && decoded.containsKey('data') ? decoded['data'] : decoded};
+        final dynamic decoded = jsonDecode(response.body);
+        if (response.statusCode == 200 || response.statusCode == 201) {
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString('cache_$endpoint', response.body);
+          
+          return {'success': true, 'data': decoded is Map && decoded.containsKey('data') ? decoded['data'] : decoded};
+        }
+        return {'success': false, 'message': decoded is Map ? (decoded['message'] ?? errorMsg) : errorMsg};
+      } catch (e) {
+        final prefs = await SharedPreferences.getInstance();
+        final cachedStr = prefs.getString('cache_$endpoint');
+        
+        if (cachedStr != null) {
+          final dynamic decoded = jsonDecode(cachedStr);
+          if (decoded is Map || decoded is List) {
+             final data = decoded is Map && decoded.containsKey('data') ? decoded['data'] : decoded;
+             return {'success': true, 'data': data, 'isCached': true};
+          }
+        }
+        return {'success': false, 'message': 'Network error and no offline data. Please check your connection.'};
       }
-      return {'success': false, 'message': decoded is Map ? (decoded['message'] ?? errorMsg) : errorMsg};
     } catch (e) {
-      return {'success': false, 'message': 'Network error: $e'};
+      return {'success': false, 'message': 'Unexpected error: $e'};
     }
   }
 
@@ -664,6 +468,21 @@ class ApiService {
   // Get Generated Papers (Study Material)
   static Future<Map<String, dynamic>> getGeneratedPapers() async {
     return _performGet('/api/generatedPapers', 'Failed to get generated papers');
+  }
+
+  // Get Answer Keys
+  static Future<Map<String, dynamic>> getAnswerKeys() async {
+    return _performGet('/api/answerKeys', 'Failed to get answer keys');
+  }
+
+  // Get Office Tools (Placeholder for now as this might be multiple endpoints)
+  static Future<Map<String, dynamic>> getOfficeTools() async {
+    return {'success': true, 'data': []};
+  }
+
+  // Get Reports (Placeholder for now as there are multiple report types)
+  static Future<Map<String, dynamic>> getReports() async {
+    return {'success': true, 'data': []};
   }
 
   // Change Password

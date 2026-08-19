@@ -59,10 +59,19 @@ class _LeaveScreenState extends State<LeaveScreen> {
         leading: const BackButton(),
         title: Text(
           'Leave Requests',
-          style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+          style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white),
         ),
-        backgroundColor: const Color(0xFFE2E8F0),
-        foregroundColor: Colors.white,
+        iconTheme: const IconThemeData(color: Colors.white),
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF2E2A66), Color(0xFF222854)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
+        
         elevation: 0,
         actions: [
           IconButton(
@@ -73,8 +82,8 @@ class _LeaveScreenState extends State<LeaveScreen> {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _showApplyLeaveBottomSheet,
-        backgroundColor: const Color(0xFF6366F1),
-        icon: const Icon(Icons.add, color: const Color(0xFF1E293B)),
+        backgroundColor: const Color(0xFF10B981),
+        icon: const Icon(Icons.add, color: const Color(0xFF64748B)),
         label: Text(
           'Apply Leave',
           style: GoogleFonts.poppins(color: const Color(0xFF1E293B), fontWeight: FontWeight.bold),
@@ -138,7 +147,7 @@ class _LeaveScreenState extends State<LeaveScreen> {
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: const Color(0xFF1E293B),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: const Color(0xFFE2E8F0)),
         boxShadow: [
@@ -198,7 +207,7 @@ class _LeaveScreenState extends State<LeaveScreen> {
           Text(
             'Reason',
             style: GoogleFonts.poppins(
-              color: const Color(0xFF94A3B8),
+              color: const Color(0xFF475569),
               fontSize: 12,
             ),
           ),
@@ -352,7 +361,7 @@ class _ApplyLeaveFormState extends State<_ApplyLeaveForm> {
                           ? 'Select Date Range'
                           : '${_startDate!.toIso8601String().split('T')[0]} to ${_endDate!.toIso8601String().split('T')[0]}',
                       style: GoogleFonts.poppins(
-                        color: _startDate == null ? const Color(0xFF64748B) : Colors.white,
+                        color: _startDate == null ? const Color(0xFF64748B) : const Color(0xFF1E293B),
                         fontSize: 16,
                       ),
                     ),
@@ -369,7 +378,7 @@ class _ApplyLeaveFormState extends State<_ApplyLeaveForm> {
             style: GoogleFonts.poppins(color: const Color(0xFF1E293B)),
             decoration: InputDecoration(
               hintText: 'Reason for leave...',
-              hintStyle: GoogleFonts.poppins(color: const Color(0xFF94A3B8)),
+              hintStyle: GoogleFonts.poppins(color: const Color(0xFF475569)),
               filled: true,
               fillColor: const Color(0xFFE2E8F0),
               border: OutlineInputBorder(
@@ -400,7 +409,7 @@ class _ApplyLeaveFormState extends State<_ApplyLeaveForm> {
                 ),
               ),
               child: _isSubmitting
-                  ? const CircularProgressIndicator(color: const Color(0xFF1E293B))
+                  ? const CircularProgressIndicator(color: Colors.white)
                   : Text(
                       'Submit Request',
                       style: GoogleFonts.poppins(
@@ -417,3 +426,5 @@ class _ApplyLeaveFormState extends State<_ApplyLeaveForm> {
     );
   }
 }
+
+
