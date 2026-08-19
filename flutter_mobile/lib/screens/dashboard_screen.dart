@@ -1,11 +1,13 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:fl_chart/fl_chart.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/api_service.dart';
 import 'login_screen.dart';
 import 'attendance_screen.dart';
 import 'fees_screen.dart';
+import 'finance_screen.dart';
 import 'exams_screen.dart';
 import 'timetable_screen.dart';
 import 'teacher_attendance_screen.dart';
@@ -46,6 +48,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
   int _adminTotalClasses = 0;
   double _adminFeeCollected = 0.0;
   double _adminFeePending = 0.0;
+
+  List<dynamic> _adminAttendanceTrend = [];
+  List<dynamic> _adminMonthlyFeeCollection = [];
+  List<dynamic> _recentAnnouncements = [];
 
   @override
   void initState() {
@@ -135,6 +141,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             _teacherTodayPresent = int.tryParse(attendanceSummary['present']?.toString() ?? '0') ?? 0;
             _teacherTodayAbsent = int.tryParse(attendanceSummary['absent']?.toString() ?? '0') ?? 0;
             _teacherAttendancePercent = double.tryParse(attendanceSummary['rate']?.toString() ?? '0.0') ?? 0.0;
+            _adminAttendanceTrend = data['attendanceTrend'] ?? [];
             _isLoading = false;
           });
         } else {
@@ -155,6 +162,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
             _adminTotalClasses = int.tryParse(stats['totalClasses']?.toString() ?? '24') ?? 24; 
             _adminFeeCollected = double.tryParse(stats['totalRevenue']?.toString() ?? '0') ?? 0.0;
             _adminFeePending = 0.0; // API doesn't return pending directly in admin dashboard
+            _adminAttendanceTrend = stats['attendanceTrend'] ?? [];
+            _adminMonthlyFeeCollection = stats['monthlyFeeCollection'] ?? [];
+            _recentAnnouncements = stats['recentAnnouncements'] ?? [];
             _isLoading = false;
           });
         } else {
@@ -260,9 +270,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          if (userRole == 'SUPER_ADMIN' || userRole == 'ADMIN')
-                            _buildAdminCombinedGrid()
-                          else ...[
+                          if (userRole == 'SUPER_ADMIN' || userRole == 'ADMIN') ...[
+                            _buildAdminCombinedGrid(),
+                            if (_adminAttendanceTrend.isNotEmpty) _buildAttendanceChart(),
+                            if (_recentAnnouncements.isNotEmpty) _buildAnnouncements(),
+                          ] else ...[
                             _buildQuickMetrics(userRole),
                             const SizedBox(height: 32),
                             Text(
@@ -978,7 +990,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             gradientStart: const Color(0xFF9E7AFF),
             gradientEnd: const Color(0xFFB193FF),
             onTap: () {
-              Navigator.push(context, MaterialPageRoute(builder: (context) => const FeesScreen()));
+              Navigator.push(context, MaterialPageRoute(builder: (context) => const FinanceScreen()));
             },
           ),
           _buildAdminActionCard(
@@ -1000,7 +1012,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             gradientStart: const Color(0xFFFF56A5),
             gradientEnd: const Color(0xFFFF7DBA),
             onTap: () {
-              Navigator.push(context, MaterialPageRoute(builder: (context) => const FeesScreen()));
+              Navigator.push(context, MaterialPageRoute(builder: (context) => const FinanceScreen()));
             },
           ),
           _buildAdminActionCard(

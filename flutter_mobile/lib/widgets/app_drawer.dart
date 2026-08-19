@@ -7,6 +7,7 @@ import '../screens/login_screen.dart';
 import '../screens/dashboard_screen.dart';
 import '../screens/attendance_screen.dart';
 import '../screens/fees_screen.dart';
+import '../screens/finance_screen.dart';
 import '../screens/exams_screen.dart';
 import '../screens/timetable_screen.dart';
 import '../screens/homework_screen.dart';
@@ -221,7 +222,7 @@ class _AppDrawerState extends State<AppDrawer> {
                       title: 'Finance',
                       routeName: 'fees',
                       isActive: widget.currentRoute == 'fees',
-                      onTap: () => _navigateTo(const FeesScreen(), 'fees'),
+                      onTap: () => _navigateTo(const FinanceScreen(), 'fees'),
                     ),
                     _buildDrawerItem(
                       icon: Icons.campaign_outlined,
@@ -422,7 +423,7 @@ class _AppDrawerState extends State<AppDrawer> {
                       title: 'Finance',
                       routeName: 'fees',
                       isActive: widget.currentRoute == 'fees',
-                      onTap: () => _navigateTo(const FeesScreen(), 'fees'),
+                      onTap: () => _navigateTo(const FinanceScreen(), 'fees'),
                     ),
                     _buildDrawerItem(
                       icon: Icons.campaign_outlined,

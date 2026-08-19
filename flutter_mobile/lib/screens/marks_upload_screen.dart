@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/api_service.dart';
@@ -30,6 +31,7 @@ class _MarksUploadScreenState extends State<MarksUploadScreen> {
   
   // To get maxMarks from the selected exam's selected subject
   double _maxMarks = 100;
+  bool _isClassFrozen = false;
 
   @override
   void initState() {
@@ -81,7 +83,7 @@ class _MarksUploadScreenState extends State<MarksUploadScreen> {
         // Exams contain JSON array of subjects in the backend structure
         final rawSubjects = exam['subjects'] ?? [];
         if (rawSubjects is String) {
-          // If stored as stringified JSON (fallback, backend normally parses it)
+          try { _subjects = jsonDecode(rawSubjects); } catch (_) {}
         } else if (rawSubjects is List) {
           _subjects = rawSubjects;
         }
@@ -89,8 +91,8 @@ class _MarksUploadScreenState extends State<MarksUploadScreen> {
     });
   }
 
-  Future<void> _fetchStudents() async {
-    if (_selectedClassId == null) return;
+  Future<void> _fetchStudentsAndMarks() async {
+    if (_selectedClassId == null || _selectedExamId == null) return;
     
     setState(() {
       _isLoadingStudents = true;
@@ -98,34 +100,104 @@ class _MarksUploadScreenState extends State<MarksUploadScreen> {
       _students.clear();
       _marksControllers.forEach((_, c) => c.dispose());
       _marksControllers.clear();
+      _isClassFrozen = false;
     });
 
-    final res = await ApiService.getStudents(classId: _selectedClassId);
-
-    if (mounted) {
-      if (res['success']) {
-        final List<dynamic> list = res['data'] ?? [];
-        setState(() {
-          _students = list;
-          for (var s in list) {
-            final id = s['id'];
-            _marksControllers[id] = TextEditingController();
+    try {
+      // Check if frozen
+      final exam = _exams.firstWhere((e) => e['id'] == _selectedExamId, orElse: () => null);
+      if (exam != null) {
+        final frozen = exam['frozenClasses'];
+        if (frozen != null) {
+          List<dynamic> frozenArr = [];
+          if (frozen is String) {
+            try { frozenArr = jsonDecode(frozen); } catch (_) {}
+          } else if (frozen is List) {
+            frozenArr = frozen;
           }
-          _isLoadingStudents = false;
-        });
-      } else {
+          _isClassFrozen = frozenArr.contains(_selectedClassId);
+        }
+      }
+
+      final res = await ApiService.getStudents(_selectedClassId!);
+      final marksRes = await ApiService.getMarksForExam(_selectedExamId!);
+
+      if (mounted) {
+        if (res['success']) {
+          final List<dynamic> list = res['data'] ?? [];
+          final List<dynamic> allMarks = marksRes['success'] ? (marksRes['data'] ?? []) : [];
+
+          setState(() {
+            _students = list;
+            for (var s in list) {
+              final id = s['id'].toString();
+              _marksControllers[id] = TextEditingController();
+            }
+
+            // Populate existing marks
+            for (var m in allMarks) {
+              final student = m['student'];
+              if (student != null && student['classId'] == _selectedClassId) {
+                // Match the fake subject ID from exam subjects
+                final fakeSub = _subjects.firstWhere((s) => s['name']?.toLowerCase() == m['subject']?['name']?.toLowerCase(), orElse: () => null);
+                final subjectId = fakeSub != null ? fakeSub['id'] : m['subjectId'];
+
+                if (_selectedSubjectId == 'ALL' || _selectedSubjectId == subjectId) {
+                   final stuId = m['studentId'].toString();
+                   if (_marksControllers.containsKey(stuId)) {
+                     _marksControllers[stuId]!.text = m['marksObtained'].toString();
+                   }
+                }
+              }
+            }
+
+            _isLoadingStudents = false;
+          });
+        } else {
+          setState(() {
+            _errorMessage = res['message'];
+            _isLoadingStudents = false;
+          });
+        }
+      }
+    } catch (e) {
+      if (mounted) {
         setState(() {
-          _errorMessage = res['message'];
+          _errorMessage = 'Error loading data: $e';
           _isLoadingStudents = false;
         });
       }
     }
   }
 
-  Future<void> _handleSubmit() async {
+  Future<void> _handleSubmit({bool isFreeze = false}) async {
+    if (_isClassFrozen) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Marks are frozen and cannot be updated.')));
+      return;
+    }
+
     if (_selectedExamId == null || _selectedSubjectId == null || _students.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please select Exam, Class, and Subject.')));
       return;
+    }
+
+    if (isFreeze) {
+      final confirm = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text('Freeze Marks?', style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
+          content: const Text('Are you sure you want to freeze the marks for this class? Once frozen, progress cards will be generated and marks cannot be edited.'),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Freeze', style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        ),
+      );
+      if (confirm != true) return;
     }
 
     setState(() => _isSubmitting = true);
@@ -133,7 +205,7 @@ class _MarksUploadScreenState extends State<MarksUploadScreen> {
     List<Map<String, dynamic>> marksToSubmit = [];
     
     for (var s in _students) {
-      final studentId = s['id'];
+      final studentId = s['id'].toString();
       final text = _marksControllers[studentId]?.text.trim();
       
       if (text != null && text.isNotEmpty) {
@@ -151,36 +223,118 @@ class _MarksUploadScreenState extends State<MarksUploadScreen> {
       }
     }
 
-    if (marksToSubmit.isEmpty) {
+    if (marksToSubmit.isEmpty && !isFreeze) {
       setState(() => _isSubmitting = false);
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No marks entered.')));
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No marks entered to save.')));
       return;
     }
 
-    final res = await ApiService.submitBulkMarks(marksToSubmit);
+    try {
+      if (marksToSubmit.isNotEmpty) {
+        final res = await ApiService.bulkUploadMarks({'marks': marksToSubmit});
+        if (!res['success']) {
+          throw Exception(res['message'] ?? 'Failed to save marks');
+        }
+      }
+
+      if (isFreeze) {
+        final freezeRes = await ApiService.freezeExamClass(_selectedExamId!, _selectedClassId!, true);
+        if (!freezeRes['success']) {
+          throw Exception(freezeRes['message'] ?? 'Failed to freeze marks');
+        }
+        
+        // Update local state
+        setState(() {
+          _isClassFrozen = true;
+          final idx = _exams.indexWhere((e) => e['id'] == _selectedExamId);
+          if (idx != -1) {
+            final exam = _exams[idx];
+            final frozen = exam['frozenClasses'];
+            if (frozen == null) {
+              exam['frozenClasses'] = [_selectedClassId];
+            } else if (frozen is List) {
+              if (!frozen.contains(_selectedClassId)) frozen.add(_selectedClassId);
+            }
+          }
+        });
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Marks frozen successfully!'), backgroundColor: Colors.green));
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Marks saved as draft successfully!'), backgroundColor: Colors.green));
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString()), backgroundColor: Colors.red));
+    } finally {
+      setState(() => _isSubmitting = false);
+    }
+  }
+
+  Future<void> _sendSMS() async {
+    if (_selectedExamId == null || _selectedClassId == null) return;
+    
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Send SMS?', style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
+        content: const Text('Are you sure you want to send the results via SMS to all parents in this class?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF6366F1)),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Send SMS', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+    
+    if (confirm != true) return;
+    
+    setState(() => _isSubmitting = true);
+    
+    try {
+      final res = await ApiService.sendMarksSMS(_selectedExamId!, _selectedClassId!);
+      if (res['success']) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('SMS sent successfully!'), backgroundColor: Colors.green));
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(res['message'] ?? 'Failed to send SMS'), backgroundColor: Colors.red));
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red));
+    } finally {
+      setState(() => _isSubmitting = false);
+    }
+  }
+
+
+  Future<void> _handleClearMarks() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Clear Marks?', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.red)),
+        content: const Text('Are you sure you want to clear marks for this subject?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Clear', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    setState(() => _isSubmitting = true);
+    final res = await ApiService.clearMarks(_selectedExamId!, _selectedClassId!, subjectId: _selectedSubjectId);
+    setState(() => _isSubmitting = false);
 
     if (mounted) {
-      setState(() => _isSubmitting = false);
       if (res['success']) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Marks submitted successfully!', style: GoogleFonts.poppins()),
-            backgroundColor: const Color(0xFF10B981),
-            behavior: SnackBarBehavior.floating,
-          )
-        );
-        // Clear inputs after success
-        for (var c in _marksControllers.values) {
-          c.clear();
-        }
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Marks cleared!'), backgroundColor: Colors.green));
+        _fetchStudentsAndMarks(); // reload
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(res['message'] ?? 'Submission failed', style: GoogleFonts.poppins()),
-            backgroundColor: Colors.redAccent,
-            behavior: SnackBarBehavior.floating,
-          )
-        );
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(res['message'] ?? 'Failed to clear marks'), backgroundColor: Colors.red));
       }
     }
   }
@@ -192,7 +346,7 @@ class _MarksUploadScreenState extends State<MarksUploadScreen> {
       drawer: const AppDrawer(currentRoute: 'exams'),
       appBar: AppBar(
         leading: const BackButton(),
-        title: Text('Upload Marks', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white)),
+        title: Text('Marks Entry', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white)),
         iconTheme: const IconThemeData(color: Colors.white),
         flexibleSpace: Container(
           decoration: const BoxDecoration(
@@ -203,8 +357,15 @@ class _MarksUploadScreenState extends State<MarksUploadScreen> {
             ),
           ),
         ),
-        
         elevation: 0,
+        actions: [
+          if (_students.isNotEmpty && !_isLoadingStudents && !_isClassFrozen)
+            IconButton(
+              icon: const Icon(Icons.delete_sweep, color: Colors.white),
+              onPressed: _handleClearMarks,
+              tooltip: 'Clear Marks',
+            )
+        ],
       ),
       body: _isLoadingDropdowns
           ? const Center(child: CircularProgressIndicator(color: Color(0xFF6366F1)))
@@ -226,7 +387,7 @@ class _MarksUploadScreenState extends State<MarksUploadScreen> {
                               : _buildStudentsList(),
                 ),
                 if (_students.isNotEmpty && !_isLoadingStudents)
-                  _buildSubmitButton(),
+                  _buildSubmitButtons(),
               ],
             ),
     );
@@ -257,7 +418,7 @@ class _MarksUploadScreenState extends State<MarksUploadScreen> {
                 style: GoogleFonts.poppins(color: const Color(0xFF1E293B), fontWeight: FontWeight.w600),
                 items: _exams.map((e) {
                   return DropdownMenuItem<String>(
-                    value: e['id'],
+                    value: e['id'].toString(),
                     child: Text('${e['name']} (${e['term']})'),
                   );
                 }).toList(),
@@ -287,14 +448,14 @@ class _MarksUploadScreenState extends State<MarksUploadScreen> {
                       style: GoogleFonts.poppins(color: const Color(0xFF1E293B), fontWeight: FontWeight.w600),
                       items: _classes.map((c) {
                         return DropdownMenuItem<String>(
-                          value: c['id'],
+                          value: c['id'].toString(),
                           child: Text('${c['name']}-${c['section']}'),
                         );
                       }).toList(),
                       onChanged: (val) {
                         setState(() => _selectedClassId = val);
                         if (_selectedSubjectId != null) {
-                          _fetchStudents();
+                          _fetchStudentsAndMarks();
                         }
                       },
                     ),
@@ -320,20 +481,20 @@ class _MarksUploadScreenState extends State<MarksUploadScreen> {
                       style: GoogleFonts.poppins(color: const Color(0xFF1E293B), fontWeight: FontWeight.w600),
                       items: _subjects.map((s) {
                         return DropdownMenuItem<String>(
-                          value: s['id'],
+                          value: s['id'].toString(),
                           child: Text(s['name'] ?? 'Subject'),
                         );
                       }).toList(),
                       onChanged: (val) {
                         setState(() {
                           _selectedSubjectId = val;
-                          final subj = _subjects.firstWhere((s) => s['id'] == val, orElse: () => null);
+                          final subj = _subjects.firstWhere((s) => s['id'].toString() == val, orElse: () => null);
                           if (subj != null) {
                             _maxMarks = double.tryParse(subj['maxMarks']?.toString() ?? '100') ?? 100;
                           }
                         });
                         if (_selectedClassId != null) {
-                          _fetchStudents();
+                          _fetchStudentsAndMarks();
                         }
                       },
                     ),
@@ -353,7 +514,7 @@ class _MarksUploadScreenState extends State<MarksUploadScreen> {
       itemCount: _students.length,
       itemBuilder: (context, index) {
         final s = _students[index];
-        final id = s['id'];
+        final id = s['id'].toString();
         final user = s['user'] ?? {};
         final name = user['name'] ?? 'Student';
         final rollNo = s['rollNo'] ?? '-';
@@ -378,7 +539,7 @@ class _MarksUploadScreenState extends State<MarksUploadScreen> {
               CircleAvatar(
                 backgroundColor: const Color(0xFF6366F1).withOpacity(0.1),
                 child: Text(
-                  name[0].toUpperCase(),
+                  name.isNotEmpty ? name[0].toUpperCase() : 'S',
                   style: GoogleFonts.outfit(color: const Color(0xFF6366F1), fontWeight: FontWeight.bold),
                 ),
               ),
@@ -412,7 +573,8 @@ class _MarksUploadScreenState extends State<MarksUploadScreen> {
                   controller: _marksControllers[id],
                   keyboardType: const TextInputType.numberWithOptions(decimal: true),
                   textAlign: TextAlign.center,
-                  style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+                  readOnly: _isClassFrozen,
+                  style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: _isClassFrozen ? Colors.grey : Colors.black),
                   decoration: InputDecoration(
                     hintText: ' / ${_maxMarks.toInt()}',
                     hintStyle: GoogleFonts.poppins(color: const Color(0xFF475569), fontSize: 13),
@@ -437,42 +599,87 @@ class _MarksUploadScreenState extends State<MarksUploadScreen> {
     );
   }
 
-  Widget _buildSubmitButton() {
+  Widget _buildSubmitButtons() {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: const BoxDecoration(
         color: Colors.white,
         border: Border(top: BorderSide(color: Color(0xFFE2E8F0))),
       ),
-      child: SizedBox(
-        width: double.infinity,
-        height: 54,
-        child: ElevatedButton(
-          onPressed: _isSubmitting ? null : _handleSubmit,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF6366F1),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            elevation: 4,
-          ),
-          child: _isSubmitting
-              ? const SizedBox(
-                  width: 24, height: 24,
-                  child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
-                )
-              : Text(
-                  'Upload Marks',
-                  style: GoogleFonts.outfit(
-                    color: const Color(0xFF1E293B),
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
+      child: _isClassFrozen
+          ? Column(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  decoration: BoxDecoration(
+                    color: Colors.green.shade50,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: Colors.green.shade200),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.lock, color: Colors.green, size: 20),
+                      const SizedBox(width: 8),
+                      Text('Class Marks Frozen', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.green.shade700, fontSize: 16)),
+                    ],
                   ),
                 ),
-        ),
-      ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  height: 54,
+                  child: ElevatedButton.icon(
+                    onPressed: _isSubmitting ? null : _sendSMS,
+                    icon: _isSubmitting
+                        ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                        : const Icon(Icons.message_rounded, color: Colors.white),
+                    label: Text('Send Marks via SMS', style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF6366F1),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      elevation: 2,
+                    ),
+                  ),
+                ),
+              ],
+            )
+          : Row(
+              children: [
+                Expanded(
+                  child: SizedBox(
+                    height: 54,
+                    child: OutlinedButton.icon(
+                      onPressed: _isSubmitting ? null : () => _handleSubmit(isFreeze: false),
+                      icon: const Icon(Icons.save, color: Color(0xFF1E293B)),
+                      label: Text('Save Draft', style: GoogleFonts.outfit(color: const Color(0xFF1E293B), fontWeight: FontWeight.bold)),
+                      style: OutlinedButton.styleFrom(
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        side: const BorderSide(color: Color(0xFFE2E8F0), width: 2),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: SizedBox(
+                    height: 54,
+                    child: ElevatedButton.icon(
+                      onPressed: _isSubmitting ? null : () => _handleSubmit(isFreeze: true),
+                      icon: _isSubmitting
+                          ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                          : const Icon(Icons.lock_outline, color: Colors.white),
+                      label: Text('Freeze', style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold)),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFEF4444), // Red for dangerous freeze action
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        elevation: 4,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
     );
   }
 }
-
-

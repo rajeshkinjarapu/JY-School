@@ -121,13 +121,88 @@ class ApiService {
 
   // Get school subjects list
   static Future<Map<String, dynamic>> getSubjects() async {
-    return _performGet('/api/subjects', 'Failed to get subjects');
+    return _performGet('/api/subjects?limit=5000', 'Failed to get subjects');
+  }
+
+  static Future<Map<String, dynamic>> createSubject(String name, String? teacherId) async {
+    return _performPost('/api/subjects', {
+      'name': name,
+      if (teacherId != null && teacherId.isNotEmpty) 'teacherId': teacherId,
+    }, 'Failed to create subject');
+  }
+
+  static Future<Map<String, dynamic>> updateSubject(String id, String name) async {
+    return _performPut('/api/subjects/$id', {'name': name}, 'Failed to update subject');
+  }
+
+  static Future<Map<String, dynamic>> deleteSubject(String id) async {
+    return _performDelete('/api/subjects/$id', 'Failed to delete subject');
+  }
+
+  static Future<Map<String, dynamic>> assignTeacherToSubject(String classId, String subjectId, String teacherId) async {
+    return _performPost('/api/subjects/assign-teacher', {
+      'classId': classId,
+      'subjectId': subjectId,
+      'teacherId': teacherId,
+    }, 'Failed to assign teacher');
   }
 
   // Get exams list
   static Future<Map<String, dynamic>> getExams({String classId = ''}) async {
-    final url = classId.isNotEmpty ? '/api/exams?classId=$classId' : '/api/exams';
+    final url = classId.isNotEmpty ? '/api/exams?classId=$classId' : '/api/exams?limit=500';
     return _performGet(url, 'Failed to get exams');
+  }
+
+  // Create exam
+  static Future<Map<String, dynamic>> createExam(Map<String, dynamic> payload) async {
+    return _performPost('/api/exams', payload, 'Failed to create exam');
+  }
+
+  // Update exam
+  static Future<Map<String, dynamic>> updateExam(String examId, Map<String, dynamic> payload) async {
+    return _performPut('/api/exams/$examId', payload, 'Failed to update exam');
+  }
+
+  // Delete exam
+  static Future<Map<String, dynamic>> deleteExam(String examId) async {
+    return _performDelete('/api/exams/$examId', 'Failed to delete exam');
+  }
+
+  static Future<Map<String, dynamic>> getExamById(String examId) async {
+    return _performGet('/api/exams/$examId', 'Failed to get exam details');
+  }
+
+  // Marks Management
+  static Future<Map<String, dynamic>> getMarksForExam(String examId) async {
+    return _performGet('/api/marks/exam/$examId', 'Failed to get marks');
+  }
+
+  static Future<Map<String, dynamic>> bulkUploadMarks(Map<String, dynamic> payload) async {
+    return _performPost('/api/marks/bulk', payload, 'Failed to save marks');
+  }
+
+  static Future<Map<String, dynamic>> freezeExamClass(String examId, String classId, bool isFrozen) async {
+    return _performPost('/api/exams/$examId/freeze', {'classId': classId, 'isFrozen': isFrozen}, 'Failed to freeze exam');
+  }
+
+  // --- Clear Marks ---
+  static Future<Map<String, dynamic>> clearMarks(String examId, String classId, String subject) async {
+    return _request('DELETE', '/api/marks/exam/$examId', queryParams: {'classId': classId, 'subject': subject});
+  }
+
+  // --- Send Marks SMS ---
+  static Future<Map<String, dynamic>> sendMarksSMS(String examId, String classId, {String template = 'Default'}) async {
+    return _request('POST', '/api/exams/$examId/classes/$classId/send-sms', body: {'template': template});
+  }
+
+  // ==========================================
+  // Finance & Fees API
+  // ==========================================
+  static Future<Map<String, dynamic>> getPendingBalances({String? classId, String? search}) async {
+    String url = '/api/fees/pending-balances?limit=1000';
+    if (classId != null && classId != 'ALL') url += '&classId=$classId';
+    if (search != null && search.isNotEmpty) url += '&search=$search';
+    return _performGet(url, 'Failed to fetch pending balances');
   }
 
   // Get all exams results
@@ -137,6 +212,11 @@ class ApiService {
       url += '?classId=$classId';
     }
     return _performGet(url, 'Failed to get exam results');
+  }
+
+  // Get Students
+  static Future<Map<String, dynamic>> getStudents(String classId) async {
+    return _performGet('/api/students?classId=$classId&limit=1000', 'Failed to get students');
   }
 
   // Get exam status overview
@@ -455,6 +535,68 @@ class ApiService {
     }
   }
 
+  // Generic POST Helper
+  static Future<Map<String, dynamic>> _performPost(String endpoint, Map<String, dynamic> payload, String errorMsg) async {
+    try {
+      final token = await getToken();
+      if (token == null) return {'success': false, 'message': 'No session token'};
+
+      final response = await http.post(
+        Uri.parse('$baseUrl$endpoint'),
+        headers: _getHeaders(token: token),
+        body: jsonEncode(payload),
+      );
+
+      final dynamic decoded = jsonDecode(response.body);
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return {'success': true, 'data': decoded is Map && decoded.containsKey('data') ? decoded['data'] : decoded};
+      }
+      return {'success': false, 'message': decoded is Map ? (decoded['message'] ?? errorMsg) : errorMsg};
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: $e'};
+    }
+  }
+  static Future<Map<String, dynamic>> _performPut(String endpoint, Map<String, dynamic> payload, String errorMsg) async {
+    try {
+      final token = await getToken();
+      if (token == null) return {'success': false, 'message': 'No session token'};
+
+      final response = await http.put(
+        Uri.parse('$baseUrl$endpoint'),
+        headers: _getHeaders(token: token),
+        body: jsonEncode(payload),
+      );
+
+      final dynamic decoded = jsonDecode(response.body);
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return {'success': true, 'data': decoded is Map && decoded.containsKey('data') ? decoded['data'] : decoded};
+      }
+      return {'success': false, 'message': decoded is Map ? (decoded['message'] ?? errorMsg) : errorMsg};
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: $e'};
+    }
+  }
+
+  static Future<Map<String, dynamic>> _performDelete(String endpoint, String errorMsg) async {
+    try {
+      final token = await getToken();
+      if (token == null) return {'success': false, 'message': 'No session token'};
+
+      final response = await http.delete(
+        Uri.parse('$baseUrl$endpoint'),
+        headers: _getHeaders(token: token),
+      );
+
+      final dynamic decoded = response.body.isNotEmpty ? jsonDecode(response.body) : {};
+      if (response.statusCode == 200 || response.statusCode == 204) {
+        return {'success': true, 'data': decoded is Map && decoded.containsKey('data') ? decoded['data'] : decoded};
+      }
+      return {'success': false, 'message': decoded is Map ? (decoded['message'] ?? errorMsg) : errorMsg};
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: $e'};
+    }
+  }
+
   // Get Admin Dashboard Stats
   static Future<Map<String, dynamic>> getAdminDashboardStats() async {
     return _performGet('/api/dashboard/admin', 'Failed to get admin statistics');
@@ -514,6 +656,103 @@ class ApiService {
   // Teacher Dashboard Stats
   static Future<Map<String, dynamic>> getAttendanceStats() async {
     return _performGet('/api/dashboard/teacher', 'Failed to get teacher dashboard stats');
+  }
+
+  // Get all fee structures
+  static Future<Map<String, dynamic>> getFeeStructures() async {
+    return _performGet('/api/fees/structures', 'Failed to get fee structures');
+  }
+
+  // Get all fee payments
+  static Future<Map<String, dynamic>> getFeePayments() async {
+    return _performGet('/api/fees/payments', 'Failed to get fee payments');
+  }
+
+  // Get fee groups
+  static Future<Map<String, dynamic>> getFeeGroups() async {
+    return _performGet('/api/fees/groups', 'Failed to get fee groups');
+  }
+
+  // Get fee heads
+  static Future<Map<String, dynamic>> getFeeHeads() async {
+    return _performGet('/api/fees/heads', 'Failed to get fee heads');
+  }
+
+  // Approve fee payment
+  static Future<Map<String, dynamic>> approvePayment(String paymentId) async {
+    try {
+      final token = await getToken();
+      if (token == null) return {'success': false, 'message': 'No session token'};
+
+      final response = await http.put(
+        Uri.parse('$baseUrl/api/fees/payments/$paymentId'),
+        headers: _getHeaders(token: token),
+        body: jsonEncode({'status': 'PAID'}),
+      );
+
+      final dynamic decoded = jsonDecode(response.body);
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return {'success': true, 'message': decoded is Map ? (decoded['message'] ?? 'Success') : 'Success'};
+      }
+      return {'success': false, 'message': decoded is Map ? (decoded['message'] ?? 'Failed request') : 'Failed request'};
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: $e'};
+    }
+  }
+
+  // Record a payment
+  static Future<Map<String, dynamic>> recordPayment({
+    required String studentId,
+    required String feeStructureId,
+    required double amountPaid,
+    required String paymentMethod,
+    String? remarks,
+  }) async {
+    try {
+      final token = await getToken();
+      if (token == null) return {'success': false, 'message': 'No session token'};
+
+      final response = await http.post(
+        Uri.parse('$baseUrl/api/fees/payments'),
+        headers: _getHeaders(token: token),
+        body: jsonEncode({
+          'studentId': studentId,
+          'feeStructureId': feeStructureId,
+          'amountPaid': amountPaid,
+          'paymentMethod': paymentMethod,
+          'remarks': remarks ?? '',
+        }),
+      );
+
+      final dynamic decoded = jsonDecode(response.body);
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return {'success': true, 'data': decoded is Map && decoded.containsKey('data') ? decoded['data'] : decoded};
+      }
+      return {'success': false, 'message': decoded is Map ? (decoded['message'] ?? 'Failed request') : 'Failed request'};
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: $e'};
+    }
+  }
+
+  // Delete a payment
+  static Future<Map<String, dynamic>> deletePayment(String paymentId) async {
+    try {
+      final token = await getToken();
+      if (token == null) return {'success': false, 'message': 'No session token'};
+
+      final response = await http.delete(
+        Uri.parse('$baseUrl/api/fees/payments/$paymentId'),
+        headers: _getHeaders(token: token),
+      );
+
+      final dynamic decoded = jsonDecode(response.body);
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return {'success': true, 'message': decoded is Map ? (decoded['message'] ?? 'Success') : 'Success'};
+      }
+      return {'success': false, 'message': decoded is Map ? (decoded['message'] ?? 'Failed request') : 'Failed request'};
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: $e'};
+    }
   }
 
   // Logout method

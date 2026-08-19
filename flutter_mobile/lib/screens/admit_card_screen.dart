@@ -11,10 +11,14 @@ class AdmitCardScreen extends StatefulWidget {
 }
 
 class _AdmitCardScreenState extends State<AdmitCardScreen> {
-  Map<String, dynamic>? _studentData;
   List<dynamic> _exams = [];
+  List<dynamic> _classes = [];
+  List<dynamic> _students = [];
+  
   String? _selectedExamId;
+  String? _selectedClassId;
   Map<String, dynamic>? _selectedExamData;
+  Map<String, dynamic>? _selectedClassData;
 
   bool _isLoading = true;
   String? _errorMessage;
@@ -22,40 +26,56 @@ class _AdmitCardScreenState extends State<AdmitCardScreen> {
   @override
   void initState() {
     super.initState();
-    _fetchData();
+    _fetchDropdownData();
   }
 
-  Future<void> _fetchData() async {
+  Future<void> _fetchDropdownData() async {
     setState(() => _isLoading = true);
 
     try {
-      final meRes = await ApiService.getMe();
       final examsRes = await ApiService.getExams();
+      final classesRes = await ApiService.getClasses();
 
       if (mounted) {
-        if (meRes['success']) {
-          final userRole = meRes['data']['role'];
-          if (userRole == 'STUDENT') {
-            _studentData = meRes['data']['student'];
-          } else {
-            _errorMessage = 'Admit Cards are only available for Students.';
-          }
-        } else {
-          _errorMessage = meRes['message'];
-        }
-
-        if (examsRes['success']) {
-          _exams = examsRes['data'] ?? [];
-        }
-
         setState(() {
+          _exams = examsRes['success'] ? examsRes['data'] ?? [] : [];
+          _classes = classesRes['success'] ? classesRes['data'] ?? [] : [];
           _isLoading = false;
         });
       }
     } catch (e) {
       if (mounted) {
         setState(() {
-          _errorMessage = 'An error occurred: $e';
+          _errorMessage = 'Failed to load data: $e';
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _fetchStudents() async {
+    if (_selectedExamId == null || _selectedClassId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please select both Exam and Class')));
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final res = await ApiService.getStudents(_selectedClassId!);
+      if (mounted) {
+        setState(() {
+          _students = res['success'] ? res['data'] ?? [] : [];
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _errorMessage = 'Failed to fetch students: $e';
           _isLoading = false;
         });
       }
@@ -69,15 +89,23 @@ class _AdmitCardScreenState extends State<AdmitCardScreen> {
       _selectedExamData = _exams.firstWhere((e) => e['id'] == examId, orElse: () => null);
     });
   }
+  
+  void _onClassSelected(String? classId) {
+    if (classId == null) return;
+    setState(() {
+      _selectedClassId = classId;
+      _selectedClassData = _classes.firstWhere((c) => c['id'] == classId, orElse: () => null);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F7FE),
+      backgroundColor: const Color(0xFFF1F5F9),
       drawer: const AppDrawer(currentRoute: 'exams'),
       appBar: AppBar(
         leading: const BackButton(),
-        title: Text('Admit Card', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white)),
+        title: Text('Admit Cards', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white)),
         iconTheme: const IconThemeData(color: Colors.white),
         flexibleSpace: Container(
           decoration: const BoxDecoration(
@@ -88,71 +116,127 @@ class _AdmitCardScreenState extends State<AdmitCardScreen> {
             ),
           ),
         ),
-        
         elevation: 0,
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: Color(0xFF6366F1)))
-          : _errorMessage != null
-              ? Center(child: Text(_errorMessage!, style: const TextStyle(color: Colors.red)))
-              : Column(
-                  children: [
-                    _buildExamSelector(),
-                    Expanded(
-                      child: _selectedExamData == null
-                          ? Center(
-                              child: Text(
-                                'Please select an exam to view your Admit Card.',
-                                style: GoogleFonts.poppins(color: const Color(0xFF475569)),
-                              ),
-                            )
-                          : SingleChildScrollView(
-                              padding: const EdgeInsets.all(20),
-                              child: _buildAdmitCard(),
+      body: Column(
+        children: [
+          _buildFiltersSection(),
+          Expanded(
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator(color: Color(0xFF6366F1)))
+                : _errorMessage != null
+                    ? Center(child: Text(_errorMessage!, style: const TextStyle(color: Colors.red)))
+                    : _students.isEmpty
+                        ? Center(
+                            child: Text(
+                              _selectedExamId == null || _selectedClassId == null 
+                                ? 'Please select an exam and class.' 
+                                : 'No students found in this class.',
+                              style: GoogleFonts.poppins(color: const Color(0xFF64748B)),
                             ),
-                    )
-                  ],
-                ),
-    );
-  }
-
-  Widget _buildExamSelector() {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: const BoxDecoration(color: Color(0xFF1E293B)),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: const Color(0xFF334155)),
-        ),
-        child: DropdownButtonHideUnderline(
-          child: DropdownButton<String>(
-            isExpanded: true,
-            dropdownColor: Colors.white,
-            hint: Text('Select Exam', style: GoogleFonts.poppins(color: const Color(0xFF475569))),
-            value: _selectedExamId,
-            style: GoogleFonts.poppins(color: const Color(0xFF1E293B), fontWeight: FontWeight.w600),
-            items: _exams.map((e) {
-              return DropdownMenuItem<String>(
-                value: e['id'],
-                child: Text('${e['name']} (${e['term']})'),
-              );
-            }).toList(),
-            onChanged: _onExamSelected,
-          ),
-        ),
+                          )
+                        : ListView.builder(
+                            padding: const EdgeInsets.all(16),
+                            itemCount: _students.length,
+                            itemBuilder: (context, index) {
+                              return _buildAdmitCard(_students[index]);
+                            },
+                          ),
+          )
+        ],
       ),
     );
   }
 
-  Widget _buildAdmitCard() {
+  Widget _buildFiltersSection() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))],
+        borderRadius: const BorderRadius.only(bottomLeft: Radius.circular(20), bottomRight: Radius.circular(20)),
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: _buildDropdown(
+                  label: 'Select Exam',
+                  value: _selectedExamId,
+                  items: _exams,
+                  onChanged: _onExamSelected,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildDropdown(
+                  label: 'Select Class',
+                  value: _selectedClassId,
+                  items: _classes,
+                  onChanged: _onClassSelected,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: _isLoading ? null : _fetchStudents,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF6366F1),
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              icon: const Icon(Icons.badge_rounded, color: Colors.white, size: 20),
+              label: Text('Generate Admit Cards', style: GoogleFonts.outfit(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDropdown({required String label, required String? value, required List<dynamic> items, required Function(dynamic) onChanged}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.w600, color: const Color(0xFF64748B))),
+        const SizedBox(height: 6),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          decoration: BoxDecoration(
+            color: const Color(0xFFF8FAFC),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: const Color(0xFFE2E8F0)),
+          ),
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton<String>(
+              isExpanded: true,
+              value: value,
+              hint: Text('Select', style: GoogleFonts.poppins(fontSize: 13, color: const Color(0xFF94A3B8))),
+              icon: const Icon(Icons.keyboard_arrow_down_rounded, color: Color(0xFF64748B)),
+              onChanged: onChanged,
+              items: items.map((item) {
+                return DropdownMenuItem<String>(
+                  value: item['id'].toString(),
+                  child: Text(item['name'] ?? item['title'] ?? 'Unknown', style: GoogleFonts.poppins(fontSize: 14, color: const Color(0xFF1E293B))),
+                );
+              }).toList(),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAdmitCard(Map<String, dynamic> studentData) {
     final examName = _selectedExamData?['name'] ?? 'Exam';
     final term = _selectedExamData?['term'] ?? 'Term';
     final examDate = _selectedExamData?['examDate'] != null 
         ? _selectedExamData!['examDate'].toString().split('T')[0] 
-        : 'Unknown Date';
+        : 'Date To Be Announced';
     
     // Parse subjects JSON safely
     List<dynamic> subjects = [];
@@ -162,46 +246,58 @@ class _AdmitCardScreenState extends State<AdmitCardScreen> {
       }
     }
 
-    final studentName = _studentData?['user']?['name'] ?? 'Student Name';
-    final rollNo = _studentData?['rollNo'] ?? 'Roll No';
-    final className = _studentData?['class'] != null 
-        ? '${_studentData!['class']['name']}-${_studentData!['class']['section']}' 
+    final user = studentData['user'] ?? {};
+    final studentName = user['name'] ?? 'Student Name';
+    final rollNo = studentData['rollNo'] ?? 'Roll No';
+    
+    final className = _selectedClassData != null 
+        ? '${_selectedClassData!['name']} - ${_selectedClassData!['section']}' 
         : 'Class';
+        
+    final photoUrl = user['photoUrl'];
+    final image = photoUrl?.isNotEmpty == true
+        ? photoUrl
+        : 'https://ui-avatars.com/api/?name=${Uri.encodeComponent(studentName)}&background=E2E8F0&color=1E293B';
 
     return Container(
+      margin: const EdgeInsets.only(bottom: 24),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
+            color: Colors.indigo.withOpacity(0.08),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
         ],
-        border: Border.all(color: const Color(0xFFE2E8F0), width: 2),
+        border: Border.all(color: const Color(0xFFE2E8F0), width: 1.5),
       ),
       child: Column(
         children: [
-          // Header
+          // Premium Header
           Container(
-            padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 20),
+            padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
             decoration: const BoxDecoration(
-              color: Color(0xFF2E2A66), // Deep JY School Purple
+              gradient: LinearGradient(
+                colors: [Color(0xFF2E2A66), Color(0xFF332F73)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
               borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(22),
-                topRight: Radius.circular(22),
+                topLeft: Radius.circular(18),
+                topRight: Radius.circular(18),
               ),
             ),
             child: Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    shape: BoxShape.circle,
+                    color: Colors.white.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Icon(Icons.school, color: const Color(0xFF64748B), size: 36),
+                  child: const Icon(Icons.school_rounded, color: Colors.white, size: 28),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
@@ -211,20 +307,20 @@ class _AdmitCardScreenState extends State<AdmitCardScreen> {
                       Text(
                         'JY SCHOOL',
                         style: GoogleFonts.outfit(
-                          color: const Color(0xFF1E293B),
-                          fontSize: 24,
+                          color: Colors.white,
+                          fontSize: 20,
                           fontWeight: FontWeight.w900,
-                          letterSpacing: 1.5,
+                          letterSpacing: 2,
                         ),
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'HALL TICKET - $term',
+                        'HALL TICKET - ${term.toUpperCase()}',
                         style: GoogleFonts.poppins(
                           color: const Color(0xFF93C5FD),
-                          fontSize: 12,
+                          fontSize: 10,
                           fontWeight: FontWeight.bold,
-                          letterSpacing: 2,
+                          letterSpacing: 1.5,
                         ),
                       ),
                     ],
@@ -236,21 +332,22 @@ class _AdmitCardScreenState extends State<AdmitCardScreen> {
           
           // Student Info Section
           Padding(
-            padding: const EdgeInsets.all(24.0),
+            padding: const EdgeInsets.all(20.0),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Profile Picture Placeholder
+                // Profile Picture
                 Container(
                   width: 90,
                   height: 110,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF1F5F9),
+                    color: const Color(0xFFF8FAFC),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(color: const Color(0xFFCBD5E1), width: 2),
-                  ),
-                  child: const Center(
-                    child: Icon(Icons.person, size: 50, color: Color(0xFF94A3B8)),
+                    image: DecorationImage(
+                      image: NetworkImage(image),
+                      fit: BoxFit.cover,
+                    ),
                   ),
                 ),
                 const SizedBox(width: 20),
@@ -263,15 +360,15 @@ class _AdmitCardScreenState extends State<AdmitCardScreen> {
                         studentName,
                         style: GoogleFonts.outfit(
                           color: const Color(0xFF1E293B),
-                          fontSize: 22,
+                          fontSize: 18,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                       const SizedBox(height: 12),
                       _buildInfoRow('Roll No', rollNo),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 6),
                       _buildInfoRow('Class', className),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 6),
                       _buildInfoRow('Exam', examName),
                     ],
                   ),
@@ -284,20 +381,21 @@ class _AdmitCardScreenState extends State<AdmitCardScreen> {
 
           // Exam Schedule
           Padding(
-            padding: const EdgeInsets.all(24.0),
+            padding: const EdgeInsets.all(20.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
                   children: [
-                    const Icon(Icons.event_note, color: Color(0xFF6366F1), size: 20),
+                    const Icon(Icons.event_note_rounded, color: Color(0xFF6366F1), size: 18),
                     const SizedBox(width: 8),
                     Text(
-                      'Exam Schedule',
+                      'EXAM SCHEDULE',
                       style: GoogleFonts.outfit(
-                        color: const Color(0xFF1E293B),
-                        fontSize: 18,
+                        color: const Color(0xFF6366F1),
+                        fontSize: 13,
                         fontWeight: FontWeight.bold,
+                        letterSpacing: 1,
                       ),
                     ),
                   ],
@@ -306,49 +404,63 @@ class _AdmitCardScreenState extends State<AdmitCardScreen> {
                 if (subjects.isEmpty)
                   Text(
                     'No subjects scheduled yet.',
-                    style: GoogleFonts.poppins(color: const Color(0xFF475569)),
+                    style: GoogleFonts.poppins(color: const Color(0xFF64748B), fontSize: 13),
                   )
                 else
-                  ...subjects.map((subj) {
-                    final sName = subj['name'] ?? 'Subject';
-                    // Example mapping; in reality dates come from the backend if available
-                    // For now, using the main examDate as fallback
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 12.0),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  Container(
+                    decoration: BoxDecoration(
+                      border: Border.all(color: const Color(0xFFE2E8F0)),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: Table(
+                        columnWidths: const {
+                          0: FlexColumnWidth(2),
+                          1: FlexColumnWidth(1.5),
+                        },
                         children: [
-                          Text(
-                            sName,
-                            style: GoogleFonts.poppins(
-                              color: const Color(0xFF475569),
-                              fontSize: 15,
-                              fontWeight: FontWeight.w600,
-                            ),
+                          TableRow(
+                            decoration: const BoxDecoration(color: Color(0xFFF8FAFC)),
+                            children: [
+                              _buildTableHeader('SUBJECT'),
+                              _buildTableHeader('DATE'),
+                            ],
                           ),
-                          Text(
-                            examDate, // Placeholder date
-                            style: GoogleFonts.poppins(
-                              color: const Color(0xFF64748B),
-                              fontSize: 14,
-                            ),
-                          ),
+                          ...subjects.map((subj) {
+                            final sName = subj['name'] ?? 'Subject';
+                            return TableRow(
+                              decoration: const BoxDecoration(
+                                border: Border(top: BorderSide(color: Color(0xFFF1F5F9))),
+                              ),
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                  child: Text(sName, style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF334155))),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                  child: Text(examDate, style: GoogleFonts.poppins(fontSize: 13, color: const Color(0xFF64748B))),
+                                ),
+                              ],
+                            );
+                          }).toList(),
                         ],
                       ),
-                    );
-                  }).toList(),
+                    ),
+                  ),
               ],
             ),
           ),
 
           // Footer / Signature Area
           Container(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
             decoration: const BoxDecoration(
               color: Color(0xFFF8FAFC),
               borderRadius: BorderRadius.only(
-                bottomLeft: Radius.circular(22),
-                bottomRight: Radius.circular(22),
+                bottomLeft: Radius.circular(18),
+                bottomRight: Radius.circular(18),
               ),
             ),
             child: Row(
@@ -360,7 +472,7 @@ class _AdmitCardScreenState extends State<AdmitCardScreen> {
                     const SizedBox(height: 8),
                     Text(
                       'Student Signature',
-                      style: GoogleFonts.poppins(color: const Color(0xFF64748B), fontSize: 12),
+                      style: GoogleFonts.poppins(color: const Color(0xFF64748B), fontSize: 11),
                     ),
                   ],
                 ),
@@ -370,7 +482,7 @@ class _AdmitCardScreenState extends State<AdmitCardScreen> {
                     const SizedBox(height: 8),
                     Text(
                       'Principal',
-                      style: GoogleFonts.poppins(color: const Color(0xFF64748B), fontSize: 12),
+                      style: GoogleFonts.poppins(color: const Color(0xFF64748B), fontSize: 11),
                     ),
                   ],
                 ),
@@ -378,6 +490,21 @@ class _AdmitCardScreenState extends State<AdmitCardScreen> {
             ),
           )
         ],
+      ),
+    );
+  }
+
+  Widget _buildTableHeader(String text) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Text(
+        text,
+        style: GoogleFonts.poppins(
+          color: const Color(0xFF64748B),
+          fontSize: 11,
+          fontWeight: FontWeight.bold,
+          letterSpacing: 0.5,
+        ),
       ),
     );
   }
@@ -391,22 +518,19 @@ class _AdmitCardScreenState extends State<AdmitCardScreen> {
           child: Text(
             label,
             style: GoogleFonts.poppins(
-              color: const Color(0xFF475569),
-              fontSize: 13,
+              color: const Color(0xFF64748B),
+              fontSize: 12,
               fontWeight: FontWeight.w500,
             ),
           ),
         ),
-        const Text(
-          ': ',
-          style: TextStyle(color: Color(0xFF94A3B8)),
-        ),
+        const Text(': ', style: TextStyle(color: Color(0xFF94A3B8))),
         Expanded(
           child: Text(
             value,
             style: GoogleFonts.poppins(
               color: const Color(0xFF334155),
-              fontSize: 13,
+              fontSize: 12,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -415,5 +539,3 @@ class _AdmitCardScreenState extends State<AdmitCardScreen> {
     );
   }
 }
-
-

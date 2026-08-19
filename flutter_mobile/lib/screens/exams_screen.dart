@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/api_service.dart';
 import '../widgets/app_drawer.dart';
+import 'create_exam_screen.dart';
 
 class ExamsScreen extends StatefulWidget {
   const ExamsScreen({super.key});
@@ -26,6 +27,10 @@ class _ExamsScreenState extends State<ExamsScreen> {
   }
 
   Future<void> _fetchResults() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
     try {
       final prefs = await SharedPreferences.getInstance();
       final userString = prefs.getString('user');
@@ -93,6 +98,40 @@ class _ExamsScreenState extends State<ExamsScreen> {
     }
   }
 
+  Future<void> _deleteExam(String examId) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Delete Exam', style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
+        content: const Text('Are you sure you want to delete this exam? This will remove all associated marks and plans.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Delete', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Deleting...')));
+      final result = await ApiService.deleteExam(examId);
+      if (mounted) {
+        if (result['success']) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Exam deleted successfully'), backgroundColor: Colors.green));
+          _fetchResults();
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(result['message'] ?? 'Failed to delete'), backgroundColor: Colors.red));
+        }
+      }
+    }
+  }
+
   Color _getGradeColor(String grade) {
     switch (grade.toUpperCase()) {
       case 'A+':
@@ -113,12 +152,14 @@ class _ExamsScreenState extends State<ExamsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final bool isAdmin = _userRole == 'ADMIN' || _userRole == 'SUPER_ADMIN';
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F7FE), // Match premium dark theme
+      backgroundColor: const Color(0xFFF4F7FE),
       drawer: const AppDrawer(currentRoute: 'exams'),
       appBar: AppBar(
         title: Text(
-          'Exams & Grades',
+          _userRole == 'STUDENT' ? 'Exams & Grades' : 'Examinations List',
           style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white),
         ),
         iconTheme: const IconThemeData(color: Colors.white),
@@ -131,9 +172,24 @@ class _ExamsScreenState extends State<ExamsScreen> {
             ),
           ),
         ),
-        
         elevation: 0,
       ),
+      floatingActionButton: isAdmin
+          ? FloatingActionButton.extended(
+              onPressed: () async {
+                final result = await Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const CreateExamScreen()),
+                );
+                if (result == true) {
+                  _fetchResults();
+                }
+              },
+              backgroundColor: const Color(0xFF6366F1),
+              icon: const Icon(Icons.add, color: Colors.white),
+              label: Text('Create Exam', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white)),
+            )
+          : null,
       body: _isLoading
           ? const Center(child: CircularProgressIndicator(color: Color(0xFF6366F1)))
           : _errorMessage != null
@@ -152,13 +208,7 @@ class _ExamsScreenState extends State<ExamsScreen> {
                         ),
                         const SizedBox(height: 20),
                         ElevatedButton(
-                          onPressed: () {
-                            setState(() {
-                              _isLoading = true;
-                              _errorMessage = null;
-                            });
-                            _fetchResults();
-                          },
+                          onPressed: _fetchResults,
                           child: const Text('Retry'),
                         )
                       ],
@@ -169,12 +219,12 @@ class _ExamsScreenState extends State<ExamsScreen> {
                   onRefresh: _fetchResults,
                   child: _userRole == 'STUDENT'
                     ? _buildStudentView()
-                    : _buildAdminView(),
+                    : _buildAdminView(isAdmin),
                 ),
     );
   }
 
-  Widget _buildAdminView() {
+  Widget _buildAdminView(bool isAdmin) {
     if (_examsList.isEmpty) {
       return Center(
         child: Text(
@@ -226,21 +276,41 @@ class _ExamsScreenState extends State<ExamsScreen> {
                       ),
                     ),
                   ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF6366F1).withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      term,
-                      style: GoogleFonts.poppins(
-                        color: const Color(0xFF818CF8),
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
+                  if (isAdmin)
+                    PopupMenuButton<String>(
+                      icon: Icon(Icons.more_vert, color: Colors.grey.shade500),
+                      onSelected: (value) async {
+                        if (value == 'edit') {
+                          final result = await Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => CreateExamScreen(existingExam: exam)),
+                          );
+                          if (result == true) _fetchResults();
+                        } else if (value == 'delete') {
+                          _deleteExam(exam['id'].toString());
+                        }
+                      },
+                      itemBuilder: (context) => [
+                        const PopupMenuItem(value: 'edit', child: Row(children: [Icon(Icons.edit, size: 18), SizedBox(width: 8), Text('Edit')])),
+                        const PopupMenuItem(value: 'delete', child: Row(children: [Icon(Icons.delete, color: Colors.red, size: 18), SizedBox(width: 8), Text('Delete', style: TextStyle(color: Colors.red))])),
+                      ],
+                    )
+                  else
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF6366F1).withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
                       ),
-                    ),
-                  )
+                      child: Text(
+                        term,
+                        style: GoogleFonts.poppins(
+                          color: const Color(0xFF818CF8),
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    )
                 ],
               ),
               const SizedBox(height: 12),
@@ -516,5 +586,3 @@ class _ExamsScreenState extends State<ExamsScreen> {
     );
   }
 }
-
-

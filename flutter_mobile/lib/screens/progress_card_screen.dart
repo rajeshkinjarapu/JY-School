@@ -49,8 +49,8 @@ class _ProgressCardScreenState extends State<ProgressCardScreen> {
   }
 
   Future<void> _fetchResults() async {
-    if (_selectedExamId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please select an Exam')));
+    if (_selectedExamId == null || _selectedClassId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please select Exam and Class')));
       return;
     }
 
@@ -60,7 +60,7 @@ class _ProgressCardScreenState extends State<ProgressCardScreen> {
     });
 
     try {
-      final result = await ApiService.getExamResults(_selectedExamId!, classId: _selectedClassId ?? '');
+      final result = await ApiService.getExamResults(_selectedExamId!, classId: _selectedClassId!);
       if (mounted) {
         setState(() {
           _resultsData = result['success'] ? result['data'] : [];
@@ -105,7 +105,7 @@ class _ProgressCardScreenState extends State<ProgressCardScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: const Color(0xFFF1F5F9), // Softer background
       appBar: AppBar(
         title: Text('Progress Cards', style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold)),
         iconTheme: const IconThemeData(color: Colors.white),
@@ -170,14 +170,15 @@ class _ProgressCardScreenState extends State<ProgressCardScreen> {
           const SizedBox(height: 16),
           SizedBox(
             width: double.infinity,
-            child: ElevatedButton(
+            child: ElevatedButton.icon(
               onPressed: _isLoading ? null : _fetchResults,
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF6366F1),
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
-              child: Text('Generate Progress Cards', style: GoogleFonts.outfit(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+              icon: const Icon(Icons.picture_as_pdf, color: Colors.white, size: 20),
+              label: Text('Generate Progress Cards', style: GoogleFonts.outfit(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
             ),
           ),
         ],
@@ -194,7 +195,7 @@ class _ProgressCardScreenState extends State<ProgressCardScreen> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12),
           decoration: BoxDecoration(
-            color: const Color(0xFFF1F5F9),
+            color: const Color(0xFFF8FAFC),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(color: const Color(0xFFE2E8F0)),
           ),
@@ -238,77 +239,184 @@ class _ProgressCardScreenState extends State<ProgressCardScreen> {
         final maxMarks = res['totalMaxMarks']?.toString() ?? '0';
         final percentage = res['percentage']?.toStringAsFixed(1) ?? '0.0';
         final grade = res['grade'] ?? '-';
+        final rank = res['rank']?.toString() ?? '-';
         final gradeColor = _getGradeColor(grade);
+        final marksArray = res['marks'] ?? [];
 
         return Container(
-          margin: const EdgeInsets.only(bottom: 16),
+          margin: const EdgeInsets.only(bottom: 24),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(20),
-            boxShadow: [BoxShadow(color: const Color(0xFF6366F1).withOpacity(0.08), blurRadius: 15, offset: const Offset(0, 5))],
+            boxShadow: [BoxShadow(color: Colors.indigo.withOpacity(0.05), blurRadius: 20, offset: const Offset(0, 10))],
+            border: Border.all(color: const Color(0xFFE2E8F0)),
           ),
           child: Column(
             children: [
-              // Header section with photo and basic info
+              // Beautiful Header Section
               Container(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(20),
                 decoration: const BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [Color(0xFFF8FAFC), Colors.white],
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
+                    colors: [Color(0xFF1E293B), Color(0xFF334155)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
                   borderRadius: BorderRadius.only(topLeft: Radius.circular(20), topRight: Radius.circular(20)),
                 ),
                 child: Row(
                   children: [
-                    CircleAvatar(
-                      radius: 30,
-                      backgroundColor: const Color(0xFFE2E8F0),
-                      backgroundImage: NetworkImage(image),
+                    Container(
+                      padding: const EdgeInsets.all(3),
+                      decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+                      child: CircleAvatar(
+                        radius: 35,
+                        backgroundColor: const Color(0xFFE2E8F0),
+                        backgroundImage: NetworkImage(image),
+                      ),
                     ),
                     const SizedBox(width: 16),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(name, style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: const Color(0xFF1E293B))),
+                          Text(name, style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white)),
                           const SizedBox(height: 4),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                            decoration: BoxDecoration(color: const Color(0xFF3B82F6).withOpacity(0.1), borderRadius: BorderRadius.circular(6)),
-                            child: Text('Roll No: $rollNo', style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.w600, color: const Color(0xFF2563EB))),
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(8)),
+                            child: Text('Roll No: $rollNo', style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white)),
                           ),
                         ],
                       ),
                     ),
-                    // Grade Badge
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                      decoration: BoxDecoration(
-                        color: gradeColor.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: gradeColor.withOpacity(0.3)),
+                    // Rank Badge
+                    if (rank != '-')
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF59E0B).withOpacity(0.15),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: const Color(0xFFF59E0B)),
+                        ),
+                        child: Column(
+                          children: [
+                            Text('RANK', style: GoogleFonts.poppins(fontSize: 9, fontWeight: FontWeight.bold, color: const Color(0xFFFCD34D), letterSpacing: 1)),
+                            Text('#$rank', style: GoogleFonts.outfit(fontSize: 22, fontWeight: FontWeight.bold, color: const Color(0xFFFBBF24))),
+                          ],
+                        ),
                       ),
-                      child: Column(
-                        children: [
-                          Text('GRADE', style: GoogleFonts.poppins(fontSize: 10, fontWeight: FontWeight.bold, color: gradeColor.withOpacity(0.8))),
-                          Text(grade, style: GoogleFonts.outfit(fontSize: 24, fontWeight: FontWeight.bold, color: gradeColor)),
-                        ],
-                      ),
-                    ),
                   ],
                 ),
               ),
+
+              // Subject-wise Detailed Marks Table
+              if (marksArray.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          const Icon(Icons.analytics_outlined, color: Color(0xFF6366F1), size: 18),
+                          const SizedBox(width: 8),
+                          Text('SUBJECT-WISE BREAKDOWN', style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.bold, color: const Color(0xFF6366F1), letterSpacing: 1)),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: const Color(0xFFE2E8F0)),
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: Table(
+                            columnWidths: const {
+                              0: FlexColumnWidth(2.5),
+                              1: FlexColumnWidth(1),
+                              2: FlexColumnWidth(1),
+                              3: FlexColumnWidth(1),
+                            },
+                            children: [
+                              TableRow(
+                                decoration: const BoxDecoration(color: Color(0xFFF8FAFC)),
+                                children: [
+                                  _buildTableHeader('SUBJECT'),
+                                  _buildTableHeader('MAX', align: Alignment.center),
+                                  _buildTableHeader('OBT', align: Alignment.center),
+                                  _buildTableHeader('GRADE', align: Alignment.center),
+                                ],
+                              ),
+                              ...marksArray.map<TableRow>((m) {
+                                final subj = m['subject']?['name'] ?? m['subject'] ?? 'Unknown';
+                                final max = m['maxMarks']?.toString() ?? '100';
+                                final obt = m['marksObtained']?.toString() ?? m['obtained']?.toString() ?? '0';
+                                final g = m['grade'] ?? '-';
+                                final gColor = _getGradeColor(g);
+
+                                return TableRow(
+                                  decoration: const BoxDecoration(
+                                    border: Border(top: BorderSide(color: Color(0xFFF1F5F9))),
+                                  ),
+                                  children: [
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                                      child: Text(subj, style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF334155))),
+                                    ),
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 12),
+                                      child: Text(max, textAlign: TextAlign.center, style: GoogleFonts.poppins(fontSize: 13, color: const Color(0xFF64748B))),
+                                    ),
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 12),
+                                      child: Text(obt, textAlign: TextAlign.center, style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.bold, color: const Color(0xFF1E293B))),
+                                    ),
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 10),
+                                      child: Center(
+                                        child: Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                          decoration: BoxDecoration(color: gColor.withOpacity(0.1), borderRadius: BorderRadius.circular(6)),
+                                          child: Text(g, style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.bold, color: gColor)),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                );
+                              }).toList(),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
               const Divider(height: 1, thickness: 1, color: Color(0xFFF1F5F9)),
-              // Stats section
+              
+              // Overall Stats section
               Padding(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(20),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
-                    _buildStatItem('Total Marks', '$total / $maxMarks', Icons.military_tech_rounded, const Color(0xFF8B5CF6)),
+                    _buildStatItem('Total Score', '$total / $maxMarks', Icons.military_tech_rounded, const Color(0xFF8B5CF6)),
+                    Container(height: 40, width: 1, color: const Color(0xFFE2E8F0)),
                     _buildStatItem('Percentage', '$percentage%', Icons.pie_chart_rounded, const Color(0xFF10B981)),
+                    Container(height: 40, width: 1, color: const Color(0xFFE2E8F0)),
+                    Column(
+                      children: [
+                        Text('Overall Grade', style: GoogleFonts.poppins(fontSize: 11, color: const Color(0xFF64748B))),
+                        const SizedBox(height: 4),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                          decoration: BoxDecoration(color: gradeColor.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
+                          child: Text(grade, style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: gradeColor)),
+                        ),
+                      ],
+                    )
                   ],
                 ),
               ),
@@ -319,20 +427,38 @@ class _ProgressCardScreenState extends State<ProgressCardScreen> {
     );
   }
 
+  Widget _buildTableHeader(String text, {Alignment align = Alignment.centerLeft}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+      child: Align(
+        alignment: align,
+        child: Text(
+          text,
+          style: GoogleFonts.poppins(
+            color: const Color(0xFF64748B),
+            fontSize: 11,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 0.5,
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildStatItem(String label, String value, IconData icon, Color color) {
     return Row(
       children: [
         Container(
           padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(10)),
-          child: Icon(icon, color: color, size: 24),
+          decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
+          child: Icon(icon, color: color, size: 22),
         ),
         const SizedBox(width: 12),
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(label, style: GoogleFonts.poppins(fontSize: 12, color: const Color(0xFF64748B))),
-            Text(value, style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: const Color(0xFF1E293B))),
+            Text(label, style: GoogleFonts.poppins(fontSize: 11, color: const Color(0xFF64748B))),
+            Text(value, style: GoogleFonts.outfit(fontSize: 17, fontWeight: FontWeight.bold, color: const Color(0xFF1E293B))),
           ],
         ),
       ],
