@@ -261,6 +261,45 @@ export const FinancePage: React.FC = () => {
     return allStudents;
   };
 
+  // Helper to get all payments with pagination
+  const fetchAllPayments = async (): Promise<any[]> => {
+    try {
+      const firstRes: any = await api.get('/api/fees/payments?limit=500&page=1', { timeout: 60000 });
+      let firstPayload = firstRes?.data;
+      if (firstPayload && !Array.isArray(firstPayload) && Array.isArray(firstPayload.data)) {
+        firstPayload = firstPayload.data;
+      } else if (!Array.isArray(firstPayload) && Array.isArray(firstRes?.data?.data)) {
+        firstPayload = firstRes.data.data;
+      }
+      if (!Array.isArray(firstPayload)) firstPayload = [];
+
+      const pagination = firstRes?.data?.meta || firstRes?.data?.pagination || {};
+      const totalPages: number = pagination.totalPages || 1;
+
+      let allPayments: any[] = firstPayload;
+
+      if (totalPages > 1) {
+        const pagePromises = [];
+        for (let p = 2; p <= totalPages; p++) {
+          pagePromises.push(api.get(`/api/fees/payments?limit=500&page=${p}`, { timeout: 60000 }));
+        }
+        const pageResults = await Promise.allSettled(pagePromises);
+        pageResults.forEach((r: any) => {
+          if (r.status === 'fulfilled') {
+            let d = r.value?.data;
+            if (d && !Array.isArray(d) && Array.isArray(d.data)) d = d.data;
+            else if (!Array.isArray(d) && Array.isArray(r.value?.data?.data)) d = r.value.data.data;
+            if (Array.isArray(d)) allPayments = [...allPayments, ...d];
+          }
+        });
+      }
+      return allPayments;
+    } catch (e) {
+      console.error("Failed to fetch all payments", e);
+      return [];
+    }
+  };
+
   const fetchHeavyData = async (silent = false) => {
     try {
       const isStudent = user?.role === 'STUDENT';
@@ -268,7 +307,7 @@ export const FinancePage: React.FC = () => {
       // Run students & payments in parallel
       const [studResult, payRes]: any = await Promise.allSettled([
         isStudent ? Promise.resolve([]) : fetchAllStudents(),
-        api.get('/api/fees/payments?limit=500'),
+        fetchAllPayments(),
       ]);
 
       let paymentArray: any[] = [];
@@ -276,10 +315,7 @@ export const FinancePage: React.FC = () => {
       if (payRes.status === 'rejected') {
         if (!silent) toast.error('Failed to load payments: ' + (payRes.reason?.message || 'Network error'));
       } else if (payRes.status === 'fulfilled') {
-        let payload = payRes.value?.data || payRes.value || [];
-        if (payload && payload.success && Array.isArray(payload.data)) payload = payload.data;
-        else if (payload && Array.isArray(payload.data)) payload = payload.data;
-        paymentArray = Array.isArray(payload) ? payload : [];
+        paymentArray = Array.isArray(payRes.value) ? payRes.value : [];
         setPayments(paymentArray);
       }
 
