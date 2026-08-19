@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+﻿import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Printer, Download, Receipt, FileText, CheckCircle, Smartphone, Calculator, Plus, Share2, Upload, Search, Users, MessageCircle, X, Copy, Eye, FileSpreadsheet, SlidersHorizontal, CheckSquare, Square } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
@@ -13,7 +13,7 @@ interface StudentFeeDetailsProps {
   classes: any[];
 }
 
-// ── Export Dialog Types ───────────────────────────────────────────────────────
+// â”€â”€ Export Dialog Types â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 interface ExportFilters {
   paymentFilter: 'all' | 'zero' | 'partial' | 'full' | 'custom';
   customMinPaid: number;
@@ -58,11 +58,11 @@ const DEFAULT_FILTERS: ExportFilters = {
 };
 
 const PAYMENT_FILTER_OPTIONS = [
-  { value: 'all',     label: 'All Students',           desc: 'Export everyone',                 icon: '👥' },
-  { value: 'zero',    label: '₹0 Paid (No Payment)',   desc: 'Students who paid nothing',       icon: '🔴' },
-  { value: 'partial', label: 'Partial Payments',       desc: 'Paid some but not full amount',   icon: '🟡' },
-  { value: 'full',    label: 'Fully Paid',             desc: 'Balance = ₹0',                   icon: '🟢' },
-  { value: 'custom',  label: 'Custom Amount Range',    desc: 'Set min–max paid amount',         icon: '⚙️' },
+  { value: 'all',     label: 'All Students',           desc: 'Export everyone',                 icon: 'ðŸ‘¥' },
+  { value: 'zero',    label: 'â‚¹0 Paid (No Payment)',   desc: 'Students who paid nothing',       icon: 'ðŸ”´' },
+  { value: 'partial', label: 'Partial Payments',       desc: 'Paid some but not full amount',   icon: 'ðŸŸ¡' },
+  { value: 'full',    label: 'Fully Paid',             desc: 'Balance = â‚¹0',                   icon: 'ðŸŸ¢' },
+  { value: 'custom',  label: 'Custom Amount Range',    desc: 'Set minâ€“max paid amount',         icon: 'âš™ï¸' },
 ] as const;
 
 interface ExportDialogProps {
@@ -302,20 +302,23 @@ export const StudentFeeDetailsTab: React.FC<StudentFeeDetailsProps> = ({ student
       try {
         const { default: jsPDF } = await import('jspdf');
         const { default: autoTable } = await import('jspdf-autotable');
-        const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+        const numCols = Object.values(cols).filter(Boolean).length;
+        const orientation = numCols > 6 ? 'landscape' : 'portrait';
+        const doc = new jsPDF({ orientation, unit: 'mm', format: 'a4' });
 
         doc.setTextColor(0, 0, 0); doc.setFontSize(16); doc.setFont('helvetica', 'bold');
-        doc.text('SRI VENKATESWARA JY SCHOOL', 105, 14, { align: 'center' });
+        const pageWidth = doc.internal.pageSize.getWidth();
+        doc.text('SRI VENKATESWARA JY SCHOOL', pageWidth / 2, 14, { align: 'center' });
         doc.setFontSize(9); doc.setFont('helvetica', 'normal');
-        doc.text('Opp. Hero Showroom, SVL Paradise Campus, Narasannapeta', 105, 20, { align: 'center' });
+        doc.text('Opp. Hero Showroom, SVL Paradise Campus, Narasannapeta', pageWidth / 2, 20, { align: 'center' });
         doc.setFontSize(12); doc.setFont('helvetica', 'bold');
-        doc.text('STUDENT FEE DETAILS REPORT', 105, 28, { align: 'center' });
+        doc.text('STUDENT FEE DETAILS REPORT', pageWidth / 2, 28, { align: 'center' });
         
-        doc.setDrawColor(200, 200, 200); doc.setLineWidth(0.5); doc.line(14, 33, 196, 33);
+        doc.setDrawColor(200, 200, 200); doc.setLineWidth(0.5); doc.line(14, 33, pageWidth - 14, 33);
         doc.setTextColor(0, 0, 0); doc.setFontSize(10); doc.setFont('helvetica', 'bold');
         doc.text(`Class: ${classLabel}   |   Filter: ${PAYMENT_FILTER_OPTIONS.find(o => o.value === filters.paymentFilter)?.label}`, 14, 41);
         doc.setFont('helvetica', 'normal'); doc.setFontSize(9);
-        doc.text(`Students: ${exportRows.length}  |  Date: ${new Date().toLocaleDateString('en-IN')}`, 196, 41, { align: 'right' });
+        doc.text(`Students: ${exportRows.length}  |  Date: ${new Date().toLocaleDateString('en-IN')}`, pageWidth - 14, 41, { align: 'right' });
 
         const headerRow: string[] = [];
         const colStyles: any = {};
@@ -546,15 +549,15 @@ export const StudentFeeDetailsTab: React.FC<StudentFeeDetailsProps> = ({ student
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <div className="bg-gradient-to-br from-indigo-500 to-purple-600 p-5 rounded-2xl shadow-lg border border-indigo-400">
           <p className="text-indigo-100 text-xs font-black uppercase tracking-wider mb-1">Total Fee</p>
-          <p className="text-2xl md:text-3xl font-black text-white">₹{totalFee.toLocaleString('en-IN')}</p>
+          <p className="text-2xl md:text-3xl font-black text-white">â‚¹{totalFee.toLocaleString('en-IN')}</p>
         </div>
         <div className="bg-gradient-to-br from-emerald-500 to-teal-600 p-5 rounded-2xl shadow-lg border border-emerald-400">
           <p className="text-emerald-100 text-xs font-black uppercase tracking-wider mb-1">Collected</p>
-          <p className="text-2xl md:text-3xl font-black text-white">₹{totalPaid.toLocaleString('en-IN')}</p>
+          <p className="text-2xl md:text-3xl font-black text-white">â‚¹{totalPaid.toLocaleString('en-IN')}</p>
         </div>
         <div className="bg-gradient-to-br from-rose-500 to-pink-600 p-5 rounded-2xl shadow-lg border border-rose-400">
           <p className="text-rose-100 text-xs font-black uppercase tracking-wider mb-1">Balance Due</p>
-          <p className="text-2xl md:text-3xl font-black text-white">₹{totalBalance.toLocaleString('en-IN')}</p>
+          <p className="text-2xl md:text-3xl font-black text-white">â‚¹{totalBalance.toLocaleString('en-IN')}</p>
         </div>
       </div>
 
@@ -595,10 +598,10 @@ export const StudentFeeDetailsTab: React.FC<StudentFeeDetailsProps> = ({ student
                     <td className="px-4 py-4 border-r border-gray-100 font-bold text-gray-700 text-xs font-mono">{row.id}</td>
                     <td className="px-4 py-4 border-r border-gray-100 font-bold text-gray-900">{row.name}</td>
                     <td className="px-4 py-4 border-r border-gray-100 text-gray-600 text-xs font-bold">{row.className}</td>
-                    <td className="px-4 py-4 border-r border-gray-100 text-right font-medium text-gray-600">₹{row.totalFee.toLocaleString('en-IN')}</td>
-                    <td className="px-4 py-4 border-r border-gray-100 text-right font-bold text-gray-900">₹{row.paidAmount.toLocaleString('en-IN')}</td>
+                    <td className="px-4 py-4 border-r border-gray-100 text-right font-medium text-gray-600">â‚¹{row.totalFee.toLocaleString('en-IN')}</td>
+                    <td className="px-4 py-4 border-r border-gray-100 text-right font-bold text-gray-900">â‚¹{row.paidAmount.toLocaleString('en-IN')}</td>
                     <td className={`px-4 py-4 border-r border-gray-100 text-right font-black ${row.balance > 0 ? 'text-rose-600' : row.balance < 0 ? 'text-emerald-600' : 'text-gray-900'}`}>
-                      ₹{row.balance.toLocaleString('en-IN')}
+                      â‚¹{row.balance.toLocaleString('en-IN')}
                     </td>
                     {isAdminOrSuper && (
                       <>
@@ -705,7 +708,7 @@ export const StudentFeeDetailsTab: React.FC<StudentFeeDetailsProps> = ({ student
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-sm font-black text-rose-600">Total Pending Balance</span>
-                    <span className="text-xl font-black text-rose-600">₹{reminderStudent.balance.toLocaleString('en-IN')}</span>
+                    <span className="text-xl font-black text-rose-600">â‚¹{reminderStudent.balance.toLocaleString('en-IN')}</span>
                   </div>
                 </div>
                 <p className="text-[10px] text-gray-400 font-medium">Dear Parent, kindly clear the pending dues at the earliest. Please ignore if already paid.</p>
@@ -723,3 +726,5 @@ export const StudentFeeDetailsTab: React.FC<StudentFeeDetailsProps> = ({ student
     </div>
   );
 };
+
+

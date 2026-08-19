@@ -282,16 +282,21 @@ export const InstallmentReportTab: React.FC<InstallmentReportTabProps> = ({
         const jsPDF = jspdfModule.jsPDF || jspdfModule.default || jspdfModule;
         const autoTableModule: any = await import('jspdf-autotable');
         const autoTable = autoTableModule.default || autoTableModule;
-        const doc = new jsPDF('l', 'mm', 'a4');
+        const numCols = Object.values(cols).filter(Boolean).length;
+        const maxInstallments = cols.installments ? Math.max(0, ...exportRows.map((r: any) => r.payments.length)) : 0;
+        const totalCols = numCols + maxInstallments;
+        const orientation = totalCols > 7 ? 'landscape' : 'portrait';
+        const doc = new jsPDF({ orientation, unit: 'mm', format: 'a4' });
 
         doc.setFontSize(16); doc.setTextColor(30, 41, 59); doc.setFont('helvetica', 'bold');
-        doc.text('SRI VENKATESWARA JY SCHOOL', 148, 14, { align: 'center' });
+        const pageWidth = doc.internal.pageSize.getWidth();
+        doc.text('SRI VENKATESWARA JY SCHOOL', pageWidth / 2, 14, { align: 'center' });
         doc.setFontSize(10); doc.setFont('helvetica', 'normal');
-        doc.text('Installment Wise Student Payment Report', 148, 21, { align: 'center' });
+        doc.text('Installment Wise Student Payment Report', pageWidth / 2, 21, { align: 'center' });
         doc.setFontSize(9); doc.setFont('helvetica', 'bold');
         doc.text(`Class: ${classInfo.name}-${classInfo.section}  |  Filter: ${PAYMENT_FILTER_OPTIONS.find(o => o.value === filters.paymentFilter)?.label}  |  Students: ${exportRows.length}`, 14, 30);
         doc.setFont('helvetica', 'normal'); doc.setTextColor(140, 140, 140);
-        doc.text(`Generated: ${new Date().toLocaleString('en-IN')}`, 283, 30, { align: 'right' });
+        doc.text(`Generated: ${new Date().toLocaleString('en-IN')}`, pageWidth - 14, 30, { align: 'right' });
 
         const maxInstallments = cols.installments ? Math.max(0, ...exportRows.map((r: any) => r.payments.length)) : 0;
         const headerRow: string[] = [];
@@ -523,3 +528,4 @@ export const InstallmentReportTab: React.FC<InstallmentReportTabProps> = ({
     </div>
   );
 };
+
