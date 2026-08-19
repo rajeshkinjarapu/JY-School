@@ -286,10 +286,9 @@ export const InstallmentReportTab: React.FC<InstallmentReportTabProps> = ({
         const jsPDF = jspdfModule.jsPDF || jspdfModule.default || jspdfModule;
         const autoTableModule: any = await import('jspdf-autotable');
         const autoTable = autoTableModule.default || autoTableModule;
-        const numCols = Object.values(cols).filter(Boolean).length;
-        const maxInstallments = cols.installments ? Math.max(0, ...exportRows.map((r: any) => r.payments.length)) : 0;
-        const totalCols = numCols + maxInstallments;
-        const orientation = totalCols > 7 ? 'landscape' : 'portrait';
+        
+        // Force landscape to give more width for columns
+        const orientation = 'landscape';
         const doc = new jsPDF({ orientation, unit: 'mm', format: 'a4' });
 
         doc.setFontSize(16); doc.setTextColor(30, 41, 59); doc.setFont('helvetica', 'bold');
@@ -298,21 +297,34 @@ export const InstallmentReportTab: React.FC<InstallmentReportTabProps> = ({
         doc.setFontSize(10); doc.setFont('helvetica', 'normal');
         doc.text('Installment Wise Student Payment Report', pageWidth / 2, 21, { align: 'center' });
         doc.setFontSize(9); doc.setFont('helvetica', 'bold');
-        doc.text(`Class: ${classInfo.name}-${classInfo.section}  |  Filter: ${PAYMENT_FILTER_OPTIONS.find(o => o.value === filters.paymentFilter)?.label}  |  Students: ${exportRows.length}`, 14, 30);
+        doc.text(`Class: ${classInfo.name}-${classInfo.section}  |  Filter: ${PAYMENT_FILTER_OPTIONS.find(o => o.value === filters.paymentFilter)?.label}  |  Students: ${exportRows.length}`, 10, 30);
         doc.setFont('helvetica', 'normal'); doc.setTextColor(140, 140, 140);
-        doc.text(`Generated: ${new Date().toLocaleString('en-IN')}`, pageWidth - 14, 30, { align: 'right' });
+        doc.text(`Generated: ${new Date().toLocaleString('en-IN')}`, pageWidth - 10, 30, { align: 'right' });
 
-        const headerRow: string[] = [];
+        const maxInstallments = cols.installments ? Math.max(0, ...exportRows.map((r: any) => r.payments.length)) : 0;
+
+        const headerRow1: any[] = [];
+        const headerRow2: any[] = [];
         const colStyles: any = {};
         let ci = 0;
-        if (cols.sno) { headerRow.push('S.No'); colStyles[ci++] = { cellWidth: 12, halign: 'center' }; }
-        if (cols.rollNo) { headerRow.push('Student ID'); colStyles[ci++] = { cellWidth: 26, halign: 'center', fontStyle: 'bold', textColor: [100, 116, 139] }; }
-        if (cols.name) { headerRow.push('Student Name'); colStyles[ci++] = { cellWidth: 'auto', fontStyle: 'bold' }; }
-        if (cols.phone) { headerRow.push('Phone'); colStyles[ci++] = { cellWidth: 28, halign: 'center' }; }
-        if (cols.totalFee) { headerRow.push('Total Fee (₹)'); colStyles[ci++] = { cellWidth: 24, halign: 'right' }; }
-        if (cols.totalPaid) { headerRow.push('Paid (₹)'); colStyles[ci++] = { cellWidth: 24, halign: 'right', fontStyle: 'bold', textColor: [5, 150, 105] }; }
-        if (cols.remaining) { headerRow.push('Balance (₹)'); colStyles[ci++] = { cellWidth: 24, halign: 'right', fontStyle: 'bold', textColor: [225, 29, 72] }; }
-        for (let i = 0; i < maxInstallments; i++) { headerRow.push(`Inst-${i+1}`); colStyles[ci++] = { cellWidth: 36, halign: 'center', fontStyle: 'bold', textColor: [67, 56, 202] }; }
+        
+        if (cols.sno) { headerRow1.push({ content: 'S.No', rowSpan: 2, styles: { halign: 'center', valign: 'middle' } }); colStyles[ci++] = { halign: 'center' }; }
+        if (cols.rollNo) { headerRow1.push({ content: 'Student ID', rowSpan: 2, styles: { halign: 'center', valign: 'middle' } }); colStyles[ci++] = { halign: 'center', fontStyle: 'bold', textColor: [100, 116, 139] }; }
+        if (cols.name) { headerRow1.push({ content: 'Student Name', rowSpan: 2, styles: { halign: 'center', valign: 'middle' } }); colStyles[ci++] = { fontStyle: 'bold' }; }
+        if (cols.phone) { headerRow1.push({ content: 'Phone', rowSpan: 2, styles: { halign: 'center', valign: 'middle' } }); colStyles[ci++] = { halign: 'center' }; }
+        if (cols.totalFee) { headerRow1.push({ content: 'Total Fee', rowSpan: 2, styles: { halign: 'center', valign: 'middle' } }); colStyles[ci++] = { halign: 'right' }; }
+        if (cols.totalPaid) { headerRow1.push({ content: 'Total Paid', rowSpan: 2, styles: { halign: 'center', valign: 'middle' } }); colStyles[ci++] = { halign: 'right', fontStyle: 'bold', textColor: [5, 150, 105] }; }
+        if (cols.remaining) { headerRow1.push({ content: 'Balance', rowSpan: 2, styles: { halign: 'center', valign: 'middle' } }); colStyles[ci++] = { halign: 'right', fontStyle: 'bold', textColor: [225, 29, 72] }; }
+        
+        for (let i = 0; i < maxInstallments; i++) { 
+          headerRow1.push({ content: `Inst-${i+1}`, colSpan: 2, styles: { halign: 'center' } }); 
+          headerRow2.push({ content: 'Amt', styles: { halign: 'center' } });
+          headerRow2.push({ content: 'Date', styles: { halign: 'center' } });
+          colStyles[ci++] = { halign: 'right', textColor: [67, 56, 202] }; // Amount
+          colStyles[ci++] = { halign: 'center', textColor: [67, 56, 202] }; // Date
+        }
+
+        const head = maxInstallments > 0 ? [headerRow1, headerRow2] : [headerRow1];
 
         const tableRows = exportRows.map((r: any) => {
           const row: any[] = [];
@@ -325,16 +337,27 @@ export const InstallmentReportTab: React.FC<InstallmentReportTabProps> = ({
           if (cols.remaining) row.push(r.remaining.toLocaleString('en-IN'));
           for (let i = 0; i < maxInstallments; i++) {
             const p = r.payments[i];
-            row.push(p ? `₹${p.amount.toLocaleString('en-IN')} (${p.dateStr})` : '-');
+            if (p) {
+              row.push(p.amount.toLocaleString('en-IN'));
+              row.push(p.dateStr);
+            } else {
+              row.push('-');
+              row.push('-');
+            }
           }
           return row;
         });
 
         autoTable(doc, {
-          head: [headerRow], body: tableRows, startY: 35, theme: 'grid',
-          styles: { fontSize: 8.5, cellPadding: 2.5, valign: 'middle', lineColor: [200, 200, 200], lineWidth: 0.1 },
+          head: head, 
+          body: tableRows, 
+          startY: 35, 
+          theme: 'grid',
+          margin: { top: 35, right: 10, bottom: 15, left: 10 },
+          styles: { fontSize: 8, cellPadding: 2, valign: 'middle', lineColor: [200, 200, 200], lineWidth: 0.1 },
           headStyles: { fillColor: [99, 102, 241], textColor: [255, 255, 255], fontStyle: 'bold', halign: 'center' },
-          alternateRowStyles: { fillColor: [248, 250, 252] }, columnStyles: colStyles,
+          alternateRowStyles: { fillColor: [248, 250, 252] }, 
+          columnStyles: colStyles,
         });
 
         const pageCount = (doc as any).internal.getNumberOfPages();

@@ -1,6 +1,8 @@
+﻿import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/api_service.dart';
+import '../widgets/app_drawer.dart';
 import 'student_profile_screen.dart';
 
 class StudentsScreen extends StatefulWidget {
@@ -11,344 +13,329 @@ class StudentsScreen extends StatefulWidget {
 }
 
 class _StudentsScreenState extends State<StudentsScreen> {
-  List<dynamic> _classes = [];
-  String? _selectedClassId;
   List<dynamic> _students = [];
   List<dynamic> _filteredStudents = [];
-  String _searchQuery = '';
+  List<dynamic> _classes = [];
   bool _isLoading = true;
-  String _errorMessage = '';
+  String _searchQuery = '';
+  String? _selectedClassId;
+
+  // Avatar gradients matching the web
+  final List<List<Color>> avatarGradients = [
+    [const Color(0xFF2DD4BF), const Color(0xFF10B981)], // Teal to Emerald
+    [const Color(0xFFFB7185), const Color(0xFFE11D48)], // Rose to Pink
+    [const Color(0xFFFBBF24), const Color(0xFFF97316)], // Amber to Orange
+    [const Color(0xFF22D3EE), const Color(0xFF3B82F6)], // Cyan to Blue
+    [const Color(0xFFA78BFA), const Color(0xFF7C3AED)], // Violet to Purple
+  ];
 
   @override
   void initState() {
     super.initState();
-    _fetchInitialData();
+    _fetchClasses();
+    _fetchStudents();
   }
 
-  Future<void> _fetchInitialData() async {
-    final classResult = await ApiService.getClasses();
-    if (mounted) {
-      if (classResult['success']) {
-        final classes = classResult['data'] as List<dynamic>? ?? [];
-        String? defaultClassId;
-        
-        if (classes.isNotEmpty) {
-          // Look for Nursery
-          final nursery = classes.firstWhere(
-            (c) => (c['name'] as String).toLowerCase().contains('nursery'),
-            orElse: () => null,
-          );
-          defaultClassId = nursery?['id'] ?? classes.first['id'];
-        }
-
+  Future<void> _fetchClasses() async {
+    try {
+      final res = await ApiService.getClasses();
+      if (res['success']) {
         setState(() {
-          _classes = classes;
-          _selectedClassId = defaultClassId;
-        });
-
-        if (defaultClassId != null) {
-          await _fetchStudents(defaultClassId);
-        } else {
-          setState(() {
-            _isLoading = false;
-          });
-        }
-      } else {
-        setState(() {
-          _errorMessage = classResult['message'] ?? 'Failed to load classes';
-          _isLoading = false;
+          _classes = res['data'] ?? [];
         });
       }
+    } catch (e) {
+      debugPrint('Failed to load classes: $e');
     }
   }
 
-  Future<void> _fetchStudents(String classId) async {
+  Future<void> _fetchStudents([String? classId]) async {
     setState(() {
       _isLoading = true;
-      _errorMessage = '';
     });
-    
-    final result = await ApiService.getStudents(classId: classId, limit: 500);
-    if (mounted) {
-      if (result['success']) {
+
+    try {
+      final res = await ApiService.getStudents(classId: classId);
+      if (res['success']) {
         setState(() {
-          _students = result['data'] ?? [];
-          _filteredStudents = _students;
-          _runSearch(_searchQuery); // Apply existing search if any
+          _students = res['data'] ?? [];
+          _filteredStudents = List.from(_students);
           _isLoading = false;
         });
       } else {
         setState(() {
-          _errorMessage = result['message'] ?? 'Failed to load students';
           _isLoading = false;
         });
       }
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
 
   void _runSearch(String query) {
     setState(() {
-      _searchQuery = query.toLowerCase();
-      if (_searchQuery.isEmpty) {
-        _filteredStudents = _students;
+      _searchQuery = query;
+      if (query.isEmpty) {
+        _filteredStudents = List.from(_students);
       } else {
-        _filteredStudents = _students.where((student) {
-          final user = student['user'] ?? {};
-          final name = (user['name'] ?? '').toString().toLowerCase();
-          final rollNo = (student['rollNo'] ?? '').toString().toLowerCase();
-          return name.contains(_searchQuery) || rollNo.contains(_searchQuery);
+        final lower = query.toLowerCase();
+        _filteredStudents = _students.where((s) {
+          final name = (s['user']?['name'] ?? '').toString().toLowerCase();
+          final roll = (s['rollNo'] ?? '').toString().toLowerCase();
+          return name.contains(lower) || roll.contains(lower);
         }).toList();
       }
     });
   }
 
+  String _getInitials(String name) {
+    if (name.isEmpty) return 'ST';
+    final parts = name.trim().split(' ');
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[1][0]).toUpperCase();
+    }
+    return name.substring(0, name.length >= 2 ? 2 : 1).toUpperCase();
+  }
+
+  Widget _buildAvatar(String name, String? photoUrl) {
+    final safeName = name.isEmpty ? 'Student' : name;
+    final colorIndex = safeName.codeUnitAt(0) % avatarGradients.length;
+    final gradientColors = avatarGradients[colorIndex];
+
+    if (photoUrl != null && photoUrl.isNotEmpty && !photoUrl.startsWith('data:')) {
+      return Container(
+        width: 44,
+        height: 44,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          border: Border.all(color: Colors.grey.shade300, width: 1),
+          image: DecorationImage(image: NetworkImage(photoUrl), fit: BoxFit.cover),
+          boxShadow: [
+            BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 4, offset: const Offset(0, 2)),
+          ],
+        ),
+      );
+    } else {
+      return Container(
+        width: 44,
+        height: 44,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          gradient: LinearGradient(colors: gradientColors, begin: Alignment.topLeft, end: Alignment.bottomRight),
+          border: Border.all(color: Colors.white, width: 2),
+          boxShadow: [
+            BoxShadow(color: gradientColors[1].withOpacity(0.3), blurRadius: 6, offset: const Offset(0, 2)),
+          ],
+        ),
+        alignment: Alignment.center,
+        child: Text(
+          _getInitials(safeName),
+          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F7FE),
+      backgroundColor: const Color(0xFFF1F5F9), // Slight gray background
+      drawer: const AppDrawer(currentRoute: 'students'),
       appBar: AppBar(
-        title: Text(
-          'Students Directory',
-          style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold),
-        ),
+        title: const Text('Students Directory', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+        backgroundColor: const Color(0xFF4F46E5), // Indigo-600
+        foregroundColor: Colors.white,
         elevation: 0,
-        centerTitle: true,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
-        ),
-        flexibleSpace: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Color(0xFF2E2A66), Color(0xFF222854)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-          ),
-        ),
+        actions: [
+          IconButton(icon: const Icon(Icons.person_add_rounded), onPressed: () {}),
+        ],
       ),
       body: Column(
         children: [
-          _buildFilters(),
-          Expanded(
-            child: _isLoading 
-              ? const Center(child: CircularProgressIndicator(color: Color(0xFF6366F1)))
-              : _errorMessage.isNotEmpty
-                ? Center(child: Text(_errorMessage, style: const TextStyle(color: Colors.red)))
-                : _filteredStudents.isEmpty
-                  ? _buildEmptyState()
-                  : SingleChildScrollView(
-                      child: Container(
-                        margin: const EdgeInsets.all(16),
+          // Gradient Hero Header
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.only(left: 20, right: 20, top: 10, bottom: 24),
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Color(0xFF4F46E5), Color(0xFF7C3AED), Color(0xFF9333EA)], // indigo to purple
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 8, offset: Offset(0, 4))],
+              borderRadius: BorderRadius.only(bottomLeft: Radius.circular(24), bottomRight: Radius.circular(24)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Total Students', style: TextStyle(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.w600, letterSpacing: 1.2)),
+                const SizedBox(height: 4),
+                Text(
+                  '${_filteredStudents.length}',
+                  style: const TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.w900),
+                ),
+              ],
+            ),
+          ),
+          
+          // Filters
+          Transform.translate(
+            offset: const Offset(0, -20),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))
+                  ],
+                ),
+                child: Column(
+                  children: [
+                    if (_classes.isNotEmpty)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
                         decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(16),
-                          boxShadow: [
-                            BoxShadow(
-                              color: const Color(0xFF6366F1).withOpacity(0.06),
-                              blurRadius: 10,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
+                          color: const Color(0xFFF8FAFC),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: const Color(0xFFE2E8F0)),
                         ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(16),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              _buildTableHeader(),
-                              ...List.generate(_filteredStudents.length, (index) {
-                                return _buildTableRow(_filteredStudents[index], index);
-                              }),
-                            ],
+                        child: DropdownButtonHideUnderline(
+                          child: DropdownButton<String>(
+                            isExpanded: true,
+                            value: _selectedClassId,
+                            hint: const Text('All Classes'),
+                            icon: const Icon(Icons.keyboard_arrow_down_rounded, color: Color(0xFF64748B)),
+                            items: _classes.map<DropdownMenuItem<String>>((c) {
+                              final className = '${c['name']} ${c['section'] ?? ''}'.trim();
+                              return DropdownMenuItem<String>(
+                                value: c['id'],
+                                child: Text(className, style: GoogleFonts.poppins(color: const Color(0xFF1E293B), fontWeight: FontWeight.w500)),
+                              );
+                            }).toList(),
+                            onChanged: (value) {
+                              if (value != null && value != _selectedClassId) {
+                                setState(() { _selectedClassId = value; });
+                                _fetchStudents(value);
+                              }
+                            },
                           ),
                         ),
                       ),
-                    ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFilters() {
-    return Container(
-      color: Colors.white,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: Column(
-        children: [
-          if (_classes.isNotEmpty)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF8FAFC),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: const Color(0xFFE2E8F0)),
-              ),
-              child: DropdownButtonHideUnderline(
-                child: DropdownButton<String>(
-                  isExpanded: true,
-                  value: _selectedClassId,
-                  hint: const Text('Select Class'),
-                  icon: const Icon(Icons.keyboard_arrow_down_rounded, color: Color(0xFF64748B)),
-                  items: _classes.map<DropdownMenuItem<String>>((c) {
-                    final className = '${c['name']} ${c['section'] ?? ''}'.trim();
-                    return DropdownMenuItem<String>(
-                      value: c['id'],
-                      child: Text(
-                        className,
-                        style: GoogleFonts.poppins(color: const Color(0xFF1E293B), fontWeight: FontWeight.w500),
+                    const SizedBox(height: 12),
+                    // Search Bar
+                    Container(
+                      height: 45,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF8FAFC),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: const Color(0xFFE2E8F0)),
                       ),
-                    );
-                  }).toList(),
-                  onChanged: (value) {
-                    if (value != null && value != _selectedClassId) {
-                      setState(() {
-                        _selectedClassId = value;
-                      });
-                      _fetchStudents(value);
-                    }
-                  },
+                      child: TextField(
+                        style: const TextStyle(color: Color(0xFF1E293B)),
+                        decoration: const InputDecoration(
+                          hintText: 'Search by name or roll...',
+                          hintStyle: TextStyle(color: Color(0xFF94A3B8)),
+                          prefixIcon: Icon(Icons.search, color: Color(0xFF94A3B8)),
+                          border: InputBorder.none,
+                          contentPadding: EdgeInsets.symmetric(vertical: 12),
+                        ),
+                        onChanged: _runSearch,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
-          const SizedBox(height: 12),
-          // Search Bar
-          Container(
-            height: 45,
-            decoration: BoxDecoration(
-              color: const Color(0xFFF8FAFC),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFFE2E8F0)),
-            ),
-            child: TextField(
-              style: const TextStyle(color: Color(0xFF1E293B)),
-              decoration: InputDecoration(
-                hintText: 'Search student by name or ID...',
-                hintStyle: const TextStyle(color: Color(0xFF94A3B8)),
-                prefixIcon: const Icon(Icons.search, color: Color(0xFF94A3B8)),
-                border: InputBorder.none,
-                contentPadding: const EdgeInsets.symmetric(vertical: 12),
-              ),
-              onChanged: _runSearch,
-            ),
+          ),
+
+          // List
+          Expanded(
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : _filteredStudents.isEmpty
+                    ? _buildEmptyState()
+                    : RefreshIndicator(
+                        onRefresh: () => _fetchStudents(_selectedClassId),
+                        child: ListView.builder(
+                          padding: const EdgeInsets.only(left: 16, right: 16, bottom: 24, top: 0),
+                          itemCount: _filteredStudents.length,
+                          itemBuilder: (context, index) {
+                            return _buildStudentCard(_filteredStudents[index]);
+                          },
+                        ),
+                      ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildTableHeader() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: const BoxDecoration(
-        color: Color(0xFFF8FAFC),
-        border: Border(bottom: BorderSide(color: Color(0xFFF1F5F9))),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            flex: 3,
-            child: Text('Student Info', style: GoogleFonts.poppins(color: const Color(0xFF64748B), fontSize: 12, fontWeight: FontWeight.w600)),
-          ),
-          Expanded(
-            flex: 2,
-            child: Text('Class', style: GoogleFonts.poppins(color: const Color(0xFF64748B), fontSize: 12, fontWeight: FontWeight.w600)),
-          ),
-          const SizedBox(width: 40), // For action button space
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTableRow(dynamic student, int index) {
+  Widget _buildStudentCard(dynamic student) {
     final user = student['user'] ?? {};
     final classInfo = student['class'] ?? {};
     final name = user['name'] ?? 'Unknown';
     final photoUrl = user['photoUrl'];
-    final image = photoUrl?.isNotEmpty == true
-        ? photoUrl
-        : 'https://ui-avatars.com/api/?name=${Uri.encodeComponent(name)}&background=E2E8F0&color=1E293B';
-        
     final className = '${classInfo['name'] ?? ''} ${classInfo['section'] ?? ''}'.trim();
     final rollNo = student['rollNo'] ?? 'N/A';
-    final isEven = index % 2 == 0;
 
-    return InkWell(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => StudentProfileScreen(student: student),
-          ),
-        );
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: BoxDecoration(
-          color: isEven ? Colors.white : const Color(0xFFF8FAFC).withOpacity(0.5),
-          border: const Border(bottom: BorderSide(color: Color(0xFFF1F5F9))),
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              flex: 3,
-              child: Row(
-                children: [
-                  CircleAvatar(
-                    radius: 20,
-                    backgroundImage: NetworkImage(image),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          name,
-                          style: GoogleFonts.poppins(
-                            color: const Color(0xFF1E293B),
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        Text(
-                          rollNo,
-                          style: GoogleFonts.poppins(
-                            color: const Color(0xFF475569),
-                            fontSize: 11,
-                          ),
-                        ),
-                      ],
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 8, offset: const Offset(0, 2))
+        ],
+      ),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: () {
+          Navigator.push(context, MaterialPageRoute(builder: (context) => StudentProfileScreen(student: student)));
+        },
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              _buildAvatar(name, photoUrl),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      name,
+                      style: GoogleFonts.poppins(color: const Color(0xFF1E293B), fontSize: 15, fontWeight: FontWeight.bold),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 4),
+                    Text(
+                      'Roll No: $rollNo',
+                      style: GoogleFonts.poppins(color: const Color(0xFF64748B), fontSize: 12),
+                    ),
+                  ],
+                ),
               ),
-            ),
-            Expanded(
-              flex: 2,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF34D399).withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(6),
+                  color: const Color(0xFF34D399).withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
                   className,
-                  style: GoogleFonts.poppins(
-                    color: const Color(0xFF059669),
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                  ),
-                  textAlign: TextAlign.center,
+                  style: GoogleFonts.poppins(color: const Color(0xFF059669), fontSize: 11, fontWeight: FontWeight.bold),
                 ),
               ),
-            ),
-            const SizedBox(width: 16),
-            const Icon(Icons.arrow_forward_ios, size: 14, color: Color(0xFF94A3B8)),
-          ],
+              const SizedBox(width: 8),
+              const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: Color(0xFFCBD5E1)),
+            ],
+          ),
         ),
       ),
     );
@@ -359,18 +346,14 @@ class _StudentsScreenState extends State<StudentsScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.search_off_rounded, size: 80, color: const Color(0xFF94A3B8).withOpacity(0.5)),
+          Icon(Icons.search_off_rounded, size: 60, color: const Color(0xFF94A3B8).withOpacity(0.5)),
           const SizedBox(height: 16),
           Text(
-            _searchQuery.isNotEmpty ? 'No students found matching "$_searchQuery"' : 'No students found in this class.',
-            style: GoogleFonts.poppins(color: const Color(0xFF64748B), fontSize: 16),
+            _searchQuery.isNotEmpty ? 'No students found matching ""' : 'No students found in this class.',
+            style: GoogleFonts.poppins(color: const Color(0xFF64748B), fontSize: 14),
           ),
         ],
       ),
     );
   }
 }
-
-
-
-

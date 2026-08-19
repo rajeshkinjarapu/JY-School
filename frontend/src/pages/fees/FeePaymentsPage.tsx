@@ -70,8 +70,42 @@ export const FeePaymentsPage: React.FC = () => {
 
   const fetchData = async () => {
     try {
-      const payRes: any = await api.get('/api/fees/payments?limit=750');
-      setPayments(payRes.data?.data || payRes.data || payRes || []);
+      // Fetch page 1 to get pagination meta
+      const firstRes: any = await api.get('/api/fees/payments?limit=500&page=1', { timeout: 60000 });
+      let firstPayload = firstRes?.data;
+      if (firstPayload && !Array.isArray(firstPayload) && Array.isArray(firstPayload.data)) {
+        firstPayload = firstPayload.data;
+      } else if (!Array.isArray(firstPayload) && Array.isArray(firstRes?.data?.data)) {
+        firstPayload = firstRes.data.data;
+      }
+      if (!Array.isArray(firstPayload)) firstPayload = [];
+
+      const pagination = firstRes?.data?.meta || firstRes?.data?.pagination || {};
+      const totalPages: number = pagination.totalPages || 1;
+      let allPayments: any[] = firstPayload;
+
+      // Fetch remaining pages in parallel
+      if (totalPages > 1) {
+        const pagePromises = [];
+        for (let p = 2; p <= totalPages; p++) {
+          pagePromises.push(api.get(`/api/fees/payments?limit=500&page=${p}`, { timeout: 60000 }));
+        }
+        const results = await Promise.allSettled(pagePromises);
+        results.forEach((res) => {
+          if (res.status === 'fulfilled') {
+            let payload = (res.value as any)?.data;
+            if (payload && !Array.isArray(payload) && Array.isArray(payload.data)) {
+              payload = payload.data;
+            } else if (!Array.isArray(payload) && Array.isArray((res.value as any)?.data?.data)) {
+              payload = (res.value as any).data.data;
+            }
+            if (Array.isArray(payload)) {
+              allPayments = [...allPayments, ...payload];
+            }
+          }
+        });
+      }
+      setPayments(allPayments);
     } catch (e) {
       toast.error('Failed to load transaction records');
     } finally {

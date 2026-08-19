@@ -52,6 +52,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
   List<dynamic> _adminAttendanceTrend = [];
   List<dynamic> _adminMonthlyFeeCollection = [];
   List<dynamic> _recentAnnouncements = [];
+  Map<String, dynamic> _adminGenderDistribution = {};
+  List<dynamic> _adminEnrollmentByClass = [];
+  List<dynamic> _adminRecentPayments = [];
+  List<dynamic> _timetableToday = [];
+  List<dynamic> _recentHomework = [];
+  List<dynamic> _recentMarks = [];
+  Map<String, dynamic> _feeStatusData = {};
 
   @override
   void initState() {
@@ -122,6 +129,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
         }
       }
 
+      // Also fetch dashboard specific student stats (today classes, recent marks)
+      final dashboardRes = await ApiService.getStudentDashboardStats();
+      if (dashboardRes['success']) {
+          final sData = dashboardRes['data'] ?? {};
+          if(mounted) {
+             _timetableToday = sData['timetableToday'] ?? [];
+             _recentMarks = sData['recentMarks'] ?? [];
+             _feeStatusData = sData['feeStatus'] ?? {};
+          }
+      }
+
       if (mounted) {
         setState(() {
           _attendanceRate = rate;
@@ -142,6 +160,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
             _teacherTodayAbsent = int.tryParse(attendanceSummary['absent']?.toString() ?? '0') ?? 0;
             _teacherAttendancePercent = double.tryParse(attendanceSummary['rate']?.toString() ?? '0.0') ?? 0.0;
             _adminAttendanceTrend = data['attendanceTrend'] ?? [];
+            _timetableToday = data['timetableToday'] ?? [];
+            _recentHomework = data['recentHomework'] ?? [];
+            _recentAnnouncements = data['announcements'] ?? [];
             _isLoading = false;
           });
         } else {
@@ -165,6 +186,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
             _adminAttendanceTrend = stats['attendanceTrend'] ?? [];
             _adminMonthlyFeeCollection = stats['monthlyFeeCollection'] ?? [];
             _recentAnnouncements = stats['recentAnnouncements'] ?? [];
+            _adminGenderDistribution = stats['genderDistribution'] ?? {};
+            _adminEnrollmentByClass = stats['enrollmentByClass'] ?? [];
+            _adminRecentPayments = stats['recentPayments'] ?? [];
             _isLoading = false;
           });
         } else {
@@ -272,21 +296,34 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         children: [
                           if (userRole == 'SUPER_ADMIN' || userRole == 'ADMIN') ...[
                             _buildAdminCombinedGrid(),
-                            if (_adminAttendanceTrend.isNotEmpty) _buildAttendanceChart(),
-                            if (_recentAnnouncements.isNotEmpty) _buildAnnouncements(),
+                            const SizedBox(height: 24),
+                            _buildAttendanceChart(),
+                            const SizedBox(height: 24),
+                            _buildDemographicsChart(),
+                            const SizedBox(height: 24),
+                            _buildEnrollmentChart(),
+                            const SizedBox(height: 24),
+                            _buildRecentPayments(),
+                            const SizedBox(height: 24),
+                            _buildAnnouncements(),
+                          ] else if (userRole == 'TEACHER') ...[
+                            _buildQuickMetrics(userRole),
+                            const SizedBox(height: 24),
+                            _buildMenuGrid(userRole),
+                            const SizedBox(height: 24),
+                            _buildTimetableToday(),
+                            const SizedBox(height: 24),
+                            _buildRecentHomework(),
+                            const SizedBox(height: 24),
+                            _buildAnnouncements(),
                           ] else ...[
                             _buildQuickMetrics(userRole),
-                            const SizedBox(height: 32),
-                            Text(
-                              userRole == 'STUDENT' ? 'Academic Portal' : 'Teacher Toolkit',
-                              style: GoogleFonts.outfit(
-                                fontSize: 22,
-                                fontWeight: FontWeight.bold,
-                                color: const Color(0xFF1E293B),
-                              ),
-                            ),
-                            const SizedBox(height: 16),
+                            const SizedBox(height: 24),
                             _buildMenuGrid(userRole),
+                            const SizedBox(height: 24),
+                            _buildTimetableToday(),
+                            const SizedBox(height: 24),
+                            _buildRecentMarks(),
                           ],
                           const SizedBox(height: 30),
                         ],
@@ -1208,6 +1245,585 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  // ================= ADMIN WIDGETS =================
+  
+  Widget _buildAttendanceChart() {
+    if (_adminAttendanceTrend.isEmpty) return const SizedBox();
+    
+    List<FlSpot> presentSpots = [];
+    List<FlSpot> absentSpots = [];
+    
+    for (int i = 0; i < _adminAttendanceTrend.length; i++) {
+      final item = _adminAttendanceTrend[i];
+      final p = double.tryParse(item['present']?.toString() ?? '0') ?? 0;
+      final a = double.tryParse(item['absent']?.toString() ?? '0') ?? 0;
+      presentSpots.add(FlSpot(i.toDouble(), p));
+      absentSpots.add(FlSpot(i.toDouble(), a));
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4)),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(color: const Color(0xFF10B981).withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
+                child: const Icon(Icons.show_chart, color: Color(0xFF10B981), size: 20),
+              ),
+              const SizedBox(width: 12),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Attendance Overview', style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold, color: const Color(0xFF1E293B))),
+                  Text('Present vs Absent (Last 7 Days)', style: GoogleFonts.poppins(fontSize: 11, color: const Color(0xFF64748B))),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          SizedBox(
+            height: 200,
+            child: LineChart(
+              LineChartData(
+                gridData: const FlGridData(show: false),
+                titlesData: const FlTitlesData(
+                  topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  leftTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  bottomTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: 22,
+                      interval: 1,
+                    ),
+                  ),
+                ),
+                borderData: FlBorderData(show: false),
+                lineBarsData: [
+                  LineChartBarData(
+                    spots: presentSpots,
+                    isCurved: true,
+                    color: const Color(0xFF10B981),
+                    barWidth: 3,
+                    isStrokeCapRound: true,
+                    dotData: const FlDotData(show: true),
+                    belowBarData: BarAreaData(
+                      show: true,
+                      color: const Color(0xFF10B981).withOpacity(0.1),
+                    ),
+                  ),
+                  LineChartBarData(
+                    spots: absentSpots,
+                    isCurved: true,
+                    color: const Color(0xFFEF4444),
+                    barWidth: 3,
+                    isStrokeCapRound: true,
+                    dotData: const FlDotData(show: true),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDemographicsChart() {
+    if (_adminGenderDistribution.isEmpty) return const SizedBox();
+    
+    final male = double.tryParse(_adminGenderDistribution['male']?.toString() ?? '0') ?? 0;
+    final female = double.tryParse(_adminGenderDistribution['female']?.toString() ?? '0') ?? 0;
+    final other = double.tryParse(_adminGenderDistribution['other']?.toString() ?? '0') ?? 0;
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4)),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(color: const Color(0xFF6366F1).withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
+                child: const Icon(Icons.pie_chart, color: Color(0xFF6366F1), size: 20),
+              ),
+              const SizedBox(width: 12),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Demographics', style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold, color: const Color(0xFF1E293B))),
+                  Text('Student gender distribution', style: GoogleFonts.poppins(fontSize: 11, color: const Color(0xFF64748B))),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          SizedBox(
+            height: 180,
+            child: PieChart(
+              PieChartData(
+                sectionsSpace: 2,
+                centerSpaceRadius: 50,
+                sections: [
+                  if (male > 0) PieChartSectionData(color: const Color(0xFF6366F1), value: male, title: 'M', radius: 40, titleStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white)),
+                  if (female > 0) PieChartSectionData(color: const Color(0xFFEC4899), value: female, title: 'F', radius: 40, titleStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white)),
+                  if (other > 0) PieChartSectionData(color: const Color(0xFFF59E0B), value: other, title: 'O', radius: 40, titleStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white)),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              _buildLegendItem(const Color(0xFF6366F1), 'Male: ${male.toInt()}'),
+              const SizedBox(width: 16),
+              _buildLegendItem(const Color(0xFFEC4899), 'Female: ${female.toInt()}'),
+            ],
+          )
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLegendItem(Color color, String text) {
+    return Row(
+      children: [
+        Container(width: 10, height: 10, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+        const SizedBox(width: 6),
+        Text(text, style: GoogleFonts.poppins(fontSize: 12, color: const Color(0xFF475569), fontWeight: FontWeight.w600)),
+      ],
+    );
+  }
+
+  Widget _buildEnrollmentChart() {
+    if (_adminEnrollmentByClass.isEmpty) return const SizedBox();
+    
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4)),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(color: const Color(0xFFF59E0B).withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
+                child: const Icon(Icons.bar_chart, color: Color(0xFFF59E0B), size: 20),
+              ),
+              const SizedBox(width: 12),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Class Enrollment', style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold, color: const Color(0xFF1E293B))),
+                  Text('Students per class', style: GoogleFonts.poppins(fontSize: 11, color: const Color(0xFF64748B))),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          SizedBox(
+            height: 220,
+            child: BarChart(
+              BarChartData(
+                alignment: BarChartAlignment.spaceAround,
+                maxY: _adminEnrollmentByClass.map((e) => double.tryParse(e['count']?.toString() ?? '0') ?? 0).reduce((a, b) => a > b ? a : b) * 1.2,
+                barTouchData: BarTouchData(enabled: false),
+                titlesData: FlTitlesData(
+                  show: true,
+                  bottomTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      getTitlesWidget: (value, meta) {
+                        if (value.toInt() < 0 || value.toInt() >= _adminEnrollmentByClass.length) return const SizedBox();
+                        return Padding(
+                          padding: const EdgeInsets.only(top: 8.0),
+                          child: Text(
+                            _adminEnrollmentByClass[value.toInt()]['name']?.toString() ?? '',
+                            style: GoogleFonts.poppins(fontSize: 10, color: const Color(0xFF64748B)),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                ),
+                gridData: const FlGridData(show: false),
+                borderData: FlBorderData(show: false),
+                barGroups: List.generate(_adminEnrollmentByClass.length, (i) {
+                  final val = double.tryParse(_adminEnrollmentByClass[i]['count']?.toString() ?? '0') ?? 0;
+                  return BarChartGroupData(
+                    x: i,
+                    barRods: [
+                      BarChartRodData(
+                        toY: val,
+                        color: const Color(0xFFF59E0B),
+                        width: 12,
+                        borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
+                      )
+                    ],
+                  );
+                }),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRecentPayments() {
+    if (_adminRecentPayments.isEmpty) return const SizedBox();
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4)),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(color: const Color(0xFF3B82F6).withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
+                child: const Icon(Icons.receipt_long, color: Color(0xFF3B82F6), size: 20),
+              ),
+              const SizedBox(width: 12),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Recent Payments', style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold, color: const Color(0xFF1E293B))),
+                  Text('Latest fee transactions', style: GoogleFonts.poppins(fontSize: 11, color: const Color(0xFF64748B))),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          ListView.separated(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: _adminRecentPayments.length > 5 ? 5 : _adminRecentPayments.length,
+            separatorBuilder: (c, i) => const Divider(color: Color(0xFFF1F5F9)),
+            itemBuilder: (context, index) {
+              final p = _adminRecentPayments[index];
+              final studentName = p['student']?['user']?['name'] ?? p['student']?['name'] ?? 'Unknown';
+              final amount = double.tryParse(p['amountPaid']?.toString() ?? '0') ?? 0;
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        studentName,
+                        style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF334155)),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    Text(
+                      '₹${amount.toInt()}',
+                      style: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.bold, color: const Color(0xFF10B981)),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ================= SHARED / COMMON WIDGETS =================
+
+  Widget _buildAnnouncements() {
+    if (_recentAnnouncements.isEmpty) return const SizedBox();
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4)),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(color: const Color(0xFF8B5CF6).withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
+                child: const Icon(Icons.campaign, color: Color(0xFF8B5CF6), size: 20),
+              ),
+              const SizedBox(width: 12),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Notice Board', style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold, color: const Color(0xFF1E293B))),
+                  Text('Latest announcements', style: GoogleFonts.poppins(fontSize: 11, color: const Color(0xFF64748B))),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          ListView.separated(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: _recentAnnouncements.length > 3 ? 3 : _recentAnnouncements.length,
+            separatorBuilder: (c, i) => const SizedBox(height: 12),
+            itemBuilder: (context, index) {
+              final a = _recentAnnouncements[index];
+              return Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF8FAFC),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFFF1F5F9)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      a['title'] ?? '',
+                      style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF1E293B)),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      a['content'] ?? '',
+                      style: GoogleFonts.poppins(fontSize: 11, color: const Color(0xFF64748B)),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ================= TEACHER / STUDENT WIDGETS =================
+
+  Widget _buildTimetableToday() {
+    if (_timetableToday.isEmpty) return const SizedBox();
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4)),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(color: const Color(0xFF06B6D4).withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
+                child: const Icon(Icons.schedule, color: Color(0xFF06B6D4), size: 20),
+              ),
+              const SizedBox(width: 12),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Today\'s Classes', style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold, color: const Color(0xFF1E293B))),
+                  Text('Your schedule for today', style: GoogleFonts.poppins(fontSize: 11, color: const Color(0xFF64748B))),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          ListView.separated(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: _timetableToday.length,
+            separatorBuilder: (c, i) => const SizedBox(height: 12),
+            itemBuilder: (context, index) {
+              final slot = _timetableToday[index];
+              return Row(
+                children: [
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(color: const Color(0xFFF1F5F9), borderRadius: BorderRadius.circular(12)),
+                    child: Center(child: Icon(Icons.book, size: 16, color: const Color(0xFF64748B))),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(slot['subject']?['name'] ?? 'Subject', style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.bold, color: const Color(0xFF1E293B))),
+                        Text('${slot['class']?['name'] ?? ''}-${slot['class']?['section'] ?? ''}', style: GoogleFonts.poppins(fontSize: 11, color: const Color(0xFF64748B))),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(color: const Color(0xFFECFEFF), borderRadius: BorderRadius.circular(20)),
+                    child: Text(slot['startTime'] ?? '', style: GoogleFonts.outfit(fontSize: 11, fontWeight: FontWeight.bold, color: const Color(0xFF0891B2))),
+                  )
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRecentHomework() {
+    if (_recentHomework.isEmpty) return const SizedBox();
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(color: const Color(0xFF8B5CF6).withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
+                child: const Icon(Icons.assignment, color: Color(0xFF8B5CF6), size: 20),
+              ),
+              const SizedBox(width: 12),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Recent Homework', style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold, color: const Color(0xFF1E293B))),
+                  Text('Latest assignments given', style: GoogleFonts.poppins(fontSize: 11, color: const Color(0xFF64748B))),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          ..._recentHomework.take(3).map((hw) => Padding(
+            padding: const EdgeInsets.only(bottom: 12.0),
+            child: Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(color: const Color(0xFFF8FAFC), borderRadius: BorderRadius.circular(12)),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(hw['title'] ?? '', style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.bold, color: const Color(0xFF1E293B))),
+                  const SizedBox(height: 4),
+                  Text('${hw['subject']?['name'] ?? ''} | Due: ${hw['dueDate']?.toString().substring(0,10) ?? ''}', style: GoogleFonts.poppins(fontSize: 11, color: const Color(0xFF64748B))),
+                ],
+              ),
+            ),
+          )).toList(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRecentMarks() {
+    if (_recentMarks.isEmpty) return const SizedBox();
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(color: const Color(0xFFF59E0B).withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
+                child: const Icon(Icons.workspace_premium, color: Color(0xFFF59E0B), size: 20),
+              ),
+              const SizedBox(width: 12),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Recent Results', style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold, color: const Color(0xFF1E293B))),
+                  Text('Latest examination scores', style: GoogleFonts.poppins(fontSize: 11, color: const Color(0xFF64748B))),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          ..._recentMarks.take(3).map((mark) => Padding(
+            padding: const EdgeInsets.only(bottom: 12.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(mark['examName'] ?? 'Exam', style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.bold, color: const Color(0xFF1E293B))),
+                      Text(mark['subjectName'] ?? '', style: GoogleFonts.poppins(fontSize: 11, color: const Color(0xFF64748B))),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(color: const Color(0xFFF59E0B).withOpacity(0.1), borderRadius: BorderRadius.circular(20)),
+                  child: Text('${mark['marksObtained']}/${mark['maxMarks']}', style: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.bold, color: const Color(0xFFD97706))),
+                ),
+              ],
+            ),
+          )).toList(),
+        ],
       ),
     );
   }

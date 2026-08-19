@@ -1,4 +1,4 @@
-import 'dart:convert';
+﻿import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -50,51 +50,45 @@ class _TimetableScreenState extends State<TimetableScreen> with SingleTickerProv
 
       final user = jsonDecode(userString);
       _userRole = user['role'];
-      
-      // If student, use their classId
+
       if (_userRole == 'STUDENT') {
-        _selectedClassId = user['student']?['classId'];
-        if (_selectedClassId == null) {
-          setState(() {
-            _errorMessage = 'Class details not found for this profile';
-            _isLoading = false;
-          });
-          return;
-        }
-      } else {
-        // Admin or Teacher, fetch classes if not fetched
-        if (_classes.isEmpty) {
-          final classesResult = await ApiService.getClasses();
-          if (classesResult['success']) {
-            _classes = classesResult['data'] ?? [];
-            if (_classes.isNotEmpty && _selectedClassId == null) {
-              _selectedClassId = _classes.first['id'];
-            }
+        final classId = user['student']?['classId']?.toString();
+        if (classId != null) {
+          final res = await ApiService.getTimetable(classId);
+          if (mounted) {
+            setState(() {
+              _timetable = res['success'] ? (res['data'] ?? {}) : {};
+              _isLoading = false;
+            });
           }
-        }
-      }
-
-      if (_selectedClassId == null) {
-        setState(() {
-          _errorMessage = 'Please select a class';
-          _isLoading = false;
-        });
-        return;
-      }
-
-      setState(() => _isLoading = true);
-      final result = await ApiService.getTimetable(_selectedClassId!);
-
-      if (mounted) {
-        if (result['success']) {
-          setState(() {
-            _timetable = result['data'] ?? {};
-            _errorMessage = null;
-            _isLoading = false;
-          });
         } else {
           setState(() {
-            _errorMessage = result['message'];
+            _errorMessage = 'Class ID not found for student.';
+            _isLoading = false;
+          });
+        }
+      } else if (_userRole == 'TEACHER') {
+        final teacherId = user['teacherId']?.toString();
+        if (teacherId != null) {
+          final res = await ApiService.getTeacherTimetable(teacherId);
+          if (mounted) {
+            setState(() {
+              _timetable = res['success'] ? (res['data'] ?? {}) : {};
+              _isLoading = false;
+            });
+          }
+        } else {
+          setState(() {
+            _errorMessage = 'Teacher ID not found.';
+            _isLoading = false;
+          });
+        }
+      } else {
+        // Admin
+        final classesRes = await ApiService.getClasses();
+        if (mounted) {
+          setState(() {
+            _classes = classesRes['success'] ? (classesRes['data'] ?? []) : [];
             _isLoading = false;
           });
         }
@@ -109,295 +103,207 @@ class _TimetableScreenState extends State<TimetableScreen> with SingleTickerProv
     }
   }
 
+  Future<void> _fetchClassTimetable(String classId) async {
+    setState(() { _isLoading = true; });
+    try {
+      final res = await ApiService.getTimetable(classId);
+      if (mounted) {
+        setState(() {
+          _timetable = res['success'] ? (res['data'] ?? {}) : {};
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _errorMessage = 'An error occurred: $e';
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F7FE), // Premium dark theme
+      backgroundColor: const Color(0xFFF8FAFC),
       drawer: const AppDrawer(currentRoute: 'timetable'),
       appBar: AppBar(
-        leading: const BackButton(),
-        title: Text(
-          'Class Timetable',
-          style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white),
-        ),
-        iconTheme: const IconThemeData(color: Colors.white),
-        flexibleSpace: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Color(0xFF2E2A66), Color(0xFF222854)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-          ),
-        ),
-        
+        title: Text('Timetable', style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 18)),
+        backgroundColor: Colors.white,
+        foregroundColor: const Color(0xFF1E293B),
         elevation: 0,
-        bottom: PreferredSize(
-          preferredSize: Size.fromHeight(_userRole != 'STUDENT' ? 100 : 50),
-          child: Column(
-            children: [
-              if (_userRole != 'STUDENT')
-                Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: DropdownButtonHideUnderline(
-                    child: DropdownButton<String>(
-                      isExpanded: true,
-                      value: _selectedClassId,
-                      icon: const Icon(Icons.keyboard_arrow_down, color: Color(0xFF6366F1)),
-                      style: GoogleFonts.outfit(color: const Color(0xFF1E293B), fontWeight: FontWeight.w600),
-                      items: _classes.map((dynamic classItem) {
-                        return DropdownMenuItem<String>(
-                          value: classItem['id'],
-                          child: Text('${classItem['name']} ${classItem['section'] ?? ''}'.trim()),
-                        );
-                      }).toList(),
-                      onChanged: (String? newValue) {
-                        if (newValue != null) {
-                          setState(() {
-                            _selectedClassId = newValue;
-                          });
-                          _fetchTimetable();
-                        }
-                      },
-                    ),
-                  ),
-                ),
-              TabBar(
-                controller: _dayTabController,
-                isScrollable: true,
-                labelColor: const Color(0xFF818CF8),
-                unselectedLabelColor: const Color(0xFF94A3B8),
-                indicatorColor: const Color(0xFF818CF8),
-                tabs: _days.map((day) => Tab(text: day.substring(0, 3))).toList(),
-              ),
-            ],
-          ),
-        ),
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: Color(0xFF6366F1)))
-          : _errorMessage != null
-              ? Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(24.0),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(Icons.error_outline, size: 60, color: Colors.redAccent),
-                        const SizedBox(height: 16),
-                        Text(
-                          _errorMessage!,
-                          textAlign: TextAlign.center,
-                          style: GoogleFonts.poppins(fontSize: 16, color: Colors.blueGrey.shade400),
-                        ),
-                        const SizedBox(height: 20),
-                        ElevatedButton(
-                          onPressed: () {
-                            setState(() {
-                              _isLoading = true;
-                              _errorMessage = null;
-                            });
-                            _fetchTimetable();
-                          },
-                          child: const Text('Retry'),
-                        )
-                      ],
+          ? const Center(child: CircularProgressIndicator())
+          : Column(
+              children: [
+                if (_userRole == 'SUPER_ADMIN' || _userRole == 'ADMIN')
+                  Container(
+                    margin: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 8, offset: const Offset(0, 2))],
+                    ),
+                    child: DropdownButtonHideUnderline(
+                      child: DropdownButton<String>(
+                        isExpanded: true,
+                        hint: Text('Select Class', style: GoogleFonts.poppins(color: const Color(0xFF64748B))),
+                        value: _selectedClassId,
+                        icon: const Icon(Icons.keyboard_arrow_down_rounded, color: Color(0xFF94A3B8)),
+                        items: _classes.map((cls) {
+                          final name = cls['className'] ?? 'Unknown';
+                          final sec = cls['section'] ?? '';
+                          return DropdownMenuItem<String>(
+                            value: cls['id'].toString(),
+                            child: Text('$name $sec', style: GoogleFonts.poppins(color: const Color(0xFF1E293B))),
+                          );
+                        }).toList(),
+                        onChanged: (val) {
+                          setState(() { _selectedClassId = val; });
+                          if (val != null) _fetchClassTimetable(val);
+                        },
+                      ),
                     ),
                   ),
-                )
-              : TabBarView(
-                  controller: _dayTabController,
-                  children: _days.map((day) {
-                    final List<dynamic> slots = _timetable[day] ?? [];
-                    
-                    // Sort slots by period number
-                    slots.sort((a, b) => (a['periodNumber'] ?? 0).compareTo(b['periodNumber'] ?? 0));
 
-                    return RefreshIndicator(
-                      onRefresh: _fetchTimetable,
-                      child: slots.isEmpty
-                          ? Center(
-                              child: Text(
-                                'No classes scheduled for $day.',
-                                style: GoogleFonts.poppins(color: const Color(0xFF475569), fontSize: 16),
-                              ),
-                            )
-                          : ListView.builder(
-                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-                              itemCount: slots.length,
-                              itemBuilder: (context, index) {
-                                final slot = slots[index];
-                                final period = slot['periodNumber'] ?? (index + 1);
-                                final startTime = slot['startTime'] ?? '--:--';
-                                final endTime = slot['endTime'] ?? '--:--';
-                                final subjectName = slot['subject']?['name'] ?? 'Subject';
-                                final teacherName = slot['teacher']?['user']?['name'] ?? 'Teacher';
-                                final room = slot['room']?.toString() ?? 'N/A';
-
-                                return IntrinsicHeight(
-                                  child: Row(
-                                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                                    children: [
-                                      // Time side column
-                                      SizedBox(
-                                        width: 70,
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.end,
-                                          children: [
-                                            Text(
-                                              startTime,
-                                              style: GoogleFonts.poppins(
-                                                color: const Color(0xFF475569),
-                                                fontSize: 14,
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                            ),
-                                            Text(
-                                              endTime,
-                                              style: GoogleFonts.poppins(
-                                                color: const Color(0xFF475569),
-                                                fontSize: 11,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                      
-                                      // Timeline Connector Indicator
-                                      _buildTimelineConnector(index, slots.length),
-                                      
-                                      // Class card info
-                                      Expanded(
-                                        child: Container(
-                                          margin: const EdgeInsets.only(bottom: 24),
-                                          padding: const EdgeInsets.all(18),
-                                          decoration: BoxDecoration(
-                                            color: Colors.white,
-                                            borderRadius: BorderRadius.circular(20),
-                                            border: Border.all(color: const Color(0xFFE2E8F0)),
-                                            boxShadow: [
-                                              BoxShadow(
-                                                color: Colors.black.withOpacity(0.02),
-                                                blurRadius: 8,
-                                                offset: const Offset(0, 4),
-                                              )
-                                            ]
-                                          ),
-                                          child: Column(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                            children: [
-                                              Row(
-                                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                                children: [
-                                                  Expanded(
-                                                    child: Text(
-                                                      subjectName,
-                                                      style: GoogleFonts.outfit(
-                                                        color: const Color(0xFF1E293B),
-                                                        fontSize: 16,
-                                                        fontWeight: FontWeight.bold,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                  Container(
-                                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                                    decoration: BoxDecoration(
-                                                      color: const Color(0xFF6366F1).withOpacity(0.1),
-                                                      borderRadius: BorderRadius.circular(8),
-                                                    ),
-                                                    child: Text(
-                                                      'Period $period',
-                                                      style: GoogleFonts.poppins(
-                                                        color: const Color(0xFF818CF8),
-                                                        fontSize: 11,
-                                                        fontWeight: FontWeight.bold,
-                                                      ),
-                                                    ),
-                                                  )
-                                                ],
-                                              ),
-                                              const SizedBox(height: 6),
-                                              Row(
-                                                children: [
-                                                  const Icon(Icons.person_outline_rounded, color: Color(0xFF94A3B8), size: 14),
-                                                  const SizedBox(width: 6),
-                                                  Text(
-                                                    teacherName,
-                                                    style: GoogleFonts.poppins(
-                                                      color: const Color(0xFF64748B),
-                                                      fontSize: 13,
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                              const SizedBox(height: 4),
-                                              Row(
-                                                children: [
-                                                  const Icon(Icons.meeting_room_outlined, color: Color(0xFF94A3B8), size: 14),
-                                                  const SizedBox(width: 6),
-                                                  Text(
-                                                    'Room: $room',
-                                                    style: GoogleFonts.poppins(
-                                                      color: const Color(0xFF64748B),
-                                                      fontSize: 13,
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                );
-                              },
-                            ),
-                    );
-                  }).toList(),
+                // Days TabBar
+                Container(
+                  color: Colors.white,
+                  child: TabBar(
+                    controller: _dayTabController,
+                    isScrollable: true,
+                    indicatorColor: Colors.transparent,
+                    labelColor: Colors.white,
+                    unselectedLabelColor: const Color(0xFF64748B),
+                    padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                    indicator: BoxDecoration(
+                      color: const Color(0xFF6366F1),
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [BoxShadow(color: const Color(0xFF6366F1).withOpacity(0.3), blurRadius: 8, offset: const Offset(0, 4))],
+                    ),
+                    tabs: _days.map((d) {
+                      return Tab(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: Text(d.substring(0, 3), style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 13)),
+                        ),
+                      );
+                    }).toList(),
+                  ),
                 ),
+
+                // Timeline View
+                Expanded(
+                  child: TabBarView(
+                    controller: _dayTabController,
+                    children: _days.map((day) => _buildDayTimetable(day)).toList(),
+                  ),
+                ),
+              ],
+            ),
     );
   }
 
-  Widget _buildTimelineConnector(int index, int total) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-      child: Column(
-        children: [
-          // Period Dot
-          Container(
-            width: 14,
-            height: 14,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: const Color(0xFF818CF8),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFF6366F1).withOpacity(0.4),
-                  blurRadius: 6,
-                  spreadRadius: 1,
-                )
+  Widget _buildDayTimetable(String day) {
+    if (_timetable.isEmpty) {
+      return Center(child: Text('No timetable available', style: GoogleFonts.poppins(color: const Color(0xFF94A3B8))));
+    }
+
+    final List<dynamic> periods = _timetable[day] ?? [];
+    if (periods.isEmpty) {
+      return Center(child: Text('No periods scheduled for $day', style: GoogleFonts.poppins(color: const Color(0xFF94A3B8))));
+    }
+
+    periods.sort((a, b) => (a['startTime'] ?? '').compareTo(b['startTime'] ?? ''));
+
+    return ListView.builder(
+      padding: const EdgeInsets.only(top: 24, left: 16, right: 16, bottom: 40),
+      itemCount: periods.length,
+      itemBuilder: (context, index) {
+        final period = periods[index];
+        final subject = period['subject']?['name'] ?? 'Free Period';
+        final teacher = period['teacher']?['user']?['name'] ?? 'No Teacher';
+        final startTime = period['startTime'] ?? '--:--';
+        final endTime = period['endTime'] ?? '--:--';
+
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Time Column
+            SizedBox(
+              width: 70,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(startTime, style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.bold, color: const Color(0xFF1E293B))),
+                  Text(endTime, style: GoogleFonts.poppins(fontSize: 11, color: const Color(0xFF94A3B8))),
+                ],
+              ),
+            ),
+            const SizedBox(width: 16),
+            
+            // Timeline Line & Dot
+            Column(
+              children: [
+                Container(
+                  width: 14,
+                  height: 14,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    border: Border.all(color: const Color(0xFF6366F1), width: 3),
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                if (index != periods.length - 1)
+                  Container(
+                    width: 2,
+                    height: 90, // Card height approximation
+                    color: const Color(0xFFE2E8F0),
+                  )
               ],
             ),
-          ),
-          // Vertical Line
-          Expanded(
-            child: index == total - 1
-                ? const SizedBox.shrink()
-                : Container(
-                    width: 2,
-                    color: const Color(0xFFE2E8F0),
-                  ),
-          ),
-        ],
-      ),
+            const SizedBox(width: 16),
+            
+            // Period Card
+            Expanded(
+              child: Container(
+                margin: const EdgeInsets.only(bottom: 24),
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4))
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      subject,
+                      style: GoogleFonts.poppins(color: const Color(0xFF1E293B), fontSize: 16, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        const Icon(Icons.person_rounded, size: 14, color: Color(0xFF64748B)),
+                        const SizedBox(width: 6),
+                        Text(
+                          teacher,
+                          style: GoogleFonts.poppins(color: const Color(0xFF64748B), fontSize: 13),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            )
+          ],
+        );
+      },
     );
   }
 }
-
-

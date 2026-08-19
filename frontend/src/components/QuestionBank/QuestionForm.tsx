@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { qbApi as api } from '../../utils/questionBankApi';
 import { LaTeXPreview } from './LaTeXPreview';
 import { Upload, X, Check, AlertCircle, Sparkles, PenTool } from 'lucide-react';
@@ -472,10 +472,42 @@ const ManualQuestionForm: React.FC<QuestionFormProps> = ({ questionId, initialDa
 import { AIQuestionForm } from './AIQuestionForm';
 
 export const QuestionForm: React.FC<QuestionFormProps> = (props) => {
+  const [mode, setMode] = useState<'ai' | 'manual'>('ai');
+
   if (props.questionId) {
     return <ManualQuestionForm {...props} />;
   }
-  return <AIQuestionForm onSuccess={props.onSuccess} onCancel={props.onCancel} />;
+
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="flex justify-center mb-2">
+        <div className="bg-slate-100 p-1 rounded-xl inline-flex shadow-inner border border-slate-200">
+          <button
+            onClick={() => setMode('ai')}
+            className={`flex items-center gap-2 px-6 py-2 rounded-lg font-bold text-sm transition-all ${
+              mode === 'ai' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+            }`}
+          >
+            <Sparkles className="w-4 h-4" /> AI Generator
+          </button>
+          <button
+            onClick={() => setMode('manual')}
+            className={`flex items-center gap-2 px-6 py-2 rounded-lg font-bold text-sm transition-all ${
+              mode === 'manual' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+            }`}
+          >
+            <PenTool className="w-4 h-4" /> Manual Entry
+          </button>
+        </div>
+      </div>
+      
+      {mode === 'ai' ? (
+        <AIQuestionForm onSuccess={props.onSuccess} onCancel={props.onCancel} />
+      ) : (
+        <ManualQuestionForm {...props} />
+      )}
+    </div>
+  );
 };
 
 

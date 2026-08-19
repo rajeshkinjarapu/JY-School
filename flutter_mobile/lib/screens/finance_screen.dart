@@ -3,6 +3,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../services/api_service.dart';
 import '../widgets/app_drawer.dart';
 import 'dart:convert';
+import 'package:fl_chart/fl_chart.dart';
 
 class FinanceScreen extends StatefulWidget {
   const FinanceScreen({super.key});
@@ -261,6 +262,15 @@ class _FinanceScreenState extends State<FinanceScreen> with SingleTickerProvider
           // KPI cards
           _buildKPICards(),
           const SizedBox(height: 24),
+          
+          // Charts Section
+          const Text(
+            'Financial Overview',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF1E293B)),
+          ),
+          const SizedBox(height: 12),
+          _buildCollectionPieChart(),
+          const SizedBox(height: 24),
 
           // Overview Details header
           const Text(
@@ -312,6 +322,86 @@ class _FinanceScreenState extends State<FinanceScreen> with SingleTickerProvider
           icon: Icons.pending_actions_rounded,
           gradientColors: [const Color(0xFFEF4444), const Color(0xFFF87171)],
         ),
+      ],
+    );
+  }
+
+    );
+  }
+
+  Widget _buildCollectionPieChart() {
+    double total = _totalCollected + _pendingDues;
+    if (total == 0) total = 1; // Prevent divide by zero
+
+    double collectedPct = (_totalCollected / total) * 100;
+    double pendingPct = (_pendingDues / total) * 100;
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          )
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Collection vs Pending',
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Color(0xFF1E293B)),
+          ),
+          const SizedBox(height: 24),
+          SizedBox(
+            height: 200,
+            child: PieChart(
+              PieChartData(
+                sectionsSpace: 4,
+                centerSpaceRadius: 50,
+                sections: [
+                  PieChartSectionData(
+                    color: const Color(0xFF10B981),
+                    value: collectedPct,
+                    title: '${collectedPct.toStringAsFixed(1)}%',
+                    radius: 40,
+                    titleStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white),
+                  ),
+                  PieChartSectionData(
+                    color: const Color(0xFFF43F5E),
+                    value: pendingPct,
+                    title: '${pendingPct.toStringAsFixed(1)}%',
+                    radius: 40,
+                    titleStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              _buildLegendItem(const Color(0xFF10B981), 'Collected'),
+              const SizedBox(width: 24),
+              _buildLegendItem(const Color(0xFFF43F5E), 'Pending'),
+            ],
+          )
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLegendItem(Color color, String label) {
+    return Row(
+      children: [
+        Container(width: 12, height: 12, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+        const SizedBox(width: 8),
+        Text(label, style: const TextStyle(fontSize: 13, color: Color(0xFF64748B), fontWeight: FontWeight.w600)),
       ],
     );
   }
