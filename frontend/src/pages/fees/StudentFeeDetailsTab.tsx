@@ -1,8 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Printer, Download, Receipt, FileText, CheckCircle, Smartphone, Calculator, Plus, Share2, Upload, Search, Users, MessageCircle, X, Copy, Eye } from 'lucide-react';
+import { Printer, Download, Receipt, FileText, CheckCircle, Smartphone, Calculator, Plus, Share2, Upload, Search, Users, MessageCircle, X, Copy, Eye, FileSpreadsheet, SlidersHorizontal, CheckSquare, Square } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
-import { saveAs } from 'file-saver';
 import { toBlob } from 'html-to-image';
 import { shareFileNatively } from '../../utils/nativeShare';
 import toast from 'react-hot-toast';
@@ -14,6 +13,184 @@ interface StudentFeeDetailsProps {
   classes: any[];
 }
 
+// ── Export Dialog Types ───────────────────────────────────────────────────────
+interface ExportFilters {
+  paymentFilter: 'all' | 'zero' | 'partial' | 'full' | 'custom';
+  customMinPaid: number;
+  customMaxPaid: number;
+  columns: {
+    sno: boolean;
+    studentId: boolean;
+    name: boolean;
+    className: boolean;
+    phone: boolean;
+    totalFee: boolean;
+    paidAmount: boolean;
+    balance: boolean;
+  };
+}
+
+const COLUMN_LABELS: Record<string, string> = {
+  sno: 'S.No',
+  studentId: 'Student ID',
+  name: 'Student Name',
+  className: 'Class',
+  phone: 'Phone Number',
+  totalFee: 'Total Fee',
+  paidAmount: 'Paid Amount',
+  balance: 'Balance Due'
+};
+
+const DEFAULT_FILTERS: ExportFilters = {
+  paymentFilter: 'all',
+  customMinPaid: 0,
+  customMaxPaid: 9999999,
+  columns: {
+    sno: true,
+    studentId: true,
+    name: true,
+    className: true,
+    phone: false,
+    totalFee: true,
+    paidAmount: true,
+    balance: true,
+  },
+};
+
+const PAYMENT_FILTER_OPTIONS = [
+  { value: 'all',     label: 'All Students',           desc: 'Export everyone',                 icon: '👥' },
+  { value: 'zero',    label: '₹0 Paid (No Payment)',   desc: 'Students who paid nothing',       icon: '🔴' },
+  { value: 'partial', label: 'Partial Payments',       desc: 'Paid some but not full amount',   icon: '🟡' },
+  { value: 'full',    label: 'Fully Paid',             desc: 'Balance = ₹0',                   icon: '🟢' },
+  { value: 'custom',  label: 'Custom Amount Range',    desc: 'Set min–max paid amount',         icon: '⚙️' },
+] as const;
+
+interface ExportDialogProps {
+  open: boolean;
+  onClose: () => void;
+  onExport: (filters: ExportFilters) => void;
+  exportType: 'pdf' | 'excel';
+  totalRows: number;
+}
+
+const ExportDialog: React.FC<ExportDialogProps> = ({ open, onClose, onExport, exportType, totalRows }) => {
+  const [filters, setFilters] = useState<ExportFilters>(DEFAULT_FILTERS);
+  if (!open) return null;
+
+  const toggleColumn = (col: keyof ExportFilters['columns']) =>
+    setFilters(f => ({ ...f, columns: { ...f.columns, [col]: !f.columns[col] } }));
+
+  const selectedColCount = Object.values(filters.columns).filter(Boolean).length;
+  const isPdf = exportType === 'pdf';
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(15,23,42,0.6)', backdropFilter: 'blur(6px)' }}>
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg border border-gray-100 overflow-hidden">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100" style={{ background: isPdf ? 'linear-gradient(135deg,#6366f1,#4f46e5)' : 'linear-gradient(135deg,#10b981,#059669)' }}>
+          <div className="flex items-center gap-3">
+            {isPdf ? <FileText className="w-5 h-5 text-white" /> : <FileSpreadsheet className="w-5 h-5 text-white" />}
+            <div>
+              <h2 className="text-white font-black text-base">Export Options</h2>
+              <p className="text-white/75 text-xs font-medium">{totalRows} students in current view</p>
+            </div>
+          </div>
+          <button onClick={onClose} className="p-1.5 rounded-xl bg-white/20 hover:bg-white/30 text-white transition-colors">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        <div className="p-6 space-y-6 max-h-[65vh] overflow-y-auto">
+          <div>
+            <div className="flex items-center gap-2 mb-3">
+              <SlidersHorizontal className="w-4 h-4 text-indigo-500" />
+              <h3 className="text-sm font-black text-gray-900">Payment Status Filter</h3>
+              <span className="ml-auto text-xs font-semibold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">
+                {PAYMENT_FILTER_OPTIONS.find(o => o.value === filters.paymentFilter)?.label}
+              </span>
+            </div>
+            <div className="grid grid-cols-1 gap-2">
+              {PAYMENT_FILTER_OPTIONS.map((opt) => {
+                const isSelected = filters.paymentFilter === opt.value;
+                return (
+                  <button key={opt.value} onClick={() => setFilters(f => ({ ...f, paymentFilter: opt.value as any }))}
+                    className={`flex items-center gap-3 px-4 py-3 rounded-xl border-2 text-left transition-all ${isSelected ? 'border-indigo-500 bg-indigo-50' : 'border-gray-100 bg-gray-50 hover:border-gray-200'}`}>
+                    <span className="text-lg">{opt.icon}</span>
+                    <div className="flex-1">
+                      <div className={`text-sm font-bold ${isSelected ? 'text-indigo-700' : 'text-gray-800'}`}>{opt.label}</div>
+                      <div className="text-xs text-gray-400">{opt.desc}</div>
+                    </div>
+                    <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${isSelected ? 'border-indigo-500 bg-indigo-500' : 'border-gray-300'}`}>
+                      {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+            {filters.paymentFilter === 'custom' && (
+              <div className="mt-3 flex gap-3 items-end bg-indigo-50 rounded-xl p-4 border border-indigo-100">
+                <div className="flex-1">
+                  <label className="text-xs font-bold text-indigo-700 block mb-1">Min Paid (Rs.)</label>
+                  <input type="number" value={filters.customMinPaid} onChange={e => setFilters(f => ({ ...f, customMinPaid: Number(e.target.value) }))}
+                    className="w-full px-3 py-2 border border-indigo-200 rounded-lg text-sm font-semibold focus:ring-2 focus:ring-indigo-400 outline-none bg-white" placeholder="0" min="0" />
+                </div>
+                <div className="text-gray-400 font-black text-lg pb-1.5">to</div>
+                <div className="flex-1">
+                  <label className="text-xs font-bold text-indigo-700 block mb-1">Max Paid (Rs.)</label>
+                  <input type="number" value={filters.customMaxPaid} onChange={e => setFilters(f => ({ ...f, customMaxPaid: Number(e.target.value) }))}
+                    className="w-full px-3 py-2 border border-indigo-200 rounded-lg text-sm font-semibold focus:ring-2 focus:ring-indigo-400 outline-none bg-white" placeholder="99999" min="0" />
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div>
+            <div className="flex items-center gap-2 mb-3">
+              <CheckSquare className="w-4 h-4 text-emerald-500" />
+              <h3 className="text-sm font-black text-gray-900">Select Columns to Export</h3>
+              <span className="ml-auto text-xs font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
+                {selectedColCount} of {Object.keys(filters.columns).length} selected
+              </span>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              {(Object.keys(filters.columns) as Array<keyof ExportFilters['columns']>).map((col) => {
+                const active = filters.columns[col];
+                return (
+                  <button key={col} onClick={() => toggleColumn(col)}
+                    className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl border-2 text-left transition-all ${active ? 'border-emerald-400 bg-emerald-50' : 'border-gray-100 bg-gray-50 hover:border-gray-200'}`}>
+                    {active ? <CheckSquare className="w-4 h-4 text-emerald-500 shrink-0" /> : <Square className="w-4 h-4 text-gray-300 shrink-0" />}
+                    <span className={`text-xs font-bold truncate ${active ? 'text-emerald-700' : 'text-gray-500'}`}>{COLUMN_LABELS[col]}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3 px-6 py-4 bg-gray-50 border-t border-gray-100">
+          <button onClick={onClose} className="flex-1 px-4 py-2.5 border border-gray-200 rounded-xl text-sm font-bold text-gray-600 hover:bg-gray-100 transition-colors">Cancel</button>
+          <button onClick={() => { onExport(filters); onClose(); }} disabled={selectedColCount === 0}
+            className={`flex-1 px-4 py-2.5 rounded-xl text-sm font-black text-white transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 ${isPdf ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-emerald-600 hover:bg-emerald-700'}`}>
+            {isPdf ? <FileText className="w-4 h-4" /> : <FileSpreadsheet className="w-4 h-4" />}
+            Export {exportType.toUpperCase()}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const applyPaymentFilter = (rows: any[], filters: ExportFilters) =>
+  rows.filter((r) => {
+    switch (filters.paymentFilter) {
+      case 'zero':    return r.paidAmount === 0;
+      case 'partial': return r.paidAmount > 0 && r.balance > 0;
+      case 'full':    return r.balance === 0 && r.totalFee > 0;
+      case 'custom':  return r.paidAmount >= filters.customMinPaid && r.paidAmount <= filters.customMaxPaid;
+      default:        return true;
+    }
+  });
+
+
 export const StudentFeeDetailsTab: React.FC<StudentFeeDetailsProps> = ({ students, structures, payments, classes }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -23,17 +200,14 @@ export const StudentFeeDetailsTab: React.FC<StudentFeeDetailsProps> = ({ student
   const [selectedClassId, setSelectedClassId] = useState<string>('ALL');
   const [searchTerm, setSearchTerm] = useState('');
   
-  // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 50;
 
-  // Fee Reminder Modal State
   const [reminderStudent, setReminderStudent] = useState<any>(null);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [exportDialog, setExportDialog] = useState<{ open: boolean; type: 'pdf' | 'excel' }>({ open: false, type: 'pdf' });
 
-  // Process data for the table
   const tableData = useMemo(() => {
-    // Build lookup dictionaries for O(1) access to avoid O(N*M) slow rendering
     const classStructuresMap = new Map();
     const studentStructuresMap = new Map();
     
@@ -84,7 +258,7 @@ export const StudentFeeDetailsTab: React.FC<StudentFeeDetailsProps> = ({ student
         studentId: student.id,
         id: student.rollNo || student.studentId || '-',
         name: student.user?.name || student.name || '-',
-        className: studentClass ? `${studentClass.name}${studentClass.section ? ` - ${studentClass.section}` : ''}` : '-',
+        className: studentClass ? `${studentClass.name}${studentClass.section ? \` - \${studentClass.section}\` : ''}` : '-',
         totalFee: totalFeeAmount,
         paidAmount,
         balance,
@@ -93,14 +267,12 @@ export const StudentFeeDetailsTab: React.FC<StudentFeeDetailsProps> = ({ student
       };
     });
 
-    // Sort class-wise first, then by student name
     rawData.sort((a, b) => {
       if (a.className < b.className) return -1;
       if (a.className > b.className) return 1;
       return a.name.localeCompare(b.name);
     });
 
-    // Assign S.No after sorting
     return rawData.map((row, index) => ({
       ...row,
       sno: index + 1
@@ -112,147 +284,167 @@ export const StudentFeeDetailsTab: React.FC<StudentFeeDetailsProps> = ({ student
     ? `${selectedClass.name} - ${selectedClass.section}`
     : 'All Classes';
 
-  const handlePrint = () => {
-    window.print();
-  };
+  const handlePrint = () => window.print();
 
-  const handleDownloadPDF = async () => {
-    const { default: jsPDF } = await import('jspdf');
-    const { default: autoTable } = await import('jspdf-autotable');
-    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  const handleExport = async (filters: ExportFilters) => {
+    const exportRows = applyPaymentFilter(tableData, filters);
+    const cols = filters.columns;
 
-    // Header
-    doc.setTextColor(0, 0, 0);
-    doc.setFontSize(16);
-    doc.setFont('helvetica', 'bold');
-    doc.text('SRI VENKATESWARA JY SCHOOL', 105, 14, { align: 'center' });
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'normal');
-    doc.text('Opp. Hero Showroom, SVL Paradise Campus, Narasannapeta', 105, 20, { align: 'center' });
+    if (exportRows.length === 0) {
+      toast.error('No students match the selected filter!');
+      return;
+    }
 
-    doc.setFontSize(12);
-    doc.setFont('helvetica', 'bold');
-    doc.text('CLASS-WISE FEE STATEMENT', 105, 28, { align: 'center' });
-    
-    // Line separator
-    doc.setDrawColor(200, 200, 200);
-    doc.setLineWidth(0.5);
-    doc.line(14, 33, 196, 33);
+    const filterSuffix = filters.paymentFilter === 'zero' ? '_ZeroPaid' : filters.paymentFilter === 'partial' ? '_PartialPaid' : filters.paymentFilter === 'full' ? '_FullyPaid' : filters.paymentFilter === 'custom' ? `_Paid${filters.customMinPaid}to${filters.customMaxPaid}` : '';
+    const fileName = `Fee_Statement_${classLabel.replace(/\s+/g, '_')}${filterSuffix}`;
 
-    // Class line
-    doc.setTextColor(0, 0, 0);
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'bold');
-    doc.text(`Class: ${classLabel}`, 14, 41);
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(9);
-    doc.text(`Date: ${new Date().toLocaleDateString('en-IN')}`, 196, 41, { align: 'right' });
+    if (exportDialog.type === 'pdf') {
+      try {
+        const { default: jsPDF } = await import('jspdf');
+        const { default: autoTable } = await import('jspdf-autotable');
+        const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
 
-    const tableColumn = ['S.No', 'Student ID', 'Student Name', 'Class', 'Total Fee', 'Paid', 'Balance'];
-    const tableRows = tableData.map(row => [
-      row.sno,
-      row.id,
-      row.name,
-      row.className,
-      row.totalFee.toLocaleString('en-IN'),
-      row.paidAmount.toLocaleString('en-IN'),
-      row.balance.toLocaleString('en-IN')
-    ]);
+        doc.setTextColor(0, 0, 0); doc.setFontSize(16); doc.setFont('helvetica', 'bold');
+        doc.text('SRI VENKATESWARA JY SCHOOL', 105, 14, { align: 'center' });
+        doc.setFontSize(9); doc.setFont('helvetica', 'normal');
+        doc.text('Opp. Hero Showroom, SVL Paradise Campus, Narasannapeta', 105, 20, { align: 'center' });
+        doc.setFontSize(12); doc.setFont('helvetica', 'bold');
+        doc.text('STUDENT FEE DETAILS REPORT', 105, 28, { align: 'center' });
+        
+        doc.setDrawColor(200, 200, 200); doc.setLineWidth(0.5); doc.line(14, 33, 196, 33);
+        doc.setTextColor(0, 0, 0); doc.setFontSize(10); doc.setFont('helvetica', 'bold');
+        doc.text(`Class: ${classLabel}   |   Filter: ${PAYMENT_FILTER_OPTIONS.find(o => o.value === filters.paymentFilter)?.label}`, 14, 41);
+        doc.setFont('helvetica', 'normal'); doc.setFontSize(9);
+        doc.text(`Students: ${exportRows.length}  |  Date: ${new Date().toLocaleDateString('en-IN')}`, 196, 41, { align: 'right' });
 
-    autoTable(doc, {
-      head: [tableColumn],
-      body: tableRows,
-      startY: 46,
-      theme: 'grid',
-      styles: { fontSize: 8, cellPadding: 3, valign: 'middle', lineColor: [200, 200, 200], lineWidth: 0.1 },
-      headStyles: { fillColor: [240, 245, 250], textColor: [20, 20, 20], fontStyle: 'bold', fontSize: 9, halign: 'center' },
-      columnStyles: {
-        0: { halign: 'center', cellWidth: 14 },
-        1: { cellWidth: 22 },
-        2: { cellWidth: 'auto' }, // Student Name auto width
-        3: { cellWidth: 20 },
-        4: { halign: 'right', cellWidth: 26 },
-        5: { halign: 'right', cellWidth: 26 },
-        6: { halign: 'right', cellWidth: 26 },
-      },
-      alternateRowStyles: { fillColor: [250, 250, 250] },
-      didParseCell: (data) => {
-        if (data.column.index === 6 && data.section === 'body') {
-          const val = Number(String(data.cell.raw).replace(/[^0-9.-]+/g,""));
-          if (val > 0) {
-            data.cell.styles.textColor = [220, 38, 38];
-            data.cell.styles.fontStyle = 'bold';
-          } else if (val <= 0 && val !== 0) {
-            data.cell.styles.textColor = [5, 150, 105];
-          }
+        const headerRow: string[] = [];
+        const colStyles: any = {};
+        let ci = 0;
+        
+        if (cols.sno) { headerRow.push('S.No'); colStyles[ci++] = { halign: 'center', cellWidth: 14 }; }
+        if (cols.studentId) { headerRow.push('Student ID'); colStyles[ci++] = { cellWidth: 22 }; }
+        if (cols.name) { headerRow.push('Student Name'); colStyles[ci++] = { cellWidth: 'auto' }; }
+        if (cols.className) { headerRow.push('Class'); colStyles[ci++] = { cellWidth: 20 }; }
+        if (cols.phone) { headerRow.push('Phone'); colStyles[ci++] = { cellWidth: 25 }; }
+        if (cols.totalFee) { headerRow.push('Total Fee'); colStyles[ci++] = { halign: 'right', cellWidth: 22 }; }
+        if (cols.paidAmount) { headerRow.push('Paid'); colStyles[ci++] = { halign: 'right', cellWidth: 22 }; }
+        if (cols.balance) { headerRow.push('Balance'); colStyles[ci++] = { halign: 'right', cellWidth: 22 }; }
+
+        const exportTableRows = exportRows.map((r, i) => {
+          const row: any[] = [];
+          if (cols.sno) row.push(i + 1);
+          if (cols.studentId) row.push(r.id);
+          if (cols.name) row.push(r.name);
+          if (cols.className) row.push(r.className);
+          if (cols.phone) row.push(r.phone || '-');
+          if (cols.totalFee) row.push(r.totalFee.toLocaleString('en-IN'));
+          if (cols.paidAmount) row.push(r.paidAmount.toLocaleString('en-IN'));
+          if (cols.balance) row.push(r.balance.toLocaleString('en-IN'));
+          return row;
+        });
+
+        let balanceColIdx = -1;
+        if (cols.balance) {
+          balanceColIdx = headerRow.indexOf('Balance');
         }
-      },
-    });
 
-    const finalY = (doc as any).lastAutoTable.finalY || 46;
+        autoTable(doc, {
+          head: [headerRow],
+          body: exportTableRows,
+          startY: 46,
+          theme: 'grid',
+          styles: { fontSize: 8, cellPadding: 3, valign: 'middle', lineColor: [200, 200, 200], lineWidth: 0.1 },
+          headStyles: { fillColor: [240, 245, 250], textColor: [20, 20, 20], fontStyle: 'bold', fontSize: 9, halign: 'center' },
+          columnStyles: colStyles,
+          alternateRowStyles: { fillColor: [250, 250, 250] },
+          didParseCell: (data: any) => {
+            if (balanceColIdx !== -1 && data.column.index === balanceColIdx && data.section === 'body') {
+              const val = Number(String(data.cell.raw).replace(/[^0-9.-]+/g,""));
+              if (val > 0) {
+                data.cell.styles.textColor = [220, 38, 38];
+                data.cell.styles.fontStyle = 'bold';
+              } else if (val <= 0 && val !== 0) {
+                data.cell.styles.textColor = [5, 150, 105];
+              }
+            }
+          },
+        });
 
-    // Summary footer
-    const totalFee = tableData.reduce((s, r) => s + (r.totalFee || 0), 0);
-    const totalPaid = tableData.reduce((s, r) => s + r.paidAmount, 0);
-    const totalBalance = tableData.reduce((s, r) => s + r.balance, 0);
+        const finalY = (doc as any).lastAutoTable.finalY || 46;
+        const totalFee = exportRows.reduce((s, r) => s + (r.totalFee || 0), 0);
+        const totalPaid = exportRows.reduce((s, r) => s + r.paidAmount, 0);
+        const totalBalance = exportRows.reduce((s, r) => s + r.balance, 0);
 
-    // Summary Table at the bottom
-    autoTable(doc, {
-      startY: finalY + 10,
-      head: [['TOTAL FEE (Rs)', 'COLLECTED (Rs)', 'BALANCE DUE (Rs)']],
-      body: [[
-        totalFee.toLocaleString('en-IN'),
-        totalPaid.toLocaleString('en-IN'),
-        totalBalance.toLocaleString('en-IN')
-      ]],
-      theme: 'grid',
-      styles: { fontSize: 10, cellPadding: 5, halign: 'center', valign: 'middle', lineColor: [200, 200, 200], lineWidth: 0.1 },
-      headStyles: { fillColor: [230, 230, 230], textColor: [0, 0, 0], fontStyle: 'bold' },
-      bodyStyles: { fontStyle: 'bold', textColor: [20, 20, 20] },
-      margin: { left: 14, right: 14 },
-    });
+        autoTable(doc, {
+          startY: finalY + 10,
+          head: [['TOTAL FEE (Rs)', 'COLLECTED (Rs)', 'BALANCE DUE (Rs)']],
+          body: [[totalFee.toLocaleString('en-IN'), totalPaid.toLocaleString('en-IN'), totalBalance.toLocaleString('en-IN')]],
+          theme: 'grid',
+          styles: { fontSize: 10, cellPadding: 5, halign: 'center', valign: 'middle', lineColor: [200, 200, 200], lineWidth: 0.1 },
+          headStyles: { fillColor: [230, 230, 230], textColor: [0, 0, 0], fontStyle: 'bold' },
+          bodyStyles: { fontStyle: 'bold', textColor: [20, 20, 20] },
+          margin: { left: 14, right: 14 },
+        });
 
-    doc.save(`Fee_Statement_${classLabel.replace(/\s+/g, '_')}_${new Date().getTime()}.pdf`);
-  };
+        doc.save(`${fileName}.pdf`);
+        toast.success(`PDF exported! (${exportRows.length} students)`);
+      } catch (e) {
+        console.error(e);
+        toast.error('Failed to generate PDF');
+      }
+    } else {
+      try {
+        const XLSX = await import('xlsx');
+        const headerRow: string[] = [];
+        if (cols.sno) headerRow.push('S.No');
+        if (cols.studentId) headerRow.push('Student ID');
+        if (cols.name) headerRow.push('Student Name');
+        if (cols.className) headerRow.push('Class');
+        if (cols.phone) headerRow.push('Phone');
+        if (cols.totalFee) headerRow.push('Total Fee');
+        if (cols.paidAmount) headerRow.push('Paid');
+        if (cols.balance) headerRow.push('Balance');
 
-  const handleExportExcel = async () => {
-    const excelData = tableData.map(row => ({
-      'S.No': row.sno,
-      'Student ID': row.id,
-      'Student Name': row.name,
-      'Class': row.className,
-      'Total Fee': row.totalFee,
-      'Paid': row.paidAmount,
-      'Balance': row.balance
-    }));
+        const exportTableRows = exportRows.map((r, i) => {
+          const row: any[] = [];
+          if (cols.sno) row.push(i + 1);
+          if (cols.studentId) row.push(r.id);
+          if (cols.name) row.push(r.name);
+          if (cols.className) row.push(r.className);
+          if (cols.phone) row.push(r.phone || '-');
+          if (cols.totalFee) row.push(r.totalFee);
+          if (cols.paidAmount) row.push(r.paidAmount);
+          if (cols.balance) row.push(r.balance);
+          return row;
+        });
 
-    const totalFee = tableData.reduce((s, r) => s + (r.totalFee || 0), 0);
-    const totalPaid = tableData.reduce((s, r) => s + r.paidAmount, 0);
-    const totalBalance = tableData.reduce((s, r) => s + r.balance, 0);
-    
-    excelData.push({
-      'S.No': '' as any,
-      'Student ID': '' as any,
-      'Student Name': '' as any,
-      'Class': 'TOTAL',
-      'Total Fee': totalFee,
-      'Paid': totalPaid,
-      'Balance': totalBalance
-    });
+        const totalFee = exportRows.reduce((s, r) => s + (r.totalFee || 0), 0);
+        const totalPaid = exportRows.reduce((s, r) => s + r.paidAmount, 0);
+        const totalBalance = exportRows.reduce((s, r) => s + r.balance, 0);
 
-    const XLSX = await import('xlsx');
-    const worksheet = XLSX.utils.json_to_sheet(excelData);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Fee Details');
+        const summaryRow = [];
+        for (let i = 0; i < headerRow.length; i++) {
+          if (headerRow[i] === 'Class' || headerRow[i] === 'Student Name') summaryRow.push('TOTAL');
+          else if (headerRow[i] === 'Total Fee') summaryRow.push(totalFee);
+          else if (headerRow[i] === 'Paid') summaryRow.push(totalPaid);
+          else if (headerRow[i] === 'Balance') summaryRow.push(totalBalance);
+          else summaryRow.push('');
+        }
+        exportTableRows.push(summaryRow);
 
-    XLSX.writeFile(workbook, `Fee_Statement_${classLabel.replace(/\s+/g, '_')}_${new Date().getTime()}.xlsx`);
+        const ws = XLSX.utils.aoa_to_sheet([headerRow, ...exportTableRows]);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Fee Details');
+        XLSX.writeFile(wb, `${fileName}.xlsx`);
+        toast.success(`Excel exported! (${exportRows.length} students)`);
+      } catch (e) {
+        toast.error('Failed to generate Excel');
+      }
+    }
   };
 
   const handleWhatsAppClick = (row: any) => {
-    if (!row.phone) {
-      toast.error('No phone number registered for this student.');
-      return;
-    }
+    if (!row.phone) { toast.error('No phone number registered for this student.'); return; }
     setReminderStudent(row);
   };
 
@@ -274,11 +466,8 @@ export const StudentFeeDetailsTab: React.FC<StudentFeeDetailsProps> = ({ student
         const didShare = await shareFileNatively(blob, fileName, textMessage);
 
         if (!didShare) {
-          // Desktop Fallback
           try {
-            await navigator.clipboard.write([
-              new ClipboardItem({ 'image/png': blob })
-            ]);
+            await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
             toast.success('Photo copied to clipboard! Paste it in the WhatsApp chat.', { duration: 5000 });
           } catch (e) {
             toast.error('Could not copy image automatically. Please screenshot the card.');
@@ -288,7 +477,6 @@ export const StudentFeeDetailsTab: React.FC<StudentFeeDetailsProps> = ({ student
       }
     } catch (err) {
       toast.error('Error generating fee reminder photo.');
-      console.error(err);
     } finally {
       setIsGenerating(false);
       setReminderStudent(null);
@@ -299,158 +487,190 @@ export const StudentFeeDetailsTab: React.FC<StudentFeeDetailsProps> = ({ student
   const totalPaid = tableData.reduce((s, r) => s + r.paidAmount, 0);
   const totalBalance = tableData.reduce((s, r) => s + r.balance, 0);
 
+  const totalPages = Math.ceil(tableData.length / itemsPerPage);
+  const currentData = tableData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
   return (
-    <div className="space-y-4 animate-fade-in">
-      <div className="flex flex-row md:flex-row gap-2 sm:gap-3 mb-4 print:hidden items-center">
-        <div className="relative flex-1 min-w-0">
-          <Search className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Search student or ID..."
-            value={searchTerm}
-            onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
-            className="w-full pl-9 sm:pl-11 pr-3 sm:pr-4 py-2 sm:py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 text-xs sm:text-sm font-medium transition-all truncate"
-          />
-        </div>
-        <div className="w-2/5 sm:w-48 md:w-56 shrink-0">
-          <select
-            value={selectedClassId}
-            onChange={(e) => { setSelectedClassId(e.target.value); setCurrentPage(1); }}
-            className="w-full px-2.5 sm:px-4 py-2 sm:py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 text-xs sm:text-sm font-medium cursor-pointer transition-all truncate"
-          >
-            <option value="ALL">All Classes</option>
-            {classes.map(c => (
-              <option key={c.id} value={c.id}>{c.name} - {c.section}</option>
-            ))}
-          </select>
-        </div>
-        <div className="hidden md:flex items-center gap-2">
-          <button onClick={handlePrint} className="flex items-center justify-center gap-1.5 px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-bold text-xs transition-colors cursor-pointer border border-gray-200">
-            <Printer className="w-4 h-4" /> Print
-          </button>
-          <button onClick={handleDownloadPDF} className="flex items-center justify-center gap-1.5 px-3 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-xl font-bold text-xs transition-colors cursor-pointer border border-indigo-100">
-            <Download className="w-4 h-4" /> PDF
-          </button>
-          <button onClick={handleExportExcel} className="flex items-center justify-center gap-1.5 px-3 py-2 bg-teal-50 hover:bg-teal-100 text-teal-700 rounded-xl font-bold text-xs transition-colors cursor-pointer border border-teal-100">
-            <Download className="w-4 h-4" /> Excel
-          </button>
-        </div>
-      </div>
+    <div className="animate-fade-in -mx-4 -my-4 md:m-0">
+      <ExportDialog
+        open={exportDialog.open}
+        onClose={() => setExportDialog(d => ({ ...d, open: false }))}
+        onExport={handleExport}
+        exportType={exportDialog.type}
+        totalRows={tableData.length}
+      />
 
-      {/* Summary Stats */}
-      <div className="grid grid-cols-3 gap-2 sm:gap-4 print:hidden">
-        {[
-          { label: 'TOTAL FEE', value: `₹${totalFee.toLocaleString('en-IN')}`, color: 'from-indigo-500 to-purple-600' },
-          { label: 'COLLECTED', value: `₹${totalPaid.toLocaleString('en-IN')}`, color: 'from-emerald-500 to-teal-600' },
-          { label: 'BALANCE DUE', value: `₹${totalBalance.toLocaleString('en-IN')}`, color: 'from-rose-500 to-pink-600' },
-        ].map((s, i) => (
-          <div key={i} className={`bg-gradient-to-br ${s.color} px-3 py-2.5 sm:p-4 rounded-xl text-white shadow-sm flex flex-col justify-center`}>
-            <p className="text-white/80 text-[10px] sm:text-xs font-bold uppercase tracking-tight whitespace-nowrap truncate">{s.label}</p>
-            <p className="text-sm sm:text-xl font-black mt-0.5 whitespace-nowrap truncate">{s.value}</p>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+        <div className="flex flex-col sm:flex-row gap-4 flex-1">
+          <div className="sm:w-64">
+            <select
+              value={selectedClassId}
+              onChange={(e) => { setSelectedClassId(e.target.value); setCurrentPage(1); }}
+              className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 text-sm font-medium cursor-pointer shadow-sm"
+            >
+              <option value="ALL">All Classes</option>
+              {classes.map(c => (
+                <option key={c.id} value={c.id}>{c.name} - {c.section}</option>
+              ))}
+            </select>
           </div>
-        ))}
+          
+          <div className="relative flex-1 max-w-md">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search student or ID..."
+              value={searchTerm}
+              onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+              className="w-full pl-11 pr-4 py-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 text-sm font-medium shadow-sm"
+            />
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <button onClick={handlePrint} className="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 text-sm font-bold rounded-xl transition-all shadow-sm">
+            <Printer className="w-4 h-4" />
+            <span className="hidden sm:inline">Print</span>
+          </button>
+          <button onClick={() => setExportDialog({ open: true, type: 'pdf' })} className="flex items-center gap-2 px-4 py-2.5 bg-indigo-50 text-indigo-700 hover:bg-indigo-600 hover:text-white border border-indigo-100 text-sm font-bold rounded-xl transition-all shadow-sm">
+            <FileText className="w-4 h-4" />
+            <span className="hidden sm:inline">PDF</span>
+          </button>
+          <button onClick={() => setExportDialog({ open: true, type: 'excel' })} className="flex items-center gap-2 px-4 py-2.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-600 hover:text-white border border-emerald-100 text-sm font-bold rounded-xl transition-all shadow-sm">
+            <FileSpreadsheet className="w-4 h-4" />
+            <span className="hidden sm:inline">Excel</span>
+          </button>
+        </div>
       </div>
 
-      {/* Print Header — only visible on print */}
-      <div className="hidden print:block print:mb-4">
-        <div style={{ background: '#1e1b4b', padding: '12px 16px', borderRadius: '0' }}>
-          <h1 style={{ color: 'white', fontSize: '18px', fontWeight: 900, margin: 0, textAlign: 'center' }}>SRI VENKATESWARA JY SCHOOL</h1>
-          <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '11px', margin: '4px 0 0', textAlign: 'center' }}>Opp. Hero Showroom, SVL Paradise Campus, Narasannapeta</p>
-          <p style={{ color: 'rgba(255,255,255,0.9)', fontSize: '13px', fontWeight: 700, margin: '6px 0 0', textAlign: 'center' }}>STUDENT FEE STATEMENT</p>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div className="bg-gradient-to-br from-indigo-500 to-purple-600 p-5 rounded-2xl shadow-lg border border-indigo-400">
+          <p className="text-indigo-100 text-xs font-black uppercase tracking-wider mb-1">Total Fee</p>
+          <p className="text-2xl md:text-3xl font-black text-white">₹{totalFee.toLocaleString('en-IN')}</p>
         </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '8px', fontSize: '11px', fontWeight: 600 }}>
-          <span>Class: {classLabel}</span>
-          <span>Date: {new Date().toLocaleDateString('en-IN')}</span>
+        <div className="bg-gradient-to-br from-emerald-500 to-teal-600 p-5 rounded-2xl shadow-lg border border-emerald-400">
+          <p className="text-emerald-100 text-xs font-black uppercase tracking-wider mb-1">Collected</p>
+          <p className="text-2xl md:text-3xl font-black text-white">₹{totalPaid.toLocaleString('en-IN')}</p>
+        </div>
+        <div className="bg-gradient-to-br from-rose-500 to-pink-600 p-5 rounded-2xl shadow-lg border border-rose-400">
+          <p className="text-rose-100 text-xs font-black uppercase tracking-wider mb-1">Balance Due</p>
+          <p className="text-2xl md:text-3xl font-black text-white">₹{totalBalance.toLocaleString('en-IN')}</p>
         </div>
       </div>
 
-      {/* Table */}
-      <div className="bg-white dark:bg-gray-900 border-t border-b border-gray-200 dark:border-gray-800 -mx-4 sm:mx-0 sm:border-x shadow-sm print:border-none print:shadow-none print:mx-0">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm text-left border-collapse border border-gray-200">
-            <thead className="bg-indigo-600 text-white font-semibold">
+            <thead className="bg-gray-50 border-b border-gray-200 text-indigo-900">
               <tr>
-                <th className="px-4 py-3 text-xs font-bold uppercase border border-indigo-500">S.No</th>
-                <th className="hidden lg:table-cell px-4 py-3 text-xs font-bold uppercase border border-indigo-500">Student ID</th>
-                <th className="px-4 py-3 text-xs font-bold uppercase border border-indigo-500">Student Name</th>
-                <th className="px-4 py-3 text-xs font-bold uppercase border border-indigo-500">Class</th>
-                <th className="hidden lg:table-cell px-4 py-3 text-xs font-bold uppercase text-right border border-indigo-500">Total Fee</th>
-                <th className="hidden lg:table-cell px-4 py-3 text-xs font-bold uppercase text-right border border-indigo-500">Paid</th>
-                <th className="hidden lg:table-cell px-4 py-3 text-xs font-bold uppercase text-right border border-indigo-500">Balance</th>
-                <th className="hidden lg:table-cell px-4 py-3 text-xs font-bold uppercase text-center border border-indigo-500 print:hidden">WhatsApp</th>
-                <th className="px-4 py-3 text-xs font-bold uppercase text-center border border-indigo-500 print:hidden">Action</th>
+                <th className="px-4 py-4 font-black uppercase text-[10px] tracking-wider border-r border-gray-200 w-16 text-center">S.No</th>
+                <th className="px-4 py-4 font-black uppercase text-[10px] tracking-wider border-r border-gray-200">Student ID</th>
+                <th className="px-4 py-4 font-black uppercase text-[10px] tracking-wider border-r border-gray-200 min-w-[200px]">Student Name</th>
+                <th className="px-4 py-4 font-black uppercase text-[10px] tracking-wider border-r border-gray-200">Class</th>
+                <th className="px-4 py-4 font-black uppercase text-[10px] tracking-wider border-r border-gray-200 text-right">Total Fee</th>
+                <th className="px-4 py-4 font-black uppercase text-[10px] tracking-wider border-r border-gray-200 text-right">Paid</th>
+                <th className="px-4 py-4 font-black uppercase text-[10px] tracking-wider border-r border-gray-200 text-right">Balance</th>
+                {isAdminOrSuper && (
+                  <>
+                    <th className="px-4 py-4 font-black uppercase text-[10px] tracking-wider border-r border-gray-200 text-center">WhatsApp</th>
+                    <th className="px-4 py-4 font-black uppercase text-[10px] tracking-wider text-center">Action</th>
+                  </>
+                )}
               </tr>
             </thead>
-            <tbody className="bg-white">
-              {tableData.length === 0 ? (
+            <tbody className="divide-y divide-gray-100">
+              {currentData.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="px-6 py-8 text-center text-gray-500 border border-gray-200">No students found.</td>
+                  <td colSpan={isAdminOrSuper ? 9 : 7} className="px-6 py-12 text-center text-gray-400 font-medium bg-gray-50/50">
+                    <div className="flex flex-col items-center justify-center">
+                      <Search className="w-10 h-10 mb-3 text-gray-300" />
+                      <p>No student records found</p>
+                    </div>
+                  </td>
                 </tr>
               ) : (
-                tableData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((row) => (
-                  <tr key={row.sno} className="hover:bg-indigo-50/50 transition-colors">
-                    <td className="px-4 py-3 text-gray-600 font-medium border border-gray-200">{row.sno}</td>
-                    
-                    <td className="hidden lg:table-cell px-4 py-3 font-mono text-xs font-bold text-indigo-600 border border-gray-200">{row.id}</td>
-                    
-                    <td className="px-4 py-3 font-bold text-gray-900 border border-gray-200">{row.name}</td>
-                    
-                    <td className="px-4 py-3 text-gray-600 text-xs border border-gray-200">{row.className}</td>
-                    
-                    <td className="hidden lg:table-cell px-4 py-3 text-right font-medium text-gray-900 border border-gray-200">₹{row.totalFee.toLocaleString('en-IN')}</td>
-                    
-                    <td className="hidden lg:table-cell px-4 py-3 text-right font-medium text-emerald-600 border border-gray-200">₹{row.paidAmount.toLocaleString('en-IN')}</td>
-                    
-                    <td className={`hidden lg:table-cell px-4 py-3 text-right font-black text-sm border border-gray-200 ${row.balance > 0 ? 'text-rose-600' : 'text-emerald-600'}`}>
+                currentData.map((row) => (
+                  <tr key={row.studentId} className="hover:bg-indigo-50/30 transition-colors">
+                    <td className="px-4 py-4 border-r border-gray-100 text-center font-medium text-gray-500">{row.sno}</td>
+                    <td className="px-4 py-4 border-r border-gray-100 font-bold text-gray-700 text-xs font-mono">{row.id}</td>
+                    <td className="px-4 py-4 border-r border-gray-100 font-bold text-gray-900">{row.name}</td>
+                    <td className="px-4 py-4 border-r border-gray-100 text-gray-600 text-xs font-bold">{row.className}</td>
+                    <td className="px-4 py-4 border-r border-gray-100 text-right font-medium text-gray-600">₹{row.totalFee.toLocaleString('en-IN')}</td>
+                    <td className="px-4 py-4 border-r border-gray-100 text-right font-bold text-gray-900">₹{row.paidAmount.toLocaleString('en-IN')}</td>
+                    <td className={`px-4 py-4 border-r border-gray-100 text-right font-black ${row.balance > 0 ? 'text-rose-600' : row.balance < 0 ? 'text-emerald-600' : 'text-gray-900'}`}>
                       ₹{row.balance.toLocaleString('en-IN')}
                     </td>
-                    
-                    <td className="hidden lg:table-cell px-4 py-3 text-center border border-gray-200 print:hidden">
-                      {row.balance > 0 && row.phone && (
-                        <button
-                          onClick={() => handleWhatsAppClick(row)}
-                          className="inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-green-500 hover:bg-green-600 text-white text-xs font-bold rounded-lg transition-colors shadow-sm cursor-pointer"
-                          title={`Generate fee reminder for ${row.phone}`}
-                        >
-                          <MessageCircle className="w-3.5 h-3.5" />
-                          Remind
-                        </button>
-                      )}
-                    </td>
-                    
-                    <td className="px-4 py-3 text-center border border-gray-200 print:hidden">
-                      <button
-                        onClick={() => navigate(`/students/${row.studentId}`)}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 text-xs font-bold rounded-lg transition-colors cursor-pointer"
-                      >
-                        <Eye className="w-4 h-4" /> View
-                      </button>
-                    </td>
+                    {isAdminOrSuper && (
+                      <>
+                        <td className="px-4 py-3 border-r border-gray-100 text-center">
+                          <button
+                            onClick={() => handleWhatsAppClick(row)}
+                            className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white text-[10px] font-bold rounded-lg transition-colors shadow-sm"
+                          >
+                            <MessageCircle className="w-3.5 h-3.5" />
+                            REMIND
+                          </button>
+                        </td>
+                        <td className="px-4 py-3 text-center">
+                          <button
+                            onClick={() => navigate(`/student/${row.studentId}`)}
+                            className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-indigo-50 hover:bg-indigo-600 hover:text-white text-indigo-600 text-[10px] font-bold rounded-lg transition-colors border border-indigo-100"
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                            View
+                          </button>
+                        </td>
+                      </>
+                    )}
                   </tr>
                 ))
               )}
             </tbody>
           </table>
         </div>
-        
-        {/* Pagination UI */}
-        {tableData.length > itemsPerPage && (
-          <div className="flex items-center justify-between p-4 border-t border-gray-200 print:hidden">
-            <span className="text-sm text-gray-600 font-medium">
-              Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, tableData.length)} of {tableData.length} entries
+
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between px-6 py-4 bg-gray-50 border-t border-gray-200">
+            <span className="text-sm font-medium text-gray-500">
+              Showing <span className="font-bold text-gray-900">{((currentPage - 1) * itemsPerPage) + 1}</span> to <span className="font-bold text-gray-900">{Math.min(currentPage * itemsPerPage, tableData.length)}</span> of <span className="font-bold text-gray-900">{tableData.length}</span> students
             </span>
-            <div className="flex gap-2">
+            <div className="flex items-center gap-2">
               <button
-                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                 disabled={currentPage === 1}
-                className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50 disabled:opacity-50 transition-colors"
+                className="px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm font-bold text-gray-700 hover:bg-gray-50 disabled:opacity-50 transition-colors shadow-sm"
               >
                 Previous
               </button>
+              <div className="flex items-center gap-1">
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  let pageNum = currentPage;
+                  if (currentPage <= 3) pageNum = i + 1;
+                  else if (currentPage >= totalPages - 2) pageNum = totalPages - 4 + i;
+                  else pageNum = currentPage - 2 + i;
+                  
+                  if (pageNum > 0 && pageNum <= totalPages) {
+                    return (
+                      <button
+                        key={pageNum}
+                        onClick={() => setCurrentPage(pageNum)}
+                        className={`w-10 h-10 rounded-xl text-sm font-bold transition-all shadow-sm flex items-center justify-center ${
+                          currentPage === pageNum
+                            ? 'bg-indigo-600 text-white shadow-indigo-200 border-none'
+                            : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
+                        }`}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+                  }
+                  return null;
+                })}
+              </div>
               <button
-                onClick={() => setCurrentPage(prev => Math.min(prev + 1, Math.ceil(tableData.length / itemsPerPage)))}
-                disabled={currentPage === Math.ceil(tableData.length / itemsPerPage)}
-                className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50 disabled:opacity-50 transition-colors"
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                className="px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm font-bold text-gray-700 hover:bg-gray-50 disabled:opacity-50 transition-colors shadow-sm"
               >
                 Next
               </button>
@@ -458,98 +678,44 @@ export const StudentFeeDetailsTab: React.FC<StudentFeeDetailsProps> = ({ student
           </div>
         )}
       </div>
-      {/* Fata Reminder Modal */}
+
       {reminderStudent && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-gray-900/60 backdrop-blur-sm p-4 print:hidden">
-          <div className="bg-white rounded-3xl overflow-hidden shadow-2xl max-w-sm w-full animate-scale-in relative">
-            <button 
-              onClick={() => setReminderStudent(null)}
-              className="absolute top-4 right-4 z-50 w-8 h-8 flex items-center justify-center bg-white/20 hover:bg-white/40 text-white rounded-full transition-colors cursor-pointer"
-            >
-              <X className="w-5 h-5" />
-            </button>
-            
-            {/* The actual Card to be captured */}
-            <div id="fee-reminder-card" className="bg-white">
-              {/* Header */}
-              <div className="bg-gradient-to-br from-indigo-900 via-indigo-800 to-indigo-950 p-6 text-center relative overflow-hidden flex flex-col items-center">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full blur-2xl -mr-10 -mt-10"></div>
-                <div className="absolute bottom-0 left-0 w-32 h-32 bg-white/5 rounded-full blur-2xl -ml-10 -mb-10"></div>
-                <div className="relative z-10 flex flex-col items-center w-full">
-                  <div className="flex items-center gap-3 w-full justify-center">
-                    <img src="/logo.png" alt="Logo" className="w-12 h-12 object-contain drop-shadow-md bg-white rounded-full p-1 shrink-0" onError={(e) => e.currentTarget.style.display = 'none'} />
-                    <div className="text-left">
-                      <h1 className="text-base sm:text-lg font-black text-white leading-tight">SRI VENKATESWARA JY SCHOOL</h1>
-                      <p className="text-indigo-200 text-[9px] mt-0.5 max-w-[240px] font-medium leading-relaxed">Opp. Hero Showroom, SVL Paradise Campus, Narasannapeta</p>
-                    </div>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-sm">
+          <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-md overflow-hidden animate-scale-in">
+            <div className="flex items-center justify-between p-6 border-b border-gray-100">
+              <h3 className="text-xl font-black text-gray-900">Send WhatsApp Reminder</h3>
+              <button onClick={() => setReminderStudent(null)} className="p-2 bg-gray-50 hover:bg-gray-100 rounded-xl transition-colors">
+                <X className="w-5 h-5 text-gray-500" />
+              </button>
+            </div>
+            <div className="p-6 bg-gray-50">
+              <div id="fee-reminder-card" className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 text-center relative overflow-hidden" style={{ minHeight: '300px' }}>
+                <div className="absolute top-0 inset-x-0 h-2 bg-rose-500" />
+                <img src="/logo.png" alt="Logo" className="w-16 h-16 mx-auto mb-4 object-contain rounded-full border-2 border-gray-100 shadow-sm" onError={(e) => { e.currentTarget.src = 'https://ui-avatars.com/api/?name=JY&background=6366f1&color=fff'; }} />
+                <h4 className="text-lg font-black text-gray-900 mb-1">SRI VENKATESWARA JY SCHOOL</h4>
+                <p className="text-xs font-bold text-rose-500 uppercase tracking-wider mb-6 px-3 py-1 bg-rose-50 inline-block rounded-full">FEE DUE REMINDER</p>
+                <div className="space-y-4 mb-6 text-left border border-gray-100 rounded-2xl p-4 bg-gray-50/50">
+                  <div className="flex justify-between items-center pb-3 border-b border-gray-100">
+                    <span className="text-sm font-semibold text-gray-500">Student Name</span>
+                    <span className="text-sm font-bold text-gray-900">{reminderStudent.name}</span>
                   </div>
-                  <div className="mt-4 inline-block bg-white/20 backdrop-blur-md px-4 py-1.5 rounded-full border border-white/20">
-                    <span className="text-white text-xs font-bold tracking-widest uppercase shadow-sm">Fee Reminder</span>
+                  <div className="flex justify-between items-center pb-3 border-b border-gray-100">
+                    <span className="text-sm font-semibold text-gray-500">Class</span>
+                    <span className="text-sm font-bold text-gray-900">{reminderStudent.className}</span>
                   </div>
-                </div>
-              </div>
-
-              {/* Body */}
-              <div className="p-6">
-                <div className="mb-6 flex items-center gap-4 bg-gray-50 p-4 rounded-2xl border border-gray-100">
-                  <div className="shrink-0">
-                    {reminderStudent.photo ? (
-                      <img src={reminderStudent.photo} alt="Student" className="w-16 h-16 rounded-full object-cover border-[3px] border-white shadow-md" />
-                    ) : (
-                      <div className="w-16 h-16 rounded-full bg-gradient-to-br from-indigo-100 to-purple-100 text-indigo-600 flex items-center justify-center font-black text-2xl shadow-md border-[3px] border-white">
-                        {reminderStudent.name.charAt(0)}
-                      </div>
-                    )}
-                  </div>
-                  <div className="text-left flex-1">
-                    <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-1">Student Details</p>
-                    <h2 className="text-lg font-black text-gray-900 leading-tight">{reminderStudent.name}</h2>
-                    <p className="text-xs font-bold text-indigo-600 mt-1">{reminderStudent.id} • Class: {reminderStudent.className}</p>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-black text-rose-600">Total Pending Balance</span>
+                    <span className="text-xl font-black text-rose-600">₹{reminderStudent.balance.toLocaleString('en-IN')}</span>
                   </div>
                 </div>
-
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center p-3 bg-gray-50 rounded-xl border border-gray-100">
-                    <span className="text-xs font-bold text-gray-500 uppercase">Total Fee</span>
-                    <span className="text-sm font-black text-gray-800">₹{reminderStudent.totalFee.toLocaleString('en-IN')}</span>
-                  </div>
-                  <div className="flex justify-between items-center p-3 bg-emerald-50 rounded-xl border border-emerald-100">
-                    <span className="text-xs font-bold text-emerald-600 uppercase">Amount Paid</span>
-                    <span className="text-sm font-black text-emerald-700">₹{reminderStudent.paidAmount.toLocaleString('en-IN')}</span>
-                  </div>
-                  <div className="flex justify-between items-center p-4 bg-rose-50 rounded-xl border border-rose-100 shadow-sm relative overflow-hidden">
-                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-rose-500"></div>
-                    <span className="text-xs font-black text-rose-600 uppercase tracking-wider">Balance Due</span>
-                    <span className="text-2xl font-black text-rose-600">₹{reminderStudent.balance.toLocaleString('en-IN')}</span>
-                  </div>
-                </div>
-
-                <div className="mt-6 text-center">
-                  <p className="text-[11px] font-bold text-gray-400">Please clear the pending dues at the earliest.</p>
-                  <p className="text-[10px] text-gray-400 mt-1">Generated on: {new Date().toLocaleDateString('en-IN')}</p>
-                </div>
+                <p className="text-[10px] text-gray-400 font-medium">Dear Parent, kindly clear the pending dues at the earliest. Please ignore if already paid.</p>
               </div>
             </div>
-
-            {/* Action Buttons */}
-            <div className="p-4 bg-gray-50 border-t border-gray-100 flex flex-col gap-2">
-              <button
-                onClick={handleShareReminder}
-                disabled={isGenerating}
-                className="w-full py-3 bg-green-500 hover:bg-green-600 text-white font-bold rounded-xl flex justify-center items-center gap-2 transition-colors cursor-pointer shadow-md shadow-green-500/25 disabled:opacity-70"
-              >
-                {isGenerating ? (
-                  <span className="animate-pulse">Generating Photo...</span>
-                ) : (
-                  <>
-                    <Share2 className="w-5 h-5" /> 
-                    <span>Share Photo on WhatsApp</span>
-                  </>
-                )}
+            <div className="p-6 border-t border-gray-100">
+              <button onClick={handleShareReminder} disabled={isGenerating} className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white rounded-xl font-bold shadow-lg transition-all">
+                {isGenerating ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Share2 className="w-5 h-5" />}
+                {isGenerating ? 'Generating Photo...' : 'Send via WhatsApp'}
               </button>
-              <p className="text-[10px] text-center text-gray-500 font-medium px-4">
-                On mobile, this opens WhatsApp directly. On PC, it copies the photo so you can paste it into WhatsApp.
-              </p>
             </div>
           </div>
         </div>
