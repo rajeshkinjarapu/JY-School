@@ -14,6 +14,7 @@ interface ExportFilters {
   customMinPaid: number;
   customMaxPaid: number;
   columns: {
+    sno: boolean;
     rollNo: boolean;
     name: boolean;
     phone: boolean;
@@ -25,7 +26,8 @@ interface ExportFilters {
 }
 
 const COLUMN_LABELS: Record<string, string> = {
-  rollNo: 'Roll No',
+  sno: 'S.No',
+  rollNo: 'Student ID',
   name: 'Student Name',
   phone: 'Phone Number',
   totalFee: 'Total Fee',
@@ -39,6 +41,7 @@ const DEFAULT_FILTERS: ExportFilters = {
   customMinPaid: 0,
   customMaxPaid: 9999999,
   columns: {
+    sno: true,
     rollNo: true,
     name: true,
     phone: false,
@@ -259,7 +262,8 @@ export const InstallmentReportTab: React.FC<InstallmentReportTabProps> = ({
       };
     });
 
-    const filteredRows = rows.filter(
+    const mappedRows = rows.map((r: any, i: number) => ({ ...r, sno: i + 1 }));
+    const filteredRows = mappedRows.filter(
       (r) => !searchTerm || r.name.toLowerCase().includes(searchTerm.toLowerCase()) || r.rollNo.toLowerCase().includes(searchTerm.toLowerCase())
     );
     return { classInfo, rows: filteredRows };
@@ -302,8 +306,9 @@ export const InstallmentReportTab: React.FC<InstallmentReportTabProps> = ({
         const headerRow: string[] = [];
         const colStyles: any = {};
         let ci = 0;
-        if (cols.rollNo) { headerRow.push('Roll No'); colStyles[ci++] = { cellWidth: 18, halign: 'center', fontStyle: 'bold', textColor: [100, 116, 139] }; }
-        if (cols.name) { headerRow.push('Student Name'); colStyles[ci++] = { cellWidth: 55, fontStyle: 'bold' }; }
+        if (cols.sno) { headerRow.push('S.No'); colStyles[ci++] = { cellWidth: 12, halign: 'center' }; }
+        if (cols.rollNo) { headerRow.push('Student ID'); colStyles[ci++] = { cellWidth: 26, halign: 'center', fontStyle: 'bold', textColor: [100, 116, 139] }; }
+        if (cols.name) { headerRow.push('Student Name'); colStyles[ci++] = { cellWidth: 'auto', fontStyle: 'bold' }; }
         if (cols.phone) { headerRow.push('Phone'); colStyles[ci++] = { cellWidth: 28, halign: 'center' }; }
         if (cols.totalFee) { headerRow.push('Total Fee (Rs.)'); colStyles[ci++] = { cellWidth: 24, halign: 'right' }; }
         if (cols.totalPaid) { headerRow.push('Paid (Rs.)'); colStyles[ci++] = { cellWidth: 24, halign: 'right', fontStyle: 'bold', textColor: [5, 150, 105] }; }
@@ -312,6 +317,7 @@ export const InstallmentReportTab: React.FC<InstallmentReportTabProps> = ({
 
         const tableRows = exportRows.map((r: any) => {
           const row: any[] = [];
+          if (cols.sno) row.push(r.sno);
           if (cols.rollNo) row.push(r.rollNo);
           if (cols.name) row.push(r.name);
           if (cols.phone) row.push(r.phone || '-');
@@ -345,7 +351,8 @@ export const InstallmentReportTab: React.FC<InstallmentReportTabProps> = ({
         const XLSX = await import('xlsx');
         const wb = XLSX.utils.book_new();
         const headerRow: string[] = [];
-        if (cols.rollNo) headerRow.push('Roll No');
+        if (cols.sno) headerRow.push('S.No');
+        if (cols.rollNo) headerRow.push('Student ID');
         if (cols.name) headerRow.push('Student Name');
         if (cols.phone) headerRow.push('Phone');
         if (cols.totalFee) headerRow.push('Total Fee (Rs.)');
@@ -359,6 +366,7 @@ export const InstallmentReportTab: React.FC<InstallmentReportTabProps> = ({
 
         const dataRows = exportRows.map((r: any) => {
           const row: any[] = [];
+          if (cols.sno) row.push(r.sno);
           if (cols.rollNo) row.push(r.rollNo);
           if (cols.name) row.push(r.name);
           if (cols.phone) row.push(r.phone || '-');
@@ -528,4 +536,6 @@ export const InstallmentReportTab: React.FC<InstallmentReportTabProps> = ({
     </div>
   );
 };
+
+
 

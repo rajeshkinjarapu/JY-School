@@ -1,4 +1,4 @@
-﻿import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Printer, Download, Receipt, FileText, CheckCircle, Smartphone, Calculator, Plus, Share2, Upload, Search, Users, MessageCircle, X, Copy, Eye, FileSpreadsheet, SlidersHorizontal, CheckSquare, Square } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
@@ -258,7 +258,7 @@ export const StudentFeeDetailsTab: React.FC<StudentFeeDetailsProps> = ({ student
         studentId: student.id,
         id: student.rollNo || student.studentId || '-',
         name: student.user?.name || student.name || '-',
-        className: studentClass ? `${studentClass.name}${studentClass.section ? \` - \${studentClass.section}\` : ''}` : '-',
+        className: studentClass ? `${studentClass.name}${studentClass.section ? ` - ${studentClass.section}` : ''}` : '-',
         totalFee: totalFeeAmount,
         paidAmount,
         balance,
@@ -325,13 +325,13 @@ export const StudentFeeDetailsTab: React.FC<StudentFeeDetailsProps> = ({ student
         let ci = 0;
         
         if (cols.sno) { headerRow.push('S.No'); colStyles[ci++] = { halign: 'center', cellWidth: 14 }; }
-        if (cols.studentId) { headerRow.push('Student ID'); colStyles[ci++] = { cellWidth: 22 }; }
+        if (cols.studentId) { headerRow.push('Student ID'); colStyles[ci++] = { cellWidth: 26 }; }
         if (cols.name) { headerRow.push('Student Name'); colStyles[ci++] = { cellWidth: 'auto' }; }
         if (cols.className) { headerRow.push('Class'); colStyles[ci++] = { cellWidth: 20 }; }
         if (cols.phone) { headerRow.push('Phone'); colStyles[ci++] = { cellWidth: 25 }; }
-        if (cols.totalFee) { headerRow.push('Total Fee'); colStyles[ci++] = { halign: 'right', cellWidth: 22 }; }
-        if (cols.paidAmount) { headerRow.push('Paid'); colStyles[ci++] = { halign: 'right', cellWidth: 22 }; }
-        if (cols.balance) { headerRow.push('Balance'); colStyles[ci++] = { halign: 'right', cellWidth: 22 }; }
+        if (cols.totalFee) { headerRow.push('Total Fee'); colStyles[ci++] = { halign: 'right', cellWidth: 26 }; }
+        if (cols.paidAmount) { headerRow.push('Paid'); colStyles[ci++] = { halign: 'right', cellWidth: 26 }; }
+        if (cols.balance) { headerRow.push('Balance'); colStyles[ci++] = { halign: 'right', cellWidth: 26 }; }
 
         const exportTableRows = exportRows.map((r, i) => {
           const row: any[] = [];
@@ -726,5 +726,7 @@ export const StudentFeeDetailsTab: React.FC<StudentFeeDetailsProps> = ({ student
     </div>
   );
 };
+
+
 
 
