@@ -1,4 +1,4 @@
-﻿import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Search, Users, FileText, FileSpreadsheet, SlidersHorizontal, X, CheckSquare, Square } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -302,7 +302,6 @@ export const InstallmentReportTab: React.FC<InstallmentReportTabProps> = ({
         doc.setFont('helvetica', 'normal'); doc.setTextColor(140, 140, 140);
         doc.text(`Generated: ${new Date().toLocaleString('en-IN')}`, pageWidth - 14, 30, { align: 'right' });
 
-        const maxInstallments = cols.installments ? Math.max(0, ...exportRows.map((r: any) => r.payments.length)) : 0;
         const headerRow: string[] = [];
         const colStyles: any = {};
         let ci = 0;
@@ -359,7 +358,6 @@ export const InstallmentReportTab: React.FC<InstallmentReportTabProps> = ({
         if (cols.totalPaid) headerRow.push('Total Paid (Rs.)');
         if (cols.remaining) headerRow.push('Remaining Balance (Rs.)');
 
-        const maxInstallments = cols.installments ? Math.max(0, ...exportRows.map((r: any) => r.payments.length)) : 0;
         for (let i = 0; i < maxInstallments; i++) {
           headerRow.push(`Inst-${i+1} Amount`); headerRow.push(`Inst-${i+1} Date`); headerRow.push(`Inst-${i+1} Method`);
         }
