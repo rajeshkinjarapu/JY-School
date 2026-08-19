@@ -1,4 +1,4 @@
-﻿import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Search, Users, FileText, FileSpreadsheet, SlidersHorizontal, X, CheckSquare, Square } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -53,11 +53,11 @@ const DEFAULT_FILTERS: ExportFilters = {
 };
 
 const PAYMENT_FILTER_OPTIONS = [
-  { value: 'all',     label: 'All Students',           desc: 'Export everyone',              icon: 'Rs.Rs.Rs.Rs.' },
-  { value: 'zero',    label: 'Rs.Rs.Rs.0 Paid (No Payment)',   desc: 'Students who paid nothing',    icon: 'Rs.Rs.Rs.Rs.' },
-  { value: 'partial', label: 'Partial Payments',       desc: 'Paid some but not full',       icon: 'Rs.Rs.Rs.Rs.' },
-  { value: 'full',    label: 'Fully Paid',             desc: 'Balance = Rs.Rs.Rs.0',                icon: 'Rs.Rs.Rs.Rs.' },
-  { value: 'custom',  label: 'Custom Amount Range',    desc: 'Set minRs.Rs.Rs.max paid amount',      icon: 'Rs.Rs.Rs.Rs.Rs.Rs.' },
+  { value: 'all',     label: 'All Students',           desc: 'Export everyone',              icon: '👥' },
+  { value: 'zero',    label: '₹0 Paid (No Payment)',   desc: 'Students who paid nothing',    icon: '💸' },
+  { value: 'partial', label: 'Partial Payments',       desc: 'Paid some but not full',       icon: '💳' },
+  { value: 'full',    label: 'Fully Paid',             desc: 'Balance = ₹0',                 icon: '✅' },
+  { value: 'custom',  label: 'Custom Amount Range',    desc: 'Set min - max paid amount',    icon: '⚙️' },
 ] as const;
 
 interface ExportDialogProps {
@@ -139,7 +139,7 @@ const ExportDialog: React.FC<ExportDialogProps> = ({ open, onClose, onExport, ex
             {filters.paymentFilter === 'custom' && (
               <div className="mt-3 flex gap-3 items-end bg-indigo-50 rounded-xl p-4 border border-indigo-100">
                 <div className="flex-1">
-                  <label className="text-xs font-bold text-indigo-700 block mb-1">Min Paid (Rs.)</label>
+                  <label className="text-xs font-bold text-indigo-700 block mb-1">Min Paid (₹)</label>
                   <input type="number" value={filters.customMinPaid}
                     onChange={e => setFilters(f => ({ ...f, customMinPaid: Number(e.target.value) }))}
                     className="w-full px-3 py-2 border border-indigo-200 rounded-lg text-sm font-semibold focus:ring-2 focus:ring-indigo-400 outline-none bg-white"
@@ -147,7 +147,7 @@ const ExportDialog: React.FC<ExportDialogProps> = ({ open, onClose, onExport, ex
                 </div>
                 <div className="text-gray-400 font-black text-lg pb-1.5">to</div>
                 <div className="flex-1">
-                  <label className="text-xs font-bold text-indigo-700 block mb-1">Max Paid (Rs.)</label>
+                  <label className="text-xs font-bold text-indigo-700 block mb-1">Max Paid (₹)</label>
                   <input type="number" value={filters.customMaxPaid}
                     onChange={e => setFilters(f => ({ ...f, customMaxPaid: Number(e.target.value) }))}
                     className="w-full px-3 py-2 border border-indigo-200 rounded-lg text-sm font-semibold focus:ring-2 focus:ring-indigo-400 outline-none bg-white"
@@ -309,9 +309,9 @@ export const InstallmentReportTab: React.FC<InstallmentReportTabProps> = ({
         if (cols.rollNo) { headerRow.push('Student ID'); colStyles[ci++] = { cellWidth: 26, halign: 'center', fontStyle: 'bold', textColor: [100, 116, 139] }; }
         if (cols.name) { headerRow.push('Student Name'); colStyles[ci++] = { cellWidth: 'auto', fontStyle: 'bold' }; }
         if (cols.phone) { headerRow.push('Phone'); colStyles[ci++] = { cellWidth: 28, halign: 'center' }; }
-        if (cols.totalFee) { headerRow.push('Total Fee (Rs.)'); colStyles[ci++] = { cellWidth: 24, halign: 'right' }; }
-        if (cols.totalPaid) { headerRow.push('Paid (Rs.)'); colStyles[ci++] = { cellWidth: 24, halign: 'right', fontStyle: 'bold', textColor: [5, 150, 105] }; }
-        if (cols.remaining) { headerRow.push('Balance (Rs.)'); colStyles[ci++] = { cellWidth: 24, halign: 'right', fontStyle: 'bold', textColor: [225, 29, 72] }; }
+        if (cols.totalFee) { headerRow.push('Total Fee (₹)'); colStyles[ci++] = { cellWidth: 24, halign: 'right' }; }
+        if (cols.totalPaid) { headerRow.push('Paid (₹)'); colStyles[ci++] = { cellWidth: 24, halign: 'right', fontStyle: 'bold', textColor: [5, 150, 105] }; }
+        if (cols.remaining) { headerRow.push('Balance (₹)'); colStyles[ci++] = { cellWidth: 24, halign: 'right', fontStyle: 'bold', textColor: [225, 29, 72] }; }
         for (let i = 0; i < maxInstallments; i++) { headerRow.push(`Inst-${i+1}`); colStyles[ci++] = { cellWidth: 36, halign: 'center', fontStyle: 'bold', textColor: [67, 56, 202] }; }
 
         const tableRows = exportRows.map((r: any) => {
@@ -325,7 +325,7 @@ export const InstallmentReportTab: React.FC<InstallmentReportTabProps> = ({
           if (cols.remaining) row.push(r.remaining.toLocaleString('en-IN'));
           for (let i = 0; i < maxInstallments; i++) {
             const p = r.payments[i];
-            row.push(p ? `Rs.${p.amount.toLocaleString('en-IN')} (${p.dateStr})` : '-');
+            row.push(p ? `₹${p.amount.toLocaleString('en-IN')} (${p.dateStr})` : '-');
           }
           return row;
         });
@@ -354,9 +354,9 @@ export const InstallmentReportTab: React.FC<InstallmentReportTabProps> = ({
         if (cols.rollNo) headerRow.push('Student ID');
         if (cols.name) headerRow.push('Student Name');
         if (cols.phone) headerRow.push('Phone');
-        if (cols.totalFee) headerRow.push('Total Fee (Rs.)');
-        if (cols.totalPaid) headerRow.push('Total Paid (Rs.)');
-        if (cols.remaining) headerRow.push('Remaining Balance (Rs.)');
+        if (cols.totalFee) headerRow.push('Total Fee (₹)');
+        if (cols.totalPaid) headerRow.push('Total Paid (₹)');
+        if (cols.remaining) headerRow.push('Remaining Balance (₹)');
 
         for (let i = 0; i < maxInstallments; i++) {
           headerRow.push(`Inst-${i+1} Amount`); headerRow.push(`Inst-${i+1} Date`); headerRow.push(`Inst-${i+1} Method`);
@@ -389,8 +389,8 @@ export const InstallmentReportTab: React.FC<InstallmentReportTabProps> = ({
           ['Class', `${classInfo.name} - ${classInfo.section}`],
           ['Filter Applied', PAYMENT_FILTER_OPTIONS.find(o => o.value === filters.paymentFilter)?.label ?? 'All'],
           ['Total Students Exported', exportRows.length],
-          ['Total Fee Collected (Rs.)', totalCollected],
-          ['Total Pending Balance (Rs.)', totalPending],
+          ['Total Fee Collected (₹)', totalCollected],
+          ['Total Pending Balance (₹)', totalPending],
           ['Generated On', new Date().toLocaleString('en-IN')],
         ]);
         summaryWs['!cols'] = [{ wch: 28 }, { wch: 30 }];
@@ -445,7 +445,7 @@ export const InstallmentReportTab: React.FC<InstallmentReportTabProps> = ({
                 {studentInstallmentData.classInfo.name} - {studentInstallmentData.classInfo.section} Fee Installment Log
               </h3>
               <p className="text-xs text-gray-400 font-semibold mt-1">
-                {studentInstallmentData.rows.length} students Rs.Rs. Tracks chronological payments sequence.
+                {studentInstallmentData.rows.length} students ₹₹ Tracks chronological payments sequence.
               </p>
             </div>
             <div className="flex items-center gap-2">
@@ -495,9 +495,9 @@ export const InstallmentReportTab: React.FC<InstallmentReportTabProps> = ({
                         <tr key={row.rollNo} className="hover:bg-indigo-50/30 transition-colors bg-white">
                           <td className="px-5 py-4 font-mono text-xs font-bold text-gray-600 border border-black text-center">{row.rollNo}</td>
                           <td className="px-5 py-4 font-bold text-gray-900 border border-black">{row.name}</td>
-                          <td className="px-5 py-4 text-right font-bold text-gray-900 border border-black bg-gray-50/30">Rs.{row.totalFee.toLocaleString('en-IN')}</td>
-                          <td className="px-5 py-4 text-right font-black text-emerald-600 border border-black bg-emerald-50/10">Rs.{row.totalPaid.toLocaleString('en-IN')}</td>
-                          <td className={`px-5 py-4 text-right font-black border border-black ${row.remaining > 0 ? 'text-rose-600 bg-rose-50/10' : 'text-emerald-600 bg-emerald-50/10'}`}>Rs.{row.remaining.toLocaleString('en-IN')}</td>
+                          <td className="px-5 py-4 text-right font-bold text-gray-900 border border-black bg-gray-50/30">₹{row.totalFee.toLocaleString('en-IN')}</td>
+                          <td className="px-5 py-4 text-right font-black text-emerald-600 border border-black bg-emerald-50/10">₹{row.totalPaid.toLocaleString('en-IN')}</td>
+                          <td className={`px-5 py-4 text-right font-black border border-black ${row.remaining > 0 ? 'text-rose-600 bg-rose-50/10' : 'text-emerald-600 bg-emerald-50/10'}`}>₹{row.remaining.toLocaleString('en-IN')}</td>
                           {maxInstallments > 0 ? (
                             Array.from({ length: maxInstallments }).map((_, i) => {
                               const p = row.payments[i];
@@ -505,7 +505,7 @@ export const InstallmentReportTab: React.FC<InstallmentReportTabProps> = ({
                                 <td key={i} className="px-5 py-4 border border-black text-center">
                                   {p ? (
                                     <div className="inline-flex flex-col justify-center gap-0.5 px-3 py-1.5 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-xl text-xs shadow-sm">
-                                      <div className="font-extrabold">Rs.{p.amount.toLocaleString('en-IN')}</div>
+                                      <div className="font-extrabold">₹{p.amount.toLocaleString('en-IN')}</div>
                                       <div className="text-[10px] text-emerald-600 font-medium whitespace-nowrap">{p.dateStr} - {p.method}</div>
                                     </div>
                                   ) : (<span className="text-gray-400 font-bold">-</span>)}
