@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+﻿import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Printer, Download, Receipt, FileText, CheckCircle, Smartphone, Calculator, Plus, Share2, Upload, Search, Users, MessageCircle, X, Copy, Eye, FileSpreadsheet, SlidersHorizontal, CheckSquare, Square } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
@@ -13,7 +13,7 @@ interface StudentFeeDetailsProps {
   classes: any[];
 }
 
-// â”€â”€ Export Dialog Types â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs. Export Dialog Types Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.
 interface ExportFilters {
   paymentFilter: 'all' | 'zero' | 'partial' | 'full' | 'custom';
   customMinPaid: number;
@@ -58,11 +58,11 @@ const DEFAULT_FILTERS: ExportFilters = {
 };
 
 const PAYMENT_FILTER_OPTIONS = [
-  { value: 'all',     label: 'All Students',           desc: 'Export everyone',                 icon: 'ðŸ‘¥' },
-  { value: 'zero',    label: 'â‚¹0 Paid (No Payment)',   desc: 'Students who paid nothing',       icon: 'ðŸ”´' },
-  { value: 'partial', label: 'Partial Payments',       desc: 'Paid some but not full amount',   icon: 'ðŸŸ¡' },
-  { value: 'full',    label: 'Fully Paid',             desc: 'Balance = â‚¹0',                   icon: 'ðŸŸ¢' },
-  { value: 'custom',  label: 'Custom Amount Range',    desc: 'Set minâ€“max paid amount',         icon: 'âš™ï¸' },
+  { value: 'all',     label: 'All Students',           desc: 'Export everyone',                 icon: 'Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.' },
+  { value: 'zero',    label: 'Rs.Rs.Rs.0 Paid (No Payment)',   desc: 'Students who paid nothing',       icon: 'Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.' },
+  { value: 'partial', label: 'Partial Payments',       desc: 'Paid some but not full amount',   icon: 'Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.' },
+  { value: 'full',    label: 'Fully Paid',             desc: 'Balance = Rs.Rs.Rs.0',                   icon: 'Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.' },
+  { value: 'custom',  label: 'Custom Amount Range',    desc: 'Set minRs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.max paid amount',         icon: 'Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.Rs.' },
 ] as const;
 
 interface ExportDialogProps {
@@ -549,15 +549,15 @@ export const StudentFeeDetailsTab: React.FC<StudentFeeDetailsProps> = ({ student
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <div className="bg-gradient-to-br from-indigo-500 to-purple-600 p-5 rounded-2xl shadow-lg border border-indigo-400">
           <p className="text-indigo-100 text-xs font-black uppercase tracking-wider mb-1">Total Fee</p>
-          <p className="text-2xl md:text-3xl font-black text-white">â‚¹{totalFee.toLocaleString('en-IN')}</p>
+          <p className="text-2xl md:text-3xl font-black text-white">Rs.Rs.Rs.{totalFee.toLocaleString('en-IN')}</p>
         </div>
         <div className="bg-gradient-to-br from-emerald-500 to-teal-600 p-5 rounded-2xl shadow-lg border border-emerald-400">
           <p className="text-emerald-100 text-xs font-black uppercase tracking-wider mb-1">Collected</p>
-          <p className="text-2xl md:text-3xl font-black text-white">â‚¹{totalPaid.toLocaleString('en-IN')}</p>
+          <p className="text-2xl md:text-3xl font-black text-white">Rs.Rs.Rs.{totalPaid.toLocaleString('en-IN')}</p>
         </div>
         <div className="bg-gradient-to-br from-rose-500 to-pink-600 p-5 rounded-2xl shadow-lg border border-rose-400">
           <p className="text-rose-100 text-xs font-black uppercase tracking-wider mb-1">Balance Due</p>
-          <p className="text-2xl md:text-3xl font-black text-white">â‚¹{totalBalance.toLocaleString('en-IN')}</p>
+          <p className="text-2xl md:text-3xl font-black text-white">Rs.Rs.Rs.{totalBalance.toLocaleString('en-IN')}</p>
         </div>
       </div>
 
@@ -598,10 +598,10 @@ export const StudentFeeDetailsTab: React.FC<StudentFeeDetailsProps> = ({ student
                     <td className="px-4 py-4 border-r border-gray-100 font-bold text-gray-700 text-xs font-mono">{row.id}</td>
                     <td className="px-4 py-4 border-r border-gray-100 font-bold text-gray-900">{row.name}</td>
                     <td className="px-4 py-4 border-r border-gray-100 text-gray-600 text-xs font-bold">{row.className}</td>
-                    <td className="px-4 py-4 border-r border-gray-100 text-right font-medium text-gray-600">â‚¹{row.totalFee.toLocaleString('en-IN')}</td>
-                    <td className="px-4 py-4 border-r border-gray-100 text-right font-bold text-gray-900">â‚¹{row.paidAmount.toLocaleString('en-IN')}</td>
+                    <td className="px-4 py-4 border-r border-gray-100 text-right font-medium text-gray-600">Rs.Rs.Rs.{row.totalFee.toLocaleString('en-IN')}</td>
+                    <td className="px-4 py-4 border-r border-gray-100 text-right font-bold text-emerald-600">Rs.Rs.Rs.{row.paidAmount.toLocaleString('en-IN')}</td>
                     <td className={`px-4 py-4 border-r border-gray-100 text-right font-black ${row.balance > 0 ? 'text-rose-600' : row.balance < 0 ? 'text-emerald-600' : 'text-gray-900'}`}>
-                      â‚¹{row.balance.toLocaleString('en-IN')}
+                      Rs.Rs.Rs.{row.balance.toLocaleString('en-IN')}
                     </td>
                     {isAdminOrSuper && (
                       <>
@@ -708,7 +708,7 @@ export const StudentFeeDetailsTab: React.FC<StudentFeeDetailsProps> = ({ student
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-sm font-black text-rose-600">Total Pending Balance</span>
-                    <span className="text-xl font-black text-rose-600">â‚¹{reminderStudent.balance.toLocaleString('en-IN')}</span>
+                    <span className="text-xl font-black text-rose-600">Rs.Rs.Rs.{reminderStudent.balance.toLocaleString('en-IN')}</span>
                   </div>
                 </div>
                 <p className="text-[10px] text-gray-400 font-medium">Dear Parent, kindly clear the pending dues at the earliest. Please ignore if already paid.</p>
@@ -726,6 +726,8 @@ export const StudentFeeDetailsTab: React.FC<StudentFeeDetailsProps> = ({ student
     </div>
   );
 };
+
+
 
 
 

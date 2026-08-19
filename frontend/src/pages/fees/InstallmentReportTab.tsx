@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+﻿import React, { useState, useMemo } from 'react';
 import { Search, Users, FileText, FileSpreadsheet, SlidersHorizontal, X, CheckSquare, Square } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -53,11 +53,11 @@ const DEFAULT_FILTERS: ExportFilters = {
 };
 
 const PAYMENT_FILTER_OPTIONS = [
-  { value: 'all',     label: 'All Students',           desc: 'Export everyone',              icon: '👥' },
-  { value: 'zero',    label: '₹0 Paid (No Payment)',   desc: 'Students who paid nothing',    icon: '🔴' },
-  { value: 'partial', label: 'Partial Payments',       desc: 'Paid some but not full',       icon: '🟡' },
-  { value: 'full',    label: 'Fully Paid',             desc: 'Balance = ₹0',                icon: '🟢' },
-  { value: 'custom',  label: 'Custom Amount Range',    desc: 'Set min–max paid amount',      icon: '⚙️' },
+  { value: 'all',     label: 'All Students',           desc: 'Export everyone',              icon: 'Rs.Rs.Rs.Rs.' },
+  { value: 'zero',    label: 'Rs.Rs.Rs.0 Paid (No Payment)',   desc: 'Students who paid nothing',    icon: 'Rs.Rs.Rs.Rs.' },
+  { value: 'partial', label: 'Partial Payments',       desc: 'Paid some but not full',       icon: 'Rs.Rs.Rs.Rs.' },
+  { value: 'full',    label: 'Fully Paid',             desc: 'Balance = Rs.Rs.Rs.0',                icon: 'Rs.Rs.Rs.Rs.' },
+  { value: 'custom',  label: 'Custom Amount Range',    desc: 'Set minRs.Rs.Rs.max paid amount',      icon: 'Rs.Rs.Rs.Rs.Rs.Rs.' },
 ] as const;
 
 interface ExportDialogProps {
@@ -445,7 +445,7 @@ export const InstallmentReportTab: React.FC<InstallmentReportTabProps> = ({
                 {studentInstallmentData.classInfo.name} - {studentInstallmentData.classInfo.section} Fee Installment Log
               </h3>
               <p className="text-xs text-gray-400 font-semibold mt-1">
-                {studentInstallmentData.rows.length} students · Tracks chronological payments sequence.
+                {studentInstallmentData.rows.length} students Rs.Rs. Tracks chronological payments sequence.
               </p>
             </div>
             <div className="flex items-center gap-2">
@@ -534,6 +534,7 @@ export const InstallmentReportTab: React.FC<InstallmentReportTabProps> = ({
     </div>
   );
 };
+
 
 
 
