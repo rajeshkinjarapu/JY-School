@@ -127,6 +127,26 @@ class ApiService {
     return _performGet(url, 'Failed to get students');
   }
 
+  // ==========================================
+  // STAFF / TEACHER ATTENDANCE & HR ENDPOINTS
+  // ==========================================
+
+  static Future<Map<String, dynamic>> getTeacherAttendance({String? date, int? month, int? year}) async {
+    String url = '/api/teacher-attendance?limit=500';
+    if (date != null) url += '&date=$date';
+    if (month != null) url += '&month=$month';
+    if (year != null) url += '&year=$year';
+    return _performGet(url, 'Failed to fetch staff attendance');
+  }
+
+  static Future<Map<String, dynamic>> bulkMarkTeacherAttendance(Map<String, dynamic> data) async {
+    return _performPost('/api/teacher-attendance/bulk-mark', data, 'Failed to mark staff attendance');
+  }
+
+  // ==========================================
+  // FEE ENDPOINTS
+  // ==========================================
+
   static Future<Map<String, dynamic>> getStudentById(String id) async {
     return _performGet('/api/students/$id', 'Failed to get student profile');
   }

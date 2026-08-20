@@ -18,6 +18,7 @@ import '../screens/profile_screen.dart';
 import '../screens/leave_screen.dart';
 import '../screens/transport_screen.dart';
 import '../screens/events_screen.dart';
+import '../screens/staff_attendance_dashboard_screen.dart';
 import '../screens/messages_screen.dart';
 import '../screens/gate_pass_screen.dart';
 import '../screens/salary_screen.dart';
@@ -166,20 +167,27 @@ class _AppDrawerState extends State<AppDrawer> {
                       isActive: widget.currentRoute == 'students',
                       onTap: () => _navigateTo(const StudentsScreen(), 'students'),
                     ),
-                    _buildDrawerItem(
-                      icon: Icons.school_outlined,
-                      title: 'Teachers',
-                      routeName: 'teachers',
-                      isActive: widget.currentRoute == 'teachers',
-                      onTap: () => _navigateTo(const TeachersScreen(), 'teachers'),
-                    ),
-                    _buildDrawerItem(
-                      icon: Icons.domain_rounded,
-                      title: 'Classes',
-                      routeName: 'classes',
-                      isActive: widget.currentRoute == 'classes',
-                      onTap: () => _navigateTo(const ClassesScreen(), 'classes'),
-                    ),
+                      _buildDrawerItem(
+                        icon: Icons.school_outlined,
+                        title: 'Teachers',
+                        routeName: 'teachers',
+                        isActive: widget.currentRoute == 'teachers',
+                        onTap: () => _navigateTo(const TeachersScreen(), 'teachers'),
+                      ),
+                      _buildDrawerItem(
+                        icon: Icons.badge_outlined,
+                        title: 'Staff HR',
+                        routeName: 'hr_dashboard',
+                        isActive: widget.currentRoute == 'hr_dashboard',
+                        onTap: () => _navigateTo(const StaffAttendanceDashboardScreen(), 'hr_dashboard'),
+                      ),
+                      _buildDrawerItem(
+                        icon: Icons.domain_rounded,
+                        title: 'Classes',
+                        routeName: 'classes',
+                        isActive: widget.currentRoute == 'classes',
+                        onTap: () => _navigateTo(const ClassesScreen(), 'classes'),
+                      ),
                     _buildDrawerItem(
                       icon: Icons.menu_book_rounded,
                       title: 'Subjects',
