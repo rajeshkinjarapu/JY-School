@@ -65,7 +65,7 @@ class _AdmitCardScreenState extends State<AdmitCardScreen> {
     });
 
     try {
-      final res = await ApiService.getStudents(_selectedClassId!);
+      final res = await ApiService.getStudents(classId: _selectedClassId!);
       if (mounted) {
         setState(() {
           _students = res['success'] ? res['data'] ?? [] : [];
@@ -82,7 +82,7 @@ class _AdmitCardScreenState extends State<AdmitCardScreen> {
     }
   }
 
-  void _onExamSelected(String? examId) {
+  void _onExamSelected(dynamic examId) {
     if (examId == null) return;
     setState(() {
       _selectedExamId = examId;
@@ -90,7 +90,7 @@ class _AdmitCardScreenState extends State<AdmitCardScreen> {
     });
   }
   
-  void _onClassSelected(String? classId) {
+  void _onClassSelected(dynamic classId) {
     if (classId == null) return;
     setState(() {
       _selectedClassId = classId;

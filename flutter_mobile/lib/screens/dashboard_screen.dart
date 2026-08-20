@@ -290,18 +290,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   children: [
                     _buildProfileCard(userName, userRole, metaLabel, metaValue),
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                      padding: const EdgeInsets.symmetric(horizontal: 12.0),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           if (userRole == 'SUPER_ADMIN' || userRole == 'ADMIN') ...[
                             _buildAdminCombinedGrid(),
-                            const SizedBox(height: 24),
-                            _buildAttendanceChart(),
-                            const SizedBox(height: 24),
-                            _buildDemographicsChart(),
-                            const SizedBox(height: 24),
-                            _buildEnrollmentChart(),
                             const SizedBox(height: 24),
                             _buildRecentPayments(),
                             const SizedBox(height: 24),
@@ -352,15 +346,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Widget _buildProfileCard(String name, String role, String metaLabel, String metaValue) {
     return Container(
-      margin: const EdgeInsets.fromLTRB(20, 16, 20, 16),
-      padding: const EdgeInsets.all(24),
+      margin: const EdgeInsets.fromLTRB(12, 12, 12, 12),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           colors: [Color(0xFF4C4296), Color(0xFF2E2A66)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
             color: const Color(0xFF2E2A66).withOpacity(0.3),
@@ -370,7 +364,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ]
       ),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Expanded(
             child: Column(
@@ -379,35 +372,37 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 Row(
                   children: [
                     Container(
-                      width: 8,
-                      height: 8,
+                      width: 7,
+                      height: 7,
                       decoration: const BoxDecoration(
                         color: Color(0xFF8B5CF6),
                         shape: BoxShape.circle,
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: 7),
                     Text(
                       _getGreeting(),
                       style: GoogleFonts.poppins(
                         color: const Color(0xFFC4B5FD),
-                        fontSize: 12,
+                        fontSize: 11,
                         fontWeight: FontWeight.bold,
-                        letterSpacing: 1.5,
+                        letterSpacing: 1.2,
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 6),
                 Text(
                   name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: GoogleFonts.outfit(
                     color: Colors.white,
-                    fontSize: 26,
+                    fontSize: 22,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 3),
                 Text(
                   '${role.replaceAll('_', ' ')} • JY School',
                   style: GoogleFonts.poppins(
@@ -416,30 +411,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     fontWeight: FontWeight.w500,
                   ),
                 ),
-                const SizedBox(height: 16),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.15),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: Colors.white.withOpacity(0.3)),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.calendar_today_outlined, color: Colors.white70, size: 14),
-                      const SizedBox(width: 8),
-                      Text(
-                        _getFormattedDate(),
-                        style: GoogleFonts.poppins(
-                          color: Colors.white,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-                )
               ],
             ),
           ),
@@ -449,27 +420,24 @@ class _DashboardScreenState extends State<DashboardScreen> {
               Navigator.push(context, MaterialPageRoute(builder: (context) => const ProfileScreen()));
             },
             child: Container(
-              width: 90,
-              height: 90,
+              width: 68,
+              height: 68,
               decoration: BoxDecoration(
                 color: Colors.white.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: Colors.white.withOpacity(0.2), width: 2),
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(color: Colors.white.withOpacity(0.25), width: 2),
               ),
               child: ClipRRect(
-                borderRadius: BorderRadius.circular(18),
+                borderRadius: BorderRadius.circular(16),
                 child: _user?['photoUrl']?.isNotEmpty == true
                     ? Image.network(
-                        _user!['photoUrl'],
+                        _user!['photoUrl'].toString().startsWith('http')
+                            ? _user!['photoUrl']
+                            : '${ApiService.baseUrl}${_user!['photoUrl']}',
                         fit: BoxFit.cover,
-                        errorBuilder: (c, e, s) => const Icon(Icons.person, color: Colors.white, size: 40),
+                        errorBuilder: (c, e, s) => Icon(Icons.person, color: Colors.white.withOpacity(0.7), size: 36),
                       )
-                    : Center(
-                        child: Text(
-                          name.isNotEmpty ? name[0].toUpperCase() : 'U',
-                          style: GoogleFonts.outfit(color: Colors.white, fontSize: 36, fontWeight: FontWeight.bold),
-                        ),
-                      ),
+                    : Icon(Icons.person, color: Colors.white.withOpacity(0.7), size: 36),
               ),
             ),
           ),
@@ -681,9 +649,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       crossAxisCount: 2,
-      crossAxisSpacing: 10,
-      mainAxisSpacing: 10,
-      childAspectRatio: 1.55,
+      crossAxisSpacing: 12,
+      mainAxisSpacing: 12,
+      childAspectRatio: 1.45,
       children: [
         _buildUniversalCard(
           subtitle: 'TOTAL STUDENTS',
@@ -737,7 +705,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           gradientStart: const Color(0xFF9E7AFF),
           gradientEnd: const Color(0xFFB193FF),
           onTap: () {
-            Navigator.push(context, MaterialPageRoute(builder: (context) => const FeesScreen()));
+            Navigator.push(context, MaterialPageRoute(builder: (context) => const FinanceScreen()));
           },
         ),
         _buildUniversalCard(
@@ -793,97 +761,150 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }) {
     return GestureDetector(
       onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [gradientStart, gradientEnd],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [gradientStart, gradientEnd],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(22),
+            boxShadow: [
+              BoxShadow(
+                color: gradientStart.withOpacity(0.45),
+                blurRadius: 14,
+                offset: const Offset(0, 7),
+              ),
+              BoxShadow(
+                color: gradientEnd.withOpacity(0.15),
+                blurRadius: 4,
+                offset: const Offset(0, 1),
+              ),
+            ],
           ),
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(
-              color: gradientStart.withOpacity(0.3),
-              blurRadius: 8,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(4),
+          child: Stack(
+            children: [
+              // Decorative large circle in background
+              Positioned(
+                right: -20,
+                top: -20,
+                child: Container(
+                  width: 90,
+                  height: 90,
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.3),
                     shape: BoxShape.circle,
+                    color: Colors.white.withOpacity(0.08),
                   ),
-                  child: Icon(icon, color: Colors.white, size: 18),
                 ),
-                Container(
-                  padding: const EdgeInsets.all(3),
+              ),
+              Positioned(
+                right: 10,
+                bottom: -30,
+                child: Container(
+                  width: 70,
+                  height: 70,
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.3),
                     shape: BoxShape.circle,
-                  ),
-                  child: const Icon(Icons.arrow_outward, color: Colors.white, size: 12),
-                ),
-              ],
-            ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  subtitle,
-                  style: GoogleFonts.outfit(
-                    color: Colors.white,
-                    fontSize: 9,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 0.5,
+                    color: Colors.white.withOpacity(0.06),
                   ),
                 ),
-                Text(
-                  title,
-                  style: GoogleFonts.outfit(
-                    color: Colors.white,
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
-            Row(
-              children: [
-                Container(
-                  width: 4,
-                  height: 4,
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                  ),
-                ),
-                const SizedBox(width: 4),
-                Expanded(
-                  child: Text(
-                    bottomText,
-                    style: GoogleFonts.poppins(
-                      color: Colors.white,
-                      fontSize: 9,
-                      fontWeight: FontWeight.w500,
+              ),
+              // Card content
+              Padding(
+                padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    // Top row: icon + arrow
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.22),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Icon(icon, color: Colors.white, size: 20),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.all(5),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.18),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Icon(Icons.arrow_outward_rounded, color: Colors.white, size: 13),
+                        ),
+                      ],
                     ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
+                    // Bottom: label + value + footnote
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          subtitle,
+                          style: GoogleFonts.poppins(
+                            color: Colors.white.withOpacity(0.80),
+                            fontSize: 9.5,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 0.8,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          title,
+                          style: GoogleFonts.outfit(
+                            color: Colors.white,
+                            fontSize: 21,
+                            fontWeight: FontWeight.w800,
+                            height: 1.1,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.18),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                width: 5,
+                                height: 5,
+                                decoration: const BoxDecoration(
+                                  color: Colors.white,
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                              const SizedBox(width: 5),
+                              Flexible(
+                                child: Text(
+                                  bottomText,
+                                  style: GoogleFonts.poppins(
+                                    color: Colors.white,
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          ],
+              ),
+            ],
+          ),
         ),
       ),
     );

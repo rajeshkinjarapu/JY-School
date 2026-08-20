@@ -1,4 +1,4 @@
-import 'dart:convert';
+﻿import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -27,7 +27,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _loadProfile() async {
     final prefs = await SharedPreferences.getInstance();
     final userString = prefs.getString('user');
-    
     if (userString != null) {
       setState(() {
         _user = jsonDecode(userString);
@@ -58,318 +57,277 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget build(BuildContext context) {
     if (_isLoading) {
       return const Scaffold(
-        backgroundColor: Color(0xFFF4F7FE),
-        body: Center(child: CircularProgressIndicator(color: Color(0xFF6366F1))),
+        backgroundColor: Color(0xFF0F0D2E),
+        body: Center(child: CircularProgressIndicator(color: Color(0xFF818CF8))),
       );
     }
 
     final name = _user?['name'] ?? 'User Name';
-    final email = _user?['email'] ?? 'user@email.com';
+    final email = _user?['email'] ?? '';
     final role = _user?['role'] ?? 'STUDENT';
     final photoUrl = _user?['photoUrl'];
+    final studentData = _user?['student'];
+    final teacherData = _user?['teacher'];
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F7FE),
+      backgroundColor: const Color(0xFFF1F5FB),
       drawer: const AppDrawer(currentRoute: 'profile'),
-      appBar: AppBar(
-        title: Text(
-          'My Profile',
-          style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white),
-        ),
-        elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.white),
-        flexibleSpace: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Color(0xFF2E2A66), Color(0xFF222854)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-          ),
-        ),
-      ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            // Top Colorful Background Section that overlaps with card
-            Stack(
-              clipBehavior: Clip.none,
-              children: [
-                Container(
-                  height: 100,
-                  decoration: const BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [Color(0xFF2E2A66), Color(0xFF222854)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.only(
-                      bottomLeft: Radius.circular(40),
-                      bottomRight: Radius.circular(40),
+      body: CustomScrollView(
+        slivers: [
+          SliverAppBar(
+            expandedHeight: 290,
+            pinned: true,
+            backgroundColor: const Color(0xFF1E1B4B),
+            iconTheme: const IconThemeData(color: Colors.white),
+            title: Text('My Profile', style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold)),
+            flexibleSpace: FlexibleSpaceBar(
+              collapseMode: CollapseMode.pin,
+              background: Stack(
+                fit: StackFit.expand,
+                children: [
+                  Container(
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [Color(0xFF312E81), Color(0xFF1E1B4B), Color(0xFF0F0D2E)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
                     ),
                   ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
-                  child: Container(
-                    padding: const EdgeInsets.all(24),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(30),
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0xFF6366F1).withOpacity(0.15),
-                          blurRadius: 20,
-                          offset: const Offset(0, 10),
-                        )
-                      ],
+                  Positioned(
+                    top: -40, right: -40,
+                    child: Container(
+                      width: 180, height: 180,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.white.withOpacity(0.04),
+                      ),
                     ),
+                  ),
+                  Positioned(
+                    bottom: 20, left: -30,
+                    child: Container(
+                      width: 130, height: 130,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: const Color(0xFF818CF8).withOpacity(0.10),
+                      ),
+                    ),
+                  ),
+                  SafeArea(
                     child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Container(
-                          width: 100,
-                          height: 100,
-                          decoration: BoxDecoration(
-                            color: Colors.grey.shade200,
-                            shape: BoxShape.circle,
-                            border: Border.all(color: Colors.white, width: 4),
-                            boxShadow: [
-                              BoxShadow(
-                                color: const Color(0xFF6366F1).withOpacity(0.2),
-                                blurRadius: 15,
-                                spreadRadius: 2,
-                              )
-                            ],
-                            image: DecorationImage(
-                              image: NetworkImage(
-                                photoUrl?.isNotEmpty == true
-                                    ? photoUrl!
-                                    : 'https://ui-avatars.com/api/?name=${Uri.encodeComponent(name)}&background=6366F1&color=fff&size=150',
+                        const SizedBox(height: 44),
+                        Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            Container(
+                              width: 112, height: 112,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                gradient: const LinearGradient(
+                                  colors: [Color(0xFF818CF8), Color(0xFF6366F1)],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: const Color(0xFF6366F1).withOpacity(0.5),
+                                    blurRadius: 24,
+                                    spreadRadius: 2,
+                                  ),
+                                ],
                               ),
-                              fit: BoxFit.cover,
                             ),
-                          ),
+                            Container(
+                              width: 106, height: 106,
+                              decoration: const BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: Colors.white,
+                              ),
+                            ),
+                            ClipOval(
+                              child: SizedBox(
+                                width: 98, height: 98,
+                                child: (photoUrl != null && photoUrl.isNotEmpty)
+                                    ? Image.network(
+                                        photoUrl.startsWith('http')
+                                            ? photoUrl
+                                            : (ApiService.baseUrl + photoUrl),
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (c, e, s) => _avatarFallback(name),
+                                      )
+                                    : _avatarFallback(name),
+                              ),
+                            ),
+                          ],
                         ),
-                        const SizedBox(height: 20),
+                        const SizedBox(height: 14),
                         Text(
                           name,
-                          style: GoogleFonts.outfit(
-                            color: const Color(0xFF1E293B),
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                          ),
+                          style: GoogleFonts.outfit(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
                         ),
-                        const SizedBox(height: 4),
-                        Text(
-                          email,
-                          style: GoogleFonts.poppins(
-                            color: const Color(0xFF64748B),
-                            fontSize: 14,
+                        if (email.isNotEmpty) ...[
+                          const SizedBox(height: 3),
+                          Text(
+                            email,
+                            style: GoogleFonts.poppins(color: Colors.white60, fontSize: 12),
                           ),
-                        ),
-                        const SizedBox(height: 16),
+                        ],
+                        const SizedBox(height: 10),
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                           decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [Color(0xFF818CF8), Color(0xFF6366F1)],
-                            ),
-                            borderRadius: BorderRadius.circular(20),
+                            gradient: const LinearGradient(colors: [Color(0xFF818CF8), Color(0xFF6366F1)]),
+                            borderRadius: BorderRadius.circular(30),
+                            boxShadow: [BoxShadow(color: const Color(0xFF6366F1).withOpacity(0.35), blurRadius: 10, offset: const Offset(0, 4))],
                           ),
                           child: Text(
                             role.replaceAll('_', ' '),
-                            style: GoogleFonts.poppins(
-                              color: Colors.white,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              letterSpacing: 1,
-                            ),
+                            style: GoogleFonts.poppins(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 0.8),
                           ),
                         ),
                       ],
                     ),
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 24),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0),
-              child: Column(
-                children: [
-                  // Role Specific Details
-                  if (role == 'STUDENT' && _user?['student'] != null)
-                    _buildDetailsCard('Student Information', [
-                      _buildDetailRow(Icons.class_rounded, 'Class', '${_user?['student']['class']?['name'] ?? ''} - ${_user?['student']['class']?['section'] ?? ''}'),
-                      _buildDetailRow(Icons.numbers_rounded, 'Roll Number', _user?['student']['rollNo']?.toString() ?? 'N/A'),
-                      _buildDetailRow(Icons.bloodtype_rounded, 'Blood Group', _user?['student']['bloodGroup'] ?? 'N/A'),
-                      _buildDetailRow(Icons.calendar_month_rounded, 'Date of Birth', _user?['student']['dateOfBirth']?.toString().split('T')[0] ?? 'N/A'),
-                    ]),
-
-                  if (role == 'TEACHER' && _user?['teacher'] != null)
-                    _buildDetailsCard('Teacher Information', [
-                      _buildDetailRow(Icons.subject_rounded, 'Specialization', _user?['teacher']['specialization'] ?? 'N/A'),
-                      _buildDetailRow(Icons.workspace_premium_rounded, 'Qualification', _user?['teacher']['qualification'] ?? 'N/A'),
-                      _buildDetailRow(Icons.work_history_rounded, 'Experience', '${_user?['teacher']['experienceYears'] ?? 0} Years'),
-                    ]),
-
-                  const SizedBox(height: 16),
-                  
-                  // System Settings Card
-                  _buildDetailsCard('System Settings', [
-                    _buildActionRow(Icons.language_rounded, 'Language', 'English'),
-                    _buildActionRow(Icons.notifications_active_rounded, 'Push Notifications', 'Enabled'),
-                    _buildActionRow(Icons.lock_rounded, 'Change Password', 'Tap to update', onTap: () {
-                      Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsScreen()));
-                    }),
-                  ]),
-
-                  const SizedBox(height: 32),
-                  
-                  // Logout Button
-                  SizedBox(
-                    width: double.infinity,
-                    height: 56,
-                    child: ElevatedButton.icon(
-                      onPressed: _handleLogout,
-                      icon: const Icon(Icons.logout_rounded, color: const Color(0xFF64748B)),
-                      label: Text(
-                        'Sign Out',
-                        style: GoogleFonts.poppins(
-                          color: const Color(0xFF1E293B),
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFF87171),
-                        elevation: 4,
-                        shadowColor: const Color(0xFFF87171).withOpacity(0.5),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 40),
                 ],
               ),
             ),
-          ],
+          ),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 20, 16, 40),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (role == 'STUDENT' && studentData != null) ...[
+                    _statsRow([
+                      _StatItem(Icons.class_rounded, 'Class',
+                          (studentData['class']?['name'] ?? '?') + '-' + (studentData['class']?['section'] ?? '?'),
+                          const Color(0xFF6366F1)),
+                      _StatItem(Icons.badge_rounded, 'Roll No', studentData['rollNo']?.toString() ?? 'N/A', const Color(0xFF10B981)),
+                      _StatItem(Icons.bloodtype_rounded, 'Blood', studentData['bloodGroup'] ?? 'N/A', const Color(0xFFF43F5E)),
+                    ]),
+                    const SizedBox(height: 22),
+                  ],
+                  if (role == 'TEACHER' && teacherData != null) ...[
+                    _statsRow([
+                      _StatItem(Icons.subject_rounded, 'Subject', teacherData['specialization'] ?? 'N/A', const Color(0xFF6366F1)),
+                      _StatItem(Icons.work_history_rounded, 'Exp', (teacherData['experienceYears'] ?? 0).toString() + ' Yrs', const Color(0xFFF59E0B)),
+                      _StatItem(Icons.workspace_premium_rounded, 'Qual.', teacherData['qualification'] ?? 'N/A', const Color(0xFF0EA5E9)),
+                    ]),
+                    const SizedBox(height: 22),
+                  ],
+                  Text('Settings', style: GoogleFonts.outfit(color: const Color(0xFF1E293B), fontSize: 17, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 10),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 14, offset: const Offset(0, 4))],
+                    ),
+                    child: Column(
+                      children: [
+                        _settingTile(icon: Icons.language_rounded, iconBg: const Color(0xFFEEF2FF), iconColor: const Color(0xFF6366F1), label: 'Language', trailing: 'English'),
+                        const Divider(height: 1, color: Color(0xFFF1F5F9), indent: 56),
+                        _settingTile(icon: Icons.notifications_active_rounded, iconBg: const Color(0xFFF0FDF4), iconColor: const Color(0xFF10B981), label: 'Push Notifications', trailing: 'Enabled'),
+                        const Divider(height: 1, color: Color(0xFFF1F5F9), indent: 56),
+                        _settingTile(
+                          icon: Icons.lock_rounded, iconBg: const Color(0xFFFFF7ED), iconColor: const Color(0xFFF97316),
+                          label: 'Change Password', trailing: 'Update',
+                          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsScreen())),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 28),
+                  GestureDetector(
+                    onTap: _handleLogout,
+                    child: Container(
+                      width: double.infinity,
+                      height: 56,
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(colors: [Color(0xFFFF4E6A), Color(0xFFE11D48)], begin: Alignment.topLeft, end: Alignment.bottomRight),
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [BoxShadow(color: const Color(0xFFE11D48).withOpacity(0.35), blurRadius: 14, offset: const Offset(0, 6))],
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.logout_rounded, color: Colors.white, size: 20),
+                          const SizedBox(width: 10),
+                          Text('Sign Out', style: GoogleFonts.poppins(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _avatarFallback(String name) {
+    return Container(
+      color: const Color(0xFF6366F1),
+      child: Center(
+        child: Text(
+          name.isNotEmpty ? name[0].toUpperCase() : 'U',
+          style: GoogleFonts.outfit(color: Colors.white, fontSize: 40, fontWeight: FontWeight.bold),
         ),
       ),
     );
   }
 
-  Widget _buildDetailsCard(String title, List<Widget> children) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 24),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
-            child: Text(
-              title,
-              style: GoogleFonts.outfit(
-                color: const Color(0xFF1E293B),
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-          const Divider(color: const Color(0xFFE2E8F0), height: 1),
-          Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(children: children),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDetailRow(IconData icon, String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16.0),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
+  Widget _statsRow(List<_StatItem> items) {
+    return Row(
+      children: List.generate(items.length, (i) {
+        final chip = items[i];
+        return Expanded(
+          child: Container(
+            margin: EdgeInsets.only(left: i == 0 ? 0 : 6, right: i == items.length - 1 ? 0 : 6),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 14),
             decoration: BoxDecoration(
-              color: const Color(0xFFE2E8F0),
-              borderRadius: BorderRadius.circular(12),
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [BoxShadow(color: chip.color.withOpacity(0.12), blurRadius: 10, offset: const Offset(0, 4))],
             ),
-            child: Icon(icon, color: const Color(0xFFC084FC), size: 20),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  label,
-                  style: GoogleFonts.poppins(
-                    color: const Color(0xFF475569),
-                    fontSize: 12,
-                  ),
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(color: chip.color.withOpacity(0.1), borderRadius: BorderRadius.circular(10)),
+                  child: Icon(chip.icon, color: chip.color, size: 18),
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  value,
-                  style: GoogleFonts.poppins(
-                    color: const Color(0xFF1E293B),
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
+                const SizedBox(height: 8),
+                Text(chip.value, style: GoogleFonts.outfit(color: const Color(0xFF1E293B), fontSize: 13, fontWeight: FontWeight.bold), maxLines: 1, overflow: TextOverflow.ellipsis),
+                Text(chip.label, style: GoogleFonts.poppins(color: const Color(0xFF94A3B8), fontSize: 10)),
               ],
             ),
           ),
-        ],
-      ),
+        );
+      }),
     );
   }
 
-  Widget _buildActionRow(IconData icon, String label, String trailing, {VoidCallback? onTap}) {
-    return GestureDetector(
+  Widget _settingTile({required IconData icon, required Color iconBg, required Color iconColor, required String label, required String trailing, VoidCallback? onTap}) {
+    return InkWell(
       onTap: onTap,
+      borderRadius: BorderRadius.circular(20),
       child: Padding(
-        padding: const EdgeInsets.only(bottom: 16.0),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         child: Row(
           children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: const Color(0xFFE2E8F0),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(icon, color: const Color(0xFF64748B), size: 20),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Text(
-                label,
-                style: GoogleFonts.poppins(
-                  color: const Color(0xFF1E293B),
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ),
-            Text(
-              trailing,
-              style: GoogleFonts.poppins(
-                color: const Color(0xFF475569),
-                fontSize: 12,
-              ),
-            ),
-            const SizedBox(width: 8),
-            const Icon(Icons.chevron_right_rounded, color: const Color(0xFFCBD5E1), size: 20),
+            Container(padding: const EdgeInsets.all(9), decoration: BoxDecoration(color: iconBg, borderRadius: BorderRadius.circular(12)), child: Icon(icon, color: iconColor, size: 20)),
+            const SizedBox(width: 14),
+            Expanded(child: Text(label, style: GoogleFonts.poppins(color: const Color(0xFF1E293B), fontSize: 14, fontWeight: FontWeight.w500))),
+            Text(trailing, style: GoogleFonts.poppins(color: const Color(0xFF94A3B8), fontSize: 12)),
+            const SizedBox(width: 6),
+            const Icon(Icons.chevron_right_rounded, size: 18, color: Color(0xFFCBD5E1)),
           ],
         ),
       ),
@@ -377,5 +335,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 }
 
-
-
+class _StatItem {
+  final IconData icon;
+  final String label;
+  final String value;
+  final Color color;
+  const _StatItem(this.icon, this.label, this.value, this.color);
+}

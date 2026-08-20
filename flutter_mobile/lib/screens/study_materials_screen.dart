@@ -26,7 +26,7 @@ class _StudyMaterialsScreenState extends State<StudyMaterialsScreen> with Single
   Future<void> _fetchData() async {
     setState(() => _isLoading = true);
     
-    final results = await Future.wait([
+    final results = await Future.wait<Map<String, dynamic>>([
       ApiService.getQuestionPapers(),
       ApiService.getGeneratedPapers(),
     ]);

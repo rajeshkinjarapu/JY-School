@@ -152,64 +152,35 @@ class _TeachersScreenState extends State<TeachersScreen> {
       ),
       body: Column(
         children: [
-          // Gradient Hero Header
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.only(left: 20, right: 20, top: 10, bottom: 24),
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Color(0xFF0F172A), Color(0xFF1E293B), Color(0xFF334155)], // Slate gradient
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 8, offset: Offset(0, 4))],
-              borderRadius: BorderRadius.only(bottomLeft: Radius.circular(24), bottomRight: Radius.circular(24)),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('Total Teachers', style: TextStyle(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.w600, letterSpacing: 1.2)),
-                const SizedBox(height: 4),
-                Text(
-                  '${_filteredTeachers.length}',
-                  style: const TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.w900),
-                ),
-              ],
-            ),
-          ),
-          
           // Filters
-          Transform.translate(
-            offset: const Offset(0, -20),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))
+                ],
+              ),
               child: Container(
-                padding: const EdgeInsets.all(16),
+                height: 45,
                 decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))
-                  ],
+                  color: const Color(0xFFF8FAFC),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFFE2E8F0)),
                 ),
-                child: Container(
-                  height: 45,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF8FAFC),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: const Color(0xFFE2E8F0)),
+                child: TextField(
+                  style: const TextStyle(color: Color(0xFF1E293B)),
+                  decoration: const InputDecoration(
+                    hintText: 'Search by name or ID...',
+                    hintStyle: TextStyle(color: Color(0xFF94A3B8)),
+                    prefixIcon: Icon(Icons.search, color: Color(0xFF94A3B8)),
+                    border: InputBorder.none,
+                    contentPadding: EdgeInsets.symmetric(vertical: 12),
                   ),
-                  child: TextField(
-                    style: const TextStyle(color: Color(0xFF1E293B)),
-                    decoration: const InputDecoration(
-                      hintText: 'Search by name or ID...',
-                      hintStyle: TextStyle(color: Color(0xFF94A3B8)),
-                      prefixIcon: Icon(Icons.search, color: Color(0xFF94A3B8)),
-                      border: InputBorder.none,
-                      contentPadding: EdgeInsets.symmetric(vertical: 12),
-                    ),
-                    onChanged: _runSearch,
-                  ),
+                  onChanged: _runSearch,
                 ),
               ),
             ),

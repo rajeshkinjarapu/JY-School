@@ -15,14 +15,17 @@ class _ClassesScreenState extends State<ClassesScreen> {
   List<dynamic> _classes = [];
   bool _isLoading = true;
   String _errorMessage = '';
+  String _searchQuery = '';
 
-  final List<Color> _cardColors = [
-    const Color(0xFF8B5CF6), // Purple
-    const Color(0xFF10B981), // Emerald
-    const Color(0xFFF59E0B), // Amber
-    const Color(0xFFEF4444), // Red
-    const Color(0xFF3B82F6), // Blue
-    const Color(0xFFEC4899), // Pink
+  final List<List<Color>> _cardGradients = [
+    [const Color(0xFF6366F1), const Color(0xFF4F46E5)],
+    [const Color(0xFF10B981), const Color(0xFF059669)],
+    [const Color(0xFFF59E0B), const Color(0xFFD97706)],
+    [const Color(0xFFEC4899), const Color(0xFFDB2777)],
+    [const Color(0xFF0EA5E9), const Color(0xFF0284C7)],
+    [const Color(0xFF8B5CF6), const Color(0xFF7C3AED)],
+    [const Color(0xFF14B8A6), const Color(0xFF0D9488)],
+    [const Color(0xFFF97316), const Color(0xFFEA580C)],
   ];
 
   @override
@@ -32,6 +35,7 @@ class _ClassesScreenState extends State<ClassesScreen> {
   }
 
   Future<void> _fetchClasses() async {
+    setState(() => _isLoading = true);
     final result = await ApiService.getClasses();
     if (mounted) {
       if (result['success']) {
@@ -48,138 +52,307 @@ class _ClassesScreenState extends State<ClassesScreen> {
     }
   }
 
+  List<dynamic> get _filteredClasses {
+    if (_searchQuery.isEmpty) return _classes;
+    return _classes.where((c) {
+      final name = '${c['name']} ${c['section'] ?? ''}'.toLowerCase();
+      final teacher = c['classTeacher']?['user']?['name']?.toString().toLowerCase() ?? '';
+      return name.contains(_searchQuery.toLowerCase()) || teacher.contains(_searchQuery.toLowerCase());
+    }).toList();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: const Color(0xFFF1F5FB),
       drawer: const AppDrawer(currentRoute: 'classes'),
       appBar: AppBar(
-        title: const Text('Classes & Sections', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-        backgroundColor: const Color(0xFF0F172A), // Slate 900
-        foregroundColor: Colors.white,
-        elevation: 0,
-      ),
-      body: Column(
-        children: [
-          // Gradient Hero Header
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.only(left: 20, right: 20, top: 10, bottom: 30),
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Color(0xFF0F172A), Color(0xFF1E293B), Color(0xFF334155)], // Slate gradient
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 8, offset: Offset(0, 4))],
-              borderRadius: BorderRadius.only(bottomLeft: Radius.circular(32), bottomRight: Radius.circular(32)),
+        iconTheme: const IconThemeData(color: Colors.white),
+        title: Text(
+          'Classes',
+          style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 20),
+        ),
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF2E2A66), Color(0xFF4F46E5)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
-            child: Column(
+          ),
+        ),
+        elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh_rounded, color: Colors.white),
+            onPressed: _fetchClasses,
+          ),
+          const SizedBox(width: 4),
+        ],
+      ),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator(color: Color(0xFF6366F1)))
+          : _errorMessage.isNotEmpty
+              ? _buildError()
+              : Column(
+                  children: [
+                    // ── Stats + Search header ──
+                    Container(
+                      decoration: const BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [Color(0xFF2E2A66), Color(0xFF4F46E5)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                      ),
+                      child: Column(
+                        children: [
+                          // Stats row
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                            child: Row(
+                              children: [
+                                _statPill(Icons.school_rounded, '${_classes.length}', 'Total Classes'),
+                                const SizedBox(width: 12),
+                                _statPill(Icons.people_rounded,
+                                    '${_classes.fold<int>(0, (s, c) => s + ((c['_count']?['students'] ?? 0) as int))}',
+                                    'Total Students'),
+                              ],
+                            ),
+                          ),
+                          // Search
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
+                            child: Container(
+                              height: 46,
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(14),
+                                boxShadow: [
+                                  BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 12, offset: const Offset(0, 4)),
+                                ],
+                              ),
+                              child: TextField(
+                                style: GoogleFonts.poppins(color: const Color(0xFF1E293B), fontSize: 13),
+                                decoration: InputDecoration(
+                                  hintText: 'Search class or teacher...',
+                                  hintStyle: GoogleFonts.poppins(color: const Color(0xFF94A3B8), fontSize: 13),
+                                  prefixIcon: const Icon(Icons.search_rounded, color: Color(0xFF94A3B8), size: 20),
+                                  border: InputBorder.none,
+                                  contentPadding: const EdgeInsets.symmetric(vertical: 13),
+                                ),
+                                onChanged: (v) => setState(() => _searchQuery = v),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // ── List ──
+                    Expanded(
+                      child: _filteredClasses.isEmpty
+                          ? Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.search_off_rounded, size: 64, color: const Color(0xFFCBD5E1)),
+                                  const SizedBox(height: 12),
+                                  Text('No classes found', style: GoogleFonts.poppins(color: const Color(0xFF94A3B8), fontSize: 14)),
+                                ],
+                              ),
+                            )
+                          : RefreshIndicator(
+                              color: const Color(0xFF6366F1),
+                              onRefresh: _fetchClasses,
+                              child: ListView.builder(
+                                padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+                                itemCount: _filteredClasses.length,
+                                itemBuilder: (context, index) {
+                                  return _buildClassCard(_filteredClasses[index], index);
+                                },
+                              ),
+                            ),
+                    ),
+                  ],
+                ),
+    );
+  }
+
+  Widget _statPill(IconData icon, String value, String label) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.15),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: Colors.white.withOpacity(0.2)),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, color: Colors.white, size: 20),
+            const SizedBox(width: 10),
+            Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Total Active Classes', style: TextStyle(color: Colors.white70, fontSize: 13, fontWeight: FontWeight.w600, letterSpacing: 1.2)),
-                const SizedBox(height: 8),
-                Text(
-                  '${_classes.length}',
-                  style: const TextStyle(color: Colors.white, fontSize: 36, fontWeight: FontWeight.w900),
+                Text(value, style: GoogleFonts.outfit(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+                Text(label, style: GoogleFonts.poppins(color: Colors.white70, fontSize: 10)),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildClassCard(dynamic cls, int index) {
+    final String name = cls['name'] ?? 'Unknown';
+    final String section = cls['section'] ?? '';
+    final String academicYear = cls['academicYear'] ?? 'N/A';
+    final String teacherName = cls['classTeacher']?['user']?['name'] ?? 'Not Assigned';
+    final int studentsCount = cls['_count']?['students'] ?? 0;
+    final String classId = cls['id'] ?? '';
+    final List<Color> gradient = _cardGradients[index % _cardGradients.length];
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 12, offset: const Offset(0, 4)),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(20),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(20),
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => ClassDetailsScreen(
+                classId: classId,
+                className: '$name${section.isNotEmpty ? '-$section' : ''}',
+              )),
+            );
+          },
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                // Gradient avatar
+                Container(
+                  width: 54,
+                  height: 54,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(colors: gradient, begin: Alignment.topLeft, end: Alignment.bottomRight),
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(color: gradient[0].withOpacity(0.35), blurRadius: 10, offset: const Offset(0, 4)),
+                    ],
+                  ),
+                  child: Center(
+                    child: Text(
+                      name.isNotEmpty ? name[0] : 'C',
+                      style: GoogleFonts.outfit(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                // Info
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Text(
+                            '$name${section.isNotEmpty ? ' - $section' : ''}',
+                            style: GoogleFonts.outfit(color: const Color(0xFF1E293B), fontSize: 17, fontWeight: FontWeight.bold),
+                          ),
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF3E8FF),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              academicYear,
+                              style: GoogleFonts.poppins(color: const Color(0xFF9333EA), fontSize: 9, fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      Row(
+                        children: [
+                          Icon(Icons.people_rounded, size: 13, color: gradient[0]),
+                          const SizedBox(width: 4),
+                          Text(
+                            '$studentsCount Students',
+                            style: GoogleFonts.poppins(color: const Color(0xFF64748B), fontSize: 12, fontWeight: FontWeight.w600),
+                          ),
+                          const SizedBox(width: 12),
+                          const Icon(Icons.person_rounded, size: 13, color: Color(0xFF94A3B8)),
+                          const SizedBox(width: 4),
+                          Flexible(
+                            child: Text(
+                              teacherName,
+                              style: GoogleFonts.poppins(color: const Color(0xFF94A3B8), fontSize: 12),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                // Arrow
+                Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF1F5F9),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(Icons.chevron_right_rounded, color: Color(0xFF64748B), size: 18),
                 ),
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
 
-          // Grid View
-          Expanded(
-            child: _isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : _errorMessage.isNotEmpty
-                    ? Center(child: Text(_errorMessage, style: GoogleFonts.poppins(color: Colors.red)))
-                    : _classes.isEmpty
-                        ? Center(child: Text('No classes found.', style: GoogleFonts.poppins(color: const Color(0xFF64748B))))
-                        : RefreshIndicator(
-                            onRefresh: _fetchClasses,
-                            child: GridView.builder(
-                              padding: const EdgeInsets.only(left: 20, right: 20, top: 20, bottom: 40),
-                              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: 2,
-                                childAspectRatio: 0.95,
-                                crossAxisSpacing: 16,
-                                mainAxisSpacing: 16,
-                              ),
-                              itemCount: _classes.length,
-                              itemBuilder: (context, index) {
-                                final cls = _classes[index];
-                                final String name = cls['className'] ?? 'Unknown';
-                                final String section = cls['section'] ?? '';
-                                final String teacherName = cls['classTeacher']?['user']?['name'] ?? 'Not Assigned';
-                                final Color cardColor = _cardColors[index % _cardColors.length];
-
-                                return Container(
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(24),
-                                    boxShadow: [
-                                      BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4)),
-                                    ],
-                                  ),
-                                  child: Material(
-                                    color: Colors.transparent,
-                                    child: InkWell(
-                                      borderRadius: BorderRadius.circular(24),
-                                      onTap: () {
-                                        Navigator.push(context, MaterialPageRoute(builder: (context) => ClassDetailsScreen(classData: cls)));
-                                      },
-                                      child: Padding(
-                                        padding: const EdgeInsets.all(16.0),
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            // Icon Container
-                                            Container(
-                                              padding: const EdgeInsets.all(10),
-                                              decoration: BoxDecoration(
-                                                color: cardColor.withOpacity(0.15),
-                                                borderRadius: BorderRadius.circular(16),
-                                              ),
-                                              child: Icon(Icons.class_rounded, color: cardColor, size: 24),
-                                            ),
-                                            const Spacer(),
-                                            // Title
-                                            Text(
-                                              name,
-                                              style: GoogleFonts.poppins(color: const Color(0xFF1E293B), fontSize: 18, fontWeight: FontWeight.bold),
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
-                                            if (section.isNotEmpty)
-                                              Text(
-                                                'Sec: $section',
-                                                style: GoogleFonts.poppins(color: const Color(0xFF64748B), fontSize: 13, fontWeight: FontWeight.w600),
-                                              ),
-                                            const SizedBox(height: 8),
-                                            // Teacher
-                                            Row(
-                                              children: [
-                                                const Icon(Icons.person_rounded, size: 12, color: Color(0xFF94A3B8)),
-                                                const SizedBox(width: 4),
-                                                Expanded(
-                                                  child: Text(
-                                                    teacherName,
-                                                    style: GoogleFonts.poppins(color: const Color(0xFF94A3B8), fontSize: 11),
-                                                    maxLines: 1,
-                                                    overflow: TextOverflow.ellipsis,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                );
-                              },
-                            ),
-                          ),
+  Widget _buildError() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: const Color(0xFFFEF2F2),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: const Icon(Icons.error_outline_rounded, size: 48, color: Color(0xFFF43F5E)),
+          ),
+          const SizedBox(height: 16),
+          Text(_errorMessage, style: GoogleFonts.poppins(color: const Color(0xFF64748B)), textAlign: TextAlign.center),
+          const SizedBox(height: 20),
+          ElevatedButton.icon(
+            onPressed: _fetchClasses,
+            icon: const Icon(Icons.refresh_rounded),
+            label: const Text('Retry'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF6366F1),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
           ),
         ],
       ),

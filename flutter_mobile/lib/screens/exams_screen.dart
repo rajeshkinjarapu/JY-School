@@ -1,4 +1,4 @@
-﻿import 'dart:convert';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -232,7 +232,7 @@ class _ExamsScreenState extends State<ExamsScreen> {
                   const SizedBox(height: 12),
                   Row(
                     children: [
-                      const Icon(Icons.class__rounded, size: 16, color: Color(0xFF94A3B8)),
+                      const Icon(Icons.class_rounded, size: 16, color: Color(0xFF94A3B8)),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(

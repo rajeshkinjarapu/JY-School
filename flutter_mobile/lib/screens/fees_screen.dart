@@ -1,4 +1,4 @@
-﻿import 'dart:convert';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/api_service.dart';
@@ -39,7 +39,7 @@ class _FeesScreenState extends State<FeesScreen> with SingleTickerProviderStateM
     });
 
     try {
-      final res = await ApiService.getFeeStatus();
+      final res = await ApiService.getFeeStatus('');
       if (res['success']) {
         setState(() {
           _feeStatusList = res['data'] ?? [];

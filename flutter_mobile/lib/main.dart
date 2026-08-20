@@ -1,4 +1,5 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -19,12 +20,20 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
-  // Initialize Firebase
-  await Firebase.initializeApp();
-  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+  // Initialize Firebase only on non-web platforms (since web options aren't configured yet)
+  if (!kIsWeb) {
+    try {
+      await Firebase.initializeApp();
+      FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+    } catch (e) {
+      debugPrint("Firebase initialization skipped/failed: $e");
+    }
+  }
   
-  // Initialize Local Notifications
-  await NotificationService().initialize(navigatorKey);
+  // Initialize Local Notifications only on non-web
+  if (!kIsWeb) {
+    await NotificationService().initialize(navigatorKey);
+  }
   
   runApp(const MyApp());
 }

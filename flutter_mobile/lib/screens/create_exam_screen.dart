@@ -267,8 +267,8 @@ class _CreateExamScreenState extends State<CreateExamScreen> {
                           children: [
                             Container(
                               padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(color: Colors.emerald.shade50, borderRadius: BorderRadius.circular(8)),
-                              child: Icon(Icons.class_outlined, color: Colors.emerald.shade600),
+                              decoration: BoxDecoration(color: Colors.green.shade50, borderRadius: BorderRadius.circular(8)),
+                              child: Icon(Icons.class_outlined, color: Colors.green.shade600),
                             ),
                             const SizedBox(width: 12),
                             Text('Applicable Classes', style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold)),

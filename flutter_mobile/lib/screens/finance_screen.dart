@@ -131,7 +131,6 @@ class _FinanceScreenState extends State<FinanceScreen> with SingleTickerProvider
         // Status filter
         final status = payment['status']?.toString().toUpperCase() ?? 'PENDING';
         final statusMatch = _selectedStatus == 'ALL' || status == _selectedStatus;
-
         return searchMatch && classMatch && statusMatch;
       }).toList();
     });
@@ -142,7 +141,7 @@ class _FinanceScreenState extends State<FinanceScreen> with SingleTickerProvider
     final res = await ApiService.approvePayment(id);
     if (res['success']) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Payment approved successfully!'), backgroundColor: Colors.emerald),
+        const SnackBar(content: Text('Payment approved successfully!'), backgroundColor: Colors.green),
       );
       _fetchData();
     } else {
@@ -155,7 +154,7 @@ class _FinanceScreenState extends State<FinanceScreen> with SingleTickerProvider
 
   Future<void> _deletePayment(String id) async {
     setState(() => _isLoading = true);
-    final res = await ApiService.deletePayment(id);
+    final res = await ApiService.deleteFeePayment(id);
     if (res['success']) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Payment record deleted successfully!'), backgroundColor: Colors.orange),
@@ -304,28 +303,25 @@ class _FinanceScreenState extends State<FinanceScreen> with SingleTickerProvider
       children: [
         _buildStatCard(
           title: 'Total Collected',
-          value: '₹ ${_totalCollected.toStringAsFixed(2)}',
+          value: 'Ã¢â€šÂ¹ ${_totalCollected.toStringAsFixed(2)}',
           icon: Icons.check_circle_rounded,
           gradientColors: [const Color(0xFF10B981), const Color(0xFF34D399)],
         ),
         const SizedBox(height: 16),
         _buildStatCard(
           title: 'Collected Today',
-          value: '₹ ${_todayCollected.toStringAsFixed(2)}',
+          value: 'Ã¢â€šÂ¹ ${_todayCollected.toStringAsFixed(2)}',
           icon: Icons.today_rounded,
           gradientColors: [const Color(0xFF6366F1), const Color(0xFF818CF8)],
         ),
         const SizedBox(height: 16),
         _buildStatCard(
           title: 'Total Pending Dues',
-          value: '₹ ${_pendingDues.toStringAsFixed(2)}',
+          value: 'Ã¢â€šÂ¹ ${_pendingDues.toStringAsFixed(2)}',
           icon: Icons.pending_actions_rounded,
           gradientColors: [const Color(0xFFEF4444), const Color(0xFFF87171)],
         ),
       ],
-    );
-  }
-
     );
   }
 
@@ -669,7 +665,7 @@ class _FinanceScreenState extends State<FinanceScreen> with SingleTickerProvider
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: isPaid ? Colors.emerald.withOpacity(0.1) : Colors.amber.withOpacity(0.1),
+                  color: isPaid ? Colors.green.withOpacity(0.1) : Colors.amber.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
@@ -677,7 +673,7 @@ class _FinanceScreenState extends State<FinanceScreen> with SingleTickerProvider
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.bold,
-                    color: isPaid ? Colors.emerald : Colors.amber.shade800,
+                    color: isPaid ? Colors.green : Colors.amber.shade800,
                   ),
                 ),
               )
@@ -695,7 +691,7 @@ class _FinanceScreenState extends State<FinanceScreen> with SingleTickerProvider
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Amount: ₹ ${amountPaid.toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                  Text('Amount: Ã¢â€šÂ¹ ${amountPaid.toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
                   Text('Method: $method  |  Date: $dateFormatted', style: const TextStyle(fontSize: 11, color: Color(0xFF64748B))),
                 ],
               ),
@@ -703,7 +699,7 @@ class _FinanceScreenState extends State<FinanceScreen> with SingleTickerProvider
                 children: [
                   if (!isPaid)
                     IconButton(
-                      icon: const Icon(Icons.check_circle_outline, color: Colors.emerald),
+                      icon: const Icon(Icons.check_circle_outline, color: Colors.green),
                       tooltip: 'Approve Payment',
                       onPressed: () => _approvePayment(payment['id']?.toString() ?? ''),
                     ),
@@ -778,12 +774,12 @@ class _FinanceScreenState extends State<FinanceScreen> with SingleTickerProvider
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  Text('₹ ${amount.toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Color(0xFF6366F1))),
+                  Text('Ã¢â€šÂ¹ ${amount.toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Color(0xFF6366F1))),
                   const SizedBox(height: 4),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(
-                      color: status.toUpperCase() == 'ACTIVE' ? Colors.emerald.withOpacity(0.1) : Colors.grey.withOpacity(0.1),
+                      color: status.toUpperCase() == 'ACTIVE' ? Colors.green.withOpacity(0.1) : Colors.grey.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
@@ -791,7 +787,7 @@ class _FinanceScreenState extends State<FinanceScreen> with SingleTickerProvider
                       style: TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.bold,
-                        color: status.toUpperCase() == 'ACTIVE' ? Colors.emerald : Colors.grey,
+                        color: status.toUpperCase() == 'ACTIVE' ? Colors.green : Colors.grey,
                       ),
                     ),
                   )
@@ -936,7 +932,7 @@ class _FinanceScreenState extends State<FinanceScreen> with SingleTickerProvider
                                     const SizedBox(height: 4),
                                     Text('Class: $className', style: const TextStyle(fontSize: 12, color: Color(0xFF64748B))),
                                     const SizedBox(height: 4),
-                                    Text('Due: ₹ ${balance.toStringAsFixed(0)}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xFFEF4444))),
+                                    Text('Due: Ã¢â€šÂ¹ ${balance.toStringAsFixed(0)}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xFFEF4444))),
                                   ],
                                 ),
                               ),
@@ -949,7 +945,7 @@ class _FinanceScreenState extends State<FinanceScreen> with SingleTickerProvider
                                   final cleanPhone = phone.replaceAll(RegExp(r'\D'), '');
                                   final fullPhone = cleanPhone.length == 10 ? '91$cleanPhone' : cleanPhone;
                                   final msg = Uri.encodeComponent(
-                                      "Dear Parent of *$name* ($className),\n\nThis is a gentle reminder from *JY SCHOOL*.\n\nYour child's outstanding fee balance is *₹${balance.toStringAsFixed(0)}*.\n\nKindly clear the dues at the earliest. For queries, contact the school office.");
+                                      "Dear Parent of *$name* ($className),\n\nThis is a gentle reminder from *JY SCHOOL*.\n\nYour child's outstanding fee balance is *Ã¢â€šÂ¹${balance.toStringAsFixed(0)}*.\n\nKindly clear the dues at the earliest. For queries, contact the school office.");
                                   final url = 'https://wa.me/$fullPhone?text=$msg';
                                   
                                   // Requires url_launcher
@@ -1059,19 +1055,25 @@ class _RecordPaymentDialogState extends State<RecordPaymentDialog> {
 
     setState(() => _isSubmitting = true);
 
-    final res = await ApiService.recordPayment(
-      studentId: _selectedStudentId!,
-      feeStructureId: _selectedStructureId!,
-      amountPaid: amount,
-      paymentMethod: _selectedMethod,
-      remarks: _remarksController.text.trim(),
-    );
+    final now = DateTime.now();
+    final paymentDate = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+
+    final res = await ApiService.recordPayments([
+      {
+        'studentId': _selectedStudentId!,
+        'feeStructureId': _selectedStructureId!,
+        'amountPaid': amount,
+        'paymentMethod': _selectedMethod,
+        'paymentDate': paymentDate,
+        'remarks': _remarksController.text.trim(),
+      }
+    ]);
 
     if (mounted) {
       setState(() => _isSubmitting = false);
       if (res['success']) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Payment recorded successfully!'), backgroundColor: Colors.emerald),
+          const SnackBar(content: Text('Payment recorded successfully!'), backgroundColor: Colors.green),
         );
         widget.onSuccess();
       } else {
@@ -1174,7 +1176,7 @@ class _RecordPaymentDialogState extends State<RecordPaymentDialog> {
                     final amount = s['amount']?.toString() ?? '0';
                     return DropdownMenuItem(
                       value: s['id']?.toString() ?? '',
-                      child: Text('$name (₹ $amount)'),
+                      child: Text('$name (Ã¢â€šÂ¹ $amount)'),
                     );
                   }).toList(),
                   onChanged: (val) {
@@ -1220,7 +1222,7 @@ class _RecordPaymentDialogState extends State<RecordPaymentDialog> {
             const SizedBox(height: 16),
 
             // Amount
-            const Text('Amount Paid (₹)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+            const Text('Amount Paid (Ã¢â€šÂ¹)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
             const SizedBox(height: 6),
             TextField(
               controller: _amountController,

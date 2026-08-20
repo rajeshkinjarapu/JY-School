@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/api_service.dart';
 import '../widgets/app_drawer.dart';
@@ -225,7 +225,7 @@ class _MarksUploadScreenState extends State<MarksUploadScreen> {
                   hint: 'Class',
                   value: _selectedClassId,
                   items: _classes,
-                  icon: Icons.class__rounded,
+                  icon: Icons.class_rounded,
                   onChanged: (val) {
                     setState(() { _selectedClassId = val; });
                     _fetchStudentsForClass();
