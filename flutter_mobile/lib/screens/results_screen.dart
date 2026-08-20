@@ -10,7 +10,8 @@ class ResultsScreen extends StatefulWidget {
 }
 
 class _ResultsScreenState extends State<ResultsScreen> {
-  bool _isLoading = true;
+  bool _isLoadingDropdowns = true;
+  bool _isLoading = false;
   String? _errorMessage;
 
   List<dynamic> _examsList = [];
@@ -19,6 +20,7 @@ class _ResultsScreenState extends State<ResultsScreen> {
 
   String? _selectedExamId;
   String? _selectedClassId;
+  Map<String, dynamic>? _selectedExamData;
 
   @override
   void initState() {
@@ -27,30 +29,54 @@ class _ResultsScreenState extends State<ResultsScreen> {
   }
 
   Future<void> _fetchDropdownData() async {
+    setState(() => _isLoadingDropdowns = true);
     try {
       final examsRes = await ApiService.getExams();
       final classesRes = await ApiService.getClasses();
 
       if (mounted) {
         setState(() {
-          _examsList = examsRes['success'] ? examsRes['data'] : [];
-          _classesList = classesRes['success'] ? classesRes['data'] : [];
-          _isLoading = false;
+          _examsList = examsRes['success'] ? examsRes['data'] ?? [] : [];
+          _classesList = classesRes['success'] ? classesRes['data'] ?? [] : [];
+          _isLoadingDropdowns = false;
         });
       }
     } catch (e) {
       if (mounted) {
         setState(() {
           _errorMessage = 'Failed to load options: $e';
-          _isLoading = false;
+          _isLoadingDropdowns = false;
         });
+      }
+    }
+  }
+  
+  void _onExamSelected(String? examId) {
+    if (examId == null) return;
+    
+    // Check if exam exists in list
+    if (!_examsList.any((e) => e['id']?.toString() == examId)) {
+      _selectedExamId = null;
+      _selectedExamData = null;
+      return;
+    }
+
+    _selectedExamId = examId;
+    _selectedExamData = _examsList.firstWhere((e) => e['id']?.toString() == examId);
+    
+    // Validate selected class against new exam
+    if (_selectedClassId != null) {
+      final examClasses = _selectedExamData!['classes'] as List?;
+      if (examClasses == null || !examClasses.any((c) => c['id'].toString() == _selectedClassId)) {
+        _selectedClassId = null;
+        _resultsData = [];
       }
     }
   }
 
   Future<void> _fetchResults() async {
-    if (_selectedExamId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please select an Exam')));
+    if (_selectedExamId == null || _selectedClassId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please select an Exam and Class'), backgroundColor: Colors.red));
       return;
     }
 
@@ -60,7 +86,7 @@ class _ResultsScreenState extends State<ResultsScreen> {
     });
 
     try {
-      final result = await ApiService.getExamResults(_selectedExamId!, classId: _selectedClassId ?? '');
+      final result = await ApiService.getExamResults(_selectedExamId!, classId: _selectedClassId!);
       if (mounted) {
         setState(() {
           _resultsData = result['success'] ? result['data'] : [];
@@ -107,42 +133,65 @@ class _ResultsScreenState extends State<ResultsScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
-        title: Text('Exam Results', style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold)),
+        title: Text('Exam Results', style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 20)),
         iconTheme: const IconThemeData(color: Colors.white),
         flexibleSpace: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
-              colors: [Color(0xFF2E2A66), Color(0xFF222854)],
+              colors: [Color(0xFF6366F1), Color(0xFF4F46E5), Color(0xFF4338CA)],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
           ),
         ),
+        elevation: 0,
       ),
-      body: Column(
-        children: [
-          _buildFiltersSection(),
-          Expanded(
-            child: _isLoading 
-                ? const Center(child: CircularProgressIndicator(color: Color(0xFF6366F1)))
-                : _errorMessage != null
-                    ? Center(child: Text(_errorMessage!, style: GoogleFonts.poppins(color: Colors.red)))
-                    : _resultsData.isEmpty
-                        ? Center(child: Text('No results found for this selection.', style: GoogleFonts.poppins(color: const Color(0xFF64748B))))
-                        : _buildResultsTable(),
-          ),
-        ],
-      ),
+      body: _isLoadingDropdowns 
+          ? const Center(child: CircularProgressIndicator(color: Color(0xFF6366F1))) 
+          : Column(
+              children: [
+                _buildFiltersSection(),
+                Expanded(
+                  child: _isLoading 
+                      ? const Center(child: CircularProgressIndicator(color: Color(0xFF6366F1)))
+                      : _errorMessage != null
+                          ? Center(child: Text(_errorMessage!, style: GoogleFonts.poppins(color: Colors.red)))
+                          : _resultsData.isEmpty
+                              ? Center(
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(Icons.query_stats_rounded, size: 64, color: const Color(0xFFCBD5E1).withOpacity(0.5)),
+                                      const SizedBox(height: 16),
+                                      Text('Select filters to fetch results.', style: GoogleFonts.poppins(color: const Color(0xFF94A3B8), fontSize: 15)),
+                                    ],
+                                  ),
+                                )
+                              : _buildResultsTable(),
+                ),
+              ],
+            ),
     );
   }
 
   Widget _buildFiltersSection() {
+    List<dynamic> filteredClasses = [];
+    
+    if (_selectedExamData != null) {
+      if (_selectedExamData!['classes'] != null) {
+        final examClassIds = (_selectedExamData!['classes'] as List).map((c) => c['id'].toString()).toSet();
+        filteredClasses = _classesList.where((c) => examClassIds.contains(c['id'].toString())).toList();
+      }
+    }
+
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
       decoration: BoxDecoration(
         color: Colors.white,
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))],
-        borderRadius: const BorderRadius.only(bottomLeft: Radius.circular(20), bottomRight: Radius.circular(20)),
+        borderRadius: const BorderRadius.only(bottomLeft: Radius.circular(30), bottomRight: Radius.circular(30)),
+        boxShadow: [
+          BoxShadow(color: const Color(0xFF6366F1).withOpacity(0.08), blurRadius: 20, offset: const Offset(0, 8))
+        ],
       ),
       child: Column(
         children: [
@@ -153,16 +202,18 @@ class _ResultsScreenState extends State<ResultsScreen> {
                   label: 'Select Exam',
                   value: _selectedExamId,
                   items: _examsList,
-                  onChanged: (val) => setState(() => _selectedExamId = val as String?),
+                  onChanged: (val) {
+                    setState(() { _onExamSelected(val); });
+                  },
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: _buildDropdown(
-                  label: 'Select Class',
+                  label: _selectedExamId == null ? 'Exam First' : 'Select Class',
                   value: _selectedClassId,
-                  items: _classesList,
-                  onChanged: (val) => setState(() => _selectedClassId = val as String?),
+                  items: filteredClasses,
+                  onChanged: _selectedExamId == null ? (val){} : (val) => setState(() => _selectedClassId = val as String?),
                 ),
               ),
             ],
@@ -170,14 +221,16 @@ class _ResultsScreenState extends State<ResultsScreen> {
           const SizedBox(height: 16),
           SizedBox(
             width: double.infinity,
-            child: ElevatedButton(
+            height: 48,
+            child: ElevatedButton.icon(
               onPressed: _isLoading ? null : _fetchResults,
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF6366F1),
-                padding: const EdgeInsets.symmetric(vertical: 14),
+                elevation: 0,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
-              child: Text('Fetch Results', style: GoogleFonts.outfit(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+              icon: const Icon(Icons.search_rounded, color: Colors.white, size: 20),
+              label: Text('Fetch Results', style: GoogleFonts.outfit(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
             ),
           ),
         ],
@@ -192,11 +245,11 @@ class _ResultsScreenState extends State<ResultsScreen> {
         Text(label, style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.w600, color: const Color(0xFF64748B))),
         const SizedBox(height: 6),
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
           decoration: BoxDecoration(
-            color: const Color(0xFFF1F5F9),
+            color: const Color(0xFFF8FAFC),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: const Color(0xFFE2E8F0)),
+            border: Border.all(color: value != null ? const Color(0xFF6366F1).withOpacity(0.5) : const Color(0xFFE2E8F0)),
           ),
           child: DropdownButtonHideUnderline(
             child: DropdownButton<String>(
@@ -204,11 +257,24 @@ class _ResultsScreenState extends State<ResultsScreen> {
               value: value,
               hint: Text('Select', style: GoogleFonts.poppins(fontSize: 13, color: const Color(0xFF94A3B8))),
               icon: const Icon(Icons.keyboard_arrow_down_rounded, color: Color(0xFF64748B)),
-              onChanged: onChanged,
+              onChanged: items.isEmpty ? null : onChanged,
               items: items.map((item) {
+                String name = item['name'] ?? item['title'] ?? item['className'] ?? 'Unknown';
+                if (item['section'] != null && item['section'].toString().trim().isNotEmpty) {
+                  name += ' - ${item['section']}';
+                }
                 return DropdownMenuItem<String>(
                   value: item['id'].toString(),
-                  child: Text(item['name'] ?? item['title'] ?? 'Unknown', style: GoogleFonts.poppins(fontSize: 14, color: const Color(0xFF1E293B))),
+                  child: Text(
+                    name, 
+                    style: GoogleFonts.poppins(
+                      fontSize: 13, 
+                      color: value == item['id']?.toString() ? const Color(0xFF6366F1) : const Color(0xFF1E293B),
+                      fontWeight: value == item['id']?.toString() ? FontWeight.bold : FontWeight.normal,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 );
               }).toList(),
             ),

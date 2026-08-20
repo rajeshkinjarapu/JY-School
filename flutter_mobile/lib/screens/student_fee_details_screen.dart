@@ -47,7 +47,6 @@ class _StudentFeeDetailsScreenState extends State<StudentFeeDetailsScreen> with 
     });
 
     try {
-      // Need structures to know total fee, payments, and discounts.
       final results = await Future.wait([
         ApiService.getFeeStructures(),
       ]);
@@ -62,7 +61,6 @@ class _StudentFeeDetailsScreenState extends State<StudentFeeDetailsScreen> with 
 
         _structures = allStructures.where((s) => s['studentId'] == studentId || s['classId'] == classId).toList();
         
-        // Let's refetch student to get fresh payments and discounts
         final studentRes = await ApiService.getStudentById(studentId);
         if (studentRes['success'] && studentRes['data'] != null) {
           _payments = studentRes['data']['feePayments'] ?? [];
@@ -127,7 +125,7 @@ class _StudentFeeDetailsScreenState extends State<StudentFeeDetailsScreen> with 
           feeStructures: _structures,
         ),
       ),
-    ).then((_) => _fetchFeeData()); // Refresh on return
+    ).then((_) => _fetchFeeData());
   }
 
   @override
@@ -137,18 +135,18 @@ class _StudentFeeDetailsScreenState extends State<StudentFeeDetailsScreen> with 
     final cls = widget.student['class'] != null ? '${widget.student['class']['name']} - ${widget.student['class']['section']}' : 'N/A';
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F7FE),
+      backgroundColor: const Color(0xFFF1F5F9), // Slight gray background
       appBar: AppBar(
-        leading: const BackButton(),
+        leading: const BackButton(color: Colors.white),
         title: Text(
-          'Fee Ledger',
-          style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white),
+          'Student Fee Ledger',
+          style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 20, color: Colors.white),
         ),
         iconTheme: const IconThemeData(color: Colors.white),
         flexibleSpace: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
-              colors: [Color(0xFF2E2A66), Color(0xFF222854)],
+              colors: [Color(0xFF6366F1), Color(0xFF4F46E5), Color(0xFF4338CA)],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
@@ -173,28 +171,34 @@ class _StudentFeeDetailsScreenState extends State<StudentFeeDetailsScreen> with 
                       padding: const EdgeInsets.all(24),
                       decoration: const BoxDecoration(
                         color: Colors.white,
-                        borderRadius: BorderRadius.vertical(bottom: Radius.circular(30)),
+                        borderRadius: BorderRadius.vertical(bottom: Radius.circular(32)),
                         boxShadow: [
-                          BoxShadow(color: Color(0x0A000000), blurRadius: 10, offset: Offset(0, 5))
+                          BoxShadow(color: Color(0x0A000000), blurRadius: 20, offset: Offset(0, 10))
                         ],
                       ),
                       child: Column(
                         children: [
                           Row(
                             children: [
-                              CircleAvatar(
-                                radius: 30,
-                                backgroundColor: const Color(0xFFEEF2FF),
-                                backgroundImage: widget.student['user'] != null && widget.student['user']['photoUrl'] != null
-                                    ? NetworkImage(widget.student['user']['photoUrl'])
-                                    : null,
+                              Container(
+                                width: 64,
+                                height: 64,
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF6366F1).withOpacity(0.1),
+                                  shape: BoxShape.circle,
+                                  image: widget.student['user'] != null && widget.student['user']['photoUrl'] != null
+                                      ? DecorationImage(image: NetworkImage(widget.student['user']['photoUrl']), fit: BoxFit.cover)
+                                      : null,
+                                ),
                                 child: (widget.student['user'] == null || widget.student['user']['photoUrl'] == null)
-                                    ? Text(
-                                        name.isNotEmpty ? name[0].toUpperCase() : '?',
-                                        style: GoogleFonts.outfit(
-                                          color: const Color(0xFF6366F1),
-                                          fontSize: 24,
-                                          fontWeight: FontWeight.bold,
+                                    ? Center(
+                                        child: Text(
+                                          name.isNotEmpty ? name[0].toUpperCase() : '?',
+                                          style: GoogleFonts.outfit(
+                                            color: const Color(0xFF6366F1),
+                                            fontSize: 28,
+                                            fontWeight: FontWeight.bold,
+                                          ),
                                         ),
                                       )
                                     : null,
@@ -208,17 +212,45 @@ class _StudentFeeDetailsScreenState extends State<StudentFeeDetailsScreen> with 
                                       name,
                                       style: GoogleFonts.outfit(
                                         color: const Color(0xFF1E293B),
-                                        fontSize: 20,
+                                        fontSize: 22,
                                         fontWeight: FontWeight.bold,
                                       ),
                                     ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      'Class: $cls | Adm: $admissionNo',
-                                      style: GoogleFonts.poppins(
-                                        color: const Color(0xFF64748B),
-                                        fontSize: 13,
-                                      ),
+                                    const SizedBox(height: 6),
+                                    Row(
+                                      children: [
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                          decoration: BoxDecoration(
+                                            color: const Color(0xFFEEF2FF),
+                                            borderRadius: BorderRadius.circular(6),
+                                          ),
+                                          child: Text(
+                                            'Class: $cls',
+                                            style: GoogleFonts.poppins(
+                                              color: const Color(0xFF6366F1),
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                          decoration: BoxDecoration(
+                                            color: const Color(0xFFF1F5F9),
+                                            borderRadius: BorderRadius.circular(6),
+                                          ),
+                                          child: Text(
+                                            'Adm: $admissionNo',
+                                            style: GoogleFonts.poppins(
+                                              color: const Color(0xFF64748B),
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ],
                                 ),
@@ -228,9 +260,9 @@ class _StudentFeeDetailsScreenState extends State<StudentFeeDetailsScreen> with 
                           const SizedBox(height: 24),
                           Row(
                             children: [
-                              Expanded(child: _buildSummaryCard('Pending', _totalPending, const Color(0xFFEF4444), const Color(0xFFFEF2F2))),
+                              Expanded(child: _buildSummaryCard('Pending Due', _totalPending, const Color(0xFFEF4444), const Color(0xFFFEF2F2), Icons.account_balance_wallet_rounded)),
                               const SizedBox(width: 12),
-                              Expanded(child: _buildSummaryCard('Paid', _totalPaid, const Color(0xFF10B981), const Color(0xFFECFDF5))),
+                              Expanded(child: _buildSummaryCard('Total Paid', _totalPaid, const Color(0xFF10B981), const Color(0xFFECFDF5), Icons.check_circle_outline_rounded)),
                             ],
                           ),
                         ],
@@ -243,12 +275,12 @@ class _StudentFeeDetailsScreenState extends State<StudentFeeDetailsScreen> with 
                       labelColor: const Color(0xFF6366F1),
                       unselectedLabelColor: const Color(0xFF64748B),
                       indicatorColor: const Color(0xFF6366F1),
-                      indicatorWeight: 3,
-                      labelStyle: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16),
-                      unselectedLabelStyle: GoogleFonts.outfit(fontWeight: FontWeight.w600, fontSize: 16),
+                      indicatorWeight: 4,
+                      labelStyle: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 14),
+                      unselectedLabelStyle: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 14),
                       tabs: const [
-                        Tab(text: 'Ledger'),
-                        Tab(text: 'Transactions'),
+                        Tab(text: 'Fee Ledger'),
+                        Tab(text: 'Payment History'),
                       ],
                     ),
                     Expanded(
@@ -268,38 +300,45 @@ class _StudentFeeDetailsScreenState extends State<StudentFeeDetailsScreen> with 
         icon: const Icon(Icons.add_card_rounded, color: Colors.white),
         label: Text(
           'Collect Fee',
-          style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold, letterSpacing: 0.5),
+          style: GoogleFonts.outfit(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold, letterSpacing: 0.5),
         ),
       ),
     );
   }
 
-  Widget _buildSummaryCard(String title, double amount, Color color, Color bgColor) {
+  Widget _buildSummaryCard(String title, double amount, Color color, Color bgColor, IconData icon) {
     final currencyFormat = NumberFormat.currency(symbol: '₹', decimalDigits: 0, locale: 'en_IN');
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
       decoration: BoxDecoration(
         color: bgColor,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withOpacity(0.2)),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withOpacity(0.3)),
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            title.toUpperCase(),
-            style: GoogleFonts.poppins(
-              color: color,
-              fontSize: 10,
-              fontWeight: FontWeight.bold,
-              letterSpacing: 1,
-            ),
+          Row(
+            children: [
+              Icon(icon, size: 16, color: color.withOpacity(0.8)),
+              const SizedBox(width: 6),
+              Text(
+                title.toUpperCase(),
+                style: GoogleFonts.poppins(
+                  color: color.withOpacity(0.9),
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 0.5,
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 8),
           Text(
             currencyFormat.format(amount),
             style: GoogleFonts.outfit(
               color: color,
-              fontSize: 20,
+              fontSize: 24,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -313,12 +352,12 @@ class _StudentFeeDetailsScreenState extends State<StudentFeeDetailsScreen> with 
     
     if (_structures.isEmpty) {
       return Center(
-        child: Text('No fee structures found.', style: GoogleFonts.poppins(color: const Color(0xFF64748B))),
+        child: Text('No fee structures assigned.', style: GoogleFonts.poppins(color: const Color(0xFF64748B))),
       );
     }
 
     return ListView.builder(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(16),
       itemCount: _structures.length,
       itemBuilder: (context, index) {
         final st = _structures[index];
@@ -346,58 +385,68 @@ class _StudentFeeDetailsScreenState extends State<StudentFeeDetailsScreen> with 
 
         return Container(
           margin: const EdgeInsets.only(bottom: 12),
-          padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: const Color(0xFFE2E8F0)),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: const Color(0xFFE2E8F0).withOpacity(0.5)),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withOpacity(0.02),
-                blurRadius: 5,
-                offset: const Offset(0, 2),
+                blurRadius: 15,
+                offset: const Offset(0, 5),
               )
             ],
           ),
           child: Column(
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    headName,
-                    style: GoogleFonts.outfit(
-                      color: const Color(0xFF1E293B),
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: isCleared ? const Color(0xFFDCFCE7) : const Color(0xFFFEF2F2),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: Text(
-                      isCleared ? 'CLEARED' : 'PENDING',
-                      style: GoogleFonts.poppins(
-                        color: isCleared ? const Color(0xFF16A34A) : const Color(0xFFDC2626),
-                        fontSize: 10,
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: isCleared ? const Color(0xFF10B981).withOpacity(0.05) : const Color(0xFFEF4444).withOpacity(0.05),
+                  borderRadius: const BorderRadius.only(topLeft: Radius.circular(20), topRight: Radius.circular(20)),
+                  border: Border(bottom: BorderSide(color: const Color(0xFFE2E8F0).withOpacity(0.5))),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      headName,
+                      style: GoogleFonts.outfit(
+                        color: const Color(0xFF1E293B),
+                        fontSize: 16,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                  ),
-                ],
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: isCleared ? const Color(0xFF10B981) : const Color(0xFFEF4444),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        isCleared ? 'CLEARED' : 'PENDING',
+                        style: GoogleFonts.poppins(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              const SizedBox(height: 12),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  _buildLedgerItem('Total', currencyFormat.format(amount), const Color(0xFF64748B)),
-                  _buildLedgerItem('Disc', currencyFormat.format(disc), const Color(0xFFF59E0B)),
-                  _buildLedgerItem('Paid', currencyFormat.format(paid), const Color(0xFF10B981)),
-                  _buildLedgerItem('Due', currencyFormat.format(pending > 0 ? pending : 0), const Color(0xFFEF4444)),
-                ],
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    _buildLedgerItem('Total', currencyFormat.format(amount), const Color(0xFF64748B)),
+                    _buildLedgerItem('Discount', currencyFormat.format(disc), const Color(0xFF10B981)),
+                    _buildLedgerItem('Paid', currencyFormat.format(paid), const Color(0xFF6366F1)),
+                    _buildLedgerItem('Due', currencyFormat.format(pending > 0 ? pending : 0), const Color(0xFFEF4444), isBold: true),
+                  ],
+                ),
               ),
             ],
           ),
@@ -406,25 +455,25 @@ class _StudentFeeDetailsScreenState extends State<StudentFeeDetailsScreen> with 
     );
   }
 
-  Widget _buildLedgerItem(String label, String value, Color color) {
+  Widget _buildLedgerItem(String label, String value, Color color, {bool isBold = false}) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           label,
           style: GoogleFonts.poppins(
             color: const Color(0xFF94A3B8),
             fontSize: 11,
-            fontWeight: FontWeight.w600,
+            fontWeight: FontWeight.w500,
           ),
         ),
-        const SizedBox(height: 2),
+        const SizedBox(height: 4),
         Text(
           value,
           style: GoogleFonts.outfit(
             color: color,
-            fontSize: 14,
-            fontWeight: FontWeight.bold,
+            fontSize: 15,
+            fontWeight: isBold ? FontWeight.bold : FontWeight.w600,
           ),
         ),
       ],
@@ -439,16 +488,20 @@ class _StudentFeeDetailsScreenState extends State<StudentFeeDetailsScreen> with 
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.receipt_long_rounded, size: 64, color: Color(0xFFCBD5E1)),
-            const SizedBox(height: 16),
-            Text('No transactions found', style: GoogleFonts.poppins(color: const Color(0xFF64748B))),
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(color: Colors.white, shape: BoxShape.circle, boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 20)]),
+              child: const Icon(Icons.history_rounded, size: 64, color: Color(0xFFCBD5E1)),
+            ),
+            const SizedBox(height: 20),
+            Text('No transactions found', style: GoogleFonts.outfit(color: const Color(0xFF94A3B8), fontSize: 18, fontWeight: FontWeight.w600)),
           ],
         ),
       );
     }
 
     return ListView.builder(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(16),
       itemCount: _payments.length,
       itemBuilder: (context, index) {
         final payment = _payments[index];
@@ -463,83 +516,85 @@ class _StudentFeeDetailsScreenState extends State<StudentFeeDetailsScreen> with 
 
         return Container(
           margin: const EdgeInsets.only(bottom: 12),
-          padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: const Color(0xFFE2E8F0)),
+            border: Border.all(color: const Color(0xFFF1F5F9)),
+            boxShadow: [
+              BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 8, offset: const Offset(0, 4))
+            ],
           ),
-          child: Row(
-            children: [
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFEEF2FF),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(Icons.receipt_rounded, color: Color(0xFF6366F1)),
+          child: ListTile(
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            leading: Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFF10B981).withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
               ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      headName,
-                      style: GoogleFonts.outfit(
-                        color: const Color(0xFF1E293B),
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        Text(
-                          date != null ? DateFormat('MMM dd, yyyy').format(date) : 'N/A',
-                          style: GoogleFonts.poppins(color: const Color(0xFF64748B), fontSize: 12),
-                        ),
-                        const SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFF1F5F9),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Text(
-                            method,
-                            style: GoogleFonts.poppins(color: const Color(0xFF475569), fontSize: 10, fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
+              child: const Icon(Icons.receipt_long_rounded, color: Color(0xFF10B981), size: 24),
+            ),
+            title: Text(
+              headName,
+              style: GoogleFonts.outfit(
+                color: const Color(0xFF1E293B),
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
               ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
+            ),
+            subtitle: Padding(
+              padding: const EdgeInsets.only(top: 4.0),
+              child: Row(
                 children: [
                   Text(
-                    currencyFormat.format(amount),
-                    style: GoogleFonts.outfit(
-                      color: const Color(0xFF10B981),
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    date != null ? DateFormat('MMM dd, yyyy').format(date) : 'N/A',
+                    style: GoogleFonts.poppins(color: const Color(0xFF64748B), fontSize: 12),
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    status,
-                    style: GoogleFonts.poppins(
-                      color: status == 'PAID' ? const Color(0xFF10B981) : const Color(0xFFF59E0B),
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
+                  const SizedBox(width: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF1F5F9),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      method,
+                      style: GoogleFonts.poppins(color: const Color(0xFF475569), fontSize: 10, fontWeight: FontWeight.bold),
                     ),
                   ),
                 ],
               ),
-            ],
+            ),
+            trailing: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  '+ ${currencyFormat.format(amount)}',
+                  style: GoogleFonts.outfit(
+                    color: const Color(0xFF10B981),
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: status == 'PAID' ? const Color(0xFF10B981).withOpacity(0.1) : const Color(0xFFF59E0B).withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    status,
+                    style: GoogleFonts.poppins(
+                      color: status == 'PAID' ? const Color(0xFF10B981) : const Color(0xFFF59E0B),
+                      fontSize: 9,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         );
       },

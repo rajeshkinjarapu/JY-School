@@ -752,6 +752,78 @@ class ApiService {
     return _performGet('/api/dashboard/student', 'Failed to get student stats');
   }
 
+  // ── Salary / HR ────────────────────────────────────────────────────────────
+
+  static Future<Map<String, dynamic>?> getUserInfo() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final userJson = prefs.getString('user');
+      if (userJson == null) return null;
+      return jsonDecode(userJson) as Map<String, dynamic>;
+    } catch (_) { return null; }
+  }
+
+  static Future<Map<String, dynamic>> getSalaries({required int year, int? month}) async {
+    final q = month != null ? 'year=$year&month=$month' : 'year=$year';
+    return _performGet('/api/salary?$q', 'Failed to load salaries');
+  }
+
+  static Future<Map<String, dynamic>> createSalary(Map<String, dynamic> body) async {
+    try {
+      final token = await getToken();
+      final res = await http.post(
+        Uri.parse('$baseUrl/api/salary'),
+        headers: _getHeaders(token: token),
+        body: jsonEncode(body),
+      );
+      final data = jsonDecode(res.body);
+      return res.statusCode == 200 || res.statusCode == 201
+          ? {'success': true, 'data': data}
+          : {'success': false, 'message': data['message'] ?? 'Failed'};
+    } catch (e) { return {'success': false, 'message': e.toString()}; }
+  }
+
+  static Future<Map<String, dynamic>> updateSalary(String id, Map<String, dynamic> body) async {
+    try {
+      final token = await getToken();
+      final res = await http.put(
+        Uri.parse('$baseUrl/api/salary/$id'),
+        headers: _getHeaders(token: token),
+        body: jsonEncode(body),
+      );
+      final data = jsonDecode(res.body);
+      return res.statusCode == 200
+          ? {'success': true, 'data': data}
+          : {'success': false, 'message': data['message'] ?? 'Failed'};
+    } catch (e) { return {'success': false, 'message': e.toString()}; }
+  }
+
+  static Future<Map<String, dynamic>> markSalaryPaid(String id) async {
+    try {
+      final token = await getToken();
+      final res = await http.patch(
+        Uri.parse('$baseUrl/api/salary/$id/mark-paid'),
+        headers: _getHeaders(token: token),
+      );
+      return res.statusCode == 200
+          ? {'success': true}
+          : {'success': false, 'message': 'Failed to mark paid'};
+    } catch (e) { return {'success': false, 'message': e.toString()}; }
+  }
+
+  static Future<Map<String, dynamic>> deleteSalary(String id) async {
+    try {
+      final token = await getToken();
+      final res = await http.delete(
+        Uri.parse('$baseUrl/api/salary/$id'),
+        headers: _getHeaders(token: token),
+      );
+      return res.statusCode == 200
+          ? {'success': true}
+          : {'success': false, 'message': 'Failed to delete'};
+    } catch (e) { return {'success': false, 'message': e.toString()}; }
+  }
+
   static Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('accessToken');

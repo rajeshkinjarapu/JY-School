@@ -1,10 +1,12 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/api_service.dart';
 import '../widgets/app_drawer.dart';
 
 class MarksUploadScreen extends StatefulWidget {
-  const MarksUploadScreen({super.key});
+  final String? initialExamId;
+  const MarksUploadScreen({super.key, this.initialExamId});
 
   @override
   State<MarksUploadScreen> createState() => _MarksUploadScreenState();
@@ -27,6 +29,8 @@ class _MarksUploadScreenState extends State<MarksUploadScreen> {
 
   final Map<String, TextEditingController> _marksControllers = {};
   double _maxMarks = 100;
+
+  Map<String, dynamic>? _selectedExamData;
 
   @override
   void initState() {
@@ -54,6 +58,13 @@ class _MarksUploadScreenState extends State<MarksUploadScreen> {
           _exams = examsRes['success'] ? examsRes['data'] ?? [] : [];
           _classes = classesRes['success'] ? classesRes['data'] ?? [] : [];
           _subjects = subjectsRes['success'] ? subjectsRes['data'] ?? [] : [];
+          
+          if (widget.initialExamId != null) {
+            _onExamSelected(widget.initialExamId);
+          } else if (_selectedExamId != null) {
+             _onExamSelected(_selectedExamId);
+          }
+          
           _isLoadingDropdowns = false;
         });
       }
@@ -63,6 +74,51 @@ class _MarksUploadScreenState extends State<MarksUploadScreen> {
           _errorMessage = 'Failed to load filters: $e';
           _isLoadingDropdowns = false;
         });
+      }
+    }
+  }
+
+  void _onExamSelected(String? examId) {
+    if (examId == null) return;
+    
+    // Check if exam exists in list
+    if (!_exams.any((e) => e['id']?.toString() == examId)) {
+      _selectedExamId = null;
+      _selectedExamData = null;
+      return;
+    }
+
+    _selectedExamId = examId;
+    _selectedExamData = _exams.firstWhere((e) => e['id']?.toString() == examId);
+    
+    // Validate selected class and subject against new exam
+    if (_selectedClassId != null) {
+      var examClasses = _selectedExamData!['classes'];
+      if (examClasses is String) {
+        try { examClasses = jsonDecode(examClasses); } catch(e) { examClasses = []; }
+      }
+      if (examClasses is List) {
+        if (!examClasses.any((c) => c['id'].toString() == _selectedClassId)) {
+          _selectedClassId = null;
+          _students = [];
+        }
+      } else {
+        _selectedClassId = null;
+        _students = [];
+      }
+    }
+    
+    if (_selectedSubjectId != null) {
+      var examSubjects = _selectedExamData!['subjects'];
+      if (examSubjects is String) {
+        try { examSubjects = jsonDecode(examSubjects); } catch(e) { examSubjects = []; }
+      }
+      if (examSubjects is List) {
+        if (!examSubjects.any((s) => s['id'].toString() == _selectedSubjectId)) {
+          _selectedSubjectId = null;
+        }
+      } else {
+        _selectedSubjectId = null;
       }
     }
   }
@@ -151,21 +207,38 @@ class _MarksUploadScreenState extends State<MarksUploadScreen> {
       backgroundColor: const Color(0xFFF1F5F9), // Slight gray background
       drawer: const AppDrawer(currentRoute: 'marks'),
       appBar: AppBar(
-        title: Text('Upload Marks', style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 18)),
-        backgroundColor: Colors.white,
-        foregroundColor: const Color(0xFF1E293B),
+        title: Text('Upload Marks', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 20, color: Colors.white)),
+        iconTheme: const IconThemeData(color: Colors.white),
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF6366F1), Color(0xFF4F46E5), Color(0xFF4338CA)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
         elevation: 0,
       ),
       body: _isLoadingDropdowns
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: CircularProgressIndicator(color: Color(0xFF6366F1)))
           : Column(
               children: [
                 _buildFiltersPanel(),
                 Expanded(
                   child: _isLoadingStudents
-                      ? const Center(child: CircularProgressIndicator())
+                      ? const Center(child: CircularProgressIndicator(color: Color(0xFF6366F1)))
                       : _students.isEmpty
-                          ? Center(child: Text('Select filters to load students', style: GoogleFonts.poppins(color: const Color(0xFF94A3B8))))
+                          ? Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.filter_alt_off_rounded, size: 64, color: const Color(0xFFCBD5E1).withOpacity(0.5)),
+                                  const SizedBox(height: 16),
+                                  Text('Select filters to load students', style: GoogleFonts.poppins(color: const Color(0xFF94A3B8), fontSize: 15)),
+                                ],
+                              ),
+                            )
                           : _buildStudentsList(),
                 ),
                 if (_students.isNotEmpty)
@@ -173,20 +246,29 @@ class _MarksUploadScreenState extends State<MarksUploadScreen> {
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
                       color: Colors.white,
-                      boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, -4))],
+                      boxShadow: [BoxShadow(color: const Color(0xFF6366F1).withOpacity(0.1), blurRadius: 20, offset: const Offset(0, -5))],
+                      borderRadius: const BorderRadius.only(topLeft: Radius.circular(24), topRight: Radius.circular(24)),
                     ),
                     child: SizedBox(
                       width: double.infinity,
-                      height: 50,
+                      height: 56,
                       child: ElevatedButton(
                         onPressed: _isSubmitting ? null : _submitMarks,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF6366F1),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                         ),
                         child: _isSubmitting
-                            ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                            : Text('Submit Marks', style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                            ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5))
+                            : Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  const Icon(Icons.cloud_upload_rounded, color: Colors.white),
+                                  const SizedBox(width: 8),
+                                  Text('Submit Grades', style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+                                ],
+                              ),
                       ),
                     ),
                   )
@@ -196,14 +278,38 @@ class _MarksUploadScreenState extends State<MarksUploadScreen> {
   }
 
   Widget _buildFiltersPanel() {
+    List<dynamic> filteredClasses = [];
+    List<dynamic> filteredSubjects = [];
+    
+    if (_selectedExamData != null) {
+      if (_selectedExamData!['classes'] != null) {
+        var examClasses = _selectedExamData!['classes'];
+        if (examClasses is String) {
+          try { examClasses = jsonDecode(examClasses); } catch(e) { examClasses = []; }
+        }
+        if (examClasses is List) {
+          final examClassIds = examClasses.map((c) => c['id'].toString()).toSet();
+          filteredClasses = _classes.where((c) => examClassIds.contains(c['id'].toString())).toList();
+        }
+      }
+      if (_selectedExamData!['subjects'] != null) {
+        var examSubjects = _selectedExamData!['subjects'];
+        if (examSubjects is String) {
+          try { examSubjects = jsonDecode(examSubjects); } catch(e) { examSubjects = []; }
+        }
+        if (examSubjects is List) {
+          filteredSubjects = List<dynamic>.from(examSubjects);
+        }
+      }
+    }
+
     return Container(
-      margin: const EdgeInsets.all(16),
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: const BorderRadius.only(bottomLeft: Radius.circular(30), bottomRight: Radius.circular(30)),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 16, offset: const Offset(0, 4))
+          BoxShadow(color: const Color(0xFF6366F1).withOpacity(0.08), blurRadius: 20, offset: const Offset(0, 8))
         ],
       ),
       child: Column(
@@ -214,32 +320,37 @@ class _MarksUploadScreenState extends State<MarksUploadScreen> {
             items: _exams,
             icon: Icons.assignment_rounded,
             onChanged: (val) {
-              setState(() { _selectedExamId = val; });
+              setState(() { 
+                _onExamSelected(val);
+              });
+              if (_selectedClassId != null) {
+                _fetchStudentsForClass();
+              }
             },
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
           Row(
             children: [
               Expanded(
                 child: _buildDropdown(
-                  hint: 'Class',
+                  hint: _selectedExamId == null ? 'Exam First' : 'Class',
                   value: _selectedClassId,
-                  items: _classes,
+                  items: filteredClasses,
                   icon: Icons.class_rounded,
-                  onChanged: (val) {
+                  onChanged: _selectedExamId == null ? (val) {} : (val) {
                     setState(() { _selectedClassId = val; });
                     _fetchStudentsForClass();
                   },
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 16),
               Expanded(
                 child: _buildDropdown(
-                  hint: 'Subject',
+                  hint: _selectedExamId == null ? 'Exam First' : 'Subject',
                   value: _selectedSubjectId,
-                  items: _subjects,
+                  items: filteredSubjects,
                   icon: Icons.book_rounded,
-                  onChanged: (val) {
+                  onChanged: _selectedExamId == null ? (val) {} : (val) {
                     setState(() { _selectedSubjectId = val; });
                   },
                 ),
@@ -259,11 +370,11 @@ class _MarksUploadScreenState extends State<MarksUploadScreen> {
     required Function(String?) onChanged,
   }) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       decoration: BoxDecoration(
         color: const Color(0xFFF8FAFC),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: value != null ? const Color(0xFF6366F1).withOpacity(0.5) : const Color(0xFFE2E8F0), width: 1.5),
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
@@ -271,21 +382,32 @@ class _MarksUploadScreenState extends State<MarksUploadScreen> {
           value: value,
           hint: Row(
             children: [
-              Icon(icon, size: 18, color: const Color(0xFF94A3B8)),
-              const SizedBox(width: 8),
+              Icon(icon, size: 20, color: const Color(0xFF64748B)),
+              const SizedBox(width: 10),
               Text(hint, style: GoogleFonts.poppins(color: const Color(0xFF64748B), fontSize: 14)),
             ],
           ),
-          icon: const Icon(Icons.keyboard_arrow_down_rounded, color: Color(0xFF94A3B8)),
+          icon: const Icon(Icons.keyboard_arrow_down_rounded, color: Color(0xFF64748B)),
           items: items.map<DropdownMenuItem<String>>((item) {
             String label = item['name'] ?? item['className'] ?? 'Unknown';
-            if (item['section'] != null) label += ' ';
+            if (item['section'] != null && item['section'].toString().trim().isNotEmpty) {
+              label += ' - ${item['section']}';
+            }
             return DropdownMenuItem<String>(
               value: item['id']?.toString() ?? '',
-              child: Text(label, style: GoogleFonts.poppins(color: const Color(0xFF1E293B), fontSize: 14)),
+              child: Text(
+                label, 
+                style: GoogleFonts.poppins(
+                  color: value == item['id']?.toString() ? const Color(0xFF6366F1) : const Color(0xFF1E293B), 
+                  fontSize: 14,
+                  fontWeight: value == item['id']?.toString() ? FontWeight.bold : FontWeight.normal,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
             );
           }).toList(),
-          onChanged: onChanged,
+          onChanged: items.isEmpty ? null : onChanged,
         ),
       ),
     );

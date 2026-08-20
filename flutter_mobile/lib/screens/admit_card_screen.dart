@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/api_service.dart';
@@ -87,6 +88,21 @@ class _AdmitCardScreenState extends State<AdmitCardScreen> {
     setState(() {
       _selectedExamId = examId;
       _selectedExamData = _exams.firstWhere((e) => e['id'] == examId, orElse: () => null);
+      
+      // Clear selected class if it's not valid for the new exam
+      if (_selectedClassId != null && _selectedExamData != null) {
+        final examClasses = _selectedExamData!['classes'] as List?;
+        if (examClasses != null) {
+          final isValid = examClasses.any((c) => c['id'].toString() == _selectedClassId);
+          if (!isValid) {
+            _selectedClassId = null;
+            _selectedClassData = null;
+          }
+        } else {
+          _selectedClassId = null;
+          _selectedClassData = null;
+        }
+      }
     });
   }
   
@@ -149,6 +165,13 @@ class _AdmitCardScreenState extends State<AdmitCardScreen> {
   }
 
   Widget _buildFiltersSection() {
+    List<dynamic> filteredClasses = [];
+    if (_selectedExamData != null && _selectedExamData!['classes'] != null) {
+      final examClasses = _selectedExamData!['classes'] as List;
+      final examClassIds = examClasses.map((c) => c['id'].toString()).toSet();
+      filteredClasses = _classes.where((c) => examClassIds.contains(c['id'].toString())).toList();
+    }
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
@@ -168,28 +191,20 @@ class _AdmitCardScreenState extends State<AdmitCardScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: _buildCompactDropdown(
-                  label: 'Exam',
-                  value: _selectedExamId,
-                  items: _exams,
-                  onChanged: _onExamSelected,
-                  icon: Icons.assignment_rounded,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _buildCompactDropdown(
-                  label: 'Class',
-                  value: _selectedClassId,
-                  items: _classes,
-                  onChanged: _onClassSelected,
-                  icon: Icons.class_rounded,
-                ),
-              ),
-            ],
+          _buildCompactDropdown(
+            label: 'Select Exam',
+            value: _selectedExamId,
+            items: _exams,
+            onChanged: _onExamSelected,
+            icon: Icons.assignment_rounded,
+          ),
+          const SizedBox(height: 12),
+          _buildCompactDropdown(
+            label: _selectedExamId == null ? 'Select Exam First' : 'Select Class',
+            value: _selectedClassId,
+            items: _selectedExamId == null ? [] : filteredClasses,
+            onChanged: _onClassSelected,
+            icon: Icons.class_rounded,
           ),
           const SizedBox(height: 12),
           SizedBox(
@@ -216,7 +231,7 @@ class _AdmitCardScreenState extends State<AdmitCardScreen> {
 
   Widget _buildCompactDropdown({required String label, required String? value, required List<dynamic> items, required Function(dynamic) onChanged, required IconData icon}) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       decoration: BoxDecoration(
         color: const Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(10),
@@ -226,9 +241,10 @@ class _AdmitCardScreenState extends State<AdmitCardScreen> {
         child: DropdownButton<String>(
           isExpanded: true,
           value: value,
-          hint: Text(label, style: GoogleFonts.poppins(fontSize: 12, color: const Color(0xFF94A3B8))),
+          hint: Text(label, style: GoogleFonts.poppins(fontSize: 13, color: const Color(0xFF94A3B8))),
           icon: const Icon(Icons.keyboard_arrow_down_rounded, color: Color(0xFF64748B), size: 18),
-          onChanged: onChanged,
+          onChanged: items.isEmpty ? null : onChanged,
+          itemHeight: null, // Allows dynamic height for multi-line text
           items: items.map((item) {
             String name = item['name'] ?? item['title'] ?? item['className'] ?? 'Unknown';
             if (item['section'] != null && item['section'].toString().trim().isNotEmpty) {
@@ -236,15 +252,18 @@ class _AdmitCardScreenState extends State<AdmitCardScreen> {
             }
             return DropdownMenuItem<String>(
               value: item['id'].toString(),
-              child: Text(
-                name, 
-                style: GoogleFonts.poppins(
-                  fontSize: 13, 
-                  fontWeight: value == item['id'].toString() ? FontWeight.bold : FontWeight.normal,
-                  color: value == item['id'].toString() ? const Color(0xFF6366F1) : const Color(0xFF1E293B)
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Text(
+                  name, 
+                  style: GoogleFonts.poppins(
+                    fontSize: 13, 
+                    fontWeight: value == item['id'].toString() ? FontWeight.bold : FontWeight.normal,
+                    color: value == item['id'].toString() ? const Color(0xFF6366F1) : const Color(0xFF1E293B)
+                  ),
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
                 ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
               ),
             );
           }).toList(),
@@ -346,27 +365,31 @@ class _AdmitCardScreenState extends State<AdmitCardScreen> {
         "Candidate must carry this Admit Card to the examination hall.\nElectronic devices including calculators and mobile phones are strictly prohibited.\nCandidate should report to the examination center 30 minutes before commencement.";
     
     // Parse Schedule
-    List<dynamic> schedule = settings['schedule'] ?? [];
+    List<dynamic> schedule = [];
+    var examPlans = _selectedExamData?['examPlans'];
+    if (examPlans is String) {
+      try { examPlans = jsonDecode(examPlans); } catch(e) { examPlans = []; }
+    }
     
-    // If schedule is empty in settings, fallback to subjects array with default date
-    if (schedule.isEmpty) {
-      final String defaultDate = _selectedExamData?['examDate'] != null 
-          ? _selectedExamData!['examDate'].toString().split('T')[0] 
-          : 'TBA';
-      
-      List<dynamic> subjects = [];
-      if (_selectedExamData?['subjects'] is List) {
-        subjects = _selectedExamData!['subjects'];
+    if (examPlans is List && examPlans.isNotEmpty) {
+      schedule = examPlans;
+    } else {
+      var examSubjects = settings['subjects'] ?? _selectedExamData?['subjects'];
+      if (examSubjects is String) {
+        try { examSubjects = jsonDecode(examSubjects); } catch(e) { examSubjects = []; }
       }
-      
-      schedule = subjects.map((subj) {
-        return {
-          'subjectId': subj['id'],
-          'subjectName': subj['name'],
-          'date': defaultDate,
-          'time': 'TBA',
-        };
-      }).toList();
+      if (examSubjects is List) {
+        final String defaultDate = _selectedExamData?['examDate'] != null 
+            ? _selectedExamData!['examDate'].toString().split('T')[0] 
+            : 'TBA';
+        schedule = examSubjects.map((subj) {
+          return {
+            'subjectName': subj['name'] ?? 'Subject',
+            'date': defaultDate,
+            'time': 'TBA',
+          };
+        }).toList();
+      }
     }
     
     final user = studentData['user'] ?? {};
@@ -383,308 +406,363 @@ class _AdmitCardScreenState extends State<AdmitCardScreen> {
         : 'https://ui-avatars.com/api/?name=${Uri.encodeComponent(studentName)}&background=E2E8F0&color=1E293B';
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 24),
+      width: double.infinity,
+      height: MediaQuery.of(context).size.height * 0.75, // Take most of the screen
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.indigo.withOpacity(0.08),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
-          ),
-        ],
-        border: Border.all(color: const Color(0xFFE2E8F0), width: 1.5),
+        borderRadius: BorderRadius.circular(8),
       ),
-      child: Column(
-        children: [
-          // Premium Header
-          Container(
-            padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Color(0xFF2E2A66), Color(0xFF332F73)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
+      child: InteractiveViewer(
+        panEnabled: true,
+        scaleEnabled: true,
+        minScale: 0.5,
+        maxScale: 4.0,
+        child: FittedBox(
+          fit: BoxFit.contain,
+          child: Container(
+            width: 794, // A4 width at 96 DPI
+            height: 1123, // A4 height at 96 DPI
+            color: Colors.white,
+            padding: const EdgeInsets.all(24),
+            child: Container(
+              decoration: BoxDecoration(
+                border: Border.all(color: const Color(0xFF0F172A), width: 4),
               ),
-              borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(18),
-                topRight: Radius.circular(18),
-              ),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.15),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Icon(Icons.school_rounded, color: Colors.white, size: 28),
+              padding: const EdgeInsets.all(4),
+              child: Container(
+                decoration: BoxDecoration(
+                  border: Border.all(color: const Color(0xFF0F172A), width: 1),
                 ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'JY SCHOOL',
-                        style: GoogleFonts.outfit(
-                          color: Colors.white,
-                          fontSize: 20,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: 2,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'HALL TICKET - ${term.toUpperCase()}',
-                        style: GoogleFonts.poppins(
-                          color: const Color(0xFF93C5FD),
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 1.5,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          
-          // Student Info Section
-          Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Profile Picture
-                Container(
-                  width: 90,
-                  height: 110,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF8FAFC),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: const Color(0xFFCBD5E1), width: 2),
-                    image: DecorationImage(
-                      image: NetworkImage(image),
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 20),
-                // Details
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        studentName,
-                        style: GoogleFonts.outfit(
-                          color: const Color(0xFF1E293B),
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      _buildInfoRow('Roll No', rollNo),
-                      const SizedBox(height: 6),
-                      _buildInfoRow('Class', className),
-                      const SizedBox(height: 6),
-                      _buildInfoRow('Exam', examName),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          const Divider(height: 1, color: Color(0xFFE2E8F0), thickness: 1),
-
-          // Exam Schedule
-          Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
+                child: Column(
                   children: [
-                    const Icon(Icons.event_note_rounded, color: Color(0xFF6366F1), size: 18),
-                    const SizedBox(width: 8),
-                    Text(
-                      'EXAM SCHEDULE',
-                      style: GoogleFonts.outfit(
-                        color: const Color(0xFF6366F1),
-                        fontSize: 13,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 1,
+                    // Header
+                    Container(
+                      padding: const EdgeInsets.all(24),
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFF8FAFC),
+                        border: Border(bottom: BorderSide(color: Color(0xFF0F172A), width: 2)),
                       ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                if (schedule.isEmpty)
-                  Text(
-                    'No schedule available yet.',
-                    style: GoogleFonts.poppins(color: const Color(0xFF64748B), fontSize: 13),
-                  )
-                else
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      border: Border.all(color: const Color(0xFFE2E8F0)),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
-                      child: Table(
-                        columnWidths: const {
-                          0: FlexColumnWidth(2),
-                          1: FlexColumnWidth(1.2),
-                          2: FlexColumnWidth(1.5),
-                        },
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          TableRow(
-                            decoration: const BoxDecoration(color: Color(0xFFF1F5F9)),
-                            children: [
-                              _buildTableHeader('SUBJECT'),
-                              _buildTableHeader('DATE'),
-                              _buildTableHeader('TIME'),
-                            ],
+                          // Logo Placeholder
+                          Container(
+                            width: 96,
+                            height: 96,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              border: Border.all(color: const Color(0xFFCBD5E1)),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            alignment: Alignment.center,
+                            child: Text('LOGO', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: const Color(0xFF1E293B))),
                           ),
-                          ...schedule.map((item) {
-                            final sName = item['subjectName'] ?? item['name'] ?? 'Subject';
-                            final sDate = item['date'] ?? 'TBA';
-                            final sTime = item['time'] ?? 'TBA';
-                            return TableRow(
-                              decoration: const BoxDecoration(
-                                border: Border(top: BorderSide(color: Color(0xFFE2E8F0))),
-                              ),
+                          const SizedBox(width: 24),
+                          // Title
+                          Expanded(
+                            child: Column(
                               children: [
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                                  child: Text(sName, style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.bold, color: const Color(0xFF334155))),
+                                Text(
+                                  'SRI VENKATESWARA JY SCHOOL',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontFamily: 'Georgia',
+                                    fontSize: 28,
+                                    fontWeight: FontWeight.w900,
+                                    color: const Color(0xFF0F172A),
+                                    letterSpacing: 1.2,
+                                  ),
                                 ),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                                  child: Text(sDate, style: GoogleFonts.poppins(fontSize: 12, color: const Color(0xFF475569))),
+                                const SizedBox(height: 4),
+                                Text(
+                                  '(IIT-JEE/NEET FOUNDATION – OLYMPIADS)',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                    color: const Color(0xFF334155),
+                                    letterSpacing: 2.0,
+                                  ),
                                 ),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                                  child: Text(sTime, style: GoogleFonts.poppins(fontSize: 12, color: const Color(0xFF475569))),
+                                const SizedBox(height: 12),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    border: Border.all(color: const Color(0xFFE2E8F0)),
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Icon(Icons.location_on, size: 14, color: Color(0xFF1E293B)),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        'Opp. Hero Showroom, SVL Paradise Campus, Narasannapeta',
+                                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: const Color(0xFF475569)),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ],
-                            );
-                          }).toList(),
+                            ),
+                          ),
+                          const SizedBox(width: 96), // Balance logo width
                         ],
                       ),
                     ),
-                  ),
-              ],
-            ),
-          ),
 
-          const Divider(height: 1, color: Color(0xFFE2E8F0), thickness: 1),
+                    // Badges
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 24),
+                      decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: Color(0xFFE2E8F0)))),
+                      child: Column(
+                        children: [
+                          Transform(
+                            transform: Matrix4.skewX(-0.2),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 8),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF0F172A),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Transform(
+                                transform: Matrix4.skewX(0.2),
+                                child: Text(
+                                  'ADMIT CARD',
+                                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: Colors.white, letterSpacing: 4.0),
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            examName.toUpperCase(),
+                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: const Color(0xFF1E293B), letterSpacing: 2.0),
+                          ),
+                        ],
+                      ),
+                    ),
 
-          // Instructions Section
-          Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    const Icon(Icons.info_outline_rounded, color: Color(0xFFEF4444), size: 18),
-                    const SizedBox(width: 8),
-                    Text(
-                      'IMPORTANT INSTRUCTIONS',
-                      style: GoogleFonts.outfit(
-                        color: const Color(0xFFEF4444),
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 1,
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.all(24),
+                        child: Column(
+                          children: [
+                            // Candidate Details
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                Expanded(
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      border: Border.all(color: const Color(0xFFCBD5E1)),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Column(
+                                      children: [
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                                          decoration: const BoxDecoration(
+                                            color: Color(0xFF1E293B),
+                                            borderRadius: BorderRadius.only(topLeft: Radius.circular(7), topRight: Radius.circular(7)),
+                                          ),
+                                          child: Row(
+                                            children: [
+                                              const Icon(Icons.person, color: Colors.white, size: 16),
+                                              const SizedBox(width: 8),
+                                              Text('CANDIDATE DETAILS', style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 1.5)),
+                                            ],
+                                          ),
+                                        ),
+                                        _buildA4TableRow('Candidate Name', studentName.toUpperCase(), isFirst: true),
+                                        _buildA4TableRow('Father Name', (studentData['parent']?['fatherName'] ?? '-').toUpperCase()),
+                                        _buildA4TableRow('Roll Number', rollNo),
+                                        _buildA4TableRow('Class & Section', className),
+                                        _buildA4TableRow('Gender / DOB', '${studentData['gender'] ?? 'Male'}  |  12/05/2010'),
+                                        _buildA4TableRow('Exam Center', 'JY School Main Campus, Hall A', isLast: true),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 24),
+                                Container(
+                                  width: 120,
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    border: Border.all(color: const Color(0xFFCBD5E1), width: 2),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  padding: const EdgeInsets.all(4),
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      image: DecorationImage(image: NetworkImage(image), fit: BoxFit.cover),
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 32),
+
+                            // Exam Schedule
+                            Container(
+                              decoration: BoxDecoration(
+                                border: Border.all(color: const Color(0xFFCBD5E1)),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Column(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                                    decoration: const BoxDecoration(
+                                      color: Color(0xFF1E293B),
+                                      borderRadius: BorderRadius.only(topLeft: Radius.circular(7), topRight: Radius.circular(7)),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        const Icon(Icons.calendar_month, color: Colors.white, size: 16),
+                                        const SizedBox(width: 8),
+                                        Text('EXAMINATION SCHEDULE', style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 1.5)),
+                                      ],
+                                    ),
+                                  ),
+                                  Table(
+                                    columnWidths: const {
+                                      0: FixedColumnWidth(60),
+                                      1: FlexColumnWidth(1.2),
+                                      2: FlexColumnWidth(2),
+                                      3: FlexColumnWidth(1.5),
+                                      4: FlexColumnWidth(1.5),
+                                    },
+                                    border: TableBorder.symmetric(inside: const BorderSide(color: Color(0xFFE2E8F0))),
+                                    children: [
+                                      TableRow(
+                                        decoration: const BoxDecoration(color: Color(0xFFF1F5F9)),
+                                        children: [
+                                          _buildA4TableHeader('S.No'),
+                                          _buildA4TableHeader('DATE'),
+                                          _buildA4TableHeader('SUBJECT'),
+                                          _buildA4TableHeader('TIME'),
+                                          _buildA4TableHeader('INVIGILATOR SIGN', center: true),
+                                        ],
+                                      ),
+                                      ...List.generate(schedule.length, (i) {
+                                        final item = schedule[i];
+                                        return TableRow(
+                                          children: [
+                                            _buildA4TableCell('${i + 1}', center: true),
+                                            _buildA4TableCell(item['date'] ?? 'TBA'),
+                                            _buildA4TableCell((item['subjectName'] ?? item['name'] ?? 'Subject').toUpperCase()),
+                                            _buildA4TableCell(item['time'] ?? 'TBA'),
+                                            _buildA4TableCell('..................', center: true, isLight: true),
+                                          ],
+                                        );
+                                      }),
+                                      if (schedule.isEmpty)
+                                        TableRow(
+                                          children: [
+                                            Padding(
+                                              padding: const EdgeInsets.all(24),
+                                              child: Text('No schedule mapped for this class.', textAlign: TextAlign.center, style: TextStyle(color: const Color(0xFF94A3B8), fontSize: 12, fontStyle: FontStyle.italic)),
+                                            ),
+                                            const SizedBox(), const SizedBox(), const SizedBox(), const SizedBox()
+                                          ],
+                                        )
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                            
+                            const Spacer(),
+
+                            // Footer
+                            Container(
+                              padding: const EdgeInsets.all(20),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF8FAFC),
+                                border: Border.all(color: const Color(0xFFE2E8F0), width: 2),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Row(
+                                          children: [
+                                            Container(width: 6, height: 6, decoration: const BoxDecoration(color: Color(0xFF0F172A), shape: BoxShape.circle)),
+                                            const SizedBox(width: 8),
+                                            Text('IMPORTANT INSTRUCTIONS', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w900, color: const Color(0xFF0F172A), letterSpacing: 1.0)),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 12),
+                                        ...instructions.split('\n').map((line) => Padding(
+                                          padding: const EdgeInsets.only(bottom: 8, left: 14),
+                                          child: Row(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              const Text('• ', style: TextStyle(fontSize: 12, color: Color(0xFF475569))),
+                                              Expanded(child: Text(line, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: const Color(0xFF334155), height: 1.5))),
+                                            ],
+                                          ),
+                                        )),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(width: 32),
+                                  Column(
+                                    children: [
+                                      if (signatureUrl.isNotEmpty)
+                                        Image.network(signatureUrl, height: 60, width: 120, fit: BoxFit.contain)
+                                      else
+                                        const SizedBox(height: 60, width: 120),
+                                      Container(width: 150, height: 1, color: const Color(0xFFCBD5E1)),
+                                      const SizedBox(height: 8),
+                                      Text('PRINCIPAL SIGNATURE', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, color: const Color(0xFF1E293B), letterSpacing: 1.0)),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 12),
-                Text(
-                  instructions,
-                  style: GoogleFonts.poppins(
-                    color: const Color(0xFF475569),
-                    fontSize: 11,
-                    height: 1.6,
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
+        ),
+      ),
+    );
+  }
 
-          // Footer / Signature Area
+  Widget _buildA4TableRow(String label, String value, {bool isFirst = false, bool isLast = false}) {
+    return Container(
+      decoration: BoxDecoration(
+        border: Border(bottom: BorderSide(color: isLast ? Colors.transparent : const Color(0xFFE2E8F0))),
+      ),
+      child: Row(
+        children: [
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+            width: 200,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: const BoxDecoration(
               color: Color(0xFFF8FAFC),
-              borderRadius: BorderRadius.only(
-                bottomLeft: Radius.circular(18),
-                bottomRight: Radius.circular(18),
-              ),
+              border: Border(right: BorderSide(color: Color(0xFFE2E8F0))),
             ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Column(
-                  children: [
-                    if (teacherSignatureUrl.isNotEmpty)
-                      Image.network(teacherSignatureUrl, height: 40, width: 80, fit: BoxFit.contain)
-                    else
-                      const SizedBox(height: 40),
-                    Container(width: 80, height: 1, color: const Color(0xFFCBD5E1)),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Teacher',
-                      style: GoogleFonts.poppins(color: const Color(0xFF64748B), fontSize: 11, fontWeight: FontWeight.w600),
-                    ),
-                  ],
-                ),
-                Column(
-                  children: [
-                    if (signatureUrl.isNotEmpty)
-                      Image.network(signatureUrl, height: 40, width: 80, fit: BoxFit.contain)
-                    else
-                      const SizedBox(height: 40),
-                    Container(width: 80, height: 1, color: const Color(0xFFCBD5E1)),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Principal',
-                      style: GoogleFonts.poppins(color: const Color(0xFF64748B), fontSize: 11, fontWeight: FontWeight.w600),
-                    ),
-                  ],
-                ),
-              ],
-            ),
+            child: Text(label.toUpperCase(), style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: const Color(0xFF475569), letterSpacing: 1.0)),
           ),
-
-          // Share/Download Button
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: SizedBox(
-              width: double.infinity,
-              child: OutlinedButton.icon(
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Downloading/Sharing Admit Card... (PDF generation)')));
-                },
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: const Color(0xFF6366F1),
-                  side: const BorderSide(color: Color(0xFF6366F1), width: 1.5),
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                ),
-                icon: const Icon(Icons.ios_share_rounded, size: 18),
-                label: Text('Share Admit Card', style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 14)),
-              ),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Text(value, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w900, color: const Color(0xFF0F172A))),
             ),
           ),
         ],
@@ -692,6 +770,19 @@ class _AdmitCardScreenState extends State<AdmitCardScreen> {
     );
   }
 
+  Widget _buildA4TableHeader(String label, {bool center = false}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Text(label, textAlign: center ? TextAlign.center : TextAlign.left, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, color: const Color(0xFF334155), letterSpacing: 1.5)),
+    );
+  }
+
+  Widget _buildA4TableCell(String label, {bool center = false, bool isLight = false}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Text(label, textAlign: center ? TextAlign.center : TextAlign.left, style: TextStyle(fontSize: 12, fontWeight: isLight ? FontWeight.normal : FontWeight.bold, color: isLight ? const Color(0xFF94A3B8) : const Color(0xFF1E293B))),
+    );
+  }
   Widget _buildTableHeader(String text) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),

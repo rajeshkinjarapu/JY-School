@@ -138,14 +138,14 @@ class _RecordFeePaymentScreenState extends State<RecordFeePaymentScreen> {
     final className = '${widget.student['class']?['name'] ?? ''} ${widget.student['class']?['section'] ?? ''}'.trim();
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF1F5FB),
+      backgroundColor: const Color(0xFFF1F5F9), // Standard gray background
       appBar: AppBar(
         iconTheme: const IconThemeData(color: Colors.white),
         title: Text('Record Payment', style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 20)),
         flexibleSpace: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
-              colors: [Color(0xFF2E2A66), Color(0xFF4F46E5)],
+              colors: [Color(0xFF6366F1), Color(0xFF4F46E5), Color(0xFF4338CA)],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
@@ -159,11 +159,11 @@ class _RecordFeePaymentScreenState extends State<RecordFeePaymentScreen> {
           Container(
             decoration: const BoxDecoration(
               gradient: LinearGradient(
-                colors: [Color(0xFF2E2A66), Color(0xFF4F46E5)],
+                colors: [Color(0xFF6366F1), Color(0xFF4F46E5), Color(0xFF4338CA)],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
-              borderRadius: BorderRadius.only(bottomLeft: Radius.circular(24), bottomRight: Radius.circular(24)),
+              borderRadius: BorderRadius.only(bottomLeft: Radius.circular(32), bottomRight: Radius.circular(32)),
               boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10, offset: Offset(0, 4))],
             ),
             padding: const EdgeInsets.fromLTRB(20, 10, 20, 24),

@@ -22,6 +22,15 @@ class _ExamsScreenState extends State<ExamsScreen> {
   String? _userRole;
   String? _expandedExamId;
 
+  // Vibrant gradients for the exam cards
+  final List<List<Color>> _cardGradients = [
+    [const Color(0xFF6366F1), const Color(0xFF8B5CF6)], // Indigo to Purple
+    [const Color(0xFFEC4899), const Color(0xFFF43F5E)], // Pink to Rose
+    [const Color(0xFF10B981), const Color(0xFF34D399)], // Emerald
+    [const Color(0xFFF59E0B), const Color(0xFFFBBF24)], // Amber
+    [const Color(0xFF3B82F6), const Color(0xFF2DD4BF)], // Blue to Teal
+  ];
+
   @override
   void initState() {
     super.initState();
@@ -79,7 +88,8 @@ class _ExamsScreenState extends State<ExamsScreen> {
         if (mounted) {
           if (result['success']) {
             setState(() {
-              _examsList = result['data'] ?? [];
+              final data = result['data'];
+              _examsList = data is List ? data : (data is Map && data['data'] is List ? data['data'] : []);
               _isLoading = false;
             });
           } else {
@@ -104,14 +114,15 @@ class _ExamsScreenState extends State<ExamsScreen> {
     final bool? confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete Exam'),
-        content: const Text('Are you sure you want to delete this exam? All associated marks will also be deleted.'),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text('Delete Exam', style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
+        content: Text('Are you sure you want to delete this exam? All associated marks will also be deleted.', style: GoogleFonts.poppins()),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(context, false), child: Text('Cancel', style: GoogleFonts.poppins(color: Colors.grey.shade700, fontWeight: FontWeight.w600))),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFEF4444), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
             onPressed: () => Navigator.pop(context, true), 
-            child: const Text('Delete', style: TextStyle(color: Colors.white)),
+            child: Text('Delete', style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -119,10 +130,8 @@ class _ExamsScreenState extends State<ExamsScreen> {
 
     if (confirm != true) return;
 
-    // Simulate API call for now (as delete might not be in ApiService yet, or we assume it is)
-    // await ApiService.deleteExam(id); 
+    // Simulate API call for now
     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Exam delete requested (Requires API support)')));
-    // Ideally we would fetch results again: _fetchResults();
   }
 
   Color _getGradeColor(String grade) {
@@ -156,49 +165,99 @@ class _ExamsScreenState extends State<ExamsScreen> {
     final title = isStudent ? 'My Results' : 'Examinations';
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: const Color(0xFFF1F5F9), // Lighter, cleaner background
       drawer: const AppDrawer(currentRoute: 'exams'),
       appBar: AppBar(
-        title: Text(title, style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 18)),
-        backgroundColor: Colors.white,
-        foregroundColor: const Color(0xFF1E293B),
+        title: Text(title, style: GoogleFonts.outfit(fontWeight: FontWeight.w800, fontSize: 22, color: const Color(0xFF1E293B))),
+        backgroundColor: Colors.transparent,
         elevation: 0,
+        centerTitle: false,
+        iconTheme: const IconThemeData(color: Color(0xFF1E293B)),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh_rounded),
-            onPressed: _fetchResults,
+          Container(
+            margin: const EdgeInsets.only(right: 12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 2))],
+            ),
+            child: IconButton(
+              icon: const Icon(Icons.refresh_rounded, color: Color(0xFF4F46E5)),
+              onPressed: _fetchResults,
+            ),
           )
         ],
       ),
+      extendBodyBehindAppBar: true,
       floatingActionButton: (!isStudent && (_userRole == 'SUPER_ADMIN' || _userRole == 'ADMIN' || _userRole == 'TEACHER')) 
-          ? FloatingActionButton.extended(
-              onPressed: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context) => const CreateExamScreen()))
-                    .then((value) { if (value == true) _fetchResults(); });
-              },
-              backgroundColor: const Color(0xFF6366F1),
-              icon: const Icon(Icons.add, color: Colors.white),
-              label: const Text('New Exam', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          ? Container(
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)]),
+                borderRadius: BorderRadius.circular(30),
+                boxShadow: [
+                  BoxShadow(color: const Color(0xFF6366F1).withOpacity(0.4), blurRadius: 16, offset: const Offset(0, 8))
+                ]
+              ),
+              child: FloatingActionButton.extended(
+                onPressed: () {
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => const CreateExamScreen()))
+                      .then((value) { if (value == true) _fetchResults(); });
+                },
+                backgroundColor: Colors.transparent,
+                elevation: 0,
+                highlightElevation: 0,
+                icon: const Icon(Icons.add_rounded, color: Colors.white, size: 24),
+                label: Text('New Exam', style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
+              ),
             )
           : null,
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _errorMessage != null
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.error_outline_rounded, size: 60, color: Colors.redAccent),
-                      const SizedBox(height: 16),
-                      Text(_errorMessage!, textAlign: TextAlign.center, style: GoogleFonts.poppins()),
-                      const SizedBox(height: 16),
-                      ElevatedButton(onPressed: _fetchResults, child: const Text('Retry'))
-                    ],
-                  ),
-                )
-              : isStudent
-                  ? _buildStudentResults()
-                  : _buildExamsList(),
+      body: Stack(
+        children: [
+          // Background subtle decorations
+          Positioned(
+            top: -100, right: -100,
+            child: Container(
+              width: 300, height: 300,
+              decoration: BoxDecoration(shape: BoxShape.circle, color: const Color(0xFF6366F1).withOpacity(0.05)),
+            ),
+          ),
+          Positioned(
+            bottom: -50, left: -50,
+            child: Container(
+              width: 200, height: 200,
+              decoration: BoxDecoration(shape: BoxShape.circle, color: const Color(0xFFEC4899).withOpacity(0.05)),
+            ),
+          ),
+          SafeArea(
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator(color: Color(0xFF6366F1)))
+                : _errorMessage != null
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.error_outline_rounded, size: 70, color: Color(0xFFEF4444)),
+                            const SizedBox(height: 16),
+                            Text(_errorMessage!, textAlign: TextAlign.center, style: GoogleFonts.poppins(fontSize: 16, color: const Color(0xFF475569))),
+                            const SizedBox(height: 24),
+                            ElevatedButton(
+                              onPressed: _fetchResults, 
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF6366F1),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12)
+                              ),
+                              child: Text('Retry', style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: Colors.white))
+                            )
+                          ],
+                        ),
+                      )
+                    : isStudent
+                        ? _buildStudentResults()
+                        : _buildExamsList(),
+          ),
+        ],
+      ),
     );
   }
 
@@ -208,26 +267,34 @@ class _ExamsScreenState extends State<ExamsScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.layers_rounded, size: 80, color: Colors.grey.shade300),
-            const SizedBox(height: 16),
-            Text("No Examinations Found", style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.grey.shade500)),
-            Text("Click 'New Exam' to schedule one.", style: GoogleFonts.poppins(color: Colors.grey.shade400)),
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(color: Colors.white, shape: BoxShape.circle, boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 20)]),
+              child: const Icon(Icons.layers_rounded, size: 80, color: Color(0xFFCBD5E1)),
+            ),
+            const SizedBox(height: 24),
+            Text("No Examinations Found", style: GoogleFonts.outfit(fontSize: 22, fontWeight: FontWeight.bold, color: const Color(0xFF334155))),
+            const SizedBox(height: 8),
+            Text("Click 'New Exam' to schedule one.", style: GoogleFonts.poppins(color: const Color(0xFF64748B), fontSize: 14)),
           ],
         ),
       );
     }
     return RefreshIndicator(
       onRefresh: _fetchResults,
+      color: const Color(0xFF6366F1),
       child: ListView.builder(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.only(top: 10, left: 20, right: 20, bottom: 100),
         itemCount: _examsList.length,
         itemBuilder: (context, index) {
           final exam = _examsList[index];
-          final String id = exam['id']?.toString() ?? index.toString();
-          final String name = exam['name'] ?? 'Unknown Exam';
-          final String term = exam['term'] ?? '';
+          if (exam == null || exam is! Map) return const SizedBox();
           
-          final String dateStr = exam['examDate'] ?? '';
+          final String id = exam['id']?.toString() ?? index.toString();
+          final String name = exam['name']?.toString() ?? 'Unknown Exam';
+          final String term = exam['term']?.toString() ?? '';
+          
+          final String dateStr = exam['examDate']?.toString() ?? '';
           String formattedDate = 'No Date';
           if (dateStr.isNotEmpty) {
             try {
@@ -238,171 +305,168 @@ class _ExamsScreenState extends State<ExamsScreen> {
 
           final List<dynamic> classes = exam['classes'] as List? ?? [];
           final bool isExpanded = _expandedExamId == id;
-          
+          final gradient = _cardGradients[index % _cardGradients.length];
+
           return GestureDetector(
             onTap: () {
               setState(() {
                 _expandedExamId = isExpanded ? null : id;
               });
             },
-            child: Container(
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeInOut,
               margin: const EdgeInsets.only(bottom: 16),
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(24),
-                border: Border.all(color: Colors.grey.shade200),
+                borderRadius: BorderRadius.circular(16),
                 boxShadow: [
-                  BoxShadow(color: Colors.black.withOpacity(isExpanded ? 0.08 : 0.03), blurRadius: isExpanded ? 20 : 12, offset: const Offset(0, 4))
+                  BoxShadow(
+                    color: gradient[0].withOpacity(isExpanded ? 0.15 : 0.05),
+                    blurRadius: isExpanded ? 20 : 10,
+                    offset: Offset(0, isExpanded ? 8 : 4),
+                  )
                 ],
+                border: Border.all(color: const Color(0xFFF1F5F9), width: 1.5),
               ),
               child: ClipRRect(
-                borderRadius: BorderRadius.circular(24),
-                child: Stack(
+                borderRadius: BorderRadius.circular(16),
+                child: Column(
                   children: [
-                    // Watermark
-                    Positioned(
-                      top: -20,
-                      right: -20,
-                      child: Container(
-                        width: 100,
-                        height: 100,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF6366F1).withOpacity(0.05),
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                    ),
+                    // Top Accent Line
+                    Container(height: 4, decoration: BoxDecoration(gradient: LinearGradient(colors: gradient))),
                     Padding(
-                      padding: const EdgeInsets.all(20),
+                      padding: const EdgeInsets.all(16),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
+                              Container(
+                                padding: const EdgeInsets.all(10),
+                                decoration: BoxDecoration(
+                                  color: gradient[0].withOpacity(0.1),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(Icons.assignment_rounded, color: gradient[0], size: 20),
+                              ),
+                              const SizedBox(width: 12),
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Row(
-                                      children: [
-                                        Flexible(
-                                          child: Text(
-                                            name,
-                                            style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: const Color(0xFF1E293B)),
-                                            maxLines: 2,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                        ),
-                                        if (term.isNotEmpty) ...[
-                                          const SizedBox(width: 8),
-                                          Container(
-                                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                            decoration: BoxDecoration(
-                                              color: const Color(0xFFEEF2FF),
-                                              borderRadius: BorderRadius.circular(12),
-                                              border: Border.all(color: const Color(0xFFC7D2FE)),
-                                            ),
-                                            child: Text(
-                                              term,
-                                              style: GoogleFonts.poppins(color: const Color(0xFF4F46E5), fontSize: 10, fontWeight: FontWeight.w700),
-                                            ),
-                                          ),
-                                        ]
-                                      ],
+                                    Text(
+                                      name,
+                                      style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold, color: const Color(0xFF1E293B)),
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
                                     ),
-                                    const SizedBox(height: 6),
+                                    const SizedBox(height: 4),
                                     Row(
                                       children: [
-                                        const Icon(Icons.calendar_month_rounded, size: 14, color: Color(0xFF94A3B8)),
-                                        const SizedBox(width: 6),
-                                        Text(formattedDate, style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.bold, color: const Color(0xFF64748B))),
+                                        if (term.isNotEmpty) ...[
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                            decoration: BoxDecoration(color: const Color(0xFFF1F5F9), borderRadius: BorderRadius.circular(6)),
+                                            child: Text(term, style: GoogleFonts.poppins(color: const Color(0xFF64748B), fontSize: 10, fontWeight: FontWeight.w600)),
+                                          ),
+                                          const SizedBox(width: 8),
+                                        ],
+                                        Icon(Icons.calendar_today_rounded, size: 12, color: const Color(0xFF94A3B8)),
+                                        const SizedBox(width: 4),
+                                        Text(formattedDate, style: GoogleFonts.poppins(fontSize: 11, color: const Color(0xFF64748B), fontWeight: FontWeight.w500)),
                                       ],
                                     ),
                                   ],
                                 ),
                               ),
-                              Icon(isExpanded ? Icons.keyboard_arrow_up_rounded : Icons.keyboard_arrow_down_rounded, color: const Color(0xFF94A3B8)),
+                              AnimatedRotation(
+                                turns: isExpanded ? 0.5 : 0.0,
+                                duration: const Duration(milliseconds: 300),
+                                child: const Icon(Icons.keyboard_arrow_down_rounded, color: Color(0xFF94A3B8), size: 20),
+                              ),
                             ],
                           ),
-                          const SizedBox(height: 16),
-                          Text('Target Classes', style: GoogleFonts.poppins(fontSize: 10, fontWeight: FontWeight.bold, color: const Color(0xFF94A3B8), letterSpacing: 0.5)),
-                          const SizedBox(height: 8),
+                          const SizedBox(height: 12),
                           Wrap(
-                            spacing: 8,
-                            runSpacing: 8,
-                            children: classes.take(isExpanded ? classes.length : 3).map((c) {
+                            spacing: 6,
+                            runSpacing: 6,
+                            children: classes.take(isExpanded ? classes.length : 4).map<Widget>((c) {
                               final className = c['name'] ?? c['className'] ?? '';
                               final section = c['section'] ?? '';
                               final display = section.isEmpty ? className : '$className-$section';
                               return Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: gradient[0].withOpacity(0.05),
+                                  border: Border.all(color: gradient[0].withOpacity(0.2)),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text(display, style: GoogleFonts.poppins(fontSize: 10, fontWeight: FontWeight.w600, color: gradient[0])),
+                              );
+                            }).toList()..addAll(!isExpanded && classes.length > 4 ? [
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                                 decoration: BoxDecoration(
                                   color: const Color(0xFFF8FAFC),
                                   border: Border.all(color: const Color(0xFFE2E8F0)),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
-                                child: Text(display, style: GoogleFonts.poppins(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFF475569))),
-                              );
-                            }).toList()..addAll(!isExpanded && classes.length > 3 ? [
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFF1F5F9),
-                                  border: Border.all(color: const Color(0xFFE2E8F0)),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Text('+${classes.length - 3} more', style: GoogleFonts.poppins(fontSize: 11, fontWeight: FontWeight.bold, color: const Color(0xFF64748B))),
+                                child: Text('+${classes.length - 4}', style: GoogleFonts.poppins(fontSize: 10, fontWeight: FontWeight.w600, color: const Color(0xFF64748B))),
                               )
                             ] : []),
                           ),
                           
                           // Expandable Actions
-                          if (isExpanded) ...[
-                            const Padding(
-                              padding: EdgeInsets.symmetric(vertical: 16),
-                              child: Divider(height: 1, color: Color(0xFFE2E8F0)),
-                            ),
-                            Row(
+                          AnimatedCrossFade(
+                            firstChild: const SizedBox(height: 0, width: double.infinity),
+                            secondChild: Column(
                               children: [
-                                if (_userRole == 'SUPER_ADMIN')
-                                  Expanded(
-                                    child: OutlinedButton.icon(
-                                      onPressed: () => _deleteExam(id),
-                                      style: OutlinedButton.styleFrom(
-                                        foregroundColor: Colors.red,
-                                        side: const BorderSide(color: Colors.red),
-                                        padding: const EdgeInsets.symmetric(vertical: 12),
-                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                const SizedBox(height: 16),
+                                const Divider(height: 1, color: Color(0xFFF1F5F9)),
+                                const SizedBox(height: 12),
+                                Row(
+                                  children: [
+                                    if (_userRole == 'SUPER_ADMIN')
+                                      Expanded(
+                                        child: OutlinedButton.icon(
+                                          onPressed: () => _deleteExam(id),
+                                          style: OutlinedButton.styleFrom(
+                                            foregroundColor: const Color(0xFFEF4444),
+                                            side: const BorderSide(color: Color(0xFFFECACA)),
+                                            padding: const EdgeInsets.symmetric(vertical: 10),
+                                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                          ),
+                                          icon: const Icon(Icons.delete_outline_rounded, size: 16),
+                                          label: Text('Delete', style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 12)),
+                                        ),
                                       ),
-                                      icon: const Icon(Icons.delete_outline_rounded, size: 18),
-                                      label: Text('Delete', style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 12)),
+                                    if (_userRole == 'SUPER_ADMIN') const SizedBox(width: 8),
+                                    Expanded(
+                                      flex: 2,
+                                      child: ElevatedButton.icon(
+                                        onPressed: () {
+                                          Navigator.push(context, MaterialPageRoute(builder: (context) => MarksUploadScreen(initialExamId: id)));
+                                        },
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: gradient[0],
+                                          foregroundColor: Colors.white,
+                                          padding: const EdgeInsets.symmetric(vertical: 10),
+                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                          elevation: 0,
+                                        ),
+                                        icon: const Icon(Icons.edit_note_rounded, size: 16),
+                                        label: Text('Enter Grades', style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 12)),
+                                      ),
                                     ),
-                                  ),
-                                if (_userRole == 'SUPER_ADMIN') const SizedBox(width: 12),
-                                Expanded(
-                                  flex: 2,
-                                  child: ElevatedButton.icon(
-                                    onPressed: () {
-                                      // Ideally navigate to MarksUploadScreen with this exam pre-selected
-                                      // For now, just navigate to it
-                                      Navigator.push(context, MaterialPageRoute(builder: (context) => MarksUploadScreen()));
-                                    },
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: const Color(0xFF4F46E5),
-                                      foregroundColor: Colors.white,
-                                      padding: const EdgeInsets.symmetric(vertical: 12),
-                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                      elevation: 0,
-                                    ),
-                                    icon: const Icon(Icons.edit_note_rounded, size: 18),
-                                    label: Text('Enter Grades', style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 12)),
-                                  ),
-                                ),
+                                  ],
+                                )
                               ],
-                            )
-                          ],
+                            ),
+                            crossFadeState: isExpanded ? CrossFadeState.showSecond : CrossFadeState.showFirst,
+                            duration: const Duration(milliseconds: 300),
+                          ),
                         ],
                       ),
                     ),
@@ -419,7 +483,20 @@ class _ExamsScreenState extends State<ExamsScreen> {
   Widget _buildStudentResults() {
     if (_examResults.isEmpty) {
       return Center(
-        child: Text("No results found.", style: GoogleFonts.poppins(color: const Color(0xFF64748B))),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(color: Colors.white, shape: BoxShape.circle, boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 20)]),
+              child: const Icon(Icons.assignment_turned_in_rounded, size: 80, color: Color(0xFFCBD5E1)),
+            ),
+            const SizedBox(height: 24),
+            Text("No Results Found", style: GoogleFonts.outfit(fontSize: 22, fontWeight: FontWeight.bold, color: const Color(0xFF334155))),
+            const SizedBox(height: 8),
+            Text("You don't have any exam marks yet.", style: GoogleFonts.poppins(color: const Color(0xFF64748B), fontSize: 14)),
+          ],
+        ),
       );
     }
     
@@ -436,8 +513,9 @@ class _ExamsScreenState extends State<ExamsScreen> {
 
     return RefreshIndicator(
       onRefresh: _fetchResults,
+      color: const Color(0xFF6366F1),
       child: ListView.builder(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.only(top: 10, left: 20, right: 20, bottom: 40),
         itemCount: groupedByExam.length,
         itemBuilder: (context, index) {
           final examName = groupedByExam.keys.elementAt(index);
@@ -456,41 +534,46 @@ class _ExamsScreenState extends State<ExamsScreen> {
           return Container(
             margin: const EdgeInsets.only(bottom: 24),
             decoration: BoxDecoration(
-              color: Colors.white,
+              gradient: const LinearGradient(
+                colors: [Color(0xFF312E81), Color(0xFF4F46E5)], // Indigo Dark to Indigo
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
               borderRadius: BorderRadius.circular(24),
               boxShadow: [
-                BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 16, offset: const Offset(0, 4))
+                BoxShadow(color: const Color(0xFF4F46E5).withOpacity(0.3), blurRadius: 20, offset: const Offset(0, 10))
               ],
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // Header & Circular Progress
+                // Header Scorecard
                 Container(
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF8FAFC),
+                    color: Colors.white.withOpacity(0.1),
                     borderRadius: const BorderRadius.only(topLeft: Radius.circular(24), topRight: Radius.circular(24)),
-                    border: const Border(bottom: BorderSide(color: Color(0xFFF1F5F9))),
                   ),
                   child: Row(
                     children: [
-                      SizedBox(
-                        width: 70,
-                        height: 70,
+                      Container(
+                        width: 76,
+                        height: 76,
+                        padding: const EdgeInsets.all(6),
+                        decoration: const BoxDecoration(shape: BoxShape.circle, color: Colors.white),
                         child: Stack(
                           fit: StackFit.expand,
                           children: [
                             CircularProgressIndicator(
                               value: percentage,
                               strokeWidth: 6,
-                              backgroundColor: const Color(0xFFE2E8F0),
+                              backgroundColor: const Color(0xFFF1F5F9),
                               valueColor: AlwaysStoppedAnimation<Color>(percentage >= 0.35 ? const Color(0xFF10B981) : const Color(0xFFEF4444)),
                             ),
                             Center(
                               child: Text(
-                                '{(percentage * 100).toStringAsFixed(0)}%',
-                                style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold, color: const Color(0xFF1E293B)),
+                                '${(percentage * 100).toStringAsFixed(0)}%',
+                                style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w900, color: const Color(0xFF1E293B)),
                               ),
                             )
                           ],
@@ -503,12 +586,19 @@ class _ExamsScreenState extends State<ExamsScreen> {
                           children: [
                             Text(
                               examName,
-                              style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.bold, color: const Color(0xFF1E293B)),
+                              style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
                             ),
-                            const SizedBox(height: 4),
-                            Text(
-                              'Total Score: ${totalObtained.toStringAsFixed(0)} / ${totalMax.toStringAsFixed(0)}',
-                              style: GoogleFonts.poppins(fontSize: 13, color: const Color(0xFF64748B)),
+                            const SizedBox(height: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Text(
+                                'Total: ${totalObtained.toStringAsFixed(0)} / ${totalMax.toStringAsFixed(0)}',
+                                style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.white),
+                              ),
                             ),
                           ],
                         ),
@@ -518,97 +608,78 @@ class _ExamsScreenState extends State<ExamsScreen> {
                 ),
                 
                 // Subjects List
-                Padding(
+                Container(
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.only(bottomLeft: Radius.circular(24), bottomRight: Radius.circular(24)),
+                  ),
                   padding: const EdgeInsets.all(20),
-                  child: Table(
-                    columnWidths: const {
-                      0: FlexColumnWidth(2),
-                      1: FlexColumnWidth(1),
-                      2: FlexColumnWidth(1),
-                      3: FlexColumnWidth(1),
-                    },
-                    children: [
-                      TableRow(
-                        children: [
-                          _buildTableHeader('SUBJECT'),
-                          _buildTableHeader('MARKS', align: Alignment.centerRight),
-                          _buildTableHeader('MAX', align: Alignment.centerRight),
-                          _buildTableHeader('GRADE', align: Alignment.center),
-                        ],
-                      ),
-                      ...marks.map((m) {
-                        final subjectName = m['subject']?['name'] ?? 'Unknown';
-                        final obtained = m['marksObtained']?.toString() ?? '-';
-                        final max = m['maxMarks']?.toString() ?? '-';
-                        final grade = m['grade'] ?? '-';
-                        return TableRow(
+                  child: Column(
+                    children: marks.map((m) {
+                      final subjectName = m['subject']?['name'] ?? 'Unknown';
+                      final obtained = m['marksObtained']?.toString() ?? '-';
+                      final max = m['maxMarks']?.toString() ?? '-';
+                      final grade = m['grade'] ?? '-';
+                      
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 12),
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF8FAFC),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: const Color(0xFFF1F5F9)),
+                          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.01), blurRadius: 4, offset: const Offset(0, 2))],
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 12.0),
-                              child: Text(
-                                subjectName,
-                                style: GoogleFonts.poppins(color: const Color(0xFF1E293B), fontSize: 13, fontWeight: FontWeight.w600),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(subjectName, style: GoogleFonts.poppins(color: const Color(0xFF1E293B), fontSize: 14, fontWeight: FontWeight.w700)),
+                                  const SizedBox(height: 4),
+                                  Text('Max Marks: $max', style: GoogleFonts.poppins(color: const Color(0xFF64748B), fontSize: 11, fontWeight: FontWeight.w500)),
+                                ],
                               ),
                             ),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 12.0),
-                              child: Align(
-                                alignment: Alignment.centerRight,
-                                child: Text(obtained, style: GoogleFonts.poppins(color: const Color(0xFF0F172A), fontSize: 13, fontWeight: FontWeight.bold)),
-                              ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 12.0),
-                              child: Align(
-                                alignment: Alignment.centerRight,
-                                child: Text(max, style: GoogleFonts.poppins(color: const Color(0xFF94A3B8), fontSize: 13)),
-                              ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 12.0),
-                              child: Align(
-                                alignment: Alignment.center,
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            Row(
+                              children: [
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    Text(obtained, style: GoogleFonts.outfit(color: const Color(0xFF4F46E5), fontSize: 22, fontWeight: FontWeight.w800)),
+                                    Text('Score', style: GoogleFonts.poppins(color: const Color(0xFF94A3B8), fontSize: 10, fontWeight: FontWeight.w700)),
+                                  ],
+                                ),
+                                const SizedBox(width: 16),
+                                Container(
+                                  width: 44,
+                                  height: 44,
                                   decoration: BoxDecoration(
-                                    color: _getGradeColor(grade).withOpacity(0.1),
-                                    borderRadius: BorderRadius.circular(6),
+                                    color: _getGradeColor(grade).withOpacity(0.15),
+                                    shape: BoxShape.circle,
+                                    border: Border.all(color: _getGradeColor(grade).withOpacity(0.3), width: 2),
                                   ),
-                                  child: Text(
-                                    grade,
-                                    style: GoogleFonts.poppins(color: _getGradeColor(grade), fontSize: 11, fontWeight: FontWeight.bold),
+                                  child: Center(
+                                    child: Text(
+                                      grade,
+                                      style: GoogleFonts.outfit(color: _getGradeColor(grade), fontSize: 16, fontWeight: FontWeight.bold),
+                                    ),
                                   ),
                                 ),
-                              ),
-                            ),
+                              ],
+                            )
                           ],
-                        );
-                      }).toList()
-                    ],
+                        ),
+                      );
+                    }).toList(),
                   ),
                 ),
               ],
             ),
           );
         },
-      ),
-    );
-  }
-
-  Widget _buildTableHeader(String text, {Alignment align = Alignment.centerLeft}) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12.0),
-      child: Align(
-        alignment: align,
-        child: Text(
-          text,
-          style: GoogleFonts.poppins(
-            color: const Color(0xFF94A3B8),
-            fontSize: 10,
-            fontWeight: FontWeight.bold,
-            letterSpacing: 1.0,
-          ),
-        ),
       ),
     );
   }
