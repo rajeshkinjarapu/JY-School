@@ -13,7 +13,8 @@ import 'fee_settings_screen.dart';
 import 'fee_installment_report_screen.dart';
 
 class FinanceScreen extends StatefulWidget {
-  const FinanceScreen({super.key});
+  final int initialIndex;
+  const FinanceScreen({super.key, this.initialIndex = 0});
 
   @override
   State<FinanceScreen> createState() => _FinanceScreenState();
@@ -42,7 +43,7 @@ class _FinanceScreenState extends State<FinanceScreen> with SingleTickerProvider
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
+    _tabController = TabController(length: 4, vsync: this, initialIndex: widget.initialIndex);
     _fetchData();
   }
 

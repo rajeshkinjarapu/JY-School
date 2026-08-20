@@ -19,6 +19,10 @@ import 'students_screen.dart';
 import 'teachers_screen.dart';
 import 'classes_screen.dart';
 import 'subjects_screen.dart';
+import 'record_fee_payment_screen.dart';
+import 'student_fee_search_screen.dart';
+import 'progress_card_screen.dart';
+import 'results_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -694,7 +698,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           gradientStart: const Color(0xFFFF4E6A),
           gradientEnd: const Color(0xFFFF7286),
           onTap: () {
-            Navigator.push(context, MaterialPageRoute(builder: (context) => const FeesScreen()));
+            Navigator.push(context, MaterialPageRoute(builder: (context) => const FinanceScreen(initialIndex: 1)));
           },
         ),
         _buildUniversalCard(
@@ -705,7 +709,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           gradientStart: const Color(0xFF9E7AFF),
           gradientEnd: const Color(0xFFB193FF),
           onTap: () {
-            Navigator.push(context, MaterialPageRoute(builder: (context) => const FinanceScreen()));
+            Navigator.push(context, MaterialPageRoute(builder: (context) => const RecordFeePaymentScreen()));
           },
         ),
         _buildUniversalCard(
@@ -716,7 +720,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           gradientStart: const Color(0xFF2DBDFD),
           gradientEnd: const Color(0xFF55CBFF),
           onTap: () {
-            Navigator.push(context, MaterialPageRoute(builder: (context) => const ExamsScreen()));
+            Navigator.push(context, MaterialPageRoute(builder: (context) => const ResultsScreen()));
           },
         ),
         _buildUniversalCard(
@@ -727,7 +731,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           gradientStart: const Color(0xFFFF56A5),
           gradientEnd: const Color(0xFFFF7DBA),
           onTap: () {
-            Navigator.push(context, MaterialPageRoute(builder: (context) => const FeesScreen()));
+            Navigator.push(context, MaterialPageRoute(builder: (context) => const StudentFeeSearchScreen()));
           },
         ),
         _buildUniversalCard(
@@ -738,12 +742,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           gradientStart: const Color(0xFF27B484),
           gradientEnd: const Color(0xFF45CA9E),
           onTap: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Reports module coming soon!'),
-                backgroundColor: Color(0xFF6366F1),
-              )
-            );
+            Navigator.push(context, MaterialPageRoute(builder: (context) => const ProgressCardScreen()));
           },
         ),
       ],
