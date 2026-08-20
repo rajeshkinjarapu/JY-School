@@ -41,7 +41,7 @@ void main() async {
   
   // Initialize Local Notifications only on non-web
   if (!kIsWeb) {
-    await NotificationService().initialize(navigatorKey);
+    NotificationService().initialize(navigatorKey);
   }
   // Initialize Offline Sync Service
   if (!kIsWeb) {

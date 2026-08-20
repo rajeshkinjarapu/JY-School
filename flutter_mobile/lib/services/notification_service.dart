@@ -19,26 +19,30 @@ class NotificationService {
   Future<void> initialize(GlobalKey<NavigatorState> key) async {
     navigatorKey = key;
 
-    // Request permissions
-    FirebaseMessaging messaging = FirebaseMessaging.instance;
-    await messaging.requestPermission(
-      alert: true,
-      badge: true,
-      sound: true,
-    );
+    // Request permissions and get token (wrapped in try-catch to avoid native crashes on launch)
+    try {
+      FirebaseMessaging messaging = FirebaseMessaging.instance;
+      await messaging.requestPermission(
+        alert: true,
+        badge: true,
+        sound: true,
+      );
 
-    // Get the token and save it to the server
-    String? token = await messaging.getToken();
-    debugPrint('FCM Token: $token');
-    if (token != null) {
-      // In a real app, send this to backend (e.g. ApiService.saveFCMToken(token))
+      // Get the token and save it to the server
+      String? token = await messaging.getToken();
+      debugPrint('FCM Token: $token');
+      if (token != null) {
+        // In a real app, send this to backend (e.g. ApiService.saveFCMToken(token))
+      }
+
+      // Handle token refresh
+      messaging.onTokenRefresh.listen((newToken) {
+        debugPrint('FCM Token Refreshed: $newToken');
+        // Send new token to server
+      });
+    } catch (e) {
+      debugPrint('FCM Init Error: $e');
     }
-
-    // Handle token refresh
-    messaging.onTokenRefresh.listen((newToken) {
-      debugPrint('FCM Token Refreshed: $newToken');
-      // Send new token to server
-    });
 
     const AndroidInitializationSettings androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
     const DarwinInitializationSettings iosSettings = DarwinInitializationSettings();

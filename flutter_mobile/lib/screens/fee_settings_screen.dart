@@ -374,7 +374,9 @@ class _FeeSettingsScreenState extends State<FeeSettingsScreen> with SingleTicker
           final name = item[nameKey]?.toString() ?? '';
           final desc = descKey != null ? item[descKey]?.toString() ?? '' : '';
           final badge = badgeKey != null
-              ? (badgeNestedKey != null ? item[badgeKey]?[badgeNestedKey]?.toString() : item[badgeKey]?.toString()) ?? ''
+              ? (badgeNestedKey != null 
+                  ? (item[badgeKey] != null ? item[badgeKey][badgeNestedKey]?.toString() : null)
+                  : item[badgeKey]?.toString()) ?? ''
               : '';
           final value = valueFn != null ? valueFn(item) : '';
           final id = item['id']?.toString() ?? '';

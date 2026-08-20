@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../widgets/app_drawer.dart';
 import 'question_papers_screen.dart';
+import 'mcq_paper_generator_screen.dart';
+import 'navodaya_paper_generator_screen.dart';
+import 'saved_papers_screen.dart';
+import 'answer_keys_screen.dart';
 
 class QuestionBankScreen extends StatelessWidget {
   const QuestionBankScreen({super.key});
@@ -23,36 +27,36 @@ class QuestionBankScreen extends StatelessWidget {
         subtitle: 'Create multiple choice question papers',
         icon: Icons.quiz_rounded,
         colors: [const Color(0xFF8B5CF6), const Color(0xFFEC4899)],
-        badge: 'Soon',
-        badgeColor: const Color(0xFF8B5CF6),
-        onTap: () => _showComingSoon(context),
+        badge: 'New',
+        badgeColor: const Color(0xFF10B981),
+        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const McqPaperGeneratorScreen())),
       ),
       _QBModule(
         title: 'Navodaya Paper Generator',
         subtitle: 'Specialised Navodaya exam papers',
         icon: Icons.auto_stories_rounded,
         colors: [const Color(0xFF0EA5E9), const Color(0xFF06B6D4)],
-        badge: 'Soon',
-        badgeColor: const Color(0xFF0EA5E9),
-        onTap: () => _showComingSoon(context),
+        badge: 'New',
+        badgeColor: const Color(0xFF10B981),
+        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const NavodayaPaperGeneratorScreen())),
       ),
       _QBModule(
         title: 'Saved Papers',
         subtitle: 'View and manage your saved papers',
         icon: Icons.bookmark_rounded,
         colors: [const Color(0xFFF59E0B), const Color(0xFFEF4444)],
-        badge: 'Soon',
-        badgeColor: const Color(0xFFF59E0B),
-        onTap: () => _showComingSoon(context),
+        badge: 'Active',
+        badgeColor: const Color(0xFF10B981),
+        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SavedPapersScreen())),
       ),
       _QBModule(
         title: 'Answer Keys',
         subtitle: 'View answer keys for exam papers',
         icon: Icons.key_rounded,
         colors: [const Color(0xFF10B981), const Color(0xFF059669)],
-        badge: 'Soon',
+        badge: 'Active',
         badgeColor: const Color(0xFF10B981),
-        onTap: () => _showComingSoon(context),
+        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AnswerKeysScreen())),
       ),
     ];
 

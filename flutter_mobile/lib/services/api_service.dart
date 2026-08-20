@@ -758,12 +758,6 @@ class ApiService {
 
   // ── Fee Settings (Groups / Heads / Concessions) ──────────────────────────
 
-  static Future<Map<String, dynamic>> getFeeGroups() async =>
-      _performGet('/api/fees/groups', 'Failed to load fee groups');
-
-  static Future<Map<String, dynamic>> getFeeHeads() async =>
-      _performGet('/api/fees/heads', 'Failed to load fee heads');
-
   static Future<Map<String, dynamic>> getFeeConcessions() async =>
       _performGet('/api/fees/concessions', 'Failed to load fee concessions');
 
@@ -884,6 +878,123 @@ class ApiService {
       return res.statusCode == 200
           ? {'success': true}
           : {'success': false, 'message': 'Failed to delete'};
+    } catch (e) { return {'success': false, 'message': e.toString()}; }
+  }
+
+  // ── Settings & Admin ────────────────────────────────────────────────────────
+  
+  static Future<Map<String, dynamic>> getSettings() async {
+    return _performGet('/api/settings', 'Failed to load system settings');
+  }
+
+  static Future<Map<String, dynamic>> updateSettings(Map<String, dynamic> body) async {
+    try {
+      final token = await getToken();
+      final res = await http.put(
+        Uri.parse('$baseUrl/api/settings'),
+        headers: _getHeaders(token: token),
+        body: jsonEncode(body),
+      );
+      final data = jsonDecode(res.body);
+      return res.statusCode == 200
+          ? {'success': true, 'data': data}
+          : {'success': false, 'message': data['message'] ?? 'Failed'};
+    } catch (e) { return {'success': false, 'message': e.toString()}; }
+  }
+
+  static Future<Map<String, dynamic>> getUsers({int page = 1, int limit = 10, String? search, String? role}) async {
+    String q = 'page=$page&limit=$limit';
+    if (search != null && search.isNotEmpty) q += '&search=$search';
+    if (role != null && role.isNotEmpty) q += '&role=$role';
+    return _performGet('/api/users?$q', 'Failed to load users');
+  }
+
+  static Future<Map<String, dynamic>> createUser(Map<String, dynamic> body) async {
+    try {
+      final token = await getToken();
+      final res = await http.post(
+        Uri.parse('$baseUrl/api/users'),
+        headers: _getHeaders(token: token),
+        body: jsonEncode(body),
+      );
+      final data = jsonDecode(res.body);
+      return res.statusCode == 200 || res.statusCode == 201
+          ? {'success': true, 'data': data}
+          : {'success': false, 'message': data['message'] ?? 'Failed'};
+    } catch (e) { return {'success': false, 'message': e.toString()}; }
+  }
+
+  static Future<Map<String, dynamic>> updateUser(String id, Map<String, dynamic> body) async {
+    try {
+      final token = await getToken();
+      final res = await http.put(
+        Uri.parse('$baseUrl/api/users/$id'),
+        headers: _getHeaders(token: token),
+        body: jsonEncode(body),
+      );
+      final data = jsonDecode(res.body);
+      return res.statusCode == 200
+          ? {'success': true, 'data': data}
+          : {'success': false, 'message': data['message'] ?? 'Failed'};
+    } catch (e) { return {'success': false, 'message': e.toString()}; }
+  }
+
+  // ── Question Bank / Generated Papers ────────────────────────────────────────
+
+  static Future<Map<String, dynamic>> getGeneratedPapers() async {
+    return _performGet('/api/generated-papers', 'Failed to load generated papers');
+  }
+
+  static Future<Map<String, dynamic>> getGeneratedPaperById(String id) async {
+    return _performGet('/api/generated-papers/$id', 'Failed to load paper details');
+  }
+
+  static Future<Map<String, dynamic>> saveGeneratedPaper(Map<String, dynamic> body) async {
+    try {
+      final token = await getToken();
+      final res = await http.post(
+        Uri.parse('$baseUrl/api/generated-papers'),
+        headers: _getHeaders(token: token),
+        body: jsonEncode(body),
+      );
+      final data = jsonDecode(res.body);
+      return res.statusCode == 200 || res.statusCode == 201
+          ? {'success': true, 'data': data}
+          : {'success': false, 'message': data['message'] ?? 'Failed'};
+    } catch (e) { return {'success': false, 'message': e.toString()}; }
+  }
+
+  static Future<Map<String, dynamic>> updateGeneratedPaper(String id, Map<String, dynamic> body) async {
+    try {
+      final token = await getToken();
+      final res = await http.put(
+        Uri.parse('$baseUrl/api/generated-papers/$id'),
+        headers: _getHeaders(token: token),
+        body: jsonEncode(body),
+      );
+      final data = jsonDecode(res.body);
+      return res.statusCode == 200
+          ? {'success': true, 'data': data}
+          : {'success': false, 'message': data['message'] ?? 'Failed'};
+    } catch (e) { return {'success': false, 'message': e.toString()}; }
+  }
+
+  static Future<Map<String, dynamic>> deleteGeneratedPaper(String id) async {
+    return deleteItem('/api/generated-papers/$id');
+  }
+
+  static Future<Map<String, dynamic>> generateQuestionsFromAI(Map<String, dynamic> body) async {
+    try {
+      final token = await getToken();
+      final res = await http.post(
+        Uri.parse('$baseUrl/api/questions/import-ai'),
+        headers: _getHeaders(token: token),
+        body: jsonEncode(body),
+      );
+      final data = jsonDecode(res.body);
+      return res.statusCode == 200 || res.statusCode == 201
+          ? {'success': true, 'data': data}
+          : {'success': false, 'message': data['message'] ?? 'Failed'};
     } catch (e) { return {'success': false, 'message': e.toString()}; }
   }
 

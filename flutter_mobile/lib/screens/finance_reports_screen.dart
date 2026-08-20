@@ -142,7 +142,7 @@ class _FinanceReportsScreenState extends State<FinanceReportsScreen> {
                 },
                 headers: ['Class Name', 'Collected Amount'],
                 data: [
-                  ..._classWiseCollection.entries.toList()..sort((a,b) => a.key.compareTo(b.key)).map((e) => [
+                  ...(_classWiseCollection.entries.toList()..sort((a,b) => a.key.compareTo(b.key))).map((e) => [
                     e.key,
                     fmt.format(e.value)
                   ]).toList()
