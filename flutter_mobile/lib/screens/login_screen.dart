@@ -1,7 +1,10 @@
 import 'dart:math';
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:local_auth/local_auth.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../services/api_service.dart';
 import 'dashboard_screen.dart';
 import 'main_layout.dart';
@@ -91,6 +94,11 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
   String? _error;
   int _roleIdx = 0;
 
+  final _localAuth = LocalAuthentication();
+  final _secureStorage = const FlutterSecureStorage();
+  bool _canCheckBiometrics = false;
+  bool _hasSavedCredentials = false;
+
   final _roles = [
     _RoleItem('Student', Icons.school_rounded,                 Color(0xFF6366F1)),
     _RoleItem('Teacher', Icons.person_rounded,                 Color(0xFF0EA5E9)),
@@ -113,6 +121,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
   @override
   void initState() {
     super.initState();
+    _checkBiometrics();
     _bgCtrl   = AnimationController(vsync: this, duration: const Duration(seconds: 8))..repeat(reverse: true);
     _bgAnim   = Tween(begin: 0.0, end: 1.0).animate(CurvedAnimation(parent: _bgCtrl,   curve: Curves.easeInOut));
     _cardCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 900))..forward();
@@ -130,6 +139,46 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
     super.dispose();
   }
 
+  Future<void> _checkBiometrics() async {
+    try {
+      final canCheck = await _localAuth.canCheckBiometrics;
+      final isSupported = await _localAuth.isDeviceSupported();
+      final savedEmail = await _secureStorage.read(key: 'email');
+      final savedPass = await _secureStorage.read(key: 'password');
+      if (mounted) {
+        setState(() {
+          _canCheckBiometrics = canCheck || isSupported;
+          _hasSavedCredentials = savedEmail != null && savedPass != null;
+        });
+      }
+    } catch (e) {
+      debugPrint('Biometric check failed: $e');
+    }
+  }
+
+  Future<void> _authenticateBiometric() async {
+    try {
+      final authenticated = await _localAuth.authenticate(
+        localizedReason: 'Scan your fingerprint or face to login',
+        options: const AuthenticationOptions(
+          stickyAuth: true,
+          biometricOnly: true,
+        ),
+      );
+      if (authenticated) {
+        final email = await _secureStorage.read(key: 'email');
+        final pass = await _secureStorage.read(key: 'password');
+        if (email != null && pass != null) {
+          _emailCtrl.text = email;
+          _passCtrl.text = pass;
+          _login();
+        }
+      }
+    } on PlatformException catch (e) {
+      debugPrint('Error using biometric auth: $e');
+    }
+  }
+
   Future<void> _login() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() { _loading = true; _error = null; });
@@ -137,6 +186,10 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
     if (!mounted) return;
     setState(() => _loading = false);
     if (res['success'] == true) {
+      // Save credentials for biometric login next time
+      await _secureStorage.write(key: 'email', value: _emailCtrl.text.trim());
+      await _secureStorage.write(key: 'password', value: _passCtrl.text);
+
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('Welcome back!', style: GoogleFonts.poppins(color: const Color(0xFF1E293B), fontWeight: FontWeight.w600)),
         backgroundColor: const Color(0xFF10B981),
@@ -338,28 +391,51 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                     validate: (v) => (v == null || v.isEmpty) ? 'Please enter password' : null),
                   const SizedBox(height: 26),
                   // Button
-                  AnimatedContainer(
-                    duration: const Duration(milliseconds: 300),
-                    height: 54,
-                    decoration: BoxDecoration(
-                      color: roleColor,
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [BoxShadow(color: roleColor.withOpacity(0.3), blurRadius: 12, offset: const Offset(0, 6))],
-                    ),
-                    child: ElevatedButton(
-                      onPressed: _loading ? null : _login,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.transparent, shadowColor: Colors.transparent,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 300),
+                          height: 54,
+                          decoration: BoxDecoration(
+                            color: roleColor,
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [BoxShadow(color: roleColor.withOpacity(0.3), blurRadius: 12, offset: const Offset(0, 6))],
+                          ),
+                          child: ElevatedButton(
+                            onPressed: _loading ? null : _login,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.transparent, shadowColor: Colors.transparent,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                            ),
+                            child: _loading
+                                ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5))
+                                : Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                                    Text('SIGN IN', style: GoogleFonts.poppins(color: const Color(0xFF1E293B), fontSize: 15, fontWeight: FontWeight.bold, letterSpacing: 1.5)),
+                                    const SizedBox(width: 10),
+                                    const Icon(Icons.arrow_forward_rounded, color: const Color(0xFF64748B), size: 20),
+                                  ]),
+                          ),
+                        ),
                       ),
-                      child: _loading
-                          ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5))
-                          : Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                              Text('SIGN IN', style: GoogleFonts.poppins(color: const Color(0xFF1E293B), fontSize: 15, fontWeight: FontWeight.bold, letterSpacing: 1.5)),
-                              const SizedBox(width: 10),
-                              const Icon(Icons.arrow_forward_rounded, color: const Color(0xFF64748B), size: 20),
-                            ]),
-                    ),
+                      if (_canCheckBiometrics && _hasSavedCredentials) ...[
+                        const SizedBox(width: 14),
+                        Container(
+                          height: 54,
+                          width: 54,
+                          decoration: BoxDecoration(
+                            color: roleColor.withOpacity(0.12),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: roleColor.withOpacity(0.3)),
+                          ),
+                          child: IconButton(
+                            icon: Icon(Icons.fingerprint_rounded, color: roleColor, size: 30),
+                            onPressed: _authenticateBiometric,
+                            tooltip: 'Login with Biometrics',
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                   const SizedBox(height: 18),
                   // SSL note
