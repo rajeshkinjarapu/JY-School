@@ -752,7 +752,66 @@ class ApiService {
     return _performGet('/api/dashboard/student', 'Failed to get student stats');
   }
 
+  // ── Fee Settings (Groups / Heads / Concessions) ──────────────────────────
+
+  static Future<Map<String, dynamic>> getFeeGroups() async =>
+      _performGet('/api/fees/groups', 'Failed to load fee groups');
+
+  static Future<Map<String, dynamic>> getFeeHeads() async =>
+      _performGet('/api/fees/heads', 'Failed to load fee heads');
+
+  static Future<Map<String, dynamic>> getFeeConcessions() async =>
+      _performGet('/api/fees/concessions', 'Failed to load fee concessions');
+
+  static Future<Map<String, dynamic>> createFeeGroup(Map<String, dynamic> body) async {
+    try {
+      final token = await getToken();
+      final res = await http.post(Uri.parse('$baseUrl/api/fees/groups'), headers: _getHeaders(token: token), body: jsonEncode(body));
+      final data = jsonDecode(res.body);
+      return res.statusCode == 200 || res.statusCode == 201
+          ? {'success': true, 'data': data}
+          : {'success': false, 'message': data['message'] ?? 'Failed'};
+    } catch (e) { return {'success': false, 'message': e.toString()}; }
+  }
+
+  static Future<Map<String, dynamic>> createFeeHead(Map<String, dynamic> body) async {
+    try {
+      final token = await getToken();
+      final res = await http.post(Uri.parse('$baseUrl/api/fees/heads'), headers: _getHeaders(token: token), body: jsonEncode(body));
+      final data = jsonDecode(res.body);
+      return res.statusCode == 200 || res.statusCode == 201
+          ? {'success': true, 'data': data}
+          : {'success': false, 'message': data['message'] ?? 'Failed'};
+    } catch (e) { return {'success': false, 'message': e.toString()}; }
+  }
+
+  static Future<Map<String, dynamic>> createFeeConcession(Map<String, dynamic> body) async {
+    try {
+      final token = await getToken();
+      final res = await http.post(Uri.parse('$baseUrl/api/fees/concessions'), headers: _getHeaders(token: token), body: jsonEncode(body));
+      final data = jsonDecode(res.body);
+      return res.statusCode == 200 || res.statusCode == 201
+          ? {'success': true, 'data': data}
+          : {'success': false, 'message': data['message'] ?? 'Failed'};
+    } catch (e) { return {'success': false, 'message': e.toString()}; }
+  }
+
+  static Future<Map<String, dynamic>> deleteItem(String path) async {
+    try {
+      final token = await getToken();
+      final res = await http.delete(Uri.parse('$baseUrl$path'), headers: _getHeaders(token: token));
+      return res.statusCode == 200 || res.statusCode == 204
+          ? {'success': true}
+          : {'success': false, 'message': 'Failed to delete'};
+    } catch (e) { return {'success': false, 'message': e.toString()}; }
+  }
+
+  static Future<Map<String, dynamic>> getAllStudents() async =>
+      _performGet('/api/students?limit=500', 'Failed to load students');
+
   // ── Salary / HR ────────────────────────────────────────────────────────────
+
+
 
   static Future<Map<String, dynamic>?> getUserInfo() async {
     try {

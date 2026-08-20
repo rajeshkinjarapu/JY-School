@@ -9,6 +9,8 @@ import 'package:intl/intl.dart';
 import 'student_fee_search_screen.dart';
 import 'fee_structure_management_screen.dart';
 import 'finance_reports_screen.dart';
+import 'fee_settings_screen.dart';
+import 'fee_installment_report_screen.dart';
 
 class FinanceScreen extends StatefulWidget {
   const FinanceScreen({super.key});
@@ -323,6 +325,22 @@ class _FinanceScreenState extends State<FinanceScreen> with SingleTickerProvider
             icon: Icons.analytics_rounded,
             color: const Color(0xFF6366F1),
             onTap: () => Navigator.push(context, MaterialPageRoute(builder: (ctx) => const FinanceReportsScreen())),
+          ),
+          const SizedBox(height: 12),
+          _buildQuickActionCard(
+            title: 'Payment Installment Report',
+            subtitle: 'Student-wise payment history & installment log',
+            icon: Icons.receipt_long_rounded,
+            color: const Color(0xFF0EA5E9),
+            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (ctx) => const FeeInstallmentReportScreen())),
+          ),
+          const SizedBox(height: 12),
+          _buildQuickActionCard(
+            title: 'Fee Settings',
+            subtitle: 'Manage fee groups, heads and concessions',
+            icon: Icons.settings_rounded,
+            color: const Color(0xFF8B5CF6),
+            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (ctx) => const FeeSettingsScreen())),
           ),
         ],
       ),
@@ -925,7 +943,7 @@ class _FinanceScreenState extends State<FinanceScreen> with SingleTickerProvider
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  Text('Ã¢â€šÂ¹ ${amount.toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Color(0xFF6366F1))),
+                  Text('₹ ${amount.toStringAsFixed(0)}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Color(0xFF6366F1))),
                   const SizedBox(height: 4),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
@@ -1096,7 +1114,7 @@ class _FinanceScreenState extends State<FinanceScreen> with SingleTickerProvider
                                   final cleanPhone = phone.replaceAll(RegExp(r'\D'), '');
                                   final fullPhone = cleanPhone.length == 10 ? '91$cleanPhone' : cleanPhone;
                                   final msg = Uri.encodeComponent(
-                                      "Dear Parent of *$name* ($className),\n\nThis is a gentle reminder from *JY SCHOOL*.\n\nYour child's outstanding fee balance is *Ã¢â€šÂ¹${balance.toStringAsFixed(0)}*.\n\nKindly clear the dues at the earliest. For queries, contact the school office.");
+                                      "Dear Parent of *$name* ($className),\n\nThis is a gentle reminder from *SRI VENKATESWARA JY SCHOOL*.\n\nYour child's outstanding fee balance is *\u20B9${balance.toStringAsFixed(0)}*.\n\nKindly clear the dues at the earliest to avoid any inconvenience.\n\nFor queries, contact the school office.\n\nThank you,\nJY School Administration");
                                   final url = 'https://wa.me/$fullPhone?text=$msg';
                                   
                                   // Requires url_launcher
@@ -1327,7 +1345,7 @@ class _RecordPaymentDialogState extends State<RecordPaymentDialog> {
                     final amount = s['amount']?.toString() ?? '0';
                     return DropdownMenuItem(
                       value: s['id']?.toString() ?? '',
-                      child: Text('$name (Ã¢â€šÂ¹ $amount)'),
+                      child: Text('$name (\u20B9$amount)'),
                     );
                   }).toList(),
                   onChanged: (val) {
@@ -1373,7 +1391,7 @@ class _RecordPaymentDialogState extends State<RecordPaymentDialog> {
             const SizedBox(height: 16),
 
             // Amount
-            const Text('Amount Paid (Ã¢â€šÂ¹)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+            const Text('Amount Paid (₹)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
             const SizedBox(height: 6),
             TextField(
               controller: _amountController,
