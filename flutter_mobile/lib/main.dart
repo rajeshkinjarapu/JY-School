@@ -15,6 +15,13 @@ final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp();
   debugPrint("Handling a background message: ${message.messageId}");
+  
+  // If it's a data-only message (no notification block), we must show it manually
+  if (message.notification == null && message.data.isNotEmpty) {
+    // Only works if flutter_local_notifications is initialized inside the background isolate,
+    // but typically for standard push notifications the backend sends the `notification` payload
+    // which Android handles automatically using the default_notification_channel_id we set!
+  }
 }
 
 void main() async {

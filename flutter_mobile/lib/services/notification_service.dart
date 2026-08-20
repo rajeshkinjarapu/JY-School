@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'api_service.dart';
@@ -49,6 +49,18 @@ class NotificationService {
       onDidReceiveNotificationResponse: _onSelectNotification,
     );
 
+    // Create high importance channel for Android so background notifications show as banners
+    const AndroidNotificationChannel channel = AndroidNotificationChannel(
+      'high_importance_channel', // MUST MATCH the ID in AndroidManifest.xml
+      'High Importance Notifications',
+      description: 'This channel is used for important notifications like alerts.',
+      importance: Importance.max,
+    );
+
+    await _notificationsPlugin
+        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+        ?.createNotificationChannel(channel);
+
     // Foreground message handler
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
       debugPrint('Got a message whilst in the foreground!');
@@ -98,9 +110,9 @@ class NotificationService {
 
   Future<void> _showLocalNotification(String? title, String? body, String? payloadRoute) async {
     const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
-      'jy_school_channel',
-      'JY School Notifications',
-      channelDescription: 'General notifications for the school',
+      'high_importance_channel',
+      'High Importance Notifications',
+      channelDescription: 'This channel is used for important notifications like alerts.',
       importance: Importance.max,
       priority: Priority.high,
     );
