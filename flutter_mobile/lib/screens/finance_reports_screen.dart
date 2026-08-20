@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
 import '../services/api_service.dart';
 
 class FinanceReportsScreen extends StatefulWidget {
@@ -17,11 +20,9 @@ class _FinanceReportsScreenState extends State<FinanceReportsScreen> {
 
   double _totalCollected = 0.0;
   double _totalExpected = 0.0;
-  double _totalDiscounts = 0.0;
   
   Map<String, double> _classWiseCollection = {};
   Map<String, double> _paymentMethods = {};
-  List<dynamic> _recentPayments = [];
 
   @override
   void initState() {
@@ -35,42 +36,31 @@ class _FinanceReportsScreenState extends State<FinanceReportsScreen> {
       final results = await Future.wait([
         ApiService.getFeeStructures(),
         ApiService.getFeePayments(),
-        ApiService.getClasses(),
       ]);
 
-      if (results[0]['success'] && results[1]['success'] && results[2]['success']) {
+      if (results[0]['success'] && results[1]['success']) {
         final structures = results[0]['data'] ?? [];
         final payments = results[1]['data'] ?? [];
-        final classes = results[2]['data'] ?? [];
 
         double expected = 0.0;
         double collected = 0.0;
         Map<String, double> classCol = {};
         Map<String, double> methods = {};
 
-        // Process Structures for expected revenue
         for (var st in structures) {
           expected += double.tryParse(st['amount']?.toString() ?? '0') ?? 0.0;
-          // In a real scenario, this would be multiplied by number of students in that class
-          // But since we might not have all students, this is an approximation for the demo.
         }
 
-        // Process Payments for collections and methods
         for (var p in payments) {
           final amt = double.tryParse(p['amountPaid']?.toString() ?? '0') ?? 0.0;
           final method = p['paymentMethod'] ?? 'CASH';
           
           if (p['status'] == 'PAID' || p['status'] == null) {
             collected += amt;
-            
-            // Method
             methods[method] = (methods[method] ?? 0) + amt;
 
-            // Class-wise
-            // For true class-wise, we need to know the student's class.
-            // Let's assume the payment has student.class.className
             if (p['student'] != null && p['student']['class'] != null) {
-              final className = '${p['student']['class']['className'] ?? p['student']['class']['name'] ?? 'Unknown'}';
+              final className = '${p['student']['class']['className'] ?? p['student']['class']['name'] ?? 'Unknown'} ${p['student']['class']['section'] ?? ''}'.trim();
               classCol[className] = (classCol[className] ?? 0) + amt;
             } else {
                classCol['Others'] = (classCol['Others'] ?? 0) + amt;
@@ -81,10 +71,9 @@ class _FinanceReportsScreenState extends State<FinanceReportsScreen> {
         if (mounted) {
           setState(() {
             _totalCollected = collected;
-            _totalExpected = collected + 50000; // Mock expected based on collected for nice chart
+            _totalExpected = collected + 50000; 
             _classWiseCollection = classCol;
             _paymentMethods = methods;
-            _recentPayments = (payments as List).take(10).toList(); // Last 10
             _isLoading = false;
           });
         }
@@ -94,6 +83,81 @@ class _FinanceReportsScreenState extends State<FinanceReportsScreen> {
     } catch (e) {
       if (mounted) setState(() => _errorMessage = 'Error: $e');
     }
+  }
+
+  Future<void> _exportToPdf() async {
+    final pdf = pw.Document();
+    final fmt = NumberFormat.currency(symbol: 'Rs. ', decimalDigits: 0, locale: 'en_IN');
+    final date = DateFormat('dd-MM-yyyy').format(DateTime.now());
+
+    pdf.addPage(
+      pw.Page(
+        pageFormat: PdfPageFormat.a4,
+        build: (pw.Context context) {
+          return pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              pw.Header(
+                level: 0,
+                child: pw.Row(
+                  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                  children: [
+                    pw.Text('SRI VENKATESWARA JY SCHOOL', style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold)),
+                    pw.Text('Date: $date'),
+                  ]
+                ),
+              ),
+              pw.SizedBox(height: 20),
+              pw.Text('Finance Report', style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold, color: PdfColors.indigo)),
+              pw.SizedBox(height: 20),
+              pw.Row(
+                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                children: [
+                  pw.Text('Total Collected: ${fmt.format(_totalCollected)}', style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold, color: PdfColors.green)),
+                  pw.Text('Total Expected: ${fmt.format(_totalExpected)}', style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold, color: PdfColors.indigo)),
+                ]
+              ),
+              pw.SizedBox(height: 30),
+              pw.Text('Payment Methods Overview', style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold)),
+              pw.SizedBox(height: 10),
+              ..._paymentMethods.entries.map((e) => pw.Row(
+                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                children: [
+                  pw.Text(e.key),
+                  pw.Text(fmt.format(e.value)),
+                ]
+              )).toList(),
+              pw.SizedBox(height: 30),
+              pw.Text('Class-wise Collection Breakdown', style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold)),
+              pw.SizedBox(height: 10),
+              pw.Table.fromTextArray(
+                context: context,
+                border: pw.TableBorder.all(color: PdfColors.grey300),
+                headerDecoration: const pw.BoxDecoration(color: PdfColors.grey200),
+                headerHeight: 25,
+                cellHeight: 25,
+                cellAlignments: {
+                  0: pw.Alignment.centerLeft,
+                  1: pw.Alignment.centerRight,
+                },
+                headers: ['Class Name', 'Collected Amount'],
+                data: [
+                  ..._classWiseCollection.entries.toList()..sort((a,b) => a.key.compareTo(b.key)).map((e) => [
+                    e.key,
+                    fmt.format(e.value)
+                  ]).toList()
+                ],
+              ),
+            ],
+          );
+        },
+      ),
+    );
+
+    await Printing.layoutPdf(
+      onLayout: (PdfPageFormat format) async => pdf.save(),
+      name: 'finance_report_$date.pdf',
+    );
   }
 
   @override
@@ -117,7 +181,8 @@ class _FinanceReportsScreenState extends State<FinanceReportsScreen> {
         ),
         elevation: 0,
         actions: [
-          IconButton(icon: const Icon(Icons.refresh_rounded), onPressed: _generateReports),
+          IconButton(icon: const Icon(Icons.picture_as_pdf_rounded), onPressed: _exportToPdf, tooltip: 'Export PDF'),
+          IconButton(icon: const Icon(Icons.refresh_rounded), onPressed: _generateReports, tooltip: 'Refresh'),
         ],
       ),
       body: _isLoading

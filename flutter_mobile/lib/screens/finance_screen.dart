@@ -851,6 +851,30 @@ class _FinanceScreenState extends State<FinanceScreen> with SingleTickerProvider
                     ),
                   const SizedBox(width: 8),
                   TextButton.icon(
+                    onPressed: () async {
+                      try {
+                        final token = await ApiService.getToken();
+                        final paymentId = payment['id']?.toString() ?? '';
+                        final url = '${ApiService.baseUrl}/api/fees/payments/$paymentId/invoice?token=$token';
+                        final uri = Uri.parse(url);
+                        if (await canLaunchUrl(uri)) {
+                          await launchUrl(uri, mode: LaunchMode.externalApplication);
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Could not open receipt.')));
+                        }
+                      } catch (e) {
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Failed to download receipt.')));
+                      }
+                    },
+                    icon: const Icon(Icons.receipt_long_rounded, size: 18, color: Color(0xFF6366F1)),
+                    label: Text('Receipt', style: GoogleFonts.poppins(fontSize: 13, color: const Color(0xFF6366F1))),
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  TextButton.icon(
                     onPressed: () {
                       showDialog(
                         context: context,
@@ -1100,8 +1124,33 @@ class _FinanceScreenState extends State<FinanceScreen> with SingleTickerProvider
                                     Text(name, style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16, color: const Color(0xFF1E293B))),
                                     const SizedBox(height: 4),
                                     Text('Class: $className', style: GoogleFonts.poppins(fontSize: 12, color: const Color(0xFF64748B))),
-                                    const SizedBox(height: 4),
-                                    Text('Due: ₹ ${balance.toStringAsFixed(0)}', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 14, color: const Color(0xFFEF4444))),
+                                    const SizedBox(height: 8),
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text('Total Fee', style: GoogleFonts.poppins(fontSize: 10, color: const Color(0xFF94A3B8))),
+                                            Text('₹${(double.tryParse(student['totalFee']?.toString() ?? '0') ?? 0).toStringAsFixed(0)}', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13, color: const Color(0xFF64748B))),
+                                          ],
+                                        ),
+                                        Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text('Paid', style: GoogleFonts.poppins(fontSize: 10, color: const Color(0xFF94A3B8))),
+                                            Text('₹${(double.tryParse(student['paidAmount']?.toString() ?? '0') ?? 0).toStringAsFixed(0)}', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13, color: const Color(0xFF10B981))),
+                                          ],
+                                        ),
+                                        Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text('Due', style: GoogleFonts.poppins(fontSize: 10, color: const Color(0xFF94A3B8))),
+                                            Text('₹${balance.toStringAsFixed(0)}', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 14, color: const Color(0xFFEF4444))),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
                                   ],
                                 ),
                               ),

@@ -17,12 +17,18 @@ export const authenticate = (
   _res: Response,
   next: NextFunction
 ): void => {
+  let token = '';
   const authHeader = req.headers.authorization;
-  if (!authHeader?.startsWith('Bearer ')) {
-    return next(createError('No token provided', 401));
+  
+  if (authHeader?.startsWith('Bearer ')) {
+    token = authHeader.split(' ')[1];
+  } else if (req.query.token && typeof req.query.token === 'string') {
+    token = req.query.token;
   }
 
-  const token = authHeader.split(' ')[1];
+  if (!token) {
+    return next(createError('No token provided', 401));
+  }
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'RajeshSecretKey_12345!@#') as {
       id: string;
