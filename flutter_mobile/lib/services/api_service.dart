@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'offline_sync_service.dart';
 
 class ApiService {
   static const String baseUrl = 'https://paralyze-canteen-goon.ngrok-free.dev';
@@ -607,7 +608,8 @@ class ApiService {
       }
       return {'success': false, 'message': decoded is Map ? (decoded['message'] ?? errorMsg) : errorMsg};
     } catch (e) {
-      return {'success': false, 'message': 'Network error: $e'};
+      await OfflineSyncService.enqueueRequest(method: 'POST', endpoint: endpoint, body: payload);
+      return {'success': true, 'isOfflineQueued': true, 'message': 'Network error. Request saved offline and will sync later.', 'data': {}};
     }
   }
   static Future<Map<String, dynamic>> _performPut(String endpoint, Map<String, dynamic> payload, String errorMsg) async {
@@ -627,7 +629,8 @@ class ApiService {
       }
       return {'success': false, 'message': decoded is Map ? (decoded['message'] ?? errorMsg) : errorMsg};
     } catch (e) {
-      return {'success': false, 'message': 'Network error: $e'};
+      await OfflineSyncService.enqueueRequest(method: 'PUT', endpoint: endpoint, body: payload);
+      return {'success': true, 'isOfflineQueued': true, 'message': 'Network error. Request saved offline and will sync later.', 'data': {}};
     }
   }
 
@@ -647,7 +650,8 @@ class ApiService {
       }
       return {'success': false, 'message': decoded is Map ? (decoded['message'] ?? errorMsg) : errorMsg};
     } catch (e) {
-      return {'success': false, 'message': 'Network error: $e'};
+      await OfflineSyncService.enqueueRequest(method: 'DELETE', endpoint: endpoint);
+      return {'success': true, 'isOfflineQueued': true, 'message': 'Network error. Request saved offline and will sync later.', 'data': {}};
     }
   }
 

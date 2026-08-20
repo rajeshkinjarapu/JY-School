@@ -8,6 +8,8 @@ import 'screens/dashboard_screen.dart';
 import 'screens/main_layout.dart';
 import 'services/api_service.dart';
 import 'services/notification_service.dart';
+import 'services/offline_sync_service.dart';
+import 'widgets/offline_banner.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
@@ -41,7 +43,11 @@ void main() async {
   if (!kIsWeb) {
     await NotificationService().initialize(navigatorKey);
   }
-  
+  // Initialize Offline Sync Service
+  if (!kIsWeb) {
+    OfflineSyncService.initialize();
+  }
+
   runApp(const MyApp());
 }
 
@@ -65,6 +71,9 @@ class MyApp extends StatelessWidget {
           Theme.of(context).textTheme,
         ),
       ),
+      builder: (context, child) {
+        return OfflineBanner(child: child!);
+      },
       home: const AuthCheck(),
     );
   }
