@@ -119,6 +119,12 @@ class _TeacherProfileScreenState extends State<TeacherProfileScreen> {
       expandedHeight: 280,
       pinned: true,
       iconTheme: const IconThemeData(color: Colors.white),
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.edit_rounded, color: Colors.white),
+          onPressed: _showEditProfileSheet,
+        ),
+      ],
       flexibleSpace: FlexibleSpaceBar(
         background: Stack(
           fit: StackFit.expand,
@@ -355,6 +361,137 @@ class _TeacherProfileScreenState extends State<TeacherProfileScreen> {
             },
           ),
       ],
+    );
+  }
+
+  void _showEditProfileSheet() {
+    final teacher = _teacherDetails ?? widget.teacher;
+    final user = teacher['user'] ?? {};
+    
+    final nameCtrl = TextEditingController(text: user['name'] ?? '');
+    final emailCtrl = TextEditingController(text: user['email'] ?? '');
+    final phoneCtrl = TextEditingController(text: user['phone']?.toString() ?? '');
+    final qualCtrl = TextEditingController(text: teacher['qualification'] ?? '');
+    final specCtrl = TextEditingController(text: teacher['specialization'] ?? '');
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        height: MediaQuery.of(context).size.height * 0.85,
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.only(topLeft: Radius.circular(24), topRight: Radius.circular(24)),
+        ),
+        child: Column(
+          children: [
+            // Premium Header
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: const BorderRadius.only(topLeft: Radius.circular(24), topRight: Radius.circular(24)),
+                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10, offset: const Offset(0, 4))],
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(colors: [Color(0xFF6366F1), Color(0xFF4F46E5)]),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(Icons.edit_rounded, color: Colors.white, size: 20),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text('Edit Teacher Profile', style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold, color: const Color(0xFF1E293B))),
+                  ),
+                  GestureDetector(
+                    onTap: () => Navigator.pop(context),
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(color: const Color(0xFFF1F5F9), borderRadius: BorderRadius.circular(12)),
+                      child: const Icon(Icons.close_rounded, color: Color(0xFF64748B), size: 20),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  children: [
+                    _editField('Full Name', nameCtrl),
+                    _editField('Email Address', emailCtrl, keyboardType: TextInputType.emailAddress),
+                    _editField('Phone Number', phoneCtrl, keyboardType: TextInputType.phone),
+                    _editField('Qualification', qualCtrl),
+                    _editField('Specialization', specCtrl),
+                    const SizedBox(height: 24),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 50,
+                      child: ElevatedButton(
+                        onPressed: () async {
+                          final payload = {
+                            'name': nameCtrl.text.trim(),
+                            'email': emailCtrl.text.trim(),
+                            'phone': phoneCtrl.text.trim(),
+                            'qualification': qualCtrl.text.trim(),
+                            'specialization': specCtrl.text.trim(),
+                          };
+                          final res = await ApiService.updateTeacher(teacher['id'], payload);
+                          if (res['success']) {
+                            Navigator.pop(context);
+                            _fetchProfile(); // Refresh profile
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(res['message'])));
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF0F172A),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                        child: Text('Save Changes', style: GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white)),
+                      ),
+                    ),
+                    // Adding bottom padding for keyboard
+                    SizedBox(height: MediaQuery.of(context).viewInsets.bottom),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _editField(String label, TextEditingController controller, {TextInputType keyboardType = TextInputType.text}) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label, style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF64748B))),
+          const SizedBox(height: 6),
+          TextField(
+            controller: controller,
+            keyboardType: keyboardType,
+            style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w500, color: const Color(0xFF1E293B)),
+            decoration: InputDecoration(
+              filled: true,
+              fillColor: const Color(0xFFF8FAFC),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+              enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
+              focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFF3B82F6), width: 1.5)),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

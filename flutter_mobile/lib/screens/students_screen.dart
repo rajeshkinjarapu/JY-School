@@ -6,6 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../services/api_service.dart';
 import '../widgets/app_drawer.dart';
 import 'student_profile_screen.dart';
+import 'add_student_screen.dart';
 
 class StudentsScreen extends StatefulWidget {
   const StudentsScreen({super.key});
@@ -109,19 +110,31 @@ class _StudentsScreenState extends State<StudentsScreen> {
     final gradientColors = avatarGradients[colorIndex];
 
     if (photoUrl != null && photoUrl.isNotEmpty && !photoUrl.startsWith('data:')) {
-      final url = photoUrl.startsWith('http') 
-          ? photoUrl 
-          : (photoUrl.startsWith('/') ? '${ApiService.baseUrl}$photoUrl' : '${ApiService.baseUrl}/$photoUrl');
+      final url = ApiService.getImageUrl(photoUrl);
       return Container(
         width: 56,
         height: 56,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(14),
           border: Border.all(color: Colors.white, width: 2),
-          image: DecorationImage(image: NetworkImage(url), fit: BoxFit.cover),
           boxShadow: [
             BoxShadow(color: Colors.black.withOpacity(0.10), blurRadius: 8, offset: const Offset(0, 4)),
           ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: Image.network(
+            url,
+            fit: BoxFit.cover,
+            headers: const {'ngrok-skip-browser-warning': '69420'},
+            errorBuilder: (context, error, stackTrace) {
+              return Container(
+                color: const Color(0xFFF1F5F9),
+                alignment: Alignment.center,
+                child: const Icon(Icons.person_rounded, color: Color(0xFF94A3B8)),
+              );
+            },
+          ),
         ),
       );
     } else {
@@ -174,7 +187,15 @@ class _StudentsScreenState extends State<StudentsScreen> {
               ),
               child: const Icon(Icons.person_add_rounded, size: 18),
             ),
-            onPressed: () {},
+            onPressed: () async {
+              final result = await Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const AddStudentScreen()),
+              );
+              if (result == true) {
+                _fetchStudents(_selectedClassId, _searchQuery);
+              }
+            },
           ),
           const SizedBox(width: 8),
         ],

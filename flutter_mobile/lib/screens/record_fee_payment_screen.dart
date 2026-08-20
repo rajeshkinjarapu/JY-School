@@ -163,8 +163,10 @@ class _RecordFeePaymentScreenState extends State<RecordFeePaymentScreen> {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
+              borderRadius: BorderRadius.only(bottomLeft: Radius.circular(24), bottomRight: Radius.circular(24)),
+              boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10, offset: Offset(0, 4))],
             ),
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
+            padding: const EdgeInsets.fromLTRB(20, 10, 20, 24),
             child: Row(children: [
               Container(
                 width: 52, height: 52,

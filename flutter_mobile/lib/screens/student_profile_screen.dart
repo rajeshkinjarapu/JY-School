@@ -14,6 +14,7 @@ class StudentProfileScreen extends StatefulWidget {
 
 class _StudentProfileScreenState extends State<StudentProfileScreen> with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  int _currentIndex = 0;
   Map<String, dynamic>? _studentDetails;
   List<dynamic> _feeStructures = [];
   bool _isLoading = true;
@@ -22,6 +23,11 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+    _tabController.addListener(() {
+      if (!_tabController.indexIsChanging) {
+        setState(() { _currentIndex = _tabController.index; });
+      }
+    });
     _fetchProfile();
   }
 
@@ -122,9 +128,11 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
+              borderRadius: BorderRadius.only(bottomLeft: Radius.circular(24), bottomRight: Radius.circular(24)),
+              boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10, offset: Offset(0, 4))],
             ),
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
+              padding: const EdgeInsets.fromLTRB(16, 20, 16, 24),
               child: Row(
                 children: [
                   Container(
@@ -138,10 +146,9 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
                       borderRadius: BorderRadius.circular(16),
                       child: (photoUrl != null && (photoUrl as String).isNotEmpty)
                           ? Image.network(
-                              (photoUrl as String).startsWith('http') 
-                                  ? photoUrl 
-                                  : ((photoUrl as String).startsWith('/') ? '${ApiService.baseUrl}$photoUrl' : '${ApiService.baseUrl}/$photoUrl'),
+                              ApiService.getImageUrl(photoUrl as String),
                               fit: BoxFit.cover,
+                              headers: const {'ngrok-skip-browser-warning': '69420'},
                               errorBuilder: (c, e, s) => _avatarFallback(name),
                             )
                           : _avatarFallback(name),
@@ -196,7 +203,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
+      floatingActionButton: _currentIndex == 2 ? FloatingActionButton.extended(
         heroTag: 'pay_fee_fab',
         onPressed: () async {
           final s2 = _studentDetails ?? widget.student;
@@ -210,7 +217,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
         backgroundColor: const Color(0xFF4F46E5),
         icon: const Icon(Icons.credit_card_rounded, color: Colors.white),
         label: Text('Pay Fee', style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold)),
-      ),
+      ) : null,
     );
   }
 
@@ -578,24 +585,47 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
           builder: (_, sc) => Container(
             decoration: const BoxDecoration(color: Colors.white, borderRadius: BorderRadius.vertical(top: Radius.circular(28))),
             child: Column(children: [
-              Container(width: 40, height: 4, margin: const EdgeInsets.symmetric(vertical: 12), decoration: BoxDecoration(color: const Color(0xFFE2E8F0), borderRadius: BorderRadius.circular(2))),
               Container(
-                width: double.infinity, padding: const EdgeInsets.fromLTRB(20, 4, 20, 16),
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(colors: [Color(0xFF2E2A66), Color(0xFF4F46E5)], begin: Alignment.topLeft, end: Alignment.bottomRight),
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF8FAFC),
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+                  boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 8, offset: const Offset(0, 4))],
                 ),
-                child: Row(children: [
-                  const Icon(Icons.edit_rounded, color: Colors.white, size: 20),
-                  const SizedBox(width: 10),
-                  Text('Edit Student Profile', style: GoogleFonts.outfit(color: Colors.white, fontSize: 17, fontWeight: FontWeight.bold)),
-                  const Spacer(),
-                  GestureDetector(onTap: () => Navigator.pop(ctx), child: const Icon(Icons.close_rounded, color: Colors.white70, size: 22)),
-                ]),
+                child: Column(
+                  children: [
+                    const SizedBox(height: 12),
+                    Container(width: 40, height: 4, decoration: BoxDecoration(color: const Color(0xFFCBD5E1), borderRadius: BorderRadius.circular(2))),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 16, 12, 16),
+                      child: Row(children: [
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(colors: [Color(0xFF8B5CF6), Color(0xFF6366F1)]),
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: [BoxShadow(color: const Color(0xFF6366F1).withOpacity(0.3), blurRadius: 8, offset: const Offset(0, 3))]
+                          ),
+                          child: const Icon(Icons.edit_document, color: Colors.white, size: 20)
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(child: Text('Edit Student Profile', style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.bold, color: const Color(0xFF1E293B)))),
+                        IconButton(
+                          onPressed: () => Navigator.pop(ctx), 
+                          icon: Container(
+                            padding: const EdgeInsets.all(6),
+                            decoration: BoxDecoration(color: Colors.white, shape: BoxShape.circle, border: Border.all(color: const Color(0xFFE2E8F0))),
+                            child: const Icon(Icons.close_rounded, color: Color(0xFF64748B), size: 16),
+                          )
+                        ),
+                      ]),
+                    ),
+                  ],
+                ),
               ),
               Expanded(child: SingleChildScrollView(
                 controller: sc,
-                padding: EdgeInsets.fromLTRB(20, 20, 20, MediaQuery.of(ctx).viewInsets.bottom + 20),
+                padding: EdgeInsets.fromLTRB(20, 24, 20, MediaQuery.of(ctx).viewInsets.bottom + 20),
                 child: Column(children: [
                   _editSection('Personal', [
                     _editField('Date of Birth', dobC, hint: 'YYYY-MM-DD', icon: Icons.cake_rounded),
@@ -665,31 +695,44 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
   }
 
   Widget _editSection(String label, List<Widget> fields) {
-    return Container(
-      decoration: BoxDecoration(color: const Color(0xFFF8FAFC), borderRadius: BorderRadius.circular(16), border: Border.all(color: const Color(0xFFE2E8F0))),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Padding(padding: const EdgeInsets.fromLTRB(16, 12, 16, 4), child: Text(label, style: GoogleFonts.poppins(fontSize: 11.5, fontWeight: FontWeight.w700, color: const Color(0xFF94A3B8), letterSpacing: 0.5))),
-        ...fields,
-      ]),
-    );
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Padding(
+        padding: const EdgeInsets.fromLTRB(4, 0, 16, 12),
+        child: Row(
+          children: [
+            Container(width: 4, height: 18, decoration: BoxDecoration(color: const Color(0xFF4F46E5), borderRadius: BorderRadius.circular(2))),
+            const SizedBox(width: 10),
+            Text(label.toUpperCase(), style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w700, color: const Color(0xFF1E293B), letterSpacing: 0.5)),
+          ],
+        ),
+      ),
+      ...fields,
+      const SizedBox(height: 16),
+    ]);
   }
 
   Widget _editField(String label, TextEditingController ctrl, {String? hint, IconData? icon, TextInputType? keyboardType, int maxLines = 1}) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 4, 12, 8),
-      child: TextField(
-        controller: ctrl, keyboardType: keyboardType, maxLines: maxLines,
-        style: GoogleFonts.poppins(fontSize: 13.5, color: const Color(0xFF1E293B)),
-        decoration: InputDecoration(
-          labelText: label, labelStyle: GoogleFonts.poppins(fontSize: 12, color: const Color(0xFF64748B)),
-          hintText: hint, hintStyle: GoogleFonts.poppins(fontSize: 12, color: const Color(0xFFCBD5E1)),
-          prefixIcon: icon != null ? Icon(icon, size: 18, color: const Color(0xFF6366F1)) : null,
-          filled: true, fillColor: Colors.white,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
-          enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
-          focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFF6366F1), width: 1.5)),
-        ),
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label.toUpperCase(), style: GoogleFonts.poppins(fontSize: 11, fontWeight: FontWeight.w700, color: const Color(0xFF64748B), letterSpacing: 0.5)),
+          const SizedBox(height: 6),
+          TextField(
+            controller: ctrl, keyboardType: keyboardType, maxLines: maxLines,
+            style: GoogleFonts.poppins(fontSize: 14, color: const Color(0xFF1E293B), fontWeight: FontWeight.w500),
+            decoration: InputDecoration(
+              hintText: hint, hintStyle: GoogleFonts.poppins(fontSize: 14, color: const Color(0xFFCBD5E1)),
+              prefixIcon: icon != null ? Icon(icon, size: 20, color: const Color(0xFF64748B)) : null,
+              filled: true, fillColor: const Color(0xFFF8FAFC),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
+              enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
+              focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFF4F46E5), width: 1.5)),
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -35,6 +35,11 @@ import '../screens/hr_salary_screen.dart';
 import '../screens/office_tools_screen.dart';
 import '../screens/question_bank_screen.dart';
 import '../screens/answer_key_screen.dart';
+import '../screens/settings_screen.dart';
+import '../screens/teacher_profile_screen.dart';
+import '../screens/student_profile_screen.dart';
+import '../screens/admin_attendance_dashboard.dart';
+import '../screens/examination_dashboard_screen.dart';
 
 class AppDrawer extends StatefulWidget {
   final String currentRoute;
@@ -187,14 +192,14 @@ class _AppDrawerState extends State<AppDrawer> {
                       title: 'Attendance',
                       routeName: 'attendance_admin',
                       isActive: widget.currentRoute == 'attendance_admin',
-                      onTap: () => _navigateTo(const AttendanceScreen(), 'attendance_admin'),
+                      onTap: () => _navigateTo(const AdminAttendanceDashboardScreen(), 'attendance_admin'),
                     ),
                     _buildDrawerItem(
                       icon: Icons.description_outlined,
                       title: 'Examination',
                       routeName: 'exams',
                       isActive: widget.currentRoute == 'exams',
-                      onTap: () => _navigateTo(const ExamsScreen(), 'exams'),
+                      onTap: () => _navigateTo(const ExaminationDashboardScreen(), 'exams'),
                     ),
                     _buildDrawerItem(
                       icon: Icons.calendar_today_outlined,
@@ -330,7 +335,7 @@ class _AppDrawerState extends State<AppDrawer> {
                       title: 'Examination',
                       routeName: 'exams',
                       isActive: widget.currentRoute == 'exams',
-                      onTap: () => _navigateTo(const TeacherMarksScreen(), 'exams'),
+                      onTap: () => _navigateTo(const ExaminationDashboardScreen(), 'exams'),
                     ),
                     _buildDrawerItem(
                       icon: Icons.calendar_today_outlined,
@@ -545,34 +550,38 @@ class _AppDrawerState extends State<AppDrawer> {
           color: isActive ? Colors.white.withOpacity(0.1) : Colors.transparent,
         ),
       ),
-      child: ListTile(
-        onTap: onTap,
-        dense: true,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        leading: Icon(
-          icon,
-          color: isActive ? Colors.white : textInactive,
-          size: 22,
-        ),
-        title: Text(
-          title,
-          style: GoogleFonts.outfit(
+      child: Material(
+        color: Colors.transparent,
+        child: ListTile(
+          onTap: onTap,
+          dense: true,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          leading: Icon(
+            icon,
             color: isActive ? Colors.white : textInactive,
-            fontWeight: isActive ? FontWeight.w500 : FontWeight.w400,
-            fontSize: 15,
+            size: 22,
           ),
+          title: Text(
+            title,
+            style: GoogleFonts.outfit(
+              color: isActive ? Colors.white : textInactive,
+              fontWeight: isActive ? FontWeight.w500 : FontWeight.w400,
+              fontSize: 15,
+            ),
+          ),
+          trailing: isActive 
+              ? Container(
+                  width: 6,
+                  height: 6,
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                  ),
+                )
+              : null,
         ),
-        trailing: isActive 
-            ? Container(
-                width: 6,
-                height: 6,
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  shape: BoxShape.circle,
-                ),
-              )
-            : null,
       ),
     );
   }
 }
+

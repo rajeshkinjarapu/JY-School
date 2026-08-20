@@ -1,9 +1,10 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../services/api_service.dart';
 import '../widgets/app_drawer.dart';
 import 'teacher_profile_screen.dart';
+import 'add_teacher_screen.dart';
 
 class TeachersScreen extends StatefulWidget {
   const TeachersScreen({super.key});
@@ -103,16 +104,28 @@ class _TeachersScreenState extends State<TeachersScreen> {
     final gradientColors = avatarGradients[colorIndex];
 
     if (photoUrl != null && photoUrl.isNotEmpty && !photoUrl.startsWith('data:')) {
+      final url = ApiService.getImageUrl(photoUrl);
       return Container(
         width: 44,
         height: 44,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           border: Border.all(color: Colors.grey.shade300, width: 1),
-          image: DecorationImage(image: NetworkImage(photoUrl), fit: BoxFit.cover),
           boxShadow: [
             BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 4, offset: const Offset(0, 2)),
           ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(22),
+          child: Image.network(
+            url,
+            fit: BoxFit.cover,
+            headers: const {'ngrok-skip-browser-warning': '69420'},
+            errorBuilder: (context, error, stackTrace) => Container(
+              color: Colors.grey.shade200,
+              child: const Icon(Icons.person, color: Colors.grey),
+            ),
+          ),
         ),
       );
     } else {
@@ -147,7 +160,15 @@ class _TeachersScreenState extends State<TeachersScreen> {
         foregroundColor: Colors.white,
         elevation: 0,
         actions: [
-          IconButton(icon: const Icon(Icons.person_add_rounded), onPressed: () {}),
+          IconButton(
+            icon: const Icon(Icons.person_add_rounded), 
+            onPressed: () async {
+              final result = await Navigator.push(context, MaterialPageRoute(builder: (context) => const AddTeacherScreen()));
+              if (result == true) {
+                _fetchTeachers();
+              }
+            }
+          ),
         ],
       ),
       body: Column(
@@ -195,10 +216,10 @@ class _TeachersScreenState extends State<TeachersScreen> {
                     : RefreshIndicator(
                         onRefresh: _fetchTeachers,
                         child: ListView.builder(
-                          padding: const EdgeInsets.only(left: 16, right: 16, bottom: 24, top: 0),
+                          padding: const EdgeInsets.only(left: 16, right: 16, bottom: 24, top: 12),
                           itemCount: _filteredTeachers.length,
                           itemBuilder: (context, index) {
-                            return _buildTeacherCard(_filteredTeachers[index]);
+                            return _buildTeacherCard(_filteredTeachers[index], index);
                           },
                         ),
                       ),
@@ -208,11 +229,11 @@ class _TeachersScreenState extends State<TeachersScreen> {
     );
   }
 
-  Widget _buildTeacherCard(dynamic teacher) {
+  Widget _buildTeacherCard(dynamic teacher, int index) {
     final user = teacher['user'] ?? {};
     final name = user['name'] ?? 'Unknown';
     final photoUrl = user['photoUrl'];
-    final id = teacher['teacherId'] ?? 'N/A';
+    final id = teacher['employeeId'] ?? 'N/A';
     final subject = teacher['specialization'] ?? 'N/A';
     final phone = user['phone']?.toString() ?? '';
 
@@ -231,22 +252,29 @@ class _TeachersScreenState extends State<TeachersScreen> {
           Navigator.push(context, MaterialPageRoute(builder: (context) => TeacherProfileScreen(teacher: teacher)));
         },
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           child: Row(
             children: [
+              SizedBox(
+                width: 28,
+                child: Text(
+                  '${index + 1}.',
+                  style: GoogleFonts.poppins(color: const Color(0xFFCBD5E1), fontSize: 13, fontWeight: FontWeight.w700),
+                ),
+              ),
               _buildAvatar(name, photoUrl),
-              const SizedBox(width: 16),
+              const SizedBox(width: 14),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       name,
-                      style: GoogleFonts.poppins(color: const Color(0xFF1E293B), fontSize: 15, fontWeight: FontWeight.bold),
+                      style: GoogleFonts.poppins(color: const Color(0xFF1E293B), fontSize: 15, fontWeight: FontWeight.w700),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 3),
                     Text(
                       'ID: $id',
                       style: GoogleFonts.poppins(color: const Color(0xFF64748B), fontSize: 12),
@@ -266,22 +294,24 @@ class _TeachersScreenState extends State<TeachersScreen> {
                 ),
               ),
               const SizedBox(width: 12),
-              InkWell(
-                onTap: () => _launchWhatsApp(phone),
-                borderRadius: BorderRadius.circular(8),
-                child: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF22C55E).withOpacity(0.15),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(
-                    Icons.chat_bubble_rounded,
-                    color: Color(0xFF16A34A),
-                    size: 18,
+              if (phone.isNotEmpty)
+                InkWell(
+                  onTap: () => _launchWhatsApp(phone),
+                  borderRadius: BorderRadius.circular(24),
+                  child: Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF25D366).withOpacity(0.15),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Image.network(
+                      'https://upload.wikimedia.org/wikipedia/commons/thumb/6/6b/WhatsApp.svg/512px-WhatsApp.svg.png',
+                      width: 24,
+                      height: 24,
+                      errorBuilder: (context, error, stackTrace) => const Icon(Icons.chat_rounded, color: Color(0xFF25D366), size: 24),
+                    ),
                   ),
                 ),
-              ),
             ],
           ),
         ),

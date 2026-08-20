@@ -9,6 +9,7 @@ import 'progress_card_screen.dart';
 import 'exam_status_screen.dart';
 import 'slip_test_screen.dart';
 import '../services/api_service.dart';
+import '../widgets/app_drawer.dart';
 
 class ExaminationDashboardScreen extends StatelessWidget {
   const ExaminationDashboardScreen({super.key});
@@ -16,19 +17,20 @@ class ExaminationDashboardScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F7FE),
+      backgroundColor: const Color(0xFFF8FAFC),
+      drawer: const AppDrawer(currentRoute: 'exams'),
       appBar: AppBar(
         title: Text(
           'Examination Dashboard',
-          style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: const Color(0xFF1E293B)),
+          style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 18),
         ),
-        backgroundColor: const Color(0xFF2E2A66), // Deep purple from screenshot
-        iconTheme: const IconThemeData(color: Colors.white),
+        backgroundColor: const Color(0xFF0F172A),
+        foregroundColor: Colors.white,
         elevation: 0,
       ),
       body: SingleChildScrollView(
         child: Padding(
-          padding: const EdgeInsets.all(16.0),
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 24.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -36,109 +38,89 @@ class ExaminationDashboardScreen extends StatelessWidget {
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 crossAxisCount: 2,
-                crossAxisSpacing: 16,
-                mainAxisSpacing: 16,
-                childAspectRatio: 1.1, // Adjusted for square-ish cards
+                crossAxisSpacing: 14,
+                mainAxisSpacing: 14,
+                childAspectRatio: 1.4, // Increased to decrease box height
                 children: [
                   _buildDashboardCard(
                     context,
-                    title: 'Examinations List',
+                    title: 'Exams List',
                     subtitle: 'Manage exams',
                     icon: Icons.assignment_outlined,
-                    color: const Color(0xFF6366F1), // Indigo
-                    onTap: () {
-                      Navigator.push(context, MaterialPageRoute(builder: (context) => const ExamsScreen()));
-                    },
+                    gradient: const LinearGradient(colors: [Color(0xFF4F46E5), Color(0xFF7C3AED)]), // Indigo to Purple
+                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const ExamsScreen())),
                   ),
                   _buildDashboardCard(
                     context,
                     title: 'Admit Card',
                     subtitle: 'Hall tickets',
                     icon: Icons.badge_outlined,
-                    color: const Color(0xFFF59E0B), // Amber/Orange
-                    onTap: () {
-                      Navigator.push(context, MaterialPageRoute(builder: (context) => const AdmitCardScreen()));
-                    },
+                    gradient: const LinearGradient(colors: [Color(0xFF0EA5E9), Color(0xFF2563EB)]), // Sky to Blue
+                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const AdmitCardScreen())),
                   ),
                   _buildDashboardCard(
                     context,
                     title: 'Question Papers',
-                    subtitle: 'Manage papers',
+                    subtitle: 'Upload & manage',
                     icon: Icons.library_books_outlined,
-                    color: const Color(0xFF475569), // Slate
-                    onTap: () {
-                      Navigator.push(context, MaterialPageRoute(builder: (context) => const QuestionPapersScreen()));
-                    },
+                    gradient: const LinearGradient(colors: [Color(0xFFF59E0B), Color(0xFFEA580C)]), // Amber to Orange
+                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const QuestionPapersScreen())),
                   ),
                   _buildDashboardCard(
                     context,
                     title: 'Marks Upload',
-                    subtitle: 'Upload marks',
-                    icon: Icons.edit_outlined,
-                    color: const Color(0xFF10B981), // Emerald
-                    onTap: () {
-                      Navigator.push(context, MaterialPageRoute(builder: (context) => const MarksUploadScreen()));
-                    },
+                    subtitle: 'Enter student marks',
+                    icon: Icons.edit_note_rounded,
+                    gradient: const LinearGradient(colors: [Color(0xFF10B981), Color(0xFF059669)]), // Emerald
+                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const MarksUploadScreen())),
                   ),
                   _buildDashboardCard(
                     context,
                     title: 'Results',
                     subtitle: 'Grade sheets',
                     icon: Icons.workspace_premium_outlined,
-                    color: const Color(0xFF0EA5E9), // Light Blue
-                    onTap: () {
-                      Navigator.push(context, MaterialPageRoute(builder: (context) => const ResultsScreen()));
-                    },
+                    gradient: const LinearGradient(colors: [Color(0xFF8B5CF6), Color(0xFF6D28D9)]), // Violet
+                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const ResultsScreen())),
                   ),
                   _buildDashboardCard(
                     context,
                     title: 'Progress Card',
                     subtitle: 'Detailed progress',
                     icon: Icons.analytics_outlined,
-                    color: const Color(0xFFEF4444), // Red
-                    onTap: () {
-                      Navigator.push(context, MaterialPageRoute(builder: (context) => const ProgressCardScreen()));
-                    },
+                    gradient: const LinearGradient(colors: [Color(0xFFF43F5E), Color(0xFFE11D48)]), // Rose
+                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const ProgressCardScreen())),
                   ),
                   _buildDashboardCard(
                     context,
-                    title: 'Slip Test Rank Card',
+                    title: 'Slip Test Rank',
                     subtitle: 'Manual ranks',
                     icon: Icons.military_tech_outlined,
-                    color: const Color(0xFF06B6D4), // Cyan
-                    onTap: () {
-                      Navigator.push(context, MaterialPageRoute(builder: (context) => const SlipTestScreen()));
-                    },
+                    gradient: const LinearGradient(colors: [Color(0xFF06B6D4), Color(0xFF0284C7)]), // Cyan
+                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const SlipTestScreen())),
                   ),
                   _buildDashboardCard(
                     context,
                     title: 'Send Marks SMS',
-                    subtitle: 'SMS parents',
-                    icon: Icons.message_outlined,
-                    color: const Color(0xFFEC4899), // Pink
-                    onTap: () {
-                      _showSendSmsBottomSheet(context);
-                    },
+                    subtitle: 'Notify parents',
+                    icon: Icons.sms_outlined,
+                    gradient: const LinearGradient(colors: [Color(0xFFEC4899), Color(0xFFBE185D)]), // Pink
+                    onTap: () => _showSendSmsBottomSheet(context),
                   ),
                   _buildDashboardCard(
                     context,
                     title: 'Status Overview',
                     subtitle: 'Track progress',
                     icon: Icons.security_outlined,
-                    color: const Color(0xFF8B5CF6), // Purple
-                    onTap: () {
-                      Navigator.push(context, MaterialPageRoute(builder: (context) => const ExamStatusScreen()));
-                    },
+                    gradient: const LinearGradient(colors: [Color(0xFFF97316), Color(0xFFC2410C)]), // Orange
+                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const ExamStatusScreen())),
                   ),
                   _buildDashboardCard(
                     context,
                     title: 'Settings',
                     subtitle: 'Configurations',
                     icon: Icons.settings_outlined,
-                    color: const Color(0xFF334155), // Dark Slate
-                    onTap: () {
-                      _showPlaceholder(context, 'Settings');
-                    },
+                    gradient: const LinearGradient(colors: [Color(0xFF64748B), Color(0xFF475569)]), // Slate
+                    onTap: () => _showPlaceholder(context, 'Settings'),
                   ),
                 ],
               ),
@@ -155,95 +137,80 @@ class ExaminationDashboardScreen extends StatelessWidget {
     required String title,
     required String subtitle,
     required IconData icon,
-    required Color color,
+    required Gradient gradient,
     required VoidCallback onTap,
   }) {
-    return GestureDetector(
+    return InkWell(
       onTap: onTap,
+      borderRadius: BorderRadius.circular(20),
       child: Container(
-        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: color,
+          gradient: gradient,
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: color.withOpacity(0.3),
-              blurRadius: 8,
+              color: (gradient as LinearGradient).colors.first.withOpacity(0.4),
+              blurRadius: 10,
               offset: const Offset(0, 4),
             ),
           ],
         ),
         child: Stack(
           children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(icon, color: const Color(0xFF64748B), size: 24),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.all(4),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(Icons.arrow_forward_ios, color: const Color(0xFF64748B), size: 12),
-                    ),
-                  ],
-                ),
-                const Spacer(),
-                Text(
-                  title,
-                  style: GoogleFonts.outfit(
-                    color: const Color(0xFF1E293B),
-                    fontSize: 15,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    Container(
-                      width: 4,
-                      height: 4,
-                      decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
-                    ),
-                    const SizedBox(width: 6),
-                    Expanded(
-                      child: Text(
-                        subtitle,
-                        style: GoogleFonts.poppins(
-                          color: const Color(0xFF1E293B).withOpacity(0.9),
-                          fontSize: 10,
-                          fontWeight: FontWeight.w500,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-            // Decorative background icon (optional, similar to image 3)
+            // Decorative background icon
             Positioned(
-              right: -10,
-              bottom: -10,
+              right: -15,
+              bottom: -15,
               child: Icon(
                 icon,
-                size: 80,
-                color: const Color(0xFF64748B).withOpacity(0.1),
+                size: 90,
+                color: Colors.white.withOpacity(0.15),
               ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.25),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(icon, color: Colors.white, size: 24),
+                  ),
+                  const Spacer(),
+                  Text(
+                    title,
+                    style: GoogleFonts.outfit(
+                      color: Colors.white,
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: GoogleFonts.poppins(
+                      color: Colors.white.withOpacity(0.9),
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+            // Optional subtle arrow icon
+            Positioned(
+              right: 12,
+              top: 14,
+              child: Icon(Icons.arrow_forward_ios, color: Colors.white.withOpacity(0.5), size: 14),
             ),
           ],
         ),

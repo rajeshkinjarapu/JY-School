@@ -122,6 +122,8 @@ class _LeaveScreenState extends State<LeaveScreen> {
 
   Widget _buildLeaveCard(Map<String, dynamic> leave) {
     final status = leave['status'] ?? 'PENDING';
+    final type = leave['type'] ?? 'General Leave';
+    
     Color statusColor;
     Color statusBgColor;
     IconData statusIcon;
@@ -141,7 +143,7 @@ class _LeaveScreenState extends State<LeaveScreen> {
     }
 
     final startDate = (leave['startDate'] as String).split('T')[0];
-    final endDate = (leave['endDate'] as String).split('T')[0];
+    final endDate = leave['endDate'] != null ? (leave['endDate'] as String).split('T')[0] : startDate;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -152,7 +154,7 @@ class _LeaveScreenState extends State<LeaveScreen> {
         border: Border.all(color: const Color(0xFFE2E8F0)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withOpacity(0.04),
             blurRadius: 10,
             offset: const Offset(0, 4),
           )
@@ -164,22 +166,24 @@ class _LeaveScreenState extends State<LeaveScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                children: [
-                  Icon(Icons.date_range_rounded, color: const Color(0xFF64748B), size: 20),
-                  const SizedBox(width: 8),
-                  Text(
-                    startDate == endDate ? startDate : '$startDate to $endDate',
-                    style: GoogleFonts.outfit(
-                      color: const Color(0xFF1E293B),
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEEF2FF),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  type,
+                  style: GoogleFonts.outfit(
+                    color: const Color(0xFF6366F1),
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 0.5,
                   ),
-                ],
+                ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
                   color: statusBgColor,
                   borderRadius: BorderRadius.circular(20),
@@ -194,8 +198,9 @@ class _LeaveScreenState extends State<LeaveScreen> {
                       status,
                       style: GoogleFonts.poppins(
                         color: statusColor,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.5,
                       ),
                     ),
                   ],
@@ -204,11 +209,28 @@ class _LeaveScreenState extends State<LeaveScreen> {
             ],
           ),
           const SizedBox(height: 16),
+          Row(
+            children: [
+              const Icon(Icons.date_range_rounded, color: Color(0xFF64748B), size: 20),
+              const SizedBox(width: 8),
+              Text(
+                startDate == endDate ? startDate : '$startDate to $endDate',
+                style: GoogleFonts.outfit(
+                  color: const Color(0xFF1E293B),
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
           Text(
             'Reason',
             style: GoogleFonts.poppins(
-              color: const Color(0xFF475569),
-              fontSize: 12,
+              color: const Color(0xFF94A3B8),
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 1,
             ),
           ),
           const SizedBox(height: 4),
@@ -236,6 +258,8 @@ class _ApplyLeaveFormState extends State<_ApplyLeaveForm> {
   final _reasonController = TextEditingController();
   DateTime? _startDate;
   DateTime? _endDate;
+  String _selectedType = 'Sick Leave';
+  final List<String> _leaveTypes = ['Sick Leave', 'Casual Leave', 'Earned Leave', 'Permission'];
   bool _isSubmitting = false;
 
   Future<void> _selectDateRange() async {
@@ -249,7 +273,7 @@ class _ApplyLeaveFormState extends State<_ApplyLeaveForm> {
             colorScheme: const ColorScheme.dark(
               primary: Color(0xFF6366F1),
               onPrimary: Colors.white,
-              surface: Color(0xFFE2E8F0),
+              surface: Color(0xFF1E293B),
               onSurface: Colors.white,
             ),
           ),
@@ -283,6 +307,7 @@ class _ApplyLeaveFormState extends State<_ApplyLeaveForm> {
     setState(() => _isSubmitting = true);
 
     final res = await ApiService.applyLeave(
+      type: _selectedType,
       startDate: _startDate!.toIso8601String(),
       endDate: _endDate!.toIso8601String(),
       reason: _reasonController.text.trim(),
@@ -314,114 +339,154 @@ class _ApplyLeaveFormState extends State<_ApplyLeaveForm> {
         top: 20,
       ),
       decoration: const BoxDecoration(
-        color: Color(0xFF1E293B),
+        color: Colors.white,
         borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Center(
-            child: Container(
-              width: 50,
-              height: 5,
-              decoration: BoxDecoration(
-                color: const Color(0xFFCBD5E1),
-                borderRadius: BorderRadius.circular(10),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 50,
+                height: 5,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFCBD5E1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
               ),
             ),
-          ),
-          const SizedBox(height: 24),
-          Text(
-            'Apply Leave',
-            style: GoogleFonts.outfit(
-              color: const Color(0xFF1E293B),
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
+            const SizedBox(height: 24),
+            Text(
+              'Apply Leave',
+              style: GoogleFonts.outfit(
+                color: const Color(0xFF1E293B),
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+              ),
             ),
-          ),
-          const SizedBox(height: 24),
-          
-          GestureDetector(
-            onTap: _selectDateRange,
-            child: Container(
-              padding: const EdgeInsets.all(16),
+            const SizedBox(height: 24),
+            
+            // Leave Type Dropdown
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
               decoration: BoxDecoration(
-                color: const Color(0xFFE2E8F0),
+                color: const Color(0xFFF8FAFC),
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(color: const Color(0xFFE2E8F0)),
               ),
-              child: Row(
-                children: [
-                  const Icon(Icons.calendar_month_rounded, color: Color(0xFF818CF8)),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Text(
-                      _startDate == null
-                          ? 'Select Date Range'
-                          : '${_startDate!.toIso8601String().split('T')[0]} to ${_endDate!.toIso8601String().split('T')[0]}',
-                      style: GoogleFonts.poppins(
-                        color: _startDate == null ? const Color(0xFF64748B) : const Color(0xFF1E293B),
-                        fontSize: 16,
+              child: DropdownButtonHideUnderline(
+                child: DropdownButton<String>(
+                  isExpanded: true,
+                  value: _selectedType,
+                  icon: const Icon(Icons.keyboard_arrow_down_rounded, color: Color(0xFF64748B)),
+                  onChanged: (val) {
+                    if (val != null) setState(() => _selectedType = val);
+                  },
+                  items: _leaveTypes.map((type) {
+                    return DropdownMenuItem(
+                      value: type,
+                      child: Text(
+                        type,
+                        style: GoogleFonts.poppins(
+                          fontSize: 14,
+                          color: const Color(0xFF1E293B),
+                        ),
                       ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-          
-          TextField(
-            controller: _reasonController,
-            maxLines: 4,
-            style: GoogleFonts.poppins(color: const Color(0xFF1E293B)),
-            decoration: InputDecoration(
-              hintText: 'Reason for leave...',
-              hintStyle: GoogleFonts.poppins(color: const Color(0xFF475569)),
-              filled: true,
-              fillColor: const Color(0xFFE2E8F0),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(16),
-                borderSide: BorderSide(color: const Color(0xFFE2E8F0)),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(16),
-                borderSide: BorderSide(color: const Color(0xFFE2E8F0)),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(16),
-                borderSide: const BorderSide(color: Color(0xFF6366F1)),
-              ),
-            ),
-          ),
-          const SizedBox(height: 24),
-          
-          SizedBox(
-            width: double.infinity,
-            height: 56,
-            child: ElevatedButton(
-              onPressed: _isSubmitting ? null : _submit,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF6366F1),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
+                    );
+                  }).toList(),
                 ),
               ),
-              child: _isSubmitting
-                  ? const CircularProgressIndicator(color: Colors.white)
-                  : Text(
-                      'Submit Request',
-                      style: GoogleFonts.poppins(
-                        color: const Color(0xFF1E293B),
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
+            ),
+            const SizedBox(height: 16),
+
+            // Date Range Picker
+            GestureDetector(
+              onTap: _selectDateRange,
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF8FAFC),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.calendar_month_rounded, color: Color(0xFF818CF8)),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Text(
+                        _startDate == null
+                            ? 'Select Date Range'
+                            : '${_startDate!.toIso8601String().split('T')[0]} to ${_endDate!.toIso8601String().split('T')[0]}',
+                        style: GoogleFonts.poppins(
+                          color: _startDate == null ? const Color(0xFF64748B) : const Color(0xFF1E293B),
+                          fontSize: 14,
+                        ),
                       ),
                     ),
+                  ],
+                ),
+              ),
             ),
-          ),
-          const SizedBox(height: 24),
-        ],
+            const SizedBox(height: 16),
+            
+            // Reason Text Field
+            TextField(
+              controller: _reasonController,
+              maxLines: 4,
+              style: GoogleFonts.poppins(color: const Color(0xFF1E293B)),
+              decoration: InputDecoration(
+                hintText: 'Reason for leave...',
+                hintStyle: GoogleFonts.poppins(color: const Color(0xFF94A3B8)),
+                filled: true,
+                fillColor: const Color(0xFFF8FAFC),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide(color: const Color(0xFFE2E8F0)),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide(color: const Color(0xFFE2E8F0)),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: const BorderSide(color: Color(0xFF6366F1)),
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+            
+            // Submit Button
+            SizedBox(
+              width: double.infinity,
+              height: 56,
+              child: ElevatedButton(
+                onPressed: _isSubmitting ? null : _submit,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF6366F1),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  elevation: 0,
+                ),
+                child: _isSubmitting
+                    ? const SizedBox(height: 24, width: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                    : Text(
+                        'Submit Request',
+                        style: GoogleFonts.outfit(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+              ),
+            ),
+            const SizedBox(height: 24),
+          ],
+        ),
       ),
     );
   }

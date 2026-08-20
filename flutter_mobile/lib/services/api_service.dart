@@ -8,8 +8,8 @@ class ApiService {
   static String getImageUrl(String? photoUrl) {
     if (photoUrl == null || photoUrl.isEmpty) return '';
     if (photoUrl.startsWith('http') || photoUrl.startsWith('data:')) return photoUrl;
-    if (photoUrl.startsWith('/')) return '\$baseUrl\$photoUrl';
-    return '\$baseUrl/\$photoUrl';
+    if (photoUrl.startsWith('/')) return '$baseUrl$photoUrl';
+    return '$baseUrl/$photoUrl';
   }
 
   // Base headers for API requests
@@ -19,7 +19,7 @@ class ApiService {
       'ngrok-skip-browser-warning': '69420',
     };
     if (token != null) {
-      headers['Authorization'] = 'Bearer \$token';
+      headers['Authorization'] = 'Bearer $token';
     }
     return headers;
   }
@@ -34,7 +34,7 @@ class ApiService {
   static Future<Map<String, dynamic>> login(String email, String password) async {
     try {
       final response = await http.post(
-        Uri.parse('\$baseUrl/api/auth/login'),
+        Uri.parse('$baseUrl/api/auth/login'),
         headers: _getHeaders(),
         body: jsonEncode({
           'email': email,
@@ -64,7 +64,7 @@ class ApiService {
       }
       return {'success': false, 'message': data['message'] ?? 'Login failed'};
     } catch (e) {
-      return {'success': false, 'message': 'Network error: \$e'};
+      return {'success': false, 'message': 'Network error: $e'};
     }
   }
 
@@ -73,26 +73,26 @@ class ApiService {
   }
 
   static Future<Map<String, dynamic>> getAttendance(String studentId, {String? startDate, String? endDate}) async {
-    String url = '/api/attendance/student?studentId=\$studentId';
-    if (startDate != null) url += '&startDate=\$startDate';
-    if (endDate != null) url += '&endDate=\$endDate';
+    String url = '/api/attendance/student?studentId=$studentId';
+    if (startDate != null) url += '&startDate=$startDate';
+    if (endDate != null) url += '&endDate=$endDate';
     return _performGet(url, 'Failed to get attendance');
   }
 
   static Future<Map<String, dynamic>> getFeeStatus(String studentId) async {
-    return _performGet('/api/fees/student/\$studentId', 'Failed to get fee status');
+    return _performGet('/api/fees/student/$studentId', 'Failed to get fee status');
   }
 
   static Future<Map<String, dynamic>> getMarks(String studentId) async {
-    return _performGet('/api/marks/student/\$studentId', 'Failed to get results');
+    return _performGet('/api/marks/student/$studentId', 'Failed to get results');
   }
 
   static Future<Map<String, dynamic>> getTimetable(String classId) async {
-    return _performGet('/api/timetable?classId=\$classId', 'Failed to get timetable');
+    return _performGet('/api/timetable?classId=$classId', 'Failed to get timetable');
   }
 
   static Future<Map<String, dynamic>> getTeacherTimetable(String teacherId) async {
-    return _performGet('/api/timetable/teacher/\$teacherId', 'Failed to get teacher timetable');
+    return _performGet('/api/timetable/teacher/$teacherId', 'Failed to get teacher timetable');
   }
 
   static Future<Map<String, dynamic>> getAnnouncements() async {
@@ -108,30 +108,34 @@ class ApiService {
   }
 
   static Future<Map<String, dynamic>> getClassDetails(String classId) async {
-    return _performGet('/api/classes/\$classId', 'Failed to get class details');
+    return _performGet('/api/classes/$classId', 'Failed to get class details');
   }
 
   static Future<Map<String, dynamic>> getClassSubjects(String classId) async {
-    return _performGet('/api/classes/\$classId/subjects', 'Failed to get class subjects');
+    return _performGet('/api/classes/$classId/subjects', 'Failed to get class subjects');
   }
 
   static Future<Map<String, dynamic>> getStudents({String? classId, String? search, int limit = 50}) async {
-    String url = '/api/students?limit=\$limit';
+    String url = '/api/students?limit=$limit';
     if (classId != null && classId.isNotEmpty) {
-      url += '&classId=\$classId';
+      url += '&classId=$classId';
     }
     if (search != null && search.isNotEmpty) {
-      url += '&search=\$search';
+      url += '&search=$search';
     }
     return _performGet(url, 'Failed to get students');
   }
 
   static Future<Map<String, dynamic>> getStudentById(String id) async {
-    return _performGet('/api/students/\$id', 'Failed to get student profile');
+    return _performGet('/api/students/$id', 'Failed to get student profile');
   }
 
   static Future<Map<String, dynamic>> updateStudent(String id, Map<String, dynamic> payload) async {
-    return _performPut('/api/students/\$id', payload, 'Failed to update student');
+    return _performPut('/api/students/$id', payload, 'Failed to update student');
+  }
+
+  static Future<Map<String, dynamic>> createStudent(Map<String, dynamic> payload) async {
+    return _performPost('/api/students', payload, 'Failed to create student');
   }
 
   static Future<Map<String, dynamic>> getSubjects() async {
@@ -146,11 +150,11 @@ class ApiService {
   }
 
   static Future<Map<String, dynamic>> updateSubject(String id, String name) async {
-    return _performPut('/api/subjects/\$id', {'name': name}, 'Failed to update subject');
+    return _performPut('/api/subjects/$id', {'name': name}, 'Failed to update subject');
   }
 
   static Future<Map<String, dynamic>> deleteSubject(String id) async {
-    return _performDelete('/api/subjects/\$id', 'Failed to delete subject');
+    return _performDelete('/api/subjects/$id', 'Failed to delete subject');
   }
 
   static Future<Map<String, dynamic>> assignTeacherToSubject(String classId, String subjectId, String teacherId) async {
@@ -162,7 +166,7 @@ class ApiService {
   }
 
   static Future<Map<String, dynamic>> getExams({String classId = ''}) async {
-    final url = classId.isNotEmpty ? '/api/exams?classId=\$classId' : '/api/exams?limit=500';
+    final url = classId.isNotEmpty ? '/api/exams?classId=$classId' : '/api/exams?limit=500';
     return _performGet(url, 'Failed to get exams');
   }
 
@@ -171,19 +175,19 @@ class ApiService {
   }
 
   static Future<Map<String, dynamic>> updateExam(String examId, Map<String, dynamic> payload) async {
-    return _performPut('/api/exams/\$examId', payload, 'Failed to update exam');
+    return _performPut('/api/exams/$examId', payload, 'Failed to update exam');
   }
 
   static Future<Map<String, dynamic>> deleteExam(String examId) async {
-    return _performDelete('/api/exams/\$examId', 'Failed to delete exam');
+    return _performDelete('/api/exams/$examId', 'Failed to delete exam');
   }
 
   static Future<Map<String, dynamic>> getExamById(String examId) async {
-    return _performGet('/api/exams/\$examId', 'Failed to get exam details');
+    return _performGet('/api/exams/$examId', 'Failed to get exam details');
   }
 
   static Future<Map<String, dynamic>> getMarksForExam(String examId) async {
-    return _performGet('/api/marks/exam/\$examId', 'Failed to get marks');
+    return _performGet('/api/marks/exam/$examId', 'Failed to get marks');
   }
 
   static Future<Map<String, dynamic>> bulkUploadMarks(Map<String, dynamic> payload) async {
@@ -195,21 +199,21 @@ class ApiService {
   }
 
   static Future<Map<String, dynamic>> freezeExamClass(String examId, String classId, bool isFrozen) async {
-    return _performPost('/api/exams/\$examId/freeze', {'classId': classId, 'isFrozen': isFrozen}, 'Failed to freeze exam');
+    return _performPost('/api/exams/$examId/freeze', {'classId': classId, 'isFrozen': isFrozen}, 'Failed to freeze exam');
   }
 
   static Future<Map<String, dynamic>> clearMarks(String examId, String classId, String subject) async {
-    return _performDelete('/api/marks/exam/\$examId?classId=\$classId&subject=\$subject', 'Failed to clear marks');
+    return _performDelete('/api/marks/exam/$examId?classId=$classId&subject=$subject', 'Failed to clear marks');
   }
 
   static Future<Map<String, dynamic>> sendMarksSMS(String examId, String classId, Map<String, dynamic> payload) async {
-    return _performPost('/api/exams/\$examId/classes/\$classId/send-sms', payload, 'Failed to send SMS');
+    return _performPost('/api/exams/$examId/classes/$classId/send-sms', payload, 'Failed to send SMS');
   }
 
   static Future<Map<String, dynamic>> getPendingBalances({String? classId, String? search}) async {
     String url = '/api/fees/pending-balances?limit=1000';
-    if (classId != null && classId != 'ALL') url += '&classId=\$classId';
-    if (search != null && search.isNotEmpty) url += '&search=\$search';
+    if (classId != null && classId != 'ALL') url += '&classId=$classId';
+    if (search != null && search.isNotEmpty) url += '&search=$search';
     return _performGet(url, 'Failed to fetch pending balances');
   }
 
@@ -228,11 +232,11 @@ class ApiService {
   }
 
   static Future<Map<String, dynamic>> updateFeePayment(String paymentId, Map<String, dynamic> payload) async {
-    return _performPut('/api/fees/payments/\$paymentId', payload, 'Failed to update payment');
+    return _performPut('/api/fees/payments/$paymentId', payload, 'Failed to update payment');
   }
 
   static Future<Map<String, dynamic>> deleteFeePayment(String paymentId) async {
-    return _performDelete('/api/fees/payments/\$paymentId', 'Failed to delete payment');
+    return _performDelete('/api/fees/payments/$paymentId', 'Failed to delete payment');
   }
 
   static Future<Map<String, dynamic>> recordPayments(List<dynamic> payments) async {
@@ -241,7 +245,7 @@ class ApiService {
       if (token == null) return {'success': false, 'message': 'No session token'};
 
       final response = await http.post(
-        Uri.parse('\$baseUrl/api/fees/payments/bulk'),
+        Uri.parse('$baseUrl/api/fees/payments/bulk'),
         headers: _getHeaders(token: token),
         body: jsonEncode({'payments': payments}),
       );
@@ -252,14 +256,14 @@ class ApiService {
       }
       return {'success': false, 'message': decoded is Map ? (decoded['message'] ?? 'Failed request') : 'Failed request'};
     } catch (e) {
-      return {'success': false, 'message': 'Network error: \$e'};
+      return {'success': false, 'message': 'Network error: $e'};
     }
   }
 
   static Future<Map<String, dynamic>> getExamResults(String examId, {String classId = ''}) async {
-    String url = '/api/exams/\$examId/results';
+    String url = '/api/exams/$examId/results';
     if (classId.isNotEmpty) {
-      url += '?classId=\$classId';
+      url += '?classId=$classId';
     }
     return _performGet(url, 'Failed to get exam results');
   }
@@ -269,15 +273,23 @@ class ApiService {
   }
 
   static Future<Map<String, dynamic>> getTeachers({int limit = 500}) async {
-    return _performGet('/api/teachers?limit=\$limit', 'Failed to get teachers');
+    return _performGet('/api/teachers?limit=$limit', 'Failed to get teachers');
   }
 
   static Future<Map<String, dynamic>> getTeacherById(String id) async {
-    return _performGet('/api/teachers/\$id', 'Failed to get teacher profile');
+    return _performGet('/api/teachers/$id', 'Failed to get teacher profile');
   }
 
   static Future<Map<String, dynamic>> getTeacherClasses(String id) async {
-    return _performGet('/api/teachers/\$id/assigned-classes', 'Failed to get assigned classes');
+    return _performGet('/api/teachers/$id/assigned-classes', 'Failed to get assigned classes');
+  }
+
+  static Future<Map<String, dynamic>> createTeacher(Map<String, dynamic> data) async {
+    return _performPost('/api/teachers', data, 'Failed to create teacher');
+  }
+
+  static Future<Map<String, dynamic>> updateTeacher(String id, Map<String, dynamic> data) async {
+    return _performPut('/api/teachers/$id', data, 'Failed to update teacher');
   }
 
   static Future<Map<String, dynamic>> getAttendanceByClass(String classId, String date) async {
@@ -286,7 +298,7 @@ class ApiService {
       if (token == null) return {'success': false, 'message': 'No session token'};
 
       final response = await http.get(
-        Uri.parse('\$baseUrl/api/attendance/class?classId=\$classId&date=\$date'),
+        Uri.parse('$baseUrl/api/attendance/class?classId=$classId&date=$date'),
         headers: _getHeaders(token: token),
       );
 
@@ -296,7 +308,7 @@ class ApiService {
       }
       return {'success': false, 'message': data['message'] ?? 'Failed to get student list'};
     } catch (e) {
-      return {'success': false, 'message': 'Network error: \$e'};
+      return {'success': false, 'message': 'Network error: $e'};
     }
   }
 
@@ -307,7 +319,7 @@ class ApiService {
       if (token == null) return {'success': false, 'message': 'No session token'};
 
       final response = await http.post(
-        Uri.parse('\$baseUrl/api/attendance/bulk'),
+        Uri.parse('$baseUrl/api/attendance/bulk'),
         headers: _getHeaders(token: token),
         body: jsonEncode({
           'classId': classId,
@@ -322,7 +334,7 @@ class ApiService {
       }
       return {'success': false, 'message': data['message'] ?? 'Failed to mark attendance'};
     } catch (e) {
-      return {'success': false, 'message': 'Network error: \$e'};
+      return {'success': false, 'message': 'Network error: $e'};
     }
   }
 
@@ -337,7 +349,7 @@ class ApiService {
       if (token == null) return {'success': false, 'message': 'No session token'};
 
       final response = await http.post(
-        Uri.parse('\$baseUrl/api/homework'),
+        Uri.parse('$baseUrl/api/homework'),
         headers: _getHeaders(token: token),
         body: jsonEncode({
           'classId': classId,
@@ -354,7 +366,7 @@ class ApiService {
       }
       return {'success': false, 'message': data['message'] ?? 'Failed to post homework'};
     } catch (e) {
-      return {'success': false, 'message': 'Network error: \$e'};
+      return {'success': false, 'message': 'Network error: $e'};
     }
   }
 
@@ -364,7 +376,7 @@ class ApiService {
       if (token == null) return {'success': false, 'message': 'No session token'};
 
       final response = await http.post(
-        Uri.parse('\$baseUrl/api/marks/bulk'),
+        Uri.parse('$baseUrl/api/marks/bulk'),
         headers: _getHeaders(token: token),
         body: jsonEncode({
           'marks': marks,
@@ -377,12 +389,12 @@ class ApiService {
       }
       return {'success': false, 'message': data['message'] ?? 'Failed to save marks'};
     } catch (e) {
-      return {'success': false, 'message': 'Network error: \$e'};
+      return {'success': false, 'message': 'Network error: $e'};
     }
   }
 
   static Future<Map<String, dynamic>> getClassStudents(String classId) async {
-    return _performGet('/api/classes/\$classId/students', 'Failed request');
+    return _performGet('/api/classes/$classId/students', 'Failed request');
   }
 
   static Future<Map<String, dynamic>> getEvents() async {
@@ -398,6 +410,7 @@ class ApiService {
   }
 
   static Future<Map<String, dynamic>> applyLeave({
+    required String type,
     required String startDate,
     required String endDate,
     required String reason,
@@ -407,9 +420,10 @@ class ApiService {
       if (token == null) return {'success': false, 'message': 'No session token'};
 
       final response = await http.post(
-        Uri.parse('\$baseUrl/api/leave'),
+        Uri.parse('$baseUrl/api/leave'),
         headers: _getHeaders(token: token),
         body: jsonEncode({
+          'type': type,
           'startDate': startDate,
           'endDate': endDate,
           'reason': reason,
@@ -422,7 +436,7 @@ class ApiService {
       }
       return {'success': false, 'message': decoded is Map ? (decoded['message'] ?? 'Failed request') : 'Failed request'};
     } catch (e) {
-      return {'success': false, 'message': 'Network error: \$e'};
+      return {'success': false, 'message': 'Network error: $e'};
     }
   }
 
@@ -439,7 +453,7 @@ class ApiService {
       if (token == null) return {'success': false, 'message': 'No session token'};
 
       final response = await http.post(
-        Uri.parse('\$baseUrl/api/gatePass'),
+        Uri.parse('$baseUrl/api/gatePass'),
         headers: _getHeaders(token: token),
         body: jsonEncode({
           'reason': reason,
@@ -453,7 +467,7 @@ class ApiService {
       }
       return {'success': false, 'message': decoded is Map ? (decoded['message'] ?? 'Failed request') : 'Failed request'};
     } catch (e) {
-      return {'success': false, 'message': 'Network error: \$e'};
+      return {'success': false, 'message': 'Network error: $e'};
     }
   }
 
@@ -475,13 +489,13 @@ class ApiService {
       if (token == null) return {'success': false, 'message': 'No session token'};
 
       final response = await http.put(
-        Uri.parse('\$baseUrl/api/notifications/read-all'),
+        Uri.parse('$baseUrl/api/notifications/read-all'),
         headers: _getHeaders(token: token),
       );
 
       return {'success': response.statusCode == 200 || response.statusCode == 201};
     } catch (e) {
-      return {'success': false, 'message': 'Network error: \$e'};
+      return {'success': false, 'message': 'Network error: $e'};
     }
   }
 
@@ -490,7 +504,7 @@ class ApiService {
   }
 
   static Future<Map<String, dynamic>> getConversation(String userId) async {
-    return _performGet('/api/messages/\$userId', 'Failed to get messages');
+    return _performGet('/api/messages/$userId', 'Failed to get messages');
   }
 
   static Future<Map<String, dynamic>> sendMessage(String receiverId, String content) async {
@@ -499,7 +513,7 @@ class ApiService {
       if (token == null) return {'success': false, 'message': 'No session token'};
 
       final response = await http.post(
-        Uri.parse('\$baseUrl/api/messages'),
+        Uri.parse('$baseUrl/api/messages'),
         headers: _getHeaders(token: token),
         body: jsonEncode({
           'receiverId': receiverId,
@@ -513,7 +527,29 @@ class ApiService {
       }
       return {'success': false, 'message': decoded is Map ? (decoded['message'] ?? 'Failed request') : 'Failed request'};
     } catch (e) {
-      return {'success': false, 'message': 'Network error: \$e'};
+      return {'success': false, 'message': 'Network error: $e'};
+    }
+  }
+
+  static Future<Map<String, dynamic>> uploadImage(String filePath) async {
+    try {
+      final token = await getToken();
+      if (token == null) return {'success': false, 'message': 'No session token'};
+
+      var request = http.MultipartRequest('POST', Uri.parse('$baseUrl/api/uploads/image'));
+      request.headers.addAll(_getHeaders(token: token));
+      request.files.add(await http.MultipartFile.fromPath('file', filePath));
+
+      var streamedResponse = await request.send();
+      var response = await http.Response.fromStream(streamedResponse);
+
+      final dynamic decoded = jsonDecode(response.body);
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return {'success': true, 'url': decoded['url']};
+      }
+      return {'success': false, 'message': decoded is Map ? (decoded['message'] ?? 'Upload failed') : 'Upload failed'};
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: $e'};
     }
   }
 
@@ -524,21 +560,21 @@ class ApiService {
 
       try {
         final response = await http.get(
-          Uri.parse('\$baseUrl\$endpoint'),
+          Uri.parse('$baseUrl$endpoint'),
           headers: _getHeaders(token: token),
         ).timeout(const Duration(seconds: 10));
 
         final dynamic decoded = jsonDecode(response.body);
         if (response.statusCode == 200 || response.statusCode == 201) {
           final prefs = await SharedPreferences.getInstance();
-          await prefs.setString('cache_\$endpoint', response.body);
+          await prefs.setString('cache_$endpoint', response.body);
           
           return {'success': true, 'data': decoded is Map && decoded.containsKey('data') ? decoded['data'] : decoded};
         }
         return {'success': false, 'message': decoded is Map ? (decoded['message'] ?? errorMsg) : errorMsg};
       } catch (e) {
         final prefs = await SharedPreferences.getInstance();
-        final cachedStr = prefs.getString('cache_\$endpoint');
+        final cachedStr = prefs.getString('cache_$endpoint');
         
         if (cachedStr != null) {
           final dynamic decoded = jsonDecode(cachedStr);
@@ -550,7 +586,7 @@ class ApiService {
         return {'success': false, 'message': 'Network error and no offline data. Please check your connection.'};
       }
     } catch (e) {
-      return {'success': false, 'message': 'Unexpected error: \$e'};
+      return {'success': false, 'message': 'Unexpected error: $e'};
     }
   }
 
@@ -560,7 +596,7 @@ class ApiService {
       if (token == null) return {'success': false, 'message': 'No session token'};
 
       final response = await http.post(
-        Uri.parse('\$baseUrl\$endpoint'),
+        Uri.parse('$baseUrl$endpoint'),
         headers: _getHeaders(token: token),
         body: jsonEncode(payload),
       );
@@ -571,7 +607,7 @@ class ApiService {
       }
       return {'success': false, 'message': decoded is Map ? (decoded['message'] ?? errorMsg) : errorMsg};
     } catch (e) {
-      return {'success': false, 'message': 'Network error: \$e'};
+      return {'success': false, 'message': 'Network error: $e'};
     }
   }
   static Future<Map<String, dynamic>> _performPut(String endpoint, Map<String, dynamic> payload, String errorMsg) async {
@@ -580,7 +616,7 @@ class ApiService {
       if (token == null) return {'success': false, 'message': 'No session token'};
 
       final response = await http.put(
-        Uri.parse('\$baseUrl\$endpoint'),
+        Uri.parse('$baseUrl$endpoint'),
         headers: _getHeaders(token: token),
         body: jsonEncode(payload),
       );
@@ -591,7 +627,7 @@ class ApiService {
       }
       return {'success': false, 'message': decoded is Map ? (decoded['message'] ?? errorMsg) : errorMsg};
     } catch (e) {
-      return {'success': false, 'message': 'Network error: \$e'};
+      return {'success': false, 'message': 'Network error: $e'};
     }
   }
 
@@ -601,7 +637,7 @@ class ApiService {
       if (token == null) return {'success': false, 'message': 'No session token'};
 
       final response = await http.delete(
-        Uri.parse('\$baseUrl\$endpoint'),
+        Uri.parse('$baseUrl$endpoint'),
         headers: _getHeaders(token: token),
       );
 
@@ -611,7 +647,7 @@ class ApiService {
       }
       return {'success': false, 'message': decoded is Map ? (decoded['message'] ?? errorMsg) : errorMsg};
     } catch (e) {
-      return {'success': false, 'message': 'Network error: \$e'};
+      return {'success': false, 'message': 'Network error: $e'};
     }
   }
 
@@ -645,7 +681,7 @@ class ApiService {
       if (token == null) return {'success': false, 'message': 'No session token'};
 
       final response = await http.put(
-        Uri.parse('\$baseUrl/api/auth/change-password'),
+        Uri.parse('$baseUrl/api/auth/change-password'),
         headers: _getHeaders(token: token),
         body: jsonEncode({
           'currentPassword': currentPassword,
@@ -659,7 +695,7 @@ class ApiService {
       }
       return {'success': false, 'message': decoded is Map ? (decoded['message'] ?? 'Failed to change password') : 'Failed request'};
     } catch (e) {
-      return {'success': false, 'message': 'Network error: \$e'};
+      return {'success': false, 'message': 'Network error: $e'};
     }
   }
 
@@ -689,7 +725,7 @@ class ApiService {
       if (token == null) return {'success': false, 'message': 'No session token'};
 
       final response = await http.put(
-        Uri.parse('\$baseUrl/api/fees/payments/\$paymentId'),
+        Uri.parse('$baseUrl/api/fees/payments/$paymentId'),
         headers: _getHeaders(token: token),
         body: jsonEncode({'status': 'PAID'}),
       );
@@ -700,12 +736,12 @@ class ApiService {
       }
       return {'success': false, 'message': decoded is Map ? (decoded['message'] ?? 'Failed request') : 'Failed request'};
     } catch (e) {
-      return {'success': false, 'message': 'Network error: \$e'};
+      return {'success': false, 'message': 'Network error: $e'};
     }
   }
 
   static Future<Map<String, dynamic>> getDailyAttendanceSummary(String date) async {
-    return _performGet('/api/attendance/daily-summary?date=\$date', 'Failed to load daily report');
+    return _performGet('/api/attendance/daily-summary?date=$date', 'Failed to load daily report');
   }
 
   static Future<Map<String, dynamic>> getAttendanceDashboardStats() async {

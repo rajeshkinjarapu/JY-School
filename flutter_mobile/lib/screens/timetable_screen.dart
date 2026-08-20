@@ -1,4 +1,4 @@
-﻿import 'dart:convert';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -22,6 +22,20 @@ class _TimetableScreenState extends State<TimetableScreen> with SingleTickerProv
   String? _errorMessage;
 
   final List<String> _days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+  // Subject Colors Mapping (from Web App)
+  Map<String, Color> _getSubjectColors(String subjectName) {
+    final name = subjectName.toLowerCase().trim();
+    if (name.contains('math')) return const { 'bg': Color(0xFFDCFCE7), 'text': Color(0xFF166534), 'border': Color(0xFFBBF7D0) }!;
+    if (name.contains('science') || name.contains('physics') || name.contains('chemistry') || name.contains('biology')) return const { 'bg': Color(0xFFCCFBF1), 'text': Color(0xFF115E59), 'border': Color(0xFF99F6E4) }!;
+    if (name.contains('english') || name.contains('hindi') || name.contains('telugu') || name.contains('language')) return const { 'bg': Color(0xFFFCE7F3), 'text': Color(0xFF9D174D), 'border': Color(0xFFFBCFE8) }!;
+    if (name.contains('physical') || name.contains('sports') || name.contains('pt')) return const { 'bg': Color(0xFFFEF3C7), 'text': Color(0xFF92400E), 'border': Color(0xFFFDE68A) }!;
+    if (name.contains('social') || name.contains('history')) return const { 'bg': Color(0xFFE0F2FE), 'text': Color(0xFF0369A1), 'border': Color(0xFFBAE6FD) }!;
+    if (name.contains('art')) return const { 'bg': Color(0xFFF3E8FF), 'text': Color(0xFF6B21A8), 'border': Color(0xFFE9D5FF) }!;
+    
+    // Default Fallback
+    return const { 'bg': Color(0xFFF1F5F9), 'text': Color(0xFF334155), 'border': Color(0xFFE2E8F0) }!;
+  }
 
   @override
   void initState() {
@@ -225,12 +239,38 @@ class _TimetableScreenState extends State<TimetableScreen> with SingleTickerProv
       itemBuilder: (context, index) {
         final period = periods[index];
         final subject = period['subject']?['name'] ?? 'Free Period';
+        final isBreak = period['isBreak'] ?? false;
         final teacher = period['teacher']?['user']?['name'] ?? 'No Teacher';
         final startTime = period['startTime'] ?? '--:--';
         final endTime = period['endTime'] ?? '--:--';
+        final room = period['room'] ?? '';
+
+        final colors = isBreak 
+            ? const { 'bg': Color(0xFFFFFBEB), 'text': Color(0xFFB45309), 'border': Color(0xFFFDE68A) }!
+            : _getSubjectColors(subject);
+
+        // Check if current time falls in this period
+        final now = DateTime.now();
+        final currentDay = [
+          'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'
+        ][now.weekday % 7];
+        
+        bool isCurrentPeriod = false;
+        if (currentDay == day && startTime != '--:--' && endTime != '--:--') {
+          try {
+            final nowMins = now.hour * 60 + now.minute;
+            final startParts = startTime.split(':');
+            final endParts = endTime.split(':');
+            final startMins = int.parse(startParts[0]) * 60 + int.parse(startParts[1]);
+            final endMins = int.parse(endParts[0]) * 60 + int.parse(endParts[1]);
+            if (nowMins >= startMins && nowMins < endMins) {
+              isCurrentPeriod = true;
+            }
+          } catch (_) {}
+        }
 
         return Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             // Time Column
             SizedBox(
@@ -238,7 +278,7 @@ class _TimetableScreenState extends State<TimetableScreen> with SingleTickerProv
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  Text(startTime, style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.bold, color: const Color(0xFF1E293B))),
+                  Text(startTime, style: GoogleFonts.poppins(fontSize: 13, fontWeight: isCurrentPeriod ? FontWeight.w900 : FontWeight.bold, color: isCurrentPeriod ? const Color(0xFF6366F1) : const Color(0xFF1E293B))),
                   Text(endTime, style: GoogleFonts.poppins(fontSize: 11, color: const Color(0xFF94A3B8))),
                 ],
               ),
@@ -252,16 +292,20 @@ class _TimetableScreenState extends State<TimetableScreen> with SingleTickerProv
                   width: 14,
                   height: 14,
                   decoration: BoxDecoration(
-                    color: Colors.white,
-                    border: Border.all(color: const Color(0xFF6366F1), width: 3),
+                    color: isCurrentPeriod ? const Color(0xFF6366F1) : Colors.white,
+                    border: Border.all(color: isCurrentPeriod ? const Color(0xFF6366F1) : colors['text']!, width: isCurrentPeriod ? 0 : 3),
                     shape: BoxShape.circle,
+                    boxShadow: isCurrentPeriod ? [
+                      BoxShadow(color: const Color(0xFF6366F1).withOpacity(0.5), blurRadius: 8, spreadRadius: 2)
+                    ] : null,
                   ),
                 ),
                 if (index != periods.length - 1)
-                  Container(
-                    width: 2,
-                    height: 90, // Card height approximation
-                    color: const Color(0xFFE2E8F0),
+                  Expanded(
+                    child: Container(
+                      width: 2,
+                      color: const Color(0xFFE2E8F0),
+                    ),
                   )
               ],
             ),
@@ -273,30 +317,55 @@ class _TimetableScreenState extends State<TimetableScreen> with SingleTickerProv
                 margin: const EdgeInsets.only(bottom: 24),
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: isBreak ? const Color(0xFFFFFBEB) : colors['bg'],
                   borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: colors['border']!),
                   boxShadow: [
-                    BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4))
+                    BoxShadow(color: colors['text']!.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))
                   ],
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      subject,
-                      style: GoogleFonts.poppins(color: const Color(0xFF1E293B), fontSize: 16, fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 8),
                     Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Icon(Icons.person_rounded, size: 14, color: Color(0xFF64748B)),
-                        const SizedBox(width: 6),
-                        Text(
-                          teacher,
-                          style: GoogleFonts.poppins(color: const Color(0xFF64748B), fontSize: 13),
+                        Expanded(
+                          child: Text(
+                            isBreak ? 'BREAK' : subject,
+                            style: GoogleFonts.poppins(color: colors['text'], fontSize: 16, fontWeight: FontWeight.bold),
+                          ),
                         ),
+                        if (room.isNotEmpty)
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.5),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(Icons.meeting_room_rounded, size: 12, color: colors['text']),
+                                const SizedBox(width: 4),
+                                Text(room, style: GoogleFonts.poppins(fontSize: 10, fontWeight: FontWeight.bold, color: colors['text'])),
+                              ],
+                            ),
+                          )
                       ],
                     ),
+                    if (!isBreak) ...[
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Icon(Icons.person_rounded, size: 14, color: colors['text']!.withOpacity(0.7)),
+                          const SizedBox(width: 6),
+                          Text(
+                            teacher,
+                            style: GoogleFonts.poppins(color: colors['text']!.withOpacity(0.8), fontSize: 13, fontWeight: FontWeight.w500),
+                          ),
+                        ],
+                      ),
+                    ]
                   ],
                 ),
               ),

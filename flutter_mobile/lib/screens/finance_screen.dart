@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../services/api_service.dart';
 import '../widgets/app_drawer.dart';
 import 'dart:convert';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:intl/intl.dart';
+import 'student_fee_search_screen.dart';
+import 'fee_structure_management_screen.dart';
+import 'finance_reports_screen.dart';
 
 class FinanceScreen extends StatefulWidget {
   const FinanceScreen({super.key});
@@ -188,20 +193,30 @@ class _FinanceScreenState extends State<FinanceScreen> with SingleTickerProvider
       backgroundColor: const Color(0xFFF8FAFC),
       drawer: const AppDrawer(currentRoute: 'fees'),
       appBar: AppBar(
-        title: const Text(
-          'Finance & Fees',
-          style: TextStyle(fontWeight: FontWeight.bold),
+        title: Text(
+          'Finance Dashboard',
+          style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white),
         ),
-        backgroundColor: Colors.white,
-        foregroundColor: const Color(0xFF1E293B),
+        iconTheme: const IconThemeData(color: Colors.white),
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF2E2A66), Color(0xFF222854)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
         elevation: 0,
         bottom: TabBar(
           controller: _tabController,
-          labelColor: const Color(0xFF6366F1),
-          unselectedLabelColor: const Color(0xFF64748B),
-          indicatorColor: const Color(0xFF6366F1),
-          indicatorWeight: 3,
+          labelColor: Colors.white,
+          unselectedLabelColor: Colors.white70,
+          indicatorColor: const Color(0xFF10B981),
+          indicatorWeight: 4,
           isScrollable: true,
+          labelStyle: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16),
+          unselectedLabelStyle: GoogleFonts.outfit(fontWeight: FontWeight.w600, fontSize: 16),
           tabs: const [
             Tab(text: 'Overview'),
             Tab(text: 'Transactions'),
@@ -211,7 +226,7 @@ class _FinanceScreenState extends State<FinanceScreen> with SingleTickerProvider
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh),
+            icon: const Icon(Icons.refresh_rounded),
             onPressed: _fetchData,
           )
         ],
@@ -244,10 +259,10 @@ class _FinanceScreenState extends State<FinanceScreen> with SingleTickerProvider
                   ],
                 ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: _showRecordPaymentDialog,
+        onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (ctx) => const StudentFeeSearchScreen())),
         backgroundColor: const Color(0xFF6366F1),
-        icon: const Icon(Icons.add_card, color: Colors.white),
-        label: const Text('Record Fee', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        icon: const Icon(Icons.person_search_rounded, color: Colors.white),
+        label: const Text('Search Student', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
       ),
     );
   }
@@ -279,6 +294,14 @@ class _FinanceScreenState extends State<FinanceScreen> with SingleTickerProvider
           const SizedBox(height: 12),
 
           _buildQuickActionCard(
+            title: 'Student Fee Ledger',
+            subtitle: 'Search students and view detailed ledger',
+            icon: Icons.person_search_rounded,
+            color: const Color(0xFF10B981),
+            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (ctx) => const StudentFeeSearchScreen())),
+          ),
+          const SizedBox(height: 12),
+          _buildQuickActionCard(
             title: 'Outstanding Collection',
             subtitle: 'Review overall student pending dues',
             icon: Icons.account_balance_wallet_outlined,
@@ -291,7 +314,15 @@ class _FinanceScreenState extends State<FinanceScreen> with SingleTickerProvider
             subtitle: 'Manage and view active fee templates',
             icon: Icons.list_alt_rounded,
             color: const Color(0xFF2DBDFD),
-            onTap: () => _tabController.animateTo(2),
+            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (ctx) => const FeeStructureManagementScreen())),
+          ),
+          const SizedBox(height: 12),
+          _buildQuickActionCard(
+            title: 'Deep Analytics & Reports',
+            subtitle: 'Class-wise collections and payment method breakdown',
+            icon: Icons.analytics_rounded,
+            color: const Color(0xFF6366F1),
+            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (ctx) => const FinanceReportsScreen())),
           ),
         ],
       ),
@@ -303,21 +334,21 @@ class _FinanceScreenState extends State<FinanceScreen> with SingleTickerProvider
       children: [
         _buildStatCard(
           title: 'Total Collected',
-          value: 'Ã¢â€šÂ¹ ${_totalCollected.toStringAsFixed(2)}',
+          value: '₹ ${_totalCollected.toStringAsFixed(2)}',
           icon: Icons.check_circle_rounded,
           gradientColors: [const Color(0xFF10B981), const Color(0xFF34D399)],
         ),
         const SizedBox(height: 16),
         _buildStatCard(
           title: 'Collected Today',
-          value: 'Ã¢â€šÂ¹ ${_todayCollected.toStringAsFixed(2)}',
+          value: '₹ ${_todayCollected.toStringAsFixed(2)}',
           icon: Icons.today_rounded,
           gradientColors: [const Color(0xFF6366F1), const Color(0xFF818CF8)],
         ),
         const SizedBox(height: 16),
         _buildStatCard(
           title: 'Total Pending Dues',
-          value: 'Ã¢â€šÂ¹ ${_pendingDues.toStringAsFixed(2)}',
+          value: '₹ ${_pendingDues.toStringAsFixed(2)}',
           icon: Icons.pending_actions_rounded,
           gradientColors: [const Color(0xFFEF4444), const Color(0xFFF87171)],
         ),
@@ -348,9 +379,9 @@ class _FinanceScreenState extends State<FinanceScreen> with SingleTickerProvider
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Collection vs Pending',
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Color(0xFF1E293B)),
+            style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16, color: const Color(0xFF1E293B)),
           ),
           const SizedBox(height: 24),
           SizedBox(
@@ -365,14 +396,14 @@ class _FinanceScreenState extends State<FinanceScreen> with SingleTickerProvider
                     value: collectedPct,
                     title: '${collectedPct.toStringAsFixed(1)}%',
                     radius: 40,
-                    titleStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white),
+                    titleStyle: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white),
                   ),
                   PieChartSectionData(
                     color: const Color(0xFFF43F5E),
                     value: pendingPct,
                     title: '${pendingPct.toStringAsFixed(1)}%',
                     radius: 40,
-                    titleStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white),
+                    titleStyle: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white),
                   ),
                 ],
               ),
@@ -397,7 +428,7 @@ class _FinanceScreenState extends State<FinanceScreen> with SingleTickerProvider
       children: [
         Container(width: 12, height: 12, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
         const SizedBox(width: 8),
-        Text(label, style: const TextStyle(fontSize: 13, color: Color(0xFF64748B), fontWeight: FontWeight.w600)),
+        Text(label, style: GoogleFonts.poppins(fontSize: 12, color: const Color(0xFF64748B), fontWeight: FontWeight.w600)),
       ],
     );
   }
@@ -434,12 +465,12 @@ class _FinanceScreenState extends State<FinanceScreen> with SingleTickerProvider
             children: [
               Text(
                 title.toUpperCase(),
-                style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 1),
+                style: GoogleFonts.poppins(color: Colors.white.withOpacity(0.8), fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 1),
               ),
               const SizedBox(height: 8),
               Text(
                 value,
-                style: const TextStyle(color: Colors.white, fontSize: 26, fontWeight: FontWeight.bold),
+                style: GoogleFonts.outfit(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold),
               ),
             ],
           ),
@@ -535,41 +566,54 @@ class _FinanceScreenState extends State<FinanceScreen> with SingleTickerProvider
 
   Widget _buildFiltersSection() {
     return Container(
-      color: Colors.white,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      color: const Color(0xFFF8FAFC),
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
       child: Column(
         children: [
-          TextField(
-            onChanged: (val) {
-              setState(() {
-                _searchTerm = val;
-              });
-              _applyFilters();
-            },
-            decoration: InputDecoration(
-              hintText: 'Search by student name...',
-              prefixIcon: const Icon(Icons.search),
-              fillColor: const Color(0xFFF1F5F9),
-              filled: true,
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
-              contentPadding: const EdgeInsets.symmetric(vertical: 0),
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10, offset: const Offset(0, 2)),
+              ],
+            ),
+            child: TextField(
+              onChanged: (val) {
+                setState(() {
+                  _searchTerm = val;
+                });
+                _applyFilters();
+              },
+              style: GoogleFonts.poppins(fontSize: 14),
+              decoration: InputDecoration(
+                hintText: 'Search by student name or ID...',
+                hintStyle: GoogleFonts.poppins(color: const Color(0xFF94A3B8), fontSize: 14),
+                prefixIcon: const Icon(Icons.search_rounded, color: Color(0xFF64748B)),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+                filled: true,
+                fillColor: Colors.transparent,
+                contentPadding: const EdgeInsets.symmetric(vertical: 14),
+              ),
             ),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 12),
           Row(
             children: [
               Expanded(
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF1F5F9),
+                    color: Colors.white,
                     borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: const Color(0xFFE2E8F0)),
                   ),
                   child: DropdownButtonHideUnderline(
                     child: DropdownButton<String>(
                       value: _selectedClass,
                       isExpanded: true,
-                      style: const TextStyle(fontSize: 14, color: Color(0xFF1E293B)),
+                      icon: const Icon(Icons.keyboard_arrow_down_rounded, color: Color(0xFF64748B)),
+                      style: GoogleFonts.poppins(fontSize: 13, color: const Color(0xFF1E293B), fontWeight: FontWeight.w500),
                       items: [
                         const DropdownMenuItem(value: 'ALL', child: Text('All Classes')),
                         ..._classes.map((c) => DropdownMenuItem(
@@ -590,16 +634,18 @@ class _FinanceScreenState extends State<FinanceScreen> with SingleTickerProvider
               const SizedBox(width: 12),
               Expanded(
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF1F5F9),
+                    color: Colors.white,
                     borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: const Color(0xFFE2E8F0)),
                   ),
                   child: DropdownButtonHideUnderline(
                     child: DropdownButton<String>(
                       value: _selectedStatus,
                       isExpanded: true,
-                      style: const TextStyle(fontSize: 14, color: Color(0xFF1E293B)),
+                      icon: const Icon(Icons.keyboard_arrow_down_rounded, color: Color(0xFF64748B)),
+                      style: GoogleFonts.poppins(fontSize: 13, color: const Color(0xFF1E293B), fontWeight: FontWeight.w500),
                       items: const [
                         DropdownMenuItem(value: 'ALL', child: Text('All Status')),
                         DropdownMenuItem(value: 'PAID', child: Text('PAID')),
@@ -624,9 +670,10 @@ class _FinanceScreenState extends State<FinanceScreen> with SingleTickerProvider
 
   Widget _buildTransactionItemCard(dynamic payment) {
     final student = payment['student'] ?? {};
-    final studentName = '${student['firstName'] ?? ''} ${student['lastName'] ?? ''}';
+    final studentName = '${student['firstName'] ?? ''} ${student['lastName'] ?? ''}'.trim();
+    final initials = studentName.isNotEmpty ? studentName.substring(0, 1).toUpperCase() : '?';
     final classInfo = student['class'] ?? {};
-    final className = '${classInfo['className'] ?? ''} - ${classInfo['section'] ?? ''}';
+    final className = '${classInfo['className'] ?? ''} ${classInfo['section'] ?? ''}'.trim();
 
     final structure = payment['feeStructure'] ?? {};
     final structureName = structure['name'] ?? 'Fee Payment';
@@ -636,101 +683,205 @@ class _FinanceScreenState extends State<FinanceScreen> with SingleTickerProvider
     final status = payment['status']?.toString().toUpperCase() ?? 'PENDING';
 
     final payDate = payment['paymentDate']?.toString() ?? payment['createdAt']?.toString() ?? '';
-    final dateFormatted = payDate.split('T')[0];
+    final dateFormatted = payDate.isNotEmpty ? payDate.split('T')[0] : 'N/A';
 
-    final isPaid = status == 'PAID';
+    final isPaid = status == 'PAID' || status == 'PARTIAL';
+
+    // Status colors
+    Color statusBgColor = const Color(0xFFFFFBEB);
+    Color statusTextColor = const Color(0xFFD97706);
+    if (status == 'PAID') {
+      statusBgColor = const Color(0xFFECFDF5);
+      statusTextColor = const Color(0xFF059669);
+    } else if (status == 'PARTIAL') {
+      statusBgColor = const Color(0xFFEFF6FF);
+      statusTextColor = const Color(0xFF2563EB);
+    } else if (status == 'OVERDUE') {
+      statusBgColor = const Color(0xFFFEF2F2);
+      statusTextColor = const Color(0xFFDC2626);
+    }
+
+    final currencyFormat = NumberFormat.currency(symbol: '₹', decimalDigits: 0, locale: 'en_IN');
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 8, offset: const Offset(0, 2)),
+          BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 12, offset: const Offset(0, 4)),
         ],
+        border: Border.all(color: const Color(0xFFF1F5F9)),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Text(
-                  studentName,
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF1E293B)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                CircleAvatar(
+                  radius: 20,
+                  backgroundColor: const Color(0xFFEEF2FF),
+                  child: Text(initials, style: GoogleFonts.outfit(color: const Color(0xFF6366F1), fontWeight: FontWeight.bold)),
                 ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: isPaid ? Colors.green.withOpacity(0.1) : Colors.amber.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  status,
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
-                    color: isPaid ? Colors.green : Colors.amber.shade800,
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        studentName,
+                        style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold, color: const Color(0xFF1E293B)),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 2),
+                      Row(
+                        children: [
+                          Icon(Icons.class_rounded, size: 12, color: const Color(0xFF64748B)),
+                          const SizedBox(width: 4),
+                          Text(
+                            className.isNotEmpty ? className : 'Unknown Class',
+                            style: GoogleFonts.poppins(fontSize: 12, color: const Color(0xFF64748B)),
+                          ),
+                        ],
+                      )
+                    ],
                   ),
                 ),
-              )
-            ],
-          ),
-          const SizedBox(height: 4),
-          Text(
-            'Class: $className  |  $structureName',
-            style: const TextStyle(fontSize: 13, color: Color(0xFF64748B)),
-          ),
-          const Divider(height: 24),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: statusBgColor,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    status,
+                    style: GoogleFonts.poppins(
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      color: statusTextColor,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                )
+              ],
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF8FAFC),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFFE2E8F0)),
+              ),
+              child: Column(
                 children: [
-                  Text('Amount: Ã¢â€šÂ¹ ${amountPaid.toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                  Text('Method: $method  |  Date: $dateFormatted', style: const TextStyle(fontSize: 11, color: Color(0xFF64748B))),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        structureName,
+                        style: GoogleFonts.poppins(fontSize: 13, color: const Color(0xFF475569), fontWeight: FontWeight.w500),
+                      ),
+                      Text(
+                        currencyFormat.format(amountPaid),
+                        style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: const Color(0xFF6366F1)),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  const Divider(height: 1, color: Color(0xFFE2E8F0)),
+                  const SizedBox(height: 12),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          const Icon(Icons.calendar_today_rounded, size: 14, color: Color(0xFF94A3B8)),
+                          const SizedBox(width: 6),
+                          Text(dateFormatted, style: GoogleFonts.poppins(fontSize: 12, color: const Color(0xFF64748B))),
+                        ],
+                      ),
+                      Row(
+                        children: [
+                          const Icon(Icons.payment_rounded, size: 14, color: Color(0xFF94A3B8)),
+                          const SizedBox(width: 6),
+                          Text(method, style: GoogleFonts.poppins(fontSize: 12, color: const Color(0xFF64748B))),
+                        ],
+                      ),
+                    ],
+                  ),
                 ],
               ),
+            ),
+            if (!isPaid || true) ...[
+              const SizedBox(height: 12),
               Row(
+                mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   if (!isPaid)
-                    IconButton(
-                      icon: const Icon(Icons.check_circle_outline, color: Colors.green),
-                      tooltip: 'Approve Payment',
+                    TextButton.icon(
                       onPressed: () => _approvePayment(payment['id']?.toString() ?? ''),
+                      icon: const Icon(Icons.check_circle_outline, size: 18, color: Color(0xFF10B981)),
+                      label: Text('Approve', style: GoogleFonts.poppins(fontSize: 13, color: const Color(0xFF10B981))),
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      ),
                     ),
-                  IconButton(
-                    icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
-                    tooltip: 'Delete Record',
+                  const SizedBox(width: 8),
+                  TextButton.icon(
                     onPressed: () {
                       showDialog(
                         context: context,
                         builder: (context) => AlertDialog(
-                          title: const Text('Delete Payment'),
-                          content: const Text('Are you sure you want to delete this payment record permanently?'),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                          title: Row(
+                            children: [
+                              const Icon(Icons.warning_amber_rounded, color: Colors.red),
+                              const SizedBox(width: 8),
+                              Text('Delete Payment', style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
+                            ],
+                          ),
+                          content: Text(
+                            'Are you sure you want to delete this payment record permanently?',
+                            style: GoogleFonts.poppins(fontSize: 14),
+                          ),
                           actions: [
-                            TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
                             TextButton(
+                              onPressed: () => Navigator.pop(context), 
+                              child: Text('Cancel', style: GoogleFonts.poppins(color: const Color(0xFF64748B)))
+                            ),
+                            ElevatedButton(
                               onPressed: () {
                                 Navigator.pop(context);
                                 _deletePayment(payment['id']?.toString() ?? '');
                               },
-                              child: const Text('Delete', style: TextStyle(color: Colors.red)),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.red,
+                                foregroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                              ),
+                              child: Text('Delete', style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
                             ),
                           ],
                         ),
                       );
                     },
+                    icon: const Icon(Icons.delete_outline_rounded, size: 18, color: Colors.redAccent),
+                    label: Text('Delete', style: GoogleFonts.poppins(fontSize: 13, color: Colors.redAccent)),
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    ),
                   ),
                 ],
               )
-            ],
-          )
-        ],
+            ]
+          ],
+        ),
       ),
     );
   }
@@ -928,11 +1079,11 @@ class _FinanceScreenState extends State<FinanceScreen> with SingleTickerProvider
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text(name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Color(0xFF1E293B))),
+                                    Text(name, style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16, color: const Color(0xFF1E293B))),
                                     const SizedBox(height: 4),
-                                    Text('Class: $className', style: const TextStyle(fontSize: 12, color: Color(0xFF64748B))),
+                                    Text('Class: $className', style: GoogleFonts.poppins(fontSize: 12, color: const Color(0xFF64748B))),
                                     const SizedBox(height: 4),
-                                    Text('Due: Ã¢â€šÂ¹ ${balance.toStringAsFixed(0)}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xFFEF4444))),
+                                    Text('Due: ₹ ${balance.toStringAsFixed(0)}', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 14, color: const Color(0xFFEF4444))),
                                   ],
                                 ),
                               ),

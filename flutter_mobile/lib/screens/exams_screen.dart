@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../services/api_service.dart';
 import '../widgets/app_drawer.dart';
 import 'create_exam_screen.dart';
+import 'marks_upload_screen.dart';
 
 class ExamsScreen extends StatefulWidget {
   const ExamsScreen({super.key});
@@ -19,6 +20,7 @@ class _ExamsScreenState extends State<ExamsScreen> {
   bool _isLoading = true;
   String? _errorMessage;
   String? _userRole;
+  String? _expandedExamId;
 
   @override
   void initState() {
@@ -96,6 +98,31 @@ class _ExamsScreenState extends State<ExamsScreen> {
         });
       }
     }
+  }
+
+  Future<void> _deleteExam(String id) async {
+    final bool? confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Exam'),
+        content: const Text('Are you sure you want to delete this exam? All associated marks will also be deleted.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () => Navigator.pop(context, true), 
+            child: const Text('Delete', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    // Simulate API call for now (as delete might not be in ApiService yet, or we assume it is)
+    // await ApiService.deleteExam(id); 
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Exam delete requested (Requires API support)')));
+    // Ideally we would fetch results again: _fetchResults();
   }
 
   Color _getGradeColor(String grade) {
@@ -178,7 +205,15 @@ class _ExamsScreenState extends State<ExamsScreen> {
   Widget _buildExamsList() {
     if (_examsList.isEmpty) {
       return Center(
-        child: Text("No exams found.", style: GoogleFonts.poppins(color: const Color(0xFF64748B))),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.layers_rounded, size: 80, color: Colors.grey.shade300),
+            const SizedBox(height: 16),
+            Text("No Examinations Found", style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.grey.shade500)),
+            Text("Click 'New Exam' to schedule one.", style: GoogleFonts.poppins(color: Colors.grey.shade400)),
+          ],
+        ),
       );
     }
     return RefreshIndicator(
@@ -188,61 +223,191 @@ class _ExamsScreenState extends State<ExamsScreen> {
         itemCount: _examsList.length,
         itemBuilder: (context, index) {
           final exam = _examsList[index];
-          final name = exam['name'] ?? 'Exam';
-          final term = exam['term'] ?? '';
-          final classes = exam['classes'] as List? ?? [];
-          final classNames = classes.map((c) => c['className'] ?? '').join(', ');
+          final String id = exam['id']?.toString() ?? index.toString();
+          final String name = exam['name'] ?? 'Unknown Exam';
+          final String term = exam['term'] ?? '';
+          
+          final String dateStr = exam['examDate'] ?? '';
+          String formattedDate = 'No Date';
+          if (dateStr.isNotEmpty) {
+            try {
+              final DateTime d = DateTime.parse(dateStr);
+              formattedDate = "${d.day}/${d.month}/${d.year}"; // Simple format
+            } catch (_) {}
+          }
 
-          return Container(
-            margin: const EdgeInsets.only(bottom: 16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 12, offset: const Offset(0, 4))
-              ],
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
-                        child: Text(
-                          name,
-                          style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.bold, color: const Color(0xFF1E293B)),
-                        ),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF6366F1).withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          term,
-                          style: GoogleFonts.poppins(color: const Color(0xFF6366F1), fontSize: 11, fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      const Icon(Icons.class_rounded, size: 16, color: Color(0xFF94A3B8)),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          'Classes: $classNames',
-                          style: GoogleFonts.poppins(fontSize: 13, color: const Color(0xFF64748B)),
-                        ),
-                      ),
-                    ],
-                  ),
+          final List<dynamic> classes = exam['classes'] as List? ?? [];
+          final bool isExpanded = _expandedExamId == id;
+          
+          return GestureDetector(
+            onTap: () {
+              setState(() {
+                _expandedExamId = isExpanded ? null : id;
+              });
+            },
+            child: Container(
+              margin: const EdgeInsets.only(bottom: 16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(color: Colors.grey.shade200),
+                boxShadow: [
+                  BoxShadow(color: Colors.black.withOpacity(isExpanded ? 0.08 : 0.03), blurRadius: isExpanded ? 20 : 12, offset: const Offset(0, 4))
                 ],
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(24),
+                child: Stack(
+                  children: [
+                    // Watermark
+                    Positioned(
+                      top: -20,
+                      right: -20,
+                      child: Container(
+                        width: 100,
+                        height: 100,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF6366F1).withOpacity(0.05),
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Flexible(
+                                          child: Text(
+                                            name,
+                                            style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: const Color(0xFF1E293B)),
+                                            maxLines: 2,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                        if (term.isNotEmpty) ...[
+                                          const SizedBox(width: 8),
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                            decoration: BoxDecoration(
+                                              color: const Color(0xFFEEF2FF),
+                                              borderRadius: BorderRadius.circular(12),
+                                              border: Border.all(color: const Color(0xFFC7D2FE)),
+                                            ),
+                                            child: Text(
+                                              term,
+                                              style: GoogleFonts.poppins(color: const Color(0xFF4F46E5), fontSize: 10, fontWeight: FontWeight.w700),
+                                            ),
+                                          ),
+                                        ]
+                                      ],
+                                    ),
+                                    const SizedBox(height: 6),
+                                    Row(
+                                      children: [
+                                        const Icon(Icons.calendar_month_rounded, size: 14, color: Color(0xFF94A3B8)),
+                                        const SizedBox(width: 6),
+                                        Text(formattedDate, style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.bold, color: const Color(0xFF64748B))),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Icon(isExpanded ? Icons.keyboard_arrow_up_rounded : Icons.keyboard_arrow_down_rounded, color: const Color(0xFF94A3B8)),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+                          Text('Target Classes', style: GoogleFonts.poppins(fontSize: 10, fontWeight: FontWeight.bold, color: const Color(0xFF94A3B8), letterSpacing: 0.5)),
+                          const SizedBox(height: 8),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: classes.take(isExpanded ? classes.length : 3).map((c) {
+                              final className = c['name'] ?? c['className'] ?? '';
+                              final section = c['section'] ?? '';
+                              final display = section.isEmpty ? className : '$className-$section';
+                              return Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFF8FAFC),
+                                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text(display, style: GoogleFonts.poppins(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFF475569))),
+                              );
+                            }).toList()..addAll(!isExpanded && classes.length > 3 ? [
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFF1F5F9),
+                                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text('+${classes.length - 3} more', style: GoogleFonts.poppins(fontSize: 11, fontWeight: FontWeight.bold, color: const Color(0xFF64748B))),
+                              )
+                            ] : []),
+                          ),
+                          
+                          // Expandable Actions
+                          if (isExpanded) ...[
+                            const Padding(
+                              padding: EdgeInsets.symmetric(vertical: 16),
+                              child: Divider(height: 1, color: Color(0xFFE2E8F0)),
+                            ),
+                            Row(
+                              children: [
+                                if (_userRole == 'SUPER_ADMIN')
+                                  Expanded(
+                                    child: OutlinedButton.icon(
+                                      onPressed: () => _deleteExam(id),
+                                      style: OutlinedButton.styleFrom(
+                                        foregroundColor: Colors.red,
+                                        side: const BorderSide(color: Colors.red),
+                                        padding: const EdgeInsets.symmetric(vertical: 12),
+                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                      ),
+                                      icon: const Icon(Icons.delete_outline_rounded, size: 18),
+                                      label: Text('Delete', style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 12)),
+                                    ),
+                                  ),
+                                if (_userRole == 'SUPER_ADMIN') const SizedBox(width: 12),
+                                Expanded(
+                                  flex: 2,
+                                  child: ElevatedButton.icon(
+                                    onPressed: () {
+                                      // Ideally navigate to MarksUploadScreen with this exam pre-selected
+                                      // For now, just navigate to it
+                                      Navigator.push(context, MaterialPageRoute(builder: (context) => MarksUploadScreen()));
+                                    },
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: const Color(0xFF4F46E5),
+                                      foregroundColor: Colors.white,
+                                      padding: const EdgeInsets.symmetric(vertical: 12),
+                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                      elevation: 0,
+                                    ),
+                                    icon: const Icon(Icons.edit_note_rounded, size: 18),
+                                    label: Text('Enter Grades', style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 12)),
+                                  ),
+                                ),
+                              ],
+                            )
+                          ],
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           );
