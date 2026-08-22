@@ -270,7 +270,7 @@ export const StudentFeeDetailsTab: React.FC<StudentFeeDetailsProps> = ({ student
     // Helper to get sort weight for class names
     const getClassWeight = (className: string) => {
       const cls = className.toUpperCase();
-      if (cls.includes('NURSERY') || cls.includes('NURSARY')) return 1;
+      if (cls.includes('NURSERY') || cls.includes('NURSARY') || cls === 'NUR' || cls.includes('NUR -') || cls.includes('NUR ')) return 1;
       if (cls.includes('PP-1') || cls.includes('PP1') || cls.includes('PP 1') || cls.includes('LKG')) return 2;
       if (cls.includes('PP-2') || cls.includes('PP2') || cls.includes('PP 2') || cls.includes('UKG')) return 3;
       if (cls.includes('1ST') || cls.includes('CLASS 1') || cls.match(/^1\s*[-]/)) return 4;
