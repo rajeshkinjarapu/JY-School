@@ -146,24 +146,20 @@ class _ProgressCardScreenState extends State<ProgressCardScreen> {
       ),
       child: Column(
         children: [
-          Row(
+          Column(
             children: [
-              Expanded(
-                child: _buildDropdown(
-                  label: 'Select Exam',
-                  value: _selectedExamId,
-                  items: _examsList,
-                  onChanged: (val) => setState(() => _selectedExamId = val as String?),
-                ),
+              _buildDropdown(
+                label: 'Select Exam',
+                value: _selectedExamId,
+                items: _examsList,
+                onChanged: (val) => setState(() => _selectedExamId = val as String?),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _buildDropdown(
-                  label: 'Select Class',
-                  value: _selectedClassId,
-                  items: _classesList,
-                  onChanged: (val) => setState(() => _selectedClassId = val as String?),
-                ),
+              const SizedBox(height: 12),
+              _buildDropdown(
+                label: 'Select Class',
+                value: _selectedClassId,
+                items: _classesList,
+                onChanged: (val) => setState(() => _selectedClassId = val as String?),
               ),
             ],
           ),

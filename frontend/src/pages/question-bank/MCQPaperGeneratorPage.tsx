@@ -694,8 +694,8 @@ export const MCQPaperGeneratorPage = () => {
             </h3>
             {/* PDF button removed from here - moved to top header */}
           </div>
-          <div className="flex justify-center p-2 md:p-8 print:p-0">
-            <div className="paper-zoom-mobile md:paper-zoom origin-top transition-transform w-full md:w-auto" style={{ transform: window.innerWidth <= 768 ? `scale(${zoomLevel})` : undefined }}>
+          <div className="flex justify-center p-2 md:p-8 print:p-0 print:block">
+            <div className="paper-zoom-mobile md:paper-zoom origin-top transition-transform w-full md:w-auto print:!transform-none" style={{ transform: window.innerWidth <= 768 ? `scale(${zoomLevel})` : undefined }}>
             <LiveLatexPreview 
               subjectContents={subjectContents}
               examName={examName}

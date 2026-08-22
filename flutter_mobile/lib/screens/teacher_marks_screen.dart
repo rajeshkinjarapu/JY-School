@@ -243,54 +243,50 @@ class _TeacherMarksScreenState extends State<TeacherMarksScreen> {
                       const SizedBox(height: 12),
                       
                       // 2. Class and Subject selectors row
-                      Row(
+                      Column(
                         children: [
-                          Expanded(
-                            child: _buildDropdownRow(
-                              label: 'Class: ',
-                              child: DropdownButton<String>(
-                                value: _selectedClassId,
-                                dropdownColor: const Color(0xFFE2E8F0),
-                                style: GoogleFonts.poppins(color: const Color(0xFF1E293B), fontWeight: FontWeight.w600),
-                                items: _classes.map<DropdownMenuItem<String>>((c) {
-                                  return DropdownMenuItem<String>(
-                                    value: c['id'],
-                                    child: Text('${c['name']}-${c['section']}'),
-                                  );
-                                }).toList(),
-                                onChanged: (value) {
-                                  setState(() {
-                                    _selectedClassId = value;
-                                  });
-                                  _fetchStudents();
-                                },
-                              ),
+                          _buildDropdownRow(
+                            label: 'Class: ',
+                            child: DropdownButton<String>(
+                              value: _selectedClassId,
+                              dropdownColor: const Color(0xFFE2E8F0),
+                              style: GoogleFonts.poppins(color: const Color(0xFF1E293B), fontWeight: FontWeight.w600),
+                              items: _classes.map<DropdownMenuItem<String>>((c) {
+                                return DropdownMenuItem<String>(
+                                  value: c['id'],
+                                  child: Text('${c['name']}-${c['section']}'),
+                                );
+                              }).toList(),
+                              onChanged: (value) {
+                                setState(() {
+                                  _selectedClassId = value;
+                                });
+                                _fetchStudents();
+                              },
                             ),
                           ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: _buildDropdownRow(
-                              label: 'Subj: ',
-                              child: DropdownButton<String>(
-                                value: _selectedSubjectId,
-                                dropdownColor: const Color(0xFFE2E8F0),
-                                style: GoogleFonts.poppins(color: const Color(0xFF1E293B), fontWeight: FontWeight.w600),
-                                items: _subjects.map<DropdownMenuItem<String>>((s) {
-                                  return DropdownMenuItem<String>(
-                                    value: s['id'],
-                                    child: Text(s['name']),
-                                  );
-                                }).toList(),
-                                onChanged: (value) {
-                                  setState(() {
-                                    _selectedSubjectId = value;
-                                  });
-                                },
-                              ),
+                          const SizedBox(height: 12),
+                          _buildDropdownRow(
+                            label: 'Subj: ',
+                            child: DropdownButton<String>(
+                              value: _selectedSubjectId,
+                              dropdownColor: const Color(0xFFE2E8F0),
+                              style: GoogleFonts.poppins(color: const Color(0xFF1E293B), fontWeight: FontWeight.w600),
+                              items: _subjects.map<DropdownMenuItem<String>>((s) {
+                                return DropdownMenuItem<String>(
+                                  value: s['id'],
+                                  child: Text(s['name']),
+                                );
+                              }).toList(),
+                              onChanged: (value) {
+                                setState(() {
+                                  _selectedSubjectId = value;
+                                });
+                              },
                             ),
                           ),
                         ],
-                      )
+                      ),
                     ],
                   ),
                 ),

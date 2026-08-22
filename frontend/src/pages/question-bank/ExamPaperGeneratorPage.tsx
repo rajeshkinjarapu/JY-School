@@ -673,7 +673,7 @@ ${paperContent}`;
             </div>
             
             <div className="flex-1 overflow-y-auto custom-scrollbar flex justify-center p-8 print:p-0 relative print:block print:overflow-visible">
-              <div className="paper-zoom origin-top transition-transform h-max w-full flex justify-center print:block print:overflow-visible">
+              <div className="paper-zoom origin-top transition-transform h-max w-full flex justify-center print:block print:overflow-visible print:!transform-none">
                 <LiveLatexPreview 
                   content={content}
                   examName={examName}

@@ -81,7 +81,7 @@ export const PullToRefresh: React.FC<PullToRefreshProps> = ({ onRefresh, childre
   }, [pullDistance, isRefreshing, onRefresh]);
 
   return (
-    <div className="relative h-full w-full overflow-hidden">
+    <div className="relative h-full w-full overflow-hidden print:overflow-visible print:h-auto print:block">
       {/* Refresh Indicator */}
       <div 
         className="absolute top-0 left-0 right-0 flex justify-center items-center z-10 transition-transform duration-200"
@@ -101,7 +101,7 @@ export const PullToRefresh: React.FC<PullToRefreshProps> = ({ onRefresh, childre
       {/* Content Container */}
       <div 
         ref={scrollContainerRef}
-        className="h-full w-full overflow-y-auto"
+        className="h-full w-full overflow-y-auto print:overflow-visible print:h-auto print:!transform-none print:block"
         style={{ 
           transform: `translateY(${pullDistance}px)`,
           transition: isPulling.current ? 'none' : 'transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)',

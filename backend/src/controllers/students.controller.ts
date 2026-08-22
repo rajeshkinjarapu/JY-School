@@ -534,6 +534,7 @@ export const bulkImport = async (req: AuthRequest, res: Response, next: NextFunc
     }
 
     clearDashboardCache();
+    cache.delPattern('students:list:*');
     successResponse(res, { success, failed, total: results.length }, 'Bulk import complete');
   } catch (error) {
     next(error);
@@ -644,6 +645,10 @@ export const bulkUploadPhotos = async (req: AuthRequest, res: Response, next: Ne
     }
     
     fs.unlinkSync(zipPath);
+    
+    // Clear list cache so new photos appear everywhere
+    cache.delPattern('students:list:*');
+    clearDashboardCache();
     
     successResponse(res, { success, failed }, `Bulk photo upload complete. ${success} uploaded.`);
   } catch (error) {

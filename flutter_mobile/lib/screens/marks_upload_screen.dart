@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/api_service.dart';
 import '../widgets/app_drawer.dart';
+import 'all_subjects_marks_entry_screen.dart';
 
 class MarksUploadScreen extends StatefulWidget {
   final String? initialExamId;
@@ -164,7 +165,11 @@ class _MarksUploadScreenState extends State<MarksUploadScreen> {
         if (val.isNotEmpty) {
           marksData.add({
             'studentId': sid,
+            'examId': _selectedExamId,
+            'subjectId': _selectedSubjectId,
             'marksObtained': double.tryParse(val) ?? 0.0,
+            'maxMarks': _maxMarks,
+            'remarks': '',
           });
         }
       }
@@ -176,10 +181,6 @@ class _MarksUploadScreenState extends State<MarksUploadScreen> {
       }
 
       final payload = {
-        'examId': _selectedExamId,
-        'classId': _selectedClassId,
-        'subjectId': _selectedSubjectId,
-        'maxMarks': _maxMarks,
         'marks': marksData,
       };
 
@@ -253,7 +254,23 @@ class _MarksUploadScreenState extends State<MarksUploadScreen> {
                       width: double.infinity,
                       height: 56,
                       child: ElevatedButton(
-                        onPressed: _isSubmitting ? null : _submitMarks,
+                        onPressed: _isSubmitting ? null : () {
+                          if (_selectedSubjectId == 'ALL') {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => AllSubjectsMarksEntryScreen(
+                                  examId: _selectedExamId!,
+                                  classId: _selectedClassId!,
+                                  subjects: _subjects.where((s) => s['id'] != 'ALL').toList(),
+                                  students: _students,
+                                ),
+                              ),
+                            );
+                          } else {
+                            _submitMarks();
+                          }
+                        },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF6366F1),
                           elevation: 0,
@@ -264,9 +281,9 @@ class _MarksUploadScreenState extends State<MarksUploadScreen> {
                             : Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  const Icon(Icons.cloud_upload_rounded, color: Colors.white),
+                                  Icon(_selectedSubjectId == 'ALL' ? Icons.apps_rounded : Icons.cloud_upload_rounded, color: Colors.white),
                                   const SizedBox(width: 8),
-                                  Text('Submit Grades', style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+                                  Text(_selectedSubjectId == 'ALL' ? 'Enter Marks for All Subjects' : 'Submit Grades', style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
                                 ],
                               ),
                       ),
@@ -299,6 +316,7 @@ class _MarksUploadScreenState extends State<MarksUploadScreen> {
         }
         if (examSubjects is List) {
           filteredSubjects = List<dynamic>.from(examSubjects);
+          filteredSubjects.insert(0, {'id': 'ALL', 'name': 'All Subjects'});
         }
       }
     }
@@ -329,31 +347,27 @@ class _MarksUploadScreenState extends State<MarksUploadScreen> {
             },
           ),
           const SizedBox(height: 16),
-          Row(
+          Column(
             children: [
-              Expanded(
-                child: _buildDropdown(
-                  hint: _selectedExamId == null ? 'Exam First' : 'Class',
-                  value: _selectedClassId,
-                  items: filteredClasses,
-                  icon: Icons.class_rounded,
-                  onChanged: _selectedExamId == null ? (val) {} : (val) {
-                    setState(() { _selectedClassId = val; });
-                    _fetchStudentsForClass();
-                  },
-                ),
+              _buildDropdown(
+                hint: _selectedExamId == null ? 'Exam First' : 'Class',
+                value: _selectedClassId,
+                items: filteredClasses,
+                icon: Icons.class_rounded,
+                onChanged: _selectedExamId == null ? (val) {} : (val) {
+                  setState(() { _selectedClassId = val; });
+                  _fetchStudentsForClass();
+                },
               ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: _buildDropdown(
-                  hint: _selectedExamId == null ? 'Exam First' : 'Subject',
-                  value: _selectedSubjectId,
-                  items: filteredSubjects,
-                  icon: Icons.book_rounded,
-                  onChanged: _selectedExamId == null ? (val) {} : (val) {
-                    setState(() { _selectedSubjectId = val; });
-                  },
-                ),
+              const SizedBox(height: 16),
+              _buildDropdown(
+                hint: _selectedExamId == null ? 'Exam First' : 'Subject',
+                value: _selectedSubjectId,
+                items: filteredSubjects,
+                icon: Icons.book_rounded,
+                onChanged: _selectedExamId == null ? (val) {} : (val) {
+                  setState(() { _selectedSubjectId = val; });
+                },
               ),
             ],
           )

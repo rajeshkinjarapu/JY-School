@@ -229,11 +229,11 @@ export const TeacherListPage: React.FC = () => {
                             <img
                               src={getPhotoUrl(teacher.user?.photoUrl)}
                               alt={name}
-                              className="w-11 h-11 rounded object-cover border border-gray-300 shadow-sm"
+                              className="w-12 h-16 rounded object-cover border border-gray-300 shadow-sm"
                             />
                           ) : (
                             <div
-                              className={`w-11 h-11 rounded bg-gradient-to-br ${colorClass} flex items-center justify-center text-white font-bold text-sm shadow-sm border border-gray-200`}
+                              className={`w-12 h-16 rounded bg-gradient-to-br ${colorClass} flex items-center justify-center text-white font-bold text-sm shadow-sm border border-gray-200`}
                             >
                               {getInitials(name)}
                             </div>

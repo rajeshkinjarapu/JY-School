@@ -267,7 +267,34 @@ export const StudentFeeDetailsTab: React.FC<StudentFeeDetailsProps> = ({ student
       };
     });
 
+    // Helper to get sort weight for class names
+    const getClassWeight = (className: string) => {
+      const cls = className.toUpperCase();
+      if (cls.includes('NURSERY')) return 1;
+      if (cls.includes('PP-1') || cls.includes('PP1') || cls.includes('PP 1') || cls.includes('LKG')) return 2;
+      if (cls.includes('PP-2') || cls.includes('PP2') || cls.includes('PP 2') || cls.includes('UKG')) return 3;
+      if (cls.includes('1ST') || cls.includes('CLASS 1') || cls.match(/^1\s*[-]/)) return 4;
+      if (cls.includes('2ND') || cls.includes('CLASS 2') || cls.match(/^2\s*[-]/)) return 5;
+      if (cls.includes('3RD') || cls.includes('CLASS 3') || cls.match(/^3\s*[-]/)) return 6;
+      if (cls.includes('4TH') || cls.includes('CLASS 4') || cls.match(/^4\s*[-]/)) return 7;
+      if (cls.includes('5TH') || cls.includes('CLASS 5') || cls.match(/^5\s*[-]/)) return 8;
+      if (cls.includes('6TH') || cls.includes('CLASS 6') || cls.match(/^6\s*[-]/)) return 9;
+      if (cls.includes('7TH') || cls.includes('CLASS 7') || cls.match(/^7\s*[-]/)) return 10;
+      if (cls.includes('8TH') || cls.includes('CLASS 8') || cls.match(/^8\s*[-]/)) return 11;
+      if (cls.includes('9TH') || cls.includes('CLASS 9') || cls.match(/^9\s*[-]/)) return 12;
+      if (cls.includes('10TH') || cls.includes('CLASS 10') || cls.match(/^10\s*[-]/)) return 13;
+      return 99; // Unknown classes go to bottom
+    };
+
     rawData.sort((a, b) => {
+      const weightA = getClassWeight(a.className);
+      const weightB = getClassWeight(b.className);
+      
+      if (weightA !== weightB) {
+        return weightA - weightB;
+      }
+      
+      // If same class hierarchy, sort alphabetically by section/name
       if (a.className < b.className) return -1;
       if (a.className > b.className) return 1;
       return a.name.localeCompare(b.name);

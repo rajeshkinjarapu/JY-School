@@ -599,7 +599,7 @@ export const QuestionPaperGeneratorPage = () => {
             </div>
           </div>
           <div className="flex justify-center p-8 print:p-0 print:block">
-            <div className="paper-zoom origin-top transition-transform print:transform-none print:scale-100 print:block">
+            <div className="paper-zoom origin-top transition-transform print:!transform-none print:scale-100 print:block">
             <LiveLatexPreview 
               subjectContents={{ 'General': content }}
               selectedSubjects={['General']}

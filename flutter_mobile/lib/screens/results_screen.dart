@@ -195,26 +195,22 @@ class _ResultsScreenState extends State<ResultsScreen> {
       ),
       child: Column(
         children: [
-          Row(
+          Column(
             children: [
-              Expanded(
-                child: _buildDropdown(
-                  label: 'Select Exam',
-                  value: _selectedExamId,
-                  items: _examsList,
-                  onChanged: (val) {
-                    setState(() { _onExamSelected(val); });
-                  },
-                ),
+              _buildDropdown(
+                label: 'Select Exam',
+                value: _selectedExamId,
+                items: _examsList,
+                onChanged: (val) {
+                  setState(() { _onExamSelected(val); });
+                },
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _buildDropdown(
-                  label: _selectedExamId == null ? 'Exam First' : 'Select Class',
-                  value: _selectedClassId,
-                  items: filteredClasses,
-                  onChanged: _selectedExamId == null ? (val){} : (val) => setState(() => _selectedClassId = val as String?),
-                ),
+              const SizedBox(height: 12),
+              _buildDropdown(
+                label: _selectedExamId == null ? 'Exam First' : 'Select Class',
+                value: _selectedClassId,
+                items: filteredClasses,
+                onChanged: _selectedExamId == null ? (val){} : (val) => setState(() => _selectedClassId = val as String?),
               ),
             ],
           ),

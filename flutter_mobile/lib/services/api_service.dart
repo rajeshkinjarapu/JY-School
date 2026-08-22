@@ -8,9 +8,11 @@ class ApiService {
 
   static String getImageUrl(String? photoUrl) {
     if (photoUrl == null || photoUrl.isEmpty) return '';
-    if (photoUrl.startsWith('http') || photoUrl.startsWith('data:')) return photoUrl;
-    if (photoUrl.startsWith('/')) return '$baseUrl$photoUrl';
-    return '$baseUrl/$photoUrl';
+    final trimmed = photoUrl.trim();
+    if (trimmed.isEmpty) return '';
+    if (trimmed.startsWith('http') || trimmed.startsWith('data:')) return trimmed;
+    if (trimmed.startsWith('/')) return '$baseUrl$trimmed';
+    return '$baseUrl/$trimmed';
   }
 
   // Base headers for API requests
