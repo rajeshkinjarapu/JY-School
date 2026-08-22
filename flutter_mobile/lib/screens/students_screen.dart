@@ -410,25 +410,11 @@ class _StudentsScreenState extends State<StudentsScreen> {
                     ],
                   ),
                 ),
-                // Premium Phone Button
-                Container(
-                  width: 40,
-                  height: 40,
-                  margin: const EdgeInsets.only(right: 4),
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFF22C55E), Color(0xFF16A34A)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(color: const Color(0xFF22C55E).withOpacity(0.3), blurRadius: 8, offset: const Offset(0, 3)),
-                    ],
-                  ),
+                // Normal Phone Button at the end (replacing arrow)
+                Padding(
+                  padding: const EdgeInsets.only(left: 16),
                   child: IconButton(
-                    padding: EdgeInsets.zero,
-                    icon: const Icon(Icons.phone_rounded, color: Colors.white, size: 20),
+                    icon: const Icon(Icons.phone_rounded, color: Color(0xFF22C55E), size: 26),
                     onPressed: () async {
                       final phone = student['parentPhone'] ?? student['parent']?['phone'] ?? student['parent']?['user']?['phone'] ?? '';
                       if (phone.isNotEmpty) {
@@ -448,7 +434,6 @@ class _StudentsScreenState extends State<StudentsScreen> {
                     },
                   ),
                 ),
-                const Icon(Icons.chevron_right_rounded, size: 24, color: Color(0xFFCBD5E1)),
               ],
             ),
           ),

@@ -84,8 +84,12 @@ class _TeachersScreenState extends State<TeachersScreen> {
       cleanPhone = '91$cleanPhone';
     }
     final url = Uri.parse('https://wa.me/$cleanPhone');
-    if (await canLaunchUrl(url)) {
+    try {
       await launchUrl(url, mode: LaunchMode.externalApplication);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Could not open WhatsApp')));
+      }
     }
   }
 
@@ -106,17 +110,17 @@ class _TeachersScreenState extends State<TeachersScreen> {
     if (photoUrl != null && photoUrl.isNotEmpty && !photoUrl.startsWith('data:')) {
       final url = ApiService.getImageUrl(photoUrl);
       return Container(
-        width: 44,
-        height: 44,
+        width: 48,
+        height: 60,
         decoration: BoxDecoration(
-          shape: BoxShape.circle,
+          borderRadius: BorderRadius.circular(10),
           border: Border.all(color: Colors.grey.shade300, width: 1),
           boxShadow: [
             BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 4, offset: const Offset(0, 2)),
           ],
         ),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(22),
+          borderRadius: BorderRadius.circular(9),
           child: Image.network(
             url,
             fit: BoxFit.cover,
@@ -130,10 +134,10 @@ class _TeachersScreenState extends State<TeachersScreen> {
       );
     } else {
       return Container(
-        width: 44,
-        height: 44,
+        width: 48,
+        height: 60,
         decoration: BoxDecoration(
-          shape: BoxShape.circle,
+          borderRadius: BorderRadius.circular(10),
           gradient: LinearGradient(colors: gradientColors, begin: Alignment.topLeft, end: Alignment.bottomRight),
           border: Border.all(color: Colors.white, width: 2),
           boxShadow: [
@@ -299,12 +303,12 @@ class _TeachersScreenState extends State<TeachersScreen> {
                   onTap: () => _launchWhatsApp(phone),
                   borderRadius: BorderRadius.circular(24),
                   child: Image.network(
-                    'https://upload.wikimedia.org/wikipedia/commons/thumb/6/6b/WhatsApp.svg/512px-WhatsApp.svg.png',
-                    width: 36,
-                    height: 36,
+                    'https://upload.wikimedia.org/wikipedia/commons/thumb/6/6b/WhatsApp.svg/150px-WhatsApp.svg.png',
+                    width: 38,
+                    height: 38,
                     errorBuilder: (ctx, err, trace) => Container(
-                      width: 36,
-                      height: 36,
+                      width: 38,
+                      height: 38,
                       decoration: const BoxDecoration(
                         color: Color(0xFF25D366),
                         shape: BoxShape.circle,

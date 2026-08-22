@@ -155,9 +155,10 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
             })()
           ) : (
             (() => {
-              const optARegex = /\(A\)\s*(.*?)(?=\(B\)|$)/s;
-              const optBRegex = /\(B\)\s*(.*?)(?=\(C\)|$)/s;
-              const optCRegex = /\(C\)\s*(.*?)(?=\(D\)|$)/s;
+              // Make regex very lenient to handle whitespace or slight variations from AI
+              const optARegex = /\(A\)\s*(.*?)(?=\s*\(B\)|$)/s;
+              const optBRegex = /\(B\)\s*(.*?)(?=\s*\(C\)|$)/s;
+              const optCRegex = /\(C\)\s*(.*?)(?=\s*\(D\)|$)/s;
               const optDRegex = /\(D\)\s*(.*)/s;
 
               const splitIndexA = block.indexOf('(A)');
@@ -218,7 +219,7 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
         );
 
         elements.push(
-          <div key={`${subject}-block-${i}`} className="w-full relative group" style={{ marginBottom }}>
+          <div key={`${subject}-block-${i}`} className="w-full relative group break-inside-avoid" style={{ marginBottom }}>
             {blockContent}
           </div>
         );
@@ -329,8 +330,8 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
             className="group absolute z-50"
             style={{}}
           >
-            <div className="relative w-full h-full bg-white/50 backdrop-blur-[1px] hover:bg-transparent transition-all border border-transparent group-hover:border-blue-400 border-dashed print:border-none print:bg-transparent">
-              <img src={dataUrl} className="w-full h-full object-contain pointer-events-none" />
+            <div className="relative w-full h-full bg-white/50 backdrop-blur-[1px] hover:bg-transparent transition-all border border-transparent group-hover:border-blue-400 border-dashed print:border-none print:bg-transparent !print:border-none">
+              <img src={dataUrl} className="w-full h-full object-contain pointer-events-none print:max-w-full" />
               {onImageDelete && (
                 <button
                   onPointerDown={(e) => e.stopPropagation()}

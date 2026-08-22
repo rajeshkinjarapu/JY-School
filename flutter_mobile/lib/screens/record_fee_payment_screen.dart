@@ -261,7 +261,7 @@ class _RecordFeePaymentScreenState extends State<RecordFeePaymentScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _sectionHeader('1', 'Select Fees'),
+                  _sectionHeader('1', 'Select Fees', gradientStart: const Color(0xFF3B82F6), gradientEnd: const Color(0xFF2563EB)),
                   const SizedBox(height: 16),
                   if (_availableStructures.isEmpty)
                     _emptyCard('No fee components assigned to this student.')
@@ -279,10 +279,10 @@ class _RecordFeePaymentScreenState extends State<RecordFeePaymentScreen> {
                         duration: const Duration(milliseconds: 250),
                         margin: const EdgeInsets.only(bottom: 12),
                         decoration: BoxDecoration(
-                          color: isChecked ? Colors.white : Colors.white,
+                          color: Colors.white,
                           borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: isChecked ? const Color(0xFF6366F1) : const Color(0xFFE2E8F0), width: isChecked ? 2 : 1),
-                          boxShadow: isChecked ? [BoxShadow(color: const Color(0xFF6366F1).withOpacity(0.15), blurRadius: 15, offset: const Offset(0, 5))] : [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 2))],
+                          border: Border.all(color: isChecked ? const Color(0xFF3B82F6) : const Color(0xFFE2E8F0), width: isChecked ? 2 : 1),
+                          boxShadow: isChecked ? [BoxShadow(color: const Color(0xFF3B82F6).withOpacity(0.15), blurRadius: 15, offset: const Offset(0, 5))] : [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 2))],
                         ),
                         child: Material(
                           color: Colors.transparent,
@@ -302,9 +302,9 @@ class _RecordFeePaymentScreenState extends State<RecordFeePaymentScreen> {
                                         width: 26,
                                         height: 26,
                                         decoration: BoxDecoration(
-                                          color: isChecked ? const Color(0xFF6366F1) : const Color(0xFFF1F5F9),
+                                          color: isChecked ? const Color(0xFF3B82F6) : const Color(0xFFF1F5F9),
                                           borderRadius: BorderRadius.circular(8),
-                                          border: Border.all(color: isChecked ? const Color(0xFF6366F1) : const Color(0xFFCBD5E1), width: 1.5),
+                                          border: Border.all(color: isChecked ? const Color(0xFF3B82F6) : const Color(0xFFCBD5E1), width: 1.5),
                                         ),
                                         child: isChecked ? const Icon(Icons.check_rounded, color: Colors.white, size: 18) : null,
                                       ),
@@ -326,21 +326,21 @@ class _RecordFeePaymentScreenState extends State<RecordFeePaymentScreen> {
                                     Container(
                                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                                       decoration: BoxDecoration(
-                                        color: const Color(0xFFEEF2FF),
+                                        color: const Color(0xFFEFF6FF),
                                         borderRadius: BorderRadius.circular(16),
-                                        border: Border.all(color: const Color(0xFFC7D2FE)),
+                                        border: Border.all(color: const Color(0xFFBFDBFE)),
                                       ),
                                       child: Row(
                                         children: [
-                                          Text('Pay', style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w600, color: const Color(0xFF6366F1))),
+                                          Text('Pay', style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w600, color: const Color(0xFF2563EB))),
                                           const SizedBox(width: 12),
-                                          const Text('₹', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF6366F1))),
+                                          const Text('₹', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF2563EB))),
                                           const SizedBox(width: 4),
                                           Expanded(
                                             child: TextField(
                                               controller: _amountControllers[id],
                                               keyboardType: TextInputType.number,
-                                              style: GoogleFonts.outfit(fontSize: 22, fontWeight: FontWeight.bold, color: const Color(0xFF4F46E5)),
+                                              style: GoogleFonts.outfit(fontSize: 22, fontWeight: FontWeight.bold, color: const Color(0xFF1D4ED8)),
                                               textAlign: TextAlign.right,
                                               decoration: const InputDecoration(
                                                 border: InputBorder.none,
@@ -363,7 +363,7 @@ class _RecordFeePaymentScreenState extends State<RecordFeePaymentScreen> {
                     }).toList(),
 
                   const SizedBox(height: 32),
-                  _sectionHeader('2', 'Transaction Details'),
+                  _sectionHeader('2', 'Transaction Details', gradientStart: const Color(0xFF8B5CF6), gradientEnd: const Color(0xFF6D28D9)),
                   const SizedBox(height: 16),
 
                   // Payment Date
@@ -423,9 +423,9 @@ class _RecordFeePaymentScreenState extends State<RecordFeePaymentScreen> {
                           crossAxisCount: 2,
                           shrinkWrap: true,
                           physics: const NeverScrollableScrollPhysics(),
-                          crossAxisSpacing: 12,
-                          mainAxisSpacing: 12,
-                          childAspectRatio: 2.5,
+                          crossAxisSpacing: 10,
+                          mainAxisSpacing: 10,
+                          childAspectRatio: 3.0,
                           children: _methods.map((m) {
                             final isSelected = _method == m;
                             final color = _methodColors[m] ?? const Color(0xFF6366F1);
@@ -497,57 +497,50 @@ class _RecordFeePaymentScreenState extends State<RecordFeePaymentScreen> {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 30, offset: const Offset(0, -10))],
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 20, offset: const Offset(0, -5))],
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      padding: EdgeInsets.fromLTRB(24, 20, 24, MediaQuery.of(context).padding.bottom + 20),
+      padding: EdgeInsets.fromLTRB(20, 16, 20, MediaQuery.of(context).padding.bottom + 12),
       child: SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Total Amount', style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.bold, color: const Color(0xFF64748B), letterSpacing: 0.5)),
-                    const SizedBox(height: 2),
-                    Text(format.format(total), style: GoogleFonts.outfit(fontSize: 28, fontWeight: FontWeight.bold, color: const Color(0xFF1E293B))),
-                  ],
-                ),
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.only(left: 20),
-                    child: GestureDetector(
-                      onTap: (_isSubmitting || !hasSelected || total <= 0) ? null : _submit,
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
-                        height: 56,
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: (hasSelected && total > 0) ? [const Color(0xFF4F46E5), const Color(0xFF6366F1)] : [const Color(0xFFCBD5E1), const Color(0xFF94A3B8)],
-                          ),
-                          borderRadius: BorderRadius.circular(20),
-                          boxShadow: (hasSelected && total > 0) ? [BoxShadow(color: const Color(0xFF6366F1).withOpacity(0.4), blurRadius: 16, offset: const Offset(0, 6))] : [],
-                        ),
-                        child: Center(
-                          child: _isSubmitting
-                              ? const CircularProgressIndicator(color: Colors.white, strokeWidth: 2)
-                              : Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    const Icon(Icons.lock_rounded, color: Colors.white, size: 18),
-                                    const SizedBox(width: 8),
-                                    Text('Confirm', style: GoogleFonts.poppins(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
-                                  ],
-                                ),
-                        ),
-                      ),
+                Text('Total Amount', style: GoogleFonts.poppins(fontSize: 11, fontWeight: FontWeight.bold, color: const Color(0xFF94A3B8))),
+                Text(format.format(total), style: GoogleFonts.outfit(fontSize: 24, fontWeight: FontWeight.bold, color: const Color(0xFF1E293B))),
+              ],
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: GestureDetector(
+                onTap: (_isSubmitting || !hasSelected || total <= 0) ? null : _submit,
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  height: 48,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: (hasSelected && total > 0) ? [const Color(0xFF10B981), const Color(0xFF059669)] : [const Color(0xFFCBD5E1), const Color(0xFF94A3B8)],
                     ),
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: (hasSelected && total > 0) ? [BoxShadow(color: const Color(0xFF10B981).withOpacity(0.4), blurRadius: 12, offset: const Offset(0, 4))] : [],
+                  ),
+                  child: Center(
+                    child: _isSubmitting
+                        ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                        : Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(Icons.check_circle_outline_rounded, color: Colors.white, size: 20),
+                              const SizedBox(width: 8),
+                              Text('Confirm Pay', style: GoogleFonts.poppins(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold)),
+                            ],
+                          ),
                   ),
                 ),
-              ],
+              ),
             ),
           ],
         ),
@@ -555,16 +548,16 @@ class _RecordFeePaymentScreenState extends State<RecordFeePaymentScreen> {
     );
   }
 
-  Widget _sectionHeader(String step, String title) {
+  Widget _sectionHeader(String step, String title, {Color gradientStart = const Color(0xFF6366F1), Color gradientEnd = const Color(0xFF4F46E5)}) {
     return Row(
       children: [
         Container(
           width: 28,
           height: 28,
           decoration: BoxDecoration(
-            gradient: const LinearGradient(colors: [Color(0xFF6366F1), Color(0xFF4F46E5)]),
+            gradient: LinearGradient(colors: [gradientStart, gradientEnd]),
             borderRadius: BorderRadius.circular(8),
-            boxShadow: [BoxShadow(color: const Color(0xFF6366F1).withOpacity(0.3), blurRadius: 8, offset: const Offset(0, 3))],
+            boxShadow: [BoxShadow(color: gradientStart.withOpacity(0.3), blurRadius: 8, offset: const Offset(0, 3))],
           ),
           child: Center(child: Text(step, style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14))),
         ),

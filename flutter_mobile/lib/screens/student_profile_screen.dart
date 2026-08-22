@@ -107,15 +107,37 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
           ),
           const SizedBox(width: 8),
         ],
-        bottom: TabBar(
-          controller: _tabController,
-          indicatorColor: Colors.white,
-          indicatorWeight: 3,
-          labelColor: Colors.white,
-          unselectedLabelColor: Colors.white54,
-          labelStyle: GoogleFonts.poppins(fontWeight: FontWeight.w700, fontSize: 12),
-          unselectedLabelStyle: GoogleFonts.poppins(fontSize: 12),
-          tabs: const [Tab(text: 'PROFILE'), Tab(text: 'EXAMS'), Tab(text: 'FEES')],
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(64),
+          child: Container(
+            margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+            padding: const EdgeInsets.all(4),
+            decoration: BoxDecoration(
+              color: Colors.black.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(30),
+            ),
+            child: TabBar(
+              controller: _tabController,
+              dividerColor: Colors.transparent,
+              indicatorSize: TabBarIndicatorSize.tab,
+              indicator: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(30),
+                boxShadow: [
+                  BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 4, offset: const Offset(0, 2)),
+                ],
+              ),
+              labelColor: const Color(0xFF4F46E5),
+              unselectedLabelColor: Colors.white,
+              labelStyle: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 12.5),
+              unselectedLabelStyle: GoogleFonts.poppins(fontWeight: FontWeight.w500, fontSize: 12.5),
+              tabs: const [
+                Tab(height: 38, text: 'PROFILE'),
+                Tab(height: 38, text: 'EXAMS'),
+                Tab(height: 38, text: 'FEES'),
+              ],
+            ),
+          ),
         ),
       ),
       body: Column(

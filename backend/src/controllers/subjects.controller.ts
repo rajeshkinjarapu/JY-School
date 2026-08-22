@@ -3,6 +3,7 @@ import { AuthRequest } from '../middlewares/auth';
 import { createError } from '../middlewares/errorHandler';
 import { prisma } from '../utils/prisma';
 import { successResponse } from '../utils/response';
+import { sortClasses } from '../utils/sortClasses';
 import * as XLSX from 'xlsx';
 
 export const getAll = async (req: AuthRequest, res: Response): Promise<void> => {
@@ -54,7 +55,7 @@ export const create = async (req: AuthRequest, res: Response, next: NextFunction
   }
 
   // If no classId provided, create subject across all classes
-  const allClasses = await prisma.class.findMany();
+  const allClasses = await prisma.class.findMany().then(sortClasses);
   if (allClasses.length === 0) {
     return next(createError('No classes found in the system.', 400));
   }

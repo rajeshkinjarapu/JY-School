@@ -2,6 +2,7 @@ import { Response, NextFunction } from 'express';
 import { AuthRequest } from '../middlewares/auth';
 import { prisma } from '../utils/prisma';
 import { successResponse } from '../utils/response';
+import { sortClasses } from '../utils/sortClasses';
 import { Role, Gender, AttendanceStatus } from '../types/enums';
 
 // Simple in-memory cache to speed up the dashboard
@@ -56,7 +57,7 @@ export const getAdminDashboard = async (req: AuthRequest, res: Response, next: N
       prisma.teacher.count(),
       prisma.class.count(),
       prisma.feePayment.aggregate({ _sum: { amountPaid: true } }),
-      prisma.class.findMany({ include: { _count: { select: { students: true } } } }),
+      prisma.class.findMany({ include: { _count: { select: { students: true } } } }).then(sortClasses),
       prisma.attendance.findMany({ where: { date: { gte: today, lt: tomorrow } } }),
       prisma.feePayment.findMany({ where: { paymentDate: { gte: twelveMonthsAgo } } }),
       prisma.student.groupBy({ by: ['gender'], _count: { _all: true } }),

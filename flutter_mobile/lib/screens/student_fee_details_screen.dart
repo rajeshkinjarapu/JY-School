@@ -171,124 +171,117 @@ class _StudentFeeDetailsScreenState extends State<StudentFeeDetailsScreen> with 
               : Column(
                   children: [
                     // Premium Gradient Header Area
-                    Stack(
-                      clipBehavior: Clip.none,
-                      children: [
-                        // Background Gradient Header
-                        Container(
-                          height: 120,
-                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                          decoration: const BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [Color(0xFF6366F1), Color(0xFF4F46E5), Color(0xFF4338CA)],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
+                    Container(
+                      padding: const EdgeInsets.fromLTRB(24, 16, 24, 40),
+                      decoration: const BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [Color(0xFF6366F1), Color(0xFF4F46E5), Color(0xFF4338CA)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.vertical(bottom: Radius.circular(32)),
+                        boxShadow: [
+                          BoxShadow(color: Colors.black26, blurRadius: 15, offset: Offset(0, 8))
+                        ],
+                      ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Avatar
+                          Container(
+                            width: 64,
+                            height: 64,
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.2),
+                              shape: BoxShape.circle,
+                              border: Border.all(color: Colors.white, width: 2),
+                              boxShadow: [
+                                BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10, offset: const Offset(0, 4))
+                              ],
                             ),
-                            borderRadius: BorderRadius.vertical(bottom: Radius.circular(32)),
-                            boxShadow: [
-                              BoxShadow(color: Colors.black26, blurRadius: 15, offset: Offset(0, 8))
-                            ],
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(32),
+                              child: photoUrl != null && photoUrl.toString().isNotEmpty
+                                  ? Image.network(
+                                      ApiService.getImageUrl(photoUrl.toString()),
+                                      fit: BoxFit.cover,
+                                      headers: const {'ngrok-skip-browser-warning': '69420'},
+                                      errorBuilder: (context, error, stackTrace) => _buildInitials(name),
+                                    )
+                                  : _buildInitials(name),
+                            ),
                           ),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              // Avatar
-                              Container(
-                                width: 64,
-                                height: 64,
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.2),
-                                  shape: BoxShape.circle,
-                                  border: Border.all(color: Colors.white, width: 2),
-                                  boxShadow: [
-                                    BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10, offset: const Offset(0, 4))
-                                  ],
+                          const SizedBox(width: 16),
+                          // Student Details
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  name,
+                                  style: GoogleFonts.outfit(
+                                    color: Colors.white,
+                                    fontSize: 22,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(32),
-                                  child: photoUrl != null && photoUrl.isNotEmpty
-                                      ? Image.network(
-                                          ApiService.getImageUrl(photoUrl),
-                                          fit: BoxFit.cover,
-                                          headers: const {'ngrok-skip-browser-warning': '69420'},
-                                          errorBuilder: (context, error, stackTrace) => _buildInitials(name),
-                                        )
-                                      : _buildInitials(name),
-                                ),
-                              ),
-                              const SizedBox(width: 16),
-                              // Student Details
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                const SizedBox(height: 6),
+                                Row(
                                   children: [
-                                    Text(
-                                      name,
-                                      style: GoogleFonts.outfit(
-                                        color: Colors.white,
-                                        fontSize: 22,
-                                        fontWeight: FontWeight.bold,
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                      decoration: BoxDecoration(
+                                        color: Colors.white.withOpacity(0.2),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Text(
+                                        'Class: $cls',
+                                        style: GoogleFonts.poppins(
+                                          color: Colors.white,
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w600,
+                                        ),
                                       ),
                                     ),
-                                    const SizedBox(height: 6),
-                                    Row(
-                                      children: [
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                          decoration: BoxDecoration(
-                                            color: Colors.white.withOpacity(0.2),
-                                            borderRadius: BorderRadius.circular(8),
-                                          ),
-                                          child: Text(
-                                            'Class: $cls',
-                                            style: GoogleFonts.poppins(
-                                              color: Colors.white,
-                                              fontSize: 11,
-                                              fontWeight: FontWeight.w600,
-                                            ),
-                                          ),
+                                    const SizedBox(width: 8),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                      decoration: BoxDecoration(
+                                        color: Colors.white.withOpacity(0.2),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Text(
+                                        'Adm: $admissionNo',
+                                        style: GoogleFonts.poppins(
+                                          color: Colors.white,
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w600,
                                         ),
-                                        const SizedBox(width: 8),
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                          decoration: BoxDecoration(
-                                            color: Colors.white.withOpacity(0.2),
-                                            borderRadius: BorderRadius.circular(8),
-                                          ),
-                                          child: Text(
-                                            'Adm: $admissionNo',
-                                            style: GoogleFonts.poppins(
-                                              color: Colors.white,
-                                              fontSize: 11,
-                                              fontWeight: FontWeight.w600,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
+                                      ),
                                     ),
                                   ],
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
-                        ),
-                        
-                        // Floating Summary Cards
-                        Positioned(
-                          bottom: -40,
-                          left: 20,
-                          right: 20,
-                          child: Row(
-                            children: [
-                              Expanded(child: _buildSummaryCard('Pending Due', _totalPending, const Color(0xFFEF4444), Colors.white, Icons.account_balance_wallet_rounded)),
-                              const SizedBox(width: 16),
-                              Expanded(child: _buildSummaryCard('Total Paid', _totalPaid, const Color(0xFF10B981), Colors.white, Icons.check_circle_outline_rounded)),
-                            ],
-                          ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                    const SizedBox(height: 60), // Space for floating cards
+                    
+                    // Floating Summary Cards
+                    Transform.translate(
+                      offset: const Offset(0, -30),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: Row(
+                          children: [
+                            Expanded(child: _buildSummaryCard('Pending Due', _totalPending, const Color(0xFFEF4444), Colors.white, Icons.account_balance_wallet_rounded)),
+                            const SizedBox(width: 16),
+                            Expanded(child: _buildSummaryCard('Total Paid', _totalPaid, const Color(0xFF10B981), Colors.white, Icons.check_circle_outline_rounded)),
+                          ],
+                        ),
+                      ),
+                    ),
                     
                     const SizedBox(height: 16),
                     TabBar(

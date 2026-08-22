@@ -370,15 +370,16 @@ export const QuestionPaperGeneratorPage = () => {
         continue;
       }
       
-      // Handle inline options like "A) 2V B) 200V C) 20V D) 10V"
-      const optionRegex = /\b([a-dA-D])[\)\.]\s+/g;
-      if (line.match(optionRegex) && (line.match(optionRegex)?.length ?? 0) > 1) {
+      // Handle inline options like "A) 2V B) 200V C) 20V D) 10V" or "a) 2V b) 200V"
+      const inlineOptionRegex = /\b([a-dA-D])[\)\.]\s+/g;
+      if (line.match(inlineOptionRegex) && (line.match(inlineOptionRegex)?.length ?? 0) > 1) {
          line = line.replace(/\b([a-dA-D])[\)\.]\s+/g, (match, letter) => `\n(${letter.toUpperCase()}) `);
          line = line.trim();
       }
       
-      // Format standard options "A) " -> "(A) "
-      line = line.replace(/^\b([a-dA-D])[\)\.]\s+/i, (match, letter) => `(${letter.toUpperCase()}) `);
+      // Format standard options "A) ", "a)", "(a)" -> "(A) "
+      line = line.replace(/^\s*\b([a-dA-D])[\)\.]\s+/i, (match, letter) => `(${letter.toUpperCase()}) `);
+      line = line.replace(/^\s*\(\s*([a-dA-D])\s*\)\s+/i, (match, letter) => `(${letter.toUpperCase()}) `);
       
       // Auto-wrap math expressions with $ if not already wrapped
       if (!line.includes('$')) {
@@ -577,7 +578,7 @@ export const QuestionPaperGeneratorPage = () => {
         </div>
 
         {/* Right Side: Live Preview (Full Width on Print) */}
-        <div className="w-1/2 overflow-y-auto bg-slate-100 print:w-full print:bg-white custom-scrollbar flex flex-col relative print:overflow-visible print:block">
+        <div className="w-1/2 overflow-y-auto bg-slate-100 print:w-full print:bg-white custom-scrollbar flex flex-col relative print:overflow-visible print:block print:absolute print:inset-0 print:z-[999] print:h-auto">
           <div className="sticky top-0 z-10 bg-slate-100/80 backdrop-blur-md border-b border-slate-200 px-6 py-3 flex justify-between items-center print:hidden">
             <h3 className="font-semibold text-slate-700 flex items-center gap-2">
               Live Preview
@@ -597,8 +598,8 @@ export const QuestionPaperGeneratorPage = () => {
               </button>
             </div>
           </div>
-          <div className="flex justify-center p-8 print:p-0">
-            <div className="paper-zoom origin-top transition-transform">
+          <div className="flex justify-center p-8 print:p-0 print:block">
+            <div className="paper-zoom origin-top transition-transform print:transform-none print:scale-100 print:block">
             <LiveLatexPreview 
               subjectContents={{ 'General': content }}
               selectedSubjects={['General']}
