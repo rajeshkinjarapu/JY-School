@@ -4,7 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'offline_sync_service.dart';
 
 class ApiService {
-  static const String baseUrl = 'https://overcast-spoken-stuck.ngrok-free.dev';
+  static const String baseUrl = 'https://paralyze-canteen-goon.ngrok-free.dev';
 
   static String getImageUrl(String? photoUrl) {
     if (photoUrl == null || photoUrl.isEmpty) return '';

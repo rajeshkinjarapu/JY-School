@@ -231,7 +231,7 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
 
   return (
     <div 
-      className="bg-white text-black shadow-2xl mx-auto relative w-[210mm] min-h-[297mm]" 
+      className="bg-white text-black shadow-2xl print:shadow-none mx-auto relative w-[210mm] min-h-[297mm] print:w-full print:min-h-0 print:m-0" 
       style={{ boxSizing: 'border-box', fontFamily: "'TeX Gyre Schola', 'TeXGyreSchola', serif, 'Mandali'", border: 'none' }}
       id="a4-preview-paper"
     >

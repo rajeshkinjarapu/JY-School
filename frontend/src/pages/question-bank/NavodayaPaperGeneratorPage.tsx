@@ -149,7 +149,7 @@ export const NavodayaPaperGeneratorPage = () => {
     if (!printWindow) { window.print(); return; }
     const styleLinks = Array.from(document.querySelectorAll('link[rel="stylesheet"]')).map((l) => l.outerHTML).join('');
     const styleTags = Array.from(document.querySelectorAll('style')).map((s) => `<style>${s.innerHTML}</style>`).join('');
-    printWindow.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"/><title>Print</title>${styleLinks}${styleTags}<style>@page{margin:10mm;size:A4;}body{margin:0;background:white;}#print-root{width:210mm;margin:0 auto;}#a4-preview-paper{box-shadow:none!important;border:none!important;}</style></head><body><div id="print-root">${paperEl.outerHTML}</div></body></html>`);
+    printWindow.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"/><title>Print</title>${styleLinks}${styleTags}<style>@page{margin:10mm;size:A4;}body{margin:0;background:white;}#print-root{width:210mm;margin:0 auto;}</style></head><body><div id="print-root">${paperEl.outerHTML}</div></body></html>`);
     printWindow.document.close();
     printWindow.onload = () => { setTimeout(() => { printWindow.focus(); printWindow.print(); printWindow.close(); }, 500); };
   };
