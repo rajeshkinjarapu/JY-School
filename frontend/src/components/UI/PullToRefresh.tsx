@@ -9,6 +9,7 @@ interface PullToRefreshProps {
 export const PullToRefresh: React.FC<PullToRefreshProps> = ({ onRefresh, children }) => {
   const [pullDistance, setPullDistance] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isPrinting, setIsPrinting] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   
   const startY = useRef(0);
@@ -17,6 +18,18 @@ export const PullToRefresh: React.FC<PullToRefreshProps> = ({ onRefresh, childre
 
   const THRESHOLD = 80;
   const MAX_PULL = 120;
+
+  // ── KEY FIX: detect print mode and remove ALL transform/overflow so pages don't clip ──
+  useEffect(() => {
+    const onBeforePrint = () => setIsPrinting(true);
+    const onAfterPrint  = () => setIsPrinting(false);
+    window.addEventListener('beforeprint', onBeforePrint);
+    window.addEventListener('afterprint',  onAfterPrint);
+    return () => {
+      window.removeEventListener('beforeprint', onBeforePrint);
+      window.removeEventListener('afterprint',  onAfterPrint);
+    };
+  }, []);
 
   useEffect(() => {
     const el = scrollContainerRef.current;
@@ -80,8 +93,13 @@ export const PullToRefresh: React.FC<PullToRefreshProps> = ({ onRefresh, childre
     };
   }, [pullDistance, isRefreshing, onRefresh]);
 
+  if (isPrinting) {
+    // During print: render children directly with no wrappers, no height, no overflow
+    return <>{children}</>;
+  }
+
   return (
-    <div className="relative h-full w-full overflow-hidden print:overflow-visible print:h-auto print:block">
+    <div className="relative h-full w-full overflow-hidden">
       {/* Refresh Indicator */}
       <div 
         className="absolute top-0 left-0 right-0 flex justify-center items-center z-10 transition-transform duration-200"
@@ -101,7 +119,7 @@ export const PullToRefresh: React.FC<PullToRefreshProps> = ({ onRefresh, childre
       {/* Content Container */}
       <div 
         ref={scrollContainerRef}
-        className="h-full w-full overflow-y-auto print:overflow-visible print:h-auto print:!transform-none print:block"
+        className="h-full w-full overflow-y-auto"
         style={{ 
           transform: `translateY(${pullDistance}px)`,
           transition: isPulling.current ? 'none' : 'transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)',
