@@ -734,7 +734,7 @@ class ApiService {
   }
 
   static Future<Map<String, dynamic>> getFeePayments() async {
-    return _performGet('/api/fees/payments', 'Failed to get fee payments');
+    return _performGet('/api/fees/payments?limit=10000', 'Failed to get fee payments');
   }
 
   static Future<Map<String, dynamic>> getFeeGroups() async {
