@@ -251,28 +251,29 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
           flex-wrap: wrap;
         }
       `}</style>
-      <div className="pt-6 pb-10 px-10 lining-nums tabular-nums">
+      <div className="pt-3 pb-3 px-8 lining-nums tabular-nums">
         
         {/* Header Section */}
-        <div className="mb-3 border-b-2 border-black pb-2">
-          <div className="flex items-center justify-center relative mb-2">
+        <div className="mb-2 border-b-2 border-black pb-1.5">
+          <div className="flex items-center justify-center relative">
             <img 
               src={logoBase64 || '/logo.png'} 
               alt="Logo" 
-              className="absolute left-0 mt-2 w-24 h-24 object-contain"
+              className="absolute w-20 h-20 object-contain"
+              style={{ left: '-2px' }}
             />
-            <div className="text-center mt-1">
-              <h1 className="text-[1.65rem] font-bold uppercase tracking-wider mb-1 whitespace-nowrap">SRI VENKATESWARA JY SCHOOL</h1>
-              <h2 className="text-sm font-semibold mb-1">(IIT-JEE/NEET Foundation – Olympiads)</h2>
+            <div className="text-center">
+              <h1 className="text-[1.55rem] font-bold uppercase tracking-wider mb-0.5 whitespace-nowrap">SRI VENKATESWARA JY SCHOOL</h1>
+              <h2 className="text-sm font-semibold mb-0.5">(IIT-JEE/NEET Foundation – Olympiads)</h2>
               <p className="text-xs">Opp. Hero Showroom, SVL Paradise Campus, Narasannapeta</p>
             </div>
           </div>
           
-          <div className="text-center mt-2 mb-2">
-             <h3 className="text-lg font-bold uppercase">{examName || 'EXAMINATION'}</h3>
+          <div className="text-center mt-1 mb-1">
+             <h3 className="text-base font-bold uppercase">{examName || 'EXAMINATION'}</h3>
           </div>
           
-          <div className="flex flex-col text-[11pt] font-medium mt-2 px-1 gap-1">
+          <div className="flex flex-col text-[10.5pt] font-medium px-1 gap-0.5">
             <div className="flex justify-between items-center">
               <div><span className="font-bold">Class:</span> {examSubject || '_______________'}</div>
               <div><span className="font-bold">Marks:</span> {time || '75'}</div>
