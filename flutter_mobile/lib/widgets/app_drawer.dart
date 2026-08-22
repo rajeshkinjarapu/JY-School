@@ -41,6 +41,7 @@ import '../screens/teacher_profile_screen.dart';
 import '../screens/student_profile_screen.dart';
 import '../screens/admin_attendance_dashboard.dart';
 import '../screens/examination_dashboard_screen.dart';
+import '../screens/main_layout.dart';
 
 class AppDrawer extends StatefulWidget {
   final String currentRoute;
@@ -83,9 +84,15 @@ class _AppDrawerState extends State<AppDrawer> {
     Navigator.of(context).pop(); // Close drawer
     if (widget.currentRoute == routeName) return; // Already on this screen
 
-    if (routeName == 'dashboard') {
+    // These routes correspond to the tabs in MainLayout's BottomNavigationBar
+    if (['dashboard', 'exams', 'fees', 'transport'].contains(routeName)) {
+      int index = 0;
+      if (routeName == 'exams') index = 1;
+      else if (routeName == 'fees') index = 2;
+      else if (routeName == 'transport') index = 3;
+
       Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (context) => screen),
+        MaterialPageRoute(builder: (context) => MainLayout(initialIndex: index)),
         (route) => false,
       );
     } else {
