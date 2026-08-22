@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Printer, Download, Receipt, FileText, CheckCircle, Smartphone, Calculator, Plus, Share2, Upload, Search, Users, MessageCircle, X, Copy, Eye, FileSpreadsheet, SlidersHorizontal, CheckSquare, Square } from 'lucide-react';
+import { Printer, Download, Receipt, FileText, CheckCircle, Smartphone, Calculator, Plus, Share2, Upload, Search, Users, MessageCircle, X, Copy, Eye, FileSpreadsheet, SlidersHorizontal, CheckSquare, Square, Trash2 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { toBlob } from 'html-to-image';
 import { shareFileNatively } from '../../utils/nativeShare';
@@ -28,6 +28,7 @@ interface ExportFilters {
     paidAmount: boolean;
     balance: boolean;
   };
+  customColumns: string[];
 }
 
 const COLUMN_LABELS: Record<string, string> = {
@@ -55,6 +56,7 @@ const DEFAULT_FILTERS: ExportFilters = {
     paidAmount: true,
     balance: true,
   },
+  customColumns: [],
 };
 
 const PAYMENT_FILTER_OPTIONS = [
@@ -75,12 +77,26 @@ interface ExportDialogProps {
 
 const ExportDialog: React.FC<ExportDialogProps> = ({ open, onClose, onExport, exportType, totalRows }) => {
   const [filters, setFilters] = useState<ExportFilters>(DEFAULT_FILTERS);
+  const [newCustomCol, setNewCustomCol] = useState('');
   if (!open) return null;
 
   const toggleColumn = (col: keyof ExportFilters['columns']) =>
     setFilters(f => ({ ...f, columns: { ...f.columns, [col]: !f.columns[col] } }));
 
-  const selectedColCount = Object.values(filters.columns).filter(Boolean).length;
+  const handleAddCustomCol = (e?: React.FormEvent) => {
+    e?.preventDefault();
+    const trimmed = newCustomCol.trim();
+    if (trimmed && !filters.customColumns.includes(trimmed)) {
+      setFilters(f => ({ ...f, customColumns: [...f.customColumns, trimmed] }));
+      setNewCustomCol('');
+    }
+  };
+
+  const handleRemoveCustomCol = (col: string) => {
+    setFilters(f => ({ ...f, customColumns: f.customColumns.filter(c => c !== col) }));
+  };
+
+  const selectedColCount = Object.values(filters.columns).filter(Boolean).length + filters.customColumns.length;
   const isPdf = exportType === 'pdf';
 
   return (
@@ -148,7 +164,7 @@ const ExportDialog: React.FC<ExportDialogProps> = ({ open, onClose, onExport, ex
               <CheckSquare className="w-4 h-4 text-emerald-500" />
               <h3 className="text-sm font-black text-gray-900">Select Columns to Export</h3>
               <span className="ml-auto text-xs font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
-                {selectedColCount} of {Object.keys(filters.columns).length} selected
+                {selectedColCount} of {Object.keys(filters.columns).length + filters.customColumns.length} selected
               </span>
             </div>
             <div className="grid grid-cols-2 gap-2">
@@ -163,6 +179,44 @@ const ExportDialog: React.FC<ExportDialogProps> = ({ open, onClose, onExport, ex
                 );
               })}
             </div>
+
+            {/* Custom Columns */}
+            {filters.customColumns.length > 0 && (
+              <div className="grid grid-cols-2 gap-2 mt-2">
+                {filters.customColumns.map((col, idx) => (
+                  <div key={idx} className="flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl border-2 border-purple-400 bg-purple-50">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <CheckSquare className="w-4 h-4 text-purple-500 shrink-0" />
+                      <span className="text-xs font-bold text-purple-700 truncate">{col}</span>
+                    </div>
+                    <button onClick={() => handleRemoveCustomCol(col)} className="text-gray-400 hover:text-red-500 transition-colors shrink-0">
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Add Custom Column Input */}
+            <form onSubmit={handleAddCustomCol} className="flex gap-2 mt-3">
+              <input
+                type="text"
+                value={newCustomCol}
+                onChange={e => setNewCustomCol(e.target.value)}
+                placeholder="Add custom column (e.g. Signature)..."
+                className="flex-1 px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-purple-400/30 focus:border-purple-400 transition-all"
+              />
+              <button
+                type="submit"
+                disabled={!newCustomCol.trim() || filters.customColumns.includes(newCustomCol.trim())}
+                className="px-3 py-2 bg-purple-600 text-white text-xs font-bold rounded-xl disabled:opacity-50 hover:bg-purple-700 transition-colors flex items-center gap-1 shrink-0"
+              >
+                <Plus className="w-3.5 h-3.5" /> Add
+              </button>
+            </form>
+            {filters.customColumns.length > 0 && (
+              <p className="text-xs text-gray-400 mt-1.5">Custom columns appear as empty columns (for manual fill-in).</p>
+            )}
           </div>
         </div>
 
@@ -329,7 +383,7 @@ export const StudentFeeDetailsTab: React.FC<StudentFeeDetailsProps> = ({ student
       try {
         const { default: jsPDF } = await import('jspdf');
         const { default: autoTable } = await import('jspdf-autotable');
-        const numCols = Object.values(cols).filter(Boolean).length;
+        const numCols = Object.values(cols).filter(Boolean).length + filters.customColumns.length;
         const orientation = numCols > 6 ? 'landscape' : 'portrait';
         const doc = new jsPDF({ orientation, unit: 'mm', format: 'a4' });
 
@@ -359,6 +413,8 @@ export const StudentFeeDetailsTab: React.FC<StudentFeeDetailsProps> = ({ student
         if (cols.totalFee) { headerRow.push('Total Fee'); colStyles[ci++] = { halign: 'right', cellWidth: 26 }; }
         if (cols.paidAmount) { headerRow.push('Paid'); colStyles[ci++] = { halign: 'right', cellWidth: 26 }; }
         if (cols.balance) { headerRow.push('Balance'); colStyles[ci++] = { halign: 'right', cellWidth: 26 }; }
+        // Custom columns
+        filters.customColumns.forEach(cc => { headerRow.push(cc); colStyles[ci++] = { cellWidth: 28 }; });
 
         const exportTableRows = exportRows.map((r, i) => {
           const row: any[] = [];
@@ -370,6 +426,8 @@ export const StudentFeeDetailsTab: React.FC<StudentFeeDetailsProps> = ({ student
           if (cols.totalFee) row.push(r.totalFee.toLocaleString('en-IN'));
           if (cols.paidAmount) row.push(r.paidAmount.toLocaleString('en-IN'));
           if (cols.balance) row.push(r.balance.toLocaleString('en-IN'));
+          // Custom columns — empty cells for manual fill-in
+          filters.customColumns.forEach(() => row.push(''));
           return row;
         });
 
@@ -434,6 +492,7 @@ export const StudentFeeDetailsTab: React.FC<StudentFeeDetailsProps> = ({ student
         if (cols.totalFee) headerRow.push('Total Fee');
         if (cols.paidAmount) headerRow.push('Paid');
         if (cols.balance) headerRow.push('Balance');
+        filters.customColumns.forEach(cc => headerRow.push(cc));
 
         const exportTableRows = exportRows.map((r, i) => {
           const row: any[] = [];
@@ -445,6 +504,7 @@ export const StudentFeeDetailsTab: React.FC<StudentFeeDetailsProps> = ({ student
           if (cols.totalFee) row.push(r.totalFee);
           if (cols.paidAmount) row.push(r.paidAmount);
           if (cols.balance) row.push(r.balance);
+          filters.customColumns.forEach(() => row.push(''));
           return row;
         });
 
