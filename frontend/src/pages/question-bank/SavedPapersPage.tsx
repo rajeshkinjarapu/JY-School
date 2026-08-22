@@ -156,6 +156,7 @@ const SavedPapersPage = () => {
         <head>
           <title>${paper.examName}</title>
           <style>
+            @page { margin: 12.7mm; size: A4; }
             body { font-family: Arial, sans-serif; padding: 40px; line-height: 1.6; }
             h1 { text-align: center; }
             .meta { text-align: center; font-style: italic; margin-bottom: 30px; border-bottom: 1px solid #ccc; padding-bottom: 10px; }
