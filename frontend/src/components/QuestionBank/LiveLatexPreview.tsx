@@ -251,7 +251,7 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
           flex-wrap: wrap;
         }
       `}</style>
-      <div className="pt-12 pb-12 px-10 lining-nums tabular-nums print:pt-12 print:pb-12">
+      <div className="pt-6 pb-10 px-10 lining-nums tabular-nums">
         
         {/* Header Section */}
         <div className="mb-3 border-b-2 border-black pb-2">

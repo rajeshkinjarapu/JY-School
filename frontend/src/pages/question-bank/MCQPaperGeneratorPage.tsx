@@ -164,14 +164,57 @@ export const MCQPaperGeneratorPage = () => {
   };
 
   const handlePrint = () => {
-    if (window.innerWidth <= 768 && mobileTab === 'editor') {
-      setMobileTab('preview');
-      setTimeout(() => {
-        window.print();
-      }, 300);
-    } else {
+    // Clone only the A4 paper content and print it in a new blank window.
+    // This bypasses ALL parent layout containers (overflow:hidden, height constraints, transforms).
+    const paperEl = document.getElementById('a4-preview-paper');
+    if (!paperEl) {
       window.print();
+      return;
     }
+
+    const printWindow = window.open('', '_blank', 'width=900,height=1200');
+    if (!printWindow) {
+      window.print();
+      return;
+    }
+
+    // Gather all stylesheets from current page (KaTeX, Tailwind, etc.)
+    const styleLinks = Array.from(document.querySelectorAll('link[rel="stylesheet"]'))
+      .map((link) => link.outerHTML)
+      .join('');
+    const styleTags = Array.from(document.querySelectorAll('style'))
+      .map((s) => `<style>${s.innerHTML}</style>`)
+      .join('');
+
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8" />
+          <title>Print</title>
+          ${styleLinks}
+          ${styleTags}
+          <style>
+            @page { margin: 10mm; size: A4; }
+            body { margin: 0; background: white; font-family: serif; }
+            #print-root { width: 210mm; margin: 0 auto; }
+          </style>
+        </head>
+        <body>
+          <div id="print-root">${paperEl.outerHTML}</div>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+
+    // Wait for fonts/images to load then print
+    printWindow.onload = () => {
+      setTimeout(() => {
+        printWindow.focus();
+        printWindow.print();
+        printWindow.close();
+      }, 500);
+    };
   };
 
   const toggleFullScreen = () => {
