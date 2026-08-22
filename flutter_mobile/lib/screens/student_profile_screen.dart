@@ -210,7 +210,12 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
           if (s2['id'] == null) return;
           final result = await Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => RecordFeePaymentScreen(student: s2, feeStructures: _feeStructures)),
+            MaterialPageRoute(builder: (context) => RecordFeePaymentScreen(
+              student: s2, 
+              feeStructures: _feeStructures,
+              payments: s2['feePayments'] ?? [],
+              discounts: s2['feeDiscounts'] ?? [],
+            )),
           );
           if (result == true) { setState(() => _isLoading = true); _fetchProfile(); }
         },

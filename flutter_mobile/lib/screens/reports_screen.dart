@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/api_service.dart';
 import '../widgets/app_drawer.dart';
+import 'finance_reports_screen.dart';
+import 'staff_attendance_report_screen.dart';
+import 'results_screen.dart';
 
 class ReportsScreen extends StatefulWidget {
   const ReportsScreen({super.key});
@@ -172,7 +175,6 @@ class _ReportsScreenState extends State<ReportsScreen> {
 
                 const SizedBox(height: 14),
 
-                // Fees Report
                 _buildReportCard(
                   icon: Icons.account_balance_wallet_rounded,
                   iconColor: const Color(0xFF4F46E5),
@@ -187,7 +189,6 @@ class _ReportsScreenState extends State<ReportsScreen> {
 
                 const SizedBox(height: 14),
 
-                // Students Roster
                 _buildReportCard(
                   icon: Icons.people_alt_rounded,
                   iconColor: const Color(0xFF0D9488),
@@ -207,35 +208,45 @@ class _ReportsScreenState extends State<ReportsScreen> {
 
                 const SizedBox(height: 24),
 
-                // Coming Soon section
-                Text('Coming Soon', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16, color: const Color(0xFF94A3B8))),
+                Text('Advanced Analytics', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16, color: const Color(0xFF1E293B))),
                 const SizedBox(height: 12),
 
-                _buildComingSoonCard(
+                _buildReportCard(
                   icon: Icons.trending_up_rounded,
                   iconColor: const Color(0xFF7C3AED),
+                  iconBg: const Color(0xFFF3E8FF),
                   title: 'FEE COLLECTION FORECASTING',
                   description: 'Cash flow analytics, collections vs outstanding dues, and monthly projections.',
-                  tag: 'Suggested',
-                  tagColor: const Color(0xFF7C3AED),
+                  onExcel: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const FinanceReportsScreen())),
+                  excelIcon: Icons.arrow_forward_ios_rounded,
+                  excelLabel: 'View',
+                  excelEnabled: true,
                 ),
-                const SizedBox(height: 10),
-                _buildComingSoonCard(
+                const SizedBox(height: 14),
+
+                _buildReportCard(
                   icon: Icons.person_pin_rounded,
                   iconColor: const Color(0xFFEA580C),
+                  iconBg: const Color(0xFFFFEDD5),
                   title: 'STAFF ATTENDANCE LEDGER',
                   description: 'Monthly staff attendance ledger with aggregate work days, leaves, and late records.',
-                  tag: 'Suggested',
-                  tagColor: const Color(0xFFEA580C),
+                  onExcel: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const StaffAttendanceReportScreen())),
+                  excelIcon: Icons.arrow_forward_ios_rounded,
+                  excelLabel: 'View',
+                  excelEnabled: true,
                 ),
-                const SizedBox(height: 10),
-                _buildComingSoonCard(
+                const SizedBox(height: 14),
+
+                _buildReportCard(
                   icon: Icons.bar_chart_rounded,
                   iconColor: const Color(0xFFE11D48),
+                  iconBg: const Color(0xFFFFE4E6),
                   title: 'COMPARATIVE CLASS PERFORMANCE',
                   description: 'Detailed comparative graph and report to analyze subject metrics across classes.',
-                  tag: 'Suggested',
-                  tagColor: const Color(0xFFE11D48),
+                  onExcel: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ResultsScreen())),
+                  excelIcon: Icons.arrow_forward_ios_rounded,
+                  excelLabel: 'View',
+                  excelEnabled: true,
                 ),
 
                 const SizedBox(height: 24),
@@ -251,10 +262,12 @@ class _ReportsScreenState extends State<ReportsScreen> {
     required String title,
     required String description,
     Widget? filterWidget,
-    required VoidCallback? onExcel,
-    required VoidCallback? onPdf,
-    required bool excelEnabled,
-    required bool pdfEnabled,
+    VoidCallback? onExcel,
+    VoidCallback? onPdf,
+    bool excelEnabled = false,
+    bool pdfEnabled = false,
+    IconData excelIcon = Icons.table_chart_rounded,
+    String excelLabel = 'Excel',
   }) {
     return Container(
       decoration: BoxDecoration(
@@ -300,19 +313,20 @@ class _ReportsScreenState extends State<ReportsScreen> {
                         border: Border.all(color: excelEnabled ? const Color(0xFF10B981).withOpacity(0.3) : const Color(0xFFE2E8F0)),
                       ),
                       child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                        Icon(Icons.table_view_rounded, size: 15, color: excelEnabled ? const Color(0xFF10B981) : const Color(0xFFCBD5E1)),
+                        Icon(excelIcon, size: 15, color: excelEnabled ? const Color(0xFF10B981) : const Color(0xFFCBD5E1)),
                         const SizedBox(width: 6),
-                        Text('Excel', style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.bold, color: excelEnabled ? const Color(0xFF10B981) : const Color(0xFFCBD5E1))),
+                        Text(excelLabel, style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.bold, color: excelEnabled ? const Color(0xFF10B981) : const Color(0xFFCBD5E1))),
                       ]),
                     ),
                   ),
                 ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: GestureDetector(
-                    onTap: pdfEnabled ? onPdf : null,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 11),
+                if (onPdf != null) ...[
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: pdfEnabled ? onPdf : null,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 11),
                       decoration: BoxDecoration(
                         gradient: pdfEnabled
                             ? const LinearGradient(colors: [Color(0xFF6366F1), Color(0xFF4F46E5)])
@@ -327,8 +341,9 @@ class _ReportsScreenState extends State<ReportsScreen> {
                         Text('PDF Report', style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.bold, color: pdfEnabled ? Colors.white : const Color(0xFFCBD5E1))),
                       ]),
                     ),
+                    ),
                   ),
-                ),
+                ],
               ],
             ),
           ],

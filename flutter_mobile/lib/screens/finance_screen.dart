@@ -14,7 +14,8 @@ import 'fee_installment_report_screen.dart';
 
 class FinanceScreen extends StatefulWidget {
   final int initialIndex;
-  const FinanceScreen({super.key, this.initialIndex = 0});
+  final bool showOnlyTransactions;
+  const FinanceScreen({super.key, this.initialIndex = 0, this.showOnlyTransactions = false});
 
   @override
   State<FinanceScreen> createState() => _FinanceScreenState();
@@ -194,24 +195,24 @@ class _FinanceScreenState extends State<FinanceScreen> with SingleTickerProvider
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
-      drawer: const AppDrawer(currentRoute: 'fees'),
+      drawer: widget.showOnlyTransactions ? null : const AppDrawer(currentRoute: 'fees'),
       appBar: AppBar(
         title: Text(
-          'Finance Dashboard',
+          widget.showOnlyTransactions ? 'Fee Transactions' : 'Finance Dashboard',
           style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white),
         ),
         iconTheme: const IconThemeData(color: Colors.white),
         flexibleSpace: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
-              colors: [Color(0xFF2E2A66), Color(0xFF222854)],
+              colors: [Color(0xFF4F46E5), Color(0xFF6366F1), Color(0xFF8B5CF6)], // Vibrant gradient
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
           ),
         ),
         elevation: 0,
-        bottom: TabBar(
+        bottom: widget.showOnlyTransactions ? null : TabBar(
           controller: _tabController,
           labelColor: Colors.white,
           unselectedLabelColor: Colors.white70,
@@ -252,15 +253,17 @@ class _FinanceScreenState extends State<FinanceScreen> with SingleTickerProvider
                     ),
                   ),
                 )
-              : TabBarView(
-                  controller: _tabController,
-                  children: [
-                    _buildOverviewTab(),
-                    _buildTransactionsTab(),
-                    _buildStructuresTab(),
-                    _buildRemindersTab(),
-                  ],
-                ),
+              : widget.showOnlyTransactions
+                  ? _buildTransactionsTab()
+                  : TabBarView(
+                      controller: _tabController,
+                      children: [
+                        _buildOverviewTab(),
+                        _buildTransactionsTab(),
+                        _buildStructuresTab(),
+                        _buildRemindersTab(),
+                      ],
+                    ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (ctx) => const StudentFeeSearchScreen())),
         backgroundColor: const Color(0xFF6366F1),
@@ -593,8 +596,9 @@ class _FinanceScreenState extends State<FinanceScreen> with SingleTickerProvider
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: const Color(0xFFE2E8F0)),
               boxShadow: [
-                BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10, offset: const Offset(0, 2)),
+                BoxShadow(color: const Color(0xFF6366F1).withOpacity(0.06), blurRadius: 10, offset: const Offset(0, 4)),
               ],
             ),
             child: TextField(
@@ -608,7 +612,7 @@ class _FinanceScreenState extends State<FinanceScreen> with SingleTickerProvider
               decoration: InputDecoration(
                 hintText: 'Search by student name or ID...',
                 hintStyle: GoogleFonts.poppins(color: const Color(0xFF94A3B8), fontSize: 14),
-                prefixIcon: const Icon(Icons.search_rounded, color: Color(0xFF64748B)),
+                prefixIcon: const Icon(Icons.search_rounded, color: Color(0xFF6366F1)),
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
                 filled: true,
                 fillColor: Colors.transparent,
@@ -689,10 +693,21 @@ class _FinanceScreenState extends State<FinanceScreen> with SingleTickerProvider
 
   Widget _buildTransactionItemCard(dynamic payment) {
     final student = payment['student'] ?? {};
-    final studentName = '${student['firstName'] ?? ''} ${student['lastName'] ?? ''}'.trim();
-    final initials = studentName.isNotEmpty ? studentName.substring(0, 1).toUpperCase() : '?';
+    final user = student['user'] ?? {};
+    
+    String studentName = (user['name'] ?? '').toString().trim();
+    if (studentName.isEmpty) {
+       studentName = '${student['firstName'] ?? ''} ${student['lastName'] ?? ''}'.trim();
+    }
+    if (studentName.isEmpty) {
+       studentName = 'Unknown Student';
+    }
+    
+    final initials = studentName != 'Unknown Student' ? studentName.substring(0, 1).toUpperCase() : '?';
+    final photoUrl = user['photoUrl'];
+    
     final classInfo = student['class'] ?? {};
-    final className = '${classInfo['className'] ?? ''} ${classInfo['section'] ?? ''}'.trim();
+    final className = '${classInfo['name'] ?? classInfo['className'] ?? ''} ${classInfo['section'] ?? ''}'.trim();
 
     final structure = payment['feeStructure'] ?? {};
     final structureName = structure['name'] ?? 'Fee Payment';
@@ -722,47 +737,90 @@ class _FinanceScreenState extends State<FinanceScreen> with SingleTickerProvider
 
     final currencyFormat = NumberFormat.currency(symbol: '₹', decimalDigits: 0, locale: 'en_IN');
 
+    // Avatar gradients
+    final List<List<Color>> avatarGradients = [
+      [const Color(0xFF2DD4BF), const Color(0xFF10B981)], // Teal
+      [const Color(0xFFFB7185), const Color(0xFFE11D48)], // Rose
+      [const Color(0xFFFBBF24), const Color(0xFFF97316)], // Amber
+      [const Color(0xFF22D3EE), const Color(0xFF3B82F6)], // Sky
+      [const Color(0xFFA78BFA), const Color(0xFF7C3AED)], // Purple
+      [const Color(0xFFF472B6), const Color(0xFFDB2777)], // Pink
+    ];
+    final colorIdx = studentName.isNotEmpty ? studentName.codeUnitAt(0) % avatarGradients.length : 0;
+    final gradientColors = avatarGradients[colorIdx];
+    final baseColor = gradientColors[0];
+
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 12, offset: const Offset(0, 4)),
+          BoxShadow(color: baseColor.withOpacity(0.08), blurRadius: 20, offset: const Offset(0, 8)),
         ],
-        border: Border.all(color: const Color(0xFFF1F5F9)),
+        border: Border.all(color: baseColor.withOpacity(0.15), width: 1.5),
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header Section with Student Info
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [baseColor.withOpacity(0.05), Colors.white],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(18)),
+            ),
+            child: Row(
               children: [
-                CircleAvatar(
-                  radius: 20,
-                  backgroundColor: const Color(0xFFEEF2FF),
-                  child: Text(initials, style: GoogleFonts.outfit(color: const Color(0xFF6366F1), fontWeight: FontWeight.bold)),
+                Container(
+                  width: 50,
+                  height: 50,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(colors: gradientColors, begin: Alignment.topLeft, end: Alignment.bottomRight),
+                    shape: BoxShape.circle,
+                    boxShadow: [BoxShadow(color: gradientColors[1].withOpacity(0.3), blurRadius: 8, offset: const Offset(0, 4))],
+                    border: Border.all(color: Colors.white, width: 2),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(25),
+                    child: (photoUrl != null && photoUrl.toString().isNotEmpty)
+                        ? Image.network(
+                            ApiService.getImageUrl(photoUrl.toString()),
+                            fit: BoxFit.cover,
+                            headers: const {'ngrok-skip-browser-warning': '69420'},
+                            errorBuilder: (c, e, s) => Center(child: Text(initials, style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 20))),
+                          )
+                        : Center(child: Text(initials, style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 20))),
+                  ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 14),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         studentName,
-                        style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold, color: const Color(0xFF1E293B)),
+                        style: GoogleFonts.outfit(fontSize: 17, fontWeight: FontWeight.bold, color: const Color(0xFF1E293B)),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      const SizedBox(height: 2),
+                      const SizedBox(height: 4),
                       Row(
                         children: [
-                          Icon(Icons.class_rounded, size: 12, color: const Color(0xFF64748B)),
-                          const SizedBox(width: 4),
-                          Text(
-                            className.isNotEmpty ? className : 'Unknown Class',
-                            style: GoogleFonts.poppins(fontSize: 12, color: const Color(0xFF64748B)),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: baseColor.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              className.isNotEmpty ? className : 'Unknown Class',
+                              style: GoogleFonts.poppins(fontSize: 10, fontWeight: FontWeight.bold, color: baseColor),
+                            ),
                           ),
                         ],
                       )
@@ -770,16 +828,16 @@ class _FinanceScreenState extends State<FinanceScreen> with SingleTickerProvider
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
                     color: statusBgColor,
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(10),
                   ),
                   child: Text(
                     status,
                     style: GoogleFonts.poppins(
                       fontSize: 10,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w800,
                       color: statusTextColor,
                       letterSpacing: 0.5,
                     ),
@@ -787,70 +845,96 @@ class _FinanceScreenState extends State<FinanceScreen> with SingleTickerProvider
                 )
               ],
             ),
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF8FAFC),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: const Color(0xFFE2E8F0)),
-              ),
-              child: Column(
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        structureName,
-                        style: GoogleFonts.poppins(fontSize: 13, color: const Color(0xFF475569), fontWeight: FontWeight.w500),
-                      ),
-                      Text(
-                        currencyFormat.format(amountPaid),
-                        style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: const Color(0xFF6366F1)),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  const Divider(height: 1, color: Color(0xFFE2E8F0)),
-                  const SizedBox(height: 12),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Row(
-                        children: [
-                          const Icon(Icons.calendar_today_rounded, size: 14, color: Color(0xFF94A3B8)),
-                          const SizedBox(width: 6),
-                          Text(dateFormatted, style: GoogleFonts.poppins(fontSize: 12, color: const Color(0xFF64748B))),
-                        ],
-                      ),
-                      Row(
-                        children: [
-                          const Icon(Icons.payment_rounded, size: 14, color: Color(0xFF94A3B8)),
-                          const SizedBox(width: 6),
-                          Text(method, style: GoogleFonts.poppins(fontSize: 12, color: const Color(0xFF64748B))),
-                        ],
-                      ),
-                    ],
-                  ),
-                ],
+          ),
+          // Amount and Details Section
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              border: const Border(
+                top: BorderSide(color: Color(0xFFF1F5F9)),
+                bottom: BorderSide(color: Color(0xFFF1F5F9)),
               ),
             ),
-            if (!isPaid || true) ...[
-              const SizedBox(height: 12),
-              Row(
+            child: Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        structureName,
+                        style: GoogleFonts.poppins(fontSize: 14, color: const Color(0xFF475569), fontWeight: FontWeight.w600),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    Text(
+                      currencyFormat.format(amountPaid),
+                      style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.bold, color: const Color(0xFF10B981)), // Green for money
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(Icons.calendar_today_rounded, size: 14, color: Color(0xFF94A3B8)),
+                        const SizedBox(width: 6),
+                        Text(dateFormatted, style: GoogleFonts.poppins(fontSize: 12, color: const Color(0xFF64748B), fontWeight: FontWeight.w500)),
+                      ],
+                    ),
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(color: const Color(0xFFE2E8F0)),
+                          ),
+                          child: Icon(
+                            method == 'UPI' || method == 'ONLINE' ? Icons.account_balance_wallet_rounded : Icons.money_rounded,
+                            size: 12,
+                            color: const Color(0xFF64748B),
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Text(method, style: GoogleFonts.poppins(fontSize: 12, color: const Color(0xFF64748B), fontWeight: FontWeight.w600)),
+                      ],
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          // Action Buttons Section
+          if (!isPaid || true)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.vertical(bottom: Radius.circular(18)),
+              ),
+              child: Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   if (!isPaid)
-                    TextButton.icon(
+                    ElevatedButton.icon(
                       onPressed: () => _approvePayment(payment['id']?.toString() ?? ''),
-                      icon: const Icon(Icons.check_circle_outline, size: 18, color: Color(0xFF10B981)),
-                      label: Text('Approve', style: GoogleFonts.poppins(fontSize: 13, color: const Color(0xFF10B981))),
-                      style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      icon: const Icon(Icons.check_circle_rounded, size: 18),
+                      label: Text('Approve', style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.bold)),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF10B981),
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                       ),
                     ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 10),
                   TextButton.icon(
                     onPressed: () async {
                       try {
@@ -867,14 +951,16 @@ class _FinanceScreenState extends State<FinanceScreen> with SingleTickerProvider
                         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Failed to download receipt.')));
                       }
                     },
-                    icon: const Icon(Icons.receipt_long_rounded, size: 18, color: Color(0xFF6366F1)),
-                    label: Text('Receipt', style: GoogleFonts.poppins(fontSize: 13, color: const Color(0xFF6366F1))),
+                    icon: const Icon(Icons.receipt_long_rounded, size: 18),
+                    label: Text('Receipt', style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.bold)),
                     style: TextButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      foregroundColor: const Color(0xFF6366F1),
+                      backgroundColor: const Color(0xFFEEF2FF),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 10),
                   TextButton.icon(
                     onPressed: () {
                       showDialog(
@@ -883,8 +969,12 @@ class _FinanceScreenState extends State<FinanceScreen> with SingleTickerProvider
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                           title: Row(
                             children: [
-                              const Icon(Icons.warning_amber_rounded, color: Colors.red),
-                              const SizedBox(width: 8),
+                              Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(color: const Color(0xFFFEF2F2), borderRadius: BorderRadius.circular(10)),
+                                child: const Icon(Icons.warning_rounded, color: Colors.red),
+                              ),
+                              const SizedBox(width: 12),
                               Text('Delete Payment', style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
                             ],
                           ),
@@ -895,7 +985,7 @@ class _FinanceScreenState extends State<FinanceScreen> with SingleTickerProvider
                           actions: [
                             TextButton(
                               onPressed: () => Navigator.pop(context), 
-                              child: Text('Cancel', style: GoogleFonts.poppins(color: const Color(0xFF64748B)))
+                              child: Text('Cancel', style: GoogleFonts.poppins(color: const Color(0xFF64748B), fontWeight: FontWeight.bold)),
                             ),
                             ElevatedButton(
                               onPressed: () {
@@ -906,25 +996,27 @@ class _FinanceScreenState extends State<FinanceScreen> with SingleTickerProvider
                                 backgroundColor: Colors.red,
                                 foregroundColor: Colors.white,
                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                elevation: 0,
                               ),
-                              child: Text('Delete', style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
+                              child: Text('Delete', style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
                             ),
                           ],
                         ),
                       );
                     },
-                    icon: const Icon(Icons.delete_outline_rounded, size: 18, color: Colors.redAccent),
-                    label: Text('Delete', style: GoogleFonts.poppins(fontSize: 13, color: Colors.redAccent)),
+                    icon: const Icon(Icons.delete_outline_rounded, size: 18),
+                    label: Text('Delete', style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.bold)),
                     style: TextButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      foregroundColor: Colors.red,
+                      backgroundColor: const Color(0xFFFEF2F2),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                     ),
                   ),
                 ],
-              )
-            ]
-          ],
-        ),
+              ),
+            ),
+        ],
       ),
     );
   }

@@ -351,7 +351,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget _buildProfileCard(String name, String role, String metaLabel, String metaValue) {
     return Container(
       margin: const EdgeInsets.fromLTRB(12, 12, 12, 12),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           colors: [Color(0xFF4C4296), Color(0xFF2E2A66)],
@@ -424,8 +424,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
               Navigator.push(context, MaterialPageRoute(builder: (context) => const ProfileScreen()));
             },
             child: Container(
-              width: 68,
-              height: 68,
+              width: 78,
+              height: 78,
               decoration: BoxDecoration(
                 color: Colors.white.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(18),
@@ -439,9 +439,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             ? _user!['photoUrl']
                             : '${ApiService.baseUrl}${_user!['photoUrl']}',
                         fit: BoxFit.cover,
-                        errorBuilder: (c, e, s) => Icon(Icons.person, color: Colors.white.withOpacity(0.7), size: 36),
+                        errorBuilder: (c, e, s) => Icon(Icons.person, color: Colors.white.withOpacity(0.7), size: 42),
                       )
-                    : Icon(Icons.person, color: Colors.white.withOpacity(0.7), size: 36),
+                    : Icon(Icons.person, color: Colors.white.withOpacity(0.7), size: 42),
               ),
             ),
           ),
@@ -698,7 +698,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           gradientStart: const Color(0xFFFF4E6A),
           gradientEnd: const Color(0xFFFF7286),
           onTap: () {
-            Navigator.push(context, MaterialPageRoute(builder: (context) => const FinanceScreen(initialIndex: 1)));
+            Navigator.push(context, MaterialPageRoute(builder: (context) => const FinanceScreen(initialIndex: 1, showOnlyTransactions: true)));
           },
         ),
         _buildUniversalCard(
@@ -709,7 +709,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           gradientStart: const Color(0xFF9E7AFF),
           gradientEnd: const Color(0xFFB193FF),
           onTap: () {
-            Navigator.push(context, MaterialPageRoute(builder: (context) => const RecordFeePaymentScreen()));
+            Navigator.push(context, MaterialPageRoute(builder: (context) => const StudentFeeSearchScreen()));
           },
         ),
         _buildUniversalCard(
@@ -1069,7 +1069,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             gradientStart: const Color(0xFFFF56A5),
             gradientEnd: const Color(0xFFFF7DBA),
             onTap: () {
-              Navigator.push(context, MaterialPageRoute(builder: (context) => const FinanceScreen()));
+              Navigator.push(context, MaterialPageRoute(builder: (context) => const StudentFeeSearchScreen()));
             },
           ),
           _buildAdminActionCard(

@@ -22,7 +22,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
 
   Future<void> _fetchConversations() async {
     setState(() => _isLoading = true);
-    final res = await ApiService.getChatConversations();
+    final res = await ApiService.getConversations();
     if (mounted) {
       setState(() {
         _isLoading = false;
@@ -323,7 +323,7 @@ class _ChatScreenState extends State<ChatScreen> {
                         color: Color(0xFF6366F1),
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(Icons.send_rounded, color: const Color(0xFF64748B), size: 20),
+                      child: const Icon(Icons.send_rounded, color: Colors.white, size: 20),
                     ),
                   ),
                 ],

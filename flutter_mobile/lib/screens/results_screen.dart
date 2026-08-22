@@ -285,57 +285,128 @@ class _ResultsScreenState extends State<ResultsScreen> {
   }
 
   Widget _buildResultsTable() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [BoxShadow(color: const Color(0xFF6366F1).withOpacity(0.08), blurRadius: 15, offset: const Offset(0, 5))],
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(20),
-          child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: DataTable(
-              headingRowColor: WidgetStateProperty.all(const Color(0xFFF8FAFC)),
-              columns: [
-                DataColumn(label: Text('Roll No', style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: const Color(0xFF475569)))),
-                DataColumn(label: Text('Student', style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: const Color(0xFF475569)))),
-                DataColumn(label: Text('Total', style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: const Color(0xFF475569)))),
-                DataColumn(label: Text('%', style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: const Color(0xFF475569)))),
-                DataColumn(label: Text('Grade', style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: const Color(0xFF475569)))),
-              ],
-              rows: _resultsData.map((res) {
-                final student = res['student'] ?? {};
-                final user = student['user'] ?? {};
-                final rollNo = student['rollNo'] ?? 'N/A';
-                final name = user['name'] ?? 'Unknown';
-                final total = res['totalMarksObtained']?.toString() ?? '0';
-                final percentage = res['percentage']?.toStringAsFixed(1) ?? '0.0';
-                final grade = res['grade'] ?? '-';
+    return ListView.builder(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      itemCount: _resultsData.length,
+      itemBuilder: (context, index) {
+        final res = _resultsData[index];
+        final student = res['student'] ?? {};
+        final user = student['user'] ?? {};
+        final rollNo = student['rollNo'] ?? 'N/A';
+        
+        String name = (user['name'] ?? '').toString().trim();
+        if (name.isEmpty) {
+           name = '${student['firstName'] ?? ''} ${student['lastName'] ?? ''}'.trim();
+        }
+        if (name.isEmpty) {
+           name = 'Unknown Student';
+        }
+        
+        final photoUrl = user['photoUrl'];
+        final initials = name != 'Unknown Student' ? name.substring(0, 1).toUpperCase() : '?';
+
+        final total = res['totalMarksObtained']?.toString() ?? '0';
+        final percentage = res['percentage'] != null ? (res['percentage'] as num).toStringAsFixed(1) : '0.0';
+        final grade = res['grade'] ?? '-';
+        
+        final gradeColor = _getGradeColor(grade);
+
+        // Avatar gradients
+        final List<List<Color>> avatarGradients = [
+          [const Color(0xFF2DD4BF), const Color(0xFF10B981)], // Teal
+          [const Color(0xFFFB7185), const Color(0xFFE11D48)], // Rose
+          [const Color(0xFFFBBF24), const Color(0xFFF97316)], // Amber
+          [const Color(0xFF22D3EE), const Color(0xFF3B82F6)], // Sky
+          [const Color(0xFFA78BFA), const Color(0xFF7C3AED)], // Purple
+          [const Color(0xFFF472B6), const Color(0xFFDB2777)], // Pink
+        ];
+        final colorIdx = name.isNotEmpty ? name.codeUnitAt(0) % avatarGradients.length : 0;
+        final gradientColors = avatarGradients[colorIdx];
+        final baseColor = gradientColors[0];
+
+        return Container(
+          margin: const EdgeInsets.only(bottom: 12),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(color: baseColor.withOpacity(0.08), blurRadius: 15, offset: const Offset(0, 5)),
+            ],
+            border: Border.all(color: baseColor.withOpacity(0.1), width: 1.5),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Row(
+              children: [
+                // Avatar
+                Container(
+                  width: 46,
+                  height: 46,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(colors: gradientColors, begin: Alignment.topLeft, end: Alignment.bottomRight),
+                    shape: BoxShape.circle,
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(23),
+                    child: (photoUrl != null && photoUrl.toString().isNotEmpty)
+                        ? Image.network(
+                            ApiService.getImageUrl(photoUrl.toString()),
+                            fit: BoxFit.cover,
+                            headers: const {'ngrok-skip-browser-warning': '69420'},
+                            errorBuilder: (c, e, s) => Center(child: Text(initials, style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18))),
+                          )
+                        : Center(child: Text(initials, style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18))),
+                  ),
+                ),
+                const SizedBox(width: 12),
                 
-                return DataRow(cells: [
-                  DataCell(Text(rollNo, style: GoogleFonts.poppins(fontWeight: FontWeight.w600, color: const Color(0xFF64748B)))),
-                  DataCell(Text(name, style: GoogleFonts.poppins(color: const Color(0xFF1E293B)))),
-                  DataCell(Text(total, style: GoogleFonts.poppins(fontWeight: FontWeight.w600, color: const Color(0xFF1E293B)))),
-                  DataCell(Text('$percentage%', style: GoogleFonts.poppins(color: const Color(0xFF1E293B)))),
-                  DataCell(
+                // Name & Roll No
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        name,
+                        style: GoogleFonts.outfit(fontSize: 15, fontWeight: FontWeight.bold, color: const Color(0xFF1E293B)),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Roll No: $rollNo',
+                        style: GoogleFonts.poppins(fontSize: 12, color: const Color(0xFF64748B), fontWeight: FontWeight.w500),
+                      ),
+                    ],
+                  ),
+                ),
+                
+                // Marks and Grade
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      'Total: $total | $percentage%',
+                      style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.w600, color: const Color(0xFF475569)),
+                    ),
+                    const SizedBox(height: 6),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
-                        color: _getGradeColor(grade).withOpacity(0.15),
+                        color: gradeColor.withOpacity(0.15),
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: Text(grade, style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: _getGradeColor(grade))),
+                      child: Text(
+                        'Grade $grade',
+                        style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 12, color: gradeColor),
+                      ),
                     ),
-                  ),
-                ]);
-              }).toList(),
+                  ],
+                ),
+              ],
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }

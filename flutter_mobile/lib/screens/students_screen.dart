@@ -161,149 +161,162 @@ class _StudentsScreenState extends State<StudentsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF1F5F9), // Slight gray background
+      backgroundColor: const Color(0xFFF4F7FE), // Premium soft blue-gray background
       drawer: const AppDrawer(currentRoute: 'students'),
       appBar: AppBar(
-        title: const Text('Students Directory', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-        backgroundColor: const Color(0xFF4F46E5),
+        title: Text('Students Directory', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 22)),
+        backgroundColor: Colors.transparent,
         foregroundColor: Colors.white,
         elevation: 0,
         flexibleSpace: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
-              colors: [Color(0xFF4F46E5), Color(0xFF6366F1)],
+              colors: [Color(0xFF6366F1), Color(0xFF8B5CF6), Color(0xFFD946EF)], // Vibrant multi-stop gradient
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
           ),
         ),
         actions: [
-          IconButton(
-            icon: Container(
-              padding: const EdgeInsets.all(6),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.18),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: const Icon(Icons.person_add_rounded, size: 18),
+          Container(
+            margin: const EdgeInsets.only(right: 12),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.white.withOpacity(0.3)),
             ),
-            onPressed: () async {
-              final result = await Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const AddStudentScreen()),
-              );
-              if (result == true) {
-                _fetchStudents(_selectedClassId, _searchQuery);
-              }
-            },
+            child: IconButton(
+              icon: const Icon(Icons.person_add_rounded, size: 22, color: Colors.white),
+              onPressed: () async {
+                final result = await Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const AddStudentScreen()),
+                );
+                if (result == true) {
+                  _fetchStudents(_selectedClassId, _searchQuery);
+                }
+              },
+            ),
           ),
-          const SizedBox(width: 8),
         ],
       ),
       body: Column(
         children: [
-          // Gradient header extension + filters
-          Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Color(0xFF4F46E5), Color(0xFF6366F1)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-              child: Container(
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(18),
-                  boxShadow: [
-                    BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 16, offset: const Offset(0, 6))
-                  ],
+          // Sleek Header with floating search/filter card
+          Stack(
+            children: [
+              Container(
+                height: 60,
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Color(0xFF6366F1), Color(0xFF8B5CF6), Color(0xFFD946EF)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.only(
+                    bottomLeft: Radius.circular(32),
+                    bottomRight: Radius.circular(32),
+                  ),
                 ),
-                child: Column(
-                  children: [
-                    if (_classes.isNotEmpty)
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 10, 16, 20),
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(24),
+                    boxShadow: [
+                      BoxShadow(color: const Color(0xFF6366F1).withOpacity(0.15), blurRadius: 24, offset: const Offset(0, 8)),
+                    ],
+                  ),
+                  child: Column(
+                    children: [
+                      if (_classes.isNotEmpty)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF8FAFC),
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(color: const Color(0xFFE2E8F0)),
+                          ),
+                          child: DropdownButtonHideUnderline(
+                            child: DropdownButton<String>(
+                              isExpanded: true,
+                              value: _selectedClassId,
+                              hint: Text('All Classes', style: GoogleFonts.poppins(color: const Color(0xFF64748B), fontWeight: FontWeight.w500)),
+                              icon: const Icon(Icons.keyboard_arrow_down_rounded, color: Color(0xFF6366F1)),
+                              items: _classes.map<DropdownMenuItem<String>>((c) {
+                                final className = '${c['name']} ${c['section'] ?? ''}'.trim();
+                                return DropdownMenuItem<String>(
+                                  value: c['id'],
+                                  child: Text(className, style: GoogleFonts.poppins(color: const Color(0xFF1E293B), fontWeight: FontWeight.bold)),
+                                );
+                              }).toList(),
+                              onChanged: (value) {
+                                if (value != null && value != _selectedClassId) {
+                                  setState(() { _selectedClassId = value; });
+                                  _fetchStudents(value, _searchQuery);
+                                }
+                              },
+                            ),
+                          ),
+                        ),
+                      const SizedBox(height: 12),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 14),
+                        height: 50,
                         decoration: BoxDecoration(
                           color: const Color(0xFFF8FAFC),
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(14),
                           border: Border.all(color: const Color(0xFFE2E8F0)),
                         ),
-                        child: DropdownButtonHideUnderline(
-                          child: DropdownButton<String>(
-                            isExpanded: true,
-                            value: _selectedClassId,
-                            hint: Text('All Classes', style: GoogleFonts.poppins(color: const Color(0xFF64748B))),
-                            icon: const Icon(Icons.keyboard_arrow_down_rounded, color: Color(0xFF64748B)),
-                            items: _classes.map<DropdownMenuItem<String>>((c) {
-                              final className = '${c['name']} ${c['section'] ?? ''}'.trim();
-                              return DropdownMenuItem<String>(
-                                value: c['id'],
-                                child: Text(className, style: GoogleFonts.poppins(color: const Color(0xFF1E293B), fontWeight: FontWeight.w500)),
-                              );
-                            }).toList(),
-                            onChanged: (value) {
-                              if (value != null && value != _selectedClassId) {
-                                setState(() { _selectedClassId = value; });
-                                _fetchStudents(value, _searchQuery);
-                              }
-                            },
+                        child: TextField(
+                          onChanged: _runSearch,
+                          style: GoogleFonts.poppins(fontSize: 14),
+                          decoration: InputDecoration(
+                            hintText: 'Search by name or roll...',
+                            hintStyle: GoogleFonts.poppins(color: const Color(0xFF94A3B8)),
+                            prefixIcon: const Icon(Icons.search_rounded, color: Color(0xFF94A3B8)),
+                            border: InputBorder.none,
+                            contentPadding: const EdgeInsets.symmetric(vertical: 15),
                           ),
                         ),
                       ),
-                    const SizedBox(height: 10),
-                    Container(
-                      height: 46,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF8FAFC),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: const Color(0xFFE2E8F0)),
-                      ),
-                      child: TextField(
-                        style: const TextStyle(color: Color(0xFF1E293B)),
-                        decoration: InputDecoration(
-                          hintText: 'Search by name or roll...',
-                          hintStyle: GoogleFonts.poppins(color: const Color(0xFF94A3B8), fontSize: 13),
-                          prefixIcon: const Icon(Icons.search_rounded, color: Color(0xFF94A3B8)),
-                          border: InputBorder.none,
-                          contentPadding: const EdgeInsets.symmetric(vertical: 12),
-                        ),
-                        onChanged: _runSearch,
-                      ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
+            ],
+          ),
+          
+          // Student List Header
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+            child: Row(
+              children: [
+                Text(
+                  '${_filteredStudents.length} Students',
+                  style: GoogleFonts.poppins(
+                    color: const Color(0xFF64748B),
+                    fontWeight: FontWeight.w700,
+                    fontSize: 14,
+                  ),
+                ),
+              ],
             ),
           ),
-          // Count bar
-          if (!_isLoading && _filteredStudents.isNotEmpty)
-            Container(
-              color: const Color(0xFFF1F5F9),
-              padding: const EdgeInsets.fromLTRB(20, 12, 20, 4),
-              child: Row(
-                children: [
-                  Text(
-                    '${_filteredStudents.length} students',
-                    style: GoogleFonts.poppins(color: const Color(0xFF64748B), fontSize: 12, fontWeight: FontWeight.w600),
-                  ),
-                ],
-              ),
-            ),
-          // List
+          
+          // Student List
           Expanded(
             child: _isLoading
-                ? const Center(child: CircularProgressIndicator(color: Color(0xFF6366F1)))
+                ? const Center(child: CircularProgressIndicator(color: Color(0xFF8B5CF6)))
                 : _filteredStudents.isEmpty
                     ? _buildEmptyState()
                     : RefreshIndicator(
-                        color: const Color(0xFF6366F1),
+                        color: const Color(0xFF8B5CF6),
                         onRefresh: () => _fetchStudents(_selectedClassId, _searchQuery),
                         child: ListView.builder(
-                          padding: const EdgeInsets.only(left: 16, right: 16, bottom: 24, top: 8),
+                          padding: const EdgeInsets.only(left: 16, right: 16, bottom: 24, top: 4),
                           itemCount: _filteredStudents.length,
                           itemBuilder: (context, index) {
                             return _buildStudentCard(_filteredStudents[index], index);
@@ -326,32 +339,37 @@ class _StudentsScreenState extends State<StudentsScreen> {
     final classLabel = [className, section].where((s) => s.isNotEmpty).join('-');
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 10),
+      margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(20),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 3))
+          BoxShadow(color: const Color(0xFF6366F1).withOpacity(0.06), blurRadius: 12, offset: const Offset(0, 4))
         ],
       ),
       child: Material(
         color: Colors.transparent,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(20),
         child: InkWell(
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(20),
           onTap: () {
             Navigator.push(context, MaterialPageRoute(builder: (context) => StudentProfileScreen(student: student)));
           },
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            padding: const EdgeInsets.all(12),
             child: Row(
               children: [
-                // Serial number
-                SizedBox(
-                  width: 28,
+                // Minimal Serial Number
+                Container(
+                  width: 30,
+                  alignment: Alignment.center,
                   child: Text(
-                    '${index + 1}.',
-                    style: GoogleFonts.poppins(color: const Color(0xFFCBD5E1), fontSize: 12, fontWeight: FontWeight.w700),
+                    '${index + 1}',
+                    style: GoogleFonts.outfit(
+                      color: const Color(0xFFCBD5E1),
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
                 ),
                 _buildAvatar(name, photoUrl),
@@ -362,28 +380,28 @@ class _StudentsScreenState extends State<StudentsScreen> {
                     children: [
                       Text(
                         name,
-                        style: GoogleFonts.poppins(color: const Color(0xFF1E293B), fontSize: 14.5, fontWeight: FontWeight.w700),
+                        style: GoogleFonts.poppins(color: const Color(0xFF1E293B), fontSize: 15, fontWeight: FontWeight.bold),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      const SizedBox(height: 3),
+                      const SizedBox(height: 4),
                       Row(
                         children: [
                           Text(
                             'Roll: $rollNo',
-                            style: GoogleFonts.poppins(color: const Color(0xFF94A3B8), fontSize: 11.5),
+                            style: GoogleFonts.poppins(color: const Color(0xFF64748B), fontSize: 12),
                           ),
                           if (classLabel.isNotEmpty) ...[
-                            const SizedBox(width: 8),
+                            const SizedBox(width: 10),
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                               decoration: BoxDecoration(
-                                color: const Color(0xFFEEF2FF),
-                                borderRadius: BorderRadius.circular(6),
+                                gradient: const LinearGradient(colors: [Color(0xFF8B5CF6), Color(0xFFD946EF)]),
+                                borderRadius: BorderRadius.circular(8),
                               ),
                               child: Text(
                                 classLabel,
-                                style: GoogleFonts.poppins(color: const Color(0xFF6366F1), fontSize: 10, fontWeight: FontWeight.w700),
+                                style: GoogleFonts.poppins(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 0.5),
                               ),
                             ),
                           ],
@@ -392,18 +410,25 @@ class _StudentsScreenState extends State<StudentsScreen> {
                     ],
                   ),
                 ),
-                // Phone button
+                // Premium Phone Button
                 Container(
-                  width: 36,
-                  height: 36,
-                  margin: const EdgeInsets.only(right: 6),
+                  width: 40,
+                  height: 40,
+                  margin: const EdgeInsets.only(right: 4),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFDCFCE7),
-                    borderRadius: BorderRadius.circular(10),
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF22C55E), Color(0xFF16A34A)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(color: const Color(0xFF22C55E).withOpacity(0.3), blurRadius: 8, offset: const Offset(0, 3)),
+                    ],
                   ),
                   child: IconButton(
                     padding: EdgeInsets.zero,
-                    icon: const Icon(Icons.phone_rounded, color: Color(0xFF16A34A), size: 18),
+                    icon: const Icon(Icons.phone_rounded, color: Colors.white, size: 20),
                     onPressed: () async {
                       final phone = student['parentPhone'] ?? student['parent']?['phone'] ?? student['parent']?['user']?['phone'] ?? '';
                       if (phone.isNotEmpty) {
@@ -423,7 +448,7 @@ class _StudentsScreenState extends State<StudentsScreen> {
                     },
                   ),
                 ),
-                const Icon(Icons.chevron_right_rounded, size: 18, color: Color(0xFFCBD5E1)),
+                const Icon(Icons.chevron_right_rounded, size: 24, color: Color(0xFFCBD5E1)),
               ],
             ),
           ),
@@ -437,11 +462,21 @@ class _StudentsScreenState extends State<StudentsScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.search_off_rounded, size: 60, color: const Color(0xFF94A3B8).withOpacity(0.5)),
-          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(color: const Color(0xFF8B5CF6).withOpacity(0.1), blurRadius: 20, offset: const Offset(0, 10)),
+              ],
+            ),
+            child: const Icon(Icons.search_off_rounded, size: 50, color: Color(0xFF8B5CF6)),
+          ),
+          const SizedBox(height: 24),
           Text(
-            _searchQuery.isNotEmpty ? 'No students found matching ""' : 'No students found in this class.',
-            style: GoogleFonts.poppins(color: const Color(0xFF64748B), fontSize: 14),
+            _searchQuery.isNotEmpty ? 'No students match "$_searchQuery"' : 'No students found in this class.',
+            style: GoogleFonts.poppins(color: const Color(0xFF64748B), fontSize: 15, fontWeight: FontWeight.w500),
           ),
         ],
       ),

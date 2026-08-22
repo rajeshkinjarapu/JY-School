@@ -81,7 +81,7 @@ class _TeachersScreenState extends State<TeachersScreen> {
     if (phone.isEmpty) return;
     String cleanPhone = phone.replaceAll(RegExp(r'\D'), '');
     if (!cleanPhone.startsWith('91') && cleanPhone.length == 10) {
-      cleanPhone = '91';
+      cleanPhone = '91$cleanPhone';
     }
     final url = Uri.parse('https://wa.me/$cleanPhone');
     if (await canLaunchUrl(url)) {
@@ -298,17 +298,18 @@ class _TeachersScreenState extends State<TeachersScreen> {
                 InkWell(
                   onTap: () => _launchWhatsApp(phone),
                   borderRadius: BorderRadius.circular(24),
-                  child: Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF25D366).withOpacity(0.15),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Image.network(
-                      'https://upload.wikimedia.org/wikipedia/commons/thumb/6/6b/WhatsApp.svg/512px-WhatsApp.svg.png',
-                      width: 24,
-                      height: 24,
-                      errorBuilder: (context, error, stackTrace) => const Icon(Icons.chat_rounded, color: Color(0xFF25D366), size: 24),
+                  child: Image.network(
+                    'https://upload.wikimedia.org/wikipedia/commons/thumb/6/6b/WhatsApp.svg/512px-WhatsApp.svg.png',
+                    width: 36,
+                    height: 36,
+                    errorBuilder: (ctx, err, trace) => Container(
+                      width: 36,
+                      height: 36,
+                      decoration: const BoxDecoration(
+                        color: Color(0xFF25D366),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.chat_bubble_rounded, color: Colors.white, size: 20),
                     ),
                   ),
                 ),

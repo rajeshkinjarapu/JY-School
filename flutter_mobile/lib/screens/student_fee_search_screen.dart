@@ -18,6 +18,14 @@ class _StudentFeeSearchScreenState extends State<StudentFeeSearchScreen> {
   List<dynamic> _classes = [];
   String _selectedClass = 'ALL';
 
+  final List<List<Color>> avatarGradients = [
+    [const Color(0xFF6366F1), const Color(0xFF8B5CF6)], // Indigo to Purple
+    [const Color(0xFF10B981), const Color(0xFF34D399)], // Emerald to Teal
+    [const Color(0xFFF59E0B), const Color(0xFFFBBF24)], // Amber to Yellow
+    [const Color(0xFFEF4444), const Color(0xFFF87171)], // Red to Pink
+    [const Color(0xFF3B82F6), const Color(0xFF60A5FA)], // Blue to Sky
+  ];
+
   @override
   void initState() {
     super.initState();
@@ -74,19 +82,19 @@ class _StudentFeeSearchScreenState extends State<StudentFeeSearchScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF1F5F9), // Slight gray background
+      backgroundColor: const Color(0xFFF8FAFC),
       drawer: const AppDrawer(currentRoute: 'finance'),
       appBar: AppBar(
         leading: const BackButton(color: Colors.white),
         title: Text(
-          'Search Student',
+          'Collect Fee',
           style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 20, color: Colors.white),
         ),
         iconTheme: const IconThemeData(color: Colors.white),
         flexibleSpace: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
-              colors: [Color(0xFF6366F1), Color(0xFF4F46E5), Color(0xFF4338CA)],
+              colors: [Color(0xFF4F46E5), Color(0xFF7C3AED), Color(0xFFC026D3)],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
@@ -96,43 +104,79 @@ class _StudentFeeSearchScreenState extends State<StudentFeeSearchScreen> {
       ),
       body: Column(
         children: [
+          // Compact Gradient Header with Search and Filter
           Container(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
             decoration: const BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.vertical(bottom: Radius.circular(32)),
+              gradient: LinearGradient(
+                colors: [Color(0xFF4F46E5), Color(0xFF7C3AED), Color(0xFFC026D3)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.vertical(bottom: Radius.circular(24)),
               boxShadow: [
-                BoxShadow(color: Color(0x0A000000), blurRadius: 20, offset: Offset(0, 10))
+                BoxShadow(color: Colors.black26, blurRadius: 10, offset: Offset(0, 4))
               ],
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'Find Student for Fee Collection',
-                  style: GoogleFonts.outfit(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: const Color(0xFF64748B),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                // Class Dropdown
+                const SizedBox(height: 10),
+                // Compact Search Field
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                  height: 48,
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: const Color(0xFFE2E8F0)),
+                    borderRadius: BorderRadius.circular(14),
                     boxShadow: [
-                      BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 8, offset: const Offset(0, 2))
+                      BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10, offset: const Offset(0, 2))
                     ],
+                  ),
+                  child: TextField(
+                    controller: _searchController,
+                    onSubmitted: (_) => _fetchStudents(),
+                    style: GoogleFonts.poppins(color: const Color(0xFF1E293B), fontSize: 14, fontWeight: FontWeight.w500),
+                    decoration: InputDecoration(
+                      hintText: 'Search by Name or Adm No...',
+                      hintStyle: GoogleFonts.poppins(color: const Color(0xFF94A3B8), fontSize: 13),
+                      prefixIcon: const Icon(Icons.search_rounded, color: Color(0xFF6366F1), size: 20),
+                      suffixIcon: GestureDetector(
+                        onTap: _fetchStudents,
+                        child: Container(
+                          margin: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(colors: [Color(0xFF6366F1), Color(0xFF4F46E5)]),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: const Icon(Icons.arrow_forward_rounded, color: Colors.white, size: 18),
+                        ),
+                      ),
+                      filled: true,
+                      fillColor: Colors.white,
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(14),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                // Compact Class Dropdown
+                Container(
+                  height: 40,
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.white.withOpacity(0.3)),
                   ),
                   child: DropdownButtonHideUnderline(
                     child: DropdownButton<String>(
                       isExpanded: true,
                       value: _selectedClass,
-                      icon: const Icon(Icons.keyboard_arrow_down_rounded, color: Color(0xFF6366F1)),
+                      dropdownColor: const Color(0xFF4F46E5),
+                      icon: const Icon(Icons.keyboard_arrow_down_rounded, color: Colors.white, size: 20),
                       onChanged: (val) {
                         if (val != null) {
                           setState(() => _selectedClass = val);
@@ -142,49 +186,18 @@ class _StudentFeeSearchScreenState extends State<StudentFeeSearchScreen> {
                       items: [
                         DropdownMenuItem(
                           value: 'ALL',
-                          child: Text('All Classes', style: GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.w500, color: const Color(0xFF1E293B))),
+                          child: Text('All Classes', style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.white)),
                         ),
                         ..._classes.map((cls) {
                           return DropdownMenuItem(
                             value: cls['id'].toString(),
                             child: Text(
                               '${cls['name']} - ${cls['section']}',
-                              style: GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.w500, color: const Color(0xFF1E293B)),
+                              style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.white),
                             ),
                           );
                         }),
                       ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                
-                // Search Field
-                TextField(
-                  controller: _searchController,
-                  onSubmitted: (_) => _fetchStudents(),
-                  style: GoogleFonts.poppins(color: const Color(0xFF1E293B), fontWeight: FontWeight.w500),
-                  decoration: InputDecoration(
-                    hintText: 'Search by Name or Adm No...',
-                    hintStyle: GoogleFonts.poppins(color: const Color(0xFF94A3B8), fontSize: 14),
-                    prefixIcon: const Icon(Icons.search_rounded, color: Color(0xFF6366F1)),
-                    suffixIcon: Container(
-                      margin: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF6366F1),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: IconButton(
-                        icon: const Icon(Icons.arrow_forward_rounded, color: Colors.white, size: 20),
-                        onPressed: _fetchStudents,
-                      ),
-                    ),
-                    filled: true,
-                    fillColor: const Color(0xFFF8FAFC),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16),
-                      borderSide: BorderSide.none,
                     ),
                   ),
                 ),
@@ -202,7 +215,11 @@ class _StudentFeeSearchScreenState extends State<StudentFeeSearchScreen> {
                           children: [
                             Container(
                               padding: const EdgeInsets.all(24),
-                              decoration: BoxDecoration(color: Colors.white, shape: BoxShape.circle, boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 20)]),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                shape: BoxShape.circle,
+                                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 20)]
+                              ),
                               child: const Icon(Icons.person_search_rounded, size: 64, color: Color(0xFFCBD5E1)),
                             ),
                             const SizedBox(height: 20),
@@ -218,60 +235,62 @@ class _StudentFeeSearchScreenState extends State<StudentFeeSearchScreen> {
                         ),
                       )
                     : ListView.builder(
-                        padding: const EdgeInsets.all(16),
+                        padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
                         itemCount: _students.length,
                         itemBuilder: (context, index) {
                           final student = _students[index];
-                          final name = '${student['firstName'] ?? ''} ${student['lastName'] ?? ''}'.trim();
+                          final user = student['user'] ?? {};
+                          final name = user['name'] ?? 'Unknown';
                           final admissionNo = student['admissionNumber'] ?? 'N/A';
                           final cls = student['class'] != null ? '${student['class']['name']} - ${student['class']['section']}' : 'N/A';
-                          
+                          final photoUrl = user['photoUrl'];
+
+                          // Dynamic Color
+                          final colorIndex = index % avatarGradients.length;
+                          final gradient = avatarGradients[colorIndex];
+
                           return Container(
-                            margin: const EdgeInsets.only(bottom: 12),
+                            margin: const EdgeInsets.only(bottom: 16),
                             decoration: BoxDecoration(
                               color: Colors.white,
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(color: const Color(0xFFE2E8F0).withOpacity(0.5)),
+                              borderRadius: BorderRadius.circular(24),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(0.02),
-                                  blurRadius: 15,
-                                  offset: const Offset(0, 5),
+                                  color: gradient[0].withOpacity(0.08),
+                                  blurRadius: 20,
+                                  offset: const Offset(0, 8),
                                 )
                               ],
                             ),
                             child: Material(
                               color: Colors.transparent,
-                              borderRadius: BorderRadius.circular(20),
+                              borderRadius: BorderRadius.circular(24),
                               child: InkWell(
-                                borderRadius: BorderRadius.circular(20),
+                                borderRadius: BorderRadius.circular(24),
                                 onTap: () => _navigateToStudentFeeDetails(student),
                                 child: Padding(
                                   padding: const EdgeInsets.all(16),
                                   child: Row(
                                     children: [
+                                      // Avatar with Loading Fix
                                       Container(
-                                        width: 50,
-                                        height: 50,
+                                        width: 60,
+                                        height: 60,
                                         decoration: BoxDecoration(
-                                          color: const Color(0xFF6366F1).withOpacity(0.1),
+                                          gradient: LinearGradient(colors: [gradient[0].withOpacity(0.2), gradient[1].withOpacity(0.2)]),
                                           shape: BoxShape.circle,
-                                          image: student['user'] != null && student['user']['photoUrl'] != null
-                                              ? DecorationImage(image: NetworkImage(student['user']['photoUrl']), fit: BoxFit.cover)
-                                              : null,
                                         ),
-                                        child: (student['user'] == null || student['user']['photoUrl'] == null)
-                                            ? Center(
-                                                child: Text(
-                                                  name.isNotEmpty ? name[0].toUpperCase() : '?',
-                                                  style: GoogleFonts.outfit(
-                                                    color: const Color(0xFF6366F1),
-                                                    fontWeight: FontWeight.bold,
-                                                    fontSize: 20,
-                                                  ),
-                                                ),
-                                              )
-                                            : null,
+                                        child: ClipRRect(
+                                          borderRadius: BorderRadius.circular(30),
+                                          child: photoUrl != null && photoUrl.toString().isNotEmpty
+                                              ? Image.network(
+                                                  ApiService.getImageUrl(photoUrl.toString()),
+                                                  fit: BoxFit.cover,
+                                                  headers: const {'ngrok-skip-browser-warning': '69420'},
+                                                  errorBuilder: (context, error, stackTrace) => _buildInitials(name, gradient),
+                                                )
+                                              : _buildInitials(name, gradient),
+                                        ),
                                       ),
                                       const SizedBox(width: 16),
                                       Expanded(
@@ -282,44 +301,16 @@ class _StudentFeeSearchScreenState extends State<StudentFeeSearchScreen> {
                                               name,
                                               style: GoogleFonts.outfit(
                                                 color: const Color(0xFF1E293B),
-                                                fontSize: 16,
+                                                fontSize: 17,
                                                 fontWeight: FontWeight.bold,
                                               ),
                                             ),
-                                            const SizedBox(height: 6),
+                                            const SizedBox(height: 8),
                                             Row(
                                               children: [
-                                                Container(
-                                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                                                  decoration: BoxDecoration(
-                                                    color: const Color(0xFFF1F5F9),
-                                                    borderRadius: BorderRadius.circular(6),
-                                                  ),
-                                                  child: Text(
-                                                    'Adm: $admissionNo',
-                                                    style: GoogleFonts.poppins(
-                                                      color: const Color(0xFF64748B),
-                                                      fontSize: 10,
-                                                      fontWeight: FontWeight.w600,
-                                                    ),
-                                                  ),
-                                                ),
+                                                _buildTag('Adm: $admissionNo', const Color(0xFF64748B), const Color(0xFFF1F5F9)),
                                                 const SizedBox(width: 8),
-                                                Container(
-                                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                                                  decoration: BoxDecoration(
-                                                    color: const Color(0xFFEEF2FF),
-                                                    borderRadius: BorderRadius.circular(6),
-                                                  ),
-                                                  child: Text(
-                                                    'Class: $cls',
-                                                    style: GoogleFonts.poppins(
-                                                      color: const Color(0xFF6366F1),
-                                                      fontSize: 10,
-                                                      fontWeight: FontWeight.w600,
-                                                    ),
-                                                  ),
-                                                ),
+                                                _buildTag(cls, gradient[0], gradient[0].withOpacity(0.1)),
                                               ],
                                             ),
                                           ],
@@ -328,10 +319,10 @@ class _StudentFeeSearchScreenState extends State<StudentFeeSearchScreen> {
                                       Container(
                                         padding: const EdgeInsets.all(8),
                                         decoration: BoxDecoration(
-                                          color: const Color(0xFF6366F1).withOpacity(0.1),
-                                          shape: BoxShape.circle,
+                                          color: gradient[0].withOpacity(0.1),
+                                          borderRadius: BorderRadius.circular(12),
                                         ),
-                                        child: const Icon(Icons.arrow_forward_ios_rounded, color: Color(0xFF6366F1), size: 14),
+                                        child: Icon(Icons.chevron_right_rounded, color: gradient[0], size: 20),
                                       ),
                                     ],
                                   ),
@@ -343,6 +334,37 @@ class _StudentFeeSearchScreenState extends State<StudentFeeSearchScreen> {
                       ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildInitials(String name, List<Color> gradient) {
+    return Center(
+      child: Text(
+        name.isNotEmpty ? name[0].toUpperCase() : '?',
+        style: GoogleFonts.outfit(
+          color: gradient[0],
+          fontWeight: FontWeight.bold,
+          fontSize: 24,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTag(String text, Color textColor, Color bgColor) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Text(
+        text,
+        style: GoogleFonts.poppins(
+          color: textColor,
+          fontSize: 10,
+          fontWeight: FontWeight.w600,
+        ),
       ),
     );
   }

@@ -457,22 +457,6 @@ class _AppDrawerState extends State<AppDrawer> {
               ),
             ),
             
-            // Bottom Install App Button (As per screenshot)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-              child: ElevatedButton.icon(
-                onPressed: () {},
-                icon: const Icon(Icons.install_mobile, color: Colors.white, size: 18),
-                label: Text('Install App', style: GoogleFonts.outfit(color: Colors.white)),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF6366F1), // Indigo
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  elevation: 0,
-                ),
-              ),
-            ),
-
             // Profile Footer
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),

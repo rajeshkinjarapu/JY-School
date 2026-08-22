@@ -8,6 +8,7 @@ import 'results_screen.dart';
 import 'progress_card_screen.dart';
 import 'exam_status_screen.dart';
 import 'slip_test_screen.dart';
+import 'settings_screen.dart';
 import '../services/api_service.dart';
 import '../widgets/app_drawer.dart';
 
@@ -120,7 +121,7 @@ class ExaminationDashboardScreen extends StatelessWidget {
                     subtitle: 'Configurations',
                     icon: Icons.settings_outlined,
                     gradient: const LinearGradient(colors: [Color(0xFF64748B), Color(0xFF475569)]), // Slate
-                    onTap: () => _showPlaceholder(context, 'Settings'),
+                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const SettingsScreen())),
                   ),
                 ],
               ),
@@ -218,15 +219,6 @@ class ExaminationDashboardScreen extends StatelessWidget {
     );
   }
 
-  void _showPlaceholder(BuildContext context, String moduleName) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('$moduleName module is currently under development.', style: GoogleFonts.poppins()),
-        backgroundColor: const Color(0xFF6366F1),
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
-  }
 
   void _showSendSmsBottomSheet(BuildContext context) async {
     // Show a beautifully designed bottom sheet to send SMS

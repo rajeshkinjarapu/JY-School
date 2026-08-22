@@ -104,7 +104,7 @@ class _SystemSettingsTabState extends State<SystemSettingsTab> {
   }
 
   Future<void> _loadSettings() async {
-    setState(() => _isLoading = true);
+    if (mounted) setState(() => _isLoading = true);
     final res = await ApiService.getSettings();
     if (res['success'] == true && res['data'] != null) {
       final data = res['data'];
@@ -121,11 +121,13 @@ class _SystemSettingsTabState extends State<SystemSettingsTab> {
         );
       }
     }
-    setState(() => _isLoading = false);
+    if (mounted) {
+      setState(() => _isLoading = false);
+    }
   }
 
   Future<void> _saveSettings() async {
-    setState(() => _isSaving = true);
+    if (mounted) setState(() => _isSaving = true);
     final payload = {
       'schoolName': _schoolNameCtrl.text,
       'address': _addressCtrl.text,
@@ -135,8 +137,9 @@ class _SystemSettingsTabState extends State<SystemSettingsTab> {
       'currentYear': _academicYearCtrl.text,
     };
     final res = await ApiService.updateSettings(payload);
-    setState(() => _isSaving = false);
+    
     if (mounted) {
+      setState(() => _isSaving = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(res['success'] ? 'System settings updated!' : 'Failed: ${res['message']}'),

@@ -961,9 +961,6 @@ class ApiService {
 
   // ── Question Bank / Generated Papers ────────────────────────────────────────
 
-  static Future<Map<String, dynamic>> getGeneratedPapers() async {
-    return _performGet('/api/generated-papers', 'Failed to load generated papers');
-  }
 
   static Future<Map<String, dynamic>> getGeneratedPaperById(String id) async {
     return _performGet('/api/generated-papers/$id', 'Failed to load paper details');
@@ -1017,6 +1014,15 @@ class ApiService {
           : {'success': false, 'message': data['message'] ?? 'Failed'};
     } catch (e) { return {'success': false, 'message': e.toString()}; }
   }
+
+  // ==========================================
+  // MESSAGING ENDPOINTS
+  // ==========================================
+  static Future<Map<String, dynamic>> getConversations() async {
+    return _performGet('/api/messages/conversations', 'Failed to fetch conversations');
+  }
+
+
 
   static Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();

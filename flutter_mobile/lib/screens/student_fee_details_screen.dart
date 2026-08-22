@@ -123,6 +123,8 @@ class _StudentFeeDetailsScreenState extends State<StudentFeeDetailsScreen> with 
         builder: (context) => RecordFeePaymentScreen(
           student: widget.student,
           feeStructures: _structures,
+          payments: _payments,
+          discounts: _discounts,
         ),
       ),
     ).then((_) => _fetchFeeData());
@@ -130,12 +132,14 @@ class _StudentFeeDetailsScreenState extends State<StudentFeeDetailsScreen> with 
 
   @override
   Widget build(BuildContext context) {
-    final name = '${widget.student['firstName'] ?? ''} ${widget.student['lastName'] ?? ''}'.trim();
+    final user = widget.student['user'] ?? {};
+    final name = user['name'] ?? 'Unknown';
     final admissionNo = widget.student['admissionNumber'] ?? 'N/A';
     final cls = widget.student['class'] != null ? '${widget.student['class']['name']} - ${widget.student['class']['section']}' : 'N/A';
+    final photoUrl = user['photoUrl'];
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF1F5F9), // Slight gray background
+      backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
         leading: const BackButton(color: Colors.white),
         title: Text(
@@ -166,44 +170,54 @@ class _StudentFeeDetailsScreenState extends State<StudentFeeDetailsScreen> with 
               ? Center(child: Text(_errorMessage!, style: const TextStyle(color: Colors.red)))
               : Column(
                   children: [
-                    // Student Header
-                    Container(
-                      padding: const EdgeInsets.all(24),
-                      decoration: const BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.vertical(bottom: Radius.circular(32)),
-                        boxShadow: [
-                          BoxShadow(color: Color(0x0A000000), blurRadius: 20, offset: Offset(0, 10))
-                        ],
-                      ),
-                      child: Column(
-                        children: [
-                          Row(
+                    // Premium Gradient Header Area
+                    Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        // Background Gradient Header
+                        Container(
+                          height: 120,
+                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                          decoration: const BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [Color(0xFF6366F1), Color(0xFF4F46E5), Color(0xFF4338CA)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            borderRadius: BorderRadius.vertical(bottom: Radius.circular(32)),
+                            boxShadow: [
+                              BoxShadow(color: Colors.black26, blurRadius: 15, offset: Offset(0, 8))
+                            ],
+                          ),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
+                              // Avatar
                               Container(
                                 width: 64,
                                 height: 64,
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFF6366F1).withOpacity(0.1),
+                                  color: Colors.white.withOpacity(0.2),
                                   shape: BoxShape.circle,
-                                  image: widget.student['user'] != null && widget.student['user']['photoUrl'] != null
-                                      ? DecorationImage(image: NetworkImage(widget.student['user']['photoUrl']), fit: BoxFit.cover)
-                                      : null,
+                                  border: Border.all(color: Colors.white, width: 2),
+                                  boxShadow: [
+                                    BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10, offset: const Offset(0, 4))
+                                  ],
                                 ),
-                                child: (widget.student['user'] == null || widget.student['user']['photoUrl'] == null)
-                                    ? Center(
-                                        child: Text(
-                                          name.isNotEmpty ? name[0].toUpperCase() : '?',
-                                          style: GoogleFonts.outfit(
-                                            color: const Color(0xFF6366F1),
-                                            fontSize: 28,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      )
-                                    : null,
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(32),
+                                  child: photoUrl != null && photoUrl.isNotEmpty
+                                      ? Image.network(
+                                          ApiService.getImageUrl(photoUrl),
+                                          fit: BoxFit.cover,
+                                          headers: const {'ngrok-skip-browser-warning': '69420'},
+                                          errorBuilder: (context, error, stackTrace) => _buildInitials(name),
+                                        )
+                                      : _buildInitials(name),
+                                ),
                               ),
                               const SizedBox(width: 16),
+                              // Student Details
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -211,7 +225,7 @@ class _StudentFeeDetailsScreenState extends State<StudentFeeDetailsScreen> with 
                                     Text(
                                       name,
                                       style: GoogleFonts.outfit(
-                                        color: const Color(0xFF1E293B),
+                                        color: Colors.white,
                                         fontSize: 22,
                                         fontWeight: FontWeight.bold,
                                       ),
@@ -220,15 +234,15 @@ class _StudentFeeDetailsScreenState extends State<StudentFeeDetailsScreen> with 
                                     Row(
                                       children: [
                                         Container(
-                                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                                           decoration: BoxDecoration(
-                                            color: const Color(0xFFEEF2FF),
-                                            borderRadius: BorderRadius.circular(6),
+                                            color: Colors.white.withOpacity(0.2),
+                                            borderRadius: BorderRadius.circular(8),
                                           ),
                                           child: Text(
                                             'Class: $cls',
                                             style: GoogleFonts.poppins(
-                                              color: const Color(0xFF6366F1),
+                                              color: Colors.white,
                                               fontSize: 11,
                                               fontWeight: FontWeight.w600,
                                             ),
@@ -236,15 +250,15 @@ class _StudentFeeDetailsScreenState extends State<StudentFeeDetailsScreen> with 
                                         ),
                                         const SizedBox(width: 8),
                                         Container(
-                                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                                           decoration: BoxDecoration(
-                                            color: const Color(0xFFF1F5F9),
-                                            borderRadius: BorderRadius.circular(6),
+                                            color: Colors.white.withOpacity(0.2),
+                                            borderRadius: BorderRadius.circular(8),
                                           ),
                                           child: Text(
                                             'Adm: $admissionNo',
                                             style: GoogleFonts.poppins(
-                                              color: const Color(0xFF64748B),
+                                              color: Colors.white,
                                               fontSize: 11,
                                               fontWeight: FontWeight.w600,
                                             ),
@@ -257,17 +271,24 @@ class _StudentFeeDetailsScreenState extends State<StudentFeeDetailsScreen> with 
                               ),
                             ],
                           ),
-                          const SizedBox(height: 24),
-                          Row(
+                        ),
+                        
+                        // Floating Summary Cards
+                        Positioned(
+                          bottom: -40,
+                          left: 20,
+                          right: 20,
+                          child: Row(
                             children: [
-                              Expanded(child: _buildSummaryCard('Pending Due', _totalPending, const Color(0xFFEF4444), const Color(0xFFFEF2F2), Icons.account_balance_wallet_rounded)),
-                              const SizedBox(width: 12),
-                              Expanded(child: _buildSummaryCard('Total Paid', _totalPaid, const Color(0xFF10B981), const Color(0xFFECFDF5), Icons.check_circle_outline_rounded)),
+                              Expanded(child: _buildSummaryCard('Pending Due', _totalPending, const Color(0xFFEF4444), Colors.white, Icons.account_balance_wallet_rounded)),
+                              const SizedBox(width: 16),
+                              Expanded(child: _buildSummaryCard('Total Paid', _totalPaid, const Color(0xFF10B981), Colors.white, Icons.check_circle_outline_rounded)),
                             ],
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
+                    const SizedBox(height: 60), // Space for floating cards
                     
                     const SizedBox(height: 16),
                     TabBar(
@@ -598,6 +619,19 @@ class _StudentFeeDetailsScreenState extends State<StudentFeeDetailsScreen> with 
           ),
         );
       },
+    );
+  }
+
+  Widget _buildInitials(String name) {
+    return Center(
+      child: Text(
+        name.isNotEmpty ? name[0].toUpperCase() : '?',
+        style: GoogleFonts.outfit(
+          color: const Color(0xFF6366F1),
+          fontSize: 28,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
     );
   }
 }
