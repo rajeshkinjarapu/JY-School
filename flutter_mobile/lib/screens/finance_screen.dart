@@ -911,7 +911,7 @@ class _FinanceScreenState extends State<FinanceScreen> with SingleTickerProvider
             ),
           ),
           // Action Buttons Section
-          if (!isPaid || true)
+          if (!widget.showOnlyTransactions)
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: const BoxDecoration(
