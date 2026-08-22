@@ -231,8 +231,8 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
 
   return (
     <div 
-      className="bg-white text-black print:bg-white print:m-0 shadow-2xl print:shadow-none mx-auto border border-gray-300 print:border-none relative w-[210mm] min-h-[297mm] print:w-full print:min-h-0" 
-      style={{ boxSizing: 'border-box', fontFamily: "'TeX Gyre Schola', 'TeXGyreSchola', serif, 'Mandali'" }}
+      className="bg-white text-black shadow-2xl mx-auto relative w-[210mm] min-h-[297mm]" 
+      style={{ boxSizing: 'border-box', fontFamily: "'TeX Gyre Schola', 'TeXGyreSchola', serif, 'Mandali'", border: 'none' }}
       id="a4-preview-paper"
     >
       <style>{`
@@ -255,18 +255,21 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
         
         {/* Header Section */}
         <div className="mb-2 border-b-2 border-black pb-1.5">
-          <div className="flex items-center justify-center relative">
-            <img 
-              src={logoBase64 || '/logo.png'} 
-              alt="Logo" 
-              className="absolute w-20 h-20 object-contain"
-              style={{ left: '-2px' }}
-            />
+          {/* Logo left | School name center | spacer right */}
+          <div className="grid grid-cols-[80px_1fr_80px] items-center">
+            <div>
+              <img 
+                src={logoBase64 || '/logo.png'} 
+                alt="Logo" 
+                className="w-[78px] h-[78px] object-contain"
+              />
+            </div>
             <div className="text-center">
               <h1 className="text-[1.55rem] font-bold uppercase tracking-wider mb-0.5 whitespace-nowrap">SRI VENKATESWARA JY SCHOOL</h1>
               <h2 className="text-sm font-semibold mb-0.5">(IIT-JEE/NEET Foundation – Olympiads)</h2>
               <p className="text-xs">Opp. Hero Showroom, SVL Paradise Campus, Narasannapeta</p>
             </div>
+            <div />
           </div>
           
           <div className="text-center mt-1 mb-1">
