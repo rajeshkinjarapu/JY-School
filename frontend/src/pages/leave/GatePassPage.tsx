@@ -1,255 +1,281 @@
 import React, { useEffect, useState } from 'react';
-import { Plus, Calendar, MapPin, Clock, CheckCircle2, ShieldCheck, ArrowRight, Users, FileText } from 'lucide-react';
+import { 
+  Users, LogOut, CheckCircle2, Clock, Search, 
+  MapPin, User, ShieldCheck, XCircle, ArrowRight,
+  Filter
+} from 'lucide-react';
+import axios from '../../api/axios';
+import toast from 'react-hot-toast';
 
-interface GatePassRequest {
+interface GatePass {
   id: string;
-  student: string;
-  standard: string;
-  destination: string;
+  studentId: string | null;
+  staffId: string | null;
+  student?: { id: string; user: { firstName: string; lastName: string; rollNumber?: string }; class: { className: string; section: string } };
+  staff?: { id: string; user: { firstName: string; lastName: string; role: string } };
   reason: string;
-  exitTime: string;
-  returnTime: string;
-  status: 'Pending' | 'Approved' | 'Rejected';
+  destination: string;
+  expectedExitTime: string;
+  expectedReturnTime: string | null;
+  actualExitTime: string | null;
+  actualReturnTime: string | null;
+  status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'ACTIVE' | 'COMPLETED' | 'OVERDUE';
+  issuedBy: string;
+  createdAt: string;
+  type: 'STUDENT' | 'STAFF' | 'VISITOR';
 }
 
-const students = [
-  { id: 'S-0101', name: 'Aditya Sharma', standard: '10-A' },
-  { id: 'S-0102', name: 'Priya Reddy', standard: '9-B' },
-  { id: 'S-0103', name: 'Kavya Singh', standard: '11-C' },
-  { id: 'S-0104', name: 'Rohit Mehta', standard: '8-D' },
-];
+interface Stats {
+  inside: number;
+  out: number;
+  pending: number;
+  todayTotal: number;
+}
 
 export const GatePassPage: React.FC = () => {
-  const [selectedStudent, setSelectedStudent] = useState(students[0].id);
-  const [destination, setDestination] = useState('Library');
-  const [reason, setReason] = useState('Medical appointment');
-  const [exitTime, setExitTime] = useState('14:30');
-  const [returnTime, setReturnTime] = useState('15:30');
-  const [requests, setRequests] = useState<GatePassRequest[]>([]);
+  const [activeTab, setActiveTab] = useState<'DASHBOARD' | 'APPROVALS' | 'HISTORY'>('DASHBOARD');
+  const [stats, setStats] = useState<Stats>({ inside: 0, out: 0, pending: 0, todayTotal: 0 });
+  const [passes, setPasses] = useState<GatePass[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
 
-  useEffect(() => {
-    const saved = localStorage.getItem('jy_gatepass_requests');
-    if (saved) {
-      setRequests(JSON.parse(saved));
-      return;
+  const fetchStats = async () => {
+    try {
+      const res = await axios.get('/gate-pass/stats');
+      setStats(res.data.data);
+    } catch (error) {
+      console.error('Error fetching stats:', error);
     }
-    const defaultRequests: GatePassRequest[] = [
-      {
-        id: '1', student: 'Aditya Sharma', standard: '10-A', destination: 'Clinic', reason: 'Medical check-up',
-        exitTime: '11:00 AM', returnTime: '11:40 AM', status: 'Approved',
-      },
-      {
-        id: '2', student: 'Priya Reddy', standard: '9-B', destination: 'Bus Stop', reason: 'Family pickup',
-        exitTime: '03:20 PM', returnTime: '03:40 PM', status: 'Pending',
-      },
-      {
-        id: '3', student: 'Kavya Singh', standard: '11-C', destination: 'Office', reason: 'Document submission',
-        exitTime: '12:10 PM', returnTime: '12:45 PM', status: 'Rejected',
-      },
-    ];
-    setRequests(defaultRequests);
-  }, []);
+  };
+
+  const fetchPasses = async () => {
+    setLoading(true);
+    try {
+      // Fetch today's passes or pending passes based on tab
+      const statusFilter = activeTab === 'APPROVALS' ? 'PENDING' : '';
+      const res = await axios.get(`/gate-pass?limit=50&status=${statusFilter}`);
+      setPasses(res.data.data);
+    } catch (error) {
+      toast.error('Failed to load gate passes');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    localStorage.setItem('jy_gatepass_requests', JSON.stringify(requests));
-  }, [requests]);
+    fetchStats();
+    fetchPasses();
+    const interval = setInterval(() => {
+      fetchStats();
+      if(activeTab !== 'HISTORY') fetchPasses();
+    }, 30000); // Auto refresh every 30s
+    return () => clearInterval(interval);
+  }, [activeTab]);
 
-  const handleSubmit = (event: React.FormEvent) => {
-    event.preventDefault();
-    const student = students.find((item) => item.id === selectedStudent);
-    if (!student) return;
-
-    const newRequest: GatePassRequest = {
-      id: Date.now().toString(),
-      student: student.name,
-      standard: student.standard,
-      destination,
-      reason,
-      exitTime: `${exitTime}`,
-      returnTime: `${returnTime}`,
-      status: 'Pending',
-    };
-
-    setRequests([newRequest, ...requests]);
-    setReason('');
-    setDestination('Library');
-    setExitTime('14:30');
-    setReturnTime('15:30');
+  const handleStatusUpdate = async (id: string, status: string) => {
+    try {
+      await axios.patch(`/gate-pass/${id}`, { status });
+      toast.success(`Gate pass ${status.toLowerCase()} successfully`);
+      fetchStats();
+      fetchPasses();
+    } catch (error) {
+      toast.error('Failed to update status');
+    }
   };
 
-  const counts = {
-    pending: requests.filter((r) => r.status === 'Pending').length,
-    approved: requests.filter((r) => r.status === 'Approved').length,
-    rejected: requests.filter((r) => r.status === 'Rejected').length,
-    total: requests.length,
+  const filteredPasses = passes.filter(p => {
+    const name = p.student ? `${p.student.user.firstName} ${p.student.user.lastName}` : (p.staff ? `${p.staff.user.firstName} ${p.staff.user.lastName}` : '');
+    return name.toLowerCase().includes(search.toLowerCase()) || p.destination.toLowerCase().includes(search.toLowerCase());
+  });
+
+  const getStatusColor = (status: string) => {
+    switch(status) {
+      case 'PENDING': return 'bg-amber-100 text-amber-800 border-amber-200';
+      case 'APPROVED': return 'bg-blue-100 text-blue-800 border-blue-200';
+      case 'ACTIVE': return 'bg-emerald-100 text-emerald-800 border-emerald-200';
+      case 'COMPLETED': return 'bg-slate-100 text-slate-800 border-slate-200';
+      case 'REJECTED': return 'bg-rose-100 text-rose-800 border-rose-200';
+      case 'OVERDUE': return 'bg-red-100 text-red-800 border-red-200';
+      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+    }
   };
 
-  const statusStyle = (status: GatePassRequest['status']) => {
-    if (status === 'Approved') return 'bg-emerald-50 text-emerald-700';
-    if (status === 'Rejected') return 'bg-red-50 text-red-700';
-    return 'bg-amber-50 text-amber-700';
+  const formatTime = (isoString: string | null) => {
+    if (!isoString) return '--:--';
+    return new Date(isoString).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
   return (
-    <div className="space-y-8">
-
-
-      <section className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
-        <div className="rounded-[2rem] bg-white shadow-lg border border-slate-200/80 p-6">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-            <div>
-              <p className="text-sm font-extrabold uppercase tracking-[0.27em] text-slate-500">Issue Gate Pass</p>
-              <h2 className="text-2xl font-black text-slate-900 mt-2">New Request Form</h2>
-            </div>
-            <div className="inline-flex items-center rounded-full bg-indigo-50 px-4 py-2 text-sm font-semibold text-indigo-700 shadow-sm">
-              <Plus className="w-4 h-4 mr-2" /> New passage creation
-            </div>
-          </div>
-
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-              <label className="block"> 
-                <span className="text-xs font-bold uppercase tracking-[0.2em] text-slate-400">Student</span>
-                <select
-                  value={selectedStudent}
-                  onChange={(e) => setSelectedStudent(e.target.value)}
-                  className="mt-2 w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-900 outline-none transition hover:border-indigo-300"
-                >
-                  {students.map((student) => (
-                    <option key={student.id} value={student.id}>
-                      {student.name} • {student.standard}
-                    </option>
-                  ))}
-                </select>
-              </label>
-
-              <label className="block">
-                <span className="text-xs font-bold uppercase tracking-[0.2em] text-slate-400">Destination</span>
-                <input
-                  value={destination}
-                  onChange={(e) => setDestination(e.target.value)}
-                  placeholder="e.g. School gate, Clinic, Bus stop"
-                  className="mt-2 w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-900 outline-none transition hover:border-indigo-300"
-                />
-              </label>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-[1.3fr_0.7fr] gap-5">
-              <label className="block">
-                <span className="text-xs font-bold uppercase tracking-[0.2em] text-slate-400">Reason</span>
-                <textarea
-                  value={reason}
-                  onChange={(e) => setReason(e.target.value)}
-                  placeholder="Brief reason for leaving"
-                  rows={4}
-                  className="mt-2 w-full rounded-[1.5rem] border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-900 outline-none transition hover:border-indigo-300 resize-none"
-                />
-              </label>
-              <div className="grid gap-5">
-                <label className="block">
-                  <span className="text-xs font-bold uppercase tracking-[0.2em] text-slate-400">Exit time</span>
-                  <input
-                    type="time"
-                    value={exitTime}
-                    onChange={(e) => setExitTime(e.target.value)}
-                    className="mt-2 w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-900 outline-none transition hover:border-indigo-300"
-                  />
-                </label>
-                <label className="block">
-                  <span className="text-xs font-bold uppercase tracking-[0.2em] text-slate-400">Return time</span>
-                  <input
-                    type="time"
-                    value={returnTime}
-                    onChange={(e) => setReturnTime(e.target.value)}
-                    className="mt-2 w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-900 outline-none transition hover:border-indigo-300"
-                  />
-                </label>
-              </div>
-            </div>
-
+    <div className="space-y-6">
+      {/* Header & Tabs */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-4 rounded-3xl shadow-sm border border-slate-100">
+        <div className="flex gap-2">
+          {['DASHBOARD', 'APPROVALS', 'HISTORY'].map((tab) => (
             <button
-              type="submit"
-              className="inline-flex items-center justify-center gap-2 rounded-3xl bg-gradient-to-r from-fuchsia-600 via-violet-600 to-indigo-500 px-6 py-3 text-sm font-black text-white shadow-[0_16px_32px_-16px_rgba(99,102,241,0.75)] transition hover:-translate-y-0.5"
+              key={tab}
+              onClick={() => setActiveTab(tab as any)}
+              className={`px-6 py-2.5 rounded-full text-sm font-bold transition-all ${
+                activeTab === tab 
+                  ? 'bg-indigo-600 text-white shadow-md shadow-indigo-200' 
+                  : 'bg-slate-50 text-slate-600 hover:bg-slate-100'
+              }`}
             >
-              <Clock className="w-4 h-4" /> Issue Gate Pass
+              {tab.charAt(0) + tab.slice(1).toLowerCase()}
+              {tab === 'APPROVALS' && stats.pending > 0 && (
+                <span className="ml-2 inline-flex items-center justify-center w-5 h-5 rounded-full bg-rose-500 text-white text-[10px]">
+                  {stats.pending}
+                </span>
+              )}
             </button>
-          </form>
+          ))}
         </div>
+        <div className="relative">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+          <input 
+            type="text" 
+            placeholder="Search by name..." 
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-11 pr-4 py-2.5 rounded-full border border-slate-200 text-sm focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all w-64"
+          />
+        </div>
+      </div>
 
-        <div className="space-y-5">
-          <div className="rounded-[2rem] bg-gradient-to-br from-sky-50 via-white to-rose-50 border border-slate-200 shadow-lg p-6">
-            <div className="flex items-center justify-between gap-3 mb-6">
-              <div>
-                <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Quick stats</p>
-                <h3 className="text-2xl font-black text-slate-900">Request Highlights</h3>
-              </div>
-              <span className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-[11px] font-black uppercase tracking-[0.3em] text-fuchsia-700 shadow-sm">
-                <ArrowRight className="w-4 h-4" /> Live update
-              </span>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              {[
-                { label: 'Pending', value: counts.pending, color: 'from-amber-300 to-amber-500', icon: Clock },
-                { label: 'Approved', value: counts.approved, color: 'from-emerald-300 to-emerald-500', icon: CheckCircle2 },
-                { label: 'Rejected', value: counts.rejected, color: 'from-rose-300 to-rose-500', icon: ShieldCheck },
-              ].map((item) => (
-                <div key={item.label} className="rounded-[1.5rem] p-4 bg-white shadow-sm border border-slate-200">
-                  <div className={`inline-flex items-center justify-center w-12 h-12 rounded-3xl bg-gradient-to-br ${item.color} text-white mb-4`}>
-                    <item.icon className="w-5 h-5" />
-                  </div>
-                  <p className="text-sm font-semibold text-slate-500">{item.label}</p>
-                  <p className="text-3xl font-black text-slate-900 mt-2">{item.value}</p>
+      {/* Stats Cards - Only visible on Dashboard */}
+      {activeTab === 'DASHBOARD' && (
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          {[
+            { label: 'Currently Inside', value: stats.inside, icon: Users, color: 'from-emerald-500 to-teal-400', bg: 'bg-emerald-50' },
+            { label: 'Currently Out', value: stats.out, icon: LogOut, color: 'from-rose-500 to-pink-400', bg: 'bg-rose-50' },
+            { label: 'Pending Approvals', value: stats.pending, icon: Clock, color: 'from-amber-500 to-orange-400', bg: 'bg-amber-50' },
+            { label: 'Total Today', value: stats.todayTotal, icon: CheckCircle2, color: 'from-indigo-500 to-blue-400', bg: 'bg-indigo-50' },
+          ].map((stat, idx) => (
+            <div key={idx} className={`${stat.bg} rounded-[2rem] p-6 border border-white/50 shadow-sm relative overflow-hidden group`}>
+              <div className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br ${stat.color} opacity-10 rounded-bl-full -mr-8 -mt-8 transition-transform group-hover:scale-110`} />
+              <div className="flex items-center gap-4 relative">
+                <div className={`w-12 h-12 rounded-2xl bg-white shadow-sm flex items-center justify-center text-slate-700`}>
+                  <stat.icon className="w-6 h-6" />
                 </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="rounded-[2rem] bg-white shadow-lg border border-slate-200 p-6">
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Recent requests</p>
-                <h3 className="text-xl font-black text-slate-900">Latest Gate Passes</h3>
+                <div>
+                  <p className="text-sm font-bold text-slate-500 uppercase tracking-wider">{stat.label}</p>
+                  <h3 className="text-3xl font-black text-slate-800 mt-1">{stat.value}</h3>
+                </div>
               </div>
-              <span className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Updated just now</span>
             </div>
-            <div className="overflow-hidden rounded-[1.75rem] border border-slate-200">
-              <table className="w-full text-left">
-                <thead className="bg-slate-950 text-white text-[11px] uppercase tracking-[0.2em]">
-                  <tr>
-                    <th className="px-4 py-3">Student</th>
-                    <th className="px-4 py-3">Destination</th>
-                    <th className="px-4 py-3">Exit</th>
-                    <th className="px-4 py-3">Return</th>
-                    <th className="px-4 py-3">Status</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-200/80">
-                  {requests.slice(0, 6).map((request) => (
-                    <tr key={request.id} className="hover:bg-slate-50 transition-colors">
-                      <td className="px-4 py-4">
-                        <div className="font-bold text-slate-900">{request.student}</div>
-                        <div className="text-[11px] text-slate-500">{request.standard}</div>
-                      </td>
-                      <td className="px-4 py-4 text-slate-600">{request.destination}</td>
-                      <td className="px-4 py-4 text-slate-600">{request.exitTime}</td>
-                      <td className="px-4 py-4 text-slate-600">{request.returnTime}</td>
-                      <td className="px-4 py-4">
-                        <span className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-[11px] font-black ${statusStyle(request.status)}`}>
-                          <span className="w-2 h-2 rounded-full bg-current" />
-                          {request.status}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
+          ))}
         </div>
-      </section>
+      )}
+
+      {/* Main Content Area */}
+      <div className="bg-white rounded-[2rem] shadow-sm border border-slate-100 overflow-hidden">
+        <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+          <h2 className="text-xl font-black text-slate-800 flex items-center gap-2">
+            {activeTab === 'DASHBOARD' ? 'Live Gate Passes' : activeTab === 'APPROVALS' ? 'Pending Approvals' : 'Pass History'}
+            <span className="px-2.5 py-0.5 rounded-full bg-slate-200 text-slate-600 text-xs font-bold">{filteredPasses.length}</span>
+          </h2>
+          <button className="flex items-center gap-2 text-sm font-bold text-indigo-600 hover:text-indigo-700">
+            <Filter className="w-4 h-4" /> Filter
+          </button>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-slate-50 border-b border-slate-100 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                <th className="p-4 pl-6">Person Details</th>
+                <th className="p-4">Destination & Reason</th>
+                <th className="p-4">Time Window</th>
+                <th className="p-4">Status</th>
+                <th className="p-4 pr-6 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-50">
+              {loading ? (
+                <tr>
+                  <td colSpan={5} className="p-8 text-center text-slate-400 font-medium">
+                    <div className="flex items-center justify-center gap-3">
+                      <div className="w-5 h-5 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+                      Loading live data...
+                    </div>
+                  </td>
+                </tr>
+              ) : filteredPasses.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="p-12 text-center text-slate-400 font-medium flex flex-col items-center">
+                    <ShieldCheck className="w-12 h-12 text-slate-200 mb-3" />
+                    No gate passes found for this category.
+                  </td>
+                </tr>
+              ) : (
+                filteredPasses.map((pass) => (
+                  <tr key={pass.id} className="hover:bg-slate-50/80 transition-colors group">
+                    <td className="p-4 pl-6">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-sm">
+                          {pass.student ? pass.student.user.firstName[0] : (pass.staff ? pass.staff.user.firstName[0] : 'V')}
+                        </div>
+                        <div>
+                          <p className="font-bold text-slate-800 text-sm">
+                            {pass.student ? `${pass.student.user.firstName} ${pass.student.user.lastName}` : 
+                             (pass.staff ? `${pass.staff.user.firstName} ${pass.staff.user.lastName}` : 'Visitor')}
+                          </p>
+                          <p className="text-xs text-slate-500 font-medium mt-0.5">
+                            {pass.type === 'STUDENT' && pass.student ? `Class ${pass.student.class.className}-${pass.student.class.section}` : pass.type}
+                          </p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="p-4">
+                      <div className="flex items-center gap-1.5 text-sm font-bold text-slate-700">
+                        <MapPin className="w-3.5 h-3.5 text-rose-500" />
+                        {pass.destination}
+                      </div>
+                      <p className="text-xs text-slate-500 mt-1 truncate max-w-xs">{pass.reason}</p>
+                    </td>
+                    <td className="p-4">
+                      <div className="flex flex-col gap-1 text-xs font-semibold">
+                        <div className="flex items-center gap-2 text-slate-600">
+                          <span className="w-10 text-slate-400">Exit:</span> 
+                          <span className="bg-slate-100 px-2 py-0.5 rounded">{formatTime(pass.expectedExitTime)}</span>
+                        </div>
+                        {pass.expectedReturnTime && (
+                          <div className="flex items-center gap-2 text-slate-600">
+                            <span className="w-10 text-slate-400">Return:</span> 
+                            <span className="bg-slate-100 px-2 py-0.5 rounded">{formatTime(pass.expectedReturnTime)}</span>
+                          </div>
+                        )}
+                      </div>
+                    </td>
+                    <td className="p-4">
+                      <span className={`px-3 py-1 text-xs font-bold rounded-full border ${getStatusColor(pass.status)}`}>
+                        {pass.status}
+                      </span>
+                    </td>
+                    <td className="p-4 pr-6 text-right">
+                      {pass.status === 'PENDING' ? (
+                        <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button onClick={() => handleStatusUpdate(pass.id, 'APPROVED')} className="p-2 rounded-xl bg-emerald-50 text-emerald-600 hover:bg-emerald-500 hover:text-white transition-colors" title="Approve">
+                            <CheckCircle2 className="w-4 h-4" />
+                          </button>
+                          <button onClick={() => handleStatusUpdate(pass.id, 'REJECTED')} className="p-2 rounded-xl bg-rose-50 text-rose-600 hover:bg-rose-500 hover:text-white transition-colors" title="Reject">
+                            <XCircle className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ) : (
+                        <button className="p-2 rounded-xl text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors">
+                          <ArrowRight className="w-4 h-4" />
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
 };
 
 export default GatePassPage;
-
