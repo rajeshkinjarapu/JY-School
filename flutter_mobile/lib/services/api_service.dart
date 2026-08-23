@@ -100,7 +100,23 @@ class ApiService {
   }
 
   static Future<Map<String, dynamic>> getTimetable(String classId) async {
-    return _performGet('/api/timetable?classId=$classId', 'Failed to get timetable');
+    return _performGet('/api/timetable/class?classId=$classId', 'Failed to get timetable');
+  }
+
+  static Future<Map<String, dynamic>> getTimetableStats() async {
+    return _performGet('/api/timetable/stats', 'Failed to get timetable stats');
+  }
+
+  static Future<Map<String, dynamic>> getTimetableClashes() async {
+    return _performGet('/api/timetable/clashes', 'Failed to get timetable clashes');
+  }
+
+  static Future<Map<String, dynamic>> getLeaveRequests() async {
+    return _performGet('/api/leave', 'Failed to get leave requests');
+  }
+
+  static Future<Map<String, dynamic>> updateLeaveRequest(String id, String status) async {
+    return _performPut('/api/leave/$id', {'status': status}, 'Failed to update leave request');
   }
 
   static Future<Map<String, dynamic>> getTeacherTimetable(String teacherId) async {

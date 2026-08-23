@@ -239,3 +239,54 @@ export const generateAuto = async (req: AuthRequest, res: Response, next: NextFu
     next(err);
   }
 };
+
+export const getClashes = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const slots = await prisma.timetable.findMany({
+      include: {
+        teacher: { include: { user: { select: { name: true } } } },
+        class: { select: { name: true, section: true } },
+        subject: { select: { name: true } }
+      }
+    });
+
+    const grouped = new Map<string, any[]>();
+    for (const slot of slots) {
+      const key = `${slot.teacherId}_${slot.day}_${slot.periodNumber}`;
+      if (!grouped.has(key)) grouped.set(key, []);
+      grouped.get(key)!.push(slot);
+    }
+
+    const clashes: any[] = [];
+    for (const [key, group] of grouped.entries()) {
+      if (group.length > 1) {
+        clashes.push({
+          teacher: group[0].teacher.user.name,
+          day: group[0].day,
+          periodNumber: group[0].periodNumber,
+          conflictingSlots: group
+        });
+      }
+    }
+
+    successResponse(res, clashes, 'Clashes fetched successfully');
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getStats = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const totalTeachers = await prisma.teacher.count();
+    const totalClasses = await prisma.class.count();
+    const totalSubjects = await prisma.subject.count();
+
+    successResponse(res, {
+      teachers: totalTeachers,
+      classes: totalClasses,
+      subjects: totalSubjects
+    }, 'Stats fetched successfully');
+  } catch (error) {
+    next(error);
+  }
+};

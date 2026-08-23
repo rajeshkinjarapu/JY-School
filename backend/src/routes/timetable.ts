@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { authenticate, authorize } from '../middlewares/auth';
-import { getByClass, getByTeacher, createSlot, updateSlot, deleteSlot, generateAuto } from '../controllers/timetable.controller';
+import { getByClass, getByTeacher, createSlot, updateSlot, deleteSlot, generateAuto, getStats, getClashes } from '../controllers/timetable.controller';
 import { getConfigs, saveConfigs, deleteConfig } from '../controllers/timetableConfig.controller';
 
 const router = Router();
@@ -11,6 +11,9 @@ router.use(authenticate);
 router.get('/config', getConfigs);
 router.post('/config', authorize('SUPER_ADMIN', 'ADMIN'), saveConfigs);
 router.delete('/config/:id', authorize('SUPER_ADMIN', 'ADMIN'), deleteConfig);
+
+router.get('/stats', authorize('SUPER_ADMIN', 'ADMIN'), getStats);
+router.get('/clashes', authorize('SUPER_ADMIN', 'ADMIN'), getClashes);
 
 // Timetable slots
 router.get('/class', getByClass);
