@@ -49,19 +49,19 @@ class _GatePassScreenState extends State<GatePassScreen> {
     final hasFullAccess = _userRole == 'SUPER_ADMIN' || _userRole == 'ADMIN' || _userRole == 'SECURITY';
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F7FE),
+      backgroundColor: const Color(0xFFF1F5F9),
       drawer: const AppDrawer(currentRoute: 'gatepass'),
       appBar: AppBar(
         leading: const BackButton(),
         title: Text(
-          'Live Security Tracking',
+          'Security Gate Pass',
           style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 18),
         ),
         iconTheme: const IconThemeData(color: Colors.white),
         flexibleSpace: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
-              colors: [Color(0xFF0F172A), Color(0xFF1E293B)],
+              colors: [Color(0xFF0F172A), Color(0xFF1E3A5F)],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
@@ -72,60 +72,83 @@ class _GatePassScreenState extends State<GatePassScreen> {
       body: hasFullAccess
           ? _buildBody()
           : const Center(child: Text("You don't have access to the security dashboard.")),
-      bottomNavigationBar: hasFullAccess ? BottomNavigationBar(
-        currentIndex: _currentIndex,
-        onTap: (idx) => setState(() => _currentIndex = idx),
-        type: BottomNavigationBarType.fixed,
-        backgroundColor: Colors.white,
-        selectedItemColor: const Color(0xFF10B981),
-        unselectedItemColor: const Color(0xFF94A3B8),
-        selectedLabelStyle: GoogleFonts.poppins(fontSize: 10, fontWeight: FontWeight.bold),
-        unselectedLabelStyle: GoogleFonts.poppins(fontSize: 10, fontWeight: FontWeight.w500),
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.dashboard_rounded), label: 'Dashboard'),
-          BottomNavigationBarItem(icon: Icon(Icons.directions_run_rounded), label: 'Live'),
-          BottomNavigationBarItem(icon: Icon(Icons.fact_check_rounded), label: 'Approvals'),
-          BottomNavigationBarItem(icon: Icon(Icons.history_rounded), label: 'History'),
-          BottomNavigationBarItem(icon: Icon(Icons.qr_code_scanner_rounded), label: 'Scanner'),
-        ],
-      ) : null,
+      bottomNavigationBar: hasFullAccess
+          ? Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 20, offset: const Offset(0, -4))],
+              ),
+              child: BottomNavigationBar(
+                currentIndex: _currentIndex,
+                onTap: (idx) => setState(() => _currentIndex = idx),
+                type: BottomNavigationBarType.fixed,
+                backgroundColor: Colors.transparent,
+                elevation: 0,
+                selectedItemColor: const Color(0xFF10B981),
+                unselectedItemColor: const Color(0xFF94A3B8),
+                selectedLabelStyle: GoogleFonts.poppins(fontSize: 10, fontWeight: FontWeight.bold),
+                unselectedLabelStyle: GoogleFonts.poppins(fontSize: 10),
+                items: const [
+                  BottomNavigationBarItem(icon: Icon(Icons.dashboard_rounded), label: 'Dashboard'),
+                  BottomNavigationBarItem(icon: Icon(Icons.directions_run_rounded), label: 'Live'),
+                  BottomNavigationBarItem(icon: Icon(Icons.fact_check_rounded), label: 'Approvals'),
+                  BottomNavigationBarItem(icon: Icon(Icons.history_rounded), label: 'History'),
+                  BottomNavigationBarItem(icon: Icon(Icons.qr_code_scanner_rounded), label: 'Scanner'),
+                ],
+              ),
+            )
+          : null,
     );
   }
 }
 
 // ---------------------------------------------------------
-// Tab 1: Dashboard
+// Tab 1: Dashboard — PREMIUM REDESIGN + REAL API
 // ---------------------------------------------------------
 class _DashboardTab extends StatefulWidget {
   const _DashboardTab();
   @override
   State<_DashboardTab> createState() => _DashboardTabState();
 }
-class _DashboardTabState extends State<_DashboardTab> {
+
+class _DashboardTabState extends State<_DashboardTab> with TickerProviderStateMixin {
   bool _loading = true;
   int _inside = 0;
   int _out = 0;
   int _pending = 0;
   int _overdue = 0;
+  late AnimationController _pulseController;
+  late Animation<double> _pulseAnim;
 
   @override
   void initState() {
     super.initState();
+    _pulseController = AnimationController(vsync: this, duration: const Duration(milliseconds: 900))
+      ..repeat(reverse: true);
+    _pulseAnim = Tween<double>(begin: 0.85, end: 1.15).animate(
+      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
+    );
     _fetchStats();
+  }
+
+  @override
+  void dispose() {
+    _pulseController.dispose();
+    super.dispose();
   }
 
   Future<void> _fetchStats() async {
     setState(() => _loading = true);
     try {
-      final res = await ApiService.getSettings(); // Replace with actual ApiService.getGatePassStats() when ready
-      await Future.delayed(const Duration(milliseconds: 600));
+      final res = await ApiService.getGatePassStats();
       if (mounted) {
+        final data = res['data'] ?? {};
         setState(() {
+          _inside = (data['inside'] as num?)?.toInt() ?? 0;
+          _out = (data['out'] as num?)?.toInt() ?? 0;
+          _pending = (data['pending'] as num?)?.toInt() ?? 0;
+          _overdue = (data['overdue'] as num?)?.toInt() ?? 0;
           _loading = false;
-          _inside = 1205; // Mock data until API is fully wired in app
-          _out = 32;
-          _pending = 5;
-          _overdue = 2; // Red alert!
         });
       }
     } catch (e) {
@@ -135,110 +158,440 @@ class _DashboardTabState extends State<_DashboardTab> {
 
   @override
   Widget build(BuildContext context) {
-    if (_loading) return const Center(child: CircularProgressIndicator(color: Color(0xFF10B981)));
+    if (_loading) {
+      return const Center(
+        child: CircularProgressIndicator(color: Color(0xFF10B981)),
+      );
+    }
 
     return RefreshIndicator(
       onRefresh: _fetchStats,
       color: const Color(0xFF10B981),
-      child: ListView(
-        padding: const EdgeInsets.all(20),
-        children: [
-          if (_overdue > 0)
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        child: Column(
+          children: [
+            // ── Hero Stats Header ──
             Container(
-              margin: const EdgeInsets.only(bottom: 20),
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: const Color(0xFFFEF2F2),
-                border: Border.all(color: const Color(0xFFEF4444)),
-                borderRadius: BorderRadius.circular(16),
+              width: double.infinity,
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Color(0xFF0F172A), Color(0xFF1E3A5F)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
               ),
-              child: Row(
-                children: [
-                  const Icon(Icons.warning_amber_rounded, color: Color(0xFFEF4444), size: 32),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('CRITICAL OVER-STAY', style: GoogleFonts.outfit(color: const Color(0xFFEF4444), fontSize: 16, fontWeight: FontWeight.bold)),
-                        Text('$_overdue students have not returned by their expected time!', style: GoogleFonts.poppins(color: const Color(0xFF991B1B), fontSize: 12)),
-                      ],
-                    ),
-                  )
-                ],
+              child: SafeArea(
+                top: false,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF10B981).withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: const Icon(Icons.sensors, color: Color(0xFF10B981), size: 18),
+                          ),
+                          const SizedBox(width: 10),
+                          Text(
+                            'LIVE CAMPUS STATUS',
+                            style: GoogleFonts.poppins(
+                              color: const Color(0xFF10B981),
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 1.5,
+                            ),
+                          ),
+                          const Spacer(),
+                          Text(
+                            DateFormat('hh:mm a').format(DateTime.now()),
+                            style: GoogleFonts.outfit(color: Colors.white54, fontSize: 13),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 24),
+                      // Big stat row
+                      Row(
+                        children: [
+                          _buildHeroStat(
+                            value: _inside,
+                            label: 'INSIDE',
+                            icon: Icons.domain_rounded,
+                            color: const Color(0xFF10B981),
+                          ),
+                          const SizedBox(width: 1),
+                          Container(width: 1, height: 60, color: Colors.white10),
+                          const SizedBox(width: 1),
+                          _buildHeroStat(
+                            value: _out,
+                            label: 'CURRENTLY OUT',
+                            icon: Icons.directions_run_rounded,
+                            color: const Color(0xFFF59E0B),
+                          ),
+                          const SizedBox(width: 1),
+                          Container(width: 1, height: 60, color: Colors.white10),
+                          const SizedBox(width: 1),
+                          _buildHeroStat(
+                            value: _pending,
+                            label: 'PENDING',
+                            icon: Icons.pending_actions_rounded,
+                            color: const Color(0xFF6366F1),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ),
 
-          Row(
-            children: [
-              Expanded(child: _buildStatCard('INSIDE', _inside.toString(), const Color(0xFF10B981), Icons.domain)),
-              const SizedBox(width: 16),
-              Expanded(child: _buildStatCard('OUT', _out.toString(), const Color(0xFFF59E0B), Icons.directions_run)),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: _buildStatCard(
-                  'PENDING APPROVALS',
-                  _pending.toString(),
-                  const Color(0xFF3B82F6),
-                  Icons.pending_actions,
-                  showBadge: _pending > 0
-                ),
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // ── Overdue Alert ──
+                  if (_overdue > 0)
+                    ScaleTransition(
+                      scale: _pulseAnim,
+                      child: Container(
+                        margin: const EdgeInsets.only(bottom: 20),
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFFFF3D5E), Color(0xFFFF6B82)],
+                          ),
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFFFF3D5E).withOpacity(0.4),
+                              blurRadius: 20,
+                              offset: const Offset(0, 8),
+                            )
+                          ],
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const Icon(Icons.warning_rounded, color: Colors.white, size: 28),
+                            ),
+                            const SizedBox(width: 14),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    '⚠️  CRITICAL OVER-STAY',
+                                    style: GoogleFonts.outfit(
+                                      color: Colors.white,
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w800,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    '$_overdue ${_overdue == 1 ? 'person has' : 'people have'} not returned by expected time!',
+                                    style: GoogleFonts.poppins(
+                                      color: Colors.white.withOpacity(0.9),
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                  // ── Section Title ──
+                  Text(
+                    'Today\'s Overview',
+                    style: GoogleFonts.outfit(
+                      color: const Color(0xFF1E293B),
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+
+                  // ── 4 Metric Cards ──
+                  GridView.count(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 12,
+                    mainAxisSpacing: 12,
+                    childAspectRatio: 1.4,
+                    children: [
+                      _buildMetricCard(
+                        title: 'Inside Campus',
+                        value: '$_inside',
+                        icon: Icons.domain_rounded,
+                        gradientColors: [const Color(0xFF10B981), const Color(0xFF34D399)],
+                        subtitle: 'Students & Staff',
+                      ),
+                      _buildMetricCard(
+                        title: 'Currently Out',
+                        value: '$_out',
+                        icon: Icons.directions_run_rounded,
+                        gradientColors: [const Color(0xFFF59E0B), const Color(0xFFFBBF24)],
+                        subtitle: 'With active pass',
+                      ),
+                      _buildMetricCard(
+                        title: 'Pending',
+                        value: '$_pending',
+                        icon: Icons.pending_actions_rounded,
+                        gradientColors: [const Color(0xFF6366F1), const Color(0xFF818CF8)],
+                        subtitle: 'Awaiting approval',
+                        hasBadge: _pending > 0,
+                      ),
+                      _buildMetricCard(
+                        title: 'Overdue',
+                        value: '$_overdue',
+                        icon: Icons.timer_off_rounded,
+                        gradientColors: _overdue > 0
+                            ? [const Color(0xFFEF4444), const Color(0xFFF87171)]
+                            : [const Color(0xFF64748B), const Color(0xFF94A3B8)],
+                        subtitle: _overdue > 0 ? 'URGENT!' : 'All on time',
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // ── Quick Actions ──
+                  Text(
+                    'Quick Actions',
+                    style: GoogleFonts.outfit(
+                      color: const Color(0xFF1E293B),
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildActionButton(
+                          label: 'View Live List',
+                          icon: Icons.directions_run_rounded,
+                          color: const Color(0xFFF59E0B),
+                          onTap: () {},
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _buildActionButton(
+                          label: 'Scan QR Code',
+                          icon: Icons.qr_code_scanner_rounded,
+                          color: const Color(0xFF10B981),
+                          onTap: () {},
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
-            ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeroStat({required int value, required String label, required IconData icon, required Color color}) {
+    return Expanded(
+      child: Column(
+        children: [
+          Icon(icon, color: color, size: 22),
+          const SizedBox(height: 6),
+          Text(
+            '$value',
+            style: GoogleFonts.outfit(
+              color: Colors.white,
+              fontSize: 30,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          Text(
+            label,
+            style: GoogleFonts.poppins(
+              color: Colors.white54,
+              fontSize: 8.5,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.8,
+            ),
+            textAlign: TextAlign.center,
           ),
         ],
       ),
     );
   }
 
-  Widget _buildStatCard(String title, String value, Color color, IconData icon, {bool showBadge = false}) {
+  Widget _buildMetricCard({
+    required String title,
+    required String value,
+    required IconData icon,
+    required List<Color> gradientColors,
+    required String subtitle,
+    bool hasBadge = false,
+  }) {
     return Container(
-      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [BoxShadow(color: const Color(0xFF1E293B).withOpacity(0.04), blurRadius: 20, offset: const Offset(0, 4))],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(color: color.withOpacity(0.1), shape: BoxShape.circle),
-                child: Icon(icon, color: color, size: 24),
-              ),
-              if (showBadge)
-                Container(
-                  width: 12, height: 12,
-                  decoration: const BoxDecoration(color: Color(0xFFEF4444), shape: BoxShape.circle),
-                )
-            ],
+        gradient: LinearGradient(
+          colors: gradientColors,
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: gradientColors[0].withOpacity(0.35),
+            blurRadius: 14,
+            offset: const Offset(0, 6),
           ),
-          const SizedBox(height: 16),
-          Text(value, style: GoogleFonts.outfit(color: const Color(0xFF1E293B), fontSize: 32, fontWeight: FontWeight.w900)),
-          const SizedBox(height: 4),
-          Text(title, style: GoogleFonts.poppins(color: const Color(0xFF64748B), fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1)),
         ],
+      ),
+      child: Stack(
+        clipBehavior: Clip.hardEdge,
+        children: [
+          Positioned(
+            right: -10,
+            bottom: -10,
+            child: Icon(icon, size: 70, color: Colors.white.withOpacity(0.12)),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(7),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.25),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Icon(icon, color: Colors.white, size: 18),
+                    ),
+                    if (hasBadge)
+                      Container(
+                        width: 10,
+                        height: 10,
+                        decoration: const BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                  ],
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      value,
+                      style: GoogleFonts.outfit(
+                        color: Colors.white,
+                        fontSize: 26,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    Text(
+                      title,
+                      style: GoogleFonts.poppins(
+                        color: Colors.white.withOpacity(0.9),
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    Text(
+                      subtitle,
+                      style: GoogleFonts.poppins(
+                        color: Colors.white.withOpacity(0.65),
+                        fontSize: 9,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActionButton({
+    required String label,
+    required IconData icon,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: color.withOpacity(0.15),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.12),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(icon, color: color, size: 24),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              label,
+              style: GoogleFonts.poppins(
+                color: const Color(0xFF1E293B),
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 }
 
 // ---------------------------------------------------------
-// Tab 2: Live List (Currently Out)
+// Tab 2: Live List (Currently Out) — REAL API
 // ---------------------------------------------------------
 class _LiveListTab extends StatefulWidget {
   const _LiveListTab();
   @override
   State<_LiveListTab> createState() => _LiveListTabState();
 }
+
 class _LiveListTabState extends State<_LiveListTab> {
   bool _loading = true;
   List<dynamic> _activePasses = [];
@@ -273,9 +626,18 @@ class _LiveListTabState extends State<_LiveListTab> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.check_circle_outline, size: 80, color: Colors.green.withOpacity(0.5)),
+            Container(
+              padding: const EdgeInsets.all(28),
+              decoration: BoxDecoration(
+                color: const Color(0xFF10B981).withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.verified_user_rounded, size: 64, color: Color(0xFF10B981)),
+            ),
             const SizedBox(height: 16),
-            Text("Everyone is inside", style: GoogleFonts.outfit(color: const Color(0xFF64748B), fontSize: 18, fontWeight: FontWeight.bold)),
+            Text("All Clear!", style: GoogleFonts.outfit(color: const Color(0xFF1E293B), fontSize: 22, fontWeight: FontWeight.w800)),
+            const SizedBox(height: 6),
+            Text("Everyone is inside campus", style: GoogleFonts.poppins(color: const Color(0xFF64748B), fontSize: 14)),
           ],
         ),
       );
@@ -284,70 +646,146 @@ class _LiveListTabState extends State<_LiveListTab> {
     return RefreshIndicator(
       onRefresh: _fetchLiveList,
       color: const Color(0xFF10B981),
-      child: ListView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: _activePasses.length,
-        itemBuilder: (context, index) {
-          final pass = _activePasses[index];
-          final isStudent = pass['requestType'] == 'STUDENT';
-          final name = isStudent ? (pass['student']?['user']?['name'] ?? 'Unknown') : (pass['requester']?['name'] ?? 'Unknown');
-          final dept = isStudent ? 'Class ${pass['student']?['class']?['name'] ?? ''} ${pass['student']?['class']?['section'] ?? ''}' : 'Staff';
-          
-          return Container(
-            margin: const EdgeInsets.only(bottom: 12),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10, offset: const Offset(0, 4))],
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+            color: const Color(0xFFF59E0B).withOpacity(0.08),
+            child: Row(
+              children: [
+                Container(
+                  width: 8, height: 8,
+                  decoration: const BoxDecoration(color: Color(0xFFF59E0B), shape: BoxShape.circle),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  '${_activePasses.length} people currently OUTSIDE campus',
+                  style: GoogleFonts.poppins(
+                    color: const Color(0xFFB45309),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
             ),
-            child: ListTile(
-              contentPadding: const EdgeInsets.all(16),
-              leading: CircleAvatar(
-                backgroundColor: const Color(0xFFE2E8F0),
-                radius: 24,
-                child: Icon(isStudent ? Icons.person : Icons.badge, color: const Color(0xFF64748B)),
-              ),
-              title: Text(name, style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16)),
-              subtitle: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(dept, style: GoogleFonts.poppins(color: const Color(0xFF64748B), fontSize: 12)),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      const Icon(Icons.login, size: 14, color: Color(0xFFF59E0B)),
-                      const SizedBox(width: 4),
-                      Text("Out: ${pass['exitTime'] ?? '-'}", style: GoogleFonts.poppins(fontSize: 12, color: const Color(0xFFF59E0B), fontWeight: FontWeight.bold)),
-                      const SizedBox(width: 16),
-                      const Icon(Icons.timer, size: 14, color: Color(0xFF64748B)),
-                      const SizedBox(width: 4),
-                      Text("Return: ${pass['expectedReturnTime'] != null ? DateFormat('hh:mm a').format(DateTime.parse(pass['expectedReturnTime'])) : pass['returnTime'] ?? '-'}", style: GoogleFonts.poppins(fontSize: 12, color: const Color(0xFF64748B))),
+          ),
+          Expanded(
+            child: ListView.builder(
+              padding: const EdgeInsets.all(16),
+              itemCount: _activePasses.length,
+              itemBuilder: (context, index) {
+                final pass = _activePasses[index];
+                final isStudent = pass['requestType'] == 'STUDENT';
+                final name = isStudent
+                    ? (pass['student']?['user']?['name'] ?? 'Unknown')
+                    : (pass['requester']?['name'] ?? 'Unknown');
+                final dept = isStudent
+                    ? 'Class ${pass['student']?['class']?['name'] ?? ''} ${pass['student']?['class']?['section'] ?? ''}'
+                    : 'Staff';
+
+                final exitTimeStr = pass['actualExitTime'] ?? pass['exitTime'];
+                final exitTime = exitTimeStr != null
+                    ? DateFormat('hh:mm a').format(DateTime.parse(exitTimeStr).toLocal())
+                    : '--';
+
+                final expectedStr = pass['expectedReturnTime'];
+                final expectedTime = expectedStr != null
+                    ? DateFormat('hh:mm a').format(DateTime.parse(expectedStr).toLocal())
+                    : '--';
+
+                final isOverdue = expectedStr != null &&
+                    DateTime.parse(expectedStr).isBefore(DateTime.now());
+
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(18),
+                    border: isOverdue
+                        ? Border.all(color: const Color(0xFFEF4444), width: 1.5)
+                        : null,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.04),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      )
                     ],
-                  )
-                ],
-              ),
-              trailing: IconButton(
-                icon: const Icon(Icons.qr_code_scanner, color: Color(0xFF10B981)),
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Use Scanner tab to mark as returned')));
-                },
-              ),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(14),
+                    child: Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 24,
+                          backgroundColor: isOverdue
+                              ? const Color(0xFFEF4444).withOpacity(0.1)
+                              : const Color(0xFFF59E0B).withOpacity(0.1),
+                          child: Icon(
+                            isStudent ? Icons.person_rounded : Icons.badge_rounded,
+                            color: isOverdue ? const Color(0xFFEF4444) : const Color(0xFFF59E0B),
+                            size: 26,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: Text(name, style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 15)),
+                                  ),
+                                  if (isOverdue)
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFFEF4444),
+                                        borderRadius: BorderRadius.circular(20),
+                                      ),
+                                      child: Text('OVERDUE', style: GoogleFonts.poppins(color: Colors.white, fontSize: 8, fontWeight: FontWeight.w800)),
+                                    ),
+                                ],
+                              ),
+                              Text(dept, style: GoogleFonts.poppins(color: const Color(0xFF64748B), fontSize: 11)),
+                              const SizedBox(height: 6),
+                              Row(
+                                children: [
+                                  Icon(Icons.login_rounded, size: 13, color: const Color(0xFFF59E0B)),
+                                  const SizedBox(width: 4),
+                                  Text('Out: $exitTime', style: GoogleFonts.poppins(fontSize: 11, color: const Color(0xFFB45309), fontWeight: FontWeight.w600)),
+                                  const SizedBox(width: 12),
+                                  Icon(Icons.timer_rounded, size: 13, color: const Color(0xFF64748B)),
+                                  const SizedBox(width: 4),
+                                  Text('Return by: $expectedTime', style: GoogleFonts.poppins(fontSize: 11, color: const Color(0xFF64748B))),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
             ),
-          );
-        },
+          ),
+        ],
       ),
     );
   }
 }
 
 // ---------------------------------------------------------
-// Tab 3: Approvals (Pending Requests)
+// Tab 3: Approvals — REAL API
 // ---------------------------------------------------------
 class _ApprovalsTab extends StatefulWidget {
   const _ApprovalsTab();
   @override
   State<_ApprovalsTab> createState() => _ApprovalsTabState();
 }
+
 class _ApprovalsTabState extends State<_ApprovalsTab> {
   bool _loading = true;
   List<dynamic> _pendingPasses = [];
@@ -379,8 +817,10 @@ class _ApprovalsTabState extends State<_ApprovalsTab> {
       _fetchPending();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('Request $status successfully'),
+          content: Text('Request ${status.toLowerCase()} successfully'),
           backgroundColor: status == 'APPROVED' ? Colors.green : Colors.red,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         ));
       }
     } catch (e) {
@@ -390,16 +830,25 @@ class _ApprovalsTabState extends State<_ApprovalsTab> {
 
   @override
   Widget build(BuildContext context) {
-    if (_loading) return const Center(child: CircularProgressIndicator(color: Color(0xFF10B981)));
+    if (_loading) return const Center(child: CircularProgressIndicator(color: Color(0xFF6366F1)));
 
     if (_pendingPasses.isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.inbox, size: 80, color: Colors.grey.withOpacity(0.5)),
+            Container(
+              padding: const EdgeInsets.all(28),
+              decoration: BoxDecoration(
+                color: const Color(0xFF6366F1).withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.inbox_rounded, size: 64, color: Color(0xFF6366F1)),
+            ),
             const SizedBox(height: 16),
-            Text("No Pending Requests", style: GoogleFonts.outfit(color: const Color(0xFF64748B), fontSize: 18, fontWeight: FontWeight.bold)),
+            Text("All Cleared!", style: GoogleFonts.outfit(color: const Color(0xFF1E293B), fontSize: 22, fontWeight: FontWeight.w800)),
+            const SizedBox(height: 6),
+            Text("No pending gate pass requests", style: GoogleFonts.poppins(color: const Color(0xFF64748B), fontSize: 14)),
           ],
         ),
       );
@@ -407,39 +856,41 @@ class _ApprovalsTabState extends State<_ApprovalsTab> {
 
     return Column(
       children: [
-        Padding(
-          padding: const EdgeInsets.all(16.0),
+        Container(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+          color: const Color(0xFF6366F1).withOpacity(0.08),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text("${_pendingPasses.length} Requests Pending", style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16)),
-              TextButton.icon(
-                onPressed: () {
-                  // Approve All Logic
-                },
-                icon: const Icon(Icons.done_all, color: Color(0xFF10B981)),
-                label: Text("Approve All", style: GoogleFonts.poppins(color: const Color(0xFF10B981), fontWeight: FontWeight.bold)),
-              )
+              Text(
+                '${_pendingPasses.length} Requests Pending Approval',
+                style: GoogleFonts.poppins(color: const Color(0xFF4338CA), fontSize: 12, fontWeight: FontWeight.w700),
+              ),
             ],
           ),
         ),
         Expanded(
           child: RefreshIndicator(
             onRefresh: _fetchPending,
-            color: const Color(0xFF10B981),
+            color: const Color(0xFF6366F1),
             child: ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+              padding: const EdgeInsets.all(16),
               itemCount: _pendingPasses.length,
               itemBuilder: (context, index) {
                 final pass = _pendingPasses[index];
                 final isStudent = pass['requestType'] == 'STUDENT';
-                final name = isStudent ? (pass['student']?['user']?['name'] ?? 'Unknown') : (pass['requester']?['name'] ?? 'Unknown');
+                final name = isStudent
+                    ? (pass['student']?['user']?['name'] ?? 'Unknown')
+                    : (pass['requester']?['name'] ?? 'Unknown');
                 final dept = isStudent ? 'Class ${pass['student']?['class']?['name'] ?? ''}' : 'Staff';
-                
-                return Card(
-                  elevation: 0,
-                  margin: const EdgeInsets.only(bottom: 12),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16), side: const BorderSide(color: Color(0xFFE2E8F0))),
+
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 14),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 12, offset: const Offset(0, 4))],
+                  ),
                   child: Padding(
                     padding: const EdgeInsets.all(16),
                     child: Column(
@@ -448,8 +899,10 @@ class _ApprovalsTabState extends State<_ApprovalsTab> {
                         Row(
                           children: [
                             CircleAvatar(
-                              backgroundColor: const Color(0xFFF1F5F9),
-                              child: Icon(isStudent ? Icons.person : Icons.badge, color: const Color(0xFF3B82F6)),
+                              backgroundColor: const Color(0xFF6366F1).withOpacity(0.1),
+                              radius: 22,
+                              child: Icon(isStudent ? Icons.person_rounded : Icons.badge_rounded,
+                                  color: const Color(0xFF6366F1), size: 22),
                             ),
                             const SizedBox(width: 12),
                             Expanded(
@@ -461,44 +914,74 @@ class _ApprovalsTabState extends State<_ApprovalsTab> {
                                 ],
                               ),
                             ),
-                            Text(pass['exitTime'] ?? '', style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: const Color(0xFF1E293B))),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF6366F1).withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Text('PENDING', style: GoogleFonts.poppins(color: const Color(0xFF4338CA), fontSize: 9, fontWeight: FontWeight.w700)),
+                            ),
                           ],
                         ),
-                        const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 12),
-                          child: Divider(height: 1, color: Color(0xFFE2E8F0)),
+                        const SizedBox(height: 12),
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF8FAFC),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(children: [
+                                const Icon(Icons.description_outlined, size: 14, color: Color(0xFF64748B)),
+                                const SizedBox(width: 6),
+                                Expanded(child: Text("${pass['reason'] ?? 'Not specified'}", style: GoogleFonts.poppins(fontSize: 12, color: const Color(0xFF475569)))),
+                              ]),
+                              if (pass['destination'] != null) ...[
+                                const SizedBox(height: 6),
+                                Row(children: [
+                                  const Icon(Icons.location_on_outlined, size: 14, color: Color(0xFF64748B)),
+                                  const SizedBox(width: 6),
+                                  Text("${pass['destination']}", style: GoogleFonts.poppins(fontSize: 12, color: const Color(0xFF475569))),
+                                ]),
+                              ],
+                            ],
+                          ),
                         ),
-                        Text("Reason: ${pass['reason']}", style: GoogleFonts.poppins(fontSize: 13, color: const Color(0xFF475569))),
-                        const SizedBox(height: 4),
-                        Text("Destination: ${pass['destination'] ?? 'Not specified'}", style: GoogleFonts.poppins(fontSize: 13, color: const Color(0xFF475569))),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 14),
                         Row(
                           children: [
                             Expanded(
-                              child: OutlinedButton(
+                              child: OutlinedButton.icon(
                                 onPressed: () => _updateStatus(pass['id'], 'REJECTED'),
+                                icon: const Icon(Icons.close_rounded, size: 16),
+                                label: const Text('Reject'),
                                 style: OutlinedButton.styleFrom(
                                   foregroundColor: const Color(0xFFEF4444),
                                   side: const BorderSide(color: Color(0xFFEF4444)),
                                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                  padding: const EdgeInsets.symmetric(vertical: 12),
                                 ),
-                                child: const Text('Reject'),
                               ),
                             ),
-                            const SizedBox(width: 12),
+                            const SizedBox(width: 10),
                             Expanded(
-                              child: ElevatedButton(
+                              child: ElevatedButton.icon(
                                 onPressed: () => _updateStatus(pass['id'], 'APPROVED'),
+                                icon: const Icon(Icons.check_rounded, size: 16, color: Colors.white),
+                                label: const Text('Approve', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: const Color(0xFF10B981),
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                                   elevation: 0,
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                  padding: const EdgeInsets.symmetric(vertical: 12),
                                 ),
-                                child: const Text('Approve', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                               ),
                             ),
                           ],
-                        )
+                        ),
                       ],
                     ),
                   ),
@@ -513,31 +996,47 @@ class _ApprovalsTabState extends State<_ApprovalsTab> {
 }
 
 // ---------------------------------------------------------
-// Tab 4: History / Search
+// Tab 4: History / Search — REAL API
 // ---------------------------------------------------------
 class _HistorySearchTab extends StatefulWidget {
   const _HistorySearchTab();
   @override
   State<_HistorySearchTab> createState() => _HistorySearchTabState();
 }
+
 class _HistorySearchTabState extends State<_HistorySearchTab> {
   final TextEditingController _searchCtrl = TextEditingController();
   bool _loading = false;
   List<dynamic> _history = [];
+  List<dynamic> _filtered = [];
 
   Future<void> _fetchHistory() async {
     setState(() => _loading = true);
     try {
-      final res = await ApiService.getGatePasses(); 
+      final res = await ApiService.getGatePasses();
       if (mounted) {
         setState(() {
           _history = res['data'] ?? [];
+          _filtered = _history;
           _loading = false;
         });
       }
     } catch (e) {
       if (mounted) setState(() => _loading = false);
     }
+  }
+
+  void _filterList(String query) {
+    setState(() {
+      _filtered = _history.where((pass) {
+        final isStudent = pass['requestType'] == 'STUDENT';
+        final name = (isStudent
+                ? (pass['student']?['user']?['name'] ?? '')
+                : (pass['requester']?['name'] ?? ''))
+            .toLowerCase();
+        return name.contains(query.toLowerCase());
+      }).toList();
+    });
   }
 
   @override
@@ -548,62 +1047,96 @@ class _HistorySearchTabState extends State<_HistorySearchTab> {
 
   @override
   Widget build(BuildContext context) {
+    final statusColor = {
+      'APPROVED': Colors.green,
+      'COMPLETED': const Color(0xFF3B82F6),
+      'REJECTED': const Color(0xFFEF4444),
+      'PENDING': const Color(0xFFF59E0B),
+      'ACTIVE': const Color(0xFF10B981),
+    };
+
     return Column(
       children: [
         Container(
           color: Colors.white,
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(14),
           child: TextField(
             controller: _searchCtrl,
+            onChanged: _filterList,
             decoration: InputDecoration(
-              hintText: 'Search Name or Roll No...',
-              hintStyle: GoogleFonts.poppins(color: const Color(0xFF94A3B8)),
-              prefixIcon: const Icon(Icons.search, color: Color(0xFF94A3B8)),
+              hintText: 'Search by name...',
+              hintStyle: GoogleFonts.poppins(color: const Color(0xFF94A3B8), fontSize: 13),
+              prefixIcon: const Icon(Icons.search_rounded, color: Color(0xFF94A3B8)),
               filled: true,
               fillColor: const Color(0xFFF1F5F9),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), BorderSide.none),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
               contentPadding: const EdgeInsets.symmetric(vertical: 14),
             ),
-            onChanged: (val) {
-              // Trigger local filter or API search
-            },
           ),
         ),
         Expanded(
-          child: _loading 
-            ? const Center(child: CircularProgressIndicator(color: Color(0xFF10B981)))
-            : RefreshIndicator(
-                onRefresh: _fetchHistory,
-                child: ListView.builder(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: _history.length,
-                  itemBuilder: (context, index) {
-                    final pass = _history[index];
-                    final isStudent = pass['requestType'] == 'STUDENT';
-                    final name = isStudent ? (pass['student']?['user']?['name'] ?? 'Unknown') : (pass['requester']?['name'] ?? 'Unknown');
-                    
-                    return Card(
-                      elevation: 0,
-                      margin: const EdgeInsets.only(bottom: 12),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16), side: const BorderSide(color: Color(0xFFE2E8F0))),
-                      child: ListTile(
-                        leading: Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: pass['status'] == 'APPROVED' ? Colors.green.withOpacity(0.1) : (pass['status'] == 'COMPLETED' ? Colors.blue.withOpacity(0.1) : Colors.grey.withOpacity(0.1)),
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(pass['status'] == 'APPROVED' ? Icons.check : (pass['status'] == 'COMPLETED' ? Icons.history : Icons.close), size: 20, color: pass['status'] == 'APPROVED' ? Colors.green : (pass['status'] == 'COMPLETED' ? Colors.blue : Colors.grey)),
+          child: _loading
+              ? const Center(child: CircularProgressIndicator(color: Color(0xFF10B981)))
+              : RefreshIndicator(
+                  onRefresh: _fetchHistory,
+                  child: _filtered.isEmpty
+                      ? Center(
+                          child: Text("No records found",
+                              style: GoogleFonts.outfit(color: const Color(0xFF64748B), fontSize: 16)))
+                      : ListView.builder(
+                          padding: const EdgeInsets.all(16),
+                          itemCount: _filtered.length,
+                          itemBuilder: (context, index) {
+                            final pass = _filtered[index];
+                            final isStudent = pass['requestType'] == 'STUDENT';
+                            final name = isStudent
+                                ? (pass['student']?['user']?['name'] ?? 'Unknown')
+                                : (pass['requester']?['name'] ?? 'Unknown');
+                            final status = pass['status'] ?? 'UNKNOWN';
+                            final color = statusColor[status] ?? Colors.grey;
+                            final date = pass['createdAt'] != null
+                                ? DateFormat('dd MMM, hh:mm a').format(DateTime.parse(pass['createdAt']).toLocal())
+                                : '--';
+
+                            return Container(
+                              margin: const EdgeInsets.only(bottom: 10),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(16),
+                                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 8, offset: const Offset(0, 3))],
+                              ),
+                              child: ListTile(
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                                leading: CircleAvatar(
+                                  backgroundColor: color.withOpacity(0.12),
+                                  child: Icon(
+                                    isStudent ? Icons.person_rounded : Icons.badge_rounded,
+                                    color: color, size: 20,
+                                  ),
+                                ),
+                                title: Text(name, style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 14)),
+                                subtitle: Text(date, style: GoogleFonts.poppins(fontSize: 11, color: const Color(0xFF94A3B8))),
+                                trailing: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: color.withOpacity(0.12),
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  child: Text(
+                                    status,
+                                    style: GoogleFonts.poppins(
+                                      color: color,
+                                      fontSize: 9,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
                         ),
-                        title: Text(name, style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 15)),
-                        subtitle: Text(DateFormat('dd MMM yyyy, hh:mm a').format(DateTime.parse(pass['createdAt'])), style: GoogleFonts.poppins(fontSize: 11)),
-                        trailing: Text(pass['status'], style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 12, color: pass['status'] == 'APPROVED' ? Colors.green : Colors.grey)),
-                      ),
-                    );
-                  },
                 ),
-              ),
-        )
+        ),
       ],
     );
   }
@@ -617,37 +1150,69 @@ class _QRScannerTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(32),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(32),
-              boxShadow: [BoxShadow(color: const Color(0xFF10B981).withOpacity(0.2), blurRadius: 40, spreadRadius: 10)],
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(36),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF10B981), Color(0xFF34D399)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(36),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF10B981).withOpacity(0.4),
+                    blurRadius: 40,
+                    offset: const Offset(0, 16),
+                  ),
+                ],
+              ),
+              child: const Icon(Icons.qr_code_scanner_rounded, size: 80, color: Colors.white),
             ),
-            child: const Icon(Icons.qr_code_scanner_rounded, size: 100, color: Color(0xFF10B981)),
-          ),
-          const SizedBox(height: 32),
-          Text("Security QR Scanner", style: GoogleFonts.outfit(color: const Color(0xFF1E293B), fontSize: 24, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 8),
-          Text("Point Camera at Student ID Card to log IN/OUT", style: GoogleFonts.poppins(color: const Color(0xFF64748B), fontSize: 14)),
-          const SizedBox(height: 40),
-          ElevatedButton.icon(
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Opening Camera...')));
-            },
-            icon: const Icon(Icons.camera_alt, color: Colors.white),
-            label: Text('TAP TO SCAN', style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold, letterSpacing: 1)),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF10B981),
-              padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-              elevation: 0,
+            const SizedBox(height: 32),
+            Text(
+              "Security QR Scanner",
+              style: GoogleFonts.outfit(color: const Color(0xFF1E293B), fontSize: 24, fontWeight: FontWeight.w800),
             ),
-          )
-        ],
+            const SizedBox(height: 8),
+            Text(
+              "Scan student or staff ID card\nto log Gate IN / OUT instantly",
+              style: GoogleFonts.poppins(color: const Color(0xFF64748B), fontSize: 14, height: 1.6),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 40),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: const Text('Opening Camera...'),
+                      behavior: SnackBarBehavior.floating,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.camera_alt_rounded, color: Colors.white),
+                label: Text(
+                  'TAP TO SCAN',
+                  style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold, letterSpacing: 1.2, fontSize: 15),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF10B981),
+                  padding: const EdgeInsets.symmetric(vertical: 18),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                  elevation: 0,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

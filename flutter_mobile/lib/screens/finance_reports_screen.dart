@@ -71,7 +71,7 @@ class _FinanceReportsScreenState extends State<FinanceReportsScreen> {
         if (mounted) {
           setState(() {
             _totalCollected = collected;
-            _totalExpected = collected + 50000; 
+            _totalExpected = expected;
             _classWiseCollection = classCol;
             _paymentMethods = methods;
             _isLoading = false;

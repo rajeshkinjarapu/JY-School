@@ -1,26 +1,15 @@
 import { Router } from 'express';
-import { authenticate, authorize } from '../middlewares/auth';
-import {
-  requestLeave,
-  getMyLeaves,
-  getAllLeaves,
-  updateLeaveStatus
-} from '../controllers/leave.controller';
+import { applyLeave, getMyLeaves, getAllLeaves, approveRejectLeave } from '../controllers/leave.controller';
+import { authenticate } from '../middleware/auth';
 
 const router = Router();
 
-router.use(authenticate);
+// Staff and Students
+router.post('/apply', authenticate, applyLeave);
+router.get('/my-leaves', authenticate, getMyLeaves);
 
-// Teacher or Student creates leave or permission
-router.post('/', authorize('TEACHER', 'STUDENT', 'SUPER_ADMIN', 'ADMIN'), requestLeave);
-
-// Get my leaves
-router.get('/my', authorize('TEACHER', 'STUDENT', 'SUPER_ADMIN', 'ADMIN'), getMyLeaves);
-
-// Admin gets all leaves
-router.get('/', authorize('SUPER_ADMIN', 'ADMIN'), getAllLeaves);
-
-// Admin updates status
-router.put('/:id/status', authorize('SUPER_ADMIN', 'ADMIN'), updateLeaveStatus);
+// Admins, Principals, HODs
+router.get('/', authenticate, getAllLeaves); // Add role check middleware if applicable
+router.patch('/:id/approve', authenticate, approveRejectLeave);
 
 export default router;

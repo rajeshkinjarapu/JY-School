@@ -230,9 +230,8 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
             context,
             MaterialPageRoute(builder: (context) => RecordFeePaymentScreen(
               student: s2, 
-              feeStructures: _feeStructures,
-              payments: s2['feePayments'] ?? [],
-              discounts: s2['feeDiscounts'] ?? [],
+              structures: _feeStructures,
+              pendingAmount: 0.0,
             )),
           );
           if (result == true) { setState(() => _isLoading = true); _fetchProfile(); }

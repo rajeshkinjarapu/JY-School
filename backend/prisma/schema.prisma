@@ -47,6 +47,8 @@ model User {
   pushSubscriptions PushSubscription[]
   notifications    Notification[]
   transportStaff   TransportStaff?
+  announcementReads AnnouncementRead[]
+  leaveBalance     LeaveBalance?
 
   @@index([email])
   @@index([role])
@@ -341,12 +343,30 @@ model Announcement {
   title       String
   content     String
   targetRoles String   // Stored as comma-separated string e.g. "STUDENT,TEACHER"
+  targetClass String?  // Optional: target specific class name e.g. "10-A"
+  priority    String   @default("NORMAL") // HIGH, NORMAL, LOW
+  status      String   @default("PUBLISHED") // DRAFT, PUBLISHED, SCHEDULED, EXPIRED
+  isPinned    Boolean  @default(false)
+  attachments String[] @default([])
+  scheduledAt DateTime?
   createdById String
   createdBy   User     @relation(fields: [createdById], references: [id])
   isActive    Boolean  @default(true)
   expiresAt   DateTime?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  reads       AnnouncementRead[]
+}
+
+model AnnouncementRead {
+  id             String       @id @default(uuid())
+  announcementId String
+  announcement   Announcement @relation(fields: [announcementId], references: [id], onDelete: Cascade)
+  userId         String
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  readAt         DateTime     @default(now())
+
+  @@unique([announcementId, userId])
 }
 
 model Message {
@@ -697,10 +717,11 @@ model LeaveRequest {
   id           String    @id @default(uuid())
   userId       String
   requester    User      @relation("LeaveRequests", fields: [userId], references: [id])
-  type         String    // LEAVE, PERMISSION
+  type         String    // SICK, CASUAL, EMERGENCY, EARNED
   startDate    DateTime
   endDate      DateTime?
   reason       String
+  documentUrl  String?
   status       String    @default("PENDING") // PENDING, APPROVED, REJECTED
   approvedById String?
   approvedBy   User?     @relation("ApprovedLeaves", fields: [approvedById], references: [id])
@@ -710,6 +731,18 @@ model LeaveRequest {
 
   @@index([userId])
   @@index([status])
+}
+
+model LeaveBalance {
+  id          String   @id @default(uuid())
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  casualTotal Int      @default(12)
+  casualUsed  Int      @default(0)
+  sickTotal   Int      @default(8)
+  sickUsed    Int      @default(0)
+  earnedTotal Int      @default(0)
+  earnedUsed  Int      @default(0)
 }
 
 

@@ -127,6 +127,10 @@ class ApiService {
     return _performGet('/api/announcements', 'Failed to get announcements');
   }
 
+  static Future<Map<String, dynamic>> markAnnouncementRead(String id) async {
+    return _performPost('/api/announcements/$id/read', {}, 'Failed to mark announcement as read');
+  }
+
   static Future<Map<String, dynamic>> getHomework() async {
     return _performGet('/api/homework', 'Failed to get homework');
   }
@@ -488,8 +492,30 @@ class ApiService {
     }
   }
 
-  static Future<Map<String, dynamic>> getGatePasses() async {
-    return _performGet('/api/gate-pass', 'Failed to get gate passes');
+  static Future<Map<String, dynamic>> getGatePasses({String? status}) async {
+    final qs = status != null ? '?status=$status' : '';
+    return _performGet('/api/gate-pass$qs', 'Failed to get gate passes');
+  }
+
+  static Future<Map<String, dynamic>> updateGatePass(String id, Map<String, dynamic> data) async {
+    try {
+      final token = await getToken();
+      if (token == null) return {'success': false, 'message': 'No session token'};
+
+      final response = await http.patch(
+        Uri.parse('$baseUrl/api/gate-pass/$id'),
+        headers: _getHeaders(token: token),
+        body: jsonEncode(data),
+      );
+
+      final dynamic decoded = jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        return {'success': true, 'message': decoded is Map ? (decoded['message'] ?? 'Success') : 'Success'};
+      }
+      return {'success': false, 'message': decoded is Map ? (decoded['message'] ?? 'Failed request') : 'Failed request'};
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: $e'};
+    }
   }
 
   static Future<Map<String, dynamic>> applyGatePass({
@@ -1059,5 +1085,12 @@ class ApiService {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('accessToken');
     await prefs.remove('refreshToken');
+  }
+
+  // ==========================================
+  // GATE PASS STATS ENDPOINT
+  // ==========================================
+  static Future<Map<String, dynamic>> getGatePassStats() async {
+    return _performGet('/api/gate-pass/stats', 'Failed to fetch gate pass stats');
   }
 }

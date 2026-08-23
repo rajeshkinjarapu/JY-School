@@ -65,6 +65,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   List<dynamic> _recentMarks = [];
   Map<String, dynamic> _feeStatusData = {};
 
+  int _unreadNotifications = 0;
+
   @override
   void initState() {
     super.initState();
@@ -201,6 +203,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
         }
       }
     }
+
+    // Fetch live unread notifications count
+    try {
+      final notifRes = await ApiService.getNotifications();
+      if (mounted && notifRes['success']) {
+        final data = notifRes['data'];
+        if (data is List) {
+          int unread = data.where((n) => n['isRead'] != true).length;
+          setState(() {
+            _unreadNotifications = unread;
+          });
+        }
+      }
+    } catch (e) {
+      // Ignore network errors for notifications
+    }
   }
 
   Future<void> _handleLogout() async {
@@ -239,48 +257,77 @@ class _DashboardScreenState extends State<DashboardScreen> {
       drawer: AppDrawer(currentRoute: 'dashboard'),
       backgroundColor: const Color(0xFFF4F7FE),
       appBar: AppBar(
+        toolbarHeight: 70,
         iconTheme: const IconThemeData(color: Colors.white),
         flexibleSpace: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
-              colors: [Color(0xFF2E2A66), Color(0xFF222854)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
+              colors: [Color(0xFF00114F), Color(0xFF000A30)],
+              begin: Alignment.centerLeft,
+              end: Alignment.centerRight,
             ),
           ),
         ),
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.menu, color: Colors.white),
+          icon: const Icon(Icons.menu_rounded, color: Colors.white, size: 30),
           onPressed: () => _scaffoldKey.currentState?.openDrawer(),
         ),
+        titleSpacing: 0,
         title: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Container(
-              padding: const EdgeInsets.all(6),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.15),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: const Icon(Icons.home_outlined, color: Colors.white, size: 20),
-            ),
-            const SizedBox(width: 12),
-            Text(
-              'Dashboard',
-              style: GoogleFonts.outfit(
-                color: Colors.white,
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
+            Image.asset('assets/images/logo.png', height: 48, fit: BoxFit.contain),
+            const SizedBox(width: 8),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'SRI VENKATESWARA',
+                  style: GoogleFonts.poppins(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w600, letterSpacing: 0.5),
+                ),
+                Text(
+                  'JY SCHOOL',
+                  style: GoogleFonts.outfit(color: const Color(0xFFFFD12A), fontSize: 22, fontWeight: FontWeight.w900, height: 1.1, letterSpacing: 0.5),
+                ),
+                Text(
+                  'Narasannapeta',
+                  style: GoogleFonts.poppins(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w500),
+                ),
+              ],
             ),
           ],
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications_none, color: Colors.white),
-            onPressed: () {
-              Navigator.push(context, MaterialPageRoute(builder: (context) => const NotificationsScreen()));
-            }, 
+          Padding(
+            padding: const EdgeInsets.only(right: 8.0),
+            child: IconButton(
+              icon: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  const Icon(Icons.notifications_none_rounded, color: Colors.white, size: 28),
+                  Positioned(
+                    right: -2,
+                    top: -2,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFF3D5E),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Text(
+                        '3', // Mock notification count
+                        style: GoogleFonts.poppins(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold, height: 1.1),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              onPressed: () {
+                Navigator.push(context, MaterialPageRoute(builder: (context) => const NotificationsScreen()));
+              }, 
+            ),
           ),
         ],
       ),
@@ -651,261 +698,231 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildAdminCombinedGrid() {
+    double screenHeight = MediaQuery.of(context).size.height;
+    double screenWidth = MediaQuery.of(context).size.width;
+    // Calculate aspect ratio so the 8 boxes (4 rows) fit perfectly on the screen
+    // Estimated fixed height: AppBar(70) + HeaderCard(160) + BottomNav(60) + Titles/Padding(100) = 390
+    double availableHeight = screenHeight - 320; 
+    if (availableHeight < 400) availableHeight = 400; // increased minimum fallback
+    
+    double itemWidth = (screenWidth - 46) / 2; // 2 columns, padding 16*2, gap 14
+    double itemHeight = (availableHeight - (14 * 3)) / 4; // 4 rows, 3 gaps of 14
+    double dynamicAspectRatio = itemWidth / itemHeight;
+
     return GridView.count(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       crossAxisCount: 2,
-      crossAxisSpacing: 12,
-      mainAxisSpacing: 12,
-      childAspectRatio: 1.45,
+                      crossAxisSpacing: 14,
+      mainAxisSpacing: 14,
+      childAspectRatio: dynamicAspectRatio, // Dynamically fitted
       children: [
-        _buildUniversalCard(
-          subtitle: 'TOTAL STUDENTS',
+        _buildPremiumCard(
+          subtitle: 'STUDENT MANAGEMENT',
           title: '$_adminTotalStudents',
-          bottomText: 'Enrolled this year',
-          icon: Icons.people_outline,
-          gradientStart: const Color(0xFF7B66FF),
-          gradientEnd: const Color(0xFF9080FF),
-          onTap: () {
-            Navigator.push(context, MaterialPageRoute(builder: (context) => const StudentsScreen()));
-          },
+          bottomText: 'Admission & Records',
+          icon: Icons.groups_rounded,
+          gradientColors: [const Color(0xFF4C3AE3), const Color(0xFF28189D)],
+          accentColor: const Color(0xFF6366F1),
+          imagePath: 'assets/images/admin_icons/student.jpg',
+          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const StudentsScreen())),
         ),
-        _buildUniversalCard(
-          subtitle: 'TOTAL TEACHERS',
+        _buildPremiumCard(
+          subtitle: 'TEACHER MANAGEMENT',
           title: '$_adminTotalTeachers',
-          bottomText: 'On staff',
-          icon: Icons.school_outlined,
-          gradientStart: const Color(0xFF2DD38A),
-          gradientEnd: const Color(0xFF4EEB9E),
-          onTap: () {
-            Navigator.push(context, MaterialPageRoute(builder: (context) => const TeachersScreen()));
-          },
+          bottomText: 'Staff & Activities',
+          icon: Icons.school_rounded,
+          gradientColors: [const Color(0xFF00BFA5), const Color(0xFF00796B)],
+          accentColor: const Color(0xFF1DE9B6),
+          imagePath: 'assets/images/admin_icons/teacher.jpg',
+          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TeachersScreen())),
         ),
-        _buildUniversalCard(
-          subtitle: 'TOTAL CLASSES',
+        _buildPremiumCard(
+          subtitle: 'CLASSES MANAGEMENT',
           title: '$_adminTotalClasses',
-          bottomText: 'Active sections',
-          icon: Icons.domain,
-          gradientStart: const Color(0xFFFBB117),
-          gradientEnd: const Color(0xFFFFC648),
-          onTap: () {
-            Navigator.push(context, MaterialPageRoute(builder: (context) => const ClassesScreen()));
-          },
+          bottomText: 'Syllabus & Timetable',
+          icon: Icons.account_balance_rounded,
+          gradientColors: [const Color(0xFF0277BD), const Color(0xFF014670)],
+          accentColor: const Color(0xFF039BE5),
+          imagePath: 'assets/images/admin_icons/classes.jpg',
+          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ClassesScreen())),
         ),
-        _buildUniversalCard(
-          subtitle: 'TOTAL REVENUE',
+        _buildPremiumCard(
+          subtitle: 'REVENUE TRACKING',
           title: '₹${_formatIndianCurrency(_adminFeeCollected)}',
-          bottomText: 'Fees collected',
-          icon: Icons.account_balance_wallet_outlined,
-          gradientStart: const Color(0xFFFF4E6A),
-          gradientEnd: const Color(0xFFFF7286),
-          onTap: () {
-            Navigator.push(context, MaterialPageRoute(builder: (context) => const FinanceScreen(initialIndex: 1, showOnlyTransactions: true)));
-          },
+          bottomText: 'Total Income',
+          icon: Icons.account_balance_wallet_rounded,
+          gradientColors: [const Color(0xFFE91E63), const Color(0xFF880E4F)],
+          accentColor: const Color(0xFFF06292),
+          imagePath: 'assets/images/admin_icons/revenue.jpg',
+          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const FinanceScreen())),
         ),
-        _buildUniversalCard(
-          subtitle: 'COLLECT PAYMENT',
-          title: 'Fees',
-          bottomText: 'Process new fees',
-          icon: Icons.payment_outlined,
-          gradientStart: const Color(0xFF9E7AFF),
-          gradientEnd: const Color(0xFFB193FF),
-          onTap: () {
-            Navigator.push(context, MaterialPageRoute(builder: (context) => const StudentFeeSearchScreen()));
-          },
+        _buildPremiumCard(
+          subtitle: 'FEE COLLECTION',
+          title: 'Collect Fees',
+          bottomText: 'Payment Tracking',
+          icon: Icons.credit_card_rounded,
+          gradientColors: [const Color(0xFF7B1FA2), const Color(0xFF4A148C)],
+          accentColor: const Color(0xFF9C27B0),
+          imagePath: 'assets/images/admin_icons/collect_fees.jpg',
+          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const StudentFeeSearchScreen())),
         ),
-        _buildUniversalCard(
-          subtitle: 'RESULTS',
+        _buildPremiumCard(
+          subtitle: 'EXAMINATIONS',
           title: 'Exams',
-          bottomText: 'View exam scores',
-          icon: Icons.description_outlined,
-          gradientStart: const Color(0xFF2DBDFD),
-          gradientEnd: const Color(0xFF55CBFF),
-          onTap: () {
-            Navigator.push(context, MaterialPageRoute(builder: (context) => const ResultsScreen()));
-          },
+          bottomText: 'Marks & Results',
+          icon: Icons.fact_check_rounded,
+          gradientColors: [const Color(0xFF1565C0), const Color(0xFF0D47A1)],
+          accentColor: const Color(0xFF1E88E5),
+          imagePath: 'assets/images/admin_icons/exams.jpg',
+          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ResultsScreen())),
         ),
-        _buildUniversalCard(
+        _buildPremiumCard(
           subtitle: 'FEE DETAILS',
-          title: 'Student Fees',
-          bottomText: 'Student balances & dues',
-          icon: Icons.receipt_long_outlined,
-          gradientStart: const Color(0xFFFF56A5),
-          gradientEnd: const Color(0xFFFF7DBA),
-          onTap: () {
-            Navigator.push(context, MaterialPageRoute(builder: (context) => const StudentFeeSearchScreen()));
-          },
+          title: 'Balances',
+          bottomText: 'Invoices & Dues',
+          icon: Icons.receipt_long_rounded,
+          gradientColors: [const Color(0xFFFF8F00), const Color(0xFFFF6F00)],
+          accentColor: const Color(0xFFFFA000),
+          imagePath: 'assets/images/admin_icons/student_fees.jpg',
+          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const StudentFeeSearchScreen())),
         ),
-        _buildUniversalCard(
-          subtitle: 'PROGRESS CARDS',
+        _buildPremiumCard(
+          subtitle: 'REPORTS & ANALYTICS',
           title: 'Reports',
-          bottomText: 'Generate & View',
-          icon: Icons.workspace_premium_outlined,
-          gradientStart: const Color(0xFF27B484),
-          gradientEnd: const Color(0xFF45CA9E),
-          onTap: () {
-            Navigator.push(context, MaterialPageRoute(builder: (context) => const ProgressCardScreen()));
-          },
+          bottomText: 'Performance Analysis',
+          icon: Icons.emoji_events_rounded,
+          gradientColors: [const Color(0xFF00C853), const Color(0xFF009624)],
+          accentColor: const Color(0xFF00E676),
+          imagePath: 'assets/images/admin_icons/reports.jpg',
+          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ProgressCardScreen())),
         ),
       ],
     );
   }
 
-  Widget _buildUniversalCard({
+  Widget _buildPremiumCard({
     required String title,
     required String subtitle,
     required String bottomText,
     required IconData icon,
-    required Color gradientStart,
-    required Color gradientEnd,
+    required List<Color> gradientColors,
+    required Color accentColor,
+    required String imagePath,
     required VoidCallback onTap,
   }) {
     return GestureDetector(
       onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        child: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [gradientStart, gradientEnd],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(22),
-            boxShadow: [
-              BoxShadow(
-                color: gradientStart.withOpacity(0.45),
-                blurRadius: 14,
-                offset: const Offset(0, 7),
-              ),
-              BoxShadow(
-                color: gradientEnd.withOpacity(0.15),
-                blurRadius: 4,
-                offset: const Offset(0, 1),
-              ),
-            ],
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: gradientColors,
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
           ),
-          child: Stack(
-            children: [
-              // Decorative large circle in background
-              Positioned(
-                right: -20,
-                top: -20,
-                child: Container(
-                  width: 90,
-                  height: 90,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Colors.white.withOpacity(0.08),
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: gradientColors[0].withOpacity(0.4),
+              blurRadius: 15,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: Stack(
+          clipBehavior: Clip.hardEdge,
+          children: [
+            // Floating 3D image bubble at the bottom right
+            Positioned(
+              right: -15,
+              bottom: -20,
+              child: Container(
+                width: 90,
+                height: 90,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.white.withOpacity(0.3),
+                      blurRadius: 15,
+                      spreadRadius: 5,
+                    )
+                  ],
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Image.asset(
+                    imagePath,
+                    fit: BoxFit.contain,
                   ),
                 ),
               ),
-              Positioned(
-                right: 10,
-                bottom: -30,
-                child: Container(
-                  width: 70,
-                  height: 70,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Colors.white.withOpacity(0.06),
-                  ),
-                ),
-              ),
-              // Card content
-              Padding(
-                padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    // Top row: icon + arrow
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.22),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Icon(icon, color: Colors.white, size: 20),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(12.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      // Icon Badge
+                      Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: Colors.white.withOpacity(0.4), width: 1),
                         ),
-                        Container(
-                          padding: const EdgeInsets.all(5),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.18),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: const Icon(Icons.arrow_outward_rounded, color: Colors.white, size: 13),
-                        ),
-                      ],
-                    ),
-                    // Bottom: label + value + footnote
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
+                        child: Icon(icon, color: Colors.white, size: 16),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
                           subtitle,
                           style: GoogleFonts.poppins(
-                            color: Colors.white.withOpacity(0.80),
-                            fontSize: 9.5,
+                            color: Colors.white.withOpacity(0.95),
+                            fontSize: 9,
                             fontWeight: FontWeight.w700,
-                            letterSpacing: 0.8,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          title,
-                          style: GoogleFonts.outfit(
-                            color: Colors.white,
-                            fontSize: 21,
-                            fontWeight: FontWeight.w800,
-                            height: 1.1,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
-                        const SizedBox(height: 6),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.18),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Container(
-                                width: 5,
-                                height: 5,
-                                decoration: const BoxDecoration(
-                                  color: Colors.white,
-                                  shape: BoxShape.circle,
-                                ),
-                              ),
-                              const SizedBox(width: 5),
-                              Flexible(
-                                child: Text(
-                                  bottomText,
-                                  style: GoogleFonts.poppins(
-                                    color: Colors.white,
-                                    fontSize: 9,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
+                      ),
+                    ],
+                  ),
+                  const Spacer(),
+                  Text(
+                    title,
+                    style: GoogleFonts.outfit(
+                      color: Colors.white,
+                      fontSize: 20,
+                      fontWeight: FontWeight.w900,
+                      height: 1.1,
                     ),
-                  ],
-                ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: accentColor.withOpacity(0.7),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      bottomText,
+                      style: GoogleFonts.poppins(color: Colors.white, fontSize: 8, fontWeight: FontWeight.w600),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

@@ -36,7 +36,20 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         });
       }
     } catch (e) {
-      // Ignore errors, let it show empty state
+      // Offline fallback — load from local cache
+      final cached = await NotificationService().getCachedNotifications();
+      if (mounted && cached.isNotEmpty) {
+        setState(() {
+          _notifications = cached.map((n) => {
+            'title': n['title'],
+            'message': n['body'],
+            'isRead': true,
+            'createdAt': n['createdAt'],
+            'route': n['route'],
+            '_isOfflineCached': true,
+          }).toList();
+        });
+      }
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);

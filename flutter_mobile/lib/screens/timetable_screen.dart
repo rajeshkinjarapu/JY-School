@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+
 import '../services/api_service.dart';
 import '../widgets/app_drawer.dart';
 import 'package:intl/intl.dart';
@@ -52,11 +52,11 @@ class _TimetableScreenState extends State<TimetableScreen> {
     ];
 
     List<BottomNavigationBarItem> navItems = [
-      const BottomNavigationBarItem(icon: Icon(LucideIcons.layoutDashboard), label: 'Dashboard'),
-      const BottomNavigationBarItem(icon: Icon(LucideIcons.calendarDays), label: 'Timetable'),
-      if (_hasFullAccess() || _userRole == 'TEACHER') const BottomNavigationBarItem(icon: Icon(LucideIcons.gitPullRequest), label: 'Requests'),
-      if (_hasFullAccess()) const BottomNavigationBarItem(icon: Icon(LucideIcons.edit3), label: 'Manage'),
-      if (_hasFullAccess()) const BottomNavigationBarItem(icon: Icon(LucideIcons.barChart3), label: 'Reports'),
+      const BottomNavigationBarItem(icon: Icon(Icons.dashboard), label: 'Dashboard'),
+      const BottomNavigationBarItem(icon: Icon(Icons.calendar_month), label: 'Timetable'),
+      if (_hasFullAccess() || _userRole == 'TEACHER') const BottomNavigationBarItem(icon: Icon(Icons.approval), label: 'Requests'),
+      if (_hasFullAccess()) const BottomNavigationBarItem(icon: Icon(Icons.edit), label: 'Manage'),
+      if (_hasFullAccess()) const BottomNavigationBarItem(icon: Icon(Icons.bar_chart), label: 'Reports'),
     ];
 
     return Scaffold(
@@ -83,7 +83,7 @@ class _TimetableScreenState extends State<TimetableScreen> {
           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Emergency Substitute Routing Triggered')));
         },
         backgroundColor: Colors.redAccent,
-        child: const Icon(LucideIcons.alertTriangle, color: Colors.white),
+        child: const Icon(Icons.warning_amber_rounded, color: Colors.white),
       ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
@@ -153,18 +153,18 @@ class _TimetableDashboardTabState extends State<TimetableDashboardTab> {
         children: [
           Row(
             children: [
-              Expanded(child: _buildStatCard('Classes', _stats['classes']?.toString() ?? '0', LucideIcons.bookOpen, const Color(0xFFECFDF5), const Color(0xFF10B981))),
+              Expanded(child: _buildStatCard('Classes', _stats['classes']?.toString() ?? '0', Icons.menu_book, const Color(0xFFECFDF5), const Color(0xFF10B981))),
               const SizedBox(width: 12),
-              Expanded(child: _buildStatCard('Teachers', _stats['teachers']?.toString() ?? '0', LucideIcons.users, const Color(0xFFEFF6FF), const Color(0xFF3B82F6))),
+              Expanded(child: _buildStatCard('Teachers', _stats['teachers']?.toString() ?? '0', Icons.people, const Color(0xFFEFF6FF), const Color(0xFF3B82F6))),
               const SizedBox(width: 12),
-              Expanded(child: _buildStatCard('Subjects', _stats['subjects']?.toString() ?? '0', LucideIcons.library, const Color(0xFFFEF2F2), const Color(0xFFEF4444))),
+              Expanded(child: _buildStatCard('Subjects', _stats['subjects']?.toString() ?? '0', Icons.library_books, const Color(0xFFFEF2F2), const Color(0xFFEF4444))),
             ],
           ),
           const SizedBox(height: 24),
           
           Row(
             children: [
-              const Icon(LucideIcons.alertOctagon, color: Colors.redAccent),
+              const Icon(Icons.error_outline, color: Colors.redAccent),
               const SizedBox(width: 8),
               Text('Clash Detection Alerts', style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: const Color(0xFF1E293B))),
               const Spacer(),
@@ -184,7 +184,7 @@ class _TimetableDashboardTabState extends State<TimetableDashboardTab> {
               child: Center(
                 child: Column(
                   children: [
-                    const Icon(LucideIcons.checkCircle2, color: Colors.green, size: 48),
+                    const Icon(Icons.check_circle_outline, color: Colors.green, size: 48),
                     const SizedBox(height: 8),
                     Text('No Clashes Detected', style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: const Color(0xFF1E293B))),
                     Text('Timetable is perfectly synced.', style: GoogleFonts.poppins(color: const Color(0xFF64748B), fontSize: 12)),
@@ -206,7 +206,7 @@ class _TimetableDashboardTabState extends State<TimetableDashboardTab> {
                   Container(
                     padding: const EdgeInsets.all(10),
                     decoration: const BoxDecoration(color: Colors.redAccent, shape: BoxShape.circle),
-                    child: const Icon(LucideIcons.alertTriangle, color: Colors.white, size: 20),
+                    child: const Icon(Icons.warning_amber_rounded, color: Colors.white, size: 20),
                   ),
                   const SizedBox(width: 16),
                   Expanded(
@@ -486,7 +486,7 @@ class TimetableManageTab extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(LucideIcons.monitor, size: 64, color: Color(0xFFCBD5E1)),
+            const Icon(Icons.desktop_windows, size: 64, color: Color(0xFFCBD5E1)),
             const SizedBox(height: 24),
             Text('Timetable Management', style: GoogleFonts.outfit(fontSize: 24, fontWeight: FontWeight.bold, color: const Color(0xFF1E293B))),
             const SizedBox(height: 8),
@@ -511,7 +511,7 @@ class TimetableReportsTab extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(LucideIcons.fileBarChart, size: 64, color: Color(0xFFCBD5E1)),
+            const Icon(Icons.insert_chart_outlined, size: 64, color: Color(0xFFCBD5E1)),
             const SizedBox(height: 24),
             Text('Teacher Workload Reports', style: GoogleFonts.outfit(fontSize: 24, fontWeight: FontWeight.bold, color: const Color(0xFF1E293B))),
             const SizedBox(height: 8),

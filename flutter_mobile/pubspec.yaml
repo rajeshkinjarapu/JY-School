@@ -51,4 +51,13 @@ flutter:
   assets:
     - shorebird.yaml
     - assets/images/logo.png
+    - assets/images/admin_icons/
     - assets/images/app_icon.jpg
+    - assets/illustrations/students.jpg
+    - assets/illustrations/teacher.jpg
+    - assets/illustrations/classes.jpg
+    - assets/illustrations/revenue.jpg
+    - assets/illustrations/payment.jpg
+    - assets/illustrations/exams.jpg
+    - assets/illustrations/fees.jpg
+    - assets/illustrations/reports.jpg
