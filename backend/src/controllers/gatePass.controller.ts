@@ -417,7 +417,8 @@ export const scanGatePass = async (req: AuthRequest, res: Response, next: NextFu
           slipNumber: `GP-${Date.now().toString().slice(-6)}`,
         }
       });
-      return successResponse(res, gatePass, 'Marked OUT successfully');
+      successResponse(res, gatePass, 'Marked OUT successfully');
+      return;
     } else {
       const gatePass = await prisma.gatePass.findFirst({
         where: { studentId: student.id, status: 'ACTIVE' },
@@ -429,7 +430,8 @@ export const scanGatePass = async (req: AuthRequest, res: Response, next: NextFu
         where: { id: gatePass.id },
         data: { status: 'COMPLETED', actualReturnTime: new Date().toISOString() }
       });
-      return successResponse(res, updated, 'Marked IN successfully');
+      successResponse(res, updated, 'Marked IN successfully');
+      return;
     }
   } catch (error) {
     next(error);
