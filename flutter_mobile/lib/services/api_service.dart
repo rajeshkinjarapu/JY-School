@@ -10,6 +10,15 @@ class ApiService {
     if (photoUrl == null || photoUrl.isEmpty) return '';
     final trimmed = photoUrl.trim();
     if (trimmed.isEmpty) return '';
+    
+    // Fix for localhost URLs from backend in mobile app
+    if (trimmed.contains('localhost:')) {
+      final uri = Uri.tryParse(trimmed);
+      if (uri != null && uri.path.isNotEmpty) {
+        return '$baseUrl${uri.path}';
+      }
+    }
+    
     if (trimmed.startsWith('http') || trimmed.startsWith('data:')) return trimmed;
     if (trimmed.startsWith('/')) return '$baseUrl$trimmed';
     return '$baseUrl/$trimmed';
@@ -464,23 +473,27 @@ class ApiService {
   }
 
   static Future<Map<String, dynamic>> getGatePasses() async {
-    return _performGet('/api/gatePass', 'Failed to get gate passes');
+    return _performGet('/api/gate-pass', 'Failed to get gate passes');
   }
 
   static Future<Map<String, dynamic>> applyGatePass({
     required String reason,
+    required String destination,
     required String outTime,
+    String? requestType,
   }) async {
     try {
       final token = await getToken();
       if (token == null) return {'success': false, 'message': 'No session token'};
 
       final response = await http.post(
-        Uri.parse('$baseUrl/api/gatePass'),
+        Uri.parse('$baseUrl/api/gate-pass'),
         headers: _getHeaders(token: token),
         body: jsonEncode({
           'reason': reason,
-          'outTime': outTime,
+          'destination': destination,
+          'exitTime': outTime,
+          if (requestType != null) 'requestType': requestType,
         }),
       );
 
@@ -1030,6 +1043,5 @@ class ApiService {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('accessToken');
     await prefs.remove('refreshToken');
-    await prefs.remove('user');
   }
 }

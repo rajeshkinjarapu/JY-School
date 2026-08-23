@@ -103,8 +103,15 @@ class _TimetableScreenState extends State<TimetableScreen> with SingleTickerProv
         if (mounted) {
           setState(() {
             _classes = classesRes['success'] ? (classesRes['data'] ?? []) : [];
-            _isLoading = false;
+            if (_classes.isNotEmpty && _selectedClassId == null) {
+              _selectedClassId = _classes[0]['id'].toString();
+            }
           });
+          if (_selectedClassId != null) {
+            await _fetchClassTimetable(_selectedClassId!);
+          } else {
+            setState(() { _isLoading = false; });
+          }
         }
       }
     } catch (e) {
@@ -143,9 +150,17 @@ class _TimetableScreenState extends State<TimetableScreen> with SingleTickerProv
       backgroundColor: const Color(0xFFF8FAFC),
       drawer: const AppDrawer(currentRoute: 'timetable'),
       appBar: AppBar(
-        title: Text('Timetable', style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 18)),
-        backgroundColor: Colors.white,
-        foregroundColor: const Color(0xFF1E293B),
+        title: Text('Timetable', style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 20)),
+        iconTheme: const IconThemeData(color: Colors.white),
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF0F172A), Color(0xFF1E293B)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
         elevation: 0,
       ),
       body: _isLoading
@@ -154,25 +169,28 @@ class _TimetableScreenState extends State<TimetableScreen> with SingleTickerProv
               children: [
                 if (_userRole == 'SUPER_ADMIN' || _userRole == 'ADMIN')
                   Container(
-                    margin: const EdgeInsets.all(16),
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    margin: const EdgeInsets.fromLTRB(16, 24, 16, 16),
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
                     decoration: BoxDecoration(
                       color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 8, offset: const Offset(0, 2))],
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: const Color(0xFFE2E8F0)),
+                      boxShadow: [
+                        BoxShadow(color: const Color(0xFF6366F1).withOpacity(0.08), blurRadius: 15, offset: const Offset(0, 5))
+                      ],
                     ),
                     child: DropdownButtonHideUnderline(
                       child: DropdownButton<String>(
                         isExpanded: true,
                         hint: Text('Select Class', style: GoogleFonts.poppins(color: const Color(0xFF64748B))),
                         value: _selectedClassId,
-                        icon: const Icon(Icons.keyboard_arrow_down_rounded, color: Color(0xFF94A3B8)),
+                        icon: const Icon(Icons.expand_more_rounded, color: Color(0xFF6366F1)),
                         items: _classes.map((cls) {
                           final name = cls['className'] ?? 'Unknown';
                           final sec = cls['section'] ?? '';
                           return DropdownMenuItem<String>(
                             value: cls['id'].toString(),
-                            child: Text('$name $sec', style: GoogleFonts.poppins(color: const Color(0xFF1E293B))),
+                            child: Text('$name $sec', style: GoogleFonts.poppins(color: const Color(0xFF1E293B), fontWeight: FontWeight.w600)),
                           );
                         }).toList(),
                         onChanged: (val) {
@@ -223,12 +241,12 @@ class _TimetableScreenState extends State<TimetableScreen> with SingleTickerProv
 
   Widget _buildDayTimetable(String day) {
     if (_timetable.isEmpty) {
-      return Center(child: Text('No timetable available', style: GoogleFonts.poppins(color: const Color(0xFF94A3B8))));
+      return _buildEmptyState('No timetable available', 'Please select a class or contact the administrator.');
     }
 
     final List<dynamic> periods = _timetable[day] ?? [];
     if (periods.isEmpty) {
-      return Center(child: Text('No periods scheduled for $day', style: GoogleFonts.poppins(color: const Color(0xFF94A3B8))));
+      return _buildEmptyState('No periods scheduled', 'Enjoy your free day on $day!');
     }
 
     periods.sort((a, b) => (a['startTime'] ?? '').compareTo(b['startTime'] ?? ''));
@@ -317,55 +335,70 @@ class _TimetableScreenState extends State<TimetableScreen> with SingleTickerProv
                 margin: const EdgeInsets.only(bottom: 24),
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: isBreak ? const Color(0xFFFFFBEB) : colors['bg'],
+                  color: isBreak ? const Color(0xFFFFFBEB) : Colors.white,
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(color: colors['border']!),
                   boxShadow: [
                     BoxShadow(color: colors['text']!.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))
                   ],
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                child: Row(
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Expanded(
-                          child: Text(
-                            isBreak ? 'BREAK' : subject,
-                            style: GoogleFonts.poppins(color: colors['text'], fontSize: 16, fontWeight: FontWeight.bold),
+                    Container(
+                      width: 4,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: colors['text'],
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  isBreak ? 'BREAK' : subject,
+                                  style: GoogleFonts.poppins(color: colors['text'], fontSize: 16, fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                              if (room.isNotEmpty)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: colors['bg'],
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Icon(Icons.meeting_room_rounded, size: 12, color: colors['text']),
+                                      const SizedBox(width: 4),
+                                      Text(room, style: GoogleFonts.poppins(fontSize: 10, fontWeight: FontWeight.bold, color: colors['text'])),
+                                    ],
+                                  ),
+                                )
+                            ],
                           ),
-                        ),
-                        if (room.isNotEmpty)
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.5),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Row(
+                          if (!isBreak) ...[
+                            const SizedBox(height: 8),
+                            Row(
                               children: [
-                                Icon(Icons.meeting_room_rounded, size: 12, color: colors['text']),
-                                const SizedBox(width: 4),
-                                Text(room, style: GoogleFonts.poppins(fontSize: 10, fontWeight: FontWeight.bold, color: colors['text'])),
+                                Icon(Icons.person_rounded, size: 14, color: const Color(0xFF64748B)),
+                                const SizedBox(width: 6),
+                                Text(
+                                  teacher,
+                                  style: GoogleFonts.poppins(color: const Color(0xFF64748B), fontSize: 13, fontWeight: FontWeight.w500),
+                                ),
                               ],
                             ),
-                          )
-                      ],
-                    ),
-                    if (!isBreak) ...[
-                      const SizedBox(height: 8),
-                      Row(
-                        children: [
-                          Icon(Icons.person_rounded, size: 14, color: colors['text']!.withOpacity(0.7)),
-                          const SizedBox(width: 6),
-                          Text(
-                            teacher,
-                            style: GoogleFonts.poppins(color: colors['text']!.withOpacity(0.8), fontSize: 13, fontWeight: FontWeight.w500),
-                          ),
+                          ]
                         ],
                       ),
-                    ]
+                    ),
                   ],
                 ),
               ),
@@ -373,6 +406,28 @@ class _TimetableScreenState extends State<TimetableScreen> with SingleTickerProv
           ],
         );
       },
+    );
+  }
+
+  Widget _buildEmptyState(String title, String subtitle) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF1F5F9),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.event_busy_rounded, size: 48, color: Color(0xFF94A3B8)),
+          ),
+          const SizedBox(height: 16),
+          Text(title, style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: const Color(0xFF1E293B))),
+          const SizedBox(height: 8),
+          Text(subtitle, style: GoogleFonts.poppins(fontSize: 13, color: const Color(0xFF64748B))),
+        ],
+      ),
     );
   }
 }

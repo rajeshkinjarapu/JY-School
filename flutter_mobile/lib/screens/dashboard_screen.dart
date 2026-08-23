@@ -14,6 +14,7 @@ import 'teacher_attendance_screen.dart';
 import 'teacher_homework_screen.dart';
 import 'teacher_marks_screen.dart';
 import 'profile_screen.dart';
+import 'notifications_screen.dart';
 import '../widgets/app_drawer.dart';
 import 'students_screen.dart';
 import 'teachers_screen.dart';
@@ -277,7 +278,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.notifications_none, color: Colors.white),
-            onPressed: () {}, 
+            onPressed: () {
+              Navigator.push(context, MaterialPageRoute(builder: (context) => const NotificationsScreen()));
+            }, 
           ),
         ],
       ),
@@ -433,12 +436,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(16),
-                child: _user?['photoUrl']?.isNotEmpty == true
+                child: _user?['photoUrl'] != null && _user!['photoUrl'].toString().isNotEmpty
                     ? Image.network(
-                        _user!['photoUrl'].toString().startsWith('http')
-                            ? _user!['photoUrl']
-                            : '${ApiService.baseUrl}${_user!['photoUrl']}',
+                        ApiService.getImageUrl(_user!['photoUrl'].toString()),
                         fit: BoxFit.cover,
+                        headers: const {'ngrok-skip-browser-warning': '69420'},
                         errorBuilder: (c, e, s) => Icon(Icons.person, color: Colors.white.withOpacity(0.7), size: 42),
                       )
                     : Icon(Icons.person, color: Colors.white.withOpacity(0.7), size: 42),

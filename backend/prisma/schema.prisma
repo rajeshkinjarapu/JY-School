@@ -16,7 +16,7 @@ model User {
   name         String
   email        String   @unique
   password     String
-  role         String   @default("STUDENT") // SUPER_ADMIN, ADMIN, TEACHER, STUDENT, PARENT
+  role         String   @default("STUDENT") // SUPER_ADMIN, ADMIN, TEACHER, STUDENT, PARENT, SECURITY
   phone        String?
   photoUrl     String?
   isActive     Boolean  @default(true)
@@ -384,9 +384,12 @@ model GatePass {
   destination    String?
   exitTime       String?
   returnTime     String?
+  expectedReturnTime String?
+  actualExitTime   String?
+  actualReturnTime String?
   notes          String?
   requestedDate  DateTime  @default(now())
-  status         String    @default("PENDING") // PENDING, APPROVED, REJECTED
+  status         String    @default("PENDING") // PENDING, APPROVED, REJECTED, ACTIVE, COMPLETED, OVERDUE
   approvedById   String?
   approvedBy     User?     @relation("ApprovedGatePasses", fields: [approvedById], references: [id])
   approvedAt     DateTime?
@@ -409,6 +412,11 @@ model SchoolSettings {
   website     String?
   logoUrl     String?
   currentYear String   @default("2024-2025")
+  examGradingSystem         String   @default("CBSE Standard (A1-E2)")
+  examAutoPublish           Boolean  @default(false)
+  examSendSms               Boolean  @default(true)
+  examShowGradesOnAdmitCard Boolean  @default(false)
+  examAdmitCardInstructions String   @default("")
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }

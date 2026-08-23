@@ -32,6 +32,12 @@ class _AllSubjectsMarksEntryScreenState extends State<AllSubjectsMarksEntryScree
   @override
   void initState() {
     super.initState();
+    sortedSubjects = List.from(widget.subjects);
+    sortedSubjects.sort((a, b) {
+      final nameA = a['name']?.toString() ?? '';
+      final nameB = b['name']?.toString() ?? '';
+      return _getSubjectPriority(nameA).compareTo(_getSubjectPriority(nameB));
+    });
     _initControllers();
     _fetchExistingMarks();
   }
@@ -141,15 +147,71 @@ class _AllSubjectsMarksEntryScreenState extends State<AllSubjectsMarksEntryScree
     }
   }
 
+  late List<dynamic> sortedSubjects;
+
+  int _getSubjectPriority(String name) {
+    name = name.toLowerCase();
+    if (name.contains('telugu')) return 1;
+    if (name.contains('hindi')) return 2;
+    if (name.contains('english')) return 3;
+    if (name.contains('math')) return 4;
+    if (name.contains('physical science') || name.contains('physics')) return 5;
+    if (name.contains('biological science') || name.contains('biology') || name.contains('chemistry')) return 6;
+    if (name.contains('social')) return 7;
+    if (name.contains('evs')) return 8;
+    return 99;
+  }
+
+  String _getShortSubjectName(String name) {
+    String lower = name.toLowerCase();
+    if (lower.contains('telugu')) return 'TEL';
+    if (lower.contains('hindi')) return 'HIN';
+    if (lower.contains('english')) return 'ENG';
+    if (lower.contains('math')) return 'MAT';
+    if (lower.contains('physical science')) return 'PHY SCI';
+    if (lower.contains('physics')) return 'PHY';
+    if (lower.contains('biological science')) return 'BIO SCI';
+    if (lower.contains('biology')) return 'BIO';
+    if (lower.contains('chemistry')) return 'CHE';
+    if (lower.contains('social')) return 'SOC';
+    if (lower.contains('evs')) return 'EVS';
+    
+    if (name.length > 8) return '${name.substring(0, 6).toUpperCase()}..';
+    return name.toUpperCase();
+  }
+
+  String _calculateTotal(String sid) {
+    double total = 0;
+    for (var sub in sortedSubjects) {
+      final subId = sub['id'].toString();
+      final val = _marksControllers['${sid}_$subId']?.text ?? '';
+      if (val.toUpperCase() != 'AB' && val.isNotEmpty) {
+        total += double.tryParse(val) ?? 0;
+      }
+    }
+    // format to remove .0 if it's an integer
+    if (total == total.toInt()) {
+      return total.toInt().toString();
+    }
+    return total.toStringAsFixed(1);
+  }
+
   @override
   Widget build(BuildContext context) {
     // Filter students by search
-    final filteredStudents = widget.students.where((s) {
+    final filteredStudents = [];
+    for (int i = 0; i < widget.students.length; i++) {
+      final s = widget.students[i];
       final name = s['user']?['name']?.toString().toLowerCase() ?? '';
       final roll = s['rollNo']?.toString().toLowerCase() ?? '';
       final q = _searchQuery.toLowerCase();
-      return name.contains(q) || roll.contains(q);
-    }).toList();
+      if (name.contains(q) || roll.contains(q)) {
+        filteredStudents.add({
+          'student': s,
+          'originalIndex': i + 1,
+        });
+      }
+    }
 
     return Scaffold(
       backgroundColor: const Color(0xFFF1F5F9), // Slight gray background
@@ -210,8 +272,10 @@ class _AllSubjectsMarksEntryScreenState extends State<AllSubjectsMarksEntryScree
                           padding: const EdgeInsets.all(16),
                           itemCount: filteredStudents.length,
                           itemBuilder: (context, index) {
-                            final student = filteredStudents[index];
-                            return _buildStudentCard(student);
+                            final item = filteredStudents[index];
+                            final student = item['student'];
+                            final sNo = item['originalIndex'];
+                            return _buildStudentCard(student, sNo);
                           },
                         ),
                 ),
@@ -252,7 +316,7 @@ class _AllSubjectsMarksEntryScreenState extends State<AllSubjectsMarksEntryScree
     );
   }
 
-  Widget _buildStudentCard(Map<String, dynamic> student) {
+  Widget _buildStudentCard(Map<String, dynamic> student, int sNo) {
     final name = student['user']?['name'] ?? 'Unknown';
     final rollNo = student['rollNo'] ?? 'N/A';
     final sid = student['id'].toString();
@@ -270,46 +334,26 @@ class _AllSubjectsMarksEntryScreenState extends State<AllSubjectsMarksEntryScree
         children: [
           // Student Header
           Container(
-            padding: const EdgeInsets.all(16),
-            decoration: const BoxDecoration(
-              border: Border(bottom: BorderSide(color: Color(0xFFF1F5F9), width: 1.5)),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF8FAFC),
+              borderRadius: const BorderRadius.only(topLeft: Radius.circular(20), topRight: Radius.circular(20)),
+              border: const Border(bottom: BorderSide(color: Color(0xFFE2E8F0), width: 1.5)),
             ),
             child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(colors: [Color(0xFFE0E7FF), Color(0xFFC7D2FE)]),
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  alignment: Alignment.center,
-                  child: Text(
-                    name.isNotEmpty ? name[0].toUpperCase() : 'S',
-                    style: GoogleFonts.poppins(color: const Color(0xFF4F46E5), fontWeight: FontWeight.bold, fontSize: 20),
-                  ),
-                ),
-                const SizedBox(width: 14),
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(name, style: GoogleFonts.poppins(color: const Color(0xFF1E293B), fontWeight: FontWeight.bold, fontSize: 16)),
-                      const SizedBox(height: 2),
-                      Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFF1F5F9),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Text('Roll: $rollNo', style: GoogleFonts.poppins(color: const Color(0xFF64748B), fontSize: 11, fontWeight: FontWeight.w600)),
-                          ),
-                        ],
-                      ),
-                    ],
+                  child: Text('$sNo. $name', style: GoogleFonts.poppins(color: const Color(0xFF1E293B), fontWeight: FontWeight.bold, fontSize: 16)),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    border: Border.all(color: const Color(0xFFCBD5E1)),
+                    borderRadius: BorderRadius.circular(6),
                   ),
+                  child: Text('Roll: $rollNo', style: GoogleFonts.poppins(color: const Color(0xFF64748B), fontSize: 12, fontWeight: FontWeight.w600)),
                 ),
               ],
             ),
@@ -318,57 +362,118 @@ class _AllSubjectsMarksEntryScreenState extends State<AllSubjectsMarksEntryScree
           // Subjects Grid
           Padding(
             padding: const EdgeInsets.all(16),
-            child: Wrap(
-              spacing: 12,
-              runSpacing: 12,
-              children: widget.subjects.map((subject) {
-                final subId = subject['id'].toString();
-                final subName = subject['name']?.toString() ?? 'Subject';
-                final maxMarks = subject['maxMarks']?.toString() ?? '100';
-                
-                return Container(
-                  width: (MediaQuery.of(context).size.width - 76) / 2, // 2 columns dynamically
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF8FAFC),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: const Color(0xFFE2E8F0)),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(subName, maxLines: 1, overflow: TextOverflow.ellipsis, style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.w600, color: const Color(0xFF475569))),
-                      const SizedBox(height: 6),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: SizedBox(
-                              height: 36,
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final int crossAxisCount = sortedSubjects.length >= 7 ? 4 : 3;
+                final double spacing = 8.0;
+                // Calculate strict width rounding down to prevent wrap overflow
+                final double itemWidth = ((constraints.maxWidth - (spacing * (crossAxisCount - 1))) / crossAxisCount).floorToDouble() - 1.0;
+
+                return Wrap(
+                  spacing: spacing,
+                  runSpacing: 12,
+                  children: [
+                    ...sortedSubjects.map((subject) {
+                      final subId = subject['id'].toString();
+                      final subName = _getShortSubjectName(subject['name']?.toString() ?? 'Subject');
+                      final maxMarks = subject['maxMarks']?.toString() ?? '100';
+                      
+                      // Color mapping logic for grid items
+                      final int subHash = subId.hashCode;
+                      final List<Color> bgColors = [const Color(0xFFEEF2FF), const Color(0xFFF0FDF4), const Color(0xFFFFF7ED), const Color(0xFFFEF2F2), const Color(0xFFF5F3FF)];
+                      final List<Color> borderColors = [const Color(0xFFC7D2FE), const Color(0xFFBBF7D0), const Color(0xFFFFEDD5), const Color(0xFFFECACA), const Color(0xFFDDD6FE)];
+                      final colorIdx = subHash % bgColors.length;
+
+                      return Container(
+                        width: itemWidth,
+                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: bgColors[colorIdx],
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: borderColors[colorIdx], width: 1.5),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(subName, maxLines: 1, overflow: TextOverflow.ellipsis, style: GoogleFonts.poppins(fontSize: sortedSubjects.length >= 7 ? 10 : 12, fontWeight: FontWeight.bold, color: const Color(0xFF334155))),
+                            const SizedBox(height: 8),
+                            SizedBox(
+                              height: 38,
                               child: TextField(
                                 controller: _marksControllers['${sid}_$subId'],
-                                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                                keyboardType: TextInputType.text,
                                 textAlign: TextAlign.center,
-                                style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 15, color: const Color(0xFF1E293B)),
+                                style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: sortedSubjects.length >= 7 ? 12 : 14, color: _marksControllers['${sid}_$subId']?.text.toUpperCase() == 'AB' ? Colors.red : const Color(0xFF1E293B)),
                                 decoration: InputDecoration(
-                                  hintText: '-',
-                                  hintStyle: const TextStyle(color: Color(0xFFCBD5E1)),
+                                  hintText: 'Max: $maxMarks',
+                                  hintStyle: TextStyle(color: const Color(0xFF94A3B8), fontSize: sortedSubjects.length >= 7 ? 9 : 10),
                                   filled: true,
                                   fillColor: Colors.white,
-                                  contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 8),
-                                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
+                                  contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 4),
+                                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: Color(0xFFCBD5E1))),
                                   focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: Color(0xFF6366F1), width: 1.5)),
+                                  suffixIcon: InkWell(
+                                    onTap: () {
+                                      setState(() {
+                                        if (_marksControllers['${sid}_$subId']?.text == 'AB') {
+                                          _marksControllers['${sid}_$subId']?.text = '';
+                                        } else {
+                                          _marksControllers['${sid}_$subId']?.text = 'AB';
+                                        }
+                                      });
+                                    },
+                                    child: Container(
+                                      margin: const EdgeInsets.all(4),
+                                      decoration: BoxDecoration(
+                                        color: _marksControllers['${sid}_$subId']?.text == 'AB' ? Colors.red.withOpacity(0.1) : const Color(0xFFF1F5F9),
+                                        borderRadius: BorderRadius.circular(4),
+                                      ),
+                                      child: Icon(Icons.person_off_rounded, size: 14, color: _marksControllers['${sid}_$subId']?.text == 'AB' ? Colors.red : const Color(0xFF94A3B8)),
+                                    ),
+                                  ),
                                 ),
+                                onChanged: (val) {
+                                  setState(() {});
+                                },
                               ),
                             ),
-                          ),
-                          const SizedBox(width: 6),
-                          Text('/ $maxMarks', style: GoogleFonts.outfit(fontSize: 12, color: const Color(0xFF94A3B8), fontWeight: FontWeight.w500)),
-                        ],
+                          ],
+                        ),
+                      );
+                    }).toList(),
+                    // Append Total option
+                    if (sortedSubjects.length == 5 || sortedSubjects.length >= 7)
+                      Container(
+                        width: itemWidth,
+                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF8FAFC),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: const Color(0xFFE2E8F0), width: 1.5),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text('TOTAL', maxLines: 1, overflow: TextOverflow.ellipsis, style: GoogleFonts.poppins(fontSize: sortedSubjects.length >= 7 ? 10 : 12, fontWeight: FontWeight.bold, color: const Color(0xFF475569))),
+                            const SizedBox(height: 8),
+                            Container(
+                              height: 38,
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(color: const Color(0xFFCBD5E1)),
+                              ),
+                              child: Text(_calculateTotal(sid), style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: sortedSubjects.length >= 7 ? 14 : 16, color: const Color(0xFF1E293B))),
+                            ),
+                          ],
+                        ),
                       ),
-                    ],
-                  ),
+                  ],
                 );
-              }).toList(),
+              },
             ),
           ),
         ],

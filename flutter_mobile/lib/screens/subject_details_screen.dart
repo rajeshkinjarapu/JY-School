@@ -51,111 +51,168 @@ class _SubjectDetailsScreenState extends State<SubjectDetailsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF1F5F9),
-      body: CustomScrollView(
-        slivers: [
-          SliverAppBar(
-            expandedHeight: 200,
-            pinned: true,
-            iconTheme: const IconThemeData(color: Colors.white),
-            flexibleSpace: FlexibleSpaceBar(
-              background: Container(
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [Color(0xFF6366F1), Color(0xFF4338CA)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
+      backgroundColor: const Color(0xFFF4F7FE),
+      appBar: AppBar(
+        title: Text('Subject Details', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 20, color: Colors.white)),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.white),
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF6366F1), Color(0xFF8B5CF6), Color(0xFFD946EF)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
+      ),
+      body: Column(
+        children: [
+          // Sleek Header Card
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              boxShadow: [BoxShadow(color: const Color(0xFF6366F1).withOpacity(0.08), blurRadius: 20, offset: const Offset(0, 10))],
+              borderRadius: const BorderRadius.only(bottomLeft: Radius.circular(30), bottomRight: Radius.circular(30)),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 64,
+                  height: 64,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)], begin: Alignment.topLeft, end: Alignment.bottomRight),
+                    borderRadius: BorderRadius.circular(18),
+                    boxShadow: [BoxShadow(color: const Color(0xFF6366F1).withOpacity(0.4), blurRadius: 10, offset: const Offset(0, 4))],
                   ),
+                  child: const Center(child: Icon(Icons.menu_book_rounded, color: Colors.white, size: 32)),
                 ),
-                child: SafeArea(
+                const SizedBox(width: 20),
+                Expanded(
                   child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(color: Colors.white.withOpacity(0.15), shape: BoxShape.circle),
-                        child: const Icon(Icons.book_rounded, color: Colors.white, size: 40),
-                      ),
-                      const SizedBox(height: 12),
                       Text(
                         widget.subjectName,
-                        style: GoogleFonts.outfit(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold),
+                        style: GoogleFonts.outfit(fontSize: 26, fontWeight: FontWeight.bold, color: const Color(0xFF1E293B)),
                       ),
-                      Text(
-                        '${_instances.length} Classes',
-                        style: GoogleFonts.poppins(color: Colors.indigo.shade100, fontSize: 14),
+                      const SizedBox(height: 4),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFEEF2FF),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          '${_instances.length} Classes Enrolled',
+                          style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF6366F1)),
+                        ),
                       ),
                     ],
                   ),
                 ),
-              ),
+              ],
             ),
           ),
-          SliverPadding(
-            padding: const EdgeInsets.all(16),
-            sliver: SliverList(
-              delegate: SliverChildBuilderDelegate(
-                (context, index) {
-                  final instance = _instances[index];
-                  final classObj = instance['class'] ?? {};
-                  final className = '${classObj['name'] ?? ''} ${classObj['section'] ?? ''}'.trim();
-                  
-                  final classSubjectTeachers = instance['classSubjectTeachers'] as List<dynamic>? ?? [];
-                  final teacher = classSubjectTeachers.isNotEmpty ? classSubjectTeachers.first['teacher'] : null;
-                  final teacherName = teacher != null ? (teacher['user']?['name'] ?? 'Unknown Teacher') : 'Unassigned';
+          
+          const SizedBox(height: 16),
+          
+          // List of Classes
+          Expanded(
+            child: ListView.builder(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              itemCount: _instances.length,
+              itemBuilder: (context, index) {
+                final instance = _instances[index];
+                final classObj = instance['class'] ?? {};
+                final className = '${classObj['name'] ?? ''} ${classObj['section'] ?? ''}'.trim();
+                
+                final classSubjectTeachers = instance['classSubjectTeachers'] as List<dynamic>? ?? [];
+                final teacher = classSubjectTeachers.isNotEmpty ? classSubjectTeachers.first['teacher'] : null;
+                final teacherName = teacher != null ? (teacher['user']?['name'] ?? 'Unknown Teacher') : 'Unassigned';
 
-                  return Container(
-                    margin: const EdgeInsets.only(bottom: 12),
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 8, offset: const Offset(0, 2))],
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 48,
-                          height: 48,
-                          decoration: BoxDecoration(color: const Color(0xFFEEF2FF), borderRadius: BorderRadius.circular(12)),
-                          child: const Center(child: Icon(Icons.class_rounded, color: Color(0xFF6366F1))),
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 16),
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [BoxShadow(color: const Color(0xFF6366F1).withOpacity(0.05), blurRadius: 12, offset: const Offset(0, 6))],
+                    border: Border.all(color: Colors.transparent),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 50,
+                        height: 50,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF8FAFC),
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: const Color(0xFFE2E8F0)),
                         ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(className.isEmpty ? 'Global Subject' : className, style: GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.bold, color: const Color(0xFF1E293B))),
-                              const SizedBox(height: 4),
-                              Row(
-                                children: [
-                                  Icon(Icons.person_rounded, size: 14, color: teacher != null ? const Color(0xFF10B981) : const Color(0xFFEF4444)),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    teacherName,
-                                    style: GoogleFonts.poppins(fontSize: 13, color: teacher != null ? const Color(0xFF10B981) : const Color(0xFFEF4444), fontWeight: FontWeight.w600),
-                                  ),
-                                ],
-                              ),
-                            ],
+                        child: Center(
+                          child: Text(
+                            className.isNotEmpty ? className.substring(0, 1) : 'G',
+                            style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.bold, color: const Color(0xFF64748B)),
                           ),
                         ),
-                        if (teacher == null)
-                          ElevatedButton(
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(className.isEmpty ? 'Global Subject' : className, style: GoogleFonts.outfit(fontSize: 17, fontWeight: FontWeight.bold, color: const Color(0xFF1E293B))),
+                            const SizedBox(height: 4),
+                            Row(
+                              children: [
+                                Icon(
+                                  teacher != null ? Icons.verified_user_rounded : Icons.person_off_rounded, 
+                                  size: 14, 
+                                  color: teacher != null ? const Color(0xFF10B981) : const Color(0xFFF43F5E)
+                                ),
+                                const SizedBox(width: 6),
+                                Expanded(
+                                  child: Text(
+                                    teacherName,
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 13, 
+                                      color: teacher != null ? const Color(0xFF10B981) : const Color(0xFFF43F5E), 
+                                      fontWeight: FontWeight.w600
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                      if (teacher == null)
+                        Container(
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)]),
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: [BoxShadow(color: const Color(0xFF6366F1).withOpacity(0.3), blurRadius: 8, offset: const Offset(0, 4))],
+                          ),
+                          child: ElevatedButton(
                             onPressed: () => _onAssignTeacher(instance),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF0F172A),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                              backgroundColor: Colors.transparent,
+                              shadowColor: Colors.transparent,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                             ),
-                            child: Text('Assign', style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white)),
-                          )
-                      ],
-                    ),
-                  );
-                },
-                childCount: _instances.length,
-              ),
+                            child: Text('Assign', style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.white)),
+                          ),
+                        )
+                    ],
+                  ),
+                );
+              },
             ),
           ),
         ],

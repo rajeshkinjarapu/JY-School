@@ -35,7 +35,36 @@ class _AttendanceDailyReportScreenState extends State<AttendanceDailyReportScree
       if (mounted) {
         if (res['success'] == true) {
           setState(() {
-            _classSummaries = res['data'] is List ? res['data'] : [];
+            List<dynamic> rawData = res['data'] is List ? res['data'] : [];
+            
+            // Custom Sorting Logic: Nur -> PP1 -> PP2 -> 1st -> 2nd ...
+            rawData.sort((a, b) {
+              String nameA = (a['className'] ?? '').toString();
+              String nameB = (b['className'] ?? '').toString();
+              
+              int getWeight(String className) {
+                final lower = className.toLowerCase();
+                if (lower.contains('nur')) return 0;
+                if (lower.contains('pp1') || lower.contains('lkg')) return 1;
+                if (lower.contains('pp2') || lower.contains('ukg')) return 2;
+                
+                final match = RegExp(r'\d+').firstMatch(lower);
+                if (match != null) {
+                  return int.parse(match.group(0)!) + 10;
+                }
+                return 100;
+              }
+              
+              int weightA = getWeight(nameA);
+              int weightB = getWeight(nameB);
+              
+              if (weightA != weightB) {
+                return weightA.compareTo(weightB);
+              }
+              return nameA.compareTo(nameB);
+            });
+            
+            _classSummaries = rawData;
             _isLoading = false;
           });
         } else {
@@ -94,113 +123,191 @@ class _AttendanceDailyReportScreenState extends State<AttendanceDailyReportScree
         child: Center(
           child: Text(
             'No attendance records found for this date.',
-            style: GoogleFonts.poppins(color: Colors.grey.shade600),
+            style: GoogleFonts.poppins(color: const Color(0xFF64748B), fontWeight: FontWeight.w500),
           ),
         ),
       );
     }
     
-    return ListView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: _classSummaries.length,
-      itemBuilder: (context, index) {
-        final c = _classSummaries[index];
-        final className = c['className'] ?? 'Unknown Class';
-        final total = c['total'] ?? 0;
-        final present = c['present'] ?? 0;
-        final absent = c['absent'] ?? 0;
-        final late = c['late'] ?? 0;
+    // Sort just before rendering to ensure Nur is first immediately on UI update
+    final sortedSummaries = List<dynamic>.from(_classSummaries);
+    sortedSummaries.sort((a, b) {
+      String nameA = (a['className'] ?? '').toString();
+      String nameB = (b['className'] ?? '').toString();
+      
+      int getWeight(String className) {
+        final lower = className.toLowerCase();
+        if (lower.contains('nur')) return 0;
+        if (lower.contains('pp1') || lower.contains('lkg')) return 1;
+        if (lower.contains('pp2') || lower.contains('ukg')) return 2;
         
-        final double percent = total > 0 ? (present / total) * 100 : 0.0;
-        final Color percentColor = percent >= 80 ? Colors.green : (percent >= 50 ? Colors.orange : Colors.red);
-
-        return Container(
-          margin: const EdgeInsets.only(bottom: 12),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 8, offset: const Offset(0, 2))
-            ],
+        final match = RegExp(r'\d+').firstMatch(lower);
+        if (match != null) {
+          return int.parse(match.group(0)!) + 10;
+        }
+        return 100;
+      }
+      
+      int weightA = getWeight(nameA);
+      int weightB = getWeight(nameB);
+      
+      if (weightA != weightB) {
+        return weightA.compareTo(weightB);
+      }
+      return nameA.compareTo(nameB);
+    });
+    
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(color: const Color(0xFF6366F1).withOpacity(0.06), blurRadius: 15, offset: const Offset(0, 5))
+        ],
+        border: Border.all(color: Colors.transparent),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: Table(
+          defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+          border: TableBorder.all(
+            color: const Color(0xFFE2E8F0),
+            width: 1,
+            borderRadius: BorderRadius.circular(20),
           ),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
+          columnWidths: const {
+            0: FlexColumnWidth(2.5),
+            1: FlexColumnWidth(1.5),
+            2: FlexColumnWidth(1.5),
+            3: FlexColumnWidth(1.5),
+            4: FlexColumnWidth(1.5),
+          },
+          children: [
+            // Table Header
+            TableRow(
+              decoration: const BoxDecoration(
+                color: Color(0xFFF8FAFC),
+              ),
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(className, style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: const Color(0xFF1E293B))),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: percentColor.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        '${percent.toStringAsFixed(1)}%',
-                        style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.bold, color: percentColor),
-                      ),
-                    ),
-                  ],
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                  child: Text('Class', style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.bold, color: const Color(0xFF64748B))),
                 ),
-                const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    _buildStatCol('Total', total.toString(), Colors.blue),
-                    _buildStatCol('Present', present.toString(), Colors.green),
-                    _buildStatCol('Absent', absent.toString(), Colors.red),
-                    _buildStatCol('Late', late.toString(), Colors.orange),
-                  ],
-                )
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 14),
+                  child: Text('Total', textAlign: TextAlign.center, style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.bold, color: const Color(0xFF64748B))),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 14),
+                  child: Text('Prs', textAlign: TextAlign.center, style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.bold, color: const Color(0xFF10B981))),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 14),
+                  child: Text('Abs', textAlign: TextAlign.center, style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.bold, color: const Color(0xFFF43F5E))),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 14),
+                  child: Text('%', textAlign: TextAlign.center, style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.bold, color: const Color(0xFF64748B))),
+                ),
               ],
             ),
-          ),
-        );
-      },
-    );
-  }
+            // Table Body
+            ...sortedSummaries.map((c) {
+              final className = c['className'] ?? 'Unknown Class';
+              final total = c['total'] ?? 0;
+              final present = c['present'] ?? 0;
+              final absent = c['absent'] ?? 0;
+              
+              final double percent = total > 0 ? (present / total) * 100 : 0.0;
+              
+              Color percentColor;
+              if (percent >= 85) {
+                percentColor = const Color(0xFF10B981);
+              } else if (percent >= 50) {
+                percentColor = const Color(0xFFF59E0B);
+              } else {
+                percentColor = const Color(0xFFF43F5E);
+              }
 
-  Widget _buildStatCol(String label, String value, Color color) {
-    return Column(
-      children: [
-        Text(value, style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.bold, color: color)),
-        Text(label, style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey.shade600)),
-      ],
+              return TableRow(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                    child: Text(
+                      className, 
+                      style: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.bold, color: const Color(0xFF1E293B)),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 14),
+                    child: Text('$total', textAlign: TextAlign.center, style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w600, color: const Color(0xFF475569))),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 14),
+                    child: Text('$present', textAlign: TextAlign.center, style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w600, color: const Color(0xFF10B981))),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 14),
+                    child: Text('$absent', textAlign: TextAlign.center, style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w600, color: const Color(0xFFF43F5E))),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 14),
+                    child: Center(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: percentColor.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          '${percent.toStringAsFixed(0)}%', 
+                          style: GoogleFonts.poppins(fontSize: 11, fontWeight: FontWeight.bold, color: percentColor),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            }).toList(),
+          ],
+        ),
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: const Color(0xFFF4F7FE),
       appBar: AppBar(
         title: Text(
           'Daily Report',
-          style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold),
+          style: GoogleFonts.outfit(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
         ),
         iconTheme: const IconThemeData(color: Colors.white),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
         flexibleSpace: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
-              colors: [Color(0xFF0EA5E9), Color(0xFF0284C7)],
+              colors: [Color(0xFF6366F1), Color(0xFF8B5CF6), Color(0xFFD946EF)],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
           ),
         ),
-        elevation: 0,
       ),
       body: Column(
         children: [
           // Date Picker Header
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.fromLTRB(24, 20, 24, 28),
             decoration: BoxDecoration(
               color: Colors.white,
-              border: Border(bottom: BorderSide(color: Colors.grey.shade200)),
+              boxShadow: [BoxShadow(color: const Color(0xFF6366F1).withOpacity(0.08), blurRadius: 20, offset: const Offset(0, 10))],
+              borderRadius: const BorderRadius.only(bottomLeft: Radius.circular(30), bottomRight: Radius.circular(30)),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -208,21 +315,30 @@ class _AttendanceDailyReportScreenState extends State<AttendanceDailyReportScree
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Select Date', style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey.shade500)),
+                    Text('Report Date', style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w500, color: const Color(0xFF64748B))),
+                    const SizedBox(height: 4),
                     Text(
                       '${_getMonthName(_selectedDate.month)} ${_selectedDate.day}, ${_selectedDate.year}',
-                      style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold, color: const Color(0xFF1E293B)),
+                      style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.bold, color: const Color(0xFF1E293B)),
                     ),
                   ],
                 ),
-                ElevatedButton.icon(
-                  onPressed: _selectDate,
-                  icon: const Icon(Icons.calendar_month_rounded, size: 18),
-                  label: const Text('Change'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF0EA5E9),
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                Container(
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)]),
+                    borderRadius: BorderRadius.circular(14),
+                    boxShadow: [BoxShadow(color: const Color(0xFF6366F1).withOpacity(0.3), blurRadius: 8, offset: const Offset(0, 4))],
+                  ),
+                  child: ElevatedButton.icon(
+                    onPressed: _selectDate,
+                    icon: const Icon(Icons.calendar_month_rounded, size: 18, color: Colors.white),
+                    label: Text('Change', style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: Colors.white)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.transparent,
+                      shadowColor: Colors.transparent,
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    ),
                   ),
                 ),
               ],
@@ -253,48 +369,6 @@ class _AttendanceDailyReportScreenState extends State<AttendanceDailyReportScree
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              // Quick Summary
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: Container(
-                                      padding: const EdgeInsets.all(16),
-                                      decoration: BoxDecoration(
-                                        color: Colors.white,
-                                        borderRadius: BorderRadius.circular(16),
-                                        border: Border.all(color: Colors.green.shade100),
-                                      ),
-                                      child: Column(
-                                        children: [
-                                          Text('Classes', style: GoogleFonts.poppins(color: Colors.green.shade700, fontWeight: FontWeight.bold)),
-                                          const SizedBox(height: 4),
-                                          Text('${_classSummaries.length}', style: GoogleFonts.outfit(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.green.shade700)),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 16),
-                                  Expanded(
-                                    child: Container(
-                                      padding: const EdgeInsets.all(16),
-                                      decoration: BoxDecoration(
-                                        color: Colors.white,
-                                        borderRadius: BorderRadius.circular(16),
-                                        border: Border.all(color: Colors.blue.shade100),
-                                      ),
-                                      child: Column(
-                                        children: [
-                                          Text('Total Students', style: GoogleFonts.poppins(color: Colors.blue.shade700, fontWeight: FontWeight.bold)),
-                                          const SizedBox(height: 4),
-                                          Text('${_classSummaries.fold<int>(0, (sum, item) => sum + ((item['total'] ?? 0) as int))}', style: GoogleFonts.outfit(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.blue.shade700)),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 24),
-                              
                               Text('Class-wise Attendance', style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: const Color(0xFF1E293B))),
                               const SizedBox(height: 12),
                               

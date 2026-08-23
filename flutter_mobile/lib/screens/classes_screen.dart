@@ -34,6 +34,29 @@ class _ClassesScreenState extends State<ClassesScreen> {
     _fetchClasses();
   }
 
+  int _getClassOrder(String className) {
+    final lower = className.toLowerCase();
+    if (lower.contains('nur')) return 0;
+    if (lower.contains('lkg') || lower.contains('pp1')) return 1;
+    if (lower.contains('ukg') || lower.contains('pp2')) return 2;
+    if (lower.contains('1st')) return 3;
+    if (lower.contains('2nd')) return 4;
+    if (lower.contains('3rd')) return 5;
+    if (lower.contains('4th')) return 6;
+    if (lower.contains('5th')) return 7;
+    if (lower.contains('6th')) return 8;
+    if (lower.contains('7th')) return 9;
+    if (lower.contains('8th')) return 10;
+    if (lower.contains('9th')) return 11;
+    if (lower.contains('10th')) return 12;
+    
+    final match = RegExp(r'\d+').firstMatch(lower);
+    if (match != null) {
+      return 2 + int.parse(match.group(0)!);
+    }
+    return 99;
+  }
+
   Future<void> _fetchClasses() async {
     setState(() => _isLoading = true);
     final result = await ApiService.getClasses();
@@ -41,6 +64,14 @@ class _ClassesScreenState extends State<ClassesScreen> {
       if (result['success']) {
         setState(() {
           _classes = result['data'] ?? [];
+          _classes.sort((a, b) {
+            final orderA = _getClassOrder(a['name'] ?? '');
+            final orderB = _getClassOrder(b['name'] ?? '');
+            if (orderA != orderB) {
+              return orderA.compareTo(orderB);
+            }
+            return (a['section'] ?? '').toString().compareTo((b['section'] ?? '').toString());
+          });
           _isLoading = false;
         });
       } else {

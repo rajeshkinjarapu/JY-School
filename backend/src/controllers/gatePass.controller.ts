@@ -374,3 +374,64 @@ export const printGatePassPdf = async (req: AuthRequest, res: Response, next: Ne
     next(error);
   }
 };
+
+export const getLiveStats = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const [totalInside, activeOut, pendingRequests, overdue] = await Promise.all([
+      prisma.student.count(), // Approx inside if not out
+      prisma.gatePass.count({ where: { status: 'ACTIVE' } }),
+      prisma.gatePass.count({ where: { status: 'PENDING' } }),
+      prisma.gatePass.count({
+        where: {
+          status: 'ACTIVE',
+          expectedReturnTime: { not: null, lt: new Date().toISOString() }
+        }
+      })
+    ]);
+
+    successResponse(res, { inside: totalInside - activeOut, out: activeOut, pending: pendingRequests, overdue }, 'Live stats fetched');
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const scanGatePass = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const { qrData, action } = req.body; // action: 'OUT' | 'IN'
+    // qrData could be student rollNo or ID
+    const student = await prisma.student.findUnique({ where: { rollNo: qrData } });
+    if (!student) return next(createError('Student not found for this QR', 404));
+
+    if (action === 'OUT') {
+      const gatePass = await prisma.gatePass.create({
+        data: {
+          requesterId: req.user!.id,
+          studentId: student.id,
+          requestType: 'STUDENT',
+          reason: 'QR Scanned Exit',
+          status: 'ACTIVE',
+          actualExitTime: new Date().toISOString(),
+          slipNumber: `GP-${Date.now().toString().slice(-6)}`,
+        }
+      });
+      return successResponse(res, gatePass, 'Marked OUT successfully');
+    } else {
+      const gatePass = await prisma.gatePass.findFirst({
+        where: { studentId: student.id, status: 'ACTIVE' },
+        orderBy: { createdAt: 'desc' }
+      });
+      if (!gatePass) return next(createError('No active out-pass found', 404));
+
+      const updated = await prisma.gatePass.update({
+        where: { id: gatePass.id },
+        data: { status: 'COMPLETED', actualReturnTime: new Date().toISOString() }
+      });
+      return successResponse(res, updated, 'Marked IN successfully');
+    }
+  } catch (error) {
+    next(error);
+  }
+};

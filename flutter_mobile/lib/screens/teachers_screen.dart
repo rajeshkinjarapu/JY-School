@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -107,120 +108,189 @@ class _TeachersScreenState extends State<TeachersScreen> {
     final colorIndex = safeName.codeUnitAt(0) % avatarGradients.length;
     final gradientColors = avatarGradients[colorIndex];
 
-    if (photoUrl != null && photoUrl.isNotEmpty && !photoUrl.startsWith('data:')) {
-      final url = ApiService.getImageUrl(photoUrl);
-      return Container(
-        width: 48,
-        height: 60,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: Colors.grey.shade300, width: 1),
-          boxShadow: [
-            BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 4, offset: const Offset(0, 2)),
-          ],
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(9),
-          child: Image.network(
-            url,
-            fit: BoxFit.cover,
-            headers: const {'ngrok-skip-browser-warning': '69420'},
-            errorBuilder: (context, error, stackTrace) => Container(
-              color: Colors.grey.shade200,
-              child: const Icon(Icons.person, color: Colors.grey),
+    if (photoUrl != null && photoUrl.isNotEmpty) {
+      Widget? imageWidget;
+      if (photoUrl.startsWith('data:')) {
+        try {
+          final parts = photoUrl.split(',');
+          if (parts.length > 1) {
+            final bytes = base64Decode(parts[1]);
+            imageWidget = Image.memory(bytes, fit: BoxFit.cover, errorBuilder: (c, e, s) => const Icon(Icons.person_rounded, color: Color(0xFF94A3B8)));
+          }
+        } catch (e) {}
+      } else {
+        final url = ApiService.getImageUrl(photoUrl);
+        imageWidget = Image.network(
+          url,
+          fit: BoxFit.cover,
+          headers: const {'ngrok-skip-browser-warning': '69420'},
+          errorBuilder: (context, error, stackTrace) => const Icon(Icons.person_rounded, color: Color(0xFF94A3B8)),
+        );
+      }
+
+      if (imageWidget != null) {
+        return Container(
+          width: 50,
+          height: 50,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: Colors.white, width: 2),
+            boxShadow: [
+              BoxShadow(color: Colors.black.withOpacity(0.10), blurRadius: 8, offset: const Offset(0, 4)),
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: Container(
+              color: const Color(0xFFF1F5F9),
+              child: imageWidget,
             ),
           ),
-        ),
-      );
-    } else {
-      return Container(
-        width: 48,
-        height: 60,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(10),
-          gradient: LinearGradient(colors: gradientColors, begin: Alignment.topLeft, end: Alignment.bottomRight),
-          border: Border.all(color: Colors.white, width: 2),
-          boxShadow: [
-            BoxShadow(color: gradientColors[1].withOpacity(0.3), blurRadius: 6, offset: const Offset(0, 2)),
-          ],
-        ),
-        alignment: Alignment.center,
-        child: Text(
-          _getInitials(safeName),
-          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
-        ),
-      );
+        );
+      }
     }
+    
+    // Fallback initials avatar
+    return Container(
+      width: 50,
+      height: 50,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(14),
+        gradient: LinearGradient(colors: gradientColors, begin: Alignment.topLeft, end: Alignment.bottomRight),
+        border: Border.all(color: Colors.white, width: 2),
+        boxShadow: [
+          BoxShadow(color: gradientColors[1].withOpacity(0.4), blurRadius: 10, offset: const Offset(0, 4)),
+        ],
+      ),
+      alignment: Alignment.center,
+      child: Text(
+        _getInitials(safeName),
+        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 17),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF1F5F9), // Slight gray background
+      backgroundColor: const Color(0xFFF4F7FE), // Premium soft blue-gray background
       drawer: const AppDrawer(currentRoute: 'teachers'),
       appBar: AppBar(
-        title: const Text('Teachers Directory', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-        backgroundColor: const Color(0xFF0F172A), // Slate 900
+        title: Text('Teachers Directory', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 22)),
+        backgroundColor: Colors.transparent,
         foregroundColor: Colors.white,
         elevation: 0,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF6366F1), Color(0xFF8B5CF6), Color(0xFFD946EF)], // Vibrant multi-stop gradient
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.person_add_rounded), 
-            onPressed: () async {
-              final result = await Navigator.push(context, MaterialPageRoute(builder: (context) => const AddTeacherScreen()));
-              if (result == true) {
-                _fetchTeachers();
+          Container(
+            margin: const EdgeInsets.only(right: 12),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.white.withOpacity(0.3)),
+            ),
+            child: IconButton(
+              icon: const Icon(Icons.person_add_rounded, size: 22, color: Colors.white), 
+              onPressed: () async {
+                final result = await Navigator.push(context, MaterialPageRoute(builder: (context) => const AddTeacherScreen()));
+                if (result == true) {
+                  _fetchTeachers();
+                }
               }
-            }
+            ),
           ),
         ],
       ),
       body: Column(
         children: [
-          // Filters
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-            child: Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))
-                ],
-              ),
-              child: Container(
-                height: 45,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF8FAFC),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0xFFE2E8F0)),
-                ),
-                child: TextField(
-                  style: const TextStyle(color: Color(0xFF1E293B)),
-                  decoration: const InputDecoration(
-                    hintText: 'Search by name or ID...',
-                    hintStyle: TextStyle(color: Color(0xFF94A3B8)),
-                    prefixIcon: Icon(Icons.search, color: Color(0xFF94A3B8)),
-                    border: InputBorder.none,
-                    contentPadding: EdgeInsets.symmetric(vertical: 12),
+          // Sleek Header with floating search/filter card
+          Stack(
+            children: [
+              Container(
+                height: 60,
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Color(0xFF6366F1), Color(0xFF8B5CF6), Color(0xFFD946EF)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
-                  onChanged: _runSearch,
+                  borderRadius: BorderRadius.only(
+                    bottomLeft: Radius.circular(32),
+                    bottomRight: Radius.circular(32),
+                  ),
                 ),
               ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 10, 16, 20),
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(24),
+                    boxShadow: [
+                      BoxShadow(color: const Color(0xFF6366F1).withOpacity(0.15), blurRadius: 24, offset: const Offset(0, 8)),
+                    ],
+                  ),
+                  child: Container(
+                    height: 50,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF8FAFC),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: const Color(0xFFE2E8F0)),
+                    ),
+                    child: TextField(
+                      style: GoogleFonts.poppins(color: const Color(0xFF1E293B)),
+                      decoration: InputDecoration(
+                        hintText: 'Search by name or ID...',
+                        hintStyle: GoogleFonts.poppins(color: const Color(0xFF94A3B8)),
+                        prefixIcon: const Icon(Icons.search_rounded, color: Color(0xFF94A3B8)),
+                        border: InputBorder.none,
+                        contentPadding: const EdgeInsets.symmetric(vertical: 15),
+                      ),
+                      onChanged: _runSearch,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+
+          // Teacher List Header
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+            child: Row(
+              children: [
+                Text(
+                  '${_filteredTeachers.length} Teachers',
+                  style: GoogleFonts.poppins(
+                    color: const Color(0xFF64748B),
+                    fontWeight: FontWeight.w700,
+                    fontSize: 14,
+                  ),
+                ),
+              ],
             ),
           ),
 
           // List
           Expanded(
             child: _isLoading
-                ? const Center(child: CircularProgressIndicator())
+                ? const Center(child: CircularProgressIndicator(color: Color(0xFF8B5CF6)))
                 : _filteredTeachers.isEmpty
                     ? _buildEmptyState()
                     : RefreshIndicator(
+                        color: const Color(0xFF8B5CF6),
                         onRefresh: _fetchTeachers,
                         child: ListView.builder(
-                          padding: const EdgeInsets.only(left: 16, right: 16, bottom: 24, top: 12),
+                          padding: const EdgeInsets.only(left: 16, right: 16, bottom: 24, top: 4),
                           itemCount: _filteredTeachers.length,
                           itemBuilder: (context, index) {
                             return _buildTeacherCard(_filteredTeachers[index], index);
@@ -245,9 +315,9 @@ class _TeachersScreenState extends State<TeachersScreen> {
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(20),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 8, offset: const Offset(0, 2))
+          BoxShadow(color: const Color(0xFF6366F1).withOpacity(0.06), blurRadius: 12, offset: const Offset(0, 4))
         ],
       ),
       child: InkWell(
@@ -259,11 +329,24 @@ class _TeachersScreenState extends State<TeachersScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           child: Row(
             children: [
-              SizedBox(
-                width: 28,
+              // Clearer Serial Number Badge
+              Container(
+                width: 32,
+                height: 32,
+                margin: const EdgeInsets.only(right: 12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF1F5F9), // Light grayish blue
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                ),
+                alignment: Alignment.center,
                 child: Text(
-                  '${index + 1}.',
-                  style: GoogleFonts.poppins(color: const Color(0xFFCBD5E1), fontSize: 13, fontWeight: FontWeight.w700),
+                  '${index + 1}',
+                  style: GoogleFonts.outfit(
+                    color: const Color(0xFF64748B), // Clearer darker gray
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
               _buildAvatar(name, photoUrl),

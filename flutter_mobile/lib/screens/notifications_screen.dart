@@ -3,6 +3,8 @@ import 'package:google_fonts/google_fonts.dart';
 import '../services/api_service.dart';
 import '../services/notification_service.dart';
 import '../widgets/app_drawer.dart';
+import 'finance_screen.dart';
+import 'exams_screen.dart';
 
 class NotificationsScreen extends StatefulWidget {
   const NotificationsScreen({super.key});
@@ -23,14 +25,22 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
   Future<void> _fetchNotifications() async {
     setState(() => _isLoading = true);
-    final res = await ApiService.getNotifications();
-    if (mounted) {
-      setState(() {
-        _isLoading = false;
-        if (res['success']) {
-          _notifications = res['data'] ?? [];
-        }
-      });
+    try {
+      final res = await ApiService.getNotifications();
+      if (mounted) {
+        setState(() {
+          if (res['success']) {
+            final data = res['data'];
+            _notifications = (data is List) ? data : [];
+          }
+        });
+      }
+    } catch (e) {
+      // Ignore errors, let it show empty state
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -142,6 +152,15 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         ),
       ),
       child: ListTile(
+        onTap: () {
+          if (notif['type'] == 'finance') {
+            Navigator.push(context, MaterialPageRoute(builder: (context) => const FinanceScreen()));
+          } else if (notif['type'] == 'exams') {
+            Navigator.push(context, MaterialPageRoute(builder: (context) => const ExamsScreen()));
+          } else {
+             ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Viewing notification details')));
+          }
+        },
         contentPadding: const EdgeInsets.all(16),
         leading: Container(
           padding: const EdgeInsets.all(10),

@@ -1,6 +1,9 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/api_service.dart';
+import 'all_students_result_screen.dart';
+import 'single_student_result_screen.dart';
 
 class ResultsScreen extends StatefulWidget {
   const ResultsScreen({super.key});
@@ -11,15 +14,16 @@ class ResultsScreen extends StatefulWidget {
 
 class _ResultsScreenState extends State<ResultsScreen> {
   bool _isLoadingDropdowns = true;
-  bool _isLoading = false;
+  bool _isLoadingStudents = false;
   String? _errorMessage;
 
   List<dynamic> _examsList = [];
   List<dynamic> _classesList = [];
-  List<dynamic> _resultsData = [];
+  List<dynamic> _students = [];
 
   String? _selectedExamId;
   String? _selectedClassId;
+  String? _selectedStudentId;
   Map<String, dynamic>? _selectedExamData;
 
   @override
@@ -54,7 +58,6 @@ class _ResultsScreenState extends State<ResultsScreen> {
   void _onExamSelected(String? examId) {
     if (examId == null) return;
     
-    // Check if exam exists in list
     if (!_examsList.any((e) => e['id']?.toString() == examId)) {
       _selectedExamId = null;
       _selectedExamData = null;
@@ -64,74 +67,81 @@ class _ResultsScreenState extends State<ResultsScreen> {
     _selectedExamId = examId;
     _selectedExamData = _examsList.firstWhere((e) => e['id']?.toString() == examId);
     
-    // Validate selected class against new exam
     if (_selectedClassId != null) {
       final examClasses = _selectedExamData!['classes'] as List?;
       if (examClasses == null || !examClasses.any((c) => c['id'].toString() == _selectedClassId)) {
         _selectedClassId = null;
-        _resultsData = [];
+        _students = [];
+        _selectedStudentId = null;
       }
     }
   }
 
-  Future<void> _fetchResults() async {
-    if (_selectedExamId == null || _selectedClassId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please select an Exam and Class'), backgroundColor: Colors.red));
+  Future<void> _fetchStudentsForClass() async {
+    if (_selectedClassId == null) return;
+    setState(() => _isLoadingStudents = true);
+
+    try {
+      final res = await ApiService.getStudents(classId: _selectedClassId);
+      if (res['success']) {
+        if (mounted) {
+          setState(() {
+            _students = res['data'] ?? [];
+            _selectedStudentId = 'ALL';
+            _isLoadingStudents = false;
+          });
+        }
+      } else {
+        if (mounted) setState(() => _isLoadingStudents = false);
+      }
+    } catch (e) {
+      if (mounted) setState(() => _isLoadingStudents = false);
+    }
+  }
+
+  void _onFetchResults() {
+    if (_selectedExamId == null || _selectedClassId == null || _selectedStudentId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please select Exam, Class and Student'), backgroundColor: Colors.red));
       return;
     }
 
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-    });
+    final examData = _examsList.firstWhere((e) => e['id'].toString() == _selectedExamId, orElse: () => null);
+    final className = _classesList.firstWhere((c) => c['id'].toString() == _selectedClassId, orElse: () => null)?['className']?.toString() ?? 'Class';
 
-    try {
-      final result = await ApiService.getExamResults(_selectedExamId!, classId: _selectedClassId!);
-      if (mounted) {
-        setState(() {
-          _resultsData = result['success'] ? result['data'] : [];
-          _isLoading = false;
-          if (!result['success']) {
-            _errorMessage = result['message'];
-          }
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _errorMessage = 'Failed to fetch results: $e';
-          _isLoading = false;
-        });
-      }
-    }
-  }
-
-  Color _getGradeColor(String grade) {
-    switch (grade.toUpperCase()) {
-      case 'A+':
-      case 'A':
-      case 'O':
-        return const Color(0xFF10B981);
-      case 'B':
-      case 'B+':
-        return const Color(0xFF3B82F6);
-      case 'C':
-      case 'C+':
-        return const Color(0xFFF59E0B);
-      case 'D':
-        return const Color(0xFFF97316);
-      case 'F':
-      case 'FAIL':
-        return const Color(0xFFEF4444);
-      default:
-        return const Color(0xFF64748B);
+    if (_selectedStudentId == 'ALL') {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => AllStudentsResultScreen(
+            examId: _selectedExamId!,
+            classId: _selectedClassId!,
+            examName: examData != null ? examData['name']?.toString() ?? 'Exam' : 'Exam',
+            className: className,
+            students: _students,
+          ),
+        ),
+      );
+    } else {
+      final studentData = _students.firstWhere((s) => s['id'].toString() == _selectedStudentId, orElse: () => null);
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => SingleStudentResultScreen(
+            examId: _selectedExamId!,
+            classId: _selectedClassId!,
+            studentId: _selectedStudentId!,
+            studentData: studentData,
+            examName: examData != null ? examData['name']?.toString() ?? 'Exam' : 'Exam',
+          ),
+        ),
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: const Color(0xFFF1F5F9), // Slight gray background
       appBar: AppBar(
         title: Text('Exam Results', style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 20)),
         iconTheme: const IconThemeData(color: Colors.white),
@@ -150,31 +160,65 @@ class _ResultsScreenState extends State<ResultsScreen> {
           ? const Center(child: CircularProgressIndicator(color: Color(0xFF6366F1))) 
           : Column(
               children: [
-                _buildFiltersSection(),
-                Expanded(
-                  child: _isLoading 
-                      ? const Center(child: CircularProgressIndicator(color: Color(0xFF6366F1)))
-                      : _errorMessage != null
-                          ? Center(child: Text(_errorMessage!, style: GoogleFonts.poppins(color: Colors.red)))
-                          : _resultsData.isEmpty
-                              ? Center(
-                                  child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Icon(Icons.query_stats_rounded, size: 64, color: const Color(0xFFCBD5E1).withOpacity(0.5)),
-                                      const SizedBox(height: 16),
-                                      Text('Select filters to fetch results.', style: GoogleFonts.poppins(color: const Color(0xFF94A3B8), fontSize: 15)),
-                                    ],
-                                  ),
-                                )
-                              : _buildResultsTable(),
-                ),
+                _buildFiltersPanel(),
+                
+                if (_selectedExamId != null && _selectedClassId != null && _selectedStudentId != null)
+                  Expanded(
+                    child: Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(24.0),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Container(
+                              width: 120,
+                              height: 120,
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFE0E7FF),
+                                shape: BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(color: const Color(0xFF6366F1).withOpacity(0.2), blurRadius: 20, spreadRadius: 5)
+                                ],
+                              ),
+                              child: const Icon(Icons.analytics_outlined, size: 64, color: Color(0xFF6366F1)),
+                            ),
+                            const SizedBox(height: 24),
+                            Text('Ready to View Results', style: GoogleFonts.outfit(fontSize: 22, fontWeight: FontWeight.bold, color: const Color(0xFF1E293B))),
+                            const SizedBox(height: 8),
+                            Text('Click below to view the performance', textAlign: TextAlign.center, style: GoogleFonts.poppins(fontSize: 14, color: const Color(0xFF64748B))),
+                            const SizedBox(height: 32),
+                            SizedBox(
+                              width: double.infinity,
+                              height: 56,
+                              child: ElevatedButton(
+                                onPressed: _onFetchResults,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFF6366F1),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                  elevation: 4,
+                                  shadowColor: const Color(0xFF6366F1).withOpacity(0.5),
+                                ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    const Icon(Icons.search_rounded, color: Colors.white),
+                                    const SizedBox(width: 8),
+                                    Text('Fetch Results', style: GoogleFonts.outfit(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
               ],
             ),
     );
   }
 
-  Widget _buildFiltersSection() {
+  Widget _buildFiltersPanel() {
     List<dynamic> filteredClasses = [];
     
     if (_selectedExamData != null) {
@@ -185,73 +229,132 @@ class _ResultsScreenState extends State<ResultsScreen> {
     }
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
+      width: double.infinity,
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: const BorderRadius.only(bottomLeft: Radius.circular(30), bottomRight: Radius.circular(30)),
+        borderRadius: const BorderRadius.only(bottomLeft: Radius.circular(32), bottomRight: Radius.circular(32)),
         boxShadow: [
-          BoxShadow(color: const Color(0xFF6366F1).withOpacity(0.08), blurRadius: 20, offset: const Offset(0, 8))
+          BoxShadow(color: const Color(0xFF6366F1).withOpacity(0.08), blurRadius: 24, offset: const Offset(0, 8)),
         ],
       ),
-      child: Column(
-        children: [
-          Column(
-            children: [
-              _buildDropdown(
-                label: 'Select Exam',
-                value: _selectedExamId,
-                items: _examsList,
-                onChanged: (val) {
-                  setState(() { _onExamSelected(val); });
-                },
-              ),
-              const SizedBox(height: 12),
-              _buildDropdown(
-                label: _selectedExamId == null ? 'Exam First' : 'Select Class',
-                value: _selectedClassId,
-                items: filteredClasses,
-                onChanged: _selectedExamId == null ? (val){} : (val) => setState(() => _selectedClassId = val as String?),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          SizedBox(
-            width: double.infinity,
-            height: 48,
-            child: ElevatedButton.icon(
-              onPressed: _isLoading ? null : _fetchResults,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF6366F1),
-                elevation: 0,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              ),
-              icon: const Icon(Icons.search_rounded, color: Colors.white, size: 20),
-              label: Text('Fetch Results', style: GoogleFonts.outfit(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(color: const Color(0xFFE0E7FF), borderRadius: BorderRadius.circular(12)),
+                  child: const Icon(Icons.filter_alt_rounded, color: Color(0xFF6366F1), size: 20),
+                ),
+                const SizedBox(width: 12),
+                Text('Filter Options', style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: const Color(0xFF1E293B))),
+              ],
             ),
-          ),
-        ],
+            const SizedBox(height: 24),
+            _buildDropdown(
+              label: 'Select Exam',
+              value: _selectedExamId,
+              items: _examsList,
+              icon: Icons.assignment_outlined,
+              onChanged: (val) {
+                setState(() { _onExamSelected(val); });
+              },
+            ),
+            const SizedBox(height: 16),
+            _buildDropdown(
+              label: _selectedExamId == null ? 'Select Exam First' : 'Select Class',
+              value: _selectedClassId,
+              items: filteredClasses,
+              icon: Icons.class_outlined,
+              onChanged: _selectedExamId == null ? null : (val) {
+                setState(() {
+                  _selectedClassId = val as String?;
+                  _fetchStudentsForClass();
+                });
+              },
+            ),
+            const SizedBox(height: 16),
+            
+            // Student Dropdown
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Select Student', style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF475569))),
+                const SizedBox(height: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: _selectedClassId == null ? const Color(0xFFF1F5F9) : Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: _selectedStudentId != null ? const Color(0xFF6366F1).withOpacity(0.5) : const Color(0xFFE2E8F0)),
+                  ),
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButton<String>(
+                      isExpanded: true,
+                      value: _selectedStudentId,
+                      hint: _isLoadingStudents 
+                          ? Row(children: [const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)), const SizedBox(width: 12), Text('Loading...', style: GoogleFonts.poppins(fontSize: 14, color: const Color(0xFF94A3B8)))])
+                          : Text(_selectedClassId == null ? 'Select Class First' : 'Select Student', style: GoogleFonts.poppins(fontSize: 14, color: const Color(0xFF94A3B8))),
+                      icon: const Icon(Icons.keyboard_arrow_down_rounded, color: Color(0xFF64748B)),
+                      onChanged: _selectedClassId == null || _isLoadingStudents ? null : (val) => setState(() => _selectedStudentId = val),
+                      items: _selectedClassId == null ? [] : [
+                        DropdownMenuItem<String>(
+                          value: 'ALL',
+                          child: Row(
+                            children: [
+                              const Icon(Icons.people_alt_outlined, size: 20, color: Color(0xFF64748B)),
+                              const SizedBox(width: 12),
+                              Text('All Students', style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w600, color: const Color(0xFF1E293B))),
+                            ],
+                          ),
+                        ),
+                        ..._students.map((student) {
+                          final user = student['user'] ?? {};
+                          String name = user['name']?.toString() ?? '${student['firstName']} ${student['lastName']}';
+                          return DropdownMenuItem<String>(
+                            value: student['id'].toString(),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.person_outline, size: 20, color: Color(0xFF64748B)),
+                                const SizedBox(width: 12),
+                                Expanded(child: Text('$name (Roll: ${student['rollNo'] ?? 'N/A'})', style: GoogleFonts.poppins(fontSize: 14, color: const Color(0xFF1E293B)), maxLines: 1, overflow: TextOverflow.ellipsis)),
+                              ],
+                            ),
+                          );
+                        }).toList(),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildDropdown({required String label, required String? value, required List<dynamic> items, required Function(dynamic) onChanged}) {
+  Widget _buildDropdown({required String label, required String? value, required List<dynamic> items, required IconData icon, required Function(dynamic)? onChanged}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.w600, color: const Color(0xFF64748B))),
-        const SizedBox(height: 6),
+        Text(label, style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF475569))),
+        const SizedBox(height: 8),
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
           decoration: BoxDecoration(
-            color: const Color(0xFFF8FAFC),
-            borderRadius: BorderRadius.circular(12),
+            color: onChanged == null ? const Color(0xFFF1F5F9) : Colors.white,
+            borderRadius: BorderRadius.circular(16),
             border: Border.all(color: value != null ? const Color(0xFF6366F1).withOpacity(0.5) : const Color(0xFFE2E8F0)),
           ),
           child: DropdownButtonHideUnderline(
             child: DropdownButton<String>(
               isExpanded: true,
               value: value,
-              hint: Text('Select', style: GoogleFonts.poppins(fontSize: 13, color: const Color(0xFF94A3B8))),
+              hint: Text('Select', style: GoogleFonts.poppins(fontSize: 14, color: const Color(0xFF94A3B8))),
               icon: const Icon(Icons.keyboard_arrow_down_rounded, color: Color(0xFF64748B)),
               onChanged: items.isEmpty ? null : onChanged,
               items: items.map((item) {
@@ -261,15 +364,23 @@ class _ResultsScreenState extends State<ResultsScreen> {
                 }
                 return DropdownMenuItem<String>(
                   value: item['id'].toString(),
-                  child: Text(
-                    name, 
-                    style: GoogleFonts.poppins(
-                      fontSize: 13, 
-                      color: value == item['id']?.toString() ? const Color(0xFF6366F1) : const Color(0xFF1E293B),
-                      fontWeight: value == item['id']?.toString() ? FontWeight.bold : FontWeight.normal,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                  child: Row(
+                    children: [
+                      Icon(icon, size: 20, color: const Color(0xFF64748B)),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          name, 
+                          style: GoogleFonts.poppins(
+                            fontSize: 14, 
+                            color: value == item['id']?.toString() ? const Color(0xFF6366F1) : const Color(0xFF1E293B),
+                            fontWeight: value == item['id']?.toString() ? FontWeight.bold : FontWeight.w500,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
                   ),
                 );
               }).toList(),
@@ -279,130 +390,5 @@ class _ResultsScreenState extends State<ResultsScreen> {
       ],
     );
   }
-
-  Widget _buildResultsTable() {
-    return ListView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      itemCount: _resultsData.length,
-      itemBuilder: (context, index) {
-        final res = _resultsData[index];
-        final student = res['student'] ?? {};
-        final user = student['user'] ?? {};
-        final rollNo = student['rollNo'] ?? 'N/A';
-        
-        String name = (user['name'] ?? '').toString().trim();
-        if (name.isEmpty) {
-           name = '${student['firstName'] ?? ''} ${student['lastName'] ?? ''}'.trim();
-        }
-        if (name.isEmpty) {
-           name = 'Unknown Student';
-        }
-        
-        final photoUrl = user['photoUrl'];
-        final initials = name != 'Unknown Student' ? name.substring(0, 1).toUpperCase() : '?';
-
-        final total = res['totalMarksObtained']?.toString() ?? '0';
-        final percentage = res['percentage'] != null ? (res['percentage'] as num).toStringAsFixed(1) : '0.0';
-        final grade = res['grade'] ?? '-';
-        
-        final gradeColor = _getGradeColor(grade);
-
-        // Avatar gradients
-        final List<List<Color>> avatarGradients = [
-          [const Color(0xFF2DD4BF), const Color(0xFF10B981)], // Teal
-          [const Color(0xFFFB7185), const Color(0xFFE11D48)], // Rose
-          [const Color(0xFFFBBF24), const Color(0xFFF97316)], // Amber
-          [const Color(0xFF22D3EE), const Color(0xFF3B82F6)], // Sky
-          [const Color(0xFFA78BFA), const Color(0xFF7C3AED)], // Purple
-          [const Color(0xFFF472B6), const Color(0xFFDB2777)], // Pink
-        ];
-        final colorIdx = name.isNotEmpty ? name.codeUnitAt(0) % avatarGradients.length : 0;
-        final gradientColors = avatarGradients[colorIdx];
-        final baseColor = gradientColors[0];
-
-        return Container(
-          margin: const EdgeInsets.only(bottom: 12),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(color: baseColor.withOpacity(0.08), blurRadius: 15, offset: const Offset(0, 5)),
-            ],
-            border: Border.all(color: baseColor.withOpacity(0.1), width: 1.5),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: Row(
-              children: [
-                // Avatar
-                Container(
-                  width: 46,
-                  height: 46,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(colors: gradientColors, begin: Alignment.topLeft, end: Alignment.bottomRight),
-                    shape: BoxShape.circle,
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(23),
-                    child: (photoUrl != null && photoUrl.toString().isNotEmpty)
-                        ? Image.network(
-                            ApiService.getImageUrl(photoUrl.toString()),
-                            fit: BoxFit.cover,
-                            headers: const {'ngrok-skip-browser-warning': '69420'},
-                            errorBuilder: (c, e, s) => Center(child: Text(initials, style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18))),
-                          )
-                        : Center(child: Text(initials, style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18))),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                
-                // Name & Roll No
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        name,
-                        style: GoogleFonts.outfit(fontSize: 15, fontWeight: FontWeight.bold, color: const Color(0xFF1E293B)),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Roll No: $rollNo',
-                        style: GoogleFonts.poppins(fontSize: 12, color: const Color(0xFF64748B), fontWeight: FontWeight.w500),
-                      ),
-                    ],
-                  ),
-                ),
-                
-                // Marks and Grade
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                      'Total: $total | $percentage%',
-                      style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.w600, color: const Color(0xFF475569)),
-                    ),
-                    const SizedBox(height: 6),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: gradeColor.withOpacity(0.15),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        'Grade $grade',
-                        style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 12, color: gradeColor),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
 }
+

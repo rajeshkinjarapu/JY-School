@@ -22,17 +22,19 @@ export const getSettings = async (req: AuthRequest, res: Response, next: NextFun
 
 export const updateSettings = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const { schoolName, address, phone, email, website, logoUrl, currentYear } = req.body;
+    const { schoolName, address, phone, email, website, logoUrl, currentYear, examGradingSystem, examAutoPublish, examSendSms, examShowGradesOnAdmitCard, examAdmitCardInstructions } = req.body;
     let settings = await prisma.schoolSettings.findFirst();
+
+    const dataPayload = { schoolName, address, phone, email, website, logoUrl, currentYear, examGradingSystem, examAutoPublish, examSendSms, examShowGradesOnAdmitCard, examAdmitCardInstructions };
 
     if (!settings) {
       settings = await prisma.schoolSettings.create({
-        data: { schoolName, address, phone, email, website, logoUrl, currentYear }
+        data: dataPayload
       });
     } else {
       settings = await prisma.schoolSettings.update({
         where: { id: settings.id },
-        data: { schoolName, address, phone, email, website, logoUrl, currentYear }
+        data: dataPayload
       });
     }
 

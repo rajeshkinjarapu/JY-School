@@ -160,27 +160,36 @@ class _MarkStaffAttendanceScreenState extends State<MarkStaffAttendanceScreen> {
 
   Widget _buildStatusToggle(String tId, String status, String label, Color color) {
     final isSelected = _attendanceMap[tId] == status;
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          _attendanceMap[tId] = status;
-        });
-      },
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        margin: const EdgeInsets.only(right: 8),
-        decoration: BoxDecoration(
-          color: isSelected ? color : Colors.transparent,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: isSelected ? color : Colors.grey.shade300),
-        ),
-        child: Text(
-          label,
-          style: GoogleFonts.poppins(
-            fontSize: 12,
-            fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-            color: isSelected ? Colors.white : Colors.grey.shade600,
+    return Expanded(
+      child: GestureDetector(
+        onTap: () {
+          setState(() {
+            _attendanceMap[tId] = status;
+          });
+        },
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          margin: const EdgeInsets.symmetric(horizontal: 4),
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: isSelected ? color : Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: isSelected ? color : Colors.grey.shade300, width: 1.5),
+            boxShadow: isSelected 
+                ? [BoxShadow(color: color.withOpacity(0.35), blurRadius: 8, offset: const Offset(0, 4))] 
+                : [],
+          ),
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              label,
+              style: GoogleFonts.outfit(
+                fontSize: 13,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+                color: isSelected ? Colors.white : Colors.grey.shade500,
+              ),
+            ),
           ),
         ),
       ),
@@ -192,14 +201,16 @@ class _MarkStaffAttendanceScreenState extends State<MarkStaffAttendanceScreen> {
     final dateStr = DateFormat('EEE, MMM d, yyyy').format(_selectedDate);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: const Color(0xFFF4F7FE),
       appBar: AppBar(
-        title: Text('Mark Staff Attendance', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white)),
+        title: Text('Mark Staff Attendance', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 22, color: Colors.white)),
         iconTheme: const IconThemeData(color: Colors.white),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
         flexibleSpace: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
-              colors: [Color(0xFF6366F1), Color(0xFF4F46E5)],
+              colors: [Color(0xFF6366F1), Color(0xFF8B5CF6), Color(0xFFD946EF)],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
@@ -210,27 +221,37 @@ class _MarkStaffAttendanceScreenState extends State<MarkStaffAttendanceScreen> {
         children: [
           // Date selector bar
           Container(
-            padding: const EdgeInsets.all(16),
-            color: Colors.white,
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              boxShadow: [
+                BoxShadow(color: const Color(0xFF6366F1).withOpacity(0.08), blurRadius: 15, offset: const Offset(0, 8))
+              ],
+              borderRadius: const BorderRadius.only(
+                bottomLeft: Radius.circular(24),
+                bottomRight: Radius.circular(24),
+              ),
+            ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Date', style: GoogleFonts.poppins(color: Colors.grey, fontSize: 12)),
-                    Text(dateStr, style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: const Color(0xFF1E293B))),
+                    Text('Selected Date', style: GoogleFonts.poppins(color: const Color(0xFF64748B), fontSize: 12, fontWeight: FontWeight.w500)),
+                    Text(dateStr, style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.bold, color: const Color(0xFF1E293B))),
                   ],
                 ),
                 ElevatedButton.icon(
                   onPressed: () => _selectDate(context),
                   icon: const Icon(Icons.calendar_month_rounded, size: 18),
-                  label: const Text('Change'),
+                  label: Text('Change', style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFFEEF2FF),
-                    foregroundColor: const Color(0xFF4F46E5),
+                    foregroundColor: const Color(0xFF6366F1),
                     elevation: 0,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                   ),
                 ),
               ],
@@ -254,47 +275,62 @@ class _MarkStaffAttendanceScreenState extends State<MarkStaffAttendanceScreen> {
                               final empId = t['employeeId'] ?? 'N/A';
                               final isAbsentOrLate = _attendanceMap[tId] != 'PRESENT';
 
-                              return Card(
+                              return Container(
                                 margin: const EdgeInsets.only(bottom: 16),
-                                elevation: 0,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(16),
-                                  side: BorderSide(color: Colors.grey.shade200)
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(20),
+                                  boxShadow: [
+                                    BoxShadow(color: const Color(0xFF6366F1).withOpacity(0.06), blurRadius: 12, offset: const Offset(0, 4))
+                                  ],
                                 ),
                                 child: Padding(
-                                  padding: const EdgeInsets.all(16),
+                                  padding: const EdgeInsets.all(20),
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       Row(
                                         children: [
-                                          CircleAvatar(
-                                            backgroundColor: const Color(0xFFEEF2FF),
-                                            child: Text(name[0].toUpperCase(), style: const TextStyle(color: Color(0xFF4F46E5), fontWeight: FontWeight.bold)),
+                                          Container(
+                                            width: 48,
+                                            height: 48,
+                                            decoration: BoxDecoration(
+                                              gradient: const LinearGradient(
+                                                colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
+                                                begin: Alignment.topLeft,
+                                                end: Alignment.bottomRight,
+                                              ),
+                                              borderRadius: BorderRadius.circular(14),
+                                              boxShadow: [
+                                                BoxShadow(color: const Color(0xFF6366F1).withOpacity(0.3), blurRadius: 8, offset: const Offset(0, 4))
+                                              ],
+                                            ),
+                                            alignment: Alignment.center,
+                                            child: Text(name[0].toUpperCase(), style: GoogleFonts.outfit(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
                                           ),
-                                          const SizedBox(width: 12),
+                                          const SizedBox(width: 14),
                                           Expanded(
                                             child: Column(
                                               crossAxisAlignment: CrossAxisAlignment.start,
                                               children: [
-                                                Text(name, style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16)),
-                                                Text('ID: $empId', style: GoogleFonts.poppins(color: Colors.grey, fontSize: 12)),
+                                                Text(name, style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 17, color: const Color(0xFF1E293B))),
+                                                const SizedBox(height: 2),
+                                                Text('ID: $empId', style: GoogleFonts.poppins(color: const Color(0xFF64748B), fontSize: 12, fontWeight: FontWeight.w500)),
                                               ],
                                             ),
                                           ),
                                         ],
                                       ),
-                                      const SizedBox(height: 16),
-                                      SingleChildScrollView(
-                                        scrollDirection: Axis.horizontal,
-                                        child: Row(
-                                          children: [
-                                            _buildStatusToggle(tId, 'PRESENT', 'Present', const Color(0xFF10B981)),
-                                            _buildStatusToggle(tId, 'ABSENT', 'Absent', const Color(0xFFEF4444)),
-                                            _buildStatusToggle(tId, 'LATE', 'Late', const Color(0xFFF59E0B)),
-                                            _buildStatusToggle(tId, 'HALF_DAY', 'Half Day', const Color(0xFF3B82F6)),
-                                          ],
-                                        ),
+                                      const SizedBox(height: 20),
+                                      // Perfectly Aligned Buttons Row
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          _buildStatusToggle(tId, 'PRESENT', 'Present', const Color(0xFF10B981)),
+                                          _buildStatusToggle(tId, 'ABSENT', 'Absent', const Color(0xFFF43F5E)),
+                                          _buildStatusToggle(tId, 'LATE', 'Late', const Color(0xFFF59E0B)),
+                                          _buildStatusToggle(tId, 'HALF_DAY', 'Half Day', const Color(0xFF3B82F6)),
+                                        ],
                                       ),
                                       if (isAbsentOrLate) ...[
                                         const SizedBox(height: 12),
@@ -327,17 +363,29 @@ class _MarkStaffAttendanceScreenState extends State<MarkStaffAttendanceScreen> {
                 color: Colors.white,
                 boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, -5))],
               ),
-              child: SizedBox(
+              child: Container(
                 width: double.infinity,
-                height: 54,
+                height: 56,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(color: const Color(0xFF6366F1).withOpacity(0.4), blurRadius: 12, offset: const Offset(0, 6))
+                  ]
+                ),
                 child: ElevatedButton.icon(
                   onPressed: _isSaving ? null : _saveAttendance,
-                  icon: _isSaving ? const SizedBox() : const Icon(Icons.check_circle_rounded, color: Colors.white),
+                  icon: _isSaving ? const SizedBox() : const Icon(Icons.check_circle_rounded, color: Colors.white, size: 22),
                   label: _isSaving 
                       ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
                       : Text('Save Attendance', style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF4F46E5),
+                    backgroundColor: Colors.transparent,
+                    shadowColor: Colors.transparent,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                   ),
                 ),

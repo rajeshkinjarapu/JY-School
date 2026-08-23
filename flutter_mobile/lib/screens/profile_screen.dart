@@ -1,4 +1,4 @@
-﻿import 'dart:convert';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -150,12 +150,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             ClipOval(
                               child: SizedBox(
                                 width: 98, height: 98,
-                                child: (photoUrl != null && photoUrl.isNotEmpty)
+                                child: (photoUrl != null && photoUrl.toString().isNotEmpty)
                                     ? Image.network(
-                                        photoUrl.startsWith('http')
-                                            ? photoUrl
-                                            : (ApiService.baseUrl + photoUrl),
+                                        ApiService.getImageUrl(photoUrl.toString()),
                                         fit: BoxFit.cover,
+                                        headers: const {'ngrok-skip-browser-warning': '69420'},
                                         errorBuilder: (c, e, s) => _avatarFallback(name),
                                       )
                                     : _avatarFallback(name),

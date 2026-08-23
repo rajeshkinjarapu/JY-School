@@ -129,7 +129,11 @@ class _FinanceScreenState extends State<FinanceScreen> with SingleTickerProvider
       _filteredPayments = _payments.where((payment) {
         // Search filter
         final student = payment['student'] ?? {};
-        final studentName = '${student['firstName'] ?? ''} ${student['lastName'] ?? ''}'.toLowerCase();
+        final user = student['user'] ?? {};
+        final firstName = student['firstName'] ?? '';
+        final lastName = student['lastName'] ?? '';
+        final studentName = (user['name']?.toString() ?? '$firstName $lastName').toLowerCase();
+        
         final searchMatch = studentName.contains(_searchTerm.toLowerCase());
 
         // Class filter
@@ -641,7 +645,7 @@ class _FinanceScreenState extends State<FinanceScreen> with SingleTickerProvider
                         const DropdownMenuItem(value: 'ALL', child: Text('All Classes')),
                         ..._classes.map((c) => DropdownMenuItem(
                               value: c['id']?.toString() ?? '',
-                              child: Text('${c['className'] ?? ''} - ${c['section'] ?? ''}'),
+                              child: Text('${c['name'] ?? c['className'] ?? ''} - ${c['section'] ?? ''}'),
                             )),
                       ],
                       onChanged: (val) {
@@ -704,7 +708,7 @@ class _FinanceScreenState extends State<FinanceScreen> with SingleTickerProvider
     }
     
     final initials = studentName != 'Unknown Student' ? studentName.substring(0, 1).toUpperCase() : '?';
-    final photoUrl = user['photoUrl'];
+    final photoUrl = user['photoUrl'] ?? student['photoUrl'];
     
     final classInfo = student['class'] ?? {};
     final className = '${classInfo['name'] ?? classInfo['className'] ?? ''} ${classInfo['section'] ?? ''}'.trim();
@@ -756,24 +760,16 @@ class _FinanceScreenState extends State<FinanceScreen> with SingleTickerProvider
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
-          BoxShadow(color: baseColor.withOpacity(0.08), blurRadius: 20, offset: const Offset(0, 8)),
+          BoxShadow(color: baseColor.withOpacity(0.1), blurRadius: 20, offset: const Offset(0, 8)),
         ],
-        border: Border.all(color: baseColor.withOpacity(0.15), width: 1.5),
+        border: Border.all(color: baseColor.withOpacity(0.4), width: 1.5),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Header Section with Student Info
-          Container(
+          Padding(
             padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [baseColor.withOpacity(0.05), Colors.white],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(18)),
-            ),
             child: Row(
               children: [
                 Container(
@@ -846,16 +842,19 @@ class _FinanceScreenState extends State<FinanceScreen> with SingleTickerProvider
               ],
             ),
           ),
-          // Amount and Details Section
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              border: const Border(
-                top: BorderSide(color: Color(0xFFF1F5F9)),
-                bottom: BorderSide(color: Color(0xFFF1F5F9)),
-              ),
+          
+          // Unified Divider instead of fragmented sections
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: Container(
+              height: 1,
+              color: baseColor.withOpacity(0.15),
             ),
+          ),
+          
+          // Amount and Details Section
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             child: Column(
               children: [
                 Row(

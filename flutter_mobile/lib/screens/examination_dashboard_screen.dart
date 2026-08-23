@@ -9,6 +9,7 @@ import 'progress_card_screen.dart';
 import 'exam_status_screen.dart';
 import 'slip_test_screen.dart';
 import 'settings_screen.dart';
+import 'exam_settings_screen.dart';
 import '../services/api_service.dart';
 import '../widgets/app_drawer.dart';
 
@@ -39,89 +40,89 @@ class ExaminationDashboardScreen extends StatelessWidget {
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 crossAxisCount: 2,
-                crossAxisSpacing: 14,
-                mainAxisSpacing: 14,
-                childAspectRatio: 1.4, // Increased to decrease box height
+                crossAxisSpacing: 12,
+                mainAxisSpacing: 12,
+                childAspectRatio: 2.3, // High ratio for compact height
                 children: [
                   _buildDashboardCard(
                     context,
                     title: 'Exams List',
                     subtitle: 'Manage exams',
-                    icon: Icons.assignment_outlined,
-                    gradient: const LinearGradient(colors: [Color(0xFF4F46E5), Color(0xFF7C3AED)]), // Indigo to Purple
+                    imageUrl: 'https://img.icons8.com/3d-fluency/94/books.png',
+                    color: const Color(0xFF4F46E5),
                     onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const ExamsScreen())),
                   ),
                   _buildDashboardCard(
                     context,
                     title: 'Admit Card',
                     subtitle: 'Hall tickets',
-                    icon: Icons.badge_outlined,
-                    gradient: const LinearGradient(colors: [Color(0xFF0EA5E9), Color(0xFF2563EB)]), // Sky to Blue
+                    imageUrl: 'https://img.icons8.com/3d-fluency/94/name-tag.png',
+                    color: const Color(0xFF0EA5E9),
                     onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const AdmitCardScreen())),
                   ),
                   _buildDashboardCard(
                     context,
                     title: 'Question Papers',
                     subtitle: 'Upload & manage',
-                    icon: Icons.library_books_outlined,
-                    gradient: const LinearGradient(colors: [Color(0xFFF59E0B), Color(0xFFEA580C)]), // Amber to Orange
+                    imageUrl: 'https://img.icons8.com/3d-fluency/94/document.png',
+                    color: const Color(0xFFF59E0B),
                     onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const QuestionPapersScreen())),
                   ),
                   _buildDashboardCard(
                     context,
                     title: 'Marks Upload',
-                    subtitle: 'Enter student marks',
-                    icon: Icons.edit_note_rounded,
-                    gradient: const LinearGradient(colors: [Color(0xFF10B981), Color(0xFF059669)]), // Emerald
+                    subtitle: 'Enter marks',
+                    imageUrl: 'https://img.icons8.com/3d-fluency/94/edit.png',
+                    color: const Color(0xFF10B981),
                     onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const MarksUploadScreen())),
                   ),
                   _buildDashboardCard(
                     context,
                     title: 'Results',
                     subtitle: 'Grade sheets',
-                    icon: Icons.workspace_premium_outlined,
-                    gradient: const LinearGradient(colors: [Color(0xFF8B5CF6), Color(0xFF6D28D9)]), // Violet
+                    imageUrl: 'https://img.icons8.com/3d-fluency/94/medal.png',
+                    color: const Color(0xFF8B5CF6),
                     onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const ResultsScreen())),
                   ),
                   _buildDashboardCard(
                     context,
                     title: 'Progress Card',
                     subtitle: 'Detailed progress',
-                    icon: Icons.analytics_outlined,
-                    gradient: const LinearGradient(colors: [Color(0xFFF43F5E), Color(0xFFE11D48)]), // Rose
+                    imageUrl: 'https://img.icons8.com/3d-fluency/94/combo-chart.png',
+                    color: const Color(0xFFF43F5E),
                     onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const ProgressCardScreen())),
                   ),
                   _buildDashboardCard(
                     context,
                     title: 'Slip Test Rank',
                     subtitle: 'Manual ranks',
-                    icon: Icons.military_tech_outlined,
-                    gradient: const LinearGradient(colors: [Color(0xFF06B6D4), Color(0xFF0284C7)]), // Cyan
+                    imageUrl: 'https://img.icons8.com/3d-fluency/94/target.png',
+                    color: const Color(0xFF06B6D4),
                     onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const SlipTestScreen())),
                   ),
                   _buildDashboardCard(
                     context,
-                    title: 'Send Marks SMS',
+                    title: 'Send SMS',
                     subtitle: 'Notify parents',
-                    icon: Icons.sms_outlined,
-                    gradient: const LinearGradient(colors: [Color(0xFFEC4899), Color(0xFFBE185D)]), // Pink
+                    imageUrl: 'https://img.icons8.com/3d-fluency/94/speech-bubble-with-dots.png',
+                    color: const Color(0xFFEC4899),
                     onTap: () => _showSendSmsBottomSheet(context),
                   ),
                   _buildDashboardCard(
                     context,
-                    title: 'Status Overview',
+                    title: 'Overview',
                     subtitle: 'Track progress',
-                    icon: Icons.security_outlined,
-                    gradient: const LinearGradient(colors: [Color(0xFFF97316), Color(0xFFC2410C)]), // Orange
+                    imageUrl: 'https://img.icons8.com/3d-fluency/94/search.png',
+                    color: const Color(0xFFF97316),
                     onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const ExamStatusScreen())),
                   ),
                   _buildDashboardCard(
                     context,
                     title: 'Settings',
                     subtitle: 'Configurations',
-                    icon: Icons.settings_outlined,
-                    gradient: const LinearGradient(colors: [Color(0xFF64748B), Color(0xFF475569)]), // Slate
-                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const SettingsScreen())),
+                    imageUrl: 'https://img.icons8.com/3d-fluency/94/gear.png',
+                    color: const Color(0xFF64748B),
+                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const ExamSettingsScreen())),
                   ),
                 ],
               ),
@@ -137,83 +138,77 @@ class ExaminationDashboardScreen extends StatelessWidget {
     BuildContext context, {
     required String title,
     required String subtitle,
-    required IconData icon,
-    required Gradient gradient,
+    required String imageUrl,
+    required Color color,
     required VoidCallback onTap,
   }) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(16),
       child: Container(
         decoration: BoxDecoration(
-          gradient: gradient,
-          borderRadius: BorderRadius.circular(20),
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: (gradient as LinearGradient).colors.first.withOpacity(0.4),
-              blurRadius: 10,
+              color: color.withOpacity(0.12),
+              blurRadius: 12,
               offset: const Offset(0, 4),
             ),
           ],
+          border: Border.all(color: color.withOpacity(0.4), width: 1.5),
         ),
-        child: Stack(
-          children: [
-            // Decorative background icon
-            Positioned(
-              right: -15,
-              bottom: -15,
-              child: Icon(
-                icon,
-                size: 90,
-                color: Colors.white.withOpacity(0.15),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12.0),
+          child: Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.08),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                alignment: Alignment.center,
+                child: Image.network(
+                  imageUrl,
+                  width: 28,
+                  height: 28,
+                  errorBuilder: (context, error, stackTrace) => Icon(Icons.apps_rounded, color: color, size: 24),
+                ),
               ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.25),
-                      borderRadius: BorderRadius.circular(12),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      title,
+                      style: GoogleFonts.outfit(
+                        color: const Color(0xFF1E293B),
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    child: Icon(icon, color: Colors.white, size: 24),
-                  ),
-                  const Spacer(),
-                  Text(
-                    title,
-                    style: GoogleFonts.outfit(
-                      color: Colors.white,
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold,
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      style: GoogleFonts.poppins(
+                        color: const Color(0xFF64748B),
+                        fontSize: 10,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    subtitle,
-                    style: GoogleFonts.poppins(
-                      color: Colors.white.withOpacity(0.9),
-                      fontSize: 11,
-                      fontWeight: FontWeight.w500,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-            // Optional subtle arrow icon
-            Positioned(
-              right: 12,
-              top: 14,
-              child: Icon(Icons.arrow_forward_ios, color: Colors.white.withOpacity(0.5), size: 14),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

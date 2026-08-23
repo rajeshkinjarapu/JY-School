@@ -259,14 +259,16 @@ class _StaffAttendanceReportScreenState extends State<StaffAttendanceReportScree
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: const Color(0xFFF4F7FE),
       appBar: AppBar(
-        title: Text('Monthly HR Report', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white)),
+        title: Text('Monthly HR Report', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 22, color: Colors.white)),
         iconTheme: const IconThemeData(color: Colors.white),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
         flexibleSpace: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
-              colors: [Color(0xFF14B8A6), Color(0xFF0F766E)],
+              colors: [Color(0xFF6366F1), Color(0xFF8B5CF6), Color(0xFFD946EF)],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
@@ -277,19 +279,34 @@ class _StaffAttendanceReportScreenState extends State<StaffAttendanceReportScree
         children: [
           // Month Selector
           Container(
-            padding: const EdgeInsets.all(16),
-            color: Colors.white,
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              boxShadow: [
+                BoxShadow(color: const Color(0xFF6366F1).withOpacity(0.08), blurRadius: 15, offset: const Offset(0, 8))
+              ],
+              borderRadius: const BorderRadius.only(
+                bottomLeft: Radius.circular(24),
+                bottomRight: Radius.circular(24),
+              ),
+            ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                IconButton(
-                  icon: const Icon(Icons.arrow_back_ios_rounded, size: 20, color: Color(0xFF1E293B)),
-                  onPressed: _previousMonth,
+                Container(
+                  decoration: BoxDecoration(color: const Color(0xFFF1F5F9), borderRadius: BorderRadius.circular(12)),
+                  child: IconButton(
+                    icon: const Icon(Icons.arrow_back_ios_rounded, size: 18, color: Color(0xFF64748B)),
+                    onPressed: _previousMonth,
+                  ),
                 ),
                 Text('${_months[_selectedMonth - 1]} $_selectedYear', style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.bold, color: const Color(0xFF1E293B))),
-                IconButton(
-                  icon: const Icon(Icons.arrow_forward_ios_rounded, size: 20, color: Color(0xFF1E293B)),
-                  onPressed: _nextMonth,
+                Container(
+                  decoration: BoxDecoration(color: const Color(0xFFF1F5F9), borderRadius: BorderRadius.circular(12)),
+                  child: IconButton(
+                    icon: const Icon(Icons.arrow_forward_ios_rounded, size: 18, color: Color(0xFF64748B)),
+                    onPressed: _nextMonth,
+                  ),
                 ),
               ],
             ),
@@ -314,58 +331,75 @@ class _StaffAttendanceReportScreenState extends State<StaffAttendanceReportScree
                               final totalDays = stats['present']! + stats['absent']! + stats['late']! + stats['half']!;
                               final attRate = totalDays > 0 ? ((stats['present']! + stats['half']! * 0.5) / totalDays * 100) : 0.0;
 
-                              return InkWell(
-                                onTap: () => _showTeacherDetails(t, stats),
-                                borderRadius: BorderRadius.circular(16),
-                                child: Ink(
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(16),
-                                    border: Border.all(color: Colors.grey.shade200),
-                                  ),
-                                  padding: const EdgeInsets.all(16),
-                                  child: Column(
-                                    children: [
-                                      Row(
-                                        children: [
-                                          CircleAvatar(
-                                            backgroundColor: const Color(0xFFEEF2FF),
-                                            child: Text(name[0].toUpperCase(), style: const TextStyle(color: Color(0xFF4F46E5), fontWeight: FontWeight.bold)),
-                                          ),
-                                          const SizedBox(width: 16),
-                                          Expanded(
-                                            child: Column(
-                                              crossAxisAlignment: CrossAxisAlignment.start,
-                                              children: [
-                                                Text(name, style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16, color: const Color(0xFF1E293B))),
-                                                Text('ID: ${t['employeeId'] ?? 'N/A'}', style: GoogleFonts.poppins(color: Colors.grey, fontSize: 12)),
-                                              ],
+                              return Container(
+                                margin: const EdgeInsets.only(bottom: 16),
+                                child: InkWell(
+                                  onTap: () => _showTeacherDetails(t, stats),
+                                  borderRadius: BorderRadius.circular(20),
+                                  child: Ink(
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(20),
+                                      boxShadow: [
+                                        BoxShadow(color: const Color(0xFF6366F1).withOpacity(0.06), blurRadius: 12, offset: const Offset(0, 4))
+                                      ],
+                                    ),
+                                    padding: const EdgeInsets.all(20),
+                                    child: Column(
+                                      children: [
+                                        Row(
+                                          children: [
+                                            Container(
+                                              width: 48,
+                                              height: 48,
+                                              decoration: BoxDecoration(
+                                                gradient: const LinearGradient(
+                                                  colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
+                                                  begin: Alignment.topLeft,
+                                                  end: Alignment.bottomRight,
+                                                ),
+                                                borderRadius: BorderRadius.circular(14),
+                                                boxShadow: [
+                                                  BoxShadow(color: const Color(0xFF6366F1).withOpacity(0.3), blurRadius: 8, offset: const Offset(0, 4))
+                                                ],
+                                              ),
+                                              alignment: Alignment.center,
+                                              child: Text(name[0].toUpperCase(), style: GoogleFonts.outfit(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
                                             ),
-                                          ),
-                                          Container(
-                                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                            decoration: BoxDecoration(
-                                              color: attRate >= 80 ? const Color(0xFF10B981).withOpacity(0.1) : const Color(0xFFF59E0B).withOpacity(0.1),
-                                              borderRadius: BorderRadius.circular(20),
+                                            const SizedBox(width: 16),
+                                            Expanded(
+                                              child: Column(
+                                                crossAxisAlignment: CrossAxisAlignment.start,
+                                                children: [
+                                                  Text(name, style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 17, color: const Color(0xFF1E293B))),
+                                                  const SizedBox(height: 2),
+                                                  Text('ID: ${t['employeeId'] ?? 'N/A'}', style: GoogleFonts.poppins(color: const Color(0xFF64748B), fontSize: 12, fontWeight: FontWeight.w500)),
+                                                ],
+                                              ),
                                             ),
-                                            child: Text('${attRate.toStringAsFixed(0)}%', style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: attRate >= 80 ? const Color(0xFF10B981) : const Color(0xFFF59E0B), fontSize: 12)),
-                                          )
-                                        ],
-                                      ),
-                                      const Padding(
-                                        padding: EdgeInsets.symmetric(vertical: 12),
-                                        child: Divider(height: 1),
-                                      ),
-                                      Row(
-                                        mainAxisAlignment: MainAxisAlignment.spaceAround,
-                                        children: [
-                                          _buildMiniStatItem('Present', stats['present'].toString(), const Color(0xFF10B981)),
-                                          _buildMiniStatItem('Absent', stats['absent'].toString(), const Color(0xFFEF4444)),
-                                          _buildMiniStatItem('Late', stats['late'].toString(), const Color(0xFFF59E0B)),
-                                          _buildMiniStatItem('Half', stats['half'].toString(), const Color(0xFF3B82F6)),
-                                        ],
-                                      )
-                                    ],
+                                            Container(
+                                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                              decoration: BoxDecoration(
+                                                color: attRate >= 80 ? const Color(0xFF10B981).withOpacity(0.1) : const Color(0xFFF59E0B).withOpacity(0.1),
+                                                borderRadius: BorderRadius.circular(20),
+                                                border: Border.all(color: attRate >= 80 ? const Color(0xFF10B981).withOpacity(0.2) : const Color(0xFFF59E0B).withOpacity(0.2)),
+                                              ),
+                                              child: Text('${attRate.toStringAsFixed(0)}%', style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: attRate >= 80 ? const Color(0xFF10B981) : const Color(0xFFF59E0B), fontSize: 12)),
+                                            )
+                                          ],
+                                        ),
+                                        const SizedBox(height: 20),
+                                        Row(
+                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            _buildMiniStatItem('Present', stats['present'].toString(), const Color(0xFF10B981), const Color(0xFFF0FDF4)),
+                                            _buildMiniStatItem('Absent', stats['absent'].toString(), const Color(0xFFF43F5E), const Color(0xFFFFF1F2)),
+                                            _buildMiniStatItem('Late', stats['late'].toString(), const Color(0xFFF59E0B), const Color(0xFFFFFBEB)),
+                                            _buildMiniStatItem('Half', stats['half'].toString(), const Color(0xFF3B82F6), const Color(0xFFEFF6FF)),
+                                          ],
+                                        )
+                                      ],
+                                    ),
                                   ),
                                 ),
                               );
@@ -377,12 +411,24 @@ class _StaffAttendanceReportScreenState extends State<StaffAttendanceReportScree
     );
   }
 
-  Widget _buildMiniStatItem(String label, String val, Color color) {
-    return Column(
-      children: [
-        Text(val, style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: color)),
-        Text(label, style: GoogleFonts.poppins(fontSize: 11, color: Colors.grey)),
-      ],
+  Widget _buildMiniStatItem(String label, String val, Color color, Color bgColor) {
+    return Expanded(
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 4),
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        decoration: BoxDecoration(
+          color: bgColor,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: color.withOpacity(0.2)),
+        ),
+        child: Column(
+          children: [
+            Text(val, style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: color)),
+            const SizedBox(height: 2),
+            Text(label, style: GoogleFonts.poppins(fontSize: 11, color: color.withOpacity(0.8), fontWeight: FontWeight.w600)),
+          ],
+        ),
+      ),
     );
   }
 }

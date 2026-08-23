@@ -168,21 +168,29 @@ class _ExamsScreenState extends State<ExamsScreen> {
       backgroundColor: const Color(0xFFF1F5F9), // Lighter, cleaner background
       drawer: const AppDrawer(currentRoute: 'exams'),
       appBar: AppBar(
-        title: Text(title, style: GoogleFonts.outfit(fontWeight: FontWeight.w800, fontSize: 22, color: const Color(0xFF1E293B))),
+        title: Text(title, style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 22, color: Colors.white)),
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: false,
-        iconTheme: const IconThemeData(color: Color(0xFF1E293B)),
+        iconTheme: const IconThemeData(color: Colors.white),
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF6366F1), Color(0xFF8B5CF6), Color(0xFFD946EF)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
         actions: [
           Container(
             margin: const EdgeInsets.only(right: 12),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: Colors.white.withOpacity(0.2),
               shape: BoxShape.circle,
-              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 2))],
             ),
             child: IconButton(
-              icon: const Icon(Icons.refresh_rounded, color: Color(0xFF4F46E5)),
+              icon: const Icon(Icons.refresh_rounded, color: Colors.white),
               onPressed: _fetchResults,
             ),
           )
@@ -327,14 +335,12 @@ class _ExamsScreenState extends State<ExamsScreen> {
                     offset: Offset(0, isExpanded ? 8 : 4),
                   )
                 ],
-                border: Border.all(color: const Color(0xFFF1F5F9), width: 1.5),
+                border: Border.all(color: gradient[0].withOpacity(0.4), width: 1.5),
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(16),
                 child: Column(
                   children: [
-                    // Top Accent Line
-                    Container(height: 4, decoration: BoxDecoration(gradient: LinearGradient(colors: gradient))),
                     Padding(
                       padding: const EdgeInsets.all(16),
                       child: Column(
@@ -344,12 +350,15 @@ class _ExamsScreenState extends State<ExamsScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Container(
-                                padding: const EdgeInsets.all(10),
+                                padding: const EdgeInsets.all(12),
                                 decoration: BoxDecoration(
-                                  color: gradient[0].withOpacity(0.1),
+                                  gradient: LinearGradient(colors: gradient, begin: Alignment.topLeft, end: Alignment.bottomRight),
                                   shape: BoxShape.circle,
+                                  boxShadow: [
+                                    BoxShadow(color: gradient[0].withOpacity(0.3), blurRadius: 8, offset: const Offset(0, 4))
+                                  ],
                                 ),
-                                child: Icon(Icons.assignment_rounded, color: gradient[0], size: 20),
+                                child: const Icon(Icons.assignment_rounded, color: Colors.white, size: 22),
                               ),
                               const SizedBox(width: 12),
                               Expanded(

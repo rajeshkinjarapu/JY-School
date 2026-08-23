@@ -144,28 +144,24 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
         children: [
           // Hero card
           Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Color(0xFF2E2A66), Color(0xFF4F46E5)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.only(bottomLeft: Radius.circular(24), bottomRight: Radius.circular(24)),
-              boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10, offset: Offset(0, 4))],
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: const BorderRadius.only(bottomLeft: Radius.circular(24), bottomRight: Radius.circular(24)),
+              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4))],
             ),
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 20, 16, 24),
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
               child: Row(
                 children: [
                   Container(
-                    width: 72, height: 72,
+                    width: 84, height: 84,
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(18),
-                      border: Border.all(color: Colors.white, width: 2.5),
-                      boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.2), blurRadius: 12, offset: const Offset(0, 4))],
+                      borderRadius: BorderRadius.circular(24),
+                      border: Border.all(color: const Color(0xFFEEF2FF), width: 4),
+                      boxShadow: [BoxShadow(color: const Color(0xFF4F46E5).withOpacity(0.2), blurRadius: 16, offset: const Offset(0, 6))],
                     ),
                     child: ClipRRect(
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius: BorderRadius.circular(20),
                       child: (photoUrl != null && (photoUrl as String).isNotEmpty)
                           ? Image.network(
                               ApiService.getImageUrl(photoUrl as String),
@@ -181,7 +177,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(name, style: GoogleFonts.outfit(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold), maxLines: 2, overflow: TextOverflow.ellipsis),
+                        Text(name, style: GoogleFonts.outfit(color: const Color(0xFF1E293B), fontSize: 18, fontWeight: FontWeight.bold), maxLines: 2, overflow: TextOverflow.ellipsis),
                         const SizedBox(height: 8),
                         Wrap(
                           spacing: 6, runSpacing: 4,
@@ -200,11 +196,11 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
                       child: Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF22C55E).withOpacity(0.2),
+                          color: const Color(0xFF22C55E).withOpacity(0.12),
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: const Color(0xFF22C55E).withOpacity(0.4)),
+                          border: Border.all(color: const Color(0xFF22C55E).withOpacity(0.25)),
                         ),
-                        child: const Icon(Icons.chat_bubble_rounded, color: Color(0xFF22C55E), size: 22),
+                        child: const Icon(Icons.chat_bubble_rounded, color: Color(0xFF16A34A), size: 22),
                       ),
                     ),
                 ],
@@ -250,23 +246,29 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
 
   Widget _avatarFallback(String name) {
     return Container(
-      color: const Color(0xFF6366F1),
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Color(0xFF8B5CF6), Color(0xFF4F46E5)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
       child: Center(child: Text(
         name.isNotEmpty ? name[0].toUpperCase() : 'S',
-        style: GoogleFonts.outfit(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold),
+        style: GoogleFonts.outfit(color: Colors.white, fontSize: 32, fontWeight: FontWeight.bold),
       )),
     );
   }
 
   Widget _badge(String text, Color color) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.2),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withOpacity(0.4)),
+        color: color.withOpacity(0.12),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withOpacity(0.25)),
       ),
-      child: Text(text, style: GoogleFonts.poppins(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w700)),
+      child: Text(text, style: GoogleFonts.poppins(color: color, fontSize: 10, fontWeight: FontWeight.w700, letterSpacing: 0.3)),
     );
   }
 
@@ -309,6 +311,13 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
   }
 
   Widget _infoCard(String title, Color accentColor, List<Widget> rows) {
+    IconData getIconForTitle(String t) {
+      if (t.contains('Personal')) return Icons.person_outline_rounded;
+      if (t.contains('Contact')) return Icons.contact_phone_outlined;
+      if (t.contains('Family')) return Icons.family_restroom_outlined;
+      return Icons.info_outline_rounded;
+    }
+
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -321,12 +330,25 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
             child: Row(children: [
-              Container(width: 4, height: 18, decoration: BoxDecoration(color: accentColor, borderRadius: BorderRadius.circular(2))),
-              const SizedBox(width: 10),
-              Text(title, style: GoogleFonts.outfit(fontSize: 15, fontWeight: FontWeight.bold, color: const Color(0xFF1E293B))),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: accentColor.withOpacity(0.12),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: accentColor.withOpacity(0.2)),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(getIconForTitle(title), size: 16, color: accentColor),
+                    const SizedBox(width: 6),
+                    Text(title, style: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.w800, color: accentColor, letterSpacing: 0.3)),
+                  ],
+                ),
+              ),
             ]),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 12),
           const Divider(height: 1, color: Color(0xFFF1F5F9)),
           ...rows.asMap().entries.map((e) => Column(children: [
             e.value,
@@ -341,20 +363,30 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
   Widget _infoRow(IconData icon, String label, String value, Color iconColor, {VoidCallback? onTap}) {
     return InkWell(
       onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(children: [
           Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(color: iconColor.withOpacity(0.1), borderRadius: BorderRadius.circular(10)),
-            child: Icon(icon, size: 17, color: iconColor),
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: iconColor.withOpacity(0.08), 
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: iconColor.withOpacity(0.15)),
+            ),
+            child: Icon(icon, size: 18, color: iconColor),
           ),
-          const SizedBox(width: 14),
+          const SizedBox(width: 16),
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(label, style: GoogleFonts.poppins(fontSize: 10.5, color: const Color(0xFF94A3B8), fontWeight: FontWeight.w600)),
-            Text(value, style: GoogleFonts.poppins(fontSize: 13.5, fontWeight: FontWeight.w600, color: onTap != null ? iconColor : const Color(0xFF1E293B))),
+            Text(label, style: GoogleFonts.poppins(fontSize: 11, color: const Color(0xFF64748B), fontWeight: FontWeight.w500)),
+            const SizedBox(height: 2),
+            Text(value, style: GoogleFonts.outfit(fontSize: 14.5, fontWeight: FontWeight.w600, color: onTap != null ? iconColor : const Color(0xFF0F172A))),
           ])),
-          if (onTap != null) Icon(Icons.call_rounded, size: 16, color: iconColor),
+          if (onTap != null) Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(color: iconColor.withOpacity(0.1), shape: BoxShape.circle),
+            child: Icon(Icons.call_rounded, size: 14, color: iconColor),
+          ),
         ]),
       ),
     );
@@ -456,12 +488,25 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
   Widget _feeSumCard(String label, String value, Color color, IconData icon) {
     return Expanded(child: Container(
       padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(color: color.withOpacity(0.08), borderRadius: BorderRadius.circular(16), border: Border.all(color: color.withOpacity(0.2))),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [color.withOpacity(0.15), color.withOpacity(0.05)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(16), 
+        border: Border.all(color: color.withOpacity(0.2)),
+        boxShadow: [BoxShadow(color: color.withOpacity(0.05), blurRadius: 8, offset: const Offset(0, 4))],
+      ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Icon(icon, color: color, size: 18),
-        const SizedBox(height: 6),
-        Text(value, style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.bold, color: color)),
-        Text(label, style: GoogleFonts.poppins(fontSize: 9.5, color: color.withOpacity(0.7))),
+        Container(
+          padding: const EdgeInsets.all(6),
+          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10), boxShadow: [BoxShadow(color: color.withOpacity(0.1), blurRadius: 4)]),
+          child: Icon(icon, color: color, size: 16),
+        ),
+        const SizedBox(height: 10),
+        Text(value, style: GoogleFonts.outfit(fontSize: 15, fontWeight: FontWeight.w800, color: color)),
+        Text(label, style: GoogleFonts.poppins(fontSize: 10, fontWeight: FontWeight.w600, color: color.withOpacity(0.8))),
       ]),
     ));
   }

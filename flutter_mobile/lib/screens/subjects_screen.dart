@@ -133,19 +133,46 @@ class _SubjectsScreenState extends State<SubjectsScreen> {
     );
   }
 
+  int _getSubjectWeight(String subject) {
+    final s = subject.toUpperCase();
+    if (s.contains('TELUGU')) return 1;
+    if (s.contains('HINDI')) return 2;
+    if (s.contains('ENGLISH')) return 3;
+    if (s.contains('MATH')) return 4;
+    if (s.contains('BIOLOGY') || s.contains('SCIENCE')) return 5;
+    if (s.contains('PHYSICS')) return 6;
+    if (s.contains('CHEMISTRY')) return 7;
+    if (s.contains('SOCIAL')) return 8;
+    return 99;
+  }
+
   @override
   Widget build(BuildContext context) {
     final keys = _groupedSubjects.keys.toList();
-    keys.sort();
+    keys.sort((a, b) {
+      int wA = _getSubjectWeight(a);
+      int wB = _getSubjectWeight(b);
+      if (wA != wB) return wA.compareTo(wB);
+      return a.compareTo(b);
+    });
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF1F5F9),
+      backgroundColor: const Color(0xFFF4F7FE),
       drawer: const AppDrawer(currentRoute: 'subjects'),
       appBar: AppBar(
-        title: const Text('Subjects & Curriculum', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-        backgroundColor: const Color(0xFF0F172A),
-        foregroundColor: Colors.white,
+        title: Text('Subjects & Curriculum', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 22, color: Colors.white)),
+        iconTheme: const IconThemeData(color: Colors.white),
+        backgroundColor: Colors.transparent,
         elevation: 0,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF6366F1), Color(0xFF8B5CF6), Color(0xFFD946EF)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -186,78 +213,87 @@ class _SubjectsScreenState extends State<SubjectsScreen> {
                             _fetchData();
                           }
                         },
-                        child: Container(
-                          margin: const EdgeInsets.only(bottom: 16),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(20),
-                            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4))],
-                          ),
-                          child: Row(
-                            children: [
-                              Container(
-                                width: 80,
-                                height: 90,
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(colors: colors, begin: Alignment.topLeft, end: Alignment.bottomRight),
-                                  borderRadius: const BorderRadius.only(topLeft: Radius.circular(20), bottomLeft: Radius.circular(20)),
-                                ),
-                                child: Center(
-                                  child: Text(
-                                    subjectName.substring(0, subjectName.length >= 2 ? 2 : 1).toUpperCase(),
-                                    style: GoogleFonts.outfit(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white.withOpacity(0.9)),
+                          child: Container(
+                            margin: const EdgeInsets.only(bottom: 16),
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(20),
+                              boxShadow: [BoxShadow(color: const Color(0xFF6366F1).withOpacity(0.06), blurRadius: 12, offset: const Offset(0, 4))],
+                            ),
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 56,
+                                  height: 56,
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(colors: colors, begin: Alignment.topLeft, end: Alignment.bottomRight),
+                                    borderRadius: BorderRadius.circular(16),
+                                    boxShadow: [BoxShadow(color: colors[0].withOpacity(0.3), blurRadius: 8, offset: const Offset(0, 4))],
+                                  ),
+                                  child: Center(
+                                    child: Text(
+                                      subjectName.substring(0, subjectName.length >= 2 ? 2 : 1).toUpperCase(),
+                                      style: GoogleFonts.outfit(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
+                                    ),
                                   ),
                                 ),
-                              ),
-                              Expanded(
-                                child: Padding(
-                                  padding: const EdgeInsets.all(16),
+                                const SizedBox(width: 16),
+                                Expanded(
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       Text(subjectName, style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: const Color(0xFF1E293B))),
-                                      const SizedBox(height: 8),
+                                      const SizedBox(height: 6),
                                       Row(
                                         children: [
-                                          Icon(Icons.class_rounded, size: 14, color: Colors.grey.shade500),
+                                          Icon(Icons.class_rounded, size: 14, color: Colors.grey.shade400),
                                           const SizedBox(width: 4),
-                                          Text('${instances.length} Classes', style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey.shade600, fontWeight: FontWeight.w500)),
+                                          Text('${instances.length} Classes', style: GoogleFonts.poppins(fontSize: 12, color: const Color(0xFF64748B), fontWeight: FontWeight.w500)),
                                           const SizedBox(width: 16),
-                                          Icon(Icons.person_rounded, size: 14, color: Colors.grey.shade500),
+                                          Icon(Icons.person_rounded, size: 14, color: Colors.grey.shade400),
                                           const SizedBox(width: 4),
-                                          Text('$assignedTeachers Teachers', style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey.shade600, fontWeight: FontWeight.w500)),
+                                          Text('$assignedTeachers Teachers', style: GoogleFonts.poppins(fontSize: 12, color: const Color(0xFF64748B), fontWeight: FontWeight.w500)),
                                         ],
                                       ),
                                     ],
                                   ),
                                 ),
-                              ),
-                              const Padding(
-                                padding: EdgeInsets.all(16.0),
-                                child: Icon(Icons.chevron_right_rounded, color: Color(0xFFCBD5E1)),
-                              ),
-                            ],
+                                Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(color: const Color(0xFFEEF2FF), borderRadius: BorderRadius.circular(12)),
+                                  child: const Icon(Icons.chevron_right_rounded, color: Color(0xFF6366F1), size: 20),
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                      );
+                        );
                     },
                   ),
                 ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () async {
-          final result = await Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => AddSubjectScreen(classes: _classes),
-            ),
-          );
-          if (result == true) {
-            _fetchData();
-          }
-        },
-        backgroundColor: const Color(0xFF6366F1),
-        icon: const Icon(Icons.add_rounded, color: Colors.white),
-        label: Text('New Subject', style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: Colors.white)),
+      floatingActionButton: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(30),
+          gradient: const LinearGradient(colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)]),
+          boxShadow: [BoxShadow(color: const Color(0xFF6366F1).withOpacity(0.4), blurRadius: 12, offset: const Offset(0, 6))],
+        ),
+        child: FloatingActionButton.extended(
+          onPressed: () async {
+            final result = await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => AddSubjectScreen(classes: _classes),
+              ),
+            );
+            if (result == true) {
+              _fetchData();
+            }
+          },
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          icon: const Icon(Icons.add_rounded, color: Colors.white),
+          label: Text('New Subject', style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: Colors.white)),
+        ),
       ),
     );
   }

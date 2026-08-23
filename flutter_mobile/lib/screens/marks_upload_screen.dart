@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../services/api_service.dart';
 import '../widgets/app_drawer.dart';
 import 'all_subjects_marks_entry_screen.dart';
+import 'single_subject_marks_entry_screen.dart';
 
 class MarksUploadScreen extends StatefulWidget {
   final String? initialExamId;
@@ -109,17 +110,17 @@ class _MarksUploadScreenState extends State<MarksUploadScreen> {
       }
     }
     
-    if (_selectedSubjectId != null) {
+    if (_selectedSubjectId != 'ALL') {
       var examSubjects = _selectedExamData!['subjects'];
       if (examSubjects is String) {
         try { examSubjects = jsonDecode(examSubjects); } catch(e) { examSubjects = []; }
       }
       if (examSubjects is List) {
         if (!examSubjects.any((s) => s['id'].toString() == _selectedSubjectId)) {
-          _selectedSubjectId = null;
+          _selectedSubjectId = 'ALL';
         }
       } else {
-        _selectedSubjectId = null;
+        _selectedSubjectId = 'ALL';
       }
     }
   }
@@ -226,66 +227,100 @@ class _MarksUploadScreenState extends State<MarksUploadScreen> {
           : Column(
               children: [
                 _buildFiltersPanel(),
-                Expanded(
-                  child: _isLoadingStudents
-                      ? const Center(child: CircularProgressIndicator(color: Color(0xFF6366F1)))
-                      : _students.isEmpty
-                          ? Center(
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(Icons.filter_alt_off_rounded, size: 64, color: const Color(0xFFCBD5E1).withOpacity(0.5)),
-                                  const SizedBox(height: 16),
-                                  Text('Select filters to load students', style: GoogleFonts.poppins(color: const Color(0xFF94A3B8), fontSize: 15)),
+                
+                // Show Proceed Button only when all 3 filters are selected
+                if (_selectedExamId != null && _selectedClassId != null && _selectedSubjectId != null)
+                  Expanded(
+                    child: Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(24.0),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Container(
+                              width: 120,
+                              height: 120,
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFE0E7FF),
+                                shape: BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(color: const Color(0xFF6366F1).withOpacity(0.2), blurRadius: 20, spreadRadius: 5)
                                 ],
                               ),
-                            )
-                          : _buildStudentsList(),
-                ),
-                if (_students.isNotEmpty)
-                  Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      boxShadow: [BoxShadow(color: const Color(0xFF6366F1).withOpacity(0.1), blurRadius: 20, offset: const Offset(0, -5))],
-                      borderRadius: const BorderRadius.only(topLeft: Radius.circular(24), topRight: Radius.circular(24)),
-                    ),
-                    child: SizedBox(
-                      width: double.infinity,
-                      height: 56,
-                      child: ElevatedButton(
-                        onPressed: _isSubmitting ? null : () {
-                          if (_selectedSubjectId == 'ALL') {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => AllSubjectsMarksEntryScreen(
-                                  examId: _selectedExamId!,
-                                  classId: _selectedClassId!,
-                                  subjects: _subjects.where((s) => s['id'] != 'ALL').toList(),
-                                  students: _students,
+                              child: const Icon(Icons.check_circle_outline_rounded, size: 64, color: Color(0xFF6366F1)),
+                            ),
+                            const SizedBox(height: 24),
+                            Text('Ready to Enter Marks', style: GoogleFonts.outfit(fontSize: 22, fontWeight: FontWeight.bold, color: const Color(0xFF1E293B))),
+                            const SizedBox(height: 8),
+                            Text('Click below to open the student list', textAlign: TextAlign.center, style: GoogleFonts.poppins(fontSize: 14, color: const Color(0xFF64748B))),
+                            const SizedBox(height: 32),
+                            SizedBox(
+                              width: double.infinity,
+                              height: 56,
+                              child: ElevatedButton(
+                                onPressed: _isLoadingStudents ? null : () {
+                                  if (_selectedSubjectId == 'ALL') {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => AllSubjectsMarksEntryScreen(
+                                          examId: _selectedExamId!,
+                                          classId: _selectedClassId!,
+                                          subjects: _getFilteredSubjects().where((s) => s['id'] != 'ALL').toList(),
+                                          students: _students,
+                                        ),
+                                      ),
+                                    );
+                                  } else {
+                                    final subject = _getFilteredSubjects().firstWhere((s) => s['id'].toString() == _selectedSubjectId, orElse: () => null);
+                                    final subName = subject != null ? subject['name']?.toString() ?? 'Subject' : 'Subject';
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => SingleSubjectMarksEntryScreen(
+                                          examId: _selectedExamId!,
+                                          classId: _selectedClassId!,
+                                          subjectId: _selectedSubjectId!,
+                                          subjectName: subName,
+                                          maxMarks: _maxMarks,
+                                          students: _students,
+                                        ),
+                                      ),
+                                    );
+                                  }
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFF6366F1),
+                                  elevation: 0,
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                                 ),
+                                child: _isLoadingStudents
+                                  ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5))
+                                  : Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        Text('Proceed to Enter Marks', style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+                                        const SizedBox(width: 8),
+                                        const Icon(Icons.arrow_forward_rounded, color: Colors.white),
+                                      ],
+                                    ),
                               ),
-                            );
-                          } else {
-                            _submitMarks();
-                          }
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF6366F1),
-                          elevation: 0,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                            ),
+                          ],
                         ),
-                        child: _isSubmitting
-                            ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5))
-                            : Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(_selectedSubjectId == 'ALL' ? Icons.apps_rounded : Icons.cloud_upload_rounded, color: Colors.white),
-                                  const SizedBox(width: 8),
-                                  Text(_selectedSubjectId == 'ALL' ? 'Enter Marks for All Subjects' : 'Submit Grades', style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
-                                ],
-                              ),
+                      ),
+                    ),
+                  )
+                else
+                  Expanded(
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.filter_alt_outlined, size: 64, color: const Color(0xFFCBD5E1).withOpacity(0.5)),
+                          const SizedBox(height: 16),
+                          Text('Select filters to continue', style: GoogleFonts.poppins(color: const Color(0xFF94A3B8), fontSize: 15)),
+                        ],
                       ),
                     ),
                   )
@@ -294,9 +329,24 @@ class _MarksUploadScreenState extends State<MarksUploadScreen> {
     );
   }
 
+  List<dynamic> _getFilteredSubjects() {
+    if (_selectedExamData != null && _selectedExamData!['subjects'] != null) {
+      var examSubjects = _selectedExamData!['subjects'];
+      if (examSubjects is String) {
+        try { examSubjects = jsonDecode(examSubjects); } catch(e) { examSubjects = []; }
+      }
+      if (examSubjects is List) {
+        final List<dynamic> filtered = List<dynamic>.from(examSubjects);
+        filtered.insert(0, {'id': 'ALL', 'name': 'All Subjects'});
+        return filtered;
+      }
+    }
+    return [];
+  }
+
   Widget _buildFiltersPanel() {
     List<dynamic> filteredClasses = [];
-    List<dynamic> filteredSubjects = [];
+    List<dynamic> filteredSubjects = _getFilteredSubjects();
     
     if (_selectedExamData != null) {
       if (_selectedExamData!['classes'] != null) {
@@ -307,16 +357,6 @@ class _MarksUploadScreenState extends State<MarksUploadScreen> {
         if (examClasses is List) {
           final examClassIds = examClasses.map((c) => c['id'].toString()).toSet();
           filteredClasses = _classes.where((c) => examClassIds.contains(c['id'].toString())).toList();
-        }
-      }
-      if (_selectedExamData!['subjects'] != null) {
-        var examSubjects = _selectedExamData!['subjects'];
-        if (examSubjects is String) {
-          try { examSubjects = jsonDecode(examSubjects); } catch(e) { examSubjects = []; }
-        }
-        if (examSubjects is List) {
-          filteredSubjects = List<dynamic>.from(examSubjects);
-          filteredSubjects.insert(0, {'id': 'ALL', 'name': 'All Subjects'});
         }
       }
     }

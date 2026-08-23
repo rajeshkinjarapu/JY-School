@@ -109,36 +109,52 @@ class _StudentsScreenState extends State<StudentsScreen> {
     final colorIndex = safeName.codeUnitAt(0) % avatarGradients.length;
     final gradientColors = avatarGradients[colorIndex];
 
-    if (photoUrl != null && photoUrl.isNotEmpty && !photoUrl.startsWith('data:')) {
-      final url = ApiService.getImageUrl(photoUrl);
-      return Container(
-        width: 56,
-        height: 56,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: Colors.white, width: 2),
-          boxShadow: [
-            BoxShadow(color: Colors.black.withOpacity(0.10), blurRadius: 8, offset: const Offset(0, 4)),
-          ],
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(12),
-          child: Image.network(
-            url,
-            fit: BoxFit.cover,
-            headers: const {'ngrok-skip-browser-warning': '69420'},
-            errorBuilder: (context, error, stackTrace) {
-              return Container(
-                color: const Color(0xFFF1F5F9),
-                alignment: Alignment.center,
-                child: const Icon(Icons.person_rounded, color: Color(0xFF94A3B8)),
-              );
-            },
+    if (photoUrl != null && photoUrl.isNotEmpty) {
+      Widget? imageWidget;
+      if (photoUrl.startsWith('data:')) {
+        try {
+          final parts = photoUrl.split(',');
+          if (parts.length > 1) {
+            final bytes = base64Decode(parts[1]);
+            imageWidget = Image.memory(bytes, fit: BoxFit.cover, errorBuilder: (c, e, s) => const Icon(Icons.person_rounded, color: Color(0xFF94A3B8)));
+          }
+        } catch (e) {
+          // Fallback handled below
+        }
+      } else {
+        final url = ApiService.getImageUrl(photoUrl);
+        imageWidget = Image.network(
+          url,
+          fit: BoxFit.cover,
+          headers: const {'ngrok-skip-browser-warning': '69420'},
+          errorBuilder: (context, error, stackTrace) => const Icon(Icons.person_rounded, color: Color(0xFF94A3B8)),
+        );
+      }
+
+      if (imageWidget != null) {
+        return Container(
+          width: 56,
+          height: 56,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: Colors.white, width: 2),
+            boxShadow: [
+              BoxShadow(color: Colors.black.withOpacity(0.10), blurRadius: 8, offset: const Offset(0, 4)),
+            ],
           ),
-        ),
-      );
-    } else {
-      return Container(
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: Container(
+              color: const Color(0xFFF1F5F9),
+              child: imageWidget,
+            ),
+          ),
+        );
+      }
+    }
+    
+    // Fallback initials avatar
+    return Container(
         width: 56,
         height: 56,
         decoration: BoxDecoration(
@@ -155,7 +171,6 @@ class _StudentsScreenState extends State<StudentsScreen> {
           style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18),
         ),
       );
-    }
   }
 
   @override
@@ -359,16 +374,23 @@ class _StudentsScreenState extends State<StudentsScreen> {
             padding: const EdgeInsets.all(12),
             child: Row(
               children: [
-                // Minimal Serial Number
+                // Better visibility Serial Number
                 Container(
-                  width: 30,
+                  width: 32,
+                  height: 32,
+                  margin: const EdgeInsets.only(right: 12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF1F5F9), // Light grayish blue
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: const Color(0xFFE2E8F0)),
+                  ),
                   alignment: Alignment.center,
                   child: Text(
                     '${index + 1}',
                     style: GoogleFonts.outfit(
-                      color: const Color(0xFFCBD5E1),
-                      fontSize: 16,
-                      fontWeight: FontWeight.w800,
+                      color: const Color(0xFF64748B), // Clearer darker gray
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
                 ),
@@ -416,12 +438,12 @@ class _StudentsScreenState extends State<StudentsScreen> {
                   child: IconButton(
                     icon: const Icon(Icons.phone_rounded, color: Color(0xFF22C55E), size: 26),
                     onPressed: () async {
-                      final phone = student['parentPhone'] ?? student['parent']?['phone'] ?? student['parent']?['user']?['phone'] ?? '';
+                      final phone = student['parentPhone'] ?? student['parent']?['phone'] ?? student['parent']?['user']?['phone'] ?? student['user']?['phone'] ?? '';
                       if (phone.isNotEmpty) {
                         final url = Uri.parse('tel:$phone');
-                        if (await canLaunchUrl(url)) {
+                        try {
                           await launchUrl(url);
-                        } else {
+                        } catch (e) {
                           if (context.mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Could not launch phone app')));
                           }
