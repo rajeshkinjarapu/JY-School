@@ -102,13 +102,14 @@ export const PaperDetail: React.FC = () => {
     setActiveSet(setCode);
   };
 
-  // Triggers browser print dialog using react-to-print for 100% fidelity
+  // Triggers browser print dialog - uses printAreaRef directly for 1:1 WYSIWYG
   const handleClientPrint = useReactToPrint({
-    content: () => printAreaRef.current,
+    contentRef: printAreaRef,
     documentTitle: paper?.title || 'Exam Paper',
     pageStyle: `
-      @page { size: A4; margin: 0; }
-      body { margin: 0; background: white; }
+      @page { size: A4 portrait; margin: 0; }
+      body { margin: 0; padding: 0; background: white; }
+      .a4-preview-paper { border: none !important; box-shadow: none !important; }
     `,
   });
 

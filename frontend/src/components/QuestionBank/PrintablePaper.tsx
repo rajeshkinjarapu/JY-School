@@ -75,7 +75,16 @@ export const PrintablePaper: React.FC<PrintablePaperProps> = ({
   };
 
   return (
-    <div className="a4-preview-paper bg-white text-black p-8 sm:p-10 border border-slate-300 mx-auto max-w-[21cm] relative shadow-2xl font-serif lining-nums tabular-nums text-[14px] leading-relaxed select-text">
+    <div
+      className="a4-preview-paper bg-white text-black border border-slate-300 mx-auto relative shadow-2xl font-serif lining-nums tabular-nums leading-relaxed select-text"
+      style={{
+        width: '210mm',
+        minHeight: '297mm',
+        padding: '15mm 18mm',
+        fontSize: '13px',
+        boxSizing: 'border-box',
+      }}
+    >
       {/* Watermark */}
       {showWatermark && paper.watermark && (
         <div className="watermark-container pointer-events-none select-none">
