@@ -209,7 +209,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
       final notifRes = await ApiService.getNotifications();
       if (mounted && notifRes['success']) {
         final data = notifRes['data'];
-        if (data is List) {
+        if (data is Map<String, dynamic>) {
+          setState(() {
+            _unreadNotifications = data['unreadCount'] ?? 0;
+          });
+        } else if (data is List) {
           int unread = data.where((n) => n['isRead'] != true).length;
           setState(() {
             _unreadNotifications = unread;
@@ -307,21 +311,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 clipBehavior: Clip.none,
                 children: [
                   const Icon(Icons.notifications_none_rounded, color: Colors.white, size: 28),
-                  Positioned(
-                    right: -2,
-                    top: -2,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFFF3D5E),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Text(
-                        '3', // Mock notification count
-                        style: GoogleFonts.poppins(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold, height: 1.1),
+                  if (_unreadNotifications > 0)
+                    Positioned(
+                      right: -2,
+                      top: -2,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFF3D5E),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Text(
+                          _unreadNotifications > 9 ? '9+' : _unreadNotifications.toString(),
+                          style: GoogleFonts.poppins(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold, height: 1.1),
+                        ),
                       ),
                     ),
-                  ),
                 ],
               ),
               onPressed: () {
@@ -832,33 +837,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         child: Stack(
           clipBehavior: Clip.hardEdge,
           children: [
-            // Floating 3D image bubble at the bottom right
-            Positioned(
-              right: -15,
-              bottom: -20,
-              child: Container(
-                width: 90,
-                height: 90,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.white.withOpacity(0.3),
-                      blurRadius: 15,
-                      spreadRadius: 5,
-                    )
-                  ],
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Image.asset(
-                    imagePath,
-                    fit: BoxFit.contain,
-                  ),
-                ),
-              ),
-            ),
+            // Floating 3D image bubble removed based on user preference
             Padding(
               padding: const EdgeInsets.all(12.0),
               child: Column(

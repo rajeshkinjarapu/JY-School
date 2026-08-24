@@ -45,32 +45,32 @@ class _MainLayoutState extends State<MainLayout> {
           color: Colors.white,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 10,
+              color: Colors.black.withOpacity(0.08),
+              blurRadius: 20,
               offset: const Offset(0, -5),
             ),
           ],
         ),
         child: SafeArea(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _buildNavItem(0, Icons.home_rounded, 'Home', const Color(0xFF6366F1)),
-                _buildNavItem(1, Icons.assignment_rounded, 'Exam', const Color(0xFF10B981)),
-                _buildNavItem(2, Icons.account_balance_wallet_rounded, 'Finance', const Color(0xFFF59E0B)),
-                _buildNavItem(3, Icons.directions_bus_rounded, 'Transport', const Color(0xFFEC4899)),
-                _buildNavItem(4, Icons.grid_view_rounded, 'More', const Color(0xFF475569)),
-              ],
-            ),
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _buildNavItem(0, Icons.home_rounded, 'Home', const Color(0xFF6366F1), const Color(0xFF4F46E5)),
+              _buildNavItem(1, Icons.assignment_rounded, 'Exam', const Color(0xFF10B981), const Color(0xFF059669)),
+              _buildNavItem(2, Icons.account_balance_wallet_rounded, 'Finance', const Color(0xFFF59E0B), const Color(0xFFD97706)),
+              _buildNavItem(3, Icons.directions_bus_rounded, 'Transport', const Color(0xFFEC4899), const Color(0xFFDB2777)),
+              _buildNavItem(4, Icons.grid_view_rounded, 'More', const Color(0xFF64748B), const Color(0xFF475569)),
+            ],
           ),
         ),
+      ),
       ),
     );
   }
 
-  Widget _buildNavItem(int index, IconData icon, String label, Color activeColor) {
+  Widget _buildNavItem(int index, IconData icon, String label, Color color1, Color color2) {
     final isSelected = _currentIndex == index;
     return GestureDetector(
       onTap: () {
@@ -79,33 +79,44 @@ class _MainLayoutState extends State<MainLayout> {
         });
       },
       behavior: HitTestBehavior.opaque,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.easeInOut,
-            padding: EdgeInsets.all(isSelected ? 10.0 : 8.0),
-            decoration: BoxDecoration(
-              color: isSelected ? activeColor.withOpacity(0.15) : Colors.transparent,
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Icon(
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 350),
+        curve: Curves.easeOutQuint,
+        padding: EdgeInsets.symmetric(
+          horizontal: isSelected ? 16.0 : 12.0,
+          vertical: 10.0,
+        ),
+        decoration: BoxDecoration(
+          gradient: isSelected
+              ? LinearGradient(
+                  colors: [color1, color2],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                )
+              : null,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
               icon,
-              color: isSelected ? activeColor : const Color(0xFF94A3B8),
-              size: isSelected ? 26 : 24,
+              color: isSelected ? Colors.white : const Color(0xFF94A3B8),
+              size: 24,
             ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: GoogleFonts.outfit(
-              color: isSelected ? activeColor : const Color(0xFF94A3B8),
-              fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-              fontSize: 11,
-            ),
-          ),
-        ],
+            if (isSelected) ...[
+              const SizedBox(width: 8),
+              Text(
+                label,
+                style: GoogleFonts.outfit(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
+                ),
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }

@@ -31,7 +31,13 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         setState(() {
           if (res['success']) {
             final data = res['data'];
-            _notifications = (data is List) ? data : [];
+            if (data is Map) {
+              _notifications = data['notifications'] ?? [];
+            } else if (data is List) {
+              _notifications = data;
+            } else {
+              _notifications = [];
+            }
           }
         });
       }
@@ -147,73 +153,173 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     );
   }
 
+  IconData _getIconForType(String? type) {
+    switch (type?.toUpperCase()) {
+      case 'MARKS':
+        return Icons.insert_drive_file_rounded;
+      case 'ATTENDANCE':
+        return Icons.warning_rounded;
+      case 'RESULT':
+        return Icons.emoji_events_rounded;
+      case 'LEAVE':
+        return Icons.calendar_month_rounded;
+      case 'HOMEWORK':
+        return Icons.menu_book_rounded;
+      case 'FINANCE':
+        return Icons.account_balance_wallet_rounded;
+      default:
+        return Icons.notifications_active_rounded;
+    }
+  }
+
+  Color _getColorForType(String? type) {
+    switch (type?.toUpperCase()) {
+      case 'MARKS':
+        return const Color(0xFF3B82F6); // Blue
+      case 'ATTENDANCE':
+        return const Color(0xFFF59E0B); // Amber
+      case 'RESULT':
+        return const Color(0xFF10B981); // Emerald
+      case 'LEAVE':
+        return const Color(0xFFA855F7); // Purple
+      case 'HOMEWORK':
+        return const Color(0xFF6366F1); // Indigo
+      case 'FINANCE':
+        return const Color(0xFFEC4899); // Pink
+      default:
+        return const Color(0xFF6366F1);
+    }
+  }
+
+  String _formatTime(String? dateStr) {
+    if (dateStr == null) return '';
+    try {
+      final date = DateTime.parse(dateStr);
+      final now = DateTime.now();
+      final diff = now.difference(date);
+      if (diff.inMinutes < 1) return 'Just now';
+      if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
+      if (diff.inHours < 24) return '${diff.inHours}h ago';
+      if (diff.inDays < 7) return '${diff.inDays}d ago';
+      return '${date.day}/${date.month}/${date.year}';
+    } catch (e) {
+      return dateStr.split('T')[0];
+    }
+  }
+
   Widget _buildNotificationCard(Map<String, dynamic> notif) {
     final title = notif['title'] ?? 'Notification';
     final message = notif['message'] ?? '';
     final isRead = notif['isRead'] == true;
-    final date = notif['createdAt'] != null 
-        ? notif['createdAt'].toString().split('T')[0]
-        : '';
+    final type = notif['type']?.toString();
+    final date = _formatTime(notif['createdAt']?.toString());
+    
+    final themeColor = _getColorForType(type);
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: isRead ? Colors.white : const Color(0xFF6366F1).withOpacity(0.1),
-        borderRadius: BorderRadius.circular(16),
+        color: isRead ? Colors.white : themeColor.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(isRead ? 0.03 : 0.06),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
+          ),
+        ],
         border: Border.all(
-          color: isRead ? const Color(0xFFE2E8F0) : const Color(0xFF6366F1).withOpacity(0.3),
+          color: isRead ? Colors.transparent : themeColor.withOpacity(0.3),
+          width: 1,
         ),
       ),
-      child: ListTile(
-        onTap: () {
-          if (notif['type'] == 'finance') {
-            Navigator.push(context, MaterialPageRoute(builder: (context) => const FinanceScreen()));
-          } else if (notif['type'] == 'exams') {
-            Navigator.push(context, MaterialPageRoute(builder: (context) => const ExamsScreen()));
-          } else {
-             ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Viewing notification details')));
-          }
-        },
-        contentPadding: const EdgeInsets.all(16),
-        leading: Container(
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            color: isRead ? const Color(0xFFE2E8F0) : const Color(0xFF6366F1).withOpacity(0.2),
-            shape: BoxShape.circle,
-          ),
-          child: Icon(
-            isRead ? Icons.notifications_none_rounded : Icons.notifications_active_rounded,
-            color: isRead ? const Color(0xFF64748B) : const Color(0xFF818CF8),
-          ),
-        ),
-        title: Text(
-          title,
-          style: GoogleFonts.outfit(
-            color: const Color(0xFF1E293B),
-            fontSize: 16,
-            fontWeight: isRead ? FontWeight.w500 : FontWeight.bold,
-          ),
-        ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 6),
-            Text(
-              message,
-              style: GoogleFonts.poppins(
-                color: isRead ? const Color(0xFF64748B) : const Color(0xFF475569),
-                fontSize: 13,
-              ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(20),
+          onTap: () {
+            if (notif['type'] == 'finance') {
+              Navigator.push(context, MaterialPageRoute(builder: (context) => const FinanceScreen()));
+            } else if (notif['type'] == 'exams') {
+              Navigator.push(context, MaterialPageRoute(builder: (context) => const ExamsScreen()));
+            } else {
+               ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Viewing notification details')));
+            }
+          },
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Icon Box
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: isRead ? const Color(0xFFF1F5F9) : themeColor.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Icon(
+                    _getIconForType(type),
+                    color: isRead ? const Color(0xFF94A3B8) : themeColor,
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                
+                // Content
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: Text(
+                              title,
+                              style: GoogleFonts.outfit(
+                                color: isRead ? const Color(0xFF334155) : const Color(0xFF0F172A),
+                                fontSize: 16,
+                                fontWeight: isRead ? FontWeight.w600 : FontWeight.w800,
+                              ),
+                            ),
+                          ),
+                          if (!isRead)
+                            Container(
+                              margin: const EdgeInsets.only(left: 8, top: 4),
+                              width: 8,
+                              height: 8,
+                              decoration: BoxDecoration(
+                                color: themeColor,
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        message,
+                        style: GoogleFonts.poppins(
+                          color: isRead ? const Color(0xFF94A3B8) : const Color(0xFF475569),
+                          fontSize: 13,
+                          height: 1.4,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        date,
+                        style: GoogleFonts.poppins(
+                          color: const Color(0xFF94A3B8),
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 8),
-            Text(
-              date,
-              style: GoogleFonts.poppins(
-                color: const Color(0xFF475569),
-                fontSize: 10,
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );
