@@ -380,22 +380,32 @@ export const printGatePassPdf = async (req: AuthRequest, res: Response, next: Ne
 
 export const getLiveStats = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    const [totalInside, activeOut, pendingRequests, overdue] = await Promise.all([
-      prisma.student.count(), // Approx inside if not out
-      prisma.gatePass.count({ where: { status: 'ACTIVE' } }),
-      prisma.gatePass.count({ where: { status: 'PENDING' } }),
+    const [
+      totalStudents, totalStaff,
+      activeStudentOut, activeStaffOut,
+      pendingStudent, pendingStaff,
+      overdueStudent, overdueStaff
+    ] = await Promise.all([
+      prisma.student.count(),
+      prisma.teacher.count(),
+      prisma.gatePass.count({ where: { status: 'ACTIVE', requestType: 'STUDENT' } }),
+      prisma.gatePass.count({ where: { status: 'ACTIVE', requestType: 'TEACHER' } }),
+      prisma.gatePass.count({ where: { status: 'PENDING', requestType: 'STUDENT' } }),
+      prisma.gatePass.count({ where: { status: 'PENDING', requestType: 'TEACHER' } }),
       prisma.gatePass.count({
-        where: {
-          status: 'ACTIVE',
-          expectedReturnTime: { not: null, lt: new Date().toISOString() }
-        }
+        where: { status: 'ACTIVE', requestType: 'STUDENT', expectedReturnTime: { not: null, lt: new Date().toISOString() } }
+      }),
+      prisma.gatePass.count({
+        where: { status: 'ACTIVE', requestType: 'TEACHER', expectedReturnTime: { not: null, lt: new Date().toISOString() } }
       })
     ]);
 
-    successResponse(res, { inside: totalInside - activeOut, out: activeOut, pending: pendingRequests, overdue }, 'Live stats fetched');
+    successResponse(res, { 
+      student: { inside: totalStudents - activeStudentOut, out: activeStudentOut, pending: pendingStudent, overdue: overdueStudent },
+      staff: { inside: totalStaff - activeStaffOut, out: activeStaffOut, pending: pendingStaff, overdue: overdueStaff },
+      // legacy fields for compatibility if needed
+      inside: totalStudents - activeStudentOut, out: activeStudentOut + activeStaffOut, pending: pendingStudent + pendingStaff, overdue: overdueStudent + overdueStaff
+    }, 'Live stats fetched');
   } catch (error) {
     next(error);
   }

@@ -8,6 +8,7 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 import '../services/api_service.dart';
 import '../widgets/app_drawer.dart';
 
@@ -118,26 +119,33 @@ class _DashboardTab extends StatefulWidget {
 
 class _DashboardTabState extends State<_DashboardTab> with TickerProviderStateMixin {
   bool _loading = true;
-  int _inside = 0;
-  int _out = 0;
-  int _pending = 0;
-  int _overdue = 0;
+  Map<String, dynamic> _studentStats = {'inside': 0, 'out': 0, 'pending': 0, 'overdue': 0};
+  Map<String, dynamic> _staffStats = {'inside': 0, 'out': 0, 'pending': 0, 'overdue': 0};
   late AnimationController _pulseController;
   late Animation<double> _pulseAnim;
+  late TabController _tabController;
 
   @override
   void initState() {
     super.initState();
+    _tabController = TabController(length: 2, vsync: this);
     _pulseController = AnimationController(vsync: this, duration: const Duration(milliseconds: 900))
       ..repeat(reverse: true);
     _pulseAnim = Tween<double>(begin: 0.85, end: 1.15).animate(
       CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
     );
+    
+    // Refresh UI when tab changes
+    _tabController.addListener(() {
+      if (!_tabController.indexIsChanging) setState(() {});
+    });
+    
     _fetchStats();
   }
 
   @override
   void dispose() {
+    _tabController.dispose();
     _pulseController.dispose();
     super.dispose();
   }
@@ -149,10 +157,15 @@ class _DashboardTabState extends State<_DashboardTab> with TickerProviderStateMi
       if (mounted) {
         final data = res['data'] ?? {};
         setState(() {
-          _inside = (data['inside'] as num?)?.toInt() ?? 0;
-          _out = (data['out'] as num?)?.toInt() ?? 0;
-          _pending = (data['pending'] as num?)?.toInt() ?? 0;
-          _overdue = (data['overdue'] as num?)?.toInt() ?? 0;
+          _studentStats = data['student'] ?? {
+            'inside': data['inside'] ?? 0,
+            'out': data['out'] ?? 0,
+            'pending': data['pending'] ?? 0,
+            'overdue': data['overdue'] ?? 0,
+          };
+          _staffStats = data['staff'] ?? {
+            'inside': 0, 'out': 0, 'pending': 0, 'overdue': 0
+          };
           _loading = false;
         });
       }
@@ -169,92 +182,117 @@ class _DashboardTabState extends State<_DashboardTab> with TickerProviderStateMi
       );
     }
 
-    return RefreshIndicator(
-      onRefresh: _fetchStats,
-      color: const Color(0xFF10B981),
-      child: SingleChildScrollView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        child: Column(
-          children: [
-            // â”€â”€ Hero Stats Header â”€â”€
-            Container(
-              width: double.infinity,
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Color(0xFF0F172A), Color(0xFF1E3A5F)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-              ),
-              child: SafeArea(
-                top: false,
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF10B981).withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: const Icon(Icons.sensors, color: Color(0xFF10B981), size: 18),
-                          ),
-                          const SizedBox(width: 10),
-                          Text(
-                            'LIVE CAMPUS STATUS',
-                            style: GoogleFonts.poppins(
-                              color: const Color(0xFF10B981),
-                              fontSize: 11,
-                              fontWeight: FontWeight.w700,
-                              letterSpacing: 1.5,
-                            ),
-                          ),
-                          const Spacer(),
-                          Text(
-                            DateFormat('hh:mm a').format(DateTime.now()),
-                            style: GoogleFonts.outfit(color: Colors.white54, fontSize: 13),
-                          ),
-                        ],
+    final isStudentTab = _tabController.index == 0;
+    final stats = isStudentTab ? _studentStats : _staffStats;
+    
+    final int _inside = stats['inside'] ?? 0;
+    final int _out = stats['out'] ?? 0;
+    final int _pending = stats['pending'] ?? 0;
+    final int _overdue = stats['overdue'] ?? 0;
+
+    return Column(
+      children: [
+        Container(
+          color: Colors.white,
+          child: TabBar(
+            controller: _tabController,
+            labelColor: const Color(0xFF10B981),
+            unselectedLabelColor: const Color(0xFF94A3B8),
+            indicatorColor: const Color(0xFF10B981),
+            labelStyle: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+            tabs: const [
+              Tab(text: 'Students'),
+              Tab(text: 'Teachers'),
+            ],
+          ),
+        ),
+        Expanded(
+          child: RefreshIndicator(
+            onRefresh: _fetchStats,
+            color: const Color(0xFF10B981),
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              child: Column(
+                children: [
+                  // â”€â”€ Hero Stats Header â”€â”€
+                  Container(
+                    width: double.infinity,
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [Color(0xFF0F172A), Color(0xFF1E3A5F)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
                       ),
-                      const SizedBox(height: 24),
-                      // Big stat row
-                      Row(
-                        children: [
-                          _buildHeroStat(
-                            value: _inside,
-                            label: 'INSIDE',
-                            icon: Icons.domain_rounded,
-                            color: const Color(0xFF10B981),
-                          ),
-                          const SizedBox(width: 1),
-                          Container(width: 1, height: 60, color: Colors.white10),
-                          const SizedBox(width: 1),
-                          _buildHeroStat(
-                            value: _out,
-                            label: 'CURRENTLY OUT',
-                            icon: Icons.directions_run_rounded,
-                            color: const Color(0xFFF59E0B),
-                          ),
-                          const SizedBox(width: 1),
-                          Container(width: 1, height: 60, color: Colors.white10),
-                          const SizedBox(width: 1),
-                          _buildHeroStat(
-                            value: _pending,
-                            label: 'PENDING',
-                            icon: Icons.pending_actions_rounded,
-                            color: const Color(0xFF6366F1),
-                          ),
-                        ],
+                    ),
+                    child: SafeArea(
+                      top: false,
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF10B981).withOpacity(0.2),
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: const Icon(Icons.sensors, color: Color(0xFF10B981), size: 18),
+                                ),
+                                const SizedBox(width: 10),
+                                Text(
+                                  'LIVE CAMPUS STATUS',
+                                  style: GoogleFonts.poppins(
+                                    color: const Color(0xFF10B981),
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w700,
+                                    letterSpacing: 1.5,
+                                  ),
+                                ),
+                                const Spacer(),
+                                Text(
+                                  DateFormat('hh:mm a').format(DateTime.now()),
+                                  style: GoogleFonts.outfit(color: Colors.white54, fontSize: 13),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 24),
+                            // Big stat row
+                            Row(
+                              children: [
+                                _buildHeroStat(
+                                  value: _inside,
+                                  label: 'INSIDE',
+                                  icon: Icons.domain_rounded,
+                                  color: const Color(0xFF10B981),
+                                ),
+                                const SizedBox(width: 1),
+                                Container(width: 1, height: 60, color: Colors.white10),
+                                const SizedBox(width: 1),
+                                _buildHeroStat(
+                                  value: _out,
+                                  label: 'CURRENTLY OUT',
+                                  icon: Icons.directions_run_rounded,
+                                  color: const Color(0xFFF59E0B),
+                                ),
+                                const SizedBox(width: 1),
+                                Container(width: 1, height: 60, color: Colors.white10),
+                                const SizedBox(width: 1),
+                                _buildHeroStat(
+                                  value: _pending,
+                                  label: 'PENDING',
+                                  icon: Icons.pending_actions_rounded,
+                                  color: const Color(0xFF6366F1),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
-                    ],
+                    ),
                   ),
-                ),
-              ),
-            ),
 
             Padding(
               padding: const EdgeInsets.all(16),
@@ -297,7 +335,7 @@ class _DashboardTabState extends State<_DashboardTab> with TickerProviderStateMi
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    'âš ï¸  CRITICAL OVER-STAY',
+                                    'âš ï¸   CRITICAL OVER-STAY',
                                     style: GoogleFonts.outfit(
                                       color: Colors.white,
                                       fontSize: 15,
@@ -345,7 +383,7 @@ class _DashboardTabState extends State<_DashboardTab> with TickerProviderStateMi
                         value: '$_inside',
                         icon: Icons.domain_rounded,
                         gradientColors: [const Color(0xFF10B981), const Color(0xFF34D399)],
-                        subtitle: 'Students & Staff',
+                        subtitle: isStudentTab ? 'Students' : 'Teachers',
                       ),
                       _buildMetricCard(
                         title: 'Currently Out',
@@ -413,8 +451,11 @@ class _DashboardTabState extends State<_DashboardTab> with TickerProviderStateMi
           ],
         ),
       ),
-    );
-  }
+    ),
+  ),
+],
+);
+}
 
   Widget _buildHeroStat({required int value, required String label, required IconData icon, required Color color}) {
     return Expanded(
@@ -1150,6 +1191,8 @@ class _HistorySearchTabState extends State<_HistorySearchTab> {
             ? DateFormat('dd MMM, hh:mm a').format(DateTime.parse(pass['createdAt']).toLocal())
             : '--';
 
+        final approvedBy = pass['approvedBy'] != null ? (pass['approvedBy']['name'] ?? 'Unknown') : null;
+        
         return Container(
           margin: const EdgeInsets.only(bottom: 10),
           decoration: BoxDecoration(
@@ -1158,6 +1201,7 @@ class _HistorySearchTabState extends State<_HistorySearchTab> {
             boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 8, offset: const Offset(0, 3))],
           ),
           child: ListTile(
+            onTap: () => _showGatePassSlipDialog(context, pass, isStudentTab, color),
             contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
             leading: CircleAvatar(
               backgroundColor: color.withOpacity(0.12),
@@ -1170,7 +1214,14 @@ class _HistorySearchTabState extends State<_HistorySearchTab> {
                   : null,
             ),
             title: Text(name, style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 14)),
-            subtitle: Text(date, style: GoogleFonts.poppins(fontSize: 11, color: const Color(0xFF94A3B8))),
+            subtitle: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(date, style: GoogleFonts.poppins(fontSize: 11, color: const Color(0xFF94A3B8))),
+                if (approvedBy != null && status != 'PENDING')
+                  Text('Approved by: $approvedBy', style: GoogleFonts.poppins(fontSize: 10, color: const Color(0xFF10B981))),
+              ],
+            ),
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -1200,6 +1251,244 @@ class _HistorySearchTabState extends State<_HistorySearchTab> {
           ),
         );
       },
+    );
+  }
+
+  void _showGatePassSlipDialog(BuildContext context, dynamic pass, bool isStudentTab, Color statusColor) {
+    final name = isStudentTab
+        ? ((pass['student'] as Map?)?['user']?['name'] ?? 'Unknown')
+        : ((pass['requester'] as Map?)?['name'] ?? 'Unknown');
+    final photoUrl = isStudentTab 
+        ? (pass['student'] as Map?)?['user']?['photoUrl'] 
+        : (pass['requester'] as Map?)?['photoUrl'];
+    final destination = pass['destination'] ?? 'N/A';
+    final reason = pass['reason'] ?? 'N/A';
+    final slipNumber = pass['slipNumber'] ?? 'N/A';
+    final status = pass['status'] ?? 'UNKNOWN';
+    final rawPhone = isStudentTab
+        ? ((pass['student'] as Map?)?['user']?['phoneNumber'] ?? '')
+        : ((pass['requester'] as Map?)?['phoneNumber'] ?? '');
+    
+    // Mask phone number to show only last 4 digits
+    final String maskedPhone = (rawPhone.length >= 4) 
+        ? 'xxxx ${rawPhone.substring(rawPhone.length - 4)}' 
+        : (rawPhone.isNotEmpty ? rawPhone : 'N/A');
+
+    final approvedBy = pass['approvedBy'] != null ? (pass['approvedBy']['name'] ?? 'Unknown') : 'Pending';
+
+    showDialog(
+      context: context,
+      builder: (ctx) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        backgroundColor: Colors.transparent,
+        child: Container(
+          width: 340,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 30,
+                offset: const Offset(0, 10),
+              )
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Header
+              Container(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                decoration: const BoxDecoration(
+                  color: Color(0xFF0F172A),
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.verified_user_rounded, color: Color(0xFF10B981), size: 24),
+                    const SizedBox(width: 8),
+                    Text(
+                      'GATE PASS SLIP',
+                      style: GoogleFonts.outfit(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 1.5,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  children: [
+                    // Photo & Name
+                    Row(
+                      children: [
+                        Container(
+                          width: 70,
+                          height: 70,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF1F5F9),
+                            borderRadius: BorderRadius.circular(16),
+                            image: (photoUrl != null && photoUrl.isNotEmpty)
+                                ? DecorationImage(image: NetworkImage(photoUrl), fit: BoxFit.cover)
+                                : null,
+                          ),
+                          child: (photoUrl == null || photoUrl.isEmpty)
+                              ? Icon(isStudentTab ? Icons.person : Icons.badge, color: const Color(0xFF94A3B8), size: 30)
+                              : null,
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                name,
+                                style: GoogleFonts.outfit(fontWeight: FontWeight.w800, fontSize: 18, color: const Color(0xFF1E293B)),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                isStudentTab ? 'Student' : 'Staff',
+                                style: GoogleFonts.poppins(color: const Color(0xFF64748B), fontSize: 13),
+                              ),
+                              const SizedBox(height: 4),
+                              Row(
+                                children: [
+                                  const Icon(Icons.phone_rounded, size: 14, color: Color(0xFF94A3B8)),
+                                  const SizedBox(width: 4),
+                                  Text(maskedPhone, style: GoogleFonts.poppins(color: const Color(0xFF64748B), fontSize: 13, fontWeight: FontWeight.w600)),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+                    
+                    // Details Grid
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF8FAFC),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: const Color(0xFFE2E8F0)),
+                      ),
+                      child: Column(
+                        children: [
+                          _buildDetailRow('Slip Number', slipNumber),
+                          const Divider(height: 20, color: Color(0xFFE2E8F0)),
+                          _buildDetailRow('Destination', destination),
+                          const Divider(height: 20, color: Color(0xFFE2E8F0)),
+                          _buildDetailRow('Reason', reason),
+                          const Divider(height: 20, color: Color(0xFFE2E8F0)),
+                          _buildDetailRow('Approved By', approvedBy),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+
+                    // QR Code
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))
+                        ],
+                      ),
+                      child: QrImageView(
+                        data: slipNumber,
+                        version: QrVersions.auto,
+                        size: 100.0,
+                        eyeStyle: QrEyeStyle(eyeShape: QrEyeShape.square, color: Color(0xFF1E293B)),
+                        dataModuleStyle: QrDataModuleStyle(dataModuleShape: QrDataModuleShape.square, color: Color(0xFF1E293B)),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: statusColor.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        status,
+                        style: GoogleFonts.poppins(color: statusColor, fontWeight: FontWeight.bold, fontSize: 13),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // Close / Print buttons
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                decoration: const BoxDecoration(
+                  color: Color(0xFFF1F5F9),
+                  borderRadius: BorderRadius.vertical(bottom: Radius.circular(24)),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: TextButton(
+                        onPressed: () => Navigator.pop(ctx),
+                        style: TextButton.styleFrom(
+                          foregroundColor: const Color(0xFF64748B),
+                        ),
+                        child: Text('Close', style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
+                      ),
+                    ),
+                    if (status == 'APPROVED' || status == 'ACTIVE' || status == 'COMPLETED')
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: () {
+                            Navigator.pop(ctx);
+                            printGatePass(context, pass);
+                          },
+                          icon: const Icon(Icons.print_rounded, size: 18, color: Colors.white),
+                          label: Text('Print', style: GoogleFonts.poppins(fontWeight: FontWeight.w600, color: Colors.white)),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF10B981),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            elevation: 0,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDetailRow(String label, String value) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          width: 90,
+          child: Text(
+            label,
+            style: GoogleFonts.poppins(color: const Color(0xFF94A3B8), fontSize: 12),
+          ),
+        ),
+        Expanded(
+          child: Text(
+            value,
+            style: GoogleFonts.poppins(color: const Color(0xFF1E293B), fontSize: 12, fontWeight: FontWeight.w600),
+            textAlign: TextAlign.right,
+          ),
+        ),
+      ],
     );
   }
 
@@ -1498,57 +1787,131 @@ Future<Uint8List> _buildPdfPass(dynamic pass) async {
   final destination = pass['destination'] ?? 'N/A';
   final reason = pass['reason'] ?? 'N/A';
   final status = pass['status'] ?? 'UNKNOWN';
+  final approvedBy = pass['approvedBy'] != null ? (pass['approvedBy']['name'] ?? 'Unknown') : 'N/A';
+  
+  final rawPhone = isStudent
+      ? ((pass['student'] as Map?)?['user']?['phoneNumber'] ?? '')
+      : ((pass['requester'] as Map?)?['phoneNumber'] ?? '');
+  final String maskedPhone = (rawPhone.length >= 4) ? 'xxxx ${rawPhone.substring(rawPhone.length - 4)}' : (rawPhone.isNotEmpty ? rawPhone : 'N/A');
 
   pdf.addPage(
     pw.Page(
       pageFormat: PdfPageFormat.a4,
+      margin: const pw.EdgeInsets.all(32),
       build: (pw.Context context) {
         return pw.Center(
           child: pw.Container(
-            padding: const pw.EdgeInsets.all(20),
+            width: 380,
+            padding: const pw.EdgeInsets.all(24),
             decoration: pw.BoxDecoration(
-              border: pw.Border.all(width: 2, color: PdfColors.black),
-              borderRadius: const pw.BorderRadius.all(pw.Radius.circular(10)),
+              border: pw.Border.all(width: 2, color: PdfColors.blueGrey800),
+              borderRadius: const pw.BorderRadius.all(pw.Radius.circular(16)),
             ),
             child: pw.Column(
               mainAxisSize: pw.MainAxisSize.min,
-              crossAxisAlignment: pw.CrossAxisAlignment.start,
+              crossAxisAlignment: pw.CrossAxisAlignment.center,
               children: [
-                pw.Center(
-                  child: pw.Text('JY SCHOOL - GATE PASS',
-                      style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold)),
-                ),
-                pw.Divider(thickness: 2),
-                pw.SizedBox(height: 20),
-                pw.Text('Slip Number: $slipNumber', style: const pw.TextStyle(fontSize: 16)),
-                pw.SizedBox(height: 10),
-                pw.Text('Name: $name', style: const pw.TextStyle(fontSize: 16)),
-                pw.SizedBox(height: 10),
-                pw.Text('Type: ${isStudent ? 'Student' : 'Staff'}', style: const pw.TextStyle(fontSize: 16)),
-                pw.SizedBox(height: 10),
-                pw.Text('Destination: $destination', style: const pw.TextStyle(fontSize: 16)),
-                pw.SizedBox(height: 10),
-                pw.Text('Reason: $reason', style: const pw.TextStyle(fontSize: 16)),
-                pw.SizedBox(height: 10),
-                pw.Text('Status: $status',
-                    style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold)),
-                pw.SizedBox(height: 30),
-                pw.Row(
-                  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-                  children: [
-                    pw.Text('Issuer Signature: ________________'),
-                    pw.Text('Security Signature: ________________'),
-                  ],
-                ),
-                pw.SizedBox(height: 20),
-                pw.Center(
-                  child: pw.BarcodeWidget(
-                    data: slipNumber,
-                    barcode: pw.Barcode.qrCode(),
-                    width: 80,
-                    height: 80,
+                pw.Container(
+                  padding: const pw.EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+                  decoration: pw.BoxDecoration(
+                    color: PdfColors.blueGrey800,
+                    borderRadius: pw.BorderRadius.circular(8),
+                  ),
+                  child: pw.Text(
+                    'JY SCHOOL - SECURITY GATE PASS',
+                    style: pw.TextStyle(
+                      color: PdfColors.white,
+                      fontSize: 18,
+                      fontWeight: pw.FontWeight.bold,
+                      letterSpacing: 1.2,
+                    ),
+                    textAlign: pw.TextAlign.center,
                   ),
                 ),
+                pw.SizedBox(height: 24),
+                pw.Row(
+                  crossAxisAlignment: pw.CrossAxisAlignment.start,
+                  children: [
+                    pw.Container(
+                      width: 80,
+                      height: 80,
+                      decoration: pw.BoxDecoration(
+                        color: PdfColors.grey200,
+                        borderRadius: pw.BorderRadius.circular(12),
+                        border: pw.Border.all(color: PdfColors.grey400),
+                      ),
+                      child: pw.Center(
+                        child: pw.Text('PHOTO', style: pw.TextStyle(color: PdfColors.grey600, fontSize: 10)),
+                      ),
+                    ),
+                    pw.SizedBox(width: 20),
+                    pw.Expanded(
+                      child: pw.Column(
+                        crossAxisAlignment: pw.CrossAxisAlignment.start,
+                        children: [
+                          pw.Text(name, style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold)),
+                          pw.SizedBox(height: 4),
+                          pw.Text('${isStudent ? 'Student' : 'Staff'} | Phone: $maskedPhone', style: const pw.TextStyle(fontSize: 12, color: PdfColors.grey700)),
+                          pw.SizedBox(height: 12),
+                          pw.Container(
+                            padding: const pw.EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            decoration: pw.BoxDecoration(
+                              color: PdfColors.grey200,
+                              borderRadius: pw.BorderRadius.circular(4),
+                            ),
+                            child: pw.Text('Slip No: $slipNumber', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 12)),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                pw.SizedBox(height: 24),
+                pw.Divider(color: PdfColors.grey300),
+                pw.SizedBox(height: 16),
+                _buildPdfDetailRow('Destination', destination),
+                pw.SizedBox(height: 12),
+                _buildPdfDetailRow('Reason', reason),
+                pw.SizedBox(height: 12),
+                _buildPdfDetailRow('Approved By', approvedBy),
+                pw.SizedBox(height: 12),
+                _buildPdfDetailRow('Current Status', status),
+                pw.SizedBox(height: 16),
+                pw.Divider(color: PdfColors.grey300),
+                pw.SizedBox(height: 32),
+                pw.Row(
+                  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: pw.CrossAxisAlignment.end,
+                  children: [
+                    pw.Column(
+                      crossAxisAlignment: pw.CrossAxisAlignment.start,
+                      children: [
+                        pw.Container(width: 120, height: 1, color: PdfColors.black),
+                        pw.SizedBox(height: 4),
+                        pw.Text('Authorized Signature', style: const pw.TextStyle(fontSize: 10)),
+                        pw.SizedBox(height: 24),
+                        pw.Container(width: 120, height: 1, color: PdfColors.black),
+                        pw.SizedBox(height: 4),
+                        pw.Text('Security Stamp', style: const pw.TextStyle(fontSize: 10)),
+                      ],
+                    ),
+                    pw.Container(
+                      padding: const pw.EdgeInsets.all(8),
+                      decoration: pw.BoxDecoration(
+                        border: pw.Border.all(color: PdfColors.grey300),
+                        borderRadius: pw.BorderRadius.circular(8),
+                      ),
+                      child: pw.BarcodeWidget(
+                        data: slipNumber,
+                        barcode: pw.Barcode.qrCode(),
+                        width: 90,
+                        height: 90,
+                      ),
+                    ),
+                  ],
+                ),
+                pw.SizedBox(height: 16),
+                pw.Text('Please present this slip at the main gate.', style: pw.TextStyle(fontSize: 9, color: PdfColors.grey600, fontStyle: pw.FontStyle.italic)),
               ],
             ),
           ),
@@ -1557,4 +1920,19 @@ Future<Uint8List> _buildPdfPass(dynamic pass) async {
     ),
   );
   return pdf.save();
+}
+
+pw.Widget _buildPdfDetailRow(String label, String value) {
+  return pw.Row(
+    crossAxisAlignment: pw.CrossAxisAlignment.start,
+    children: [
+      pw.SizedBox(
+        width: 100,
+        child: pw.Text(label, style: const pw.TextStyle(color: PdfColors.grey700, fontSize: 12)),
+      ),
+      pw.Expanded(
+        child: pw.Text(value, style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 12)),
+      ),
+    ],
+  );
 }

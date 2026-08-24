@@ -30,106 +30,109 @@ class ExaminationDashboardScreen extends StatelessWidget {
         foregroundColor: Colors.white,
         elevation: 0,
       ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 24.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              GridView.count(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                crossAxisCount: 2,
-                crossAxisSpacing: 12,
-                mainAxisSpacing: 12,
-                childAspectRatio: 2.3, // High ratio for compact height
-                children: [
-                  _buildDashboardCard(
-                    context,
-                    title: 'Exams List',
-                    subtitle: 'Manage exams',
-                    imageUrl: 'https://img.icons8.com/3d-fluency/94/books.png',
-                    color: const Color(0xFF4F46E5),
-                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const ExamsScreen())),
-                  ),
-                  _buildDashboardCard(
-                    context,
-                    title: 'Admit Card',
-                    subtitle: 'Hall tickets',
-                    imageUrl: 'https://img.icons8.com/3d-fluency/94/name-tag.png',
-                    color: const Color(0xFF0EA5E9),
-                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const AdmitCardScreen())),
-                  ),
-                  _buildDashboardCard(
-                    context,
-                    title: 'Question Papers',
-                    subtitle: 'Upload & manage',
-                    imageUrl: 'https://img.icons8.com/3d-fluency/94/document.png',
-                    color: const Color(0xFFF59E0B),
-                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const QuestionPapersScreen())),
-                  ),
-                  _buildDashboardCard(
-                    context,
-                    title: 'Marks Upload',
-                    subtitle: 'Enter marks',
-                    imageUrl: 'https://img.icons8.com/3d-fluency/94/edit.png',
-                    color: const Color(0xFF10B981),
-                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const MarksUploadScreen())),
-                  ),
-                  _buildDashboardCard(
-                    context,
-                    title: 'Results',
-                    subtitle: 'Grade sheets',
-                    imageUrl: 'https://img.icons8.com/3d-fluency/94/medal.png',
-                    color: const Color(0xFF8B5CF6),
-                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const ResultsScreen())),
-                  ),
-                  _buildDashboardCard(
-                    context,
-                    title: 'Progress Card',
-                    subtitle: 'Detailed progress',
-                    imageUrl: 'https://img.icons8.com/3d-fluency/94/combo-chart.png',
-                    color: const Color(0xFFF43F5E),
-                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const ProgressCardScreen())),
-                  ),
-                  _buildDashboardCard(
-                    context,
-                    title: 'Slip Test Rank',
-                    subtitle: 'Manual ranks',
-                    imageUrl: 'https://img.icons8.com/3d-fluency/94/target.png',
-                    color: const Color(0xFF06B6D4),
-                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const SlipTestScreen())),
-                  ),
-                  _buildDashboardCard(
-                    context,
-                    title: 'Send SMS',
-                    subtitle: 'Notify parents',
-                    imageUrl: 'https://img.icons8.com/3d-fluency/94/speech-bubble-with-dots.png',
-                    color: const Color(0xFFEC4899),
-                    onTap: () => _showSendSmsBottomSheet(context),
-                  ),
-                  _buildDashboardCard(
-                    context,
-                    title: 'Overview',
-                    subtitle: 'Track progress',
-                    imageUrl: 'https://img.icons8.com/3d-fluency/94/search.png',
-                    color: const Color(0xFFF97316),
-                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const ExamStatusScreen())),
-                  ),
-                  _buildDashboardCard(
-                    context,
-                    title: 'Settings',
-                    subtitle: 'Configurations',
-                    imageUrl: 'https://img.icons8.com/3d-fluency/94/gear.png',
-                    color: const Color(0xFF64748B),
-                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const ExamSettingsScreen())),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20),
-            ],
-          ),
-        ),
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          // Calculate available height: Layout constraint height - Padding(48)
+          double availableHeight = constraints.maxHeight - 48;
+          if (availableHeight < 400) availableHeight = 400; // Fallback
+          
+          double itemWidth = (constraints.maxWidth - 32 - 12) / 2; // 32 padding (16*2), 12 spacing
+          double itemHeight = (availableHeight - (12 * 4)) / 5; // 5 rows, 4 spacings
+          double dynamicAspectRatio = itemWidth / itemHeight;
+
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 24.0),
+            child: GridView.count(
+              physics: const NeverScrollableScrollPhysics(),
+              crossAxisCount: 2,
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 12,
+              childAspectRatio: dynamicAspectRatio,
+              children: [
+                _buildDashboardCard(
+                  context,
+                  title: 'Exams List',
+                  subtitle: 'Manage exams',
+                  imageUrl: 'https://img.icons8.com/3d-fluency/94/books.png',
+                  color: const Color(0xFF4F46E5),
+                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const ExamsScreen())),
+                ),
+                _buildDashboardCard(
+                  context,
+                  title: 'Admit Card',
+                  subtitle: 'Hall tickets',
+                  imageUrl: 'https://img.icons8.com/3d-fluency/94/name-tag.png',
+                  color: const Color(0xFF0EA5E9),
+                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const AdmitCardScreen())),
+                ),
+                _buildDashboardCard(
+                  context,
+                  title: 'Question Papers',
+                  subtitle: 'Upload & manage',
+                  imageUrl: 'https://img.icons8.com/3d-fluency/94/document.png',
+                  color: const Color(0xFFF59E0B),
+                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const QuestionPapersScreen())),
+                ),
+                _buildDashboardCard(
+                  context,
+                  title: 'Marks Upload',
+                  subtitle: 'Enter marks',
+                  imageUrl: 'https://img.icons8.com/3d-fluency/94/edit.png',
+                  color: const Color(0xFF10B981),
+                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const MarksUploadScreen())),
+                ),
+                _buildDashboardCard(
+                  context,
+                  title: 'Results',
+                  subtitle: 'Grade sheets',
+                  imageUrl: 'https://img.icons8.com/3d-fluency/94/medal.png',
+                  color: const Color(0xFF8B5CF6),
+                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const ResultsScreen())),
+                ),
+                _buildDashboardCard(
+                  context,
+                  title: 'Progress Card',
+                  subtitle: 'Detailed progress',
+                  imageUrl: 'https://img.icons8.com/3d-fluency/94/combo-chart.png',
+                  color: const Color(0xFFF43F5E),
+                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const ProgressCardScreen())),
+                ),
+                _buildDashboardCard(
+                  context,
+                  title: 'Slip Test Rank',
+                  subtitle: 'Manual ranks',
+                  imageUrl: 'https://img.icons8.com/3d-fluency/94/target.png',
+                  color: const Color(0xFF06B6D4),
+                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const SlipTestScreen())),
+                ),
+                _buildDashboardCard(
+                  context,
+                  title: 'Send SMS',
+                  subtitle: 'Notify parents',
+                  imageUrl: 'https://img.icons8.com/3d-fluency/94/speech-bubble-with-dots.png',
+                  color: const Color(0xFFEC4899),
+                  onTap: () => _showSendSmsBottomSheet(context),
+                ),
+                _buildDashboardCard(
+                  context,
+                  title: 'Overview',
+                  subtitle: 'Track progress',
+                  imageUrl: 'https://img.icons8.com/3d-fluency/94/search.png',
+                  color: const Color(0xFFF97316),
+                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const ExamStatusScreen())),
+                ),
+                _buildDashboardCard(
+                  context,
+                  title: 'Settings',
+                  subtitle: 'Configurations',
+                  imageUrl: 'https://img.icons8.com/3d-fluency/94/gear.png',
+                  color: const Color(0xFF64748B),
+                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const ExamSettingsScreen())),
+                ),
+              ],
+            ),
+          );
+        },
       ),
     );
   }

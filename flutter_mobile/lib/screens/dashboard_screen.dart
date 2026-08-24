@@ -794,7 +794,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ),
         _buildPremiumCard(
           subtitle: 'REPORTS & ANALYTICS',
-          title: 'Reports',
+          title: 'Progress Card',
           bottomText: 'Performance Analysis',
           icon: Icons.emoji_events_rounded,
           gradientColors: [const Color(0xFF00C853), const Color(0xFF009624)],
@@ -839,7 +839,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           children: [
             // Floating 3D image bubble removed based on user preference
             Padding(
-              padding: const EdgeInsets.all(12.0),
+              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -849,22 +849,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     children: [
                       // Icon Badge
                       Container(
-                        padding: const EdgeInsets.all(6),
+                        padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
                           color: Colors.white.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: BorderRadius.circular(12),
                           border: Border.all(color: Colors.white.withOpacity(0.4), width: 1),
                         ),
-                        child: Icon(icon, color: Colors.white, size: 16),
+                        child: Icon(icon, color: Colors.white, size: 18),
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: 10),
                       Expanded(
                         child: Text(
                           subtitle,
                           style: GoogleFonts.poppins(
                             color: Colors.white.withOpacity(0.95),
-                            fontSize: 9,
+                            fontSize: 10,
                             fontWeight: FontWeight.w700,
+                            letterSpacing: 0.5,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -872,28 +873,28 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ),
                     ],
                   ),
-                  const Spacer(),
+                  const SizedBox(height: 16),
                   Text(
                     title,
                     style: GoogleFonts.outfit(
                       color: Colors.white,
-                      fontSize: 20,
+                      fontSize: 28,
                       fontWeight: FontWeight.w900,
                       height: 1.1,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 8),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
-                      color: accentColor.withOpacity(0.7),
-                      borderRadius: BorderRadius.circular(8),
+                      color: accentColor.withOpacity(0.8),
+                      borderRadius: BorderRadius.circular(10),
                     ),
                     child: Text(
                       bottomText,
-                      style: GoogleFonts.poppins(color: Colors.white, fontSize: 8, fontWeight: FontWeight.w600),
+                      style: GoogleFonts.poppins(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w600),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
