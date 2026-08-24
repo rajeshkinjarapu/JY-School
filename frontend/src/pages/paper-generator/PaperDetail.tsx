@@ -108,7 +108,12 @@ export const PaperDetail: React.FC = () => {
     documentTitle: paper?.title || 'Exam Paper',
     pageStyle: `
       @page { size: A4; margin: 0; }
-      body { margin: 0; padding: 0; background: white !important; }
+      html, body { 
+        margin: 0 !important; 
+        padding: 0 !important; 
+        background: white !important; 
+        background-color: white !important; 
+      }
       .a4-preview-paper { 
         border: none !important; 
         box-shadow: none !important; 
