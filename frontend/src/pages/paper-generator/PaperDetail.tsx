@@ -108,7 +108,7 @@ export const PaperDetail: React.FC = () => {
         documentTitle: paper?.title || 'Exam Paper',
         pageStyle: `
             @page { size: A4 portrait; margin: 0; }
-            html, body, #root, #print-root { 
+            html, body { 
                 margin: 0 !important; 
                 padding: 0 !important; 
                 background: #ffffff !important; 
@@ -116,6 +116,14 @@ export const PaperDetail: React.FC = () => {
                 color-scheme: light !important;
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
+                min-height: 100vh !important;
+                height: 100% !important;
+            }
+            * {
+                background-color: transparent;
+            }
+            .a4-paper {
+                background: #ffffff !important;
             }
         `,
     });
