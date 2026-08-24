@@ -238,19 +238,17 @@ export const FinancePage: React.FC = () => {
     let allStudents: any[] = firstPayload;
 
     if (totalPages > 1) {
-      const pagePromises = [];
       for (let p = 2; p <= totalPages; p++) {
-        pagePromises.push(api.get(`/api/students?limit=100&page=${p}`, { timeout: 60000 }));
-      }
-      const pageResults = await Promise.allSettled(pagePromises);
-      pageResults.forEach((r: any) => {
-        if (r.status === 'fulfilled') {
-          let d = r.value?.data;
+        try {
+          const r: any = await api.get(`/api/students?limit=100&page=${p}`, { timeout: 60000 });
+          let d = r?.data;
           if (d && !Array.isArray(d) && Array.isArray(d.data)) d = d.data;
-          else if (!Array.isArray(d) && Array.isArray(r.value?.data?.data)) d = r.value.data.data;
+          else if (!Array.isArray(d) && Array.isArray(r?.data?.data)) d = r.data.data;
           if (Array.isArray(d)) allStudents = [...allStudents, ...d];
+        } catch (err) {
+          console.error(`Failed to fetch page ${p}`, err);
         }
-      });
+      }
     }
 
     // Save to localStorage cache with timestamp
@@ -279,19 +277,17 @@ export const FinancePage: React.FC = () => {
       let allPayments: any[] = firstPayload;
 
       if (totalPages > 1) {
-        const pagePromises = [];
         for (let p = 2; p <= totalPages; p++) {
-          pagePromises.push(api.get(`/api/fees/payments?limit=500&page=${p}`, { timeout: 60000 }));
-        }
-        const pageResults = await Promise.allSettled(pagePromises);
-        pageResults.forEach((r: any) => {
-          if (r.status === 'fulfilled') {
-            let d = r.value?.data;
+          try {
+            const r: any = await api.get(`/api/fees/payments?limit=500&page=${p}`, { timeout: 60000 });
+            let d = r?.data;
             if (d && !Array.isArray(d) && Array.isArray(d.data)) d = d.data;
-            else if (!Array.isArray(d) && Array.isArray(r.value?.data?.data)) d = r.value.data.data;
+            else if (!Array.isArray(d) && Array.isArray(r?.data?.data)) d = r.data.data;
             if (Array.isArray(d)) allPayments = [...allPayments, ...d];
+          } catch (err) {
+            console.error(`Failed to fetch page ${p}`, err);
           }
-        });
+        }
       }
       return allPayments;
     } catch (e) {
