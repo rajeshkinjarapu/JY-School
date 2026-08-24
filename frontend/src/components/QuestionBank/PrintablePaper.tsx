@@ -137,8 +137,8 @@ export const PrintablePaper: React.FC<PrintablePaperProps> = ({
                         background: #ffffff !important;
                         background-color: #ffffff !important;
                         color: #000000 !important;
-                        min-height: 100vh !important;
-                        height: 100% !important;
+                        min-height: 100% !important;
+                        height: auto !important;
                     }
                     * {
                         forced-color-adjust: none !important;

@@ -989,8 +989,13 @@ export const NavodayaPaperGeneratorPage = () => {
         @media print {
           .paper-zoom { zoom: 1 !important; transform: none !important; margin: 0 !important; }
           @page { margin: 10mm; size: A4; }
-          body { -webkit-print-color-adjust: exact; background: white; }
-          #root { display: block !important; }
+          html, body { 
+            -webkit-print-color-adjust: exact; 
+            background: white !important; 
+            min-height: 100% !important; 
+            height: auto !important; 
+          }
+          #root { display: block !important; background: white !important; height: auto !important; min-height: 100% !important; }
         }
       `}</style>
     </div>

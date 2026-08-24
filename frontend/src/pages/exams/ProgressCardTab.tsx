@@ -3,7 +3,7 @@ import api from '../../api/axios';
 import { formatExamOptionLabel } from '../../utils/formatters';
 import { Printer, Download, FileText, CheckCircle, Settings, Upload, Save, MessageCircle } from 'lucide-react';
 import { jsPDF } from 'jspdf';
-import html2canvas from 'html2canvas';
+import { toJpeg } from 'html-to-image';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
 import { triggerDownloadNotification } from "../../utils/downloadNotification";
@@ -185,20 +185,19 @@ export const ProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
     await new Promise(resolve => setTimeout(resolve, 300));
     
     try {
-      const canvas = await html2canvas(el, { 
-        scale: window.innerWidth < 768 ? 1.5 : 2, // Better quality, fallback to 1.5 on mobile for memory
-        useCORS: true, 
+      const rect = el.getBoundingClientRect();
+      const dataUrl = await toJpeg(el, { 
+        quality: 0.95,
         backgroundColor: '#ffffff',
-        logging: false
+        pixelRatio: window.innerWidth < 768 ? 1.5 : 2,
+        style: { display: 'flex', transform: 'none' }
       });
-      
-      const imgData = canvas.toDataURL('image/jpeg', 0.95);
       
       const pdf = new jsPDF('p', 'mm', 'a4');
       const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+      const pdfHeight = (rect.height * pdfWidth) / rect.width;
       
-      pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight, undefined, 'FAST');
+      pdf.addImage(dataUrl, 'JPEG', 0, 0, pdfWidth, pdfHeight, undefined, 'FAST');
       
       return pdf;
     } finally {
@@ -330,19 +329,19 @@ export const ProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
         el.style.display = 'flex';
         await new Promise(resolve => setTimeout(resolve, 100)); // Small delay for layout
         
-        const canvas = await html2canvas(el, { 
-          scale: window.innerWidth < 768 ? 1.5 : 2, 
-          useCORS: true, 
+        const rect = el.getBoundingClientRect();
+        const dataUrl = await toJpeg(el, { 
+          quality: 0.9,
           backgroundColor: '#ffffff',
-          logging: false
+          pixelRatio: window.innerWidth < 768 ? 1.5 : 2,
+          style: { display: 'flex', transform: 'none' }
         });
-        const imgData = canvas.toDataURL('image/jpeg', 0.9);
         
         const pdf = new jsPDF('p', 'mm', 'a4');
         const pdfWidth = pdf.internal.pageSize.getWidth();
-        const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+        const pdfHeight = (rect.height * pdfWidth) / rect.width;
         
-        pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight, undefined, 'FAST');
+        pdf.addImage(dataUrl, 'JPEG', 0, 0, pdfWidth, pdfHeight, undefined, 'FAST');
         const fileName = `${data.studentName || `Student_${i+1}`}_ProgressCard.pdf`;
         zip.file(fileName, pdf.output('blob'));
         
