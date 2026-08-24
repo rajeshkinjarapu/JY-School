@@ -262,6 +262,14 @@
     min-height: 297mm !important;
     box-sizing: border-box !important;
   }
+
+  .page-break {
+    page-break-before: always !important;
+    break-before: page !important;
+    display: block;
+    height: 0;
+    overflow: hidden;
+  }
 }
 
 @page {
