@@ -248,7 +248,7 @@
     print-color-adjust: exact !important;
   }
   
-  html, body, #root, .a4-preview-paper, .a4-preview-paper * {
+  html, body, #root, .a4-paper, .a4-paper * {
     background: #ffffff !important;
     background-color: #ffffff !important;
     color: #000000 !important;
@@ -260,7 +260,7 @@
     -webkit-color-scheme: light !important;
   }
   
-  .a4-preview-paper {
+  .a4-paper {
     border: none !important;
     box-shadow: none !important;
     margin: 0 !important;
