@@ -17,6 +17,13 @@ export const ResultsTab: React.FC<{ exams: any[] }> = ({ exams }) => {
   const [loading, setLoading] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [exportSettings, setExportSettings] = useState({
+    title: 'EXAMINATION RESULTS SUMMARY',
+    examName: '',
+    subtitle: '',
+    date: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+  });
 
   const toggleRow = (id: string) => setExpandedRow(prev => prev === id ? null : id);
 
@@ -143,12 +150,12 @@ export const ResultsTab: React.FC<{ exams: any[] }> = ({ exams }) => {
 
       doc.setFontSize(10);
       doc.setTextColor(67, 56, 202); // #4338CA - Dark Indigo
-      doc.text('EXAMINATION RESULTS SUMMARY', 16, 24);
+      doc.text(exportSettings.title || 'EXAMINATION RESULTS SUMMARY', 16, 24);
 
       // Metadata info on top right of banner
-      const examNameStr = selectedExam?.name || 'Examination';
-      const classNameStr = results[0]?.className || 'Class';
-      const dateStr = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+      const examNameStr = exportSettings.examName || selectedExam?.name || 'Examination';
+      const classNameStr = exportSettings.subtitle || results[0]?.className || 'Class';
+      const dateStr = exportSettings.date;
 
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(10);
@@ -338,7 +345,14 @@ export const ResultsTab: React.FC<{ exams: any[] }> = ({ exams }) => {
               </button>
               <button
                 type="button"
-                onClick={handleDownloadPDF}
+                onClick={() => {
+                  setExportSettings(prev => ({
+                    ...prev,
+                    examName: selectedExam?.name || '',
+                    subtitle: results[0]?.className || 'Class'
+                  }));
+                  setShowExportModal(true);
+                }}
                 disabled={isDownloading}
                 className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white font-bold rounded-xl transition-all shadow-md active:scale-95 text-xs cursor-pointer disabled:opacity-50"
               >
@@ -488,6 +502,85 @@ export const ResultsTab: React.FC<{ exams: any[] }> = ({ exams }) => {
                   ))}
                 </tbody>
               </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Export Settings Modal */}
+      {showExportModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 animate-fade-in no-print">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-md shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-800 animate-slide-up">
+            <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-gradient-to-r from-indigo-50/50 to-white dark:from-slate-800/50 dark:to-slate-900">
+              <h3 className="text-lg font-black text-slate-800 dark:text-white flex items-center gap-2">
+                <Printer className="w-5 h-5 text-indigo-600" />
+                PDF Export Settings
+              </h3>
+              <button onClick={() => setShowExportModal(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors">
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+            
+            <div className="p-6 space-y-5">
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Report Title</label>
+                <input 
+                  type="text" 
+                  value={exportSettings.title} 
+                  onChange={e => setExportSettings({...exportSettings, title: e.target.value})}
+                  className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 text-sm font-semibold text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+                  placeholder="EXAMINATION RESULTS SUMMARY"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Exam Full Name</label>
+                <input 
+                  type="text" 
+                  value={exportSettings.examName} 
+                  onChange={e => setExportSettings({...exportSettings, examName: e.target.value})}
+                  className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 text-sm font-semibold text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+                  placeholder="e.g. FORMATIVE ASSESSMENT - I"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Class / Subtitle</label>
+                  <input 
+                    type="text" 
+                    value={exportSettings.subtitle} 
+                    onChange={e => setExportSettings({...exportSettings, subtitle: e.target.value})}
+                    className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 text-sm font-semibold text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Date</label>
+                  <input 
+                    type="text" 
+                    value={exportSettings.date} 
+                    onChange={e => setExportSettings({...exportSettings, date: e.target.value})}
+                    className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 text-sm font-semibold text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+                  />
+                </div>
+              </div>
+            </div>
+            
+            <div className="p-6 bg-slate-50 dark:bg-slate-800/30 flex gap-3 rounded-b-3xl">
+              <button 
+                onClick={() => setShowExportModal(false)}
+                className="flex-1 px-4 py-3 rounded-xl font-bold text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={() => {
+                  setShowExportModal(false);
+                  handleDownloadPDF();
+                }}
+                className="flex-1 px-4 py-3 rounded-xl font-bold text-white bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 shadow-md transition-all flex justify-center items-center gap-2"
+              >
+                <Download className="w-4 h-4" />
+                Generate
+              </button>
             </div>
           </div>
         </div>
