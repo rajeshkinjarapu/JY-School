@@ -118,7 +118,7 @@ export const PrintablePaper: React.FC<PrintablePaperProps> = ({
     // ─── Main Render ────────────────────────────────────────────────────────────
     return (
         <div
-            className="a4-paper bg-white text-black mx-auto relative font-serif leading-relaxed select-text border border-slate-300 print:border-none shadow-2xl print:shadow-none"
+            className="a4-paper mx-auto relative font-serif leading-relaxed select-text"
             style={{
                 width: '210mm',
                 minHeight: '297mm',
@@ -127,22 +127,21 @@ export const PrintablePaper: React.FC<PrintablePaperProps> = ({
                 boxSizing: 'border-box',
                 backgroundColor: '#ffffff',
                 color: '#000000',
+                border: '1px solid #cbd5e1',
+                boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)',
             }}
         >
             <style dangerouslySetInnerHTML={{ __html: `
                 @media print {
+                    html, body, #root, iframe, .a4-paper {
+                        background: #ffffff !important;
+                        background-color: #ffffff !important;
+                        color: #000000 !important;
+                    }
                     * {
-                        background: white !important;
-                        background-color: white !important;
-                        color: black !important;
                         forced-color-adjust: none !important;
                         -webkit-print-color-adjust: exact !important;
                         print-color-adjust: exact !important;
-                    }
-                    body, html, .a4-paper, .a4-paper * {
-                        background: white !important;
-                        background-color: white !important;
-                        color: black !important;
                     }
                     :root { color-scheme: light !important; }
                     @page {
@@ -152,6 +151,7 @@ export const PrintablePaper: React.FC<PrintablePaperProps> = ({
                     .a4-paper {
                         border: none !important;
                         box-shadow: none !important;
+                        outline: none !important;
                         margin: 0 !important;
                         padding: 15mm 18mm !important;
                         width: 210mm !important;

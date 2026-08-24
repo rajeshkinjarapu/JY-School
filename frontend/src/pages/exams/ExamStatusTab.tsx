@@ -40,8 +40,10 @@ export const ExamStatusTab: React.FC<{ exams: any[] }> = ({ exams }) => {
     for (const cls of activeExamData.classes) {
       const subjects = cls.subjectStats?.totalSubjects || [];
       for (const sub of subjects) {
-        if (!allSubjectNames.includes(sub.name)) {
-          allSubjectNames.push(sub.name);
+        if (!sub.name) continue;
+        const normalizedName = sub.name.trim().toUpperCase();
+        if (!allSubjectNames.includes(normalizedName)) {
+          allSubjectNames.push(normalizedName);
         }
       }
     }
@@ -124,8 +126,8 @@ export const ExamStatusTab: React.FC<{ exams: any[] }> = ({ exams }) => {
                     const progress = Math.round(stats.progress || 0);
 
                     // Build a quick Set for O(1) lookup
-                    const enteredSet = new Set<string>((stats.enteredSubjects || []).map((s: any) => s.name));
-                    const classSubjectNames = new Set<string>((stats.totalSubjects || []).map((s: any) => s.name));
+                    const enteredSet = new Set<string>((stats.enteredSubjects || []).map((s: any) => s.name?.trim().toUpperCase()));
+                    const classSubjectNames = new Set<string>((stats.totalSubjects || []).map((s: any) => s.name?.trim().toUpperCase()));
 
                     const rowBg = rowIdx % 2 === 0
                       ? 'bg-white dark:bg-slate-900'

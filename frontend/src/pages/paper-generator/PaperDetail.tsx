@@ -103,46 +103,54 @@ export const PaperDetail: React.FC = () => {
   };
 
   // Triggers browser print dialog - uses printAreaRef directly for 1:1 WYSIWYG
-  const handleClientPrint = useReactToPrint({
-    contentRef: printAreaRef,
-    documentTitle: paper?.title || 'Exam Paper',
-    pageStyle: `
-      @page { size: A4; margin: 0; }
-      html, body { 
-        margin: 0 !important; 
-        padding: 0 !important; 
-        background: white !important; 
-        background-color: white !important; 
-        color-scheme: light !important;
-      }
-      .a4-paper { 
-        border: none !important; 
-        box-shadow: none !important; 
-        margin: 0 !important; 
-      }
-    `,
-  });
+    const handleClientPrint = useReactToPrint({
+        contentRef: printAreaRef,
+        documentTitle: paper?.title || 'Exam Paper',
+        pageStyle: `
+            @page { size: A4 portrait; margin: 0; }
+            html, body, #root, #print-root { 
+                margin: 0 !important; 
+                padding: 0 !important; 
+                background: #ffffff !important; 
+                background-color: #ffffff !important; 
+                color-scheme: light !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+        `,
+    });
 
-  // Calls the Puppeteer backend to render PDF
-  const handleServerPdfExport = async () => {
+  const loadHtml2Pdf = (): Promise<any> => {
+    return new Promise((resolve, reject) => {
+      if ((window as any).html2pdf) {
+        resolve((window as any).html2pdf);
+        return;
+      }
+      const script = document.createElement('script');
+      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+      script.onload = () => resolve((window as any).html2pdf);
+      script.onerror = () => reject(new Error('Failed to load html2pdf.js'));
+      document.body.appendChild(script);
+    });
+  };
+
+  const handleDirectPdfDownload = async () => {
     if (!printAreaRef.current || !paper) return;
     setGeneratingPdf(true);
     try {
-      // Fetch the print element's inner HTML (contains pre-rendered KaTeX symbols as pure SVG/HTML!)
-      const printHtml = printAreaRef.current.innerHTML;
-
-      const blob = await api.exportPdf(printHtml);
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${paper.title.replace(/\s+/g, '_').toLowerCase()}_set_${activeSet}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      window.URL.revokeObjectURL(url);
+      const html2pdf = await loadHtml2Pdf();
+      const element = printAreaRef.current;
+      const opt = {
+        margin:       0,
+        filename:     `${paper.title.replace(/\s+/g, '_').toLowerCase()}_set_${activeSet}.pdf`,
+        image:        { type: 'jpeg', quality: 1 },
+        html2canvas:  { scale: 2, useCORS: true, logging: false, backgroundColor: '#ffffff' },
+        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      };
+      await html2pdf().set(opt).from(element).save();
     } catch (err) {
       console.error(err);
-      alert('Failed to generate PDF via backend. Attempting local client print fallback.');
+      alert('Failed to generate PDF. Please try Print / PDF fallback.');
       window.print();
     } finally {
       setGeneratingPdf(false);
@@ -213,7 +221,7 @@ export const PaperDetail: React.FC = () => {
             </button>
 
             <button
-              onClick={handleServerPdfExport}
+              onClick={handleDirectPdfDownload}
               disabled={generatingPdf}
               className="px-4 py-2 bg-gradient-to-r from-indigo-600 to-accentPurple hover:brightness-110 text-white rounded-xl text-xs font-bold shadow-md flex items-center gap-1.5 transition-all disabled:opacity-50"
             >
