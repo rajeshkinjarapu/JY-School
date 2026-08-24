@@ -56,11 +56,8 @@ export const MarksEntryPage: React.FC = () => {
 
       // 4. Get subjects from exam JSON (fallback to empty array)
       const rawExamSubjects = Array.isArray(examObj.subjects) ? examObj.subjects : [];
-      // Only keep exam subjects that are globally mapped to this specific class
-      const classMappedSubjects = classRes.data?.subjects || [];
-      const examSubjects = rawExamSubjects.filter(examSub => 
-        classMappedSubjects.some((classSub: any) => classSub.name?.trim().toLowerCase() === examSub.name?.trim().toLowerCase())
-      );
+      // Do not filter out subjects. If a subject is added to the exam, it must be available for marks entry.
+      const examSubjects = rawExamSubjects;
       setSubjects(examSubjects);
 
       // 5. Get existing flat marks from marks API

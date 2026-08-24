@@ -92,15 +92,22 @@ export const bulkCreate = async (req: AuthRequest, res: Response, next: NextFunc
       
       if (fakeSubject) {
         const classId = studentClassMap.get(m.studentId);
-        const matchingRealSubject = realSubjects.find(
+        let matchingRealSubject = realSubjects.find(
           s => s.classId === classId && s.name.toLowerCase() === fakeSubject.name.toLowerCase()
         );
         if (matchingRealSubject) {
           realSubjectId = matchingRealSubject.id;
         } else {
-          // If the subject doesn't exist for this class globally, we skip saving it.
-          // This prevents DB pollution and FK constraint errors.
-          continue;
+          // Auto-create subject for this class since it's required for the exam!
+          matchingRealSubject = await prisma.subject.create({
+            data: {
+              name: fakeSubject.name.trim(),
+              code: fakeSubject.name.substring(0, 3).toUpperCase(),
+              classId: classId as string
+            }
+          });
+          realSubjects.push(matchingRealSubject);
+          realSubjectId = matchingRealSubject.id;
         }
       }
 
