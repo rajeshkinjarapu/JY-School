@@ -76,13 +76,15 @@ export const PrintablePaper: React.FC<PrintablePaperProps> = ({
 
   return (
     <div
-      className="a4-preview-paper bg-white text-black border border-slate-300 mx-auto relative shadow-2xl font-serif lining-nums tabular-nums leading-relaxed select-text"
+      className="a4-preview-paper bg-white text-black mx-auto relative font-serif lining-nums tabular-nums leading-relaxed select-text"
       style={{
         width: '210mm',
         minHeight: '297mm',
         padding: '15mm 18mm',
         fontSize: '13px',
         boxSizing: 'border-box',
+        border: '1px solid #cbd5e1',   /* shows on screen only, removed in print via pageStyle */
+        boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)',
       }}
     >
       {/* Watermark */}
