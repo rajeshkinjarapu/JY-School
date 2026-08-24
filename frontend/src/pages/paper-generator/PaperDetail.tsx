@@ -113,6 +113,7 @@ export const PaperDetail: React.FC = () => {
         padding: 0 !important; 
         background: white !important; 
         background-color: white !important; 
+        color-scheme: light !important;
       }
       .a4-preview-paper { 
         border: none !important; 
