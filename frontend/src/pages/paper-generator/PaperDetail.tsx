@@ -370,8 +370,8 @@ export const PaperDetail: React.FC = () => {
         </div>
 
         {/* Paper Sheet Preview Area (Right 3 Columns) */}
-        <div className="lg:col-span-3 overflow-x-auto p-4 bg-white border border-slate-200 rounded-3xl min-h-[600px] flex justify-center items-start shadow-sm">
-          <div ref={printAreaRef} className="print:block">
+        <div className="lg:col-span-3 overflow-x-auto p-4 bg-white border border-slate-200 rounded-3xl min-h-[600px] flex justify-center items-start shadow-sm print:bg-white print:border-none print:p-0 print:m-0">
+          <div ref={printAreaRef} className="print:block print:bg-white print:border-none print:p-0 print:m-0">
             <PrintablePaper
               paper={paper}
               showWatermark={showWatermark}

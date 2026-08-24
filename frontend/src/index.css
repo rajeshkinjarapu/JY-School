@@ -240,7 +240,7 @@
     margin: 0 !important; 
   }
   
-  html, body {
+  html, body, #root {
     background-color: #ffffff !important;
     background: #ffffff !important;
     color: #000000 !important;
