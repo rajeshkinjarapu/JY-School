@@ -255,7 +255,7 @@
   }
   
   /* డార్క్ మోడ్ ని force గా ఆఫ్ చేయండి */
-  :root {
+  :root, html, body, html.dark, body.dark {
     color-scheme: light !important;
     -webkit-color-scheme: light !important;
   }
