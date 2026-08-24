@@ -42,6 +42,26 @@ export const ResultsTab: React.FC<{ exams: any[] }> = ({ exams }) => {
     fetchResults();
   }, [selectedExamId, selectedClassId]);
 
+  // Derive master list of subjects for HTML and PDF tables
+  const desiredOrder = ['TELUGU', 'HINDI', 'ENG', 'MATH', 'SCIENCE', 'SOCIAL'];
+  const sortMarks = (marks: any[]) => {
+    return [...marks].sort((a, b) => {
+      const aSub = String(a.subject).toUpperCase();
+      const bSub = String(b.subject).toUpperCase();
+      let aIndex = desiredOrder.findIndex(sub => aSub.includes(sub));
+      let bIndex = desiredOrder.findIndex(sub => bSub.includes(sub));
+      if (aIndex === -1) aIndex = 999;
+      if (bIndex === -1) bIndex = 999;
+      return aIndex - bIndex;
+    });
+  };
+
+  const allSubjectsSet = new Set<string>();
+  results.forEach(student => {
+    student.marks?.forEach((m: any) => allSubjectsSet.add(m.subject));
+  });
+  const masterSubjects = sortMarks(Array.from(allSubjectsSet).map(subject => ({ subject, obtained: 0 })));
+
   const handlePrint = () => {
     const printContent = document.getElementById('results-print-area');
     if (!printContent) return;
@@ -140,22 +160,7 @@ export const ResultsTab: React.FC<{ exams: any[] }> = ({ exams }) => {
       doc.setTextColor(51, 65, 85); 
       doc.text(`Class: ${classNameStr}   |   Date: ${dateStr}   |   Total: ${results.length} Students`, pageWidth - 16, 24, { align: 'right' });
 
-      // Sort subjects in specific order
-      const desiredOrder = ['TELUGU', 'HINDI', 'ENG', 'MATH', 'SCIENCE', 'SOCIAL'];
-      const sortMarks = (marks: any[]) => {
-        return [...marks].sort((a, b) => {
-          const aSub = String(a.subject).toUpperCase();
-          const bSub = String(b.subject).toUpperCase();
-          let aIndex = desiredOrder.findIndex(sub => aSub.includes(sub));
-          let bIndex = desiredOrder.findIndex(sub => bSub.includes(sub));
-          if (aIndex === -1) aIndex = 999;
-          if (bIndex === -1) bIndex = 999;
-          return aIndex - bIndex;
-        });
-      };
-
-      // Table Headers
-      const subjectsList = sortMarks(results[0]?.marks || []);
+      const subjectsList = masterSubjects;
       const head = [[
         'Rank',
         'Student Name',
@@ -174,12 +179,14 @@ export const ResultsTab: React.FC<{ exams: any[] }> = ({ exams }) => {
       ]];
 
       const body = results.map((student) => {
-        const sortedMarks = sortMarks(student.marks || []);
         return [
           student.rank,
           student.name,
           student.rollNo || '-',
-          ...sortedMarks.map((m: any) => m.obtained),
+          ...masterSubjects.map((ms: any) => {
+            const found = student.marks?.find((m: any) => m.subject === ms.subject);
+            return found ? found.obtained : '-';
+          }),
           student.total,
           `${student.percentage}%`
         ];
@@ -380,8 +387,8 @@ export const ResultsTab: React.FC<{ exams: any[] }> = ({ exams }) => {
                     <th className="p-4 font-black text-indigo-900 text-xs uppercase tracking-wider rounded-tl-xl w-16 text-center">Rank</th>
                     <th className="p-4 font-black text-indigo-900 text-xs uppercase tracking-wider whitespace-nowrap">Student Name</th>
                     <th className="hidden md:table-cell p-4 font-black text-indigo-900 text-xs uppercase tracking-wider w-28">Roll No</th>
-                    {results[0]?.marks.map((m: any, i: number) => (
-                      <th key={i} className="hidden md:table-cell p-4 font-black text-indigo-900 text-xs uppercase tracking-wider text-center">{m.subject}</th>
+                    {masterSubjects.map((ms: any, i: number) => (
+                      <th key={i} className="hidden md:table-cell p-4 font-black text-indigo-900 text-xs uppercase tracking-wider text-center">{ms.subject}</th>
                     ))}
                     <th className="p-4 font-black text-indigo-900 text-xs uppercase tracking-wider text-center w-20">Total</th>
                     <th className="hidden md:table-cell p-4 font-black text-indigo-900 text-xs uppercase tracking-wider text-center w-24">Percentage</th>
@@ -418,11 +425,14 @@ export const ResultsTab: React.FC<{ exams: any[] }> = ({ exams }) => {
                         <td className="hidden md:table-cell p-4">
                           <p className="text-xs text-gray-500 font-semibold print-roll-no">{student.rollNo || '-'}</p>
                         </td>
-                        {student.marks.map((m: any, i: number) => (
-                          <td key={i} className="hidden md:table-cell p-4 text-center">
-                            <span className="font-bold text-gray-700">{m.obtained}</span>
-                          </td>
-                        ))}
+                        {masterSubjects.map((ms: any, i: number) => {
+                          const found = student.marks?.find((m: any) => m.subject === ms.subject);
+                          return (
+                            <td key={i} className="hidden md:table-cell p-4 text-center">
+                              <span className="font-bold text-gray-700">{found ? found.obtained : '-'}</span>
+                            </td>
+                          );
+                        })}
                         <td className="p-4 text-center font-black text-indigo-600">
                           {student.total}
                         </td>
@@ -459,12 +469,15 @@ export const ResultsTab: React.FC<{ exams: any[] }> = ({ exams }) => {
                               <div className="pt-2 border-t border-gray-200/60">
                                 <p className="text-xs font-bold text-indigo-500 uppercase mb-2">Subject Marks</p>
                                 <div className="grid grid-cols-2 gap-2">
-                                  {student.marks.map((m: any, i: number) => (
-                                    <div key={i} className="flex justify-between items-center bg-white/80 backdrop-blur-sm p-2 rounded-lg border border-white shadow-sm">
-                                      <span className="text-xs font-semibold text-gray-500 truncate mr-2">{m.subject}</span>
-                                      <span className="text-sm font-bold text-indigo-700">{m.obtained}</span>
-                                    </div>
-                                  ))}
+                                  {masterSubjects.map((ms: any, i: number) => {
+                                    const found = student.marks?.find((m: any) => m.subject === ms.subject);
+                                    return (
+                                      <div key={i} className="flex justify-between items-center bg-white/80 backdrop-blur-sm p-2 rounded-lg border border-white shadow-sm">
+                                        <span className="text-xs font-semibold text-gray-500 truncate mr-2">{ms.subject}</span>
+                                        <span className="text-sm font-bold text-indigo-700">{found ? found.obtained : '-'}</span>
+                                      </div>
+                                    );
+                                  })}
                                 </div>
                               </div>
                             </div>
