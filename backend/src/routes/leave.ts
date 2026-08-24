@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { applyLeave, getMyLeaves, getAllLeaves, approveRejectLeave } from '../controllers/leave.controller';
-import { authenticate } from '../middleware/auth';
+import { authenticate } from '../middlewares/auth';
 
 const router = Router();
 

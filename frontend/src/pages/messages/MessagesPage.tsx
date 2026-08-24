@@ -27,7 +27,7 @@ export const MessagesPage: React.FC = () => {
     if (typeof window !== 'undefined') {
       const host = window.location.hostname;
       if (host.includes('vercel.app')) {
-        return 'https://overcast-spoken-stuck.ngrok-free.dev';
+        return 'https://oxidize-entangled-spendable.ngrok-free.dev';
       }
       if (host === 'localhost' || host === '127.0.0.1') {
         return 'http://localhost:5000';

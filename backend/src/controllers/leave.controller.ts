@@ -1,11 +1,8 @@
-import { Request, Response } from 'express';
-import { prisma } from '../index'; // or wherever prisma is exported from
-// Adjusting import based on common patterns in this codebase.
-import { PrismaClient } from '@prisma/client';
+import { Response } from 'express';
+import { AuthRequest } from '../middlewares/auth';
+import { prisma } from '../utils/prisma';
 
-const prismaClient = new PrismaClient();
-
-export const applyLeave = async (req: Request, res: Response) => {
+export const applyLeave = async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user?.id;
     if (!userId) {
@@ -20,7 +17,7 @@ export const applyLeave = async (req: Request, res: Response) => {
 
     // Optional: check leave balance here before creating
 
-    const leaveRequest = await prismaClient.leaveRequest.create({
+    const leaveRequest = await prisma.leaveRequest.create({
       data: {
         userId,
         type,
@@ -39,25 +36,25 @@ export const applyLeave = async (req: Request, res: Response) => {
   }
 };
 
-export const getMyLeaves = async (req: Request, res: Response) => {
+export const getMyLeaves = async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user?.id;
     if (!userId) {
       return res.status(401).json({ success: false, message: 'Unauthorized' });
     }
 
-    const leaves = await prismaClient.leaveRequest.findMany({
+    const leaves = await prisma.leaveRequest.findMany({
       where: { userId },
       orderBy: { createdAt: 'desc' },
     });
 
-    let balance = await prismaClient.leaveBalance.findUnique({
+    let balance = await prisma.leaveBalance.findUnique({
       where: { userId },
     });
 
     if (!balance) {
       // Auto-create balance if it doesn't exist
-      balance = await prismaClient.leaveBalance.create({
+      balance = await prisma.leaveBalance.create({
         data: { userId },
       });
     }
@@ -69,7 +66,7 @@ export const getMyLeaves = async (req: Request, res: Response) => {
   }
 };
 
-export const getAllLeaves = async (req: Request, res: Response) => {
+export const getAllLeaves = async (req: AuthRequest, res: Response) => {
   try {
     const status = req.query.status as string;
     
@@ -78,7 +75,7 @@ export const getAllLeaves = async (req: Request, res: Response) => {
       whereClause.status = status;
     }
 
-    const leaves = await prismaClient.leaveRequest.findMany({
+    const leaves = await prisma.leaveRequest.findMany({
       where: whereClause,
       include: {
         requester: {
@@ -95,7 +92,7 @@ export const getAllLeaves = async (req: Request, res: Response) => {
   }
 };
 
-export const approveRejectLeave = async (req: Request, res: Response) => {
+export const approveRejectLeave = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
     const { status, rejectionReason } = req.body; // 'APPROVED' or 'REJECTED'
@@ -109,12 +106,12 @@ export const approveRejectLeave = async (req: Request, res: Response) => {
       return res.status(400).json({ success: false, message: 'Invalid status' });
     }
 
-    const leave = await prismaClient.leaveRequest.findUnique({ where: { id } });
+    const leave = await prisma.leaveRequest.findUnique({ where: { id } });
     if (!leave) {
       return res.status(404).json({ success: false, message: 'Leave request not found' });
     }
 
-    const updatedLeave = await prismaClient.leaveRequest.update({
+    const updatedLeave = await prisma.leaveRequest.update({
       where: { id },
       data: {
         status,
@@ -129,23 +126,23 @@ export const approveRejectLeave = async (req: Request, res: Response) => {
         ? Math.ceil((new Date(leave.endDate).getTime() - new Date(leave.startDate).getTime()) / (1000 * 3600 * 24)) + 1
         : 1;
 
-      let balance = await prismaClient.leaveBalance.findUnique({ where: { userId: leave.userId } });
+      let balance = await prisma.leaveBalance.findUnique({ where: { userId: leave.userId } });
       if (!balance) {
-        balance = await prismaClient.leaveBalance.create({ data: { userId: leave.userId } });
+        balance = await prisma.leaveBalance.create({ data: { userId: leave.userId } });
       }
 
       if (leave.type === 'CASUAL') {
-        await prismaClient.leaveBalance.update({
+        await prisma.leaveBalance.update({
           where: { userId: leave.userId },
           data: { casualUsed: balance.casualUsed + days },
         });
       } else if (leave.type === 'SICK') {
-        await prismaClient.leaveBalance.update({
+        await prisma.leaveBalance.update({
           where: { userId: leave.userId },
           data: { sickUsed: balance.sickUsed + days },
         });
       } else if (leave.type === 'EARNED') {
-        await prismaClient.leaveBalance.update({
+        await prisma.leaveBalance.update({
           where: { userId: leave.userId },
           data: { earnedUsed: balance.earnedUsed + days },
         });
