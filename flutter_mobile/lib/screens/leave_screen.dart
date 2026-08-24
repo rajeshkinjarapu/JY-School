@@ -70,7 +70,7 @@ class _LeaveScreenState extends State<LeaveScreen> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (ctx) => const _ApplyLeaveForm(),
+      builder: (ctx) => _ApplyLeaveForm(user: _currentUser),
     ).then((value) {
       if (value == true) {
         _fetchData();
@@ -539,7 +539,8 @@ class _LeaveListTabState extends State<_LeaveListTab> with SingleTickerProviderS
 }
 
 class _ApplyLeaveForm extends StatefulWidget {
-  const _ApplyLeaveForm();
+  final Map<String, dynamic>? user;
+  const _ApplyLeaveForm({super.key, this.user});
 
   @override
   State<_ApplyLeaveForm> createState() => _ApplyLeaveFormState();
@@ -552,6 +553,40 @@ class _ApplyLeaveFormState extends State<_ApplyLeaveForm> {
   String _selectedType = 'SICK';
   final List<String> _leaveTypes = ['SICK', 'CASUAL', 'EARNED'];
   bool _isSubmitting = false;
+
+  bool _isAdmin = false;
+  List<dynamic> _usersList = [];
+  String? _selectedUserId;
+  bool _isLoadingUsers = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _isAdmin = widget.user != null && 
+               (widget.user!['role'] == 'ADMIN' || widget.user!['role'] == 'SUPER_ADMIN');
+    if (_isAdmin) {
+      _fetchUsers();
+    }
+  }
+
+  Future<void> _fetchUsers() async {
+    setState(() => _isLoadingUsers = true);
+    final res = await ApiService.getUsers(limit: 1000); // Fetch all
+    if (mounted) {
+      setState(() {
+        _isLoadingUsers = false;
+        if (res['success'] && res['data'] != null) {
+          final items = res['data']['users'] ?? res['data'];
+          if (items is List) {
+            _usersList = items.where((u) => u['role'] == 'STUDENT' || u['role'] == 'TEACHER').toList();
+            if (_usersList.isNotEmpty) {
+              _selectedUserId = _usersList.first['id'];
+            }
+          }
+        }
+      });
+    }
+  }
 
   Future<void> _selectDateRange() async {
     final range = await showDateRangePicker(
@@ -579,6 +614,10 @@ class _ApplyLeaveFormState extends State<_ApplyLeaveForm> {
   }
 
   Future<void> _submit() async {
+    if (_isAdmin && _selectedUserId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please select an applicant')));
+      return;
+    }
     if (_startDate == null || _endDate == null) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please select a date range')));
       return;
@@ -591,6 +630,7 @@ class _ApplyLeaveFormState extends State<_ApplyLeaveForm> {
     setState(() => _isSubmitting = true);
 
     final res = await ApiService.applyLeave(
+      userId: _isAdmin ? _selectedUserId : null,
       type: _selectedType,
       startDate: _startDate!.toIso8601String(),
       endDate: _endDate!.toIso8601String(),
@@ -635,6 +675,29 @@ class _ApplyLeaveFormState extends State<_ApplyLeaveForm> {
             const SizedBox(height: 24),
             Text('Request Leave', style: GoogleFonts.outfit(color: const Color(0xFF1E293B), fontSize: 24, fontWeight: FontWeight.bold)),
             const SizedBox(height: 24),
+            if (_isAdmin) ...[
+              if (_isLoadingUsers)
+                const Center(child: CircularProgressIndicator())
+              else
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                  decoration: BoxDecoration(color: const Color(0xFFF8FAFC), borderRadius: BorderRadius.circular(16), border: Border.all(color: const Color(0xFFE2E8F0))),
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButton<String>(
+                      isExpanded: true,
+                      hint: Text('Select Applicant', style: GoogleFonts.poppins(fontSize: 14, color: const Color(0xFF94A3B8))),
+                      value: _selectedUserId,
+                      icon: const Icon(Icons.keyboard_arrow_down_rounded, color: Color(0xFF64748B)),
+                      onChanged: (val) { if (val != null) setState(() => _selectedUserId = val); },
+                      items: _usersList.map((user) => DropdownMenuItem<String>(
+                        value: user['id'],
+                        child: Text('${user['name']} (${user['role']})', style: GoogleFonts.poppins(fontSize: 14, color: const Color(0xFF1E293B))),
+                      )).toList(),
+                    ),
+                  ),
+                ),
+              const SizedBox(height: 16),
+            ],
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
               decoration: BoxDecoration(color: const Color(0xFFF8FAFC), borderRadius: BorderRadius.circular(16), border: Border.all(color: const Color(0xFFE2E8F0))),

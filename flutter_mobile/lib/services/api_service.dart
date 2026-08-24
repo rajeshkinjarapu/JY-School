@@ -471,6 +471,7 @@ class ApiService {
   }
 
   static Future<Map<String, dynamic>> applyLeave({
+    String? userId,
     required String type,
     required String startDate,
     required String endDate,
@@ -484,6 +485,7 @@ class ApiService {
         Uri.parse('$baseUrl/api/leave'),
         headers: _getHeaders(token: token),
         body: jsonEncode({
+          if (userId != null) 'userId': userId,
           'type': type,
           'startDate': startDate,
           'endDate': endDate,

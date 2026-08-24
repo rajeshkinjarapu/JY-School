@@ -4,22 +4,33 @@ import { prisma } from '../utils/prisma';
 
 export const applyLeave = async (req: AuthRequest, res: Response) => {
   try {
-    const userId = req.user?.id;
-    if (!userId) {
+    const currentUserId = req.user?.id;
+    if (!currentUserId) {
       return res.status(401).json({ success: false, message: 'Unauthorized' });
     }
 
-    const { type, startDate, endDate, reason, documentUrl } = req.body;
+    const { type, startDate, endDate, reason, documentUrl, userId: targetUserId } = req.body;
 
     if (!type || !startDate || !reason) {
       return res.status(400).json({ success: false, message: 'Missing required fields' });
+    }
+
+    let finalUserId = currentUserId;
+
+    // If a specific userId is provided in the body, verify if the current user has admin rights
+    if (targetUserId && targetUserId !== currentUserId) {
+      if (req.user?.role === 'SUPER_ADMIN' || req.user?.role === 'ADMIN') {
+        finalUserId = targetUserId;
+      } else {
+        return res.status(403).json({ success: false, message: 'Only admins can apply on behalf of other users' });
+      }
     }
 
     // Optional: check leave balance here before creating
 
     const leaveRequest = await prisma.leaveRequest.create({
       data: {
-        userId,
+        userId: finalUserId,
         type,
         startDate: new Date(startDate),
         endDate: endDate ? new Date(endDate) : null,
