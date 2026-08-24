@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useReactToPrint } from 'react-to-print';
 import { useParams, Link, useOutletContext } from 'react-router-dom';
 import { qbApi as api } from '../../utils/questionBankApi';
 import { PrintablePaper } from '../../components/QuestionBank/PrintablePaper';
@@ -101,10 +102,15 @@ export const PaperDetail: React.FC = () => {
     setActiveSet(setCode);
   };
 
-  // Triggers browser print dialog
-  const handleClientPrint = () => {
-    window.print();
-  };
+  // Triggers browser print dialog using react-to-print for 100% fidelity
+  const handleClientPrint = useReactToPrint({
+    content: () => printAreaRef.current,
+    documentTitle: paper?.title || 'Exam Paper',
+    pageStyle: `
+      @page { size: A4; margin: 0; }
+      body { margin: 0; background: white; }
+    `,
+  });
 
   // Calls the Puppeteer backend to render PDF
   const handleServerPdfExport = async () => {
@@ -368,17 +374,6 @@ export const PaperDetail: React.FC = () => {
         </div>
       </div>
 
-      {/* Print only CSS wrapper block */}
-      <div className="hidden print:block">
-        <PrintablePaper
-          paper={paper}
-          showWatermark={showWatermark}
-          showOmr={showOmr}
-          showAnswerKey={showAnswerKey}
-          showSolutions={showSolutions}
-          isDoubleColumn={isDoubleColumn}
-          optionLabelType={optionLabelType}
-        />
       </div>
     </div>
   );
