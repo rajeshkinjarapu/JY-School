@@ -155,45 +155,132 @@ class _ExamStatusScreenState extends State<ExamStatusScreen> {
         final isExplicitlyFrozen = frozenClasses.contains(classId);
 
         Widget statusBadge;
-        if (isPublished) {
-          statusBadge = _buildStatusBadge('PUBLISHED', Icons.public_rounded, const Color(0xFF10B981), const Color(0xFF10B981).withOpacity(0.1));
-        } else if (isExplicitlyFrozen) {
+        if (isExplicitlyFrozen) {
           statusBadge = _buildStatusBadge('LOCKED', Icons.lock_rounded, const Color(0xFF8B5CF6), const Color(0xFF8B5CF6).withOpacity(0.1));
+        } else if (isPublished && hasMarks) {
+          statusBadge = _buildStatusBadge('PUBLISHED', Icons.public_rounded, const Color(0xFF10B981), const Color(0xFF10B981).withOpacity(0.1));
         } else if (hasMarks) {
           statusBadge = _buildStatusBadge('DRAFT', Icons.edit_note_rounded, const Color(0xFF3B82F6), const Color(0xFF3B82F6).withOpacity(0.1));
         } else {
-          statusBadge = _buildStatusBadge('MISSING', Icons.error_outline_rounded, const Color(0xFFEF4444), const Color(0xFFEF4444).withOpacity(0.1));
+          statusBadge = _buildStatusBadge('PENDING', Icons.error_outline_rounded, const Color(0xFFEF4444), const Color(0xFFEF4444).withOpacity(0.1));
         }
+
+        final stats = cls['subjectStats'] ?? {};
+        final totalSubjects = (stats['totalSubjects'] as List?) ?? [];
+        final enteredSubjects = (stats['enteredSubjects'] as List?) ?? [];
+        final pendingSubjects = (stats['pendingSubjects'] as List?) ?? [];
+        final double progress = (stats['progress'] as num?)?.toDouble() ?? 0.0;
 
         return Container(
           margin: const EdgeInsets.only(bottom: 12),
-          padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(color: const Color(0xFFF1F5F9)),
             boxShadow: [BoxShadow(color: const Color(0xFF6366F1).withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4))],
           ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
+          child: Theme(
+            data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+            child: ExpansionTile(
+              tilePadding: const EdgeInsets.all(16),
+              childrenPadding: const EdgeInsets.only(left: 16, right: 16, bottom: 16),
+              title: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(color: const Color(0xFFF8FAFC), borderRadius: BorderRadius.circular(10)),
-                    child: const Icon(Icons.class_rounded, color: Color(0xFF6366F1), size: 20),
+                  Expanded(
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(color: const Color(0xFFF8FAFC), borderRadius: BorderRadius.circular(10)),
+                          child: const Icon(Icons.class_rounded, color: Color(0xFF6366F1), size: 20),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(className, style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold, color: const Color(0xFF1E293B))),
+                              const SizedBox(height: 6),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(4),
+                                      child: LinearProgressIndicator(
+                                        value: totalSubjects.isEmpty ? 0 : progress / 100,
+                                        minHeight: 6,
+                                        backgroundColor: const Color(0xFFF1F5F9),
+                                        valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF6366F1)),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    '${enteredSubjects.length}/${totalSubjects.length}',
+                                    style: GoogleFonts.poppins(fontSize: 10, fontWeight: FontWeight.bold, color: const Color(0xFF64748B)),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                  const SizedBox(width: 16),
-                  Text(className, style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold, color: const Color(0xFF1E293B))),
+                  const SizedBox(width: 12),
+                  statusBadge,
                 ],
               ),
-              statusBadge,
-            ],
+              children: [
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF8FAFC),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: const Color(0xFFE2E8F0)),
+                  ),
+                  child: totalSubjects.isEmpty
+                      ? Text('No subjects mapped to this class.', style: GoogleFonts.poppins(fontSize: 12, fontStyle: FontStyle.italic, color: const Color(0xFF94A3B8)))
+                      : Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: [
+                            ...enteredSubjects.map((sub) => _buildSubjectChip(sub['name'], true)),
+                            ...pendingSubjects.map((sub) => _buildSubjectChip(sub['name'], false)),
+                          ],
+                        ),
+                )
+              ],
+            ),
           ),
         );
       },
+    );
+  }
+
+  Widget _buildSubjectChip(String name, bool isEntered) {
+    final color = isEntered ? const Color(0xFF10B981) : const Color(0xFFF59E0B);
+    final bgColor = isEntered ? const Color(0xFF10B981).withOpacity(0.1) : const Color(0xFFF59E0B).withOpacity(0.1);
+    final icon = isEntered ? Icons.check_circle_rounded : Icons.pending_rounded;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withOpacity(0.2)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 12, color: color),
+          const SizedBox(width: 4),
+          Text(name, style: GoogleFonts.poppins(fontSize: 11, fontWeight: FontWeight.w600, color: color)),
+        ],
+      ),
     );
   }
 

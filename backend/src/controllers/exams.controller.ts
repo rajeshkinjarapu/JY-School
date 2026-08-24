@@ -412,26 +412,60 @@ export const getAllStatus = async (req: AuthRequest, res: Response, next: NextFu
       orderBy: { examDate: 'desc' },
     });
 
+    const allSubjects = await prisma.subject.findMany({ select: { id: true, name: true, classId: true } });
+    const classSubjectsMap: Record<string, { id: string, name: string }[]> = {};
+    for (const sub of allSubjects) {
+      if (!classSubjectsMap[sub.classId]) classSubjectsMap[sub.classId] = [];
+      classSubjectsMap[sub.classId].push({ id: sub.id, name: sub.name });
+    }
+
     const marksGrouped = await prisma.mark.groupBy({
-      by: ['examId', 'studentId'],
+      by: ['examId', 'studentId', 'subjectId'],
     });
 
     const students = await prisma.student.findMany({ select: { id: true, classId: true } });
     const studentClassMap = new Map(students.map(s => [s.id, s.classId]));
 
-    const examClassMarksMap: Record<string, Set<string>> = {};
+    const examClassEnteredSubjects: Record<string, Record<string, Set<string>>> = {};
     for (const m of marksGrouped) {
        const classId = studentClassMap.get(m.studentId);
        if (classId) {
-         if (!examClassMarksMap[m.examId]) examClassMarksMap[m.examId] = new Set();
-         examClassMarksMap[m.examId].add(classId);
+         if (!examClassEnteredSubjects[m.examId]) examClassEnteredSubjects[m.examId] = {};
+         if (!examClassEnteredSubjects[m.examId][classId]) examClassEnteredSubjects[m.examId][classId] = new Set();
+         examClassEnteredSubjects[m.examId][classId].add(m.subjectId);
        }
     }
 
-    const result = exams.map(exam => ({
-       ...exam,
-       classesWithMarks: Array.from(examClassMarksMap[exam.id] || [])
-    }));
+    const result = exams.map(exam => {
+       const enhancedClasses = (exam.classes || []).map((cls) => {
+         const classSubjects = classSubjectsMap[cls.id] || [];
+         const enteredSubjectIds = examClassEnteredSubjects[exam.id]?.[cls.id] || new Set<string>();
+         
+         const enteredSubjects = classSubjects.filter(s => enteredSubjectIds.has(s.id));
+         const pendingSubjects = classSubjects.filter(s => !enteredSubjectIds.has(s.id));
+         
+         const totalSubjects = classSubjects.length;
+         const enteredCount = enteredSubjects.length;
+         const progress = totalSubjects > 0 ? (enteredCount / totalSubjects) * 100 : (enteredCount > 0 ? 100 : 0);
+         const hasMarks = enteredCount > 0;
+
+         return {
+           ...cls,
+           subjectStats: {
+             totalSubjects: classSubjects,
+             enteredSubjects,
+             pendingSubjects,
+             progress,
+           }
+         };
+       });
+
+       return {
+         ...exam,
+         classes: enhancedClasses,
+         classesWithMarks: enhancedClasses.filter((c) => c.subjectStats.enteredSubjects.length > 0).map((c) => c.id)
+       };
+    });
 
     successResponse(res, result, 'Exam status fetched');
   } catch (error) {
