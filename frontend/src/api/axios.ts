@@ -26,7 +26,6 @@ export const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
     'ngrok-skip-browser-warning': '69420',
-    'Bypass-Tunnel-Reminder': 'true',
   },
 });
 
