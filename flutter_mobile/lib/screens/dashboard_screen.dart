@@ -8,6 +8,7 @@ import 'login_screen.dart';
 import 'attendance_screen.dart';
 import 'fees_screen.dart';
 import 'finance_screen.dart';
+import 'transactions_screen.dart';
 import 'exams_screen.dart';
 import 'timetable_screen.dart';
 import 'teacher_attendance_screen.dart';
@@ -723,7 +724,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       childAspectRatio: dynamicAspectRatio, // Dynamically fitted
       children: [
         _buildPremiumCard(
-          subtitle: 'STUDENT MANAGEMENT',
+          subtitle: 'TOTAL STUDENTS',
           title: '$_adminTotalStudents',
           bottomText: 'Admission & Records',
           icon: Icons.groups_rounded,
@@ -733,7 +734,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const StudentsScreen())),
         ),
         _buildPremiumCard(
-          subtitle: 'TEACHER MANAGEMENT',
+          subtitle: 'TOTAL TEACHERS',
           title: '$_adminTotalTeachers',
           bottomText: 'Staff & Activities',
           icon: Icons.school_rounded,
@@ -743,7 +744,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TeachersScreen())),
         ),
         _buildPremiumCard(
-          subtitle: 'CLASSES MANAGEMENT',
+          subtitle: 'TOTAL CLASSES',
           title: '$_adminTotalClasses',
           bottomText: 'Syllabus & Timetable',
           icon: Icons.account_balance_rounded,
@@ -753,14 +754,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
           onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ClassesScreen())),
         ),
         _buildPremiumCard(
-          subtitle: 'REVENUE TRACKING',
+          subtitle: 'TOTAL REVENUE',
           title: '₹${_formatIndianCurrency(_adminFeeCollected)}',
           bottomText: 'Total Income',
           icon: Icons.account_balance_wallet_rounded,
           gradientColors: [const Color(0xFFE91E63), const Color(0xFF880E4F)],
           accentColor: const Color(0xFFF06292),
           imagePath: 'assets/images/admin_icons/revenue.jpg',
-          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const FinanceScreen())),
+          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TransactionsScreen())),
         ),
         _buildPremiumCard(
           subtitle: 'FEE COLLECTION',
@@ -773,7 +774,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const StudentFeeSearchScreen())),
         ),
         _buildPremiumCard(
-          subtitle: 'EXAMINATIONS',
+          subtitle: 'EXAM RESULTS',
           title: 'Exams',
           bottomText: 'Marks & Results',
           icon: Icons.fact_check_rounded,
