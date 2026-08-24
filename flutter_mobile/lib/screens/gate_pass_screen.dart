@@ -1,8 +1,13 @@
 import 'dart:convert';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
+import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
 import '../services/api_service.dart';
 import '../widgets/app_drawer.dart';
 
@@ -650,15 +655,15 @@ class _LiveListTabState extends State<_LiveListTab> {
       itemBuilder: (context, index) {
         final pass = filtered[index];
         final name = isStudentTab
-            ? (pass['student']?['user']?['name'] ?? 'Unknown')
-            : (pass['requester']?['name'] ?? 'Unknown');
+            ? ((pass['student'] as Map?)?['user']?['name'] ?? 'Unknown')
+            : ((pass['requester'] as Map?)?['name'] ?? 'Unknown');
         final dept = isStudentTab
-            ? 'Class ${pass['student']?['class']?['name'] ?? ''} ${pass['student']?['class']?['section'] ?? ''}'
+            ? 'Class ${(pass['student'] as Map?)?['class']?['name'] ?? ''} ${(pass['student'] as Map?)?['class']?['section'] ?? ''}'
             : 'Staff';
         final photoUrl = isStudentTab 
-            ? pass['student']?['user']?['photoUrl'] 
-            : pass['requester']?['photoUrl'];
-        final approvedBy = pass['approvedBy']?['name'] ?? 'Pending';
+            ? (pass['student'] as Map?)?['user']?['photoUrl'] 
+            : (pass['requester'] as Map?)?['photoUrl'];
+        final approvedBy = (pass['approvedBy'] as Map?)?['name'] ?? 'Pending';
 
         final exitTimeStr = pass['actualExitTime'] ?? pass['exitTime'];
         final exitTime = exitTimeStr != null
@@ -901,12 +906,12 @@ class _ApprovalsTabState extends State<_ApprovalsTab> {
       itemBuilder: (context, index) {
         final pass = filtered[index];
         final name = isStudentTab
-            ? (pass['student']?['user']?['name'] ?? 'Unknown')
-            : (pass['requester']?['name'] ?? 'Unknown');
-        final dept = isStudentTab ? 'Class ${pass['student']?['class']?['name'] ?? ''}' : 'Staff';
+            ? ((pass['student'] as Map?)?['user']?['name'] ?? 'Unknown')
+            : ((pass['requester'] as Map?)?['name'] ?? 'Unknown');
+        final dept = isStudentTab ? 'Class ${(pass['student'] as Map?)?['class']?['name'] ?? ''}' : 'Staff';
         final photoUrl = isStudentTab 
-            ? pass['student']?['user']?['photoUrl'] 
-            : pass['requester']?['photoUrl'];
+            ? (pass['student'] as Map?)?['user']?['photoUrl'] 
+            : (pass['requester'] as Map?)?['photoUrl'];
 
         return Container(
           margin: const EdgeInsets.only(bottom: 14),
@@ -1134,11 +1139,11 @@ class _HistorySearchTabState extends State<_HistorySearchTab> {
       itemBuilder: (context, index) {
         final pass = filtered[index];
         final name = isStudentTab
-            ? (pass['student']?['user']?['name'] ?? 'Unknown')
-            : (pass['requester']?['name'] ?? 'Unknown');
+            ? ((pass['student'] as Map?)?['user']?['name'] ?? 'Unknown')
+            : ((pass['requester'] as Map?)?['name'] ?? 'Unknown');
         final photoUrl = isStudentTab 
-            ? pass['student']?['user']?['photoUrl'] 
-            : pass['requester']?['photoUrl'];
+            ? (pass['student'] as Map?)?['user']?['photoUrl'] 
+            : (pass['requester'] as Map?)?['photoUrl'];
         final status = pass['status'] ?? 'UNKNOWN';
         final color = statusColor[status] ?? Colors.grey;
         final date = pass['createdAt'] != null
@@ -1346,7 +1351,7 @@ class _QRScannerTabState extends State<_QRScannerTab> {
           context: context,
           builder: (ctx) => AlertDialog(
             title: const Text('Gate Pass Scanned'),
-            content: Text('Pass for ${pass['requestType'] == 'STUDENT' ? pass['student']?['user']?['name'] : pass['requester']?['name']}\nCurrent Status: $status\n\nDo you want to $actionText?'),
+            content: Text("Pass for ${pass['requestType'] == 'STUDENT' ? (pass['student'] as Map?)?['user']?['name'] : (pass['requester'] as Map?)?['name']}\nCurrent Status: $status\n\nDo you want to $actionText?"),
             actions: [
               TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
               ElevatedButton(
@@ -1469,4 +1474,87 @@ class _QRScannerTabState extends State<_QRScannerTab> {
       ),
     );
   }
+}
+
+Future<void> printGatePass(BuildContext context, dynamic pass) async {
+  try {
+    final pdfBytes = await _buildPdfPass(pass);
+    await Printing.layoutPdf(
+      onLayout: (PdfPageFormat format) async => pdfBytes,
+      name: 'GatePass_${pass['slipNumber'] ?? 'Unknown'}.pdf',
+    );
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Failed to print: $e')),
+    );
+  }
+}
+
+Future<Uint8List> _buildPdfPass(dynamic pass) async {
+  final pdf = pw.Document();
+  final isStudent = pass['requestType'] == 'STUDENT';
+  final name = isStudent ? ((pass['student'] as Map?)?['user']?['name'] ?? 'Unknown') : ((pass['requester'] as Map?)?['name'] ?? 'Unknown');
+  final slipNumber = pass['slipNumber'] ?? 'N/A';
+  final destination = pass['destination'] ?? 'N/A';
+  final reason = pass['reason'] ?? 'N/A';
+  final status = pass['status'] ?? 'UNKNOWN';
+
+  pdf.addPage(
+    pw.Page(
+      pageFormat: PdfPageFormat.a4,
+      build: (pw.Context context) {
+        return pw.Center(
+          child: pw.Container(
+            padding: const pw.EdgeInsets.all(20),
+            decoration: pw.BoxDecoration(
+              border: pw.Border.all(width: 2, color: PdfColors.black),
+              borderRadius: const pw.BorderRadius.all(pw.Radius.circular(10)),
+            ),
+            child: pw.Column(
+              mainAxisSize: pw.MainAxisSize.min,
+              crossAxisAlignment: pw.CrossAxisAlignment.start,
+              children: [
+                pw.Center(
+                  child: pw.Text('JY SCHOOL - GATE PASS',
+                      style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold)),
+                ),
+                pw.Divider(thickness: 2),
+                pw.SizedBox(height: 20),
+                pw.Text('Slip Number: $slipNumber', style: const pw.TextStyle(fontSize: 16)),
+                pw.SizedBox(height: 10),
+                pw.Text('Name: $name', style: const pw.TextStyle(fontSize: 16)),
+                pw.SizedBox(height: 10),
+                pw.Text('Type: ${isStudent ? 'Student' : 'Staff'}', style: const pw.TextStyle(fontSize: 16)),
+                pw.SizedBox(height: 10),
+                pw.Text('Destination: $destination', style: const pw.TextStyle(fontSize: 16)),
+                pw.SizedBox(height: 10),
+                pw.Text('Reason: $reason', style: const pw.TextStyle(fontSize: 16)),
+                pw.SizedBox(height: 10),
+                pw.Text('Status: $status',
+                    style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold)),
+                pw.SizedBox(height: 30),
+                pw.Row(
+                  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                  children: [
+                    pw.Text('Issuer Signature: ________________'),
+                    pw.Text('Security Signature: ________________'),
+                  ],
+                ),
+                pw.SizedBox(height: 20),
+                pw.Center(
+                  child: pw.BarcodeWidget(
+                    data: slipNumber,
+                    barcode: pw.Barcode.qrCode(),
+                    width: 80,
+                    height: 80,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    ),
+  );
+  return pdf.save();
 }

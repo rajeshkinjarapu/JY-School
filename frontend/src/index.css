@@ -245,11 +245,13 @@
     box-shadow: none !important;
   }
   
-  #a4-preview-paper {
-    border: none !important;
+  .a4-preview-paper {
+    border: 0 !important;
     outline: none !important;
     box-shadow: none !important;
-    margin: 0 !important;
+    margin: 0 auto !important;
+    max-width: 21cm !important;
+    width: 100% !important;
   }
   
   ::-webkit-scrollbar {
