@@ -3,12 +3,15 @@ import { useParams, Link, useOutletContext } from 'react-router-dom';
 import api from '../../api/axios';
 import { LoadingSpinner } from '../../components/UI/LoadingSpinner';
 import { PageHeader } from '../../components/UI/PageHeader';
-import { ArrowLeft, BookOpen, GraduationCap, School, Camera, Printer, Phone, Mail, MapPin } from 'lucide-react';
+import { ArrowLeft, BookOpen, GraduationCap, School, Camera, Printer, Phone, Mail, MapPin, Edit } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getPhotoUrl } from '../../utils/photo';
 import { compressImage } from '../../utils/imageCompressor';
+import { useAuth } from '../../hooks/useAuth';
 
 export const TeacherProfilePage: React.FC = () => {
+  const { user } = useAuth();
+  const isAdminOrSuper = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN';
   const { id } = useParams();
   const outletContext = useOutletContext<any>();
   const setDynamicTitle = outletContext?.setDynamicTitle;
@@ -76,9 +79,16 @@ export const TeacherProfilePage: React.FC = () => {
         title="Teacher Profile"
         icon={<Link to="/teachers"><ArrowLeft className="w-6 h-6 text-gray-400 hover:text-indigo-600 cursor-pointer" /></Link>}
         action={
-          <button onClick={() => window.print()} className="hidden md:inline-flex items-center justify-center btn-primary w-full sm:w-auto">
-            <Printer className="w-4 h-4 mr-2" /> Print Profile
-          </button>
+          <div className="flex gap-2 w-full sm:w-auto">
+            {isAdminOrSuper && (
+              <Link to={`/teachers/${id}/edit`} className="inline-flex items-center justify-center btn-primary bg-amber-500 hover:bg-amber-600 shadow-md hover:shadow-amber-500/30 flex-1 sm:flex-none">
+                <Edit className="w-4 h-4 mr-2" /> <span className="hidden sm:inline">Edit Profile</span><span className="sm:hidden">Edit</span>
+              </Link>
+            )}
+            <button onClick={() => window.print()} className="inline-flex items-center justify-center btn-primary flex-1 sm:flex-none">
+              <Printer className="w-4 h-4 mr-2" /> <span className="hidden sm:inline">Print Profile</span><span className="sm:hidden">Print</span>
+            </button>
+          </div>
         }
       />
       

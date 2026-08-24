@@ -617,31 +617,7 @@ class _LiveListTabState extends State<_LiveListTab> {
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    if (_loading) return const Center(child: CircularProgressIndicator(color: Color(0xFF10B981)));
 
-    if (_activePasses.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(28),
-              decoration: BoxDecoration(
-                color: const Color(0xFF10B981).withOpacity(0.1),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(Icons.verified_user_rounded, size: 64, color: Color(0xFF10B981)),
-            ),
-            const SizedBox(height: 16),
-            Text("All Clear!", style: GoogleFonts.outfit(color: const Color(0xFF1E293B), fontSize: 22, fontWeight: FontWeight.w800)),
-            const SizedBox(height: 6),
-            Text("Everyone is inside campus", style: GoogleFonts.poppins(color: const Color(0xFF64748B), fontSize: 14)),
-          ],
-        ),
-      );
-    }
 
   Widget _buildList(List<dynamic> passes, bool isStudentTab) {
     final filtered = passes.where((p) => (p['requestType'] == 'STUDENT') == isStudentTab).toList();
