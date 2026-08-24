@@ -83,31 +83,9 @@ export const bulkCreate = async (req: AuthRequest, res: Response, next: NextFunc
 
     let realSubjects = await prisma.subject.findMany({ where: { classId: { in: classIds as string[] } } });
 
-    // Create any missing subjects dynamically
+    const upsertOps: any[] = [];
+    
     for (const m of marks) {
-      const fakeSubject = examSubjects.find(s => s.id === m.subjectId);
-      if (fakeSubject) {
-        const classId = studentClassMap.get(m.studentId);
-        if (classId) {
-          const matchingRealSubject = realSubjects.find(
-            s => s.classId === classId && s.name.toLowerCase() === fakeSubject.name.toLowerCase()
-          );
-          if (!matchingRealSubject) {
-            // Subject doesn't exist for this class! Auto-create it to prevent 500 FK error.
-            const newSubject = await prisma.subject.create({
-              data: {
-                name: fakeSubject.name,
-                code: `${fakeSubject.name.substring(0, 3).toUpperCase()}-${Math.floor(Math.random() * 1000)}`,
-                classId: classId
-              }
-            });
-            realSubjects.push(newSubject);
-          }
-        }
-      }
-    }
-
-    const upsertOps = marks.map((m) => {
       // Resolve fake subject ID to real subject ID
       let realSubjectId = m.subjectId;
       const fakeSubject = examSubjects.find(s => s.id === m.subjectId);
@@ -119,16 +97,33 @@ export const bulkCreate = async (req: AuthRequest, res: Response, next: NextFunc
         );
         if (matchingRealSubject) {
           realSubjectId = matchingRealSubject.id;
+        } else {
+          // If the subject doesn't exist for this class globally, we skip saving it.
+          // This prevents DB pollution and FK constraint errors.
+          continue;
         }
       }
 
-      const grade = calculateGrade(m.marksObtained, m.maxMarks);
-      return prisma.mark.upsert({
+      // Handle 'AB' (Absent) logic
+      let finalMarksObtained = m.marksObtained;
+      let finalRemarks = m.remarks;
+      if (m.remarks === 'AB' || m.marksObtained === -1) {
+          finalMarksObtained = 0;
+          finalRemarks = 'AB';
+      }
+
+      // Validate max marks
+      if (finalMarksObtained > m.maxMarks && finalRemarks !== 'AB') {
+         return next(createError(`Marks obtained (${finalMarksObtained}) cannot exceed max marks (${m.maxMarks})`, 400));
+      }
+
+      const grade = finalRemarks === 'AB' ? 'F' : calculateGrade(finalMarksObtained, m.maxMarks);
+      upsertOps.push(prisma.mark.upsert({
         where: { studentId_examId_subjectId: { studentId: m.studentId, examId: m.examId, subjectId: realSubjectId } },
-        update: { marksObtained: m.marksObtained, maxMarks: m.maxMarks, grade, remarks: m.remarks },
-        create: { studentId: m.studentId, examId: m.examId, subjectId: realSubjectId, marksObtained: m.marksObtained, maxMarks: m.maxMarks, grade, remarks: m.remarks },
-      });
-    });
+        update: { marksObtained: finalMarksObtained, maxMarks: m.maxMarks, grade, remarks: finalRemarks },
+        create: { studentId: m.studentId, examId: m.examId, subjectId: realSubjectId, marksObtained: finalMarksObtained, maxMarks: m.maxMarks, grade, remarks: finalRemarks },
+      }));
+    }
 
     const results = await prisma.$transaction(upsertOps);
 
