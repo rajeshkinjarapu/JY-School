@@ -210,7 +210,7 @@ export const StudentMobileDashboard: React.FC<{ data: any }> = ({ data }) => {
               {
                 label: 'Last Score',
                 value: data?.recentMarks?.length > 0
-                  ? `${data.recentMarks[0].marksObtained}/${data.recentMarks[0].maxMarks}`
+                  ? (data.recentMarks[0].remarks === 'AB' ? 'AB' : `${data.recentMarks[0].marksObtained}/${data.recentMarks[0].maxMarks}`)
                   : 'N/A',
                 color: '#a5b4fc',
               },
@@ -330,8 +330,9 @@ export const StudentMobileDashboard: React.FC<{ data: any }> = ({ data }) => {
             </div>
             <div className="space-y-2.5">
               {data.recentMarks.slice(0, 4).map((m: any, i: number) => {
-                const pct = Math.round((m.marksObtained / m.maxMarks) * 100);
-                const gc = pct >= 80 ? '#10b981' : pct >= 60 ? '#f59e0b' : '#f43f5e';
+                const isAB = m.remarks === 'AB';
+                const pct = isAB ? 0 : Math.round((m.marksObtained / m.maxMarks) * 100);
+                const gc = isAB ? '#f43f5e' : (pct >= 80 ? '#10b981' : pct >= 60 ? '#f59e0b' : '#f43f5e');
                 return (
                   <div key={i} className="flex items-center gap-3 bg-white rounded-2xl p-3.5 shadow-sm border border-gray-100">
                     <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
@@ -344,11 +345,11 @@ export const StudentMobileDashboard: React.FC<{ data: any }> = ({ data }) => {
                     </div>
                     <div className="text-right shrink-0">
                       <p className="text-sm font-black" style={{ color: gc }}>
-                        {m.marksObtained}/{m.maxMarks}
+                        {isAB ? 'AB' : `${m.marksObtained}/${m.maxMarks}`}
                       </p>
                       <span className="text-[10px] font-black px-2 py-0.5 rounded-full"
                         style={{ background: gc + '18', color: gc }}>
-                        {m.grade || `${pct}%`}
+                        {m.grade || (isAB ? 'F' : `${pct}%`)}
                       </span>
                     </div>
                   </div>

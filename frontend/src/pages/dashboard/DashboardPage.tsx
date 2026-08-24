@@ -699,19 +699,20 @@ const StudentView: React.FC<{ data: any }> = ({ data }) => {
             action={<Link to="/exams" className="flex items-center gap-1 text-xs font-bold text-purple-600 hover:text-purple-700">Full Report <ChevronRight className="w-3.5 h-3.5" /></Link>} />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {data.recentMarks?.length > 0 ? data.recentMarks.slice(0, 4).map((m: any, i: number) => {
-              const pct = Math.round((m.marksObtained / m.maxMarks) * 100);
-              const gc = pct >= 80 ? '#10b981' : pct >= 60 ? '#f59e0b' : '#f43f5e';
+              const isAB = m.remarks === 'AB';
+              const pct = isAB ? 0 : Math.round((m.marksObtained / m.maxMarks) * 100);
+              const gc = isAB ? '#f43f5e' : (pct >= 80 ? '#10b981' : pct >= 60 ? '#f59e0b' : '#f43f5e');
               return (
                 <div key={i} className="p-4 rounded-[1.2rem] border border-slate-100 bg-slate-50/50 hover:bg-white transition-colors hover:shadow-lg">
                   <div className="flex justify-between items-start mb-2">
                     <span className="text-[10px] font-black px-2.5 py-1 rounded-full bg-indigo-100 text-indigo-700">{m.examName}</span>
-                    <span className="text-[10px] font-black px-2.5 py-1 rounded-full" style={{ background: gc + '20', color: gc }}>{m.grade}</span>
+                    <span className="text-[10px] font-black px-2.5 py-1 rounded-full" style={{ background: gc + '20', color: gc }}>{m.grade || (isAB ? 'F' : `${pct}%`)}</span>
                   </div>
                   <h4 className="text-sm font-bold text-slate-800 line-clamp-1">{m.subjectName}</h4>
                   <div className="flex justify-between items-center mt-3">
                     <span className="text-xs font-semibold text-slate-500">Score</span>
                     <span className="text-[14px] font-black" style={{ color: gc }}>
-                      {m.marksObtained}/{m.maxMarks} <span className="text-[10px] text-slate-400 font-medium ml-0.5">({pct}%)</span>
+                      {isAB ? 'AB' : `${m.marksObtained}/${m.maxMarks}`} {!isAB && <span className="text-[10px] text-slate-400 font-medium ml-0.5">({pct}%)</span>}
                     </span>
                   </div>
                 </div>

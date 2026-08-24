@@ -18,7 +18,7 @@ export const MarksEntryPage: React.FC = () => {
   const [currentClass, setCurrentClass] = useState<any>(null);
   const [students, setStudents] = useState<any[]>([]);
   const [subjects, setSubjects] = useState<any[]>([]);
-  const [marksData, setMarksData] = useState<{ [key: string]: number }>({});
+  const [marksData, setMarksData] = useState<{ [key: string]: number | string }>({});
   const [remarksData, setRemarksData] = useState<{ [key: string]: string }>({});
   const [loading, setLoading] = useState(true);
   const [isClassFrozen, setIsClassFrozen] = useState(false);
@@ -55,14 +55,19 @@ export const MarksEntryPage: React.FC = () => {
       setStudents(studentsRes.data || []);
 
       // 4. Get subjects from exam JSON (fallback to empty array)
-      const examSubjects = Array.isArray(examObj.subjects) ? examObj.subjects : [];
+      const rawExamSubjects = Array.isArray(examObj.subjects) ? examObj.subjects : [];
+      // Only keep exam subjects that are globally mapped to this specific class
+      const classMappedSubjects = classRes.data?.subjects || [];
+      const examSubjects = rawExamSubjects.filter(examSub => 
+        classMappedSubjects.some((classSub: any) => classSub.name?.trim().toLowerCase() === examSub.name?.trim().toLowerCase())
+      );
       setSubjects(examSubjects);
 
       // 5. Get existing flat marks from marks API
       const marksRes: any = await api.get(`/api/marks/exam/${id}`);
       const flatMarks = marksRes.data || [];
       
-      const initialMarks: { [key: string]: number } = {};
+      const initialMarks: { [key: string]: number | string } = {};
       const initialRemarks: { [key: string]: string } = {};
 
       flatMarks.forEach((m: any) => {
@@ -71,7 +76,7 @@ export const MarksEntryPage: React.FC = () => {
           const fakeSub = examSubjects.find((s: any) => s.name?.toLowerCase() === m.subject?.name?.toLowerCase());
           const fakeSubId = fakeSub ? fakeSub.id : m.subjectId;
 
-          initialMarks[`${m.studentId}_${fakeSubId}`] = m.marksObtained;
+          initialMarks[`${m.studentId}_${fakeSubId}`] = m.remarks === 'AB' ? 'AB' : m.marksObtained;
           initialRemarks[`${m.studentId}_${fakeSubId}`] = m.remarks || '';
         }
       });
@@ -94,6 +99,8 @@ export const MarksEntryPage: React.FC = () => {
       const next = { ...prev };
       if (val === '') {
         delete next[`${studentId}_${subjectId}`];
+      } else if (val.toUpperCase() === 'AB') {
+        next[`${studentId}_${subjectId}`] = 'AB';
       } else {
         next[`${studentId}_${subjectId}`] = Number(val);
       }
@@ -117,19 +124,37 @@ export const MarksEntryPage: React.FC = () => {
       if (!window.confirm("Are you sure you want to freeze the marks for this class? Once frozen, progress cards will be generated and marks cannot be edited.")) return;
     }
 
+    // Frontend validation
+    for (const key of Object.keys(marksData)) {
+      const val = marksData[key];
+      if (val !== null && val !== undefined && val !== '') {
+        const [studentId, subjectId] = key.split('_');
+        const subjectInfo = subjects.find(s => s.id === subjectId);
+        const maxMarks = Number(subjectInfo?.maxMarks) || 100;
+        
+        if (val !== 'AB' && Number(val) > maxMarks) {
+           toast.error(`Marks cannot exceed ${maxMarks} for ${subjectInfo?.name || 'subject'}`);
+           return;
+        }
+      }
+    }
+
     const payload = {
       marks: Object.keys(marksData)
-        .filter(key => marksData[key] !== null && marksData[key] !== undefined && marksData[key] !== ('' as any) && !isNaN(Number(marksData[key])))
+        .filter(key => marksData[key] !== null && marksData[key] !== undefined && marksData[key] !== '')
         .map(key => {
           const [studentId, subjectId] = key.split('_');
           const subjectInfo = subjects.find(s => s.id === subjectId);
+          const val = marksData[key];
+          const isAB = val === 'AB';
+          
           return {
             studentId,
             examId: id,
             subjectId,
-            marksObtained: Number(marksData[key]),
+            marksObtained: isAB ? 0 : Number(val),
             maxMarks: Number(subjectInfo?.maxMarks) || 100,
-            remarks: remarksData[key] || '',
+            remarks: isAB ? 'AB' : (remarksData[key] || ''),
           };
         }),
     };
@@ -299,12 +324,15 @@ export const MarksEntryPage: React.FC = () => {
                         <div className="flex flex-col gap-3">
                           <div className="relative flex gap-2">
                                   <input 
-                                    type="number" 
-                                    min="0" 
-                                    max={sub.maxMarks || 100} 
+                                    type="text" 
                                     value={marksData[key] ?? ''}
-                                    onChange={(e) => handleMarkChange(student.id, sub.id, e.target.value)}
-                                    className={`w-[70px] text-center p-2 text-sm font-bold border-2 rounded-lg outline-none transition-all ${isClassFrozen ? 'bg-gray-100 cursor-not-allowed border-gray-200' : 'bg-white focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100'} ${marksData[key] && Number(marksData[key]) < (sub.passMarks || 35) ? 'border-red-300 text-red-600 bg-red-50' : 'border-slate-200 text-slate-800'}`}
+                                    onChange={(e) => {
+                                      const val = e.target.value.toUpperCase();
+                                      if (val === '' || val === 'A' || val === 'AB' || (!isNaN(Number(val)) && Number(val) >= 0)) {
+                                         handleMarkChange(student.id, sub.id, val);
+                                      }
+                                    }}
+                                    className={`w-[70px] text-center p-2 text-sm font-bold border-2 rounded-lg outline-none transition-all ${isClassFrozen ? 'bg-gray-100 cursor-not-allowed border-gray-200' : 'bg-white focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100'} ${(marksData[key] !== 'AB' && marksData[key] && Number(marksData[key]) < (sub.passMarks || 35)) ? 'border-red-300 text-red-600 bg-red-50' : 'border-slate-200 text-slate-800'}`}
                                     placeholder="--"
                                     disabled={isClassFrozen}
                                   />
