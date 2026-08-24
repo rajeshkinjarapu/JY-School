@@ -53,18 +53,21 @@ export const listGatePasses = async (req: AuthRequest, res: Response, next: Next
 export const createGatePass = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
     const user = req.user!;
-    const { reason, destination, exitTime, returnTime, notes, requestType, studentId } = req.body;
+    const { reason, destination, exitTime, returnTime, notes, requestType, studentId, staffId } = req.body;
 
     const studentRecord = studentId ? await prisma.student.findUnique({ where: { id: studentId } }) : null;
     if (studentId && !studentRecord) return next(createError('Student not found', 404));
 
+    const finalRequesterId = (staffId && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN')) ? staffId : user.id;
+    const finalRequestType = requestType || (studentId ? 'STUDENT' : 'TEACHER');
+    
     const slipNumber = `GP-${Date.now().toString().slice(-6)}`;
 
     const gatePass = await prisma.gatePass.create({
       data: {
-        requesterId: user.id,
+        requesterId: finalRequesterId,
         studentId: studentRecord?.id || null,
-        requestType: requestType || (user.role === 'TEACHER' ? 'TEACHER' : 'STUDENT'),
+        requestType: finalRequestType,
         reason,
         destination,
         exitTime,

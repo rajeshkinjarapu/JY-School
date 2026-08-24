@@ -103,7 +103,7 @@ class _GatePassScreenState extends State<GatePassScreen> {
 }
 
 // ---------------------------------------------------------
-// Tab 1: Dashboard — PREMIUM REDESIGN + REAL API
+// Tab 1: Dashboard â€” PREMIUM REDESIGN + REAL API
 // ---------------------------------------------------------
 class _DashboardTab extends StatefulWidget {
   const _DashboardTab();
@@ -171,7 +171,7 @@ class _DashboardTabState extends State<_DashboardTab> with TickerProviderStateMi
         physics: const AlwaysScrollableScrollPhysics(),
         child: Column(
           children: [
-            // ── Hero Stats Header ──
+            // â”€â”€ Hero Stats Header â”€â”€
             Container(
               width: double.infinity,
               decoration: const BoxDecoration(
@@ -256,7 +256,7 @@ class _DashboardTabState extends State<_DashboardTab> with TickerProviderStateMi
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // ── Overdue Alert ──
+                  // â”€â”€ Overdue Alert â”€â”€
                   if (_overdue > 0)
                     ScaleTransition(
                       scale: _pulseAnim,
@@ -292,7 +292,7 @@ class _DashboardTabState extends State<_DashboardTab> with TickerProviderStateMi
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    '⚠️  CRITICAL OVER-STAY',
+                                    'âš ï¸  CRITICAL OVER-STAY',
                                     style: GoogleFonts.outfit(
                                       color: Colors.white,
                                       fontSize: 15,
@@ -315,7 +315,7 @@ class _DashboardTabState extends State<_DashboardTab> with TickerProviderStateMi
                       ),
                     ),
 
-                  // ── Section Title ──
+                  // â”€â”€ Section Title â”€â”€
                   Text(
                     'Today\'s Overview',
                     style: GoogleFonts.outfit(
@@ -326,7 +326,7 @@ class _DashboardTabState extends State<_DashboardTab> with TickerProviderStateMi
                   ),
                   const SizedBox(height: 14),
 
-                  // ── 4 Metric Cards ──
+                  // â”€â”€ 4 Metric Cards â”€â”€
                   GridView.count(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
@@ -371,7 +371,7 @@ class _DashboardTabState extends State<_DashboardTab> with TickerProviderStateMi
 
                   const SizedBox(height: 20),
 
-                  // ── Quick Actions ──
+                  // â”€â”€ Quick Actions â”€â”€
                   Text(
                     'Quick Actions',
                     style: GoogleFonts.outfit(
@@ -584,7 +584,7 @@ class _DashboardTabState extends State<_DashboardTab> with TickerProviderStateMi
 }
 
 // ---------------------------------------------------------
-// Tab 2: Live List (Currently Out) — REAL API
+// Tab 2: Live List (Currently Out) â€” REAL API
 // ---------------------------------------------------------
 class _LiveListTab extends StatefulWidget {
   const _LiveListTab();
@@ -643,11 +643,167 @@ class _LiveListTabState extends State<_LiveListTab> {
       );
     }
 
-    return RefreshIndicator(
-      onRefresh: _fetchLiveList,
-      color: const Color(0xFF10B981),
+  Widget _buildList(List<dynamic> passes, bool isStudentTab) {
+    final filtered = passes.where((p) => (p['requestType'] == 'STUDENT') == isStudentTab).toList();
+
+    if (filtered.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(28),
+              decoration: BoxDecoration(
+                color: const Color(0xFF10B981).withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.verified_user_rounded, size: 64, color: Color(0xFF10B981)),
+            ),
+            const SizedBox(height: 16),
+            Text("All Clear!", style: GoogleFonts.outfit(color: const Color(0xFF1E293B), fontSize: 22, fontWeight: FontWeight.w800)),
+            const SizedBox(height: 6),
+            Text(isStudentTab ? "No active student passes" : "No active staff passes", style: GoogleFonts.poppins(color: const Color(0xFF64748B), fontSize: 14)),
+          ],
+        ),
+      );
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: filtered.length,
+      itemBuilder: (context, index) {
+        final pass = filtered[index];
+        final name = isStudentTab
+            ? (pass['student']?['user']?['name'] ?? 'Unknown')
+            : (pass['requester']?['name'] ?? 'Unknown');
+        final dept = isStudentTab
+            ? 'Class ${pass['student']?['class']?['name'] ?? ''} ${pass['student']?['class']?['section'] ?? ''}'
+            : 'Staff';
+        final photoUrl = isStudentTab 
+            ? pass['student']?['user']?['photoUrl'] 
+            : pass['requester']?['photoUrl'];
+        final approvedBy = pass['approvedBy']?['name'] ?? 'Pending';
+
+        final exitTimeStr = pass['actualExitTime'] ?? pass['exitTime'];
+        final exitTime = exitTimeStr != null
+            ? DateFormat('hh:mm a').format(DateTime.parse(exitTimeStr).toLocal())
+            : '--';
+
+        final expectedStr = pass['expectedReturnTime'];
+        final expectedTime = expectedStr != null
+            ? DateFormat('hh:mm a').format(DateTime.parse(expectedStr).toLocal())
+            : '--';
+
+        final isOverdue = expectedStr != null &&
+            DateTime.parse(expectedStr).isBefore(DateTime.now());
+
+        return Container(
+          margin: const EdgeInsets.only(bottom: 12),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(18),
+            border: isOverdue
+                ? Border.all(color: const Color(0xFFEF4444), width: 1.5)
+                : null,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.04),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              )
+            ],
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+            child: Row(
+              children: [
+                CircleAvatar(
+                  radius: 24,
+                  backgroundColor: isOverdue
+                      ? const Color(0xFFEF4444).withOpacity(0.1)
+                      : const Color(0xFFF59E0B).withOpacity(0.1),
+                  backgroundImage: (photoUrl != null && photoUrl.isNotEmpty) ? NetworkImage(photoUrl) : null,
+                  child: (photoUrl == null || photoUrl.isEmpty)
+                      ? Icon(
+                          isStudentTab ? Icons.person_rounded : Icons.badge_rounded,
+                          color: isOverdue ? const Color(0xFFEF4444) : const Color(0xFFF59E0B),
+                          size: 26,
+                        )
+                      : null,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(name, style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 15)),
+                          ),
+                          if (isOverdue)
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFEF4444),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Text('OVERDUE', style: GoogleFonts.poppins(color: Colors.white, fontSize: 8, fontWeight: FontWeight.w800)),
+                            ),
+                        ],
+                      ),
+                      Text(dept, style: GoogleFonts.poppins(color: const Color(0xFF64748B), fontSize: 11)),
+                      const SizedBox(height: 4),
+                      Text('Approved By: $approvedBy', style: GoogleFonts.poppins(color: const Color(0xFF10B981), fontSize: 10, fontWeight: FontWeight.w600)),
+                      const SizedBox(height: 6),
+                      Row(
+                        children: [
+                          Icon(Icons.login_rounded, size: 13, color: const Color(0xFFF59E0B)),
+                          const SizedBox(width: 4),
+                          Text('Out: $exitTime', style: GoogleFonts.poppins(fontSize: 11, color: const Color(0xFFB45309), fontWeight: FontWeight.w600)),
+                          const SizedBox(width: 12),
+                          Icon(Icons.timer_rounded, size: 13, color: const Color(0xFF64748B)),
+                          const SizedBox(width: 4),
+                          Text('Return by: $expectedTime', style: GoogleFonts.poppins(fontSize: 11, color: const Color(0xFF64748B))),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  onPressed: () => printGatePass(context, pass),
+                  icon: const Icon(Icons.print_rounded, color: Color(0xFF64748B)),
+                  tooltip: 'Print Pass',
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_loading) return const Center(child: CircularProgressIndicator(color: Color(0xFF10B981)));
+
+    return DefaultTabController(
+      length: 2,
       child: Column(
         children: [
+          Container(
+            color: Colors.white,
+            child: TabBar(
+              labelColor: const Color(0xFF10B981),
+              unselectedLabelColor: const Color(0xFF94A3B8),
+              indicatorColor: const Color(0xFF10B981),
+              labelStyle: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+              tabs: const [
+                Tab(text: "Students"),
+                Tab(text: "Staff"),
+              ],
+            ),
+          ),
           Container(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
             color: const Color(0xFFF59E0B).withOpacity(0.08),
@@ -670,105 +826,15 @@ class _LiveListTabState extends State<_LiveListTab> {
             ),
           ),
           Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: _activePasses.length,
-              itemBuilder: (context, index) {
-                final pass = _activePasses[index];
-                final isStudent = pass['requestType'] == 'STUDENT';
-                final name = isStudent
-                    ? (pass['student']?['user']?['name'] ?? 'Unknown')
-                    : (pass['requester']?['name'] ?? 'Unknown');
-                final dept = isStudent
-                    ? 'Class ${pass['student']?['class']?['name'] ?? ''} ${pass['student']?['class']?['section'] ?? ''}'
-                    : 'Staff';
-
-                final exitTimeStr = pass['actualExitTime'] ?? pass['exitTime'];
-                final exitTime = exitTimeStr != null
-                    ? DateFormat('hh:mm a').format(DateTime.parse(exitTimeStr).toLocal())
-                    : '--';
-
-                final expectedStr = pass['expectedReturnTime'];
-                final expectedTime = expectedStr != null
-                    ? DateFormat('hh:mm a').format(DateTime.parse(expectedStr).toLocal())
-                    : '--';
-
-                final isOverdue = expectedStr != null &&
-                    DateTime.parse(expectedStr).isBefore(DateTime.now());
-
-                return Container(
-                  margin: const EdgeInsets.only(bottom: 12),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(18),
-                    border: isOverdue
-                        ? Border.all(color: const Color(0xFFEF4444), width: 1.5)
-                        : null,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.04),
-                        blurRadius: 12,
-                        offset: const Offset(0, 4),
-                      )
-                    ],
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(14),
-                    child: Row(
-                      children: [
-                        CircleAvatar(
-                          radius: 24,
-                          backgroundColor: isOverdue
-                              ? const Color(0xFFEF4444).withOpacity(0.1)
-                              : const Color(0xFFF59E0B).withOpacity(0.1),
-                          child: Icon(
-                            isStudent ? Icons.person_rounded : Icons.badge_rounded,
-                            color: isOverdue ? const Color(0xFFEF4444) : const Color(0xFFF59E0B),
-                            size: 26,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: Text(name, style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 15)),
-                                  ),
-                                  if (isOverdue)
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                                      decoration: BoxDecoration(
-                                        color: const Color(0xFFEF4444),
-                                        borderRadius: BorderRadius.circular(20),
-                                      ),
-                                      child: Text('OVERDUE', style: GoogleFonts.poppins(color: Colors.white, fontSize: 8, fontWeight: FontWeight.w800)),
-                                    ),
-                                ],
-                              ),
-                              Text(dept, style: GoogleFonts.poppins(color: const Color(0xFF64748B), fontSize: 11)),
-                              const SizedBox(height: 6),
-                              Row(
-                                children: [
-                                  Icon(Icons.login_rounded, size: 13, color: const Color(0xFFF59E0B)),
-                                  const SizedBox(width: 4),
-                                  Text('Out: $exitTime', style: GoogleFonts.poppins(fontSize: 11, color: const Color(0xFFB45309), fontWeight: FontWeight.w600)),
-                                  const SizedBox(width: 12),
-                                  Icon(Icons.timer_rounded, size: 13, color: const Color(0xFF64748B)),
-                                  const SizedBox(width: 4),
-                                  Text('Return by: $expectedTime', style: GoogleFonts.poppins(fontSize: 11, color: const Color(0xFF64748B))),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              },
+            child: RefreshIndicator(
+              onRefresh: _fetchLiveList,
+              color: const Color(0xFF10B981),
+              child: TabBarView(
+                children: [
+                  _buildList(_activePasses, true),
+                  _buildList(_activePasses, false),
+                ],
+              ),
             ),
           ),
         ],
@@ -778,7 +844,7 @@ class _LiveListTabState extends State<_LiveListTab> {
 }
 
 // ---------------------------------------------------------
-// Tab 3: Approvals — REAL API
+// Tab 3: Approvals â€” REAL API
 // ---------------------------------------------------------
 class _ApprovalsTab extends StatefulWidget {
   const _ApprovalsTab();
@@ -828,11 +894,10 @@ class _ApprovalsTabState extends State<_ApprovalsTab> {
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    if (_loading) return const Center(child: CircularProgressIndicator(color: Color(0xFF6366F1)));
+  Widget _buildList(List<dynamic> passes, bool isStudentTab) {
+    final filtered = passes.where((p) => (p['requestType'] == 'STUDENT') == isStudentTab).toList();
 
-    if (_pendingPasses.isEmpty) {
+    if (filtered.isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -854,149 +919,181 @@ class _ApprovalsTabState extends State<_ApprovalsTab> {
       );
     }
 
-    return Column(
-      children: [
-        Container(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-          color: const Color(0xFF6366F1).withOpacity(0.08),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                '${_pendingPasses.length} Requests Pending Approval',
-                style: GoogleFonts.poppins(color: const Color(0xFF4338CA), fontSize: 12, fontWeight: FontWeight.w700),
-              ),
-            ],
-          ),
-        ),
-        Expanded(
-          child: RefreshIndicator(
-            onRefresh: _fetchPending,
-            color: const Color(0xFF6366F1),
-            child: ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: _pendingPasses.length,
-              itemBuilder: (context, index) {
-                final pass = _pendingPasses[index];
-                final isStudent = pass['requestType'] == 'STUDENT';
-                final name = isStudent
-                    ? (pass['student']?['user']?['name'] ?? 'Unknown')
-                    : (pass['requester']?['name'] ?? 'Unknown');
-                final dept = isStudent ? 'Class ${pass['student']?['class']?['name'] ?? ''}' : 'Staff';
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: filtered.length,
+      itemBuilder: (context, index) {
+        final pass = filtered[index];
+        final name = isStudentTab
+            ? (pass['student']?['user']?['name'] ?? 'Unknown')
+            : (pass['requester']?['name'] ?? 'Unknown');
+        final dept = isStudentTab ? 'Class ${pass['student']?['class']?['name'] ?? ''}' : 'Staff';
+        final photoUrl = isStudentTab 
+            ? pass['student']?['user']?['photoUrl'] 
+            : pass['requester']?['photoUrl'];
 
-                return Container(
-                  margin: const EdgeInsets.only(bottom: 14),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 12, offset: const Offset(0, 4))],
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            CircleAvatar(
-                              backgroundColor: const Color(0xFF6366F1).withOpacity(0.1),
-                              radius: 22,
-                              child: Icon(isStudent ? Icons.person_rounded : Icons.badge_rounded,
-                                  color: const Color(0xFF6366F1), size: 22),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(name, style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16)),
-                                  Text(dept, style: GoogleFonts.poppins(color: const Color(0xFF64748B), fontSize: 12)),
-                                ],
-                              ),
-                            ),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFF6366F1).withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: Text('PENDING', style: GoogleFonts.poppins(color: const Color(0xFF4338CA), fontSize: 9, fontWeight: FontWeight.w700)),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFF8FAFC),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(children: [
-                                const Icon(Icons.description_outlined, size: 14, color: Color(0xFF64748B)),
-                                const SizedBox(width: 6),
-                                Expanded(child: Text("${pass['reason'] ?? 'Not specified'}", style: GoogleFonts.poppins(fontSize: 12, color: const Color(0xFF475569)))),
-                              ]),
-                              if (pass['destination'] != null) ...[
-                                const SizedBox(height: 6),
-                                Row(children: [
-                                  const Icon(Icons.location_on_outlined, size: 14, color: Color(0xFF64748B)),
-                                  const SizedBox(width: 6),
-                                  Text("${pass['destination']}", style: GoogleFonts.poppins(fontSize: 12, color: const Color(0xFF475569))),
-                                ]),
-                              ],
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 14),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: OutlinedButton.icon(
-                                onPressed: () => _updateStatus(pass['id'], 'REJECTED'),
-                                icon: const Icon(Icons.close_rounded, size: 16),
-                                label: const Text('Reject'),
-                                style: OutlinedButton.styleFrom(
-                                  foregroundColor: const Color(0xFFEF4444),
-                                  side: const BorderSide(color: Color(0xFFEF4444)),
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                  padding: const EdgeInsets.symmetric(vertical: 12),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: ElevatedButton.icon(
-                                onPressed: () => _updateStatus(pass['id'], 'APPROVED'),
-                                icon: const Icon(Icons.check_rounded, size: 16, color: Colors.white),
-                                label: const Text('Approve', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xFF10B981),
-                                  elevation: 0,
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                  padding: const EdgeInsets.symmetric(vertical: 12),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
+        return Container(
+          margin: const EdgeInsets.only(bottom: 14),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 12, offset: const Offset(0, 4))],
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    CircleAvatar(
+                      backgroundColor: const Color(0xFF6366F1).withOpacity(0.1),
+                      radius: 22,
+                      backgroundImage: (photoUrl != null && photoUrl.isNotEmpty) ? NetworkImage(photoUrl) : null,
+                      child: (photoUrl == null || photoUrl.isEmpty)
+                          ? Icon(isStudentTab ? Icons.person_rounded : Icons.badge_rounded, color: const Color(0xFF6366F1), size: 22)
+                          : null,
                     ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(name, style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16)),
+                          Text(dept, style: GoogleFonts.poppins(color: const Color(0xFF64748B), fontSize: 12)),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF6366F1).withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text('PENDING', style: GoogleFonts.poppins(color: const Color(0xFF4338CA), fontSize: 9, fontWeight: FontWeight.w700)),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF8FAFC),
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                );
-              },
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(children: [
+                        const Icon(Icons.description_outlined, size: 14, color: Color(0xFF64748B)),
+                        const SizedBox(width: 6),
+                        Expanded(child: Text("${pass['reason'] ?? 'Not specified'}", style: GoogleFonts.poppins(fontSize: 12, color: const Color(0xFF475569)))),
+                      ]),
+                      if (pass['destination'] != null) ...[
+                        const SizedBox(height: 6),
+                        Row(children: [
+                          const Icon(Icons.location_on_outlined, size: 14, color: Color(0xFF64748B)),
+                          const SizedBox(width: 6),
+                          Text("${pass['destination']}", style: GoogleFonts.poppins(fontSize: 12, color: const Color(0xFF475569))),
+                        ]),
+                      ],
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 14),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: () => _updateStatus(pass['id'], 'REJECTED'),
+                        icon: const Icon(Icons.close_rounded, size: 16),
+                        label: const Text('Reject'),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: const Color(0xFFEF4444),
+                          side: const BorderSide(color: Color(0xFFEF4444)),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () => _updateStatus(pass['id'], 'APPROVED'),
+                        icon: const Icon(Icons.check_rounded, size: 16, color: Colors.white),
+                        label: const Text('Approve', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF10B981),
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
-        ),
-      ],
+        );
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_loading) return const Center(child: CircularProgressIndicator(color: Color(0xFF6366F1)));
+
+    return DefaultTabController(
+      length: 2,
+      child: Column(
+        children: [
+          Container(
+            color: Colors.white,
+            child: TabBar(
+              labelColor: const Color(0xFF6366F1),
+              unselectedLabelColor: const Color(0xFF94A3B8),
+              indicatorColor: const Color(0xFF6366F1),
+              labelStyle: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+              tabs: const [
+                Tab(text: "Students"),
+                Tab(text: "Staff"),
+              ],
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+            color: const Color(0xFF6366F1).withOpacity(0.08),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  '${_pendingPasses.length} Requests Pending Approval',
+                  style: GoogleFonts.poppins(color: const Color(0xFF4338CA), fontSize: 12, fontWeight: FontWeight.w700),
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: RefreshIndicator(
+              onRefresh: _fetchPending,
+              color: const Color(0xFF6366F1),
+              child: TabBarView(
+                children: [
+                  _buildList(_pendingPasses, true),
+                  _buildList(_pendingPasses, false),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
 
 // ---------------------------------------------------------
-// Tab 4: History / Search — REAL API
+// Tab 4: History / Search â€” REAL API
 // ---------------------------------------------------------
 class _HistorySearchTab extends StatefulWidget {
   const _HistorySearchTab();
@@ -1045,6 +1142,86 @@ class _HistorySearchTabState extends State<_HistorySearchTab> {
     _fetchHistory();
   }
 
+  Widget _buildList(List<dynamic> items, bool isStudentTab, Map<String, Color> statusColor) {
+    final filtered = items.where((p) => (p['requestType'] == 'STUDENT') == isStudentTab).toList();
+
+    if (filtered.isEmpty) {
+      return Center(
+        child: Text("No records found",
+            style: GoogleFonts.outfit(color: const Color(0xFF64748B), fontSize: 16)),
+      );
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: filtered.length,
+      itemBuilder: (context, index) {
+        final pass = filtered[index];
+        final name = isStudentTab
+            ? (pass['student']?['user']?['name'] ?? 'Unknown')
+            : (pass['requester']?['name'] ?? 'Unknown');
+        final photoUrl = isStudentTab 
+            ? pass['student']?['user']?['photoUrl'] 
+            : pass['requester']?['photoUrl'];
+        final status = pass['status'] ?? 'UNKNOWN';
+        final color = statusColor[status] ?? Colors.grey;
+        final date = pass['createdAt'] != null
+            ? DateFormat('dd MMM, hh:mm a').format(DateTime.parse(pass['createdAt']).toLocal())
+            : '--';
+
+        return Container(
+          margin: const EdgeInsets.only(bottom: 10),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 8, offset: const Offset(0, 3))],
+          ),
+          child: ListTile(
+            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+            leading: CircleAvatar(
+              backgroundColor: color.withOpacity(0.12),
+              backgroundImage: (photoUrl != null && photoUrl.isNotEmpty) ? NetworkImage(photoUrl) : null,
+              child: (photoUrl == null || photoUrl.isEmpty)
+                  ? Icon(
+                      isStudentTab ? Icons.person_rounded : Icons.badge_rounded,
+                      color: color, size: 20,
+                    )
+                  : null,
+            ),
+            title: Text(name, style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 14)),
+            subtitle: Text(date, style: GoogleFonts.poppins(fontSize: 11, color: const Color(0xFF94A3B8))),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (status == 'APPROVED' || status == 'ACTIVE' || status == 'COMPLETED')
+                  IconButton(
+                    icon: Icon(Icons.print_rounded, size: 20, color: color),
+                    onPressed: () => printGatePass(context, pass),
+                    tooltip: 'Print Pass',
+                  ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.12),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    status,
+                    style: GoogleFonts.poppins(
+                      color: color,
+                      fontSize: 9,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final statusColor = {
@@ -1055,89 +1232,56 @@ class _HistorySearchTabState extends State<_HistorySearchTab> {
       'ACTIVE': const Color(0xFF10B981),
     };
 
-    return Column(
-      children: [
-        Container(
-          color: Colors.white,
-          padding: const EdgeInsets.all(14),
-          child: TextField(
-            controller: _searchCtrl,
-            onChanged: _filterList,
-            decoration: InputDecoration(
-              hintText: 'Search by name...',
-              hintStyle: GoogleFonts.poppins(color: const Color(0xFF94A3B8), fontSize: 13),
-              prefixIcon: const Icon(Icons.search_rounded, color: Color(0xFF94A3B8)),
-              filled: true,
-              fillColor: const Color(0xFFF1F5F9),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
-              contentPadding: const EdgeInsets.symmetric(vertical: 14),
+    if (_loading) return const Center(child: CircularProgressIndicator(color: Color(0xFF6366F1)));
+
+    return DefaultTabController(
+      length: 2,
+      child: Column(
+        children: [
+          Container(
+            color: Colors.white,
+            child: TabBar(
+              labelColor: const Color(0xFF6366F1),
+              unselectedLabelColor: const Color(0xFF94A3B8),
+              indicatorColor: const Color(0xFF6366F1),
+              labelStyle: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+              tabs: const [
+                Tab(text: "Students"),
+                Tab(text: "Staff"),
+              ],
             ),
           ),
-        ),
-        Expanded(
-          child: _loading
-              ? const Center(child: CircularProgressIndicator(color: Color(0xFF10B981)))
-              : RefreshIndicator(
-                  onRefresh: _fetchHistory,
-                  child: _filtered.isEmpty
-                      ? Center(
-                          child: Text("No records found",
-                              style: GoogleFonts.outfit(color: const Color(0xFF64748B), fontSize: 16)))
-                      : ListView.builder(
-                          padding: const EdgeInsets.all(16),
-                          itemCount: _filtered.length,
-                          itemBuilder: (context, index) {
-                            final pass = _filtered[index];
-                            final isStudent = pass['requestType'] == 'STUDENT';
-                            final name = isStudent
-                                ? (pass['student']?['user']?['name'] ?? 'Unknown')
-                                : (pass['requester']?['name'] ?? 'Unknown');
-                            final status = pass['status'] ?? 'UNKNOWN';
-                            final color = statusColor[status] ?? Colors.grey;
-                            final date = pass['createdAt'] != null
-                                ? DateFormat('dd MMM, hh:mm a').format(DateTime.parse(pass['createdAt']).toLocal())
-                                : '--';
-
-                            return Container(
-                              margin: const EdgeInsets.only(bottom: 10),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(16),
-                                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 8, offset: const Offset(0, 3))],
-                              ),
-                              child: ListTile(
-                                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                                leading: CircleAvatar(
-                                  backgroundColor: color.withOpacity(0.12),
-                                  child: Icon(
-                                    isStudent ? Icons.person_rounded : Icons.badge_rounded,
-                                    color: color, size: 20,
-                                  ),
-                                ),
-                                title: Text(name, style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 14)),
-                                subtitle: Text(date, style: GoogleFonts.poppins(fontSize: 11, color: const Color(0xFF94A3B8))),
-                                trailing: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                  decoration: BoxDecoration(
-                                    color: color.withOpacity(0.12),
-                                    borderRadius: BorderRadius.circular(20),
-                                  ),
-                                  child: Text(
-                                    status,
-                                    style: GoogleFonts.poppins(
-                                      color: color,
-                                      fontSize: 9,
-                                      fontWeight: FontWeight.w700,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                ),
-        ),
-      ],
+          Container(
+            color: Colors.white,
+            padding: const EdgeInsets.all(14),
+            child: TextField(
+              controller: _searchCtrl,
+              onChanged: _filterList,
+              decoration: InputDecoration(
+                hintText: 'Search by name...',
+                hintStyle: GoogleFonts.poppins(color: const Color(0xFF94A3B8), fontSize: 13),
+                prefixIcon: const Icon(Icons.search_rounded, color: Color(0xFF94A3B8)),
+                filled: true,
+                fillColor: const Color(0xFFF1F5F9),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
+                contentPadding: const EdgeInsets.symmetric(vertical: 14),
+              ),
+            ),
+          ),
+          Expanded(
+            child: RefreshIndicator(
+              onRefresh: _fetchHistory,
+              color: const Color(0xFF6366F1),
+              child: TabBarView(
+                children: [
+                  _buildList(_filtered, true, statusColor),
+                  _buildList(_filtered, false, statusColor),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -1145,10 +1289,146 @@ class _HistorySearchTabState extends State<_HistorySearchTab> {
 // ---------------------------------------------------------
 // Tab 5: QR Scanner
 // ---------------------------------------------------------
-class _QRScannerTab extends StatelessWidget {
+class _QRScannerTab extends StatefulWidget {
   const _QRScannerTab();
   @override
+  State<_QRScannerTab> createState() => _QRScannerTabState();
+}
+
+class _QRScannerTabState extends State<_QRScannerTab> {
+  bool _isScanning = false;
+  MobileScannerController cameraController = MobileScannerController();
+
+  @override
+  void dispose() {
+    cameraController.dispose();
+    super.dispose();
+  }
+
+  void _onDetect(BarcodeCapture capture) async {
+    final List<Barcode> barcodes = capture.barcodes;
+    if (barcodes.isNotEmpty) {
+      final String? code = barcodes.first.rawValue;
+      if (code != null) {
+        cameraController.stop();
+        setState(() {
+          _isScanning = false;
+        });
+        
+        // Assume code is the gate pass ID
+        _handleScannedCode(code);
+      }
+    }
+  }
+
+  Future<void> _handleScannedCode(String id) async {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => const Center(child: CircularProgressIndicator(color: Color(0xFF10B981))),
+    );
+
+    try {
+      // First get the pass details to see current status
+      final res = await ApiService.getGatePasses();
+      final passes = res['data'] as List<dynamic>? ?? [];
+      final pass = passes.firstWhere((p) => p['id'] == id || p['slipNumber'] == id, orElse: () => null);
+
+      if (mounted) Navigator.pop(context); // close loader
+
+      if (pass == null) {
+        if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Gate Pass not found!')));
+        return;
+      }
+
+      final status = pass['status'];
+      String nextStatus = '';
+      String actionText = '';
+
+      if (status == 'APPROVED') {
+        nextStatus = 'ACTIVE';
+        actionText = 'Mark as EXITED';
+      } else if (status == 'ACTIVE') {
+        nextStatus = 'COMPLETED';
+        actionText = 'Mark as RETURNED';
+      } else {
+        if (mounted) {
+          showDialog(
+            context: context,
+            builder: (ctx) => AlertDialog(
+              title: const Text('Invalid Status'),
+              content: Text('This gate pass is currently $status and cannot be scanned for exit/return.'),
+              actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('OK'))],
+            ),
+          );
+        }
+        return;
+      }
+
+      if (mounted) {
+        showDialog(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: const Text('Gate Pass Scanned'),
+            content: Text('Pass for ${pass['requestType'] == 'STUDENT' ? pass['student']?['user']?['name'] : pass['requester']?['name']}\nCurrent Status: $status\n\nDo you want to $actionText?'),
+            actions: [
+              TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF10B981)),
+                onPressed: () async {
+                  Navigator.pop(ctx);
+                  await ApiService.updateGatePass(pass['id'], {'status': nextStatus});
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Gate pass marked as $nextStatus')));
+                  }
+                },
+                child: Text(actionText, style: const TextStyle(color: Colors.white)),
+              ),
+            ],
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+      }
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    if (_isScanning) {
+      return Stack(
+        children: [
+          MobileScanner(
+            controller: cameraController,
+            onDetect: _onDetect,
+          ),
+          Positioned(
+            bottom: 40,
+            left: 0,
+            right: 0,
+            child: Center(
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  cameraController.stop();
+                  setState(() => _isScanning = false);
+                },
+                icon: const Icon(Icons.close, color: Colors.white),
+                label: const Text('Cancel Scan', style: TextStyle(color: Colors.white)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.redAccent,
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                ),
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
@@ -1190,13 +1470,10 @@ class _QRScannerTab extends StatelessWidget {
               width: double.infinity,
               child: ElevatedButton.icon(
                 onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: const Text('Opening Camera...'),
-                      behavior: SnackBarBehavior.floating,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                    ),
-                  );
+                  setState(() {
+                    _isScanning = true;
+                  });
+                  cameraController.start();
                 },
                 icon: const Icon(Icons.camera_alt_rounded, color: Colors.white),
                 label: Text(

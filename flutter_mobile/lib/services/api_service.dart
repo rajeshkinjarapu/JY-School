@@ -519,9 +519,13 @@ class ApiService {
   }
 
   static Future<Map<String, dynamic>> applyGatePass({
+    String? studentId,
+    String? staffId,
     required String reason,
     required String destination,
     required String outTime,
+    String? expectedReturnTime,
+    bool? isReturnable,
     String? requestType,
   }) async {
     try {
@@ -532,9 +536,13 @@ class ApiService {
         Uri.parse('$baseUrl/api/gate-pass'),
         headers: _getHeaders(token: token),
         body: jsonEncode({
+          if (studentId != null) 'studentId': studentId,
+          if (staffId != null) 'staffId': staffId,
           'reason': reason,
           'destination': destination,
           'exitTime': outTime,
+          if (expectedReturnTime != null) 'returnTime': expectedReturnTime,
+          if (isReturnable != null) 'isReturnable': isReturnable,
           if (requestType != null) 'requestType': requestType,
         }),
       );
