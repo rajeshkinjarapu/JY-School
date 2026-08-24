@@ -437,8 +437,21 @@ export const getAllStatus = async (req: AuthRequest, res: Response, next: NextFu
     }
 
     const result = exams.map(exam => {
+       let examAllowedSubjects: any[] | null = null;
+       if (exam.subjects) {
+         try {
+           examAllowedSubjects = typeof exam.subjects === 'string' ? JSON.parse(exam.subjects) : exam.subjects;
+         } catch (e) {}
+       }
+
        const enhancedClasses = (exam.classes || []).map((cls) => {
-         const classSubjects = classSubjectsMap[cls.id] || [];
+         let classSubjects = classSubjectsMap[cls.id] || [];
+         
+         if (Array.isArray(examAllowedSubjects) && examAllowedSubjects.length > 0) {
+           const allowedNames = examAllowedSubjects.map((s: any) => s.name?.trim().toUpperCase());
+           classSubjects = classSubjects.filter(s => allowedNames.includes(s.name?.trim().toUpperCase()));
+         }
+
          const enteredSubjectIds = examClassEnteredSubjects[exam.id]?.[cls.id] || new Set<string>();
          
          const enteredSubjects = classSubjects.filter(s => enteredSubjectIds.has(s.id));
