@@ -7,7 +7,7 @@ const getApiUrl = () => {
     // Vercel rewrites will proxy these to the backend.
     if (host.includes('vercel.app')) {
       // NOTE: Update this to your current ngrok URL when using Vercel
-      return 'https://petite-dolls-exist.loca.lt';
+      return 'https://velvet-emerald-niece.ngrok-free.dev';
     }
     
     // For local development on network
@@ -15,7 +15,7 @@ const getApiUrl = () => {
       return `http://${host}:5000`;
     }
   }
-  return 'https://petite-dolls-exist.loca.lt';
+  return 'https://velvet-emerald-niece.ngrok-free.dev';
 };
 
 const API_URL = getApiUrl();
