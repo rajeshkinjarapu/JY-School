@@ -107,30 +107,13 @@ export const PaperDetail: React.FC = () => {
     contentRef: printAreaRef,
     documentTitle: paper?.title || 'Exam Paper',
     pageStyle: `
-      @page { size: A4 portrait; margin: 0; }
-      html, body {
-        margin: 0 !important;
-        padding: 0 !important;
-        background: white !important;
-        background-color: white !important;
-        -webkit-print-color-adjust: exact !important;
-        print-color-adjust: exact !important;
+      @page { size: A4; margin: 0; }
+      body { margin: 0; padding: 0; background: white !important; }
+      .a4-preview-paper { 
+        border: none !important; 
+        box-shadow: none !important; 
+        margin: 0 !important; 
       }
-      * {
-        background-color: transparent !important;
-        color: black !important;
-        -webkit-print-color-adjust: exact !important;
-        print-color-adjust: exact !important;
-      }
-      .a4-preview-paper {
-        background-color: white !important;
-        border: none !important;
-        box-shadow: none !important;
-        outline: none !important;
-      }
-      .bg-white { background-color: white !important; }
-      .bg-slate-50, .bg-slate-100 { background-color: #f8fafc !important; }
-      .bg-slate-900, .bg-gray-900, .bg-gray-950 { background-color: white !important; color: black !important; }
     `,
   });
 
