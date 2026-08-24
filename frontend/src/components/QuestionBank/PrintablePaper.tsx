@@ -85,6 +85,35 @@ export const PrintablePaper: React.FC<PrintablePaperProps> = ({
         boxSizing: 'border-box',
       }}
     >
+      <style dangerouslySetInnerHTML={{ __html: `
+        @media print {
+          @page {
+            size: A4 portrait;
+            margin: 0 !important;
+          }
+          html, body {
+            background-color: #ffffff !important;
+            background: #ffffff !important;
+            color: #000000 !important;
+            color-scheme: light !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+          .a4-preview-paper {
+            background-color: #ffffff !important;
+            background: #ffffff !important;
+            border: none !important;
+            box-shadow: none !important;
+            margin: 0 !important;
+            padding: 15mm 18mm !important;
+            width: 210mm !important;
+            min-height: 297mm !important;
+            box-sizing: border-box !important;
+          }
+        }
+      `}} />
       {/* Watermark */}
       {showWatermark && paper.watermark && (
         <div className="watermark-container pointer-events-none select-none">
