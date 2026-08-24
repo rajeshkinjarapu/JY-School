@@ -83,27 +83,33 @@ export const PrintablePaper: React.FC<PrintablePaperProps> = ({
         padding: '15mm 18mm',
         fontSize: '13px',
         boxSizing: 'border-box',
+        backgroundColor: '#ffffff',
+        color: '#000000',
       }}
     >
       <style dangerouslySetInnerHTML={{ __html: `
         @media print {
+          * {
+            background: white !important;
+            background-color: white !important;
+            color: black !important;
+            forced-color-adjust: none !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+          body, html, .a4-preview-paper, .a4-preview-paper * {
+            background: white !important;
+            background-color: white !important;
+            color: black !important;
+          }
+          :root {
+            color-scheme: light !important;
+          }
           @page {
             size: A4 portrait;
             margin: 0 !important;
           }
-          html, body {
-            background-color: #ffffff !important;
-            background: #ffffff !important;
-            color: #000000 !important;
-            color-scheme: light !important;
-            margin: 0 !important;
-            padding: 0 !important;
-            -webkit-print-color-adjust: exact !important;
-            print-color-adjust: exact !important;
-          }
           .a4-preview-paper {
-            background-color: #ffffff !important;
-            background: #ffffff !important;
             border: none !important;
             box-shadow: none !important;
             margin: 0 !important;

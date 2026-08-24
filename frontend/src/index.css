@@ -240,20 +240,27 @@
     margin: 0 !important; 
   }
   
-  html, body, #root {
+  * {
     background-color: #ffffff !important;
-    background: #ffffff !important;
     color: #000000 !important;
-    color-scheme: light !important;
-    margin: 0 !important;
-    padding: 0 !important;
+    forced-color-adjust: none !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
   
-  .a4-preview-paper {
-    background-color: #ffffff !important;
+  html, body, #root, .a4-preview-paper, .a4-preview-paper * {
     background: #ffffff !important;
+    background-color: #ffffff !important;
+    color: #000000 !important;
+  }
+  
+  /* డార్క్ మోడ్ ని force గా ఆఫ్ చేయండి */
+  :root {
+    color-scheme: light !important;
+    -webkit-color-scheme: light !important;
+  }
+  
+  .a4-preview-paper {
     border: none !important;
     box-shadow: none !important;
     margin: 0 !important;
