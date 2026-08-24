@@ -7,7 +7,7 @@ const getApiUrl = () => {
     // Vercel rewrites will proxy these to the backend.
     if (host.includes('vercel.app')) {
       // NOTE: Update this to your current ngrok URL when using Vercel
-      return 'https://oxidize-entangled-spendable.ngrok-free.dev';
+      return 'https://little-falcons-stop.loca.lt';
     }
     
     // For local development on network
@@ -15,7 +15,7 @@ const getApiUrl = () => {
       return `http://${host}:5000`;
     }
   }
-  return 'https://oxidize-entangled-spendable.ngrok-free.dev';
+  return 'https://little-falcons-stop.loca.lt';
 };
 
 const API_URL = getApiUrl();
@@ -26,6 +26,7 @@ export const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
     'ngrok-skip-browser-warning': '69420',
+    'Bypass-Tunnel-Reminder': 'true',
   },
 });
 
