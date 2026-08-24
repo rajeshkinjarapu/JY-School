@@ -76,7 +76,7 @@ export const PrintablePaper: React.FC<PrintablePaperProps> = ({
 
   return (
     <div
-      className="a4-preview-paper bg-white text-black mx-auto relative font-serif lining-nums tabular-nums leading-relaxed select-text border border-slate-300 print:border-none shadow-2xl print:shadow-none"
+      className="a4-preview-paper bg-white text-black mx-auto relative font-serif lining-nums tabular-nums leading-relaxed select-text border border-slate-350 print:border-none shadow-2xl print:shadow-none"
       style={{
         width: '210mm',
         minHeight: '297mm',
@@ -87,6 +87,10 @@ export const PrintablePaper: React.FC<PrintablePaperProps> = ({
         color: '#000000',
       }}
     >
+      {/* 
+        This embedded style tag guarantees that when the element is cloned and printed, 
+        the print styles will override any global dark mode configurations or browser defaults.
+      */}
       <style dangerouslySetInnerHTML={{ __html: `
         @media print {
           * {
@@ -118,8 +122,16 @@ export const PrintablePaper: React.FC<PrintablePaperProps> = ({
             min-height: 297mm !important;
             box-sizing: border-box !important;
           }
+          .page-break {
+            page-break-before: always !important;
+            break-before: page !important;
+            display: block;
+            height: 0;
+            overflow: hidden;
+          }
         }
       `}} />
+
       {/* Watermark */}
       {showWatermark && paper.watermark && (
         <div className="watermark-container pointer-events-none select-none">
@@ -129,10 +141,10 @@ export const PrintablePaper: React.FC<PrintablePaperProps> = ({
         </div>
       )}
 
-      {/* JEE Exam Booklet Header */}
+      {/* Booklet Header */}
       {!showSolutions && !showAnswerKey && (
         <div className="z-10 relative">
-          {/* Customizable School Header Layout */}
+          {/* Institute Details */}
           <div className="flex items-center gap-4 border-b-2 border-black pb-3 mb-3 font-sans text-black">
             {/* Round Logo Area */}
             <div className="w-[75px] h-[75px] border border-black rounded-full flex-shrink-0 flex items-center justify-center overflow-hidden bg-white">
@@ -150,7 +162,7 @@ export const PrintablePaper: React.FC<PrintablePaperProps> = ({
               )}
             </div>
 
-            {/* School Details */}
+            {/* School Details Text */}
             <div className="flex-1 text-center">
               <h1 className="text-xl md:text-2xl font-black tracking-wide uppercase leading-none text-black font-sans">
                 {paper.instituteName || "SRI VENKATESWARA JY SCHOOL"}
@@ -171,15 +183,18 @@ export const PrintablePaper: React.FC<PrintablePaperProps> = ({
             </h2>
           </div>
 
-          {/* Exam metadata grid (Class, Date, Marks, Duration) */}
+          {/* Metadata Block */}
           <div className="grid grid-cols-2 gap-y-1 mb-4 font-sans text-xs md:text-sm font-bold border-b border-black pb-2 text-black leading-tight">
             <div>Class – {paper.className || "6th A"}</div>
             <div className="text-right">Marks : {paper.totalMarks}</div>
             <div>Date : {paper.examDate || "04/07/2026"}</div>
-            <div className="text-right">Duration : {paper.duration} Minutes &nbsp; {paper.paperCode && <span className="font-mono text-indigo-600">({paper.paperCode})</span>}</div>
+            <div className="text-right">
+              Duration : {paper.duration} Minutes &nbsp; 
+              {paper.paperCode && <span className="font-mono text-indigo-600">({paper.paperCode})</span>}
+            </div>
           </div>
 
-          {/* Candidate Registration Block */}
+          {/* Candidate Registration fields */}
           <div className="border border-black p-3 mb-6 font-sans text-xs grid grid-cols-2 gap-4">
             <div>
               <span className="font-semibold">Candidate's Name:</span> _________________________________________________
@@ -189,7 +204,7 @@ export const PrintablePaper: React.FC<PrintablePaperProps> = ({
             </div>
           </div>
 
-          {/* Instructions Box */}
+          {/* General Instructions Box */}
           <div className="border border-black p-4 mb-6 text-xs font-sans bg-slate-50/40">
             <h3 className="font-bold text-sm border-b border-black pb-1 mb-2">GENERAL INSTRUCTIONS</h3>
             <ul className="list-decimal pl-4 space-y-1.5 leading-relaxed">
@@ -207,7 +222,7 @@ export const PrintablePaper: React.FC<PrintablePaperProps> = ({
         </div>
       )}
 
-      {/* Standard Question Booklet View */}
+      {/* Booklet Questions View */}
       {!showSolutions && !showAnswerKey && (
         <div className="z-10 relative">
           {paper.sections.map((section) => (
@@ -216,7 +231,7 @@ export const PrintablePaper: React.FC<PrintablePaperProps> = ({
                 {section.name}
               </h2>
 
-              {/* Question Layout (Double vs Single Column) */}
+              {/* Layout wrapper (supporting both single and double column styles) */}
               <div className={isDoubleColumn ? "two-column-layout relative" : "space-y-3 relative"}>
                 {section.questions.map((q) => {
                   const qNum = absoluteQuestionCounter++;
@@ -231,7 +246,7 @@ export const PrintablePaper: React.FC<PrintablePaperProps> = ({
                         </div>
                       </div>
 
-                      {/* Display Diagram if it exists */}
+                      {/* Render diagram image if available */}
                       {q.imageUrl && (
                         <div className="my-3 flex justify-center max-w-full">
                           <img
@@ -242,7 +257,7 @@ export const PrintablePaper: React.FC<PrintablePaperProps> = ({
                         </div>
                       )}
 
-                      {/* Options Grid (with horizontal column alignment based on text length) */}
+                      {/* MCQ Option Choices */}
                       {q.type.startsWith('MCQ') && (
                         <div className={`${
                           Math.max((q.optionA || '').length, (q.optionB || '').length, (q.optionC || '').length, (q.optionD || '').length) < 20
@@ -270,6 +285,7 @@ export const PrintablePaper: React.FC<PrintablePaperProps> = ({
                         </div>
                       )}
 
+                      {/* Numerical Question hint */}
                       {q.type === 'NUMERICAL' && (
                         <div className="mt-2 text-slate-500 font-sans italic text-[11px]">
                           [Numerical Answer Type - Integer or Decimal value]
@@ -284,7 +300,7 @@ export const PrintablePaper: React.FC<PrintablePaperProps> = ({
         </div>
       )}
 
-      {/* OMR Grid Printout (JEE Hall Style) */}
+      {/* OMR Grid Response sheet */}
       {showOmr && !showSolutions && !showAnswerKey && (
         <div className="page-break z-10 relative pt-6 font-sans">
           <div className="border-2 border-black p-6 rounded-xl">
@@ -323,7 +339,7 @@ export const PrintablePaper: React.FC<PrintablePaperProps> = ({
         </div>
       )}
 
-      {/* Printable Answer Key Sheet */}
+      {/* Answer Key Grid */}
       {showAnswerKey && (
         <div className="z-10 relative font-sans">
           <h2 className="text-center font-bold text-lg border-b-2 border-black pb-2 mb-6">
@@ -363,7 +379,7 @@ export const PrintablePaper: React.FC<PrintablePaperProps> = ({
         </div>
       )}
 
-      {/* Printable Detailed Solutions Sheet */}
+      {/* Detailed Solutions sheet */}
       {showSolutions && (
         <div className="z-10 relative font-sans">
           <h2 className="text-center font-bold text-lg border-b-2 border-black pb-2 mb-6 uppercase tracking-wider">
@@ -414,4 +430,3 @@ export const PrintablePaper: React.FC<PrintablePaperProps> = ({
     </div>
   );
 };
-
