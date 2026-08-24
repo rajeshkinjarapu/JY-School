@@ -6,8 +6,8 @@ const getApiUrl = () => {
     // If accessing via Vercel or DuckDNS (HTTPS), use relative URLs for API to avoid mixed content.
     // Vercel rewrites will proxy these to the backend.
     if (host.includes('vercel.app')) {
-      // Use relative URL so Vercel rewrites (vercel.json) can proxy it to the VPS
-      return '';
+      // NOTE: Update this to your current ngrok URL when using Vercel
+      return 'https://jy-school-production-f159.up.railway.app';
     }
     
     // For local development on network
@@ -15,7 +15,7 @@ const getApiUrl = () => {
       return `http://${host}:5000`;
     }
   }
-  return '';
+  return 'https://jy-school-production-f159.up.railway.app';
 };
 
 const API_URL = getApiUrl();
