@@ -172,6 +172,12 @@ export const MCQPaperGeneratorPage = () => {
       return;
     }
 
+    const cloneEl = paperEl.cloneNode(true) as HTMLElement;
+    cloneEl.classList.remove('shadow-2xl');
+    cloneEl.style.boxShadow = 'none';
+    cloneEl.style.border = 'none';
+    cloneEl.style.outline = 'none';
+
     const printWindow = window.open('', '_blank', 'width=900,height=1200');
     if (!printWindow) {
       window.print();
@@ -201,7 +207,7 @@ export const MCQPaperGeneratorPage = () => {
           </style>
         </head>
         <body>
-          <div id="print-root">${paperEl.outerHTML}</div>
+          <div id="print-root">${cloneEl.outerHTML}</div>
         </body>
       </html>
     `);
