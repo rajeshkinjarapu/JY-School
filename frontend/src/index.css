@@ -63,7 +63,7 @@
     overflow: hidden;
     overscroll-behavior-y: none;
     touch-action: manipulation;
-    background-color: #0f172a !important;
+    background-color: #0f172a;
   }
 
 
@@ -248,6 +248,9 @@
     --tw-bg-opacity: 1 !important;
     background: #ffffff !important;
     background-color: #ffffff !important;
+    height: auto !important;
+    min-height: auto !important;
+    overflow: visible !important;
   }
 
   /* Override every element's background */
