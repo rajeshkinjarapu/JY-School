@@ -145,7 +145,46 @@ export const ExamPaperGeneratorPage = () => {
   };
 
   const handlePrint = () => {
-    window.print();
+    const paperEl = document.getElementById('a4-preview-paper');
+    if (!paperEl) { window.print(); return; }
+    
+    const cloneEl = paperEl.cloneNode(true) as HTMLElement;
+    cloneEl.classList.remove('shadow-2xl', 'min-h-[297mm]', 'w-[210mm]');
+    cloneEl.style.boxShadow = 'none';
+    cloneEl.style.border = 'none';
+    cloneEl.style.outline = 'none';
+    cloneEl.style.minHeight = '0';
+    cloneEl.style.width = '100%';
+
+    let oldIframe = document.getElementById('print-iframe');
+    if (oldIframe) { oldIframe.remove(); }
+
+    const iframe = document.createElement('iframe');
+    iframe.id = 'print-iframe';
+    iframe.style.position = 'absolute';
+    iframe.style.width = '0px';
+    iframe.style.height = '0px';
+    iframe.style.border = 'none';
+    iframe.style.left = '-10000px';
+    iframe.style.top = '-10000px';
+    document.body.appendChild(iframe);
+
+    const printDocument = iframe.contentWindow?.document;
+    if (!printDocument) { window.print(); return; }
+
+    const styleLinks = Array.from(document.querySelectorAll('link[rel="stylesheet"]')).map((l) => l.outerHTML).join('');
+    const styleTags = Array.from(document.querySelectorAll('style')).map((s) => `<style>${s.innerHTML}</style>`).join('');
+
+    printDocument.write(`<!DOCTYPE html><html><head><meta charset="utf-8"/><meta name="color-scheme" content="light"/><title>Print</title>${styleLinks}${styleTags}<style>:root{color-scheme:light !important;}@page{margin:12.7mm;size:A4;}html,body{margin:0;padding:0;background-color:#ffffff !important;background:#ffffff !important;color:#000000 !important;font-family:serif;}@media print{html,body{background-color:#ffffff !important;background:#ffffff !important;}}#print-root{width:100%;margin:0 auto;background-color:#ffffff !important;}</style></head><body><div id="print-root">${cloneEl.outerHTML}</div></body></html>`);
+    printDocument.close();
+
+    iframe.onload = () => {
+      setTimeout(() => {
+        iframe.contentWindow?.focus();
+        iframe.contentWindow?.print();
+        setTimeout(() => iframe.remove(), 1000);
+      }, 500);
+    };
   };
 
   const toggleFullScreen = () => {
