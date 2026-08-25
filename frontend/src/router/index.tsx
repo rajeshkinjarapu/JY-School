@@ -102,6 +102,8 @@ const TransportStudentsPage = lazy(() => import('../pages/transport/StudentTrans
 const TransportFuelLogsPage = lazy(() => import('../pages/transport/FuelLogsPage'));
 const TransportMaintenanceLogsPage = lazy(() => import('../pages/transport/MaintenanceLogsPage'));
 const AnswerKeyPage = lazy(() => import('../pages/question-bank/AnswerKeyPage'));
+const IdCardDashboard = lazy(() => import('../pages/idcards/IdCardDashboard').then(m => ({ default: m.IdCardDashboard })));
+const IdCardGeneratorPage = lazy(() => import('../pages/idcards/IdCardGeneratorPage').then(m => ({ default: m.IdCardGeneratorPage })));
 
 
 const AttendanceWrapper = () => {
@@ -459,18 +461,34 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: 'transport/fuel',
+        path: 'transport/fuel-logs',
         element: withSuspense(
-          <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN']}>
+          <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN', 'TRANSPORT_MANAGER']}>
             <TransportFuelLogsPage />
           </ProtectedRoute>
         ),
       },
       {
-        path: 'transport/maintenance',
+        path: 'transport/maintenance-logs',
+        element: withSuspense(
+          <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN', 'TRANSPORT_MANAGER']}>
+            <TransportMaintenanceLogsPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'id-cards',
         element: withSuspense(
           <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN']}>
-            <TransportMaintenanceLogsPage />
+            <IdCardDashboard />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'id-cards/generate/:templateId',
+        element: withSuspense(
+          <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN']}>
+            <IdCardGeneratorPage />
           </ProtectedRoute>
         ),
       },
