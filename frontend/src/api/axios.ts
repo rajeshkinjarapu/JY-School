@@ -7,11 +7,7 @@ const getApiUrl = () => {
     // Vercel rewrites will proxy these to the backend.
     if (host.includes('vercel.app')) {
       // NOTE: Update this to your current ngrok URL when using Vercel
-<<<<<<< HEAD
-      return 'https://oxidize-entangled-spendable.ngrok-free.dev';
-=======
       return 'https://jy-school-production-f159.up.railway.app';
->>>>>>> 2f32945f038a8fd5ecb6e2d211e317f162b3c3d9
     }
     
     // For local development on network
@@ -19,11 +15,7 @@ const getApiUrl = () => {
       return `http://${host}:5000`;
     }
   }
-<<<<<<< HEAD
-  return 'http://localhost:5000';
-=======
   return 'https://jy-school-production-f159.up.railway.app';
->>>>>>> 2f32945f038a8fd5ecb6e2d211e317f162b3c3d9
 };
 
 const API_URL = getApiUrl();
