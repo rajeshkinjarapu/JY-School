@@ -9,7 +9,7 @@ class ApiService {
   static String getImageUrl(String? photoUrl) {
     if (photoUrl == null || photoUrl.isEmpty) return '';
     final trimmed = photoUrl.trim();
-    if (trimmed.isEmpty) return '';
+    if (trimmed.isEmpty || trimmed == 'null' || trimmed == 'undefined') return '';
     
     // Fix for localhost URLs from backend in mobile app
     if (trimmed.contains('localhost:')) {

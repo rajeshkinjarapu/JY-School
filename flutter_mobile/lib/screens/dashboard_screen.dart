@@ -84,18 +84,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
           _user = jsonDecode(userString);
         });
       }
-      await _fetchLiveStats();
-    } else {
-      final res = await ApiService.getMe();
-      if (res['success'] && mounted) {
-        setState(() {
-          _user = res['data'];
-        });
-        await _fetchLiveStats();
-      } else if (mounted) {
-        _handleLogout();
-      }
     }
+    
+    // Always fetch fresh user data to get updated photoUrl, name, etc.
+    final res = await ApiService.getMe();
+    if (res['success'] && mounted) {
+      setState(() {
+        _user = res['data'];
+      });
+      // Update cache
+      await prefs.setString('user', jsonEncode(res['data']));
+    } else if (userString == null && mounted) {
+      _handleLogout();
+      return;
+    }
+
+    await _fetchLiveStats();
   }
 
   Future<void> _fetchLiveStats() async {
@@ -489,7 +493,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(16),
-                child: _user?['photoUrl'] != null && _user!['photoUrl'].toString().isNotEmpty
+                child: _user?['photoUrl'] != null && _user!['photoUrl'].toString().isNotEmpty && _user!['photoUrl'].toString() != 'null' && _user!['photoUrl'].toString() != 'undefined'
                     ? Image.network(
                         ApiService.getImageUrl(_user!['photoUrl'].toString()),
                         fit: BoxFit.cover,

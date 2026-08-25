@@ -150,7 +150,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             ClipOval(
                               child: SizedBox(
                                 width: 98, height: 98,
-                                child: (photoUrl != null && photoUrl.toString().isNotEmpty)
+                                child: (photoUrl != null && photoUrl.toString().isNotEmpty && photoUrl.toString() != 'null' && photoUrl.toString() != 'undefined')
                                     ? Image.network(
                                         ApiService.getImageUrl(photoUrl.toString()),
                                         fit: BoxFit.cover,
