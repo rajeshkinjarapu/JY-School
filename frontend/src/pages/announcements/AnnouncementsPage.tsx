@@ -8,6 +8,7 @@ import {
   Calendar, Flag, Edit3, Search, Filter, Archive, Zap, BarChart2
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { PageHeader } from '../../components/UI/PageHeader';
 
 const PRIORITY_CONFIG: Record<string, { label: string; color: string; bg: string; icon: React.ElementType; dot: string }> = {
   HIGH:   { label: 'Urgent',  color: 'text-red-600',    bg: 'bg-red-50 border-red-200',    icon: Zap,          dot: 'bg-red-500' },
@@ -166,226 +167,285 @@ export const AnnouncementsPage: React.FC = () => {
   const totalDraft = announcements.filter(a => a.status === 'DRAFT').length;
 
   return (
-    <div className="flex flex-col h-full bg-slate-50/60" style={{ minHeight: 'calc(100vh - 64px)' }}>
-      {/* Header */}
-      <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 px-6 py-5">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-white/20 backdrop-blur rounded-xl">
-              <Megaphone className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <h1 className="text-xl font-black text-white">Announcements</h1>
-              <p className="text-xs text-white/70">School-wide broadcast system</p>
-            </div>
-          </div>
-          {canCreate && (
-            <button onClick={openCreate}
-              className="flex items-center gap-2 px-4 py-2 bg-white text-indigo-700 font-bold text-sm rounded-xl shadow hover:bg-indigo-50 transition-colors cursor-pointer">
-              <Plus className="w-4 h-4" />
-              <span className="hidden sm:inline">Create</span>
+    <div className="flex flex-col h-full bg-slate-50" style={{ minHeight: 'calc(100vh - 64px)' }}>
+      <PageHeader 
+        title="Announcements" 
+        icon={<Megaphone className="w-5 h-5" />}
+        action={
+          canCreate ? (
+            <button onClick={openCreate} className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 text-white rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all font-bold">
+              <Plus className="w-5 h-5" /> Create Announcement
             </button>
-          )}
-        </div>
+          ) : undefined
+        }
+      />
 
-        {/* Stats */}
-        <div className="grid grid-cols-3 gap-3">
-          {[
-            { label: 'Published', value: totalPublished, icon: CheckCircle, color: 'text-emerald-300' },
-            { label: 'Urgent', value: totalUrgent, icon: Zap, color: 'text-red-300' },
-            { label: 'Drafts', value: totalDraft, icon: Edit3, color: 'text-amber-300' },
-          ].map(stat => (
-            <div key={stat.label} className="bg-white/15 backdrop-blur rounded-xl p-3 text-center">
-              <stat.icon className={`w-5 h-5 mx-auto mb-1 ${stat.color}`} />
-              <div className="text-xl font-black text-white">{stat.value}</div>
-              <div className="text-[10px] text-white/70 font-medium">{stat.label}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Search & Filters */}
-      <div className="bg-white border-b border-gray-100 px-4 py-3 flex flex-wrap items-center gap-3">
-        <div className="flex items-center gap-2 flex-1 min-w-[180px] bg-gray-50 border border-gray-200 rounded-xl px-3 py-2">
-          <Search className="w-4 h-4 text-gray-400" />
-          <input placeholder="Search announcements…" value={searchTerm} onChange={e => setSearchTerm(e.target.value)}
-            className="flex-1 text-sm bg-transparent outline-none text-gray-700 placeholder-gray-400" />
-        </div>
-        <div className="flex items-center gap-2">
-          <Filter className="w-4 h-4 text-gray-400" />
-          <select value={filterPriority} onChange={e => setFilterPriority(e.target.value)}
-            className="text-xs font-semibold text-gray-600 bg-gray-50 border border-gray-200 rounded-lg px-2 py-1.5 outline-none cursor-pointer">
-            <option value="ALL">All Priority</option>
-            <option value="HIGH">🔴 Urgent</option>
-            <option value="NORMAL">🔵 Normal</option>
-            <option value="LOW">⚪ Low</option>
-          </select>
-          {isManagement && (
-            <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)}
-              className="text-xs font-semibold text-gray-600 bg-gray-50 border border-gray-200 rounded-lg px-2 py-1.5 outline-none cursor-pointer">
-              <option value="ALL">All Status</option>
-              <option value="PUBLISHED">Published</option>
-              <option value="DRAFT">Draft</option>
-              <option value="SCHEDULED">Scheduled</option>
-            </select>
-          )}
-        </div>
-      </div>
-
-      {/* Content */}
-      <div className="flex-1 overflow-auto p-4 md:p-6">
-        {loading ? (
-          <div className="flex items-center justify-center py-24"><LoadingSpinner size="lg" /></div>
-        ) : filtered.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-24 text-gray-400">
-            <Megaphone className="w-16 h-16 mb-4 opacity-20" />
-            <p className="text-lg font-bold text-gray-500">No announcements found</p>
-            <p className="text-sm mt-1 text-gray-400">Try adjusting filters or create a new one</p>
-          </div>
-        ) : (
-          <div className="max-w-4xl mx-auto space-y-6">
-            {/* Pinned section */}
-            {pinned.length > 0 && (
+      <div className="flex-1 overflow-auto p-4 md:p-6 lg:p-8">
+        <div className="max-w-7xl mx-auto space-y-6">
+          
+          {/* Stats Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between group hover:shadow-md transition-shadow">
               <div>
-                <div className="flex items-center gap-2 mb-3">
-                  <Pin className="w-4 h-4 text-amber-500" />
-                  <span className="text-sm font-bold text-amber-600 uppercase tracking-wider">Pinned</span>
+                <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Published</p>
+                <h3 className="text-3xl font-black text-gray-800">{totalPublished}</h3>
+              </div>
+              <div className="p-4 bg-emerald-50 rounded-2xl text-emerald-600 group-hover:scale-110 transition-transform">
+                <CheckCircle className="w-8 h-8" />
+              </div>
+            </div>
+            
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between group hover:shadow-md transition-shadow">
+              <div>
+                <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Urgent</p>
+                <h3 className="text-3xl font-black text-gray-800">{totalUrgent}</h3>
+              </div>
+              <div className="p-4 bg-red-50 rounded-2xl text-red-600 group-hover:scale-110 transition-transform">
+                <Zap className="w-8 h-8" />
+              </div>
+            </div>
+            
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between group hover:shadow-md transition-shadow">
+              <div>
+                <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Drafts</p>
+                <h3 className="text-3xl font-black text-gray-800">{totalDraft}</h3>
+              </div>
+              <div className="p-4 bg-amber-50 rounded-2xl text-amber-600 group-hover:scale-110 transition-transform">
+                <Edit3 className="w-8 h-8" />
+              </div>
+            </div>
+          </div>
+
+          {/* Search & Filters */}
+          <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex flex-col sm:flex-row gap-4 items-center justify-between">
+            <div className="flex items-center gap-3 w-full sm:w-auto flex-1 max-w-md">
+              <div className="relative w-full">
+                <Search className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                <input 
+                  type="text" 
+                  placeholder="Search announcements..." 
+                  value={searchTerm}
+                  onChange={e => setSearchTerm(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+                />
+              </div>
+            </div>
+            <div className="flex items-center gap-3 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0">
+              <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-xl px-3 py-1.5 shrink-0">
+                <Filter className="w-4 h-4 text-gray-500" />
+                <select 
+                  value={filterPriority} 
+                  onChange={e => setFilterPriority(e.target.value)}
+                  className="bg-transparent text-sm font-semibold text-gray-700 outline-none cursor-pointer py-1"
+                >
+                  <option value="ALL">All Priority</option>
+                  <option value="HIGH">Urgent</option>
+                  <option value="NORMAL">Normal</option>
+                  <option value="LOW">General</option>
+                </select>
+              </div>
+              {isManagement && (
+                <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-xl px-3 py-1.5 shrink-0">
+                  <select 
+                    value={filterStatus} 
+                    onChange={e => setFilterStatus(e.target.value)}
+                    className="bg-transparent text-sm font-semibold text-gray-700 outline-none cursor-pointer py-1"
+                  >
+                    <option value="ALL">All Status</option>
+                    <option value="PUBLISHED">Published</option>
+                    <option value="DRAFT">Drafts</option>
+                    <option value="SCHEDULED">Scheduled</option>
+                  </select>
                 </div>
-                <div className="space-y-3">
-                  {pinned.map((ann, idx) => (
-                    <AnnouncementCard key={ann.id} ann={ann} idx={idx} isManagement={isManagement}
-                      expandedId={expandedId} setExpandedId={setExpandedId}
-                      onDelete={handleDelete} onPin={handlePin} onEdit={openEdit}
-                      onMarkRead={handleMarkRead} />
-                  ))}
+              )}
+            </div>
+          </div>
+
+          {/* Content Area */}
+          <div>
+            {loading ? (
+              <div className="flex items-center justify-center py-24"><LoadingSpinner size="lg" /></div>
+            ) : filtered.length === 0 ? (
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center justify-center py-24 text-gray-400">
+                <div className="p-6 bg-gray-50 rounded-full mb-4">
+                  <Megaphone className="w-12 h-12 text-gray-300" />
                 </div>
+                <p className="text-xl font-bold text-gray-800 mb-1">No announcements found</p>
+                <p className="text-sm text-gray-500">Try adjusting filters or create a new announcement.</p>
+              </div>
+            ) : (
+              <div className="space-y-8">
+                {/* Pinned Section */}
+                {pinned.length > 0 && (
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2 px-2">
+                      <Pin className="w-5 h-5 text-amber-500" />
+                      <h2 className="text-lg font-black text-gray-800">Pinned Announcements</h2>
+                    </div>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                      {pinned.map((ann, idx) => (
+                        <AnnouncementCard key={ann.id} ann={ann} idx={idx} isManagement={isManagement}
+                          expandedId={expandedId} setExpandedId={setExpandedId}
+                          onDelete={handleDelete} onPin={handlePin} onEdit={openEdit}
+                          onMarkRead={handleMarkRead} />
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Regular Section */}
+                {regular.length > 0 && (
+                  <div className="space-y-4">
+                    {pinned.length > 0 && (
+                      <div className="flex items-center gap-2 px-2 mt-4">
+                        <Clock className="w-5 h-5 text-gray-400" />
+                        <h2 className="text-lg font-black text-gray-800">Recent Announcements</h2>
+                      </div>
+                    )}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                      {regular.map((ann, idx) => (
+                        <AnnouncementCard key={ann.id} ann={ann} idx={idx + pinned.length} isManagement={isManagement}
+                          expandedId={expandedId} setExpandedId={setExpandedId}
+                          onDelete={handleDelete} onPin={handlePin} onEdit={openEdit}
+                          onMarkRead={handleMarkRead} />
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
-
-            {/* Regular list */}
-            <div className="space-y-3">
-              {regular.map((ann, idx) => (
-                <AnnouncementCard key={ann.id} ann={ann} idx={idx + pinned.length} isManagement={isManagement}
-                  expandedId={expandedId} setExpandedId={setExpandedId}
-                  onDelete={handleDelete} onPin={handlePin} onEdit={openEdit}
-                  onMarkRead={handleMarkRead} />
-              ))}
-            </div>
           </div>
-        )}
+        </div>
       </div>
 
       {/* Create/Edit Modal */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/60 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
             {/* Modal Header */}
-            <div className="sticky top-0 bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-4 rounded-t-2xl flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <Megaphone className="w-5 h-5 text-white" />
-                <h3 className="text-lg font-black text-white">{editItem ? 'Edit Announcement' : 'Create Announcement'}</h3>
+            <div className="sticky top-0 bg-white border-b border-gray-100 px-8 py-5 flex items-center justify-between z-10">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-indigo-50 text-indigo-600 rounded-xl">
+                  <Megaphone className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-black text-gray-900">{editItem ? 'Edit Announcement' : 'Create Announcement'}</h3>
+                  <p className="text-sm text-gray-500 font-medium">Broadcast a message to your school community</p>
+                </div>
               </div>
-              <button onClick={() => setShowModal(false)} className="p-1.5 bg-white/20 rounded-lg text-white hover:bg-white/30 cursor-pointer">
-                <X className="w-4 h-4" />
+              <button onClick={() => setShowModal(false)} className="p-2 bg-gray-50 hover:bg-gray-100 rounded-full text-gray-500 transition-colors">
+                <X className="w-5 h-5" />
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="p-6 space-y-5">
+            <form onSubmit={handleSubmit} className="p-8 space-y-6">
               {/* Title */}
               <div>
-                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">Title *</label>
-                <input type="text" required placeholder="e.g. Unit Test Schedule - Class 10"
+                <label className="block text-sm font-bold text-gray-700 mb-2">Announcement Title *</label>
+                <input type="text" required placeholder="e.g. Annual Sports Meet 2026"
                   value={form.title} onChange={e => setForm(f => ({...f, title: e.target.value}))}
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-none transition-all font-medium" />
               </div>
 
               {/* Content */}
               <div>
-                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">Message *</label>
-                <textarea required rows={5} placeholder="Type announcement details here..."
+                <label className="block text-sm font-bold text-gray-700 mb-2">Detailed Message *</label>
+                <textarea required rows={6} placeholder="Write your announcement details here..."
                   value={form.content} onChange={e => setForm(f => ({...f, content: e.target.value}))}
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none resize-none" />
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-none transition-all resize-none" />
               </div>
 
-              {/* Row: Priority + Status */}
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Priority */}
+                <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100">
+                  <label className="block text-sm font-bold text-gray-700 mb-3">Priority Level</label>
+                  <div className="flex flex-col gap-2">
+                    {[
+                      { val: 'HIGH', label: 'Urgent', color: 'red' },
+                      { val: 'NORMAL', label: 'Normal', color: 'blue' },
+                      { val: 'LOW', label: 'General', color: 'gray' }
+                    ].map(p => (
+                      <label key={p.val} className={`flex items-center p-3 border rounded-xl cursor-pointer transition-all ${form.priority === p.val ? `border-${p.color}-500 bg-white shadow-sm ring-1 ring-${p.color}-500` : 'border-gray-200 hover:border-gray-300 bg-transparent'}`}>
+                        <input type="radio" name="priority" value={p.val} checked={form.priority === p.val} onChange={e => setForm(f => ({...f, priority: e.target.value}))} className="hidden" />
+                        <div className={`w-4 h-4 rounded-full border-2 mr-3 flex items-center justify-center ${form.priority === p.val ? `border-${p.color}-500` : 'border-gray-300'}`}>
+                          {form.priority === p.val && <div className={`w-2 h-2 rounded-full bg-${p.color}-500`} />}
+                        </div>
+                        <span className={`font-bold ${form.priority === p.val ? `text-${p.color}-700` : 'text-gray-600'}`}>{p.label}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Target Audience */}
+                <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100 flex flex-col justify-between">
+                  <div>
+                    <label className="block text-sm font-bold text-gray-700 mb-3">Target Audience</label>
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      {['STUDENT', 'TEACHER', 'STAFF'].map(role => (
+                        <label key={role} className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 cursor-pointer transition-all text-sm font-bold ${
+                          form.targetRoles.includes(role)
+                            ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
+                            : 'border-gray-200 bg-white text-gray-500 hover:border-gray-300'
+                        }`}>
+                          <input type="checkbox" checked={form.targetRoles.includes(role)}
+                            onChange={() => handleRoleToggle(role)} className="hidden" />
+                          {role === 'STUDENT' ? <GraduationCap className="w-4 h-4" /> : <Users className="w-4 h-4" />}
+                          {role}
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Specific Class (Optional)</label>
+                    <input type="text" placeholder="e.g. 10-A"
+                      value={form.targetClass} onChange={e => setForm(f => ({...f, targetClass: e.target.value}))}
+                      className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500" />
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Status */}
                 <div>
-                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
-                    <Flag className="w-3 h-3 inline mr-1" />Priority
-                  </label>
-                  <select value={form.priority} onChange={e => setForm(f => ({...f, priority: e.target.value}))}
-                    className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm font-semibold outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer">
-                    <option value="HIGH">🔴 Urgent / High</option>
-                    <option value="NORMAL">🔵 Normal</option>
-                    <option value="LOW">⚪ Low / General</option>
+                  <label className="block text-sm font-bold text-gray-700 mb-2">Publish Status</label>
+                  <select value={form.status} onChange={e => setForm(f => ({...f, status: e.target.value}))}
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer">
+                    <option value="PUBLISHED">Publish Immediately</option>
+                    <option value="DRAFT">Save as Draft</option>
+                    <option value="SCHEDULED">Schedule for Later</option>
                   </select>
                 </div>
+
+                {/* Expiry */}
                 <div>
-                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">Status</label>
-                  <select value={form.status} onChange={e => setForm(f => ({...f, status: e.target.value}))}
-                    className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm font-semibold outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer">
-                    <option value="PUBLISHED">✅ Publish Now</option>
-                    <option value="DRAFT">📝 Save as Draft</option>
-                    <option value="SCHEDULED">⏰ Schedule</option>
-                  </select>
+                  <label className="block text-sm font-bold text-gray-700 mb-2">Expires At (Optional)</label>
+                  <input type="datetime-local" value={form.expiresAt}
+                    onChange={e => setForm(f => ({...f, expiresAt: e.target.value}))}
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500" />
                 </div>
               </div>
 
               {/* Schedule Date */}
               {form.status === 'SCHEDULED' && (
-                <div>
-                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
-                    <Calendar className="w-3 h-3 inline mr-1" />Publish Date & Time
+                <div className="bg-purple-50 p-4 rounded-xl border border-purple-100">
+                  <label className="block text-sm font-bold text-purple-900 mb-2">
+                    <Calendar className="w-4 h-4 inline mr-2" />Scheduled Publish Date & Time
                   </label>
                   <input type="datetime-local" value={form.scheduledAt}
                     onChange={e => setForm(f => ({...f, scheduledAt: e.target.value}))}
-                    className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500" />
+                    className="w-full px-4 py-3 bg-white border border-purple-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-purple-500" />
                 </div>
               )}
 
-              {/* Target Audience */}
-              <div>
-                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
-                  <Users className="w-3 h-3 inline mr-1" />Target Audience
-                </label>
-                <div className="flex gap-3 flex-wrap mb-2">
-                  {['STUDENT', 'TEACHER', 'STAFF'].map(role => (
-                    <label key={role} className={`flex items-center gap-2 px-4 py-2 rounded-xl border-2 cursor-pointer transition-all text-sm font-bold ${
-                      form.targetRoles.includes(role)
-                        ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
-                        : 'border-gray-200 text-gray-500 hover:border-gray-300'
-                    }`}>
-                      <input type="checkbox" checked={form.targetRoles.includes(role)}
-                        onChange={() => handleRoleToggle(role)} className="hidden" />
-                      {role === 'STUDENT' ? <GraduationCap className="w-4 h-4" /> : <Users className="w-4 h-4" />}
-                      {role}
-                    </label>
-                  ))}
-                </div>
-                <input type="text" placeholder="Specific Class (optional) e.g. 10-A, 9-B"
-                  value={form.targetClass} onChange={e => setForm(f => ({...f, targetClass: e.target.value}))}
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500" />
-              </div>
-
-              {/* Expiry */}
-              <div>
-                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
-                  <Clock className="w-3 h-3 inline mr-1" />Expires At (optional)
-                </label>
-                <input type="datetime-local" value={form.expiresAt}
-                  onChange={e => setForm(f => ({...f, expiresAt: e.target.value}))}
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500" />
-              </div>
-
               {/* Actions */}
-              <div className="flex gap-3 justify-end pt-2 border-t border-gray-100">
+              <div className="flex justify-end gap-3 pt-6 border-t border-gray-100">
                 <button type="button" onClick={() => setShowModal(false)}
-                  className="px-4 py-2 text-sm font-bold text-gray-600 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors cursor-pointer">
+                  className="px-6 py-3 text-sm font-bold text-gray-600 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
                   Cancel
                 </button>
                 <button type="submit" disabled={saving}
-                  className="px-6 py-2 text-sm font-bold text-white bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl hover:from-indigo-700 hover:to-purple-700 transition-colors cursor-pointer shadow-md disabled:opacity-50">
-                  {saving ? 'Saving…' : (editItem ? 'Update' : 'Publish')}
+                  className="px-8 py-3 text-sm font-bold text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 transition-all shadow-md shadow-indigo-200 disabled:opacity-50">
+                  {saving ? 'Processing...' : (editItem ? 'Save Changes' : 'Publish Announcement')}
                 </button>
               </div>
             </form>
@@ -406,101 +466,108 @@ const AnnouncementCard: React.FC<{
   const isExpanded = expandedId === ann.id;
   const priorityCfg = PRIORITY_CONFIG[ann.priority] || PRIORITY_CONFIG.NORMAL;
   const statusCfg = STATUS_CONFIG[ann.status] || STATUS_CONFIG.PUBLISHED;
-  const gradient = GRADIENT_BANDS[idx % GRADIENT_BANDS.length];
   const roles = typeof ann.targetRoles === 'string' ? ann.targetRoles.split(',').filter(Boolean) : (ann.targetRoles || []);
 
   return (
-    <div className={`bg-white rounded-2xl shadow-sm border overflow-hidden transition-all duration-200 hover:shadow-md ${ann.isPinned ? 'border-amber-300 ring-1 ring-amber-200' : 'border-gray-100'}`}>
-      {/* Top colored band */}
-      <div className={`h-1.5 bg-gradient-to-r ${gradient}`} />
-      <div className="p-5">
+    <div className={`bg-white rounded-2xl shadow-sm border overflow-hidden transition-all duration-300 hover:shadow-lg ${ann.isPinned ? 'border-amber-400 ring-2 ring-amber-100' : 'border-gray-200 hover:border-indigo-200'}`}>
+      <div className="p-6">
         <div className="flex items-start gap-4">
-          {/* Icon */}
-          <div className={`p-3 rounded-2xl bg-gradient-to-br ${gradient} text-white shadow shrink-0 relative`}>
-            <priorityCfg.icon className="w-5 h-5" />
-            {ann.priority === 'HIGH' && (
-              <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-white animate-pulse" />
-            )}
-          </div>
+          
+          {/* Status/Priority Indicator Bar */}
+          <div className={`w-1.5 h-full absolute left-0 top-0 bottom-0 ${priorityCfg.dot}`} />
 
           <div className="flex-1 min-w-0">
-            {/* Title Row */}
-            <div className="flex items-start justify-between gap-2 mb-1">
-              <div className="flex items-center gap-2 flex-wrap">
-                {ann.isPinned && <Pin className="w-3.5 h-3.5 text-amber-500 shrink-0" />}
-                <h4 className="font-black text-base text-gray-900 leading-tight">{ann.title}</h4>
+            {/* Header Row */}
+            <div className="flex items-start justify-between gap-3 mb-2">
+              <div className="flex flex-col gap-1.5">
+                <div className="flex items-center gap-2 flex-wrap">
+                  {ann.isPinned && <Pin className="w-4 h-4 text-amber-500 fill-amber-500 shrink-0" />}
+                  <h4 className="font-black text-lg text-gray-900 leading-tight tracking-tight">{ann.title}</h4>
+                </div>
+                <div className="flex items-center gap-3 text-xs font-bold text-gray-500">
+                  <span className="flex items-center gap-1.5 bg-gray-100 px-2 py-1 rounded-md text-gray-600">
+                    <Clock className="w-3.5 h-3.5" />
+                    {new Date(ann.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                  </span>
+                  <span className={`flex items-center gap-1.5 px-2 py-1 rounded-md ${statusCfg.bg} ${statusCfg.color}`}>
+                    {statusCfg.label}
+                  </span>
+                  <span className={`flex items-center gap-1.5 px-2 py-1 rounded-md border ${priorityCfg.bg} ${priorityCfg.color}`}>
+                    <priorityCfg.icon className="w-3.5 h-3.5" />
+                    {priorityCfg.label}
+                  </span>
+                </div>
               </div>
-              <div className="flex items-center gap-1.5 shrink-0">
-                {/* Status Badge */}
-                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${statusCfg.bg} ${statusCfg.color}`}>
-                  {statusCfg.label}
-                </span>
-                {/* Priority Badge */}
-                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${priorityCfg.bg} ${priorityCfg.color}`}>
-                  {priorityCfg.label}
-                </span>
-              </div>
-            </div>
-
-            {/* Meta info */}
-            <div className="flex items-center flex-wrap gap-x-3 gap-y-1 text-xs text-gray-400 font-medium mb-2">
-              <span className="flex items-center gap-1">
-                <Clock className="w-3 h-3" />
-                {new Date(ann.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
-              </span>
-              <span className="flex items-center gap-1">
-                <Users className="w-3 h-3" />
-                {roles.join(', ') || 'All'}
-                {ann.targetClass && <span className="text-indigo-500 font-bold"> · {ann.targetClass}</span>}
-              </span>
+              
+              {/* Management Actions */}
               {isManagement && (
-                <span className="flex items-center gap-1">
-                  <Eye className="w-3 h-3" />
-                  {ann.readCount || 0} read
-                </span>
-              )}
-              {ann.hasRead && (
-                <span className="flex items-center gap-1 text-emerald-500">
-                  <CheckCircle className="w-3 h-3" />Read
-                </span>
-              )}
-            </div>
-
-            {/* Content preview */}
-            {!isExpanded && (
-              <p className="text-sm text-gray-500 leading-relaxed line-clamp-2">{ann.content}</p>
-            )}
-            {isExpanded && (
-              <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-line">{ann.content}</p>
-            )}
-
-            {/* Bottom Actions */}
-            <div className="flex items-center justify-between mt-3">
-              <button onClick={() => {
-                setExpandedId(isExpanded ? null : ann.id);
-                if (!ann.hasRead) onMarkRead(ann.id);
-              }}
-                className="flex items-center gap-1 text-xs font-bold text-indigo-600 hover:text-indigo-800 transition-colors cursor-pointer">
-                {isExpanded ? <><ChevronUp className="w-3.5 h-3.5" />Show less</> : <><ChevronDown className="w-3.5 h-3.5" />Read more</>}
-              </button>
-
-              {isManagement && (
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-1 bg-gray-50 p-1 rounded-xl border border-gray-100 shrink-0">
                   <button onClick={() => onPin(ann.id)} title={ann.isPinned ? 'Unpin' : 'Pin to top'}
-                    className="p-1.5 rounded-lg text-gray-400 hover:text-amber-500 hover:bg-amber-50 transition-colors cursor-pointer">
-                    {ann.isPinned ? <PinOff className="w-3.5 h-3.5" /> : <Pin className="w-3.5 h-3.5" />}
+                    className="p-2 rounded-lg text-gray-400 hover:text-amber-500 hover:bg-white hover:shadow-sm transition-all">
+                    {ann.isPinned ? <PinOff className="w-4 h-4" /> : <Pin className="w-4 h-4" />}
                   </button>
-                  <button onClick={() => onEdit(ann)}
-                    className="p-1.5 rounded-lg text-gray-400 hover:text-blue-500 hover:bg-blue-50 transition-colors cursor-pointer">
-                    <Edit3 className="w-3.5 h-3.5" />
+                  <button onClick={() => onEdit(ann)} title="Edit"
+                    className="p-2 rounded-lg text-gray-400 hover:text-blue-500 hover:bg-white hover:shadow-sm transition-all">
+                    <Edit3 className="w-4 h-4" />
                   </button>
-                  <button onClick={() => onDelete(ann.id)}
-                    className="p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors cursor-pointer">
-                    <Trash2 className="w-3.5 h-3.5" />
+                  <div className="w-px h-4 bg-gray-200 mx-1"></div>
+                  <button onClick={() => onDelete(ann.id)} title="Delete"
+                    className="p-2 rounded-lg text-gray-400 hover:text-red-500 hover:bg-white hover:shadow-sm transition-all">
+                    <Trash2 className="w-4 h-4" />
                   </button>
                 </div>
               )}
             </div>
+
+            {/* Target Audience Tags */}
+            <div className="flex items-center gap-2 mb-4 mt-3">
+              <Users className="w-4 h-4 text-indigo-400" />
+              <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Visible To:</span>
+              <div className="flex flex-wrap gap-1.5">
+                {roles.length === 0 ? <span className="text-xs font-bold text-gray-600 bg-gray-100 px-2 py-0.5 rounded text-center">ALL</span> : roles.map((r: string) => (
+                  <span key={r} className="text-[10px] font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-100">{r}</span>
+                ))}
+                {ann.targetClass && <span className="text-[10px] font-bold text-purple-700 bg-purple-50 px-2 py-0.5 rounded border border-purple-100">Class: {ann.targetClass}</span>}
+              </div>
+            </div>
+
+            {/* Content Preview */}
+            <div className={`bg-gray-50 rounded-xl p-4 border border-gray-100 ${isExpanded ? '' : 'max-h-24 overflow-hidden relative'}`}>
+              <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line font-medium">
+                {ann.content}
+              </p>
+              {!isExpanded && (
+                <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-gray-50 to-transparent pointer-events-none" />
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="flex items-center justify-between mt-4">
+              <button 
+                onClick={() => {
+                  setExpandedId(isExpanded ? null : ann.id);
+                  if (!ann.hasRead) onMarkRead(ann.id);
+                }}
+                className="flex items-center gap-2 text-sm font-bold text-indigo-600 hover:text-indigo-800 transition-colors bg-indigo-50 hover:bg-indigo-100 px-4 py-2 rounded-lg"
+              >
+                {isExpanded ? <><ChevronUp className="w-4 h-4" /> Collapse</> : <><ChevronDown className="w-4 h-4" /> Read Full Announcement</>}
+              </button>
+
+              <div className="flex items-center gap-4">
+                {isManagement && (
+                  <span className="flex items-center gap-1.5 text-xs font-bold text-gray-400">
+                    <Eye className="w-4 h-4" />
+                    {ann.readCount || 0} Views
+                  </span>
+                )}
+                {ann.hasRead && (
+                  <span className="flex items-center gap-1.5 text-xs font-bold text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-100">
+                    <CheckCircle className="w-4 h-4" /> Read
+                  </span>
+                )}
+              </div>
+            </div>
+
           </div>
         </div>
       </div>

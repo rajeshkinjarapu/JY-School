@@ -1,4 +1,4 @@
-import React, from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '../../components/UI/PageHeader';
 import { BadgeCheck } from 'lucide-react';
