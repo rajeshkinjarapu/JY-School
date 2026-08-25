@@ -24,6 +24,21 @@ export const MobileNotificationToast: React.FC = () => {
   const triggerNativeNotification = async (item: ToastNotification) => {
     try {
       if (Capacitor.isNativePlatform()) {
+        // Ensure channel exists for local notifications (different from PushNotifications channel)
+        try {
+          await LocalNotifications.createChannel({
+            id: 'high_importance_channel',
+            name: 'Important Notifications',
+            description: 'Used for important alerts and banners',
+            importance: 5, // 5 = MAX
+            visibility: 1,
+            sound: 'default',
+            vibration: true,
+          });
+        } catch (e) {
+          console.error('Error creating local notification channel', e);
+        }
+
         await LocalNotifications.schedule({
           notifications: [
             {
@@ -32,6 +47,7 @@ export const MobileNotificationToast: React.FC = () => {
               id: Math.floor(Math.random() * 1000000),
               schedule: { at: new Date(Date.now() + 50) },
               smallIcon: 'ic_launcher_foreground',
+              channelId: 'high_importance_channel',
             }
           ]
         });
