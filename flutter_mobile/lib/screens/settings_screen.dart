@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/api_service.dart';
 import 'package:flutter/cupertino.dart';
@@ -30,6 +31,7 @@ class _SettingsScreenState extends State<SettingsScreen> with SingleTickerProvid
     return Scaffold(
       backgroundColor: const Color(0xFFF4F7FE),
       appBar: AppBar(
+        systemOverlayStyle: SystemUiOverlayStyle.light,
         leading: const BackButton(color: Colors.white),
         title: Text(
           'Admin Settings',
@@ -46,21 +48,41 @@ class _SettingsScreenState extends State<SettingsScreen> with SingleTickerProvid
           ),
         ),
         elevation: 0,
-        bottom: TabBar(
-          controller: _tabController,
-          isScrollable: true,
-          labelColor: Colors.white,
-          unselectedLabelColor: Colors.white70,
-          indicatorColor: const Color(0xFFD946EF),
-          indicatorWeight: 4,
-          labelStyle: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 15),
-          unselectedLabelStyle: GoogleFonts.outfit(fontWeight: FontWeight.w500, fontSize: 14),
-          tabs: const [
-            Tab(text: 'System', icon: Icon(Icons.settings_applications)),
-            Tab(text: 'Users', icon: Icon(Icons.people_alt)),
-            Tab(text: 'Danger Zone', icon: Icon(Icons.warning_amber_rounded)),
-            Tab(text: 'Security', icon: Icon(Icons.security)),
-          ],
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(60),
+          child: Container(
+            margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: TabBar(
+              controller: _tabController,
+              isScrollable: true,
+              tabAlignment: TabAlignment.start,
+              labelColor: const Color(0xFFD946EF),
+              unselectedLabelColor: Colors.white70,
+              indicatorSize: TabBarIndicatorSize.tab,
+              dividerColor: Colors.transparent,
+              indicator: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 4, offset: const Offset(0, 2)),
+                ],
+              ),
+              labelStyle: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 14),
+              unselectedLabelStyle: GoogleFonts.outfit(fontWeight: FontWeight.w500, fontSize: 13),
+              padding: const EdgeInsets.all(4),
+              labelPadding: const EdgeInsets.symmetric(horizontal: 20),
+              tabs: const [
+                Tab(child: Row(children: [Icon(Icons.settings_applications, size: 18), SizedBox(width: 8), Text('System')])),
+                Tab(child: Row(children: [Icon(Icons.people_alt, size: 18), SizedBox(width: 8), Text('Users')])),
+                Tab(child: Row(children: [Icon(Icons.warning_amber_rounded, size: 18), SizedBox(width: 8), Text('Danger')])),
+                Tab(child: Row(children: [Icon(Icons.security, size: 18), SizedBox(width: 8), Text('Security')])),
+              ],
+            ),
+          ),
         ),
       ),
       body: TabBarView(
@@ -200,30 +222,60 @@ class _SystemSettingsTabState extends State<SystemSettingsTab> {
 
   Widget _buildTextField(String label, TextEditingController controller, IconData icon, {int maxLines = 1}) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: TextField(
-        controller: controller,
-        maxLines: maxLines,
-        style: GoogleFonts.poppins(fontSize: 14),
-        decoration: InputDecoration(
-          labelText: label,
-          labelStyle: GoogleFonts.poppins(color: const Color(0xFF64748B), fontSize: 13),
-          prefixIcon: Icon(icon, color: const Color(0xFF6366F1), size: 20),
-          filled: true,
-          fillColor: Colors.white,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: Colors.grey.shade300),
+      padding: const EdgeInsets.only(bottom: 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: GoogleFonts.poppins(color: const Color(0xFF475569), fontSize: 12, fontWeight: FontWeight.w600),
           ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: Colors.grey.shade200),
+          const SizedBox(height: 8),
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.03),
+                  blurRadius: 10,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: TextField(
+              controller: controller,
+              maxLines: maxLines,
+              style: GoogleFonts.poppins(fontSize: 14, color: const Color(0xFF1E293B), fontWeight: FontWeight.w500),
+              decoration: InputDecoration(
+                hintText: 'Enter $label',
+                hintStyle: GoogleFonts.poppins(color: const Color(0xFF94A3B8), fontSize: 13),
+                prefixIcon: Container(
+                  margin: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF1F5F9),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(icon, color: const Color(0xFF6366F1), size: 18),
+                ),
+                filled: true,
+                fillColor: Colors.transparent,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide.none,
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide(color: Colors.grey.shade200),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: const BorderSide(color: Color(0xFF6366F1), width: 1.5),
+                ),
+              ),
+            ),
           ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: Color(0xFF6366F1), width: 1.5),
-          ),
-        ),
+        ],
       ),
     );
   }
@@ -688,19 +740,46 @@ class _DangerZoneTabState extends State<DangerZoneTab> {
                         itemCount: _students.length,
                         itemBuilder: (ctx, i) {
                           final s = _students[i];
-                          return Card(
-                            elevation: 0,
-                            margin: const EdgeInsets.only(bottom: 8),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              side: BorderSide(color: Colors.grey.shade300),
+                          return Container(
+                            margin: const EdgeInsets.only(bottom: 12),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(color: Colors.red.shade100, width: 1.5),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.red.withOpacity(0.05),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
                             ),
                             child: ListTile(
-                              title: Text(s['name'], style: const TextStyle(fontWeight: FontWeight.bold)),
-                              subtitle: Text('Roll No: ${s['rollNumber'] ?? 'N/A'}'),
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                              leading: Container(
+                                padding: const EdgeInsets.all(10),
+                                decoration: BoxDecoration(
+                                  color: Colors.red.shade50,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(Icons.person_remove, color: Colors.red.shade400, size: 24),
+                              ),
+                              title: Text(
+                                s['name'] ?? 'Unknown',
+                                style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: const Color(0xFF1E293B), fontSize: 15),
+                              ),
+                              subtitle: Text(
+                                'Roll No: ${s['rollNumber'] ?? 'N/A'}',
+                                style: GoogleFonts.poppins(color: const Color(0xFF64748B), fontSize: 13),
+                              ),
                               trailing: IconButton(
                                 icon: const Icon(Icons.delete_forever, color: Colors.red),
-                                onPressed: () => _deleteStudent(s['id'], s['name']),
+                                onPressed: () => _deleteStudent(s['id'], s['name'] ?? 'Unknown'),
+                                tooltip: 'Delete Permanently',
+                                style: IconButton.styleFrom(
+                                  backgroundColor: Colors.red.shade50,
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                ),
                               ),
                             ),
                           );
