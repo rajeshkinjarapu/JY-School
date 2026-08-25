@@ -192,19 +192,18 @@ export const getResults = async (req: AuthRequest, res: Response, next: NextFunc
     }
   }
 
-  const subjectOrder: Record<string, number> = {
-    'MATHS': 1,
-    'MATHEMATICS': 1,
-    'PHYSICS': 2,
-    'CHEMISTRY': 3,
-    'BOTANY': 4,
-    'ZOOLOGY': 5,
-  };
+  const rawSubjects = Array.isArray(exam.subjects) ? exam.subjects : [];
+  const subjectOrderMap = new Map<string, number>();
+  rawSubjects.forEach((sub: any, index: number) => {
+    if (sub && sub.name) {
+      subjectOrderMap.set(sub.name.toUpperCase().trim(), index);
+    }
+  });
 
   const results = Array.from(studentMap.values()).map((s) => {
     s.marks.sort((a, b) => {
-      const weightA = subjectOrder[a.subject.toUpperCase()] || 99;
-      const weightB = subjectOrder[b.subject.toUpperCase()] || 99;
+      const weightA = subjectOrderMap.has(a.subject.toUpperCase().trim()) ? subjectOrderMap.get(a.subject.toUpperCase().trim())! : 999;
+      const weightB = subjectOrderMap.has(b.subject.toUpperCase().trim()) ? subjectOrderMap.get(b.subject.toUpperCase().trim())! : 999;
       if (weightA !== weightB) return weightA - weightB;
       return a.subject.localeCompare(b.subject);
     });

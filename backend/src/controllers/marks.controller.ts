@@ -56,7 +56,10 @@ export const bulkCreate = async (req: AuthRequest, res: Response, next: NextFunc
     const examId = marks[0]?.examId;
     if (!examId) return next(createError('Exam ID is required', 400));
 
-    const exam = await prisma.exam.findUnique({ where: { id: examId } });
+    const exam = await prisma.exam.findUnique({ 
+      where: { id: examId },
+      include: { examPlans: true }
+    });
     const examSubjects: any[] = Array.isArray(exam?.subjects) ? exam.subjects : [];
 
     // Pre-fetch all students to get their classIds
@@ -119,16 +122,25 @@ export const bulkCreate = async (req: AuthRequest, res: Response, next: NextFunc
           finalRemarks = 'AB';
       }
 
-      // Validate max marks
-      if (finalMarksObtained > m.maxMarks && finalRemarks !== 'AB') {
-         return next(createError(`Marks obtained (${finalMarksObtained}) cannot exceed max marks (${m.maxMarks})`, 400));
+      // Enforce actual max marks from DB
+      let actualMaxMarks = exam?.maxMarks || 100;
+      if (exam?.examPlans && exam.examPlans.length > 0) {
+        const plan = exam.examPlans.find((p: any) => p.subjectId === realSubjectId);
+        if (plan && plan.maxMarks) {
+          actualMaxMarks = plan.maxMarks;
+        }
       }
 
-      const grade = finalRemarks === 'AB' ? 'F' : calculateGrade(finalMarksObtained, m.maxMarks);
+      // Validate max marks
+      if (finalMarksObtained > actualMaxMarks && finalRemarks !== 'AB') {
+         return next(createError(`Marks obtained (${finalMarksObtained}) cannot exceed max marks (${actualMaxMarks}) for this subject.`, 400));
+      }
+
+      const grade = finalRemarks === 'AB' ? 'F' : calculateGrade(finalMarksObtained, actualMaxMarks);
       upsertOps.push(prisma.mark.upsert({
         where: { studentId_examId_subjectId: { studentId: m.studentId, examId: m.examId, subjectId: realSubjectId } },
-        update: { marksObtained: finalMarksObtained, maxMarks: m.maxMarks, grade, remarks: finalRemarks },
-        create: { studentId: m.studentId, examId: m.examId, subjectId: realSubjectId, marksObtained: finalMarksObtained, maxMarks: m.maxMarks, grade, remarks: finalRemarks },
+        update: { marksObtained: finalMarksObtained, maxMarks: actualMaxMarks, grade, remarks: finalRemarks },
+        create: { studentId: m.studentId, examId: m.examId, subjectId: realSubjectId, marksObtained: finalMarksObtained, maxMarks: actualMaxMarks, grade, remarks: finalRemarks },
       }));
     }
 

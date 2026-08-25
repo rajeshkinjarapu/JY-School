@@ -169,7 +169,7 @@ class _LeaveDashboardScreenState extends State<LeaveDashboardScreen> with Single
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
-        title: Text('Leave Management', style: GoogleFonts.outfit(fontWeight: FontWeight.w700)),
+        title: Text('Apply Leave', style: GoogleFonts.outfit(fontWeight: FontWeight.w700)),
         backgroundColor: const Color(0xFF4F46E5),
         foregroundColor: Colors.white,
         elevation: 0,
@@ -177,6 +177,8 @@ class _LeaveDashboardScreenState extends State<LeaveDashboardScreen> with Single
           controller: _tabController,
           indicatorColor: Colors.white,
           indicatorWeight: 3,
+          labelColor: Colors.white,
+          unselectedLabelColor: Colors.white70,
           labelStyle: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16),
           unselectedLabelStyle: GoogleFonts.outfit(fontWeight: FontWeight.w500, fontSize: 16),
           tabs: const [

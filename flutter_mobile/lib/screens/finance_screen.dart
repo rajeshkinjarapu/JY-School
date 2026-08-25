@@ -8,6 +8,7 @@ import 'fee_structure_management_screen.dart';
 import 'finance_reports_screen.dart';
 import 'fee_settings_screen.dart';
 import 'fee_installment_report_screen.dart';
+import 'fee_reminder_search_screen.dart';
 
 class FinanceScreen extends StatefulWidget {
   const FinanceScreen({super.key});
@@ -266,6 +267,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
       {'title': 'Class Reports', 'desc': 'Revenue Analytics', 'icon': Icons.analytics, 'color': const Color(0xFF6366F1), 'screen': const FinanceReportsScreen()},
       {'title': 'Fee Structure', 'desc': 'Setup Templates', 'icon': Icons.account_tree, 'color': const Color(0xFFF59E0B), 'screen': const FeeStructureManagementScreen()},
       {'title': 'Fee Settings', 'desc': 'Concessions & Heads', 'icon': Icons.settings, 'color': const Color(0xFF8B5CF6), 'screen': const FeeSettingsScreen()},
+      {'title': 'Fee Reminder', 'desc': 'Send Slips', 'icon': Icons.notifications_active_rounded, 'color': const Color(0xFFEAB308), 'screen': const FeeReminderSearchScreen()},
     ];
 
     return GridView.builder(

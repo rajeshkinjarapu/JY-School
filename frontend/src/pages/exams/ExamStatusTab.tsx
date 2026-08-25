@@ -46,9 +46,8 @@ export const ExamStatusTab: React.FC<{ exams: any[] }> = ({ exams }) => {
           allSubjectNames.push(normalizedName);
         }
       }
-    }
-    // Sort alphabetically for consistent column ordering
-    allSubjectNames.sort((a, b) => a.localeCompare(b));
+    // We no longer sort alphabetically. We keep the order as they were inserted (which is derived from the first class's subjectStats, preserving original order)
+    // allSubjectNames.sort((a, b) => a.localeCompare(b));
   }
 
   let frozenClasses: string[] = [];

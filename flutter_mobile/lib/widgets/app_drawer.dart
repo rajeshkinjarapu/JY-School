@@ -193,7 +193,7 @@ class _AppDrawerState extends State<AppDrawer> {
                         title: 'Classes',
                         routeName: 'classes',
                         isActive: widget.currentRoute == 'classes',
-                        onTap: () => _navigateTo(const ClassesScreen(), 'classes'),
+                        onTap: () => _navigateTo(ClassesScreen(), 'classes'),
                       ),
                     _buildDrawerItem(
                       icon: Icons.menu_book_rounded,

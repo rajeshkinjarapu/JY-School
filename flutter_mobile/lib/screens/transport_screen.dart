@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:lucide_icons/lucide_icons.dart';
 import '../services/api_service.dart';
 import '../widgets/app_drawer.dart';
 import 'transport_routes_screen.dart';
@@ -190,11 +189,11 @@ class _TransportScreenState extends State<TransportScreen> {
       crossAxisSpacing: 16,
       childAspectRatio: 0.9,
       children: [
-        _buildGridItem('Bus Routes', 'Manage routes & stops', LucideIcons.map, const [Color(0xFF3B82F6), Color(0xFF2563EB)], const TransportRoutesScreen()),
-        _buildGridItem('Vehicles', 'Track fleet details', LucideIcons.bus, const [Color(0xFF8B5CF6), Color(0xFF7C3AED)], const TransportVehiclesScreen()),
-        _buildGridItem('Students', 'Allocation & Fees', LucideIcons.users, const [Color(0xFFEC4899), Color(0xFFDB2777)], const TransportStudentsScreen()),
-        _buildGridItem('Fuel Logs', 'Track diesel expenses', LucideIcons.fuel, const [Color(0xFFF43F5E), Color(0xFFE11D48)], const TransportFuelScreen()),
-        _buildGridItem('Maintenance', 'Repairs & Service', LucideIcons.wrench, const [Color(0xFF10B981), Color(0xFF059669)], const TransportMaintenanceScreen()),
+        _buildGridItem('Bus Routes', 'Manage routes & stops', Icons.map_rounded, const [Color(0xFF3B82F6), Color(0xFF2563EB)], const TransportRoutesScreen()),
+        _buildGridItem('Vehicles', 'Track fleet details', Icons.directions_bus_rounded, const [Color(0xFF8B5CF6), Color(0xFF7C3AED)], const TransportVehiclesScreen()),
+        _buildGridItem('Students', 'Allocation & Fees', Icons.people_rounded, const [Color(0xFFEC4899), Color(0xFFDB2777)], const TransportStudentsScreen()),
+        _buildGridItem('Fuel Logs', 'Track diesel expenses', Icons.local_gas_station_rounded, const [Color(0xFFF43F5E), Color(0xFFE11D48)], const TransportFuelScreen()),
+        _buildGridItem('Maintenance', 'Repairs & Service', Icons.build_rounded, const [Color(0xFF10B981), Color(0xFF059669)], const TransportMaintenanceScreen()),
       ],
     );
   }

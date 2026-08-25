@@ -1,52 +1,23 @@
-# JY-School Project State & Memory
+# Project State: JY-School ERP
 
-**Last Updated:** August 24, 2026
-**Purpose:** This file acts as a persistent memory bank for the AI agent. Whenever a new session starts, the AI should read this file to understand the project architecture, recent work, open issues, and the user's specific rules.
+## Recent Changes & Fixes
+- **Leave Apply / My History Tabs:** Fixed the UI contrast issue in the Teacher Mobile App (`leave_dashboard_screen.dart`) by setting `labelColor: Colors.white` for the TabBar.
+- **Gate Pass Class/Section Filtering:** Added `Class` and `Section` Dropdown filters in the Gate Pass issuance screen (`create_gate_pass_screen.dart`).
+- **Fee Reminder Navigation Fix:** Corrected a bug in the Teacher Mobile App (`dashboard_screen.dart`) where the 'Fee Reminder' button mistakenly routed to the 'Collect Fee' screen (`StudentFeeSearchScreen`) instead of the correct `FeeReminderSearchScreen`.
+- **Max Marks Data Integrity (Backend):** 
+  - Discovered a data inconsistency where marks entered via the Mobile App ignored subject-specific max marks (e.g., 20) and defaulted to the global exam max marks (100).
+  - Modified `marks.controller.ts` in the backend to explicitly pre-fetch `ExamPlans` and strictly enforce the database truth for `maxMarks`, preventing the client (Web or Mobile) from manipulating it.
+  - Wrote a batched database cleanup script (`fixMarks.ts`) to repair existing corrupted records (like the Hindi 100 maxMarks issue) without causing memory exhaustion.
+- **Flutter Progress Card UI Overhaul:**
+  - Redesigned `single_progress_card_screen.dart` in the Flutter mobile app to perfectly match the premium Web App design.
+  - Added missing fields (Mobile, Location) and matched the Row-based layout of the Academic Rating Box.
+- **Subject Ordering Bug Fix:**
+  - Fixed an issue where the custom order of subjects entered during Exam Creation was ignored in Results, Progress Card, and Flutter App.
+  - Removed conflicting hardcoded sorting logic from the backend (`exams.controller.ts` `getResults`), Web App (`ResultsTab.tsx`), and Flutter (`single_progress_card_screen.dart`).
+  - The system now strictly respects the order of subjects as stored in `exam.subjects` JSON.
+- **Max Marks Data Repair Script Fix:**
+  - Fixed a critical bug in `fixMarks.ts` that caused it to crash and incorrectly assign the exam's total max marks to individual subjects. It now accurately extracts subject-specific max marks from the `exam.subjects` JSON array.
 
----
-
-## 1. Project Overview & Architecture
-* **Project Name:** JY School ERP
-* **Frontend:** React + Vite, Tailwind CSS v4, Lucide React (Icons).
-* **Backend:** Node.js (Express) + Prisma ORM.
-* **Database:** PostgreSQL (hosted on Supabase).
-* **Hosting Configuration:**
-  * **Frontend:** Deployed on Vercel (`jy-school.vercel.app`).
-  * **Backend:** Deployed on Railway (`jy-school-production-f159.up.railway.app`). No longer relying on Ngrok or VPS for the main API!
-
-## 2. User Preferences & Strict Rules
-1. **Professional UI/UX:** The user demands modern, premium, and highly polished designs. Avoid generic basic styles. Use subtle gradients, hover animations, and proper spacing. The goal is to feel like a "Professional School ERP Software."
-2. **Flutter App Design Protocol:** Before writing Flutter UI code, the AI MUST strictly check the corresponding web app pages (`frontend/src/pages/`) to understand the exact flow, features, and API usage. The mobile design must match the functionality but look even more premium.
-3. **No Automatic Terminal Execution:** Do not execute terminal commands automatically that modify systems. Instead, provide the exact commands (including the `cd` to the right folder) for the user to copy-paste.
-4. **Context Continuity:** The AI must always consult this `PROJECT_STATE.md` file to resume work seamlessly across different days and devices.
-
-## 3. Recently Completed Work (August 2026)
-* **Transport Module Architecture & DB (Phase 1):** Designed the complete full-stack Transport architecture. Added models for `TransportVehicle`, `TransportRoute`, `RouteStop` (with GPS coordinates), `TransportFuelLog`, and `TransportMaintenanceLog` to `schema.prisma`. Pushed database schema updates.
-* **Transport Backend APIs (Phase 2):** Created `transportController.ts` and `transportRoutes.ts` with full CRUD operations for Vehicles, Routes, Stops, Fuel Logs, Maintenance Logs, and Dashboard Statistics. Linked routes in main Express app.
-* **Transport Web App UI (Phase 3):** Built a premium React frontend for the Transport Module. Overhauled `TransportDashboard.tsx` to include live statistical cards. Created `FuelLogsPage.tsx` and `MaintenanceLogsPage.tsx` with modal forms, and added routing to `router/index.tsx`. Included Google Maps layout placeholders for future live-tracking integration.
-* **Transport Mobile App (Phase 4):** Completely rebuilt `transport_screen.dart` into a premium Dashboard layout matching the web app. Added live statistics API integration. Created 5 new screens (`transport_routes_screen.dart`, `transport_vehicles_screen.dart`, `transport_fuel_screen.dart`, `transport_maintenance_screen.dart`, `transport_students_screen.dart`) for full CRUD functionality. Updated `api_service.dart` with all Transport API endpoints.
-* **ID Card Generation Module:** Built a completely new full-stack module to generate Student ID cards. 
-  - **Web (React):** Added `IdCardDashboard.tsx` and `IdCardGeneratorPage.tsx` with 10 distinct, premium React component templates (Vertical, Corporate, Gradient, QR Code, Wave, Dark Mode, etc.). Implemented live preview with bulk printing functionality using native `@media print` CSS.
-  - **Mobile (Flutter):** Created `id_card_templates_screen.dart`, `id_card_students_screen.dart`, and `id_card_preview_screen.dart` to allow Admins to select a template, search a student, and preview their ID card dynamically in high resolution.
-* **Marks Entry UI Update (Web):** In `MarksEntryPage.tsx`, replaced the "SAVE MARKS" button text with "SUBMIT MARKS", changed the success toast message from "saved as draft" to "submitted successfully", and restricted the "FREEZE MARKS" button so it is only visible to `ADMIN` and `SUPER_ADMIN` roles, hiding it from teachers.
-* **Teacher Dashboard Redesign (Flutter):** Completely overhauled the TEACHER role dashboard in `flutter_mobile/lib/screens/dashboard_screen.dart` to match the 10-grid web app layout precisely. Introduced `_buildTeacherGridCard` for a sleek, solid color premium design with rounded borders, icons, arrows, and dynamically calculated `childAspectRatio` to ensure all 10 boxes (5 rows) fit perfectly on the screen without scrolling.
-* **MCQ Generator Resizer & Print Fix:** Added a draggable vertical resizer between the editor and live preview in `MCQPaperGeneratorPage.tsx`. Completely fixed all print preview bugs (including the Chromium black canvas background bug and the squished 50% width bug) by isolating dark mode background colors to `@media screen` and ensuring the inline resizer widths don't apply during printing.
-* **Print Black Shade Bug Fixed (Finalized):** The dark canvas issue in Chrome print preview was caused by Tailwind's `html.dark` injecting `color-scheme: dark`. We overrode this by forcing `color-scheme: light !important` for `:root, html, body, html.dark, body.dark` in `index.css`.
-* **Marks Entry Missing Subjects Bug Fixed:** Updated `MarksEntryPage.tsx` to stop filtering out exam subjects that aren't mapped to the class. Updated `marks.controller.ts` (`bulkCreate`) to automatically create missing `Subject` records on-the-fly to prevent data loss.
-* **Persistent Memory & Rules:** Created this `PROJECT_STATE.md` file and added a Strict Rule in `AGENTS.md` for the AI to auto-update it at the end of every conversation.
-* **Persona Set:** AI is now officially named **"Kallu"** (Female persona).
-* **Transactions & Dashboard Update:** Updated dashboard labels in Flutter to match user requirements (TOTAL STUDENTS, TOTAL TEACHERS, TOTAL CLASSES, TOTAL REVENUE, EXAM RESULTS). Created `transactions_screen.dart` in Flutter and linked it to the TOTAL REVENUE dashboard card. Reverted unintended Web Dashboard changes.
-* **Gate Pass PDF Redesign (Web & Mobile):** Overhauled the Gate Pass PDF layout in both the web app (`GatePassPrint.tsx`) and the Flutter app (`gate_pass_screen.dart`). Switched to A4 Landscape, made the Student and Security copies span the full height of the page, increased QR code and photo sizes, and added dynamic specific fields based on whether the pass is for a Student or Staff member.
-* **Admin Leave Proxy Support:** Modified backend `leave.controller.ts` and Flutter UI to allow `ADMIN` and `SUPER_ADMIN` to apply for leave on behalf of Students and Teachers. Added a dropdown for applicant selection in the Flutter Leave form.
-* **Permanent Backend Deployment:** Successfully migrated the backend from VPS+Ngrok to Railway. Updated Vercel rewrites, React `axios.ts`, and Flutter `api_service.dart` to use the permanent `jy-school-production-f159.up.railway.app` URL, solving all "Network Error" and "Direct IP access not allowed" issues permanently.
-* **Leave Module Redesign (Flutter):** Completely rebuilt `leave_screen.dart` to match the Gate Pass module's premium standards. Replaced the basic view with a multi-tab Scaffold (Dashboard, Approvals, History), Top Tabs for Students and Staff (for admins), dynamic stat grids, beautiful history cards with Approver/Rejector controls, and a modern bottom-sheet Apply Leave form.
-* **Gate Pass Redesign (Flutter):** Completely revamped the Gate Pass module in the Flutter app. Added role-based top tabs (Students/Teachers), integrated live backend stats for both groups (updated `gatePass.controller.ts` and deployed to VPS), added a beautiful Gate Pass Slip popup, masked phone numbers (xxxx 1234), added approver names, and integrated `qr_flutter` for stunning on-screen and PDF QR codes.
-* **Run Flutter in Chrome:** Provided terminal commands to run the Flutter application (`flutter_mobile`) in Google Chrome.
-* **Dashboard Text Scaling (Flutter):** Fixed text overflow and overly large font sizes for long card titles ("Progress Card", "Collect Fees") in `dashboard_screen.dart` by reducing the font size and utilizing `FittedBox`.
-* **Fee Details UI Fix (Flutter):** Repositioned the "Pay" FloatingActionButton in `student_fee_details_screen.dart` by adding bottom and right padding, ensuring it doesn't sit too low on the screen.
-* **Flutter APK Build:** Provided the user with the terminal commands to build the release APK for the Flutter mobile app.
-
-## 4. Pending / Next Steps
-1. **Flutter App Features:** Continue building the Flutter mobile app ensuring it syncs perfectly with the existing web APIs and has a premium design. Discuss which module to build next (e.g., Attendance, Exams, Fees).
-2. **Verify Railway Stability:** Ensure SMS and Push Notifications work smoothly from the Railway backend.
-3. **Backend Permanent Hosting (DuckDNS):** Discussed replacing Ngrok/Render with a completely free solution using DuckDNS (e.g., `jyschool.duckdns.org`), Nginx, and Certbot SSL on the existing VPS (`148.113.9.103`).
+## Outstanding Items
+- Teacher Live Classes Feature (Jitsi/Agora Integration).
+- Admin Reporting of "Read" Status for Announcements.

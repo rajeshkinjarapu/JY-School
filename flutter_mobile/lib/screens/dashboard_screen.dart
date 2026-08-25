@@ -26,6 +26,14 @@ import 'record_fee_payment_screen.dart';
 import 'student_fee_search_screen.dart';
 import 'progress_card_screen.dart';
 import 'results_screen.dart';
+import 'answer_keys_screen.dart';
+import 'settings_screen.dart';
+import 'announcement_detail_screen.dart';
+import 'leave_dashboard_screen.dart';
+import 'gate_pass_screen.dart';
+import 'create_gate_pass_screen.dart';
+import 'leave_screen.dart';
+import 'fee_reminder_search_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -369,8 +377,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   const SizedBox(height: 24),
                                   _buildAnnouncements(),
                                 ] else if (userRole == 'TEACHER') ...[
+                                  _buildTeacherAnnouncementBanner(),
+                                  const SizedBox(height: 8),
                                   _buildMenuGrid(userRole),
-                                  const SizedBox(height: 24),
+                                  const SizedBox(height: 20),
+                                  _buildTeacherMetricsRow(),
+                                  const SizedBox(height: 20),
                                   _buildTimetableToday(),
                                   const SizedBox(height: 24),
                                   _buildRecentHomework(),
@@ -829,8 +841,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Widget _buildProfileCard(String name, String role, String metaLabel, String metaValue) {
     return Container(
-      margin: const EdgeInsets.fromLTRB(12, 12, 12, 12),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+      margin: const EdgeInsets.fromLTRB(12, 8, 12, 8),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           colors: [Color(0xFF4C4296), Color(0xFF2E2A66)],
@@ -1126,6 +1138,178 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return res;
   }
 
+  // Teacher Dashboard metrics row — shown below the grid
+  Widget _buildTeacherMetricsRow() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF1E1B4B), Color(0xFF312E81)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(color: const Color(0xFF312E81).withOpacity(0.5), blurRadius: 16, offset: const Offset(0, 8)),
+        ],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          _buildTeacherStatChip(Icons.groups_rounded,      '$_teacherTotalStudents', 'Students',    const Color(0xFF34D399)),
+          _buildTeacherStatDivider(),
+          _buildTeacherStatChip(Icons.check_circle_rounded, '$_teacherTodayPresent',  'Present Today', const Color(0xFF60A5FA)),
+          _buildTeacherStatDivider(),
+          _buildTeacherStatChip(Icons.cancel_rounded,       '$_teacherTodayAbsent',   'Absent Today',  const Color(0xFFF87171)),
+          _buildTeacherStatDivider(),
+          _buildTeacherStatChip(Icons.bar_chart_rounded,    '${_teacherAttendancePercent.toStringAsFixed(0)}%', 'Avg Attend.',   const Color(0xFFFBBF24)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTeacherStatChip(IconData icon, String value, String label, Color color) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, color: color, size: 20),
+        const SizedBox(height: 6),
+        Text(value, style: GoogleFonts.outfit(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w900)),
+        const SizedBox(height: 2),
+        Text(label, style: GoogleFonts.poppins(color: Colors.white54, fontSize: 9, fontWeight: FontWeight.w500), textAlign: TextAlign.center),
+      ],
+    );
+  }
+
+  Widget _buildTeacherStatDivider() {
+    return Container(height: 40, width: 1, color: Colors.white.withOpacity(0.12));
+  }
+
+  // ===== TEACHER ANNOUNCEMENT BANNER =====
+  Widget _buildTeacherAnnouncementBanner() {
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const AnnouncementDetailScreen(
+              title: 'Annual Sports Day 2025',
+              message: 'Dear Teachers, \n\nWe are excited to announce that the Annual Sports Day will be held on the 28th of August, 2025. Please ensure all participating students have their gear ready. All teaching staff are requested to report to the school grounds by 8:00 AM sharp to assist with the arrangements.\n\nThank you for your cooperation.',
+              date: 'Aug 24, 2025',
+              sender: 'Principal Office',
+              imagePath: null, // No image to show normal title
+            ),
+          ),
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFFFFFBEB), Color(0xFFFEF3C7)], // Soft Light Amber/Gold
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFFDE68A), width: 1.5),
+        boxShadow: [
+          BoxShadow(color: const Color(0xFFF59E0B).withOpacity(0.15), blurRadius: 16, offset: const Offset(0, 8)),
+        ],
+      ),
+      child: Stack(
+        clipBehavior: Clip.hardEdge,
+        children: [
+          // Decorative circle in background
+          Positioned(
+            right: -20,
+            top: -20,
+            child: Container(
+              width: 100,
+              height: 100,
+              decoration: BoxDecoration(
+                color: const Color(0xFFF59E0B).withOpacity(0.06),
+                shape: BoxShape.circle,
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            child: Row(
+              children: [
+                // Big Megaphone Icon
+                Container(
+                  width: 56,
+                  height: 56,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF59E0B).withOpacity(0.12),
+                    shape: BoxShape.circle,
+                    border: Border.all(color: const Color(0xFFF59E0B).withOpacity(0.25), width: 1.5),
+                  ),
+                  child: const Icon(
+                    Icons.campaign_rounded, // Megaphone icon
+                    color: Color(0xFFD97706),
+                    size: 32,
+                  ),
+                ),
+                const SizedBox(width: 14),
+                // Text content
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF59E0B),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text('📣 NEW', style: GoogleFonts.poppins(color: Colors.white, fontSize: 9, fontWeight: FontWeight.w800)),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Announcement',
+                            style: GoogleFonts.outfit(color: const Color(0xFF92400E), fontSize: 14, fontWeight: FontWeight.w800),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 5),
+                      Text(
+                        'Annual Sports Day on 28th Aug 2025. All teachers to report by 8 AM.',
+                        style: GoogleFonts.poppins(color: const Color(0xFF92400E).withOpacity(0.85), fontSize: 11, height: 1.4),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 10),
+                // View button
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF59E0B),
+                    borderRadius: BorderRadius.circular(10),
+                    boxShadow: [
+                      BoxShadow(color: const Color(0xFFF59E0B).withOpacity(0.3), blurRadius: 4, offset: const Offset(0, 2))
+                    ],
+                  ),
+                  child: Text(
+                    'View',
+                    style: GoogleFonts.poppins(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w700),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    ));
+  }
+
+
   Widget _buildAdminCombinedGrid() {
     double screenHeight = MediaQuery.of(context).size.height;
     double screenWidth = MediaQuery.of(context).size.width;
@@ -1146,7 +1330,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       mainAxisSpacing: 14,
       childAspectRatio: dynamicAspectRatio, // Dynamically fitted
       children: [
-        _buildPremiumCard(
+        _buildMenuPremiumCard(
           subtitle: 'TOTAL STUDENTS',
           title: '$_adminTotalStudents',
           bottomText: 'Admission & Records',
@@ -1156,7 +1340,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           imagePath: 'assets/images/admin_icons/student.jpg',
           onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const StudentsScreen())),
         ),
-        _buildPremiumCard(
+        _buildMenuPremiumCard(
           subtitle: 'TOTAL TEACHERS',
           title: '$_adminTotalTeachers',
           bottomText: 'Staff & Activities',
@@ -1166,7 +1350,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           imagePath: 'assets/images/admin_icons/teacher.jpg',
           onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TeachersScreen())),
         ),
-        _buildPremiumCard(
+        _buildMenuPremiumCard(
           subtitle: 'TOTAL CLASSES',
           title: '$_adminTotalClasses',
           bottomText: 'Syllabus & Timetable',
@@ -1174,9 +1358,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
           gradientColors: [const Color(0xFF0277BD), const Color(0xFF014670)],
           accentColor: const Color(0xFF039BE5),
           imagePath: 'assets/images/admin_icons/classes.jpg',
-          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ClassesScreen())),
+          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ClassesScreen())),
         ),
-        _buildPremiumCard(
+        _buildMenuPremiumCard(
           subtitle: 'TOTAL REVENUE',
           title: '₹${_formatIndianCurrency(_adminFeeCollected)}',
           bottomText: 'Total Income',
@@ -1186,7 +1370,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           imagePath: 'assets/images/admin_icons/revenue.jpg',
           onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TransactionsScreen())),
         ),
-        _buildPremiumCard(
+        _buildMenuPremiumCard(
           subtitle: 'FEE COLLECTION',
           title: 'Collect Fees',
           bottomText: 'Payment Tracking',
@@ -1196,7 +1380,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           imagePath: 'assets/images/admin_icons/collect_fees.jpg',
           onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const StudentFeeSearchScreen())),
         ),
-        _buildPremiumCard(
+        _buildMenuPremiumCard(
           subtitle: 'EXAM RESULTS',
           title: 'Exams',
           bottomText: 'Marks & Results',
@@ -1206,7 +1390,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           imagePath: 'assets/images/admin_icons/exams.jpg',
           onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ResultsScreen())),
         ),
-        _buildPremiumCard(
+        _buildMenuPremiumCard(
           subtitle: 'FEE DETAILS',
           title: 'Balances',
           bottomText: 'Invoices & Dues',
@@ -1216,7 +1400,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           imagePath: 'assets/images/admin_icons/student_fees.jpg',
           onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const StudentFeeSearchScreen())),
         ),
-        _buildPremiumCard(
+        _buildMenuPremiumCard(
           subtitle: 'REPORTS & ANALYTICS',
           title: 'Progress Card',
           bottomText: 'Performance Analysis',
@@ -1230,7 +1414,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildPremiumCard({
+  Widget _buildMenuPremiumCard({
     required String title,
     required String subtitle,
     required String bottomText,
@@ -1261,7 +1445,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
         child: Stack(
           clipBehavior: Clip.hardEdge,
           children: [
-            // Floating 3D image bubble removed based on user preference
+            // Background Image Overlay for Premium Look
+            Positioned(
+              right: -20,
+              bottom: -20,
+              child: Opacity(
+                opacity: 0.35,
+                child: Image.asset(
+                  imagePath,
+                  width: 140,
+                  height: 140,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) => const SizedBox(),
+                ),
+              ),
+            ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
               child: Column(
@@ -1395,68 +1593,47 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ],
       );
     } else if (role == 'TEACHER') {
-      // Teacher grid dashboard options
+      // Professional Teacher Grid — fits 12 tiles (4 rows × 3 cols) on single screen
+      final double screenH = MediaQuery.of(context).size.height;
+      final double screenW = MediaQuery.of(context).size.width;
+      // Fixed heights consumed:
+      //   AppBar: 56, ProfileCard: ~120, Announcement banner: ~85,
+      //   Gap above banner: 8, Gap below banner: 14, Grid top padding: 0,
+      //   Bottom nav: 56, SafeArea: ~20, Extra buffer: 20
+      const double consumed = 56 + 120 + 85 + 8 + 14 + 56 + 20 + 30;
+      final double availH = screenH - consumed;
+
+      // 3 cols, spacing=6, 4 rows, spacing=6
+      final double tileW = (screenW - 24 - 6 * 2) / 3; // 24 = horizontal padding
+      final double tileH = (availH - 6 * 3) / 4;
+      final double ar = tileW / (tileH < 70 ? 70 : tileH);
+
       return GridView.count(
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
-        crossAxisCount: 2,
-        crossAxisSpacing: 16,
-        mainAxisSpacing: 16,
-        childAspectRatio: 1.3,
+        crossAxisCount: 3,
+        crossAxisSpacing: 6,
+        mainAxisSpacing: 6,
+        childAspectRatio: ar.clamp(0.75, 1.3),
         children: [
-          _buildNavigationCard(
-            icon: Icons.how_to_reg_rounded,
-            color: const Color(0xFF10B981),
-            title: 'Mark Attendance',
-            subtitle: 'Mark student logs',
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const TeacherAttendanceScreen()),
-              );
-            },
-          ),
-          _buildNavigationCard(
-            icon: Icons.edit_note_rounded,
-            color: const Color(0xFF6366F1),
-            title: 'Post Homework',
-            subtitle: 'Assign homework tasks',
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const TeacherHomeworkScreen()),
-              );
-            },
-          ),
-          _buildNavigationCard(
-            icon: Icons.grade_rounded,
-            color: const Color(0xFFF59E0B),
-            title: 'Enter Marks',
-            subtitle: 'Record test grades',
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const TeacherMarksScreen()),
-              );
-            },
-          ),
-          _buildNavigationCard(
-            icon: Icons.schedule_rounded,
-            color: const Color(0xFFEF4444),
-            title: 'My Timetable',
-            subtitle: 'Weekly class schedule',
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const TimetableScreen()),
-              );
-            },
-          ),
+          _buildImageCard(imagePath: 'assets/images/admin_icons/attendance_mark.jpg',title: 'Mark Attendance',borderColor: const Color(0xFF10B981), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TeacherAttendanceScreen()))),
+          _buildImageCard(imagePath: 'assets/images/admin_icons/classes.jpg',    title: 'Total Students', borderColor: const Color(0xFF8B5CF6), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const StudentsScreen()))),
+          _buildImageCard(imagePath: 'assets/images/admin_icons/exams.jpg',      title: 'Answer Key',    borderColor: const Color(0xFFF59E0B), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AnswerKeysScreen()))),
+          _buildImageCard(imagePath: 'assets/images/admin_icons/teacher.jpg',    title: 'Timetable',     borderColor: const Color(0xFF6366F1), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TimetableScreen()))),
+          _buildImageCard(imagePath: 'assets/images/admin_icons/reports.jpg',    title: 'Marks Entry',   borderColor: const Color(0xFFF97316), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TeacherMarksScreen()))),
+          _buildImageCard(imagePath: 'assets/images/admin_icons/results.png',    title: 'Results',       borderColor: const Color(0xFF10B981), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ResultsScreen()))),
+          _buildImageCard(imagePath: 'assets/images/admin_icons/student.jpg',    title: 'Progress Cards',borderColor: const Color(0xFFD946EF), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ProgressCardScreen()))),
+          _buildImageCard(imagePath: 'assets/images/admin_icons/student_fees.jpg', title: 'Fee Reminder', borderColor: const Color(0xFF14B8A6), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const FeeReminderSearchScreen()))),
+          _buildImageCard(imagePath: 'assets/images/admin_icons/revenue.jpg',    title: 'Messaging',     borderColor: const Color(0xFF06B6D4), onTap: () => ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Messaging coming soon!')))),
+          _buildImageCard(imagePath: 'assets/images/admin_icons/collect_fees.jpg', title: 'My Salary',   borderColor: const Color(0xFFEAB308), onTap: () => ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('My Salary coming soon!')))),
+          _buildImageCard(imagePath: 'assets/images/admin_icons/leave.png',title: 'Leave Apply',  borderColor: const Color(0xFF3B82F6), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const LeaveDashboardScreen()))),
+          _buildImageCard(imagePath: 'assets/images/admin_icons/classes.jpg',    title: 'Gate Pass',          borderColor: const Color(0xFF64748B), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => CreateGatePassScreen(userRole: role)))),
         ],
       );
     } else {
       // Admin grid dashboard options
       return GridView.count(
+
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         crossAxisCount: 2,
@@ -1505,12 +1682,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
             gradientStart: const Color(0xFF27B484),
             gradientEnd: const Color(0xFF45CA9E),
             onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Reports module coming soon!'),
-                  backgroundColor: Color(0xFF6366F1),
-                )
-              );
+              Navigator.push(context, MaterialPageRoute(builder: (context) => const ProgressCardScreen()));
+            },
+          ),
+          _buildAdminActionCard(
+            title: 'Leave Request',
+            subtitle: 'APPROVALS',
+            bottomText: 'Manage staff/student leaves',
+            icon: Icons.assignment_turned_in_outlined,
+            gradientStart: const Color(0xFFFF9E44),
+            gradientEnd: const Color(0xFFFFC074),
+            onTap: () {
+              Navigator.push(context, MaterialPageRoute(builder: (context) => const LeaveScreen()));
             },
           ),
         ],
@@ -1628,65 +1811,69 @@ class _DashboardScreenState extends State<DashboardScreen> {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              color.withOpacity(0.8),
-              color,
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
+          color: color,
           borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
-              color: color.withOpacity(0.3),
-              blurRadius: 8,
+              color: color.withOpacity(0.4),
+              blurRadius: 10,
               offset: const Offset(0, 4),
             ),
           ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                    color: Colors.white.withOpacity(0.25),
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(icon, color: const Color(0xFF64748B), size: 24),
+                  child: Icon(icon, color: const Color(0xFF1E293B).withOpacity(0.5), size: 22),
                 ),
                 Container(
-                  padding: const EdgeInsets.all(4),
+                  padding: const EdgeInsets.all(6),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                    color: Colors.white.withOpacity(0.15),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.arrow_outward, color: const Color(0xFF64748B), size: 16),
+                  child: Icon(Icons.arrow_outward_rounded, color: const Color(0xFF1E293B).withOpacity(0.4), size: 16),
                 ),
               ],
             ),
-            const SizedBox(height: 8),
-            Text(
-              subtitle.toUpperCase(),
-              style: GoogleFonts.outfit(
-                color: const Color(0xFF1E293B),
-                fontSize: 11,
-                fontWeight: FontWeight.w800,
-                letterSpacing: 0.5,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              title,
-              style: GoogleFonts.outfit(
-                color: const Color(0xFF1E293B),
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-              ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  subtitle.toUpperCase(),
+                  style: GoogleFonts.outfit(
+                    color: const Color(0xFF1E293B).withOpacity(0.75),
+                    fontSize: 10,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    title,
+                    style: GoogleFonts.outfit(
+                      color: const Color(0xFF1E293B),
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      height: 1.1,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
@@ -2272,6 +2459,63 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ),
     );
   }
+  Widget _buildImageCard({
+    required String imagePath,
+    required String title,
+    required Color borderColor,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          // Circular image tile with colourful border
+          Container(
+            width: 68,
+            height: 68,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: borderColor, width: 3),
+              boxShadow: [
+                BoxShadow(
+                  color: borderColor.withOpacity(0.35),
+                  blurRadius: 12,
+                  offset: const Offset(0, 5),
+                ),
+              ],
+            ),
+            child: ClipOval(
+              child: Image.asset(
+                imagePath,
+                fit: BoxFit.cover,
+                errorBuilder: (c, e, s) => Container(
+                  color: borderColor.withOpacity(0.1),
+                  child: Icon(Icons.image_rounded, color: borderColor, size: 30),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          // Title below the circle
+          Text(
+            title,
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: GoogleFonts.outfit(
+              color: const Color(0xFF1E293B),
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              height: 1.2,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
+
 
 

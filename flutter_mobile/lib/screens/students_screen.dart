@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
 import 'package:url_launcher/url_launcher.dart';
 import '../services/api_service.dart';
 import '../widgets/app_drawer.dart';
@@ -33,11 +35,28 @@ class _StudentsScreenState extends State<StudentsScreen> {
     [const Color(0xFFA78BFA), const Color(0xFF7C3AED)], // Violet to Purple
   ];
 
+  String _userRole = '';
+
   @override
   void initState() {
     super.initState();
+    _initRole();
     _fetchClasses();
     _fetchStudents();
+  }
+
+  Future<void> _initRole() async {
+    final prefs = await SharedPreferences.getInstance();
+    final userStr = prefs.getString('user');
+    if (userStr != null) {
+      if (mounted) {
+        setState(() {
+          _userRole = jsonDecode(userStr)['role'] ?? '';
+        });
+      } else {
+        _userRole = jsonDecode(userStr)['role'] ?? '';
+      }
+    }
   }
 
   @override
@@ -193,7 +212,7 @@ class _StudentsScreenState extends State<StudentsScreen> {
           ),
         ),
         actions: [
-          Container(
+          if (_userRole != 'TEACHER') Container(
             margin: const EdgeInsets.only(right: 12),
             decoration: BoxDecoration(
               color: Colors.white.withOpacity(0.2),

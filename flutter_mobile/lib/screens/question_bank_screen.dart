@@ -14,46 +14,46 @@ class QuestionBankScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final modules = [
       _QBModule(
-        title: 'Question Papers',
-        subtitle: 'Browse & generate exam question papers',
-        icon: Icons.article_rounded,
-        colors: [const Color(0xFF6366F1), const Color(0xFF4F46E5)],
-        badge: 'Active',
+        title: 'AI Paper Generator',
+        subtitle: 'Dual-layout paper creator',
+        icon: Icons.upload_file_rounded,
+        colors: [const Color(0xFF1D4ED8), const Color(0xFF6366F1)], // blue-700 to indigo-500
+        badge: 'New',
         badgeColor: const Color(0xFF10B981),
         onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const QuestionPapersScreen())),
       ),
       _QBModule(
-        title: 'MCQ Paper Generator',
-        subtitle: 'Create multiple choice question papers',
-        icon: Icons.quiz_rounded,
-        colors: [const Color(0xFF8B5CF6), const Color(0xFFEC4899)],
-        badge: 'New',
-        badgeColor: const Color(0xFF10B981),
-        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const McqPaperGeneratorScreen())),
-      ),
-      _QBModule(
-        title: 'Navodaya Paper Generator',
-        subtitle: 'Specialised Navodaya exam papers',
-        icon: Icons.auto_stories_rounded,
-        colors: [const Color(0xFF0EA5E9), const Color(0xFF06B6D4)],
-        badge: 'New',
-        badgeColor: const Color(0xFF10B981),
-        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const NavodayaPaperGeneratorScreen())),
-      ),
-      _QBModule(
-        title: 'Saved Papers',
-        subtitle: 'View and manage your saved papers',
-        icon: Icons.bookmark_rounded,
-        colors: [const Color(0xFFF59E0B), const Color(0xFFEF4444)],
+        title: 'Saved AI Papers',
+        subtitle: 'View and edit saved papers',
+        icon: Icons.description_rounded,
+        colors: [const Color(0xFF0284C7), const Color(0xFF06B6D4)], // sky-600 to cyan-500
         badge: 'Active',
         badgeColor: const Color(0xFF10B981),
         onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SavedPapersScreen())),
       ),
       _QBModule(
-        title: 'Answer Keys',
-        subtitle: 'View answer keys for exam papers',
-        icon: Icons.key_rounded,
-        colors: [const Color(0xFF10B981), const Color(0xFF059669)],
+        title: 'Navodaya Paper Generator',
+        subtitle: 'Navodaya Mathematics',
+        icon: Icons.check_circle_rounded,
+        colors: [const Color(0xFFEA580C), const Color(0xFFFB923C)], // orange-600 to orange-400
+        badge: 'New',
+        badgeColor: const Color(0xFF10B981),
+        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const NavodayaPaperGeneratorScreen())),
+      ),
+      _QBModule(
+        title: 'MCQ Paper Generator',
+        subtitle: 'Custom MCQ Papers',
+        icon: Icons.list_alt_rounded,
+        colors: [const Color(0xFF059669), const Color(0xFF34D399)], // emerald-600 to emerald-400
+        badge: 'New',
+        badgeColor: const Color(0xFF10B981),
+        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const McqPaperGeneratorScreen())),
+      ),
+      _QBModule(
+        title: 'Answer Key',
+        subtitle: 'Manage & generate answer keys',
+        icon: Icons.vpn_key_rounded,
+        colors: [const Color(0xFFE11D48), const Color(0xFFFB7185)], // rose-600 to rose-400
         badge: 'Active',
         badgeColor: const Color(0xFF10B981),
         onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AnswerKeysScreen())),
@@ -80,35 +80,6 @@ class QuestionBankScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          // Header banner
-          Container(
-            margin: const EdgeInsets.only(bottom: 20),
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFF4338CA), Color(0xFF6366F1), Color(0xFF8B5CF6)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(24),
-              boxShadow: [BoxShadow(color: const Color(0xFF6366F1).withOpacity(0.35), blurRadius: 20, offset: const Offset(0, 8))],
-            ),
-            child: Row(children: [
-              Container(
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(16)),
-                child: const Icon(Icons.library_books_rounded, color: Colors.white, size: 30),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text('Question Bank', style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 20)),
-                  Text('Create, manage & generate exam papers', style: GoogleFonts.poppins(color: Colors.white.withOpacity(0.8), fontSize: 12)),
-                ]),
-              ),
-            ]),
-          ),
-
           // Modules list
           ...modules.map((m) => _buildModuleCard(context, m)),
         ],

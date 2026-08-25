@@ -231,27 +231,8 @@ class _SingleProgressCardScreenState extends State<SingleProgressCardScreen> {
 
     final totalMarksObtained = _resultData!['total'] ?? 0;
     int totalMaxMarks = 0;
-    int getSubjectPriority(String subjectName) {
-      String name = subjectName.toUpperCase();
-      if (name.contains('TELUGU')) return 1;
-      if (name.contains('HINDI')) return 2;
-      if (name.contains('ENGLISH')) return 3;
-      if (name.contains('MATH')) return 4;
-      if (name.contains('PHYSICS')) return 5;
-      if (name.contains('SCIENCE')) return 6;
-      if (name.contains('CHEMISTRY')) return 7;
-      if (name.contains('BOTANY')) return 8;
-      if (name.contains('ZOOLOGY')) return 9;
-      if (name.contains('SOCIAL')) return 10;
-      return 99;
-    }
-
+    // The backend API now returns the subjects exactly in the order they were defined in Exam Configuration
     final marksList = List<dynamic>.from(_resultData!['marks'] as List? ?? []);
-    marksList.sort((a, b) {
-      final priorityA = getSubjectPriority(a['subject']?.toString() ?? '');
-      final priorityB = getSubjectPriority(b['subject']?.toString() ?? '');
-      return priorityA.compareTo(priorityB);
-    });
     for(var m in marksList) { totalMaxMarks += (m['max'] as num?)?.toInt() ?? 100; }
     
     final percentage = _resultData!['percentage'] != null ? (_resultData!['percentage'] as num).toDouble() : 0.0;
@@ -446,7 +427,9 @@ class _SingleProgressCardScreenState extends State<SingleProgressCardScreen> {
                           _buildPremiumInfoRow('🆔 ID', rollNo.toString(), isEven: true, isMobile: isMobile),
                           _buildPremiumInfoRow('📚 Class', className, isEven: false, isMobile: isMobile),
                           _buildPremiumInfoRow('📖 Section', section, isEven: true, isMobile: isMobile),
-                          _buildPremiumInfoRow('📅 Year', '2026-2027', isEven: false, isLast: rank == null, isMobile: isMobile),
+                          _buildPremiumInfoRow('📞 Mobile', widget.studentData?['mobile']?.toString() ?? 'N/A', isEven: false, isMobile: isMobile),
+                          _buildPremiumInfoRow('📅 Year', '2026-2027', isEven: true, isMobile: isMobile),
+                          _buildPremiumInfoRow('📍 Location', widget.studentData?['address']?.toString() ?? 'N/A', isEven: false, isLast: rank == null, isMobile: isMobile),
                           if (rank != null)
                             _buildPremiumInfoRow('🏅 Rank', '#' + rank, isEven: true, isLast: true, isMobile: isMobile),
                         ],
@@ -581,37 +564,50 @@ class _SingleProgressCardScreenState extends State<SingleProgressCardScreen> {
                 ),
               ),
 
-              // Rating Box
+              // Rating Box (Matching React Row layout)
               Container(
-                margin: EdgeInsets.symmetric(horizontal: hPadding, vertical: 8),
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                margin: EdgeInsets.symmetric(horizontal: hPadding, vertical: 10),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                 decoration: BoxDecoration(
-                  color: ratingBg,
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: ratingBorder),
+                  color: const Color(0xFFF8FAFC), // slate-50
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFFE2E8F0)), // slate-200
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                child: Row(
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text('ACADEMIC RATING', style: GoogleFonts.outfit(fontSize: 10, fontWeight: FontWeight.bold, color: ratingColor.withOpacity(0.8), letterSpacing: 0.5)),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(color: ratingBorder),
+                    Expanded(
+                      flex: 1,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'ACADEMIC PERFORMANCE RATING',
+                            style: GoogleFonts.outfit(fontSize: 10, fontWeight: FontWeight.bold, color: const Color(0xFF94A3B8), letterSpacing: 0.5), // slate-400
                           ),
-                          child: Text(ratingLabel, style: GoogleFonts.outfit(fontSize: 11, fontWeight: FontWeight.w900, color: ratingColor)),
-                        ),
-                      ],
+                          const SizedBox(height: 4),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: ratingBg,
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(color: ratingBorder),
+                            ),
+                            child: Text(
+                              ratingLabel,
+                              style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.w900, color: ratingColor),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                    const SizedBox(height: 6),
-                    Text(
-                      '"' + ratingComment + '"',
-                      style: GoogleFonts.lora(fontSize: 11, fontStyle: FontStyle.italic, fontWeight: FontWeight.w600, color: const Color(0xFF475569)),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      flex: 1,
+                      child: Text(
+                        '"' + ratingComment + '"',
+                        textAlign: TextAlign.right,
+                        style: GoogleFonts.lora(fontSize: 12, fontStyle: FontStyle.italic, fontWeight: FontWeight.bold, color: const Color(0xFF475569)), // slate-600
+                      ),
                     ),
                   ],
                 ),

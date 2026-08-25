@@ -52,7 +52,7 @@ class _GatePassScreenState extends State<GatePassScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final hasFullAccess = _userRole == 'SUPER_ADMIN' || _userRole == 'ADMIN' || _userRole == 'SECURITY';
+    final hasFullAccess = _userRole == 'SUPER_ADMIN' || _userRole == 'ADMIN' || _userRole == 'SECURITY' || _userRole == 'TEACHER';
 
     return Scaffold(
       backgroundColor: const Color(0xFFF1F5F9),

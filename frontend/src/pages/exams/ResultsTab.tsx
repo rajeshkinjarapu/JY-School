@@ -49,25 +49,16 @@ export const ResultsTab: React.FC<{ exams: any[] }> = ({ exams }) => {
     fetchResults();
   }, [selectedExamId, selectedClassId]);
 
-  // Derive master list of subjects for HTML and PDF tables
-  const desiredOrder = ['TELUGU', 'HINDI', 'ENG', 'MATH', 'SCIENCE', 'SOCIAL'];
-  const sortMarks = (marks: any[]) => {
-    return [...marks].sort((a, b) => {
-      const aSub = String(a.subject).toUpperCase();
-      const bSub = String(b.subject).toUpperCase();
-      let aIndex = desiredOrder.findIndex(sub => aSub.includes(sub));
-      let bIndex = desiredOrder.findIndex(sub => bSub.includes(sub));
-      if (aIndex === -1) aIndex = 999;
-      if (bIndex === -1) bIndex = 999;
-      return aIndex - bIndex;
-    });
-  };
-
+  // Use the order of subjects as returned by the API (which is now sorted correctly)
   const allSubjectsSet = new Set<string>();
+  if (results.length > 0) {
+    results[0].marks?.forEach((m: any) => allSubjectsSet.add(m.subject));
+  }
+  // Fallback to iterating all students if first student doesn't have all subjects
   results.forEach(student => {
     student.marks?.forEach((m: any) => allSubjectsSet.add(m.subject));
   });
-  const masterSubjects = sortMarks(Array.from(allSubjectsSet).map(subject => ({ subject, obtained: 0 })));
+  const masterSubjects = Array.from(allSubjectsSet).map(subject => ({ subject, obtained: 0 }));
 
   const handlePrint = () => {
     const printContent = document.getElementById('results-print-area');

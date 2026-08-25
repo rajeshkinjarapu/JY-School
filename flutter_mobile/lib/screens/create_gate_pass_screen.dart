@@ -25,14 +25,18 @@ class _CreateGatePassScreenState extends State<CreateGatePassScreen> {
   String _searchQuery = '';
   bool _isFetchingData = true;
   String _requestType = 'STUDENT'; // 'STUDENT' or 'TEACHER'
+  
+  String? _selectedFilterClass;
+  String? _selectedFilterSection;
 
   @override
   void initState() {
     super.initState();
-    if (widget.userRole == 'TEACHER') {
-      _requestType = 'TEACHER';
+    if (widget.userRole == 'STUDENT') {
+      _requestType = 'STUDENT';
       _isFetchingData = false; 
     } else {
+      _requestType = 'STUDENT';
       _fetchData();
     }
   }
@@ -73,8 +77,8 @@ class _CreateGatePassScreenState extends State<CreateGatePassScreen> {
   }
 
   Future<void> _submit() async {
-    final isAdmin = widget.userRole == 'ADMIN' || widget.userRole == 'SUPER_ADMIN';
-    if (isAdmin) {
+    final canIssueForOthers = widget.userRole == 'ADMIN' || widget.userRole == 'SUPER_ADMIN' || widget.userRole == 'SECURITY' || widget.userRole == 'TEACHER';
+    if (canIssueForOthers) {
       if (_requestType == 'STUDENT' && _selectedStudentId == null) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please select a student')));
         return;
@@ -126,14 +130,35 @@ class _CreateGatePassScreenState extends State<CreateGatePassScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isAdmin = widget.userRole == 'ADMIN' || widget.userRole == 'SUPER_ADMIN';
+    final canIssueForOthers = widget.userRole == 'ADMIN' || widget.userRole == 'SUPER_ADMIN' || widget.userRole == 'SECURITY' || widget.userRole == 'TEACHER';
+    final isStrictAdmin = widget.userRole == 'ADMIN' || widget.userRole == 'SUPER_ADMIN' || widget.userRole == 'SECURITY';
     
     final filteredStudents = _students.where((s) {
       final name = (s['user']?['name'] ?? '').toLowerCase();
       final roll = (s['rollNo'] ?? '').toLowerCase();
-      return name.contains(_searchQuery.toLowerCase()) || roll.contains(_searchQuery.toLowerCase());
+      final className = (s['class']?['name'] ?? '').toLowerCase();
+      final section = (s['class']?['section'] ?? '').toLowerCase();
+      final q = _searchQuery.toLowerCase();
+      
+      final matchQuery = name.contains(q) || roll.contains(q) || className.contains(q) || section.contains(q);
+      final matchClass = _selectedFilterClass == null || (s['class']?['name']?.toString() == _selectedFilterClass);
+      final matchSection = _selectedFilterSection == null || (s['class']?['section']?.toString() == _selectedFilterSection);
+      
+      return matchQuery && matchClass && matchSection;
     }).toList();
     
+    final uniqueClasses = _students
+        .map((s) => s['class']?['name']?.toString() ?? '')
+        .where((c) => c.isNotEmpty)
+        .toSet()
+        .toList()..sort();
+        
+    final uniqueSections = _students
+        .map((s) => s['class']?['section']?.toString() ?? '')
+        .where((s) => s.isNotEmpty)
+        .toSet()
+        .toList()..sort();
+        
     final filteredTeachers = _teachers.where((t) {
       final name = (t['user']?['name'] ?? '').toLowerCase();
       return name.contains(_searchQuery.toLowerCase());
@@ -155,7 +180,7 @@ class _CreateGatePassScreenState extends State<CreateGatePassScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (isAdmin) ...[
+              if (isStrictAdmin) ...[
                 Row(
                   children: [
                     Expanded(
@@ -208,7 +233,7 @@ class _CreateGatePassScreenState extends State<CreateGatePassScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    if (isAdmin) ...[
+                    if (canIssueForOthers) ...[
                       if (_isFetchingData)
                         const Center(child: Padding(
                           padding: EdgeInsets.all(20.0),
@@ -223,13 +248,71 @@ class _CreateGatePassScreenState extends State<CreateGatePassScreen> {
                             TextField(
                               onChanged: (v) => setState(() => _searchQuery = v),
                               decoration: InputDecoration(
-                                hintText: _requestType == 'STUDENT' ? 'Search student by name or roll no...' : 'Search staff by name...',
+                                hintText: _requestType == 'STUDENT' ? 'Search by name, roll no, class or section...' : 'Search staff by name...',
                                 prefixIcon: const Icon(Icons.search_rounded, color: Color(0xFF94A3B8)),
                                 filled: true,
                                 fillColor: const Color(0xFFF8FAFC),
                                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
                               ),
                             ),
+                            if (_requestType == 'STUDENT') ...[
+                              const SizedBox(height: 12),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFFF8FAFC),
+                                        borderRadius: BorderRadius.circular(16),
+                                        border: Border.all(color: const Color(0xFFE2E8F0)),
+                                      ),
+                                      child: DropdownButtonHideUnderline(
+                                        child: DropdownButton<String>(
+                                          isExpanded: true,
+                                          hint: const Text('All Classes'),
+                                          value: _selectedFilterClass,
+                                          items: [
+                                            const DropdownMenuItem<String>(value: null, child: Text('All Classes')),
+                                            ...uniqueClasses.map((c) => DropdownMenuItem(value: c, child: Text(c))),
+                                          ],
+                                          onChanged: (v) => setState(() {
+                                            _selectedFilterClass = v;
+                                            _selectedStudentId = null; // Reset selection on filter change
+                                          }),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFFF8FAFC),
+                                        borderRadius: BorderRadius.circular(16),
+                                        border: Border.all(color: const Color(0xFFE2E8F0)),
+                                      ),
+                                      child: DropdownButtonHideUnderline(
+                                        child: DropdownButton<String>(
+                                          isExpanded: true,
+                                          hint: const Text('All Sections'),
+                                          value: _selectedFilterSection,
+                                          items: [
+                                            const DropdownMenuItem<String>(value: null, child: Text('All Sections')),
+                                            ...uniqueSections.map((s) => DropdownMenuItem(value: s, child: Text(s))),
+                                          ],
+                                          onChanged: (v) => setState(() {
+                                            _selectedFilterSection = v;
+                                            _selectedStudentId = null; // Reset selection on filter change
+                                          }),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
                             const SizedBox(height: 16),
                             if (_requestType == 'STUDENT')
                               filteredStudents.isEmpty

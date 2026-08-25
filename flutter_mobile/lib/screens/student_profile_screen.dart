@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
 import '../services/api_service.dart';
 import 'record_fee_payment_screen.dart';
 
@@ -13,22 +15,35 @@ class StudentProfileScreen extends StatefulWidget {
 }
 
 class _StudentProfileScreenState extends State<StudentProfileScreen> with SingleTickerProviderStateMixin {
-  late TabController _tabController;
+  TabController? _tabController;
   int _currentIndex = 0;
   Map<String, dynamic>? _studentDetails;
   List<dynamic> _feeStructures = [];
   bool _isLoading = true;
+  bool _isTeacher = false;
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
-    _tabController.addListener(() {
-      if (!_tabController.indexIsChanging) {
-        setState(() { _currentIndex = _tabController.index; });
+    _initTabs();
+    _fetchProfile();
+  }
+
+  Future<void> _initTabs() async {
+    final prefs = await SharedPreferences.getInstance();
+    final userStr = prefs.getString('user');
+    String role = '';
+    if (userStr != null) {
+      role = jsonDecode(userStr)['role'] ?? '';
+    }
+    _isTeacher = role == 'TEACHER';
+    _tabController = TabController(length: _isTeacher ? 2 : 3, vsync: this);
+    _tabController!.addListener(() {
+      if (!_tabController!.indexIsChanging && mounted) {
+        setState(() { _currentIndex = _tabController!.index; });
       }
     });
-    _fetchProfile();
+    if (mounted) setState(() {});
   }
 
   Future<void> _fetchProfile() async {
@@ -52,7 +67,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
   }
 
   @override
-  void dispose() { _tabController.dispose(); super.dispose(); }
+  void dispose() { _tabController?.dispose(); super.dispose(); }
 
   Future<void> _launchUrl(String scheme, String value) async {
     if (value.isEmpty || value == 'N/A') return;
@@ -96,7 +111,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
         ),
         elevation: 0,
         actions: [
-          IconButton(
+          if (!_isTeacher) IconButton(
             icon: Container(
               padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(color: Colors.white.withOpacity(0.18), borderRadius: BorderRadius.circular(10)),
@@ -116,27 +131,29 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
               color: Colors.black.withOpacity(0.15),
               borderRadius: BorderRadius.circular(30),
             ),
-            child: TabBar(
-              controller: _tabController,
-              dividerColor: Colors.transparent,
-              indicatorSize: TabBarIndicatorSize.tab,
-              indicator: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(30),
-                boxShadow: [
-                  BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 4, offset: const Offset(0, 2)),
-                ],
-              ),
-              labelColor: const Color(0xFF4F46E5),
-              unselectedLabelColor: Colors.white,
-              labelStyle: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 12.5),
-              unselectedLabelStyle: GoogleFonts.poppins(fontWeight: FontWeight.w500, fontSize: 12.5),
-              tabs: const [
-                Tab(height: 38, text: 'PROFILE'),
-                Tab(height: 38, text: 'EXAMS'),
-                Tab(height: 38, text: 'FEES'),
-              ],
-            ),
+            child: _tabController == null
+                ? const Center(child: CircularProgressIndicator(color: Colors.white))
+                : TabBar(
+                    controller: _tabController,
+                    dividerColor: Colors.transparent,
+                    indicatorSize: TabBarIndicatorSize.tab,
+                    indicator: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(30),
+                      boxShadow: [
+                        BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 4, offset: const Offset(0, 2)),
+                      ],
+                    ),
+                    labelColor: const Color(0xFF4F46E5),
+                    unselectedLabelColor: Colors.white,
+                    labelStyle: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 12.5),
+                    unselectedLabelStyle: GoogleFonts.poppins(fontWeight: FontWeight.w500, fontSize: 12.5),
+                    tabs: [
+                      const Tab(height: 38, text: 'PROFILE'),
+                      const Tab(height: 38, text: 'EXAMS'),
+                      if (!_isTeacher) const Tab(height: 38, text: 'FEES'),
+                    ],
+                  ),
           ),
         ),
       ),
@@ -208,14 +225,14 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
             ),
           ),
           Expanded(
-            child: _isLoading
+            child: _isLoading || _tabController == null
                 ? const Center(child: CircularProgressIndicator(color: Color(0xFF6366F1)))
                 : TabBarView(
                     controller: _tabController,
                     children: [
                       _buildProfileTab(s, user),
                       _buildExamsTab(s),
-                      _buildFeesTab(s),
+                      if (!_isTeacher) _buildFeesTab(s),
                     ],
                   ),
           ),

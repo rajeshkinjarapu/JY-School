@@ -6,9 +6,9 @@ const router = Router();
 router.use(authenticate);
 
 // @ts-ignore
-router.get('/stats', authorize('SUPER_ADMIN', 'ADMIN', 'SECURITY' as any), getLiveStats);
+router.get('/stats', authorize('SUPER_ADMIN', 'ADMIN', 'SECURITY' as any, 'TEACHER'), getLiveStats);
 // @ts-ignore
-router.post('/scan', authorize('SUPER_ADMIN', 'ADMIN', 'SECURITY' as any), scanGatePass);
+router.post('/scan', authorize('SUPER_ADMIN', 'ADMIN', 'SECURITY' as any, 'TEACHER'), scanGatePass);
 
 router.get('/', listGatePasses);
 router.post('/', createGatePass);
@@ -16,6 +16,6 @@ router.get('/:id', getGatePassById);
 router.get('/:id/print', printGatePass);
 router.get('/:id/print/pdf', printGatePassPdf);
 // @ts-ignore
-router.patch('/:id', authorize('SUPER_ADMIN', 'ADMIN', 'SECURITY' as any), updateGatePass);
+router.patch('/:id', authorize('SUPER_ADMIN', 'ADMIN', 'SECURITY' as any, 'TEACHER'), updateGatePass);
 
 export default router;

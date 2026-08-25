@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
 
 import 'students_screen.dart';
 import 'teachers_screen.dart';
@@ -9,24 +11,60 @@ import 'student_fee_search_screen.dart';
 import 'exams_screen.dart';
 import 'progress_card_screen.dart';
 import 'attendance_screen.dart';
-import 'timetable_screen.dart';
 import 'transport_screen.dart';
+import 'fee_reminder_search_screen.dart';
+import 'leave_screen.dart';
+import 'leave_dashboard_screen.dart';
+import 'timetable_screen.dart';
 
-class ModulesScreen extends StatelessWidget {
+class ModulesScreen extends StatefulWidget {
   const ModulesScreen({super.key});
 
   @override
+  State<ModulesScreen> createState() => _ModulesScreenState();
+}
+
+class _ModulesScreenState extends State<ModulesScreen> {
+  String _userRole = '';
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _initRole();
+  }
+
+  Future<void> _initRole() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      final userStr = prefs.getString('user');
+      if (userStr != null) {
+        _userRole = jsonDecode(userStr)['role'] ?? '';
+      }
+      _isLoading = false;
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+    
+    final isTeacher = _userRole == 'TEACHER';
+
     // A comprehensive list of modules for the More page
     final List<Map<String, dynamic>> modules = [
       {'title': 'Students', 'icon': Icons.groups_rounded, 'color': const Color(0xFF6366F1), 'page': const StudentsScreen()},
       {'title': 'Teachers', 'icon': Icons.school_rounded, 'color': const Color(0xFF10B981), 'page': const TeachersScreen()},
-      {'title': 'Classes', 'icon': Icons.account_balance_rounded, 'color': const Color(0xFF0EA5E9), 'page': const ClassesScreen()},
-      {'title': 'Finance', 'icon': Icons.account_balance_wallet_rounded, 'color': const Color(0xFFF43F5E), 'page': const FinanceScreen()},
-      {'title': 'Fee Collection', 'icon': Icons.credit_card_rounded, 'color': const Color(0xFF8B5CF6), 'page': const StudentFeeSearchScreen()},
+      {'title': 'Classes', 'icon': Icons.account_balance_rounded, 'color': const Color(0xFF0EA5E9), 'page': ClassesScreen()},
+      if (!isTeacher) {'title': 'Finance', 'icon': Icons.account_balance_wallet_rounded, 'color': const Color(0xFFF43F5E), 'page': const FinanceScreen()},
+      if (!isTeacher) {'title': 'Fee Collection', 'icon': Icons.credit_card_rounded, 'color': const Color(0xFF8B5CF6), 'page': const StudentFeeSearchScreen()},
+      {'title': 'Fee Reminder', 'icon': Icons.notifications_active_rounded, 'color': const Color(0xFFEAB308), 'page': const FeeReminderSearchScreen()},
       {'title': 'Exams', 'icon': Icons.fact_check_rounded, 'color': const Color(0xFF0284C7), 'page': const ExamsScreen()},
       {'title': 'Reports', 'icon': Icons.emoji_events_rounded, 'color': const Color(0xFF059669), 'page': const ProgressCardScreen()},
       {'title': 'Attendance', 'icon': Icons.how_to_reg_rounded, 'color': const Color(0xFFD97706), 'page': const AttendanceScreen()},
+      {'title': 'Leave', 'icon': Icons.time_to_leave_rounded, 'color': const Color(0xFFEF4444), 'page': isTeacher ? const LeaveDashboardScreen() : const LeaveScreen()},
       {'title': 'Timetable', 'icon': Icons.schedule_rounded, 'color': const Color(0xFFEA580C), 'page': const TimetableScreen()},
       {'title': 'Transport', 'icon': Icons.directions_bus_rounded, 'color': const Color(0xFFDB2777), 'page': const TransportScreen()},
       {'title': 'Settings', 'icon': Icons.settings_rounded, 'color': const Color(0xFF475569), 'page': null},

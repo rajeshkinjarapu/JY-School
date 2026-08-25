@@ -462,9 +462,7 @@ class ApiService {
     return _performGet('/api/events', 'Failed request');
   }
 
-  static Future<Map<String, dynamic>> getTransportRoutes() async {
-    return _performGet('/api/transport/routes', 'Failed request');
-  }
+
 
   static Future<Map<String, dynamic>> getMyLeaves() async {
     return _performGet('/api/leave/my', 'Failed request');
@@ -1167,5 +1165,20 @@ class ApiService {
   
   static Future<Map<String, dynamic>> getMaintenanceLogs() async {
     return _performGet('/api/transport/maintenance-logs', 'Failed to fetch maintenance logs');
+  }
+
+  // ==========================================
+  // PUBLIC GENERIC METHODS (For newer screens)
+  // ==========================================
+  static Future<Map<String, dynamic>> performGet(String url, String errorMessage) async {
+    return _performGet(url, errorMessage);
+  }
+
+  static Future<Map<String, dynamic>> performPost(String url, Map<String, dynamic> body, String errorMessage) async {
+    return _performPost(url, body, errorMessage);
+  }
+
+  static Future<Map<String, dynamic>> performPut(String url, Map<String, dynamic> body, String errorMessage) async {
+    return _performPut(url, body, errorMessage);
   }
 }
