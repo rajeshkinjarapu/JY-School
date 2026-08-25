@@ -688,7 +688,7 @@ export const MCQPaperGeneratorPage = () => {
       {/* Main Dual Layout Content */}
       <div className="flex-1 flex overflow-hidden print:overflow-visible h-[calc(100vh-80px)] print:h-auto print:block">
         <style>{`
-          @media (min-width: 768px) {
+          @media screen and (min-width: 768px) {
             .split-left { width: ${leftWidth}% !important; }
             .split-right { width: ${100 - leftWidth}% !important; }
           }
