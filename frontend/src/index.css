@@ -52,7 +52,18 @@
     height: 100%;
     overscroll-behavior-y: none;
     -webkit-tap-highlight-color: transparent;
-    background-color: #0f172a !important; /* Full solid dark background for bottom navigation bar */
+  }
+  
+  @media screen {
+    html {
+      background-color: #0f172a !important; /* Full solid dark background for bottom navigation bar */
+    }
+    body {
+      background-color: #0f172a !important;
+    }
+    body.is-native #root {
+      background-color: #0f172a !important; /* Premium dark blue notch area */
+    }
   }
   
   body {
@@ -63,10 +74,7 @@
     overflow: hidden;
     overscroll-behavior-y: none;
     touch-action: manipulation;
-    background-color: #0f172a;
   }
-
-
 
   /* Flutter-like GPU Hardware Acceleration & Smooth Mobile Touch Feedback */
   .gpu-accelerated {
@@ -97,7 +105,6 @@
   /* Fix for Capacitor Android/iOS notch across ALL pages */
   body.is-native #root {
     padding-top: env(safe-area-inset-top) !important;
-    background-color: #0f172a !important; /* Premium dark blue notch area */
   }
 }
 
@@ -241,7 +248,7 @@
   }
   
   /* Force all CSS variables (Tailwind v4 oklch) to white/black */
-  :root, html, body, html.dark, body.dark {
+  :root, html, body, html.dark, body.dark, #root {
     color-scheme: light only !important;
     -webkit-color-scheme: light !important;
     --color-bg: #ffffff !important;
