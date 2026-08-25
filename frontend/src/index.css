@@ -261,9 +261,9 @@
   }
 
   /* Override every element's background */
-  *,
-  *::before,
-  *::after {
+  *:not(.katex):not(.katex *),
+  *:not(.katex):not(.katex *)::before,
+  *:not(.katex):not(.katex *)::after {
     background: #ffffff !important;
     background-color: #ffffff !important;
     background-image: none !important;
@@ -276,9 +276,16 @@
     print-color-adjust: exact !important;
   }
 
+  /* Exception for KaTeX: rely on transparent background to prevent overlapping spans from hiding math */
+  .katex, .katex * {
+    background: transparent !important;
+    background-color: transparent !important;
+    border-color: currentColor !important;
+  }
+
   /* Specific elements that can carry dark backgrounds */
   html, body, #root,
-  .a4-paper, .a4-paper *,
+  .a4-paper, .a4-paper *:not(.katex):not(.katex *),
   div, section, article, main, nav, header, footer, aside {
     background: #ffffff !important;
     background-color: #ffffff !important;
