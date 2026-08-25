@@ -192,9 +192,14 @@ export const MCQPaperGeneratorPage = () => {
     const printDocument = iframe.contentWindow?.document;
     if (!printDocument) { window.print(); return; }
 
+      const dynamicLinks = Array.from(document.querySelectorAll('link[rel="stylesheet"]'))
+        .map((l) => l.outerHTML)
+        .join('\n');
+
       const styleLinks = `
         <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+        ${dynamicLinks}
       `;
 
       const styleTags = Array.from(document.querySelectorAll('style'))
