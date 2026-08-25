@@ -30,6 +30,8 @@
 * **Run Flutter in Chrome:** Provided terminal commands to run the Flutter application (`flutter_mobile`) in Google Chrome.
 * **Print Preview Fix (React):** Fixed a dark mode interference issue causing black shades at the bottom of printed pages across all Question Bank generators and Saved Papers by forcing an explicit white background.
 * **Dashboard Text Scaling (Flutter):** Fixed text overflow and overly large font sizes for long card titles ("Progress Card", "Collect Fees") in `dashboard_screen.dart` by reducing the font size and utilizing `FittedBox`.
+* **Fee Details UI Fix (Flutter):** Repositioned the "Pay" FloatingActionButton in `student_fee_details_screen.dart` by adding bottom and right padding, ensuring it doesn't sit too low on the screen.
+* **Flutter APK Build:** Provided the user with the terminal commands to build the release APK for the Flutter mobile app.
 
 ## 4. Pending / Next Steps
 1. **Flutter App Features:** Continue building the Flutter mobile app ensuring it syncs perfectly with the existing web APIs and has a premium design. Discuss which module to build next (e.g., Attendance, Exams, Fees).

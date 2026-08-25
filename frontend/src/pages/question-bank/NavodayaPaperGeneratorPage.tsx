@@ -143,22 +143,7 @@ export const NavodayaPaperGeneratorPage = () => {
   };
 
   const handlePrint = () => {
-    const paperEl = document.getElementById('a4-preview-paper');
-    if (!paperEl) { window.print(); return; }
-    
-    const cloneEl = paperEl.cloneNode(true) as HTMLElement;
-    cloneEl.classList.remove('shadow-2xl');
-    cloneEl.style.boxShadow = 'none';
-    cloneEl.style.border = 'none';
-    cloneEl.style.outline = 'none';
-
-    const printWindow = window.open('', '_blank', 'width=900,height=1200');
-    if (!printWindow) { window.print(); return; }
-    const styleLinks = Array.from(document.querySelectorAll('link[rel="stylesheet"]')).map((l) => l.outerHTML).join('');
-    const styleTags = Array.from(document.querySelectorAll('style')).map((s) => `<style>${s.innerHTML}</style>`).join('');
-    printWindow.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"/><title>Print</title>${styleLinks}${styleTags}<style>@page{margin:12.7mm;size:A4;}html,body{margin:0;padding:0;background-color:#ffffff !important;background:#ffffff !important;color:#000000 !important;}@media print{html,body{background-color:#ffffff !important;background:#ffffff !important;}}#print-root{width:210mm;margin:0 auto;background-color:#ffffff !important;}</style></head><body><div id="print-root">${cloneEl.outerHTML}</div></body></html>`);
-    printWindow.document.close();
-    printWindow.onload = () => { setTimeout(() => { printWindow.focus(); printWindow.print(); printWindow.close(); }, 500); };
+    window.print();
   };
 
   const toggleFullScreen = () => {
