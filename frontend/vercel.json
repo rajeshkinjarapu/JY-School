@@ -2,11 +2,11 @@
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "https://oxidize-entangled-spendable.ngrok-free.dev/api/$1"
+      "destination": "https://jy-school-production-f159.up.railway.app/api/$1"
     },
     {
       "source": "/uploads/(.*)",
-      "destination": "https://oxidize-entangled-spendable.ngrok-free.dev/uploads/$1"
+      "destination": "https://jy-school-production-f159.up.railway.app/uploads/$1"
     },
     {
       "source": "/(.*)",

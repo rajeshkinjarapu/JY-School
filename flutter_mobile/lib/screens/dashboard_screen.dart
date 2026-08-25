@@ -8,6 +8,7 @@ import 'login_screen.dart';
 import 'attendance_screen.dart';
 import 'fees_screen.dart';
 import 'finance_screen.dart';
+import 'transactions_screen.dart';
 import 'exams_screen.dart';
 import 'timetable_screen.dart';
 import 'teacher_attendance_screen.dart';
@@ -723,7 +724,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       childAspectRatio: dynamicAspectRatio, // Dynamically fitted
       children: [
         _buildPremiumCard(
-          subtitle: 'STUDENT MANAGEMENT',
+          subtitle: 'TOTAL STUDENTS',
           title: '$_adminTotalStudents',
           bottomText: 'Admission & Records',
           icon: Icons.groups_rounded,
@@ -733,7 +734,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const StudentsScreen())),
         ),
         _buildPremiumCard(
-          subtitle: 'TEACHER MANAGEMENT',
+          subtitle: 'TOTAL TEACHERS',
           title: '$_adminTotalTeachers',
           bottomText: 'Staff & Activities',
           icon: Icons.school_rounded,
@@ -743,7 +744,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TeachersScreen())),
         ),
         _buildPremiumCard(
-          subtitle: 'CLASSES MANAGEMENT',
+          subtitle: 'TOTAL CLASSES',
           title: '$_adminTotalClasses',
           bottomText: 'Syllabus & Timetable',
           icon: Icons.account_balance_rounded,
@@ -753,14 +754,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
           onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ClassesScreen())),
         ),
         _buildPremiumCard(
-          subtitle: 'REVENUE TRACKING',
+          subtitle: 'TOTAL REVENUE',
           title: '₹${_formatIndianCurrency(_adminFeeCollected)}',
           bottomText: 'Total Income',
           icon: Icons.account_balance_wallet_rounded,
           gradientColors: [const Color(0xFFE91E63), const Color(0xFF880E4F)],
           accentColor: const Color(0xFFF06292),
           imagePath: 'assets/images/admin_icons/revenue.jpg',
-          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const FinanceScreen())),
+          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TransactionsScreen())),
         ),
         _buildPremiumCard(
           subtitle: 'FEE COLLECTION',
@@ -773,7 +774,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const StudentFeeSearchScreen())),
         ),
         _buildPremiumCard(
-          subtitle: 'EXAMINATIONS',
+          subtitle: 'EXAM RESULTS',
           title: 'Exams',
           bottomText: 'Marks & Results',
           icon: Icons.fact_check_rounded,
@@ -794,7 +795,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ),
         _buildPremiumCard(
           subtitle: 'REPORTS & ANALYTICS',
-          title: 'Reports',
+          title: 'Progress Card',
           bottomText: 'Performance Analysis',
           icon: Icons.emoji_events_rounded,
           gradientColors: [const Color(0xFF00C853), const Color(0xFF009624)],
@@ -839,7 +840,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           children: [
             // Floating 3D image bubble removed based on user preference
             Padding(
-              padding: const EdgeInsets.all(12.0),
+              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -849,22 +850,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     children: [
                       // Icon Badge
                       Container(
-                        padding: const EdgeInsets.all(6),
+                        padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
                           color: Colors.white.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: BorderRadius.circular(12),
                           border: Border.all(color: Colors.white.withOpacity(0.4), width: 1),
                         ),
-                        child: Icon(icon, color: Colors.white, size: 16),
+                        child: Icon(icon, color: Colors.white, size: 18),
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: 10),
                       Expanded(
                         child: Text(
                           subtitle,
                           style: GoogleFonts.poppins(
                             color: Colors.white.withOpacity(0.95),
-                            fontSize: 9,
+                            fontSize: 10,
                             fontWeight: FontWeight.w700,
+                            letterSpacing: 0.5,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -872,28 +874,30 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ),
                     ],
                   ),
-                  const Spacer(),
-                  Text(
-                    title,
-                    style: GoogleFonts.outfit(
-                      color: Colors.white,
-                      fontSize: 20,
-                      fontWeight: FontWeight.w900,
-                      height: 1.1,
+                  const SizedBox(height: 16),
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      title,
+                      style: GoogleFonts.outfit(
+                        color: Colors.white,
+                        fontSize: 24,
+                        fontWeight: FontWeight.w900,
+                        height: 1.1,
+                      ),
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 8),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
-                      color: accentColor.withOpacity(0.7),
-                      borderRadius: BorderRadius.circular(8),
+                      color: accentColor.withOpacity(0.8),
+                      borderRadius: BorderRadius.circular(10),
                     ),
                     child: Text(
                       bottomText,
-                      style: GoogleFonts.poppins(color: Colors.white, fontSize: 8, fontWeight: FontWeight.w600),
+                      style: GoogleFonts.poppins(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w600),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),

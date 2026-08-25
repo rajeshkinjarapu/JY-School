@@ -240,26 +240,42 @@
     margin: 0 !important; 
   }
   
-  * {
+  /* Force all CSS variables (Tailwind v4 oklch) to white/black */
+  :root, html, body, html.dark, body.dark {
+    color-scheme: light only !important;
+    -webkit-color-scheme: light !important;
+    --color-bg: #ffffff !important;
+    --tw-bg-opacity: 1 !important;
+    background: #ffffff !important;
     background-color: #ffffff !important;
+  }
+
+  /* Override every element's background */
+  *,
+  *::before,
+  *::after {
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+    background-image: none !important;
     color: #000000 !important;
+    border-color: #000000 !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
     forced-color-adjust: none !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
-  
-  html, body, #root, .a4-paper, .a4-paper * {
+
+  /* Specific elements that can carry dark backgrounds */
+  html, body, #root,
+  .a4-paper, .a4-paper *,
+  div, section, article, main, nav, header, footer, aside {
     background: #ffffff !important;
     background-color: #ffffff !important;
     color: #000000 !important;
   }
-  
-  /* డార్క్ మోడ్ ని force గా ఆఫ్ చేయండి */
-  :root, html, body, html.dark, body.dark {
-    color-scheme: light !important;
-    -webkit-color-scheme: light !important;
-  }
-  
+
+  /* Preserve colored elements ONLY inside .a4-paper (borders, lines etc.) */
   .a4-paper {
     border: none !important;
     box-shadow: none !important;
@@ -267,7 +283,13 @@
     padding: 15mm 18mm !important;
     width: 210mm !important;
     min-height: 297mm !important;
+    height: auto !important;
     box-sizing: border-box !important;
+  }
+
+  /* Keep table borders and hr lines visible */
+  .a4-paper table, .a4-paper th, .a4-paper td, .a4-paper hr {
+    border-color: #000000 !important;
   }
 
   .page-break {
@@ -276,6 +298,13 @@
     display: block;
     height: 0;
     overflow: hidden;
+  }
+
+  /* Hide UI chrome elements */
+  .no-print,
+  nav, header:not(.print-header), aside,
+  button, .sidebar, .topbar {
+    display: none !important;
   }
 }
 

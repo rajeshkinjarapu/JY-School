@@ -4,7 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'offline_sync_service.dart';
 
 class ApiService {
-  static const String baseUrl = 'https://oxidize-entangled-spendable.ngrok-free.dev';
+  static const String baseUrl = 'https://jy-school-production-f159.up.railway.app';
 
   static String getImageUrl(String? photoUrl) {
     if (photoUrl == null || photoUrl.isEmpty) return '';
@@ -82,6 +82,15 @@ class ApiService {
 
   static Future<Map<String, dynamic>> getMe() async {
     return _performGet('/api/auth/me', 'Failed to get profile');
+  }
+
+  static Future<Map<String, dynamic>?> getUserDetails() async {
+    final prefs = await SharedPreferences.getInstance();
+    final userStr = prefs.getString('user');
+    if (userStr != null) {
+      return jsonDecode(userStr) as Map<String, dynamic>;
+    }
+    return null;
   }
 
   static Future<Map<String, dynamic>> getAttendance(String studentId, {String? startDate, String? endDate}) async {
@@ -462,6 +471,7 @@ class ApiService {
   }
 
   static Future<Map<String, dynamic>> applyLeave({
+    String? userId,
     required String type,
     required String startDate,
     required String endDate,
@@ -475,10 +485,40 @@ class ApiService {
         Uri.parse('$baseUrl/api/leave'),
         headers: _getHeaders(token: token),
         body: jsonEncode({
+          if (userId != null) 'userId': userId,
           'type': type,
           'startDate': startDate,
           'endDate': endDate,
           'reason': reason,
+        }),
+      );
+
+      final dynamic decoded = jsonDecode(response.body);
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return {'success': true, 'message': decoded is Map ? (decoded['message'] ?? 'Success') : 'Success'};
+      }
+      return {'success': false, 'message': decoded is Map ? (decoded['message'] ?? 'Failed request') : 'Failed request'};
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: $e'};
+    }
+  }
+
+  static Future<Map<String, dynamic>> getAllLeaves({String? status}) async {
+    final qs = status != null && status != 'ALL' ? '?status=$status' : '';
+    return _performGet('/api/leave$qs', 'Failed request');
+  }
+
+  static Future<Map<String, dynamic>> updateLeaveStatus(String id, String status, {String? rejectionReason}) async {
+    try {
+      final token = await getToken();
+      if (token == null) return {'success': false, 'message': 'No session token'};
+
+      final response = await http.put(
+        Uri.parse('$baseUrl/api/leave/$id/status'),
+        headers: _getHeaders(token: token),
+        body: jsonEncode({
+          'status': status,
+          if (rejectionReason != null) 'rejectionReason': rejectionReason,
         }),
       );
 

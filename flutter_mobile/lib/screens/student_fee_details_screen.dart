@@ -147,22 +147,25 @@ class _StudentFeeDetailsScreenState extends State<StudentFeeDetailsScreen> with 
                 ),
               ],
             ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => RecordFeePaymentScreen(
-                student: widget.student,
-                pendingAmount: _totalPending,
-                structures: _structures,
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(bottom: 24.0, right: 8.0),
+        child: FloatingActionButton.extended(
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => RecordFeePaymentScreen(
+                  student: widget.student,
+                  pendingAmount: _totalPending,
+                  structures: _structures,
+                ),
               ),
-            ),
-          ).then((_) => _fetchFeeData());
-        },
-        backgroundColor: const Color(0xFF10B981),
-        icon: const Icon(Icons.payment_rounded, color: Colors.white),
-        label: Text('Pay ₹${_totalPending.toStringAsFixed(0)}', style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+            ).then((_) => _fetchFeeData());
+          },
+          backgroundColor: const Color(0xFF10B981),
+          icon: const Icon(Icons.payment_rounded, color: Colors.white),
+          label: Text('Pay ₹${_totalPending.toStringAsFixed(0)}', style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+        ),
       ),
     );
   }

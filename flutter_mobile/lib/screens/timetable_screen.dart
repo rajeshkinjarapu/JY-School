@@ -316,7 +316,7 @@ class _TimetableViewTabState extends State<TimetableViewTab> with SingleTickerPr
               child: DropdownButton<String>(
                 isExpanded: true,
                 value: _selectedClassId,
-                items: _classes.map((cls) => DropdownMenuItem(value: cls['id'].toString(), child: Text('${cls['className']} ${cls['section']}'))).toList(),
+                items: _classes.map((cls) => DropdownMenuItem(value: cls['id'].toString(), child: Text('${cls['name'] ?? ''} ${cls['section'] ?? ''}'.trim()))).toList(),
                 onChanged: (v) { setState(() => _selectedClassId = v); if(v!=null) _fetchClassTimetable(v); },
               ),
             ),
@@ -344,7 +344,20 @@ class _TimetableViewTabState extends State<TimetableViewTab> with SingleTickerPr
 
   Widget _buildDayView(String day) {
     final List<dynamic> periods = _timetable[day] ?? [];
-    if (periods.isEmpty) return const Center(child: Text('No classes scheduled'));
+    if (periods.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.event_busy, size: 64, color: Colors.grey[300]),
+            const SizedBox(height: 16),
+            Text('No classes scheduled', style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.grey[600])),
+            const SizedBox(height: 8),
+            Text('Original timetable slots will appear here once assigned.', style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey[400])),
+          ],
+        ),
+      );
+    }
     
     return ListView.builder(
       padding: const EdgeInsets.all(16),
@@ -352,31 +365,83 @@ class _TimetableViewTabState extends State<TimetableViewTab> with SingleTickerPr
       itemBuilder: (context, index) {
         final period = periods[index];
         return Container(
-          margin: const EdgeInsets.only(bottom: 12),
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: const Color(0xFFE2E8F0)), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0,4))]),
+          margin: const EdgeInsets.only(bottom: 16),
+          decoration: BoxDecoration(
+            color: Colors.white, 
+            borderRadius: BorderRadius.circular(20), 
+            border: Border.all(color: const Color(0xFFE2E8F0)), 
+            boxShadow: [
+              BoxShadow(color: const Color(0xFF6366F1).withOpacity(0.08), blurRadius: 24, offset: const Offset(0, 10))
+            ]
+          ),
           child: Row(
             children: [
               Container(
-                width: 60,
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                decoration: BoxDecoration(color: const Color(0xFFF8FAFC), borderRadius: BorderRadius.circular(12)),
+                width: 85,
+                padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 8),
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(colors: [Color(0xFF6366F1), Color(0xFF4F46E5)], begin: Alignment.topLeft, end: Alignment.bottomRight), 
+                  borderRadius: BorderRadius.only(topLeft: Radius.circular(20), bottomLeft: Radius.circular(20))
+                ),
                 child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(period['startTime'] ?? '', style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 13, color: const Color(0xFF1E293B))),
-                    Text(period['endTime'] ?? '', style: GoogleFonts.poppins(fontSize: 10, color: const Color(0xFF94A3B8))),
+                    Text(period['startTime'] ?? '--:--', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.white)),
+                    const SizedBox(height: 4),
+                    Text('to', style: GoogleFonts.poppins(fontSize: 10, color: Colors.white70)),
+                    const SizedBox(height: 4),
+                    Text(period['endTime'] ?? '--:--', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.white)),
                   ],
                 ),
               ),
-              const SizedBox(width: 16),
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(period['subject']?['name'] ?? 'Free Period', style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 16, color: const Color(0xFF1E293B))),
-                    if (period['teacher'] != null)
-                      Text(period['teacher']['user']['name'], style: GoogleFonts.poppins(fontSize: 13, color: const Color(0xFF64748B))),
-                  ],
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(
+                            child: Text(period['subject']?['name'] ?? 'Free Period', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 18, color: const Color(0xFF1E293B))),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(color: const Color(0xFFF8FAFC), borderRadius: BorderRadius.circular(10), border: Border.all(color: const Color(0xFFE2E8F0))),
+                            child: Text('P - ${period['periodNumber']}', style: GoogleFonts.poppins(fontSize: 11, fontWeight: FontWeight.bold, color: const Color(0xFF475569))),
+                          )
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(6),
+                            decoration: BoxDecoration(color: const Color(0xFFEFF6FF), borderRadius: BorderRadius.circular(8)),
+                            child: const Icon(Icons.person, size: 14, color: Color(0xFF3B82F6)),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(child: Text(period['teacher'] != null ? period['teacher']['user']['name'] : 'No Teacher Assigned', style: GoogleFonts.poppins(fontSize: 13, color: const Color(0xFF475569), fontWeight: FontWeight.w500))),
+                        ],
+                      ),
+                      if (period['room'] != null && period['room'].toString().isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 10.0),
+                          child: Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(6),
+                                decoration: BoxDecoration(color: const Color(0xFFFDF4FF), borderRadius: BorderRadius.circular(8)),
+                                child: const Icon(Icons.meeting_room, size: 14, color: Color(0xFFD946EF)),
+                              ),
+                              const SizedBox(width: 10),
+                              Text(period['room'], style: GoogleFonts.poppins(fontSize: 13, color: const Color(0xFF475569), fontWeight: FontWeight.w500)),
+                            ],
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
               )
             ],
