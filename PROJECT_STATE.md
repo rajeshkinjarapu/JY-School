@@ -21,10 +21,11 @@
 4. **Context Continuity:** The AI must always consult this `PROJECT_STATE.md` file to resume work seamlessly across different days and devices.
 
 ## 3. Recently Completed Work (August 2026)
-* **PDF Download Bug Fixed:** Replaced `html2canvas` with `html-to-image` (`toJpeg`) in `ProgressCardTab.tsx` and `JEEProgressCardTab.tsx`. This fixed the `Failed to generate zip: Attempting to parse an unsupported color function "oklch"` error caused by Tailwind v4's default OKLCH color palette.
-* **Print Black Shade Bug Fixed:** Removed `height: 100vh` and added `min-height: 100% !important; height: auto !important;` to `html, body` in print CSS media queries across all Question Paper Generator pages to prevent dark mode backgrounds from showing up at the bottom of printed pages.
+* **Print Black Shade Bug Fixed (Finalized):** The dark canvas issue in Chrome print preview was caused by Tailwind's `html.dark` injecting `color-scheme: dark`. We overrode this by forcing `color-scheme: light !important` for `:root, html, body, html.dark, body.dark` in `index.css`.
 * **Marks Entry Missing Subjects Bug Fixed:** Updated `MarksEntryPage.tsx` to stop filtering out exam subjects that aren't mapped to the class. Updated `marks.controller.ts` (`bulkCreate`) to automatically create missing `Subject` records on-the-fly to prevent data loss.
+* **Persistent Memory & Rules:** Created this `PROJECT_STATE.md` file and added a Strict Rule in `AGENTS.md` for the AI to auto-update it at the end of every conversation.
+* **Persona Set:** AI is now officially named **"Kallu"** (Female persona).
 
 ## 4. Pending / Next Steps
-1. **Backend Permanent Hosting:** Setup Nginx + SSL (Certbot) on the VPS (`148.113.9.103`) and link a Custom Domain so the user no longer has to rely on Ngrok, Render, or Koyeb for the backend API.
+1. **Backend Permanent Hosting (DuckDNS):** Discussed replacing Ngrok/Render with a completely free solution using DuckDNS (e.g., `jyschool.duckdns.org`), Nginx, and Certbot SSL on the existing VPS (`148.113.9.103`). This is the very next action item.
 2. **Flutter App Setup:** Continue building the Flutter mobile app ensuring it syncs perfectly with the existing web APIs and has a premium design.
