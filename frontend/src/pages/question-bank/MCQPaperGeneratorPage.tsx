@@ -16,6 +16,7 @@ export const MCQPaperGeneratorPage = () => {
   const paperId = searchParams.get('id');
   const [isSaving, setIsSaving] = useState(false);
   const [zoomLevel, setZoomLevel] = useState(0.48);
+  const [leftWidth, setLeftWidth] = useState(50);
   
   // Paper Settings State
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -191,10 +192,61 @@ export const MCQPaperGeneratorPage = () => {
     const printDocument = iframe.contentWindow?.document;
     if (!printDocument) { window.print(); return; }
 
-    const styleLinks = Array.from(document.querySelectorAll('link[rel="stylesheet"]')).map((l) => l.outerHTML).join('');
-    const styleTags = Array.from(document.querySelectorAll('style')).map((s) => `<style>${s.innerHTML}</style>`).join('');
+      const styleLinks = `
+        <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+      `;
 
-    printDocument.write(`<!DOCTYPE html><html><head><meta charset="utf-8"/><meta name="color-scheme" content="light"/><title>Print</title>${styleLinks}${styleTags}<style>:root{color-scheme:light !important;}@page{margin:12.7mm;size:A4;}html,body{margin:0;padding:0;background-color:#ffffff !important;background:#ffffff !important;color:#000000 !important;font-family:serif;}@media print{html,body{background-color:#ffffff !important;background:#ffffff !important;}}#print-root{width:100%;margin:0 auto;background-color:#ffffff !important;}</style></head><body><div id="print-root">${cloneEl.outerHTML}</div></body></html>`);
+      const styleTags = Array.from(document.querySelectorAll('style'))
+        .map(style => style.outerHTML)
+        .join('\n');
+
+      // Add comprehensive print CSS that forces background to white and removes any dark mode restrictions
+      printDocument.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8"/>
+          <meta name="color-scheme" content="light"/>
+          <title>Print - ${examName}</title>
+          ${styleLinks}
+          ${styleTags}
+          <style>
+            :root { color-scheme: light !important; }
+            @page { margin: 12.7mm; size: A4; }
+            html, body { 
+              margin: 0; padding: 0; 
+              background-color: #ffffff !important; 
+              background: #ffffff !important;
+              color: #000000 !important;
+              font-family: serif; 
+              height: auto !important; 
+              overflow: visible !important; 
+            }
+            @media print {
+              html, body {
+                background-color: #ffffff !important; 
+                background: #ffffff !important;
+                height: auto !important; 
+                overflow: visible !important; 
+              }
+            }
+            #print-root {
+              width: 100%;
+              margin: 0 auto;
+              background-color: #ffffff !important;
+              height: auto !important;
+              overflow: visible !important;
+            }
+          </style>
+        </head>
+        <body>
+          <div id="print-root">
+            ${cloneEl.outerHTML}
+          </div>
+        </body>
+        </html>
+      `);
     printDocument.close();
 
     iframe.onload = () => {
@@ -635,9 +687,14 @@ export const MCQPaperGeneratorPage = () => {
 
       {/* Main Dual Layout Content */}
       <div className="flex-1 flex overflow-hidden print:overflow-visible h-[calc(100vh-80px)] print:h-auto print:block">
-        
+        <style>{`
+          @media (min-width: 768px) {
+            .split-left { width: ${leftWidth}% !important; }
+            .split-right { width: ${100 - leftWidth}% !important; }
+          }
+        `}</style>
         {/* Left Side: Editor (Hidden on Print) */}
-        <div className={`w-full md:w-1/2 p-4 md:p-6 overflow-y-auto border-r border-slate-200 bg-white print:hidden custom-scrollbar pb-24 md:pb-6 ${mobileTab === 'editor' ? 'block' : 'hidden md:block'}`}>
+        <div className={`w-full split-left p-4 md:p-6 overflow-y-auto border-slate-200 bg-white print:hidden custom-scrollbar pb-24 md:pb-6 ${mobileTab === 'editor' ? 'block' : 'hidden md:block'}`}>
           <div className="h-full flex flex-col pb-20">
             {/* Mobile Actions removed from here - moved to header */}
             <h3 className="font-semibold text-slate-700 border-b pb-2 mb-4 hidden md:flex justify-between items-center">
@@ -710,8 +767,40 @@ export const MCQPaperGeneratorPage = () => {
           </div>
         </div>
 
+        {/* Resizer */}
+        <div 
+          className="w-2.5 bg-slate-100 hover:bg-blue-100 active:bg-blue-200 cursor-col-resize flex flex-col justify-center items-center group transition-colors print:hidden hidden md:flex border-l border-r border-slate-200 z-10"
+          onPointerDown={(e) => {
+            e.preventDefault();
+            const startX = e.clientX;
+            const startWidth = leftWidth;
+            const containerWidth = containerRef.current?.offsetWidth || window.innerWidth;
+            
+            const onMove = (eMove: PointerEvent) => {
+              const deltaX = eMove.clientX - startX;
+              const deltaPct = (deltaX / containerWidth) * 100;
+              let newWidth = startWidth + deltaPct;
+              if (newWidth < 20) newWidth = 20;
+              if (newWidth > 80) newWidth = 80;
+              setLeftWidth(newWidth);
+            };
+            
+            const onUp = () => {
+              window.removeEventListener('pointermove', onMove);
+              window.removeEventListener('pointerup', onUp);
+            };
+            
+            window.addEventListener('pointermove', onMove);
+            window.addEventListener('pointerup', onUp);
+          }}
+        >
+          <div className="flex flex-col gap-1 items-center justify-center h-8 w-4 rounded-full bg-white shadow-sm border border-slate-300 text-slate-400 group-hover:text-blue-500 group-hover:border-blue-400 transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18-6-6 6-6"/><path d="m15 6 6 6-6 6"/></svg>
+          </div>
+        </div>
+
         {/* Right Side: Live Preview */}
-        <div className={`w-full md:w-1/2 overflow-y-auto bg-slate-100 print:w-full print:bg-white custom-scrollbar flex flex-col relative print:overflow-visible print:block pb-40 md:pb-0 ${mobileTab === 'preview' ? 'block' : 'hidden md:block'}`}>
+        <div className={`w-full split-right overflow-y-auto bg-slate-100 print:w-full print:bg-white custom-scrollbar flex flex-col relative print:overflow-visible print:block pb-40 md:pb-0 ${mobileTab === 'preview' ? 'block' : 'hidden md:block'}`}>
           
           {/* Mobile Zoom Controls */}
           <div className="md:hidden sticky top-0 z-10 bg-slate-100/90 backdrop-blur-md px-4 py-2 flex justify-end gap-3 items-center print:hidden border-b border-slate-200">
