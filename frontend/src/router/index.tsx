@@ -99,6 +99,8 @@ const TransportDashboard = lazy(routeImports['/transport']);
 const TransportRoutesPage = lazy(() => import('../pages/transport/RoutesPage'));
 const TransportVehiclesPage = lazy(() => import('../pages/transport/VehiclesPage'));
 const TransportStudentsPage = lazy(() => import('../pages/transport/StudentTransportPage'));
+const TransportFuelLogsPage = lazy(() => import('../pages/transport/FuelLogsPage'));
+const TransportMaintenanceLogsPage = lazy(() => import('../pages/transport/MaintenanceLogsPage'));
 const AnswerKeyPage = lazy(() => import('../pages/question-bank/AnswerKeyPage'));
 
 
@@ -453,6 +455,22 @@ export const router = createBrowserRouter([
         element: withSuspense(
           <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN']}>
             <TransportStudentsPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'transport/fuel',
+        element: withSuspense(
+          <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN']}>
+            <TransportFuelLogsPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'transport/maintenance',
+        element: withSuspense(
+          <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN']}>
+            <TransportMaintenanceLogsPage />
           </ProtectedRoute>
         ),
       },

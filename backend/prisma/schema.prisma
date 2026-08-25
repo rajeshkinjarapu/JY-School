@@ -761,6 +761,36 @@ model Vehicle {
   updatedAt       DateTime          @updatedAt
   transportStaff  TransportStaff[]
   routes          TransportRoute[]
+  fuelLogs        TransportFuelLog[]
+  maintenanceLogs TransportMaintenanceLog[]
+}
+
+model TransportFuelLog {
+  id              String   @id @default(uuid())
+  vehicleId       String
+  vehicle         Vehicle  @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  date            DateTime
+  liters          Float
+  costPerLiter    Float
+  totalCost       Float
+  odometerReading Float?
+  remarks         String?
+  createdAt       DateTime @default(now())
+
+  @@index([vehicleId])
+}
+
+model TransportMaintenanceLog {
+  id              String   @id @default(uuid())
+  vehicleId       String
+  vehicle         Vehicle  @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  date            DateTime
+  description     String
+  cost            Float
+  mechanicDetails String?
+  createdAt       DateTime @default(now())
+
+  @@index([vehicleId])
 }
 
 model TransportRoute {
@@ -787,6 +817,8 @@ model RouteStop {
   dropTime        String          // "04:30 PM"
   distance        Float?
   monthlyFee      Float           @default(0)
+  latitude        Float?          // For Google Maps integration
+  longitude       Float?          // For Google Maps integration
   createdAt       DateTime        @default(now())
   students        StudentTransport[]
 

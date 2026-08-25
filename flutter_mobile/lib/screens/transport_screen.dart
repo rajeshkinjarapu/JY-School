@@ -1,7 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import '../services/api_service.dart';
 import '../widgets/app_drawer.dart';
+import 'transport_routes_screen.dart';
+import 'transport_vehicles_screen.dart';
+import 'transport_fuel_screen.dart';
+import 'transport_maintenance_screen.dart';
+import 'transport_students_screen.dart';
 
 class TransportScreen extends StatefulWidget {
   const TransportScreen({super.key});
@@ -12,280 +18,228 @@ class TransportScreen extends StatefulWidget {
 
 class _TransportScreenState extends State<TransportScreen> {
   bool _isLoading = true;
-  List<dynamic> _routes = [];
+  Map<String, dynamic> _stats = {};
 
   @override
   void initState() {
     super.initState();
-    _fetchRoutes();
+    _fetchDashboardStats();
   }
 
-  Future<void> _fetchRoutes() async {
+  Future<void> _fetchDashboardStats() async {
     setState(() => _isLoading = true);
-    final res = await ApiService.getTransportRoutes();
-    if (mounted) {
-      setState(() {
-        _isLoading = false;
+    try {
+      final res = await ApiService.getTransportDashboard();
+      if (mounted) {
         if (res['success']) {
-          _routes = res['data'];
+          setState(() {
+            _stats = res['data'];
+            _isLoading = false;
+          });
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(res['message'] ?? 'Failed to load routes')),
-          );
+          setState(() => _isLoading = false);
         }
-      });
+      }
+    } catch (e) {
+      if (mounted) setState(() => _isLoading = false);
     }
+  }
+
+  void _navigateTo(Widget screen) {
+    Navigator.push(context, MaterialPageRoute(builder: (_) => screen));
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F7FE),
-      drawer: AppDrawer(currentRoute: 'transport'),
-      appBar: AppBar(
-        title: Text(
-          'Transport Routes',
-          style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white),
-        ),
-        iconTheme: const IconThemeData(color: Colors.white),
-        flexibleSpace: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Color(0xFF2E2A66), Color(0xFF222854)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-          ),
-        ),
-        
-        elevation: 0,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh_rounded),
-            onPressed: _fetchRoutes,
-          )
-        ],
-      ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: Color(0xFF6366F1)))
-          : _routes.isEmpty
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
+      backgroundColor: const Color(0xFFF8FAFC),
+      drawer: const AppDrawer(currentRoute: 'transport'),
+      body: NestedScrollView(
+        headerSliverBuilder: (context, innerBoxIsScrolled) {
+          return [
+            SliverAppBar(
+              expandedHeight: 120.0,
+              floating: false,
+              pinned: true,
+              elevation: 0,
+              backgroundColor: const Color(0xFF1E1B4B),
+              iconTheme: const IconThemeData(color: Colors.white),
+              flexibleSpace: FlexibleSpaceBar(
+                titlePadding: const EdgeInsets.only(left: 60, bottom: 16),
+                title: Text(
+                  'Transport',
+                  style: GoogleFonts.outfit(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 20,
+                  ),
+                ),
+                background: Container(
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Color(0xFF312E81), Color(0xFF1E1B4B)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                  ),
+                  child: Stack(
                     children: [
-                      Icon(Icons.directions_bus_rounded, size: 80, color: const Color(0xFFCBD5E1)),
-                      const SizedBox(height: 16),
-                      Text(
-                        'No Routes Available',
-                        style: GoogleFonts.outfit(
-                          color: const Color(0xFF64748B),
-                          fontSize: 20,
-                          fontWeight: FontWeight.w600,
-                        ),
+                      Positioned(
+                        right: -30,
+                        top: -20,
+                        child: Icon(Icons.directions_bus_rounded, size: 150, color: Colors.white.withOpacity(0.05)),
                       ),
                     ],
                   ),
-                )
-              : ListView.builder(
-                  padding: const EdgeInsets.all(20),
-                  itemCount: _routes.length,
-                  itemBuilder: (context, index) {
-                    final route = _routes[index];
-                    return _buildRouteCard(route);
-                  },
                 ),
+              ),
+              actions: [
+                IconButton(
+                  icon: const Icon(Icons.refresh_rounded, color: Colors.white),
+                  onPressed: _fetchDashboardStats,
+                )
+              ],
+            ),
+          ];
+        },
+        body: _isLoading 
+            ? const Center(child: CircularProgressIndicator(color: Color(0xFF4F46E5)))
+            : RefreshIndicator(
+                onRefresh: _fetchDashboardStats,
+                color: const Color(0xFF4F46E5),
+                child: SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildStatsRow(),
+                      const SizedBox(height: 24),
+                      Text(
+                        'Management Modules',
+                        style: GoogleFonts.outfit(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: const Color(0xFF1E293B),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      _buildGridOptions(),
+                    ],
+                  ),
+                ),
+              ),
+      ),
     );
   }
 
-  Widget _buildRouteCard(Map<String, dynamic> route) {
-    final vehicle = route['vehicle'];
-    final stopsCount = (route['stops'] as List?)?.length ?? 0;
-    final studentsCount = route['_count']?['students'] ?? 0;
+  Widget _buildStatsRow() {
+    return Column(
+      children: [
+        Row(
+          children: [
+            Expanded(child: _buildStatCard('Vehicles', _stats['totalVehicles']?.toString() ?? '0', Icons.directions_bus_rounded, const Color(0xFF4F46E5))),
+            const SizedBox(width: 16),
+            Expanded(child: _buildStatCard('Routes', _stats['totalRoutes']?.toString() ?? '0', Icons.map_rounded, const Color(0xFF059669))),
+          ],
+        ),
+        const SizedBox(height: 16),
+        Row(
+          children: [
+            Expanded(child: _buildStatCard('Fuel (Month)', '₹${_stats['monthlyFuelCost']?.toStringAsFixed(0) ?? '0'}', Icons.local_gas_station_rounded, const Color(0xFFE11D48))),
+            const SizedBox(width: 16),
+            Expanded(child: _buildStatCard('Maintenance', '₹${_stats['monthlyMaintenanceCost']?.toStringAsFixed(0) ?? '0'}', Icons.build_rounded, const Color(0xFFD97706))),
+          ],
+        ),
+      ],
+    );
+  }
 
+  Widget _buildStatCard(String title, String value, IconData icon, Color color) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 20),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.2),
-            blurRadius: 15,
-            offset: const Offset(0, 8),
-          )
-        ],
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [BoxShadow(color: color.withOpacity(0.1), blurRadius: 10, offset: const Offset(0, 4))],
+        border: Border.all(color: color.withOpacity(0.1)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header with Gradient
           Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  const Color(0xFF6366F1).withOpacity(0.2),
-                  const Color(0xFFC084FC).withOpacity(0.05),
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-              border: Border(bottom: BorderSide(color: const Color(0xFFE2E8F0))),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF6366F1).withOpacity(0.2),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(Icons.directions_bus_rounded, color: Color(0xFF818CF8)),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        route['name'] ?? 'Unknown Route',
-                        style: GoogleFonts.outfit(
-                          color: const Color(0xFF1E293B),
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        vehicle != null ? '${vehicle['make'] ?? ''} - ${vehicle['registrationNo'] ?? ''}' : 'No Vehicle Assigned',
-                        style: GoogleFonts.poppins(
-                          color: const Color(0xFF64748B),
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                if (vehicle != null)
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFE2E8F0),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      'Cap: ${vehicle['capacity'] ?? 0}',
-                      style: GoogleFonts.poppins(color: const Color(0xFF475569), fontSize: 10),
-                    ),
-                  ),
-              ],
-            ),
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(color: color.withOpacity(0.1), shape: BoxShape.circle),
+            child: Icon(icon, color: color, size: 24),
           ),
-          
-          // Route Details
-          Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              children: [
-                _buildTimelinePoint(
-                  title: 'Start Point',
-                  subtitle: route['startPoint'] ?? 'N/A',
-                  isFirst: true,
-                  isLast: false,
-                ),
-                _buildTimelinePoint(
-                  title: 'End Point',
-                  subtitle: route['endPoint'] ?? 'N/A',
-                  isFirst: false,
-                  isLast: true,
-                ),
-                const SizedBox(height: 20),
-                const Divider(color: const Color(0xFFE2E8F0)),
-                const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    _buildStatItem(Icons.location_on_rounded, '$stopsCount Stops'),
-                    Container(width: 1, height: 24, color: const Color(0xFFE2E8F0)),
-                    _buildStatItem(Icons.people_alt_rounded, '$studentsCount Students'),
-                  ],
-                ),
-              ],
-            ),
-          ),
+          const SizedBox(height: 12),
+          Text(value, style: GoogleFonts.outfit(fontSize: 24, fontWeight: FontWeight.bold, color: const Color(0xFF0F172A))),
+          const SizedBox(height: 4),
+          Text(title, style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.w500, color: const Color(0xFF64748B))),
         ],
       ),
     );
   }
 
-  Widget _buildTimelinePoint({required String title, required String subtitle, required bool isFirst, required bool isLast}) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
+  Widget _buildGridOptions() {
+    return GridView.count(
+      crossAxisCount: 2,
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      mainAxisSpacing: 16,
+      crossAxisSpacing: 16,
+      childAspectRatio: 0.9,
       children: [
-        Column(
-          children: [
-            Container(
-              width: 12,
-              height: 12,
-              decoration: BoxDecoration(
-                color: isFirst ? const Color(0xFF10B981) : const Color(0xFFEF4444),
-                shape: BoxShape.circle,
-                border: Border.all(color: Colors.white, width: 2),
-              ),
-            ),
-            if (!isLast)
-              Container(
-                width: 2,
-                height: 30,
-                color: const Color(0xFFE2E8F0),
-              ),
-          ],
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: Padding(
-            padding: EdgeInsets.only(bottom: isLast ? 0 : 16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: GoogleFonts.poppins(
-                    color: const Color(0xFF475569),
-                    fontSize: 10,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  subtitle,
-                  style: GoogleFonts.poppins(
-                    color: const Color(0xFF1E293B),
-                    fontSize: 14,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
+        _buildGridItem('Bus Routes', 'Manage routes & stops', LucideIcons.map, const [Color(0xFF3B82F6), Color(0xFF2563EB)], const TransportRoutesScreen()),
+        _buildGridItem('Vehicles', 'Track fleet details', LucideIcons.bus, const [Color(0xFF8B5CF6), Color(0xFF7C3AED)], const TransportVehiclesScreen()),
+        _buildGridItem('Students', 'Allocation & Fees', LucideIcons.users, const [Color(0xFFEC4899), Color(0xFFDB2777)], const TransportStudentsScreen()),
+        _buildGridItem('Fuel Logs', 'Track diesel expenses', LucideIcons.fuel, const [Color(0xFFF43F5E), Color(0xFFE11D48)], const TransportFuelScreen()),
+        _buildGridItem('Maintenance', 'Repairs & Service', LucideIcons.wrench, const [Color(0xFF10B981), Color(0xFF059669)], const TransportMaintenanceScreen()),
       ],
     );
   }
 
-  Widget _buildStatItem(IconData icon, String text) {
-    return Row(
-      children: [
-        Icon(icon, color: const Color(0xFF64748B), size: 16),
-        const SizedBox(width: 6),
-        Text(
-          text,
-          style: GoogleFonts.poppins(color: const Color(0xFF475569), fontSize: 12),
+  Widget _buildGridItem(String title, String subtitle, IconData icon, List<Color> gradient, Widget screen) {
+    return GestureDetector(
+      onTap: () => _navigateTo(screen),
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(colors: gradient, begin: Alignment.topLeft, end: Alignment.bottomRight),
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: [BoxShadow(color: gradient[1].withOpacity(0.3), blurRadius: 12, offset: const Offset(0, 6))],
         ),
-      ],
+        child: Stack(
+          children: [
+            Positioned(
+              right: -15,
+              bottom: -15,
+              child: Icon(icon, size: 80, color: Colors.white.withOpacity(0.15)),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(16)),
+                    child: Icon(icon, color: Colors.white, size: 28),
+                  ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(title, style: GoogleFonts.outfit(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 4),
+                      Text(subtitle, style: GoogleFonts.poppins(color: Colors.white.withOpacity(0.8), fontSize: 11), maxLines: 2, overflow: TextOverflow.ellipsis),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
-
-

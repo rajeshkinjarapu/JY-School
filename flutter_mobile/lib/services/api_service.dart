@@ -1141,4 +1141,31 @@ class ApiService {
   static Future<Map<String, dynamic>> getGatePassStats() async {
     return _performGet('/api/gate-pass/stats', 'Failed to fetch gate pass stats');
   }
+
+  // ==========================================
+  // TRANSPORT ENDPOINTS
+  // ==========================================
+  static Future<Map<String, dynamic>> getTransportDashboard() async {
+    return _performGet('/api/transport/dashboard', 'Failed to fetch transport stats');
+  }
+  
+  static Future<Map<String, dynamic>> getTransportRoutes() async {
+    return _performGet('/api/transport/routes', 'Failed to fetch transport routes');
+  }
+  
+  static Future<Map<String, dynamic>> getTransportVehicles() async {
+    return _performGet('/api/transport/vehicles', 'Failed to fetch transport vehicles');
+  }
+  
+  static Future<Map<String, dynamic>> getTransportStudents() async {
+    return _performGet('/api/transport/students', 'Failed to fetch transport students');
+  }
+  
+  static Future<Map<String, dynamic>> getFuelLogs() async {
+    return _performGet('/api/transport/fuel-logs', 'Failed to fetch fuel logs');
+  }
+  
+  static Future<Map<String, dynamic>> getMaintenanceLogs() async {
+    return _performGet('/api/transport/maintenance-logs', 'Failed to fetch maintenance logs');
+  }
 }
