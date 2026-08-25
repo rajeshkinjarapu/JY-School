@@ -1839,129 +1839,170 @@ pw.Widget _buildPassBox(
     String destination, String reason, String classSec, String fatherName, String designation, pw.ImageProvider? photoProvider) {
   return pw.Expanded(
     child: pw.Container(
-      padding: const pw.EdgeInsets.all(24),
       decoration: pw.BoxDecoration(
         border: pw.Border.all(width: 2, color: PdfColors.blueGrey800),
-        borderRadius: const pw.BorderRadius.all(pw.Radius.circular(16)),
+        borderRadius: const pw.BorderRadius.all(pw.Radius.circular(12)),
       ),
       child: pw.Column(
         crossAxisAlignment: pw.CrossAxisAlignment.stretch,
         children: [
-          pw.Center(
-            child: pw.Container(
-              padding: const pw.EdgeInsets.symmetric(vertical: 8, horizontal: 24),
-              decoration: pw.BoxDecoration(
-                color: PdfColors.blueGrey800,
-                borderRadius: pw.BorderRadius.circular(8),
-              ),
-              child: pw.Text(
-                'JY SCHOOL - $copyType',
-                style: pw.TextStyle(color: PdfColors.white, fontSize: 16, fontWeight: pw.FontWeight.bold, letterSpacing: 1.2),
-                textAlign: pw.TextAlign.center,
-              ),
+          // Header (Full width)
+          pw.Container(
+            padding: const pw.EdgeInsets.symmetric(vertical: 8),
+            decoration: const pw.BoxDecoration(
+              color: PdfColors.blueGrey800,
+              borderRadius: pw.BorderRadius.only(topLeft: pw.Radius.circular(10), topRight: pw.Radius.circular(10)),
+            ),
+            child: pw.Text(
+              'JY SCHOOL - $copyType',
+              style: pw.TextStyle(color: PdfColors.white, fontSize: 14, fontWeight: pw.FontWeight.bold, letterSpacing: 1.5),
+              textAlign: pw.TextAlign.center,
             ),
           ),
-          pw.SizedBox(height: 24),
-          pw.Row(
-            crossAxisAlignment: pw.CrossAxisAlignment.start,
-            mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-            children: [
-              pw.Container(
-                width: 90,
-                height: 110,
-                decoration: pw.BoxDecoration(
-                  color: PdfColors.grey200,
-                  borderRadius: pw.BorderRadius.circular(8),
-                  border: pw.Border.all(color: PdfColors.grey400),
-                ),
-                child: photoProvider != null 
-                    ? pw.ClipRRect(
-                        horizontalRadius: 7,
-                        verticalRadius: 7,
-                        child: pw.Image(photoProvider, fit: pw.BoxFit.cover),
-                      )
-                    : pw.Center(child: pw.Text('PHOTO', style: const pw.TextStyle(color: PdfColors.grey600, fontSize: 10))),
-              ),
-              pw.SizedBox(width: 16),
-              pw.Expanded(
-                child: pw.Column(
-                  crossAxisAlignment: pw.CrossAxisAlignment.start,
-                  children: [
-                    pw.Text(name, style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
-                    pw.SizedBox(height: 4),
-                    pw.Text('${isStudent ? 'Student' : 'Staff'} | Phone: $maskedPhone', style: const pw.TextStyle(fontSize: 12, color: PdfColors.grey700)),
-                    pw.SizedBox(height: 8),
-                    pw.Container(
-                      padding: const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: pw.BoxDecoration(
-                        color: PdfColors.grey200,
-                        borderRadius: pw.BorderRadius.circular(4),
+          
+          // Body
+          pw.Expanded(
+            child: pw.Padding(
+              padding: const pw.EdgeInsets.all(16),
+              child: pw.Column(
+                crossAxisAlignment: pw.CrossAxisAlignment.stretch,
+                children: [
+                  // Top section: Photo + Name Info
+                  pw.Row(
+                    crossAxisAlignment: pw.CrossAxisAlignment.start,
+                    children: [
+                      // Photo
+                      pw.Container(
+                        width: 70,
+                        height: 90,
+                        decoration: pw.BoxDecoration(
+                          color: PdfColors.grey200,
+                          borderRadius: pw.BorderRadius.circular(6),
+                          border: pw.Border.all(color: PdfColors.grey400),
+                        ),
+                        child: photoProvider != null 
+                            ? pw.ClipRRect(
+                                horizontalRadius: 5,
+                                verticalRadius: 5,
+                                child: pw.Image(photoProvider, fit: pw.BoxFit.cover),
+                              )
+                            : pw.Center(child: pw.Text('PHOTO', style: const pw.TextStyle(color: PdfColors.grey600, fontSize: 9))),
                       ),
-                      child: pw.Text('Slip No: $slipNumber', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 12)),
+                      pw.SizedBox(width: 16),
+                      // Info
+                      pw.Expanded(
+                        child: pw.Column(
+                          crossAxisAlignment: pw.CrossAxisAlignment.start,
+                          mainAxisAlignment: pw.MainAxisAlignment.start,
+                          children: [
+                            pw.SizedBox(height: 4),
+                            pw.FittedBox(
+                              fit: pw.BoxFit.scaleDown,
+                              alignment: pw.Alignment.centerLeft,
+                              child: pw.Text(name.toUpperCase(), style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold, color: PdfColors.blueGrey900)),
+                            ),
+                            pw.SizedBox(height: 4),
+                            pw.Text('${isStudent ? 'STUDENT' : 'STAFF'} | Phone: $maskedPhone', style: pw.TextStyle(fontSize: 10, color: PdfColors.grey700, fontWeight: pw.FontWeight.bold)),
+                            pw.SizedBox(height: 12),
+                            pw.Container(
+                              padding: const pw.EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                              decoration: pw.BoxDecoration(
+                                color: PdfColors.blueGrey50,
+                                border: pw.Border.all(color: PdfColors.blueGrey200),
+                                borderRadius: pw.BorderRadius.circular(6),
+                              ),
+                              child: pw.Text('SLIP NO: $slipNumber', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 11, color: PdfColors.blueGrey800)),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  pw.SizedBox(height: 16),
+                  
+                  // Details Box
+                  pw.Container(
+                    padding: const pw.EdgeInsets.all(12),
+                    decoration: pw.BoxDecoration(
+                      color: PdfColors.grey100,
+                      borderRadius: pw.BorderRadius.circular(8),
+                      border: pw.Border.all(color: PdfColors.grey300),
                     ),
-                  ],
-                ),
-              ),
-              pw.SizedBox(width: 16),
-              pw.Container(
-                padding: const pw.EdgeInsets.all(6),
-                decoration: pw.BoxDecoration(
-                  border: pw.Border.all(color: PdfColors.grey300),
-                  borderRadius: pw.BorderRadius.circular(8),
-                ),
-                child: pw.BarcodeWidget(
-                  data: slipNumber,
-                  barcode: pw.Barcode.qrCode(),
-                  width: 90,
-                  height: 90,
-                ),
-              ),
-            ],
-          ),
-          pw.SizedBox(height: 24),
-          pw.Divider(color: PdfColors.grey300),
-          pw.SizedBox(height: 16),
-          
-          if (isStudent) ...[
-            _buildPdfDetailRow('Class/Sec', classSec),
-            pw.SizedBox(height: 10),
-            _buildPdfDetailRow('Father Name', fatherName),
-          ] else ...[
-            _buildPdfDetailRow('Designation', designation),
-          ],
-          
-          pw.SizedBox(height: 10),
-          _buildPdfDetailRow('Destination', destination),
-          pw.SizedBox(height: 10),
-          _buildPdfDetailRow('Reason', reason),
-          
-          pw.Spacer(),
-          pw.Divider(color: PdfColors.grey300),
-          pw.SizedBox(height: 24),
-          pw.Row(
-            mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-            children: [
-              pw.Column(
-                crossAxisAlignment: pw.CrossAxisAlignment.center,
-                children: [
-                  pw.Container(width: 120, height: 1, color: PdfColors.black),
-                  pw.SizedBox(height: 4),
-                  pw.Text('Authorized Signature', style: const pw.TextStyle(fontSize: 10)),
+                    child: pw.Column(
+                      crossAxisAlignment: pw.CrossAxisAlignment.stretch,
+                      children: [
+                        if (isStudent) ...[
+                          _buildPdfDetailRow('Class / Sec', classSec),
+                          pw.SizedBox(height: 6),
+                          pw.Divider(color: PdfColors.grey300, height: 1),
+                          pw.SizedBox(height: 6),
+                          _buildPdfDetailRow('Father Name', fatherName),
+                        ] else ...[
+                          _buildPdfDetailRow('Designation', designation),
+                        ],
+                        pw.SizedBox(height: 6),
+                        pw.Divider(color: PdfColors.grey300, height: 1),
+                        pw.SizedBox(height: 6),
+                        _buildPdfDetailRow('Destination', destination),
+                        pw.SizedBox(height: 6),
+                        pw.Divider(color: PdfColors.grey300, height: 1),
+                        pw.SizedBox(height: 6),
+                        _buildPdfDetailRow('Reason', reason),
+                      ],
+                    ),
+                  ),
+                  
+                  pw.Spacer(),
+                  
+                  // QR Code
+                  pw.Center(
+                    child: pw.Container(
+                      padding: const pw.EdgeInsets.all(6),
+                      decoration: pw.BoxDecoration(
+                        color: PdfColors.white,
+                        border: pw.Border.all(color: PdfColors.grey300),
+                        borderRadius: pw.BorderRadius.circular(8),
+                      ),
+                      child: pw.BarcodeWidget(
+                        data: slipNumber,
+                        barcode: pw.Barcode.qrCode(),
+                        width: 75,
+                        height: 75,
+                      ),
+                    ),
+                  ),
+                  
+                  pw.SizedBox(height: 16),
+                  
+                  // Signatures
+                  pw.Row(
+                    mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                    children: [
+                      pw.Column(
+                        crossAxisAlignment: pw.CrossAxisAlignment.center,
+                        children: [
+                          pw.Container(width: 100, height: 1, color: PdfColors.black),
+                          pw.SizedBox(height: 4),
+                          pw.Text('Authorized Signature', style: pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold, color: PdfColors.blueGrey800)),
+                        ],
+                      ),
+                      pw.Column(
+                        crossAxisAlignment: pw.CrossAxisAlignment.center,
+                        children: [
+                          pw.Container(width: 100, height: 1, color: PdfColors.black),
+                          pw.SizedBox(height: 4),
+                          pw.Text('Security Stamp', style: pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold, color: PdfColors.blueGrey800)),
+                        ],
+                      ),
+                    ],
+                  ),
+                  pw.SizedBox(height: 12),
+                  pw.Center(
+                    child: pw.Text('Please present this slip at the main gate.', style: pw.TextStyle(fontSize: 8, color: PdfColors.grey600, fontStyle: pw.FontStyle.italic)),
+                  ),
                 ],
               ),
-              pw.Column(
-                crossAxisAlignment: pw.CrossAxisAlignment.center,
-                children: [
-                  pw.Container(width: 120, height: 1, color: PdfColors.black),
-                  pw.SizedBox(height: 4),
-                  pw.Text('Security Stamp', style: const pw.TextStyle(fontSize: 10)),
-                ],
-              ),
-            ],
-          ),
-          pw.SizedBox(height: 16),
-          pw.Center(
-            child: pw.Text('Please present this slip at the main gate.', style: pw.TextStyle(fontSize: 10, color: PdfColors.grey600, fontStyle: pw.FontStyle.italic)),
+            ),
           ),
         ],
       ),
@@ -1974,11 +2015,13 @@ pw.Widget _buildPdfDetailRow(String label, String value) {
     crossAxisAlignment: pw.CrossAxisAlignment.start,
     children: [
       pw.SizedBox(
-        width: 100,
-        child: pw.Text(label, style: const pw.TextStyle(color: PdfColors.grey700, fontSize: 13, letterSpacing: 0.5)),
+        width: 80,
+        child: pw.Text(label, style: const pw.TextStyle(color: PdfColors.grey700, fontSize: 10, letterSpacing: 0.5)),
       ),
+      pw.Text(':', style: const pw.TextStyle(color: PdfColors.grey500, fontSize: 10)),
+      pw.SizedBox(width: 8),
       pw.Expanded(
-        child: pw.Text(value, style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 13)),
+        child: pw.Text(value.toUpperCase(), style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 10, color: PdfColors.blueGrey900)),
       ),
     ],
   );

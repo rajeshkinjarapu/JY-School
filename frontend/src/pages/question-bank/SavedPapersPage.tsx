@@ -157,7 +157,10 @@ const SavedPapersPage = () => {
           <title>${paper.examName}</title>
           <style>
             @page { margin: 12.7mm; size: A4; }
-            body { font-family: Arial, sans-serif; padding: 40px; line-height: 1.6; }
+            html, body { font-family: Arial, sans-serif; padding: 40px; line-height: 1.6; margin: 0; background-color: #ffffff !important; background: #ffffff !important; color: #000000 !important; }
+            @media print {
+              html, body { background-color: #ffffff !important; background: #ffffff !important; }
+            }
             h1 { text-align: center; }
             .meta { text-align: center; font-style: italic; margin-bottom: 30px; border-bottom: 1px solid #ccc; padding-bottom: 10px; }
             .content { max-width: 800px; margin: 0 auto; }

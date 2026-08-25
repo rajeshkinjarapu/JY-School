@@ -27,6 +27,9 @@
 * **Permanent Backend Deployment:** Successfully migrated the backend from VPS+Ngrok to Railway. Updated Vercel rewrites, React `axios.ts`, and Flutter `api_service.dart` to use the permanent `jy-school-production-f159.up.railway.app` URL, solving all "Network Error" and "Direct IP access not allowed" issues permanently.
 * **Leave Module Redesign (Flutter):** Completely rebuilt `leave_screen.dart` to match the Gate Pass module's premium standards. Replaced the basic view with a multi-tab Scaffold (Dashboard, Approvals, History), Top Tabs for Students and Staff (for admins), dynamic stat grids, beautiful history cards with Approver/Rejector controls, and a modern bottom-sheet Apply Leave form.
 * **Gate Pass Redesign (Flutter):** Completely revamped the Gate Pass module in the Flutter app. Added role-based top tabs (Students/Teachers), integrated live backend stats for both groups (updated `gatePass.controller.ts` and deployed to VPS), added a beautiful Gate Pass Slip popup, masked phone numbers (xxxx 1234), added approver names, and integrated `qr_flutter` for stunning on-screen and PDF QR codes.
+* **Run Flutter in Chrome:** Provided terminal commands to run the Flutter application (`flutter_mobile`) in Google Chrome.
+* **Print Preview Fix (React):** Fixed a dark mode interference issue causing black shades at the bottom of printed pages across all Question Bank generators and Saved Papers by forcing an explicit white background.
+* **Dashboard Text Scaling (Flutter):** Fixed text overflow and overly large font sizes for long card titles ("Progress Card", "Collect Fees") in `dashboard_screen.dart` by reducing the font size and utilizing `FittedBox`.
 
 ## 4. Pending / Next Steps
 1. **Flutter App Features:** Continue building the Flutter mobile app ensuring it syncs perfectly with the existing web APIs and has a premium design. Discuss which module to build next (e.g., Attendance, Exams, Fees).

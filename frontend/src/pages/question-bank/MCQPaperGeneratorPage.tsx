@@ -202,8 +202,11 @@ export const MCQPaperGeneratorPage = () => {
           ${styleTags}
           <style>
             @page { margin: 12.7mm; size: A4; }
-            body { margin: 0; background: white; font-family: serif; }
-            #print-root { width: 210mm; margin: 0 auto; }
+            html, body { margin: 0; padding: 0; background-color: #ffffff !important; background: #ffffff !important; color: #000000 !important; font-family: serif; }
+            @media print {
+              html, body { background-color: #ffffff !important; background: #ffffff !important; }
+            }
+            #print-root { width: 210mm; margin: 0 auto; background-color: #ffffff !important; }
           </style>
         </head>
         <body>
