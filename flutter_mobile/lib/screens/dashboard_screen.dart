@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -266,6 +267,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       drawer: AppDrawer(currentRoute: 'dashboard'),
       backgroundColor: const Color(0xFFF4F7FE),
       appBar: AppBar(
+        systemOverlayStyle: SystemUiOverlayStyle.light,
         toolbarHeight: 70,
         iconTheme: const IconThemeData(color: Colors.white),
         flexibleSpace: Container(
@@ -365,8 +367,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             const SizedBox(height: 24),
                             _buildAnnouncements(),
                           ] else if (userRole == 'TEACHER') ...[
-                            _buildQuickMetrics(userRole),
-                            const SizedBox(height: 24),
                             _buildMenuGrid(userRole),
                             const SizedBox(height: 24),
                             _buildTimetableToday(),

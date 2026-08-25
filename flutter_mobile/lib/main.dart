@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -66,6 +67,9 @@ class MyApp extends StatelessWidget {
           seedColor: const Color(0xFF6366F1),
           primary: const Color(0xFF6366F1),
           secondary: const Color(0xFFD946EF),
+        ),
+        appBarTheme: const AppBarTheme(
+          systemOverlayStyle: SystemUiOverlayStyle.light,
         ),
         textTheme: GoogleFonts.interTextTheme(
           Theme.of(context).textTheme,

@@ -170,7 +170,7 @@ export const MarksEntryPage: React.FC = () => {
         toast.success('Marks frozen successfully! Progress cards generated.');
         navigate(`/exams?tab=progress-card&classId=${classId}`);
       } else {
-        toast.success('Marks saved as draft successfully!');
+        toast.success('Marks submitted successfully!');
         navigate('/exams?tab=written-exam');
       }
     } catch (e: any) {
@@ -428,15 +428,17 @@ export const MarksEntryPage: React.FC = () => {
             className="flex-1 sm:flex-none sm:w-auto px-8 py-3 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 border border-indigo-200 rounded-xl font-bold text-sm sm:text-base flex items-center justify-center gap-2 active:scale-95 transition-all cursor-pointer"
           >
             <Save className="w-5 h-5" />
-            SAVE MARKS
+            SUBMIT MARKS
           </button>
-          <button
-            onClick={() => handleSave(true)}
-            className="flex-1 sm:flex-none sm:w-auto px-8 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-xl font-bold text-sm sm:text-base flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/30 active:scale-95 transition-all cursor-pointer"
-          >
-            <Lock className="w-5 h-5" />
-            FREEZE MARKS
-          </button>
+          {isAdmin && (
+            <button
+              onClick={() => handleSave(true)}
+              className="flex-1 sm:flex-none sm:w-auto px-8 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-xl font-bold text-sm sm:text-base flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/30 active:scale-95 transition-all cursor-pointer"
+            >
+              <Lock className="w-5 h-5" />
+              FREEZE MARKS
+            </button>
+          )}
         </div>
       )}
       {students.length > 0 && isClassFrozen && (
