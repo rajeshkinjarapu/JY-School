@@ -111,6 +111,11 @@ class _AppDrawerState extends State<AppDrawer> {
     const Color sidebarBg = Color(0xFF2E2A66);
     const Color activeBg = Color(0xFF3B3580);
     const Color textInactive = Color(0xFF9EA3CB);
+    
+    final avatar = _user?['avatar'] ?? _user?['photo'] ?? _user?['photoUrl'];
+    final String avatarUrl = (avatar != null && avatar.toString().isNotEmpty && avatar.toString() != 'null' && avatar.toString() != 'undefined') 
+        ? ApiService.getImageUrl(avatar.toString())
+        : 'https://ui-avatars.com/api/?name=${Uri.encodeComponent(name)}&background=8B5CF6&color=fff';
 
     return Drawer(
       backgroundColor: sidebarBg,
@@ -483,7 +488,7 @@ class _AppDrawerState extends State<AppDrawer> {
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           image: DecorationImage(
-                            image: NetworkImage('https://ui-avatars.com/api/?name=${Uri.encodeComponent(name)}&background=8B5CF6&color=fff'),
+                            image: NetworkImage(avatarUrl),
                             fit: BoxFit.cover,
                           ),
                         ),

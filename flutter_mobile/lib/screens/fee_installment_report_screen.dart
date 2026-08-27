@@ -57,14 +57,23 @@ class _FeeInstallmentReportScreenState extends State<FeeInstallmentReportScreen>
     for (final s in _students) {
       final id = s['id']?.toString() ?? '';
       if (id.isEmpty) continue;
-      final name = '${s['firstName'] ?? ''} ${s['lastName'] ?? ''}'.trim();
+      
+      final user = s['user'] ?? {};
+      String name = user['name']?.toString() ?? '';
+      if (name.isEmpty) {
+        name = '${s['firstName'] ?? ''} ${s['lastName'] ?? ''}'.trim();
+      }
+      if (name.isEmpty) name = 'Unknown Student';
+      
       final classId = s['class']?['id']?.toString() ?? '';
-      final className = '${s['class']?['className'] ?? ''} ${s['class']?['section'] ?? ''}'.trim();
+      final className = '${s['class']?['className'] ?? s['class']?['name'] ?? ''} ${s['class']?['section'] ?? ''}'.trim();
 
       // Total fee from structures for this student's class
       double totalFee = 0;
       for (final st in _structures) {
-        if (st['class']?['id']?.toString() == classId) {
+        final structClassId = st['class']?['id']?.toString() ?? st['classId']?.toString();
+        final structStudentId = st['student']?['id']?.toString() ?? st['studentId']?.toString();
+        if (structClassId == classId || structStudentId == id) {
           totalFee += double.tryParse(st['amount']?.toString() ?? '0') ?? 0;
         }
       }
@@ -137,7 +146,7 @@ class _FeeInstallmentReportScreenState extends State<FeeInstallmentReportScreen>
     return Scaffold(
       backgroundColor: const Color(0xFFF1F5F9),
       appBar: AppBar(
-        title: Text('Installment Report', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 19, color: Colors.white)),
+        title: Text('Payment Installment Log', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 19, color: Colors.white)),
         iconTheme: const IconThemeData(color: Colors.white),
         flexibleSpace: Container(
           decoration: const BoxDecoration(

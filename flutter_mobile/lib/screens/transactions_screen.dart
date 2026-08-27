@@ -53,6 +53,82 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
     }
   }
 
+  Future<void> _deleteTransaction(String id) async {
+    final conf = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete Transaction'),
+        content: const Text('Are you sure you want to delete this payment?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Delete', style: TextStyle(color: Colors.red))),
+        ],
+      ),
+    );
+    if (conf != true) return;
+    
+    setState(() => _isLoading = true);
+    final res = await ApiService.deleteItem('/api/fees/payments/$id');
+    if (res['success']) {
+      _fetchTransactions();
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Deleted successfully')));
+    } else {
+      setState(() => _isLoading = false);
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(res['message'] ?? 'Failed')));
+    }
+  }
+
+  void _showEditDialog(Map<String, dynamic> tx) {
+    final amtController = TextEditingController(text: tx['amountPaid']?.toString() ?? '');
+    String method = tx['paymentMethod'] ?? 'CASH';
+    
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          title: const Text('Edit Transaction'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: amtController,
+                decoration: const InputDecoration(labelText: 'Amount Paid', prefixText: '₹'),
+                keyboardType: TextInputType.number,
+              ),
+              const SizedBox(height: 16),
+              DropdownButtonFormField<String>(
+                value: method,
+                decoration: const InputDecoration(labelText: 'Payment Method'),
+                items: ['CASH', 'ONLINE', 'BANK_TRANSFER', 'CHEQUE'].map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
+                onChanged: (v) => method = v ?? 'CASH',
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+            ElevatedButton(
+              onPressed: () async {
+                Navigator.pop(ctx);
+                setState(() => _isLoading = true);
+                final res = await ApiService.updateFeePayment(tx['id'], {
+                  'amountPaid': double.tryParse(amtController.text) ?? 0.0,
+                  'paymentMethod': method,
+                });
+                if (res['success']) {
+                  _fetchTransactions();
+                } else {
+                  setState(() => _isLoading = false);
+                  if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(res['message'] ?? 'Failed')));
+                }
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -109,11 +185,22 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                                   overflow: TextOverflow.ellipsis,
                                 ),
                               ),
-                              Text(
-                                _currency.format(amt),
-                                style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16, color: const Color(0xFF10B981)),
-                              ),
-                            ],
+                                Text(
+                                  _currency.format(amt),
+                                  style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16, color: const Color(0xFF10B981)),
+                                ),
+                                PopupMenuButton<String>(
+                                  icon: const Icon(Icons.more_vert, size: 20, color: Colors.grey),
+                                  onSelected: (val) {
+                                    if (val == 'edit') _showEditDialog(tx);
+                                    if (val == 'delete') _deleteTransaction(tx['id']);
+                                  },
+                                  itemBuilder: (context) => [
+                                    const PopupMenuItem(value: 'edit', child: Text('Edit')),
+                                    const PopupMenuItem(value: 'delete', child: Text('Delete', style: TextStyle(color: Colors.red))),
+                                  ],
+                                ),
+                              ],
                           ),
                           const SizedBox(height: 8),
                           Row(

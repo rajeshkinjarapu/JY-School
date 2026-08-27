@@ -782,6 +782,10 @@ class ApiService {
     return _performGet('/api/dashboard/admin', 'Failed to get admin statistics');
   }
 
+  static Future<Map<String, dynamic>> getAccountantDashboardStats() async {
+    return _performGet('/api/dashboard/accountant', 'Failed to get accountant statistics');
+  }
+
   static Future<Map<String, dynamic>> getQuestionPapers() async {
     return _performGet('/api/questionPapers', 'Failed to get question papers');
   }
@@ -867,6 +871,7 @@ class ApiService {
     }
   }
 
+
   static Future<Map<String, dynamic>> getDailyAttendanceSummary(String date) async {
     return _performGet('/api/attendance/daily-summary?date=$date', 'Failed to load daily report');
   }
@@ -928,7 +933,7 @@ class ApiService {
   }
 
   static Future<Map<String, dynamic>> getAllStudents() async =>
-      _performGet('/api/students?limit=500', 'Failed to load students');
+      _performGet('/api/students?limit=5000', 'Failed to load students');
 
   // ── Salary / HR ────────────────────────────────────────────────────────────
 

@@ -28,9 +28,9 @@ class _RecordFeePaymentScreenState extends State<RecordFeePaymentScreen> {
   bool _isSubmitting = false;
 
   final List<Map<String, dynamic>> _methods = [
-    {'id': 'CASH', 'label': 'Cash', 'icon': Icons.money_rounded, 'color': Color(0xFF10B981)},
-    {'id': 'UPI', 'label': 'UPI / Scan', 'icon': Icons.qr_code_scanner_rounded, 'color': Color(0xFF8B5CF6)},
-    {'id': 'BANK_TRANSFER', 'label': 'Bank Txn', 'icon': Icons.account_balance_rounded, 'color': Color(0xFF0EA5E9)},
+    {'id': 'CASH', 'label': 'Cash', 'icon': Icons.money_rounded, 'color': const Color(0xFF10B981)},
+    {'id': 'UPI', 'label': 'UPI / Scan', 'icon': Icons.qr_code_scanner_rounded, 'color': const Color(0xFF8B5CF6)},
+    {'id': 'BANK_TRANSFER', 'label': 'Bank Txn', 'icon': Icons.account_balance_rounded, 'color': const Color(0xFF0EA5E9)},
   ];
 
   @override
@@ -39,8 +39,6 @@ class _RecordFeePaymentScreenState extends State<RecordFeePaymentScreen> {
     for (final st in widget.structures) {
       final id = st['id'] as String;
       _checked[id] = false;
-      // We will default to full amount for simplicity, although we should calculate pending per structure.
-      // Since we don't have payments passed here (only total pending), we let user enter amount.
       _amountControllers[id] = TextEditingController(text: (st['amount'] ?? 0).toString());
     }
   }
@@ -63,6 +61,20 @@ class _RecordFeePaymentScreenState extends State<RecordFeePaymentScreen> {
       }
     }
     return total;
+  }
+
+  Future<void> _pickDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _paymentDate,
+      firstDate: DateTime(2020),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+    );
+    if (picked != null && mounted) {
+      setState(() {
+        _paymentDate = picked;
+      });
+    }
   }
 
   Future<void> _submit() async {
@@ -118,56 +130,58 @@ class _RecordFeePaymentScreenState extends State<RecordFeePaymentScreen> {
     final user = widget.student['user'] ?? {};
     final name = user['name'] ?? '${widget.student['firstName']} ${widget.student['lastName']}';
 
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(width: 40, height: 5, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(10))),
-          const SizedBox(height: 24),
-          const Icon(Icons.check_circle_rounded, color: Color(0xFF10B981), size: 80),
-          const SizedBox(height: 16),
-          Text('Payment Successful!', style: GoogleFonts.outfit(fontSize: 24, fontWeight: FontWeight.bold, color: const Color(0xFF1E293B))),
-          const SizedBox(height: 8),
-          Text('₹${_totalAmount.toStringAsFixed(0)} has been recorded for $name.', textAlign: TextAlign.center, style: GoogleFonts.poppins(color: const Color(0xFF64748B))),
-          const SizedBox(height: 24),
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(color: const Color(0xFFF8FAFC), borderRadius: BorderRadius.circular(16), border: Border.all(color: const Color(0xFFE2E8F0))),
-            child: Column(
-              children: [
-                _buildReceiptRow('Receipt Date', DateFormat('MMM dd, yyyy').format(DateTime.now())),
-                _buildReceiptRow('Payment Method', _method),
-                _buildReceiptRow('Transaction ID', 'TXN-${DateTime.now().millisecondsSinceEpoch.toString().substring(5)}'),
-              ],
-            ),
-          ),
-          const SizedBox(height: 32),
-          SizedBox(
-            width: double.infinity,
-            height: 56,
-            child: ElevatedButton.icon(
-              onPressed: () => Navigator.pop(context),
-              icon: const Icon(Icons.print_rounded),
-              label: Text('Print Receipt (PDF)', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16)),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF6366F1),
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+    return SafeArea(
+      child: Container(
+        padding: const EdgeInsets.all(24),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(width: 40, height: 5, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(10))),
+            const SizedBox(height: 24),
+            const Icon(Icons.check_circle_rounded, color: Color(0xFF10B981), size: 80),
+            const SizedBox(height: 16),
+            Text('Payment Successful!', style: GoogleFonts.outfit(fontSize: 24, fontWeight: FontWeight.bold, color: const Color(0xFF1E293B))),
+            const SizedBox(height: 8),
+            Text('₹${_totalAmount.toStringAsFixed(0)} has been recorded for $name.', textAlign: TextAlign.center, style: GoogleFonts.poppins(color: const Color(0xFF64748B))),
+            const SizedBox(height: 24),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(color: const Color(0xFFF8FAFC), borderRadius: BorderRadius.circular(16), border: Border.all(color: const Color(0xFFE2E8F0))),
+              child: Column(
+                children: [
+                  _buildReceiptRow('Receipt Date', DateFormat('MMM dd, yyyy').format(DateTime.now())),
+                  _buildReceiptRow('Payment Method', _method),
+                  _buildReceiptRow('Transaction ID', 'TXN-${DateTime.now().millisecondsSinceEpoch.toString().substring(5)}'),
+                ],
               ),
             ),
-          ),
-          const SizedBox(height: 12),
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('Done', style: GoogleFonts.poppins(color: const Color(0xFF64748B), fontWeight: FontWeight.w600)),
-          ),
-          const SizedBox(height: 16),
-        ],
+            const SizedBox(height: 32),
+            SizedBox(
+              width: double.infinity,
+              height: 56,
+              child: ElevatedButton.icon(
+                onPressed: () => Navigator.pop(context),
+                icon: const Icon(Icons.print_rounded),
+                label: Text('Print Receipt (PDF)', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF6366F1),
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text('Done', style: GoogleFonts.poppins(color: const Color(0xFF64748B), fontWeight: FontWeight.w600)),
+            ),
+            const SizedBox(height: 16),
+          ],
+        ),
       ),
     );
   }
@@ -202,44 +216,72 @@ class _RecordFeePaymentScreenState extends State<RecordFeePaymentScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  Text('Payment Date', style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: const Color(0xFF1E293B))),
+                  const SizedBox(height: 12),
+                  GestureDetector(
+                    onTap: _pickDate,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: const Color(0xFFE2E8F0)),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            DateFormat('dd MMM yyyy').format(_paymentDate),
+                            style: GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.w500, color: const Color(0xFF1E293B)),
+                          ),
+                          const Icon(Icons.calendar_month_rounded, color: Color(0xFF64748B)),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
                   _buildPaymentMethods(),
-                  const SizedBox(height: 32),
-                  Text('Fee Components', style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.bold, color: const Color(0xFF1E293B))),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 24),
+                  Text('Fee Components', style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: const Color(0xFF1E293B))),
+                  const SizedBox(height: 12),
                   _buildStructuresList(),
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 24),
+                  Text('Remarks / Notes', style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: const Color(0xFF1E293B))),
+                  const SizedBox(height: 12),
                   _buildRemarksField(),
-                  const SizedBox(height: 120), // Padding for sticky bottom
                 ],
               ),
             ),
-      bottomSheet: Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, -5))],
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Total Paying', style: GoogleFonts.poppins(fontSize: 12, color: const Color(0xFF64748B))),
-                Text('₹${_totalAmount.toStringAsFixed(0)}', style: GoogleFonts.outfit(fontSize: 24, fontWeight: FontWeight.bold, color: const Color(0xFF10B981))),
-              ],
-            ),
-            ElevatedButton(
-              onPressed: _submit,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF10B981),
-                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      bottomNavigationBar: SafeArea(
+        child: Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, -5))],
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Total Paying', style: GoogleFonts.poppins(fontSize: 12, color: const Color(0xFF64748B))),
+                  Text('₹${_totalAmount.toStringAsFixed(0)}', style: GoogleFonts.outfit(fontSize: 24, fontWeight: FontWeight.bold, color: const Color(0xFF10B981))),
+                ],
               ),
-              child: Text('Confirm Pay', style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
-            ),
-          ],
+              ElevatedButton(
+                onPressed: _isSubmitting ? null : _submit,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF10B981),
+                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  elevation: 0,
+                ),
+                child: Text('Confirm Pay', style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -249,8 +291,8 @@ class _RecordFeePaymentScreenState extends State<RecordFeePaymentScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Payment Method', style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.bold, color: const Color(0xFF1E293B))),
-        const SizedBox(height: 16),
+        Text('Payment Method', style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: const Color(0xFF1E293B))),
+        const SizedBox(height: 12),
         Row(
           children: _methods.map((m) {
             final isSelected = _method == m['id'];
@@ -263,18 +305,17 @@ class _RecordFeePaymentScreenState extends State<RecordFeePaymentScreen> {
                   margin: const EdgeInsets.only(right: 8),
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   decoration: BoxDecoration(
-                    color: isSelected ? color : Colors.white,
+                    color: isSelected ? color.withOpacity(0.1) : Colors.white,
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: isSelected ? color : const Color(0xFFE2E8F0), width: 1.5),
-                    boxShadow: isSelected ? [BoxShadow(color: color.withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 4))] : [],
+                    border: Border.all(color: isSelected ? color : const Color(0xFFE2E8F0), width: isSelected ? 2 : 1),
                   ),
                   child: Column(
                     children: [
-                      Icon(m['icon'], color: isSelected ? Colors.white : const Color(0xFF64748B)),
+                      Icon(m['icon'], color: isSelected ? color : const Color(0xFF64748B)),
                       const SizedBox(height: 8),
                       Text(
                         m['label'],
-                        style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.bold, color: isSelected ? Colors.white : const Color(0xFF64748B)),
+                        style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.w600, color: isSelected ? color : const Color(0xFF64748B)),
                       ),
                     ],
                   ),
@@ -288,6 +329,21 @@ class _RecordFeePaymentScreenState extends State<RecordFeePaymentScreen> {
   }
 
   Widget _buildStructuresList() {
+    if (widget.structures.isEmpty) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: const Color(0xFFE2E8F0))),
+        child: Column(
+          children: [
+            const Icon(Icons.check_circle_outline_rounded, color: Color(0xFF10B981), size: 48),
+            const SizedBox(height: 16),
+            Text('No pending fees found.', style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: const Color(0xFF1E293B))),
+          ],
+        ),
+      );
+    }
+
     return ListView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -297,36 +353,51 @@ class _RecordFeePaymentScreenState extends State<RecordFeePaymentScreen> {
         final id = st['id'] as String;
         final isChecked = _checked[id] ?? false;
 
-        return Container(
+        return AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
           margin: const EdgeInsets.only(bottom: 12),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: isChecked ? const Color(0xFFEEF2FF) : Colors.white,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: isChecked ? const Color(0xFF6366F1) : const Color(0xFFE2E8F0), width: 1.5),
+            border: Border.all(color: isChecked ? const Color(0xFF6366F1) : const Color(0xFFE2E8F0), width: isChecked ? 2 : 1),
+            boxShadow: isChecked ? [BoxShadow(color: const Color(0xFF6366F1).withOpacity(0.1), blurRadius: 8, offset: const Offset(0, 2))] : [],
           ),
-          child: CheckboxListTile(
-            value: isChecked,
-            onChanged: (val) {
-              setState(() => _checked[id] = val ?? false);
-            },
-            activeColor: const Color(0xFF6366F1),
-            title: Text(st['name'] ?? 'Fee Component', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: const Color(0xFF1E293B))),
-            subtitle: isChecked
-                ? Padding(
-                    padding: const EdgeInsets.only(top: 8.0),
-                    child: TextField(
-                      controller: _amountControllers[id],
-                      keyboardType: TextInputType.number,
-                      onChanged: (v) => setState(() {}),
-                      decoration: InputDecoration(
-                        labelText: 'Amount Paying',
-                        prefixText: '₹ ',
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                        isDense: true,
-                      ),
+          child: Column(
+            children: [
+              CheckboxListTile(
+                value: isChecked,
+                onChanged: (val) {
+                  setState(() => _checked[id] = val ?? false);
+                },
+                activeColor: const Color(0xFF6366F1),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                title: Text(st['name'] ?? 'Fee Component', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: const Color(0xFF1E293B), fontSize: 16)),
+                subtitle: isChecked ? null : Text('Total: ₹${st['amount']}', style: GoogleFonts.poppins(color: const Color(0xFF64748B), fontSize: 13)),
+              ),
+              if (isChecked)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                  child: TextField(
+                    controller: _amountControllers[id],
+                    keyboardType: TextInputType.number,
+                    onChanged: (v) => setState(() {}),
+                    style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: const Color(0xFF1E293B)),
+                    decoration: InputDecoration(
+                      labelText: 'Amount Paying',
+                      labelStyle: GoogleFonts.poppins(color: const Color(0xFF64748B)),
+                      prefixText: '₹ ',
+                      prefixStyle: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: const Color(0xFF6366F1)),
+                      filled: true,
+                      fillColor: Colors.white,
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFCBD5E1))),
+                      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFCBD5E1))),
+                      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFF6366F1), width: 2)),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                     ),
-                  )
-                : Text('Total: ₹${st['amount']}', style: GoogleFonts.poppins(color: const Color(0xFF64748B))),
+                  ),
+                ),
+            ],
           ),
         );
       },
@@ -337,13 +408,15 @@ class _RecordFeePaymentScreenState extends State<RecordFeePaymentScreen> {
     return TextField(
       controller: _remarksCtrl,
       maxLines: 3,
+      style: GoogleFonts.poppins(fontSize: 14, color: const Color(0xFF1E293B)),
       decoration: InputDecoration(
-        labelText: 'Remarks (Optional)',
-        alignLabelWithHint: true,
+        hintText: 'Add remarks, cheque no, UTR etc. (Optional)',
+        hintStyle: GoogleFonts.poppins(fontSize: 14, color: const Color(0xFF94A3B8)),
         filled: true,
         fillColor: Colors.white,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
         enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
+        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: Color(0xFF6366F1), width: 2)),
       ),
     );
   }

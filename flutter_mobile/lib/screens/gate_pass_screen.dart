@@ -11,6 +11,8 @@ import 'package:printing/printing.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import '../services/api_service.dart';
 import '../widgets/app_drawer.dart';
+import 'create_gate_pass_screen.dart';
+import 'gate_pass_view_screen.dart';
 
 class GatePassScreen extends StatefulWidget {
   const GatePassScreen({super.key});
@@ -78,6 +80,16 @@ class _GatePassScreenState extends State<GatePassScreen> {
       body: hasFullAccess
           ? _buildBody()
           : const Center(child: Text("You don't have access to the security dashboard.")),
+      floatingActionButton: (_currentIndex == 0 || _currentIndex == 2) && hasFullAccess
+          ? FloatingActionButton.extended(
+              onPressed: () {
+                Navigator.push(context, MaterialPageRoute(builder: (_) => CreateGatePassScreen(userRole: _userRole)));
+              },
+              backgroundColor: const Color(0xFF6366F1),
+              icon: const Icon(Icons.add_rounded, color: Colors.white),
+              label: Text('Issue Pass', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white)),
+            )
+          : null,
       bottomNavigationBar: hasFullAccess
           ? Container(
               decoration: BoxDecoration(
@@ -1201,7 +1213,11 @@ class _HistorySearchTabState extends State<_HistorySearchTab> {
             boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 8, offset: const Offset(0, 3))],
           ),
           child: ListTile(
-            onTap: () => _showGatePassSlipDialog(context, pass, isStudentTab, color),
+            onTap: () {
+              Navigator.push(context, MaterialPageRoute(
+                builder: (_) => GatePassViewScreen(pass: pass, isStudentTab: isStudentTab, statusColor: color),
+              ));
+            },
             contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
             leading: CircleAvatar(
               backgroundColor: color.withOpacity(0.12),
@@ -1254,243 +1270,7 @@ class _HistorySearchTabState extends State<_HistorySearchTab> {
     );
   }
 
-  void _showGatePassSlipDialog(BuildContext context, dynamic pass, bool isStudentTab, Color statusColor) {
-    final name = isStudentTab
-        ? ((pass['student'] as Map?)?['user']?['name'] ?? 'Unknown')
-        : ((pass['requester'] as Map?)?['name'] ?? 'Unknown');
-    final photoUrl = isStudentTab 
-        ? (pass['student'] as Map?)?['user']?['photoUrl'] 
-        : (pass['requester'] as Map?)?['photoUrl'];
-    final destination = pass['destination'] ?? 'N/A';
-    final reason = pass['reason'] ?? 'N/A';
-    final slipNumber = pass['slipNumber'] ?? 'N/A';
-    final status = pass['status'] ?? 'UNKNOWN';
-    final rawPhone = isStudentTab
-        ? ((pass['student'] as Map?)?['user']?['phoneNumber'] ?? '')
-        : ((pass['requester'] as Map?)?['phoneNumber'] ?? '');
-    
-    // Mask phone number to show only last 4 digits
-    final String maskedPhone = (rawPhone.length >= 4) 
-        ? 'xxxx ${rawPhone.substring(rawPhone.length - 4)}' 
-        : (rawPhone.isNotEmpty ? rawPhone : 'N/A');
-
-    final approvedBy = pass['approvedBy'] != null ? (pass['approvedBy']['name'] ?? 'Unknown') : 'Pending';
-
-    showDialog(
-      context: context,
-      builder: (ctx) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        backgroundColor: Colors.transparent,
-        child: Container(
-          width: 340,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(24),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.1),
-                blurRadius: 30,
-                offset: const Offset(0, 10),
-              )
-            ],
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Header
-              Container(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                decoration: const BoxDecoration(
-                  color: Color(0xFF0F172A),
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.verified_user_rounded, color: Color(0xFF10B981), size: 24),
-                    const SizedBox(width: 8),
-                    Text(
-                      'GATE PASS SLIP',
-                      style: GoogleFonts.outfit(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 1.5,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  children: [
-                    // Photo & Name
-                    Row(
-                      children: [
-                        Container(
-                          width: 70,
-                          height: 70,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFF1F5F9),
-                            borderRadius: BorderRadius.circular(16),
-                            image: (photoUrl != null && photoUrl.isNotEmpty)
-                                ? DecorationImage(image: NetworkImage(photoUrl), fit: BoxFit.cover)
-                                : null,
-                          ),
-                          child: (photoUrl == null || photoUrl.isEmpty)
-                              ? Icon(isStudentTab ? Icons.person : Icons.badge, color: const Color(0xFF94A3B8), size: 30)
-                              : null,
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                name,
-                                style: GoogleFonts.outfit(fontWeight: FontWeight.w800, fontSize: 18, color: const Color(0xFF1E293B)),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                isStudentTab ? 'Student' : 'Staff',
-                                style: GoogleFonts.poppins(color: const Color(0xFF64748B), fontSize: 13),
-                              ),
-                              const SizedBox(height: 4),
-                              Row(
-                                children: [
-                                  const Icon(Icons.phone_rounded, size: 14, color: Color(0xFF94A3B8)),
-                                  const SizedBox(width: 4),
-                                  Text(maskedPhone, style: GoogleFonts.poppins(color: const Color(0xFF64748B), fontSize: 13, fontWeight: FontWeight.w600)),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 24),
-                    
-                    // Details Grid
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF8FAFC),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: const Color(0xFFE2E8F0)),
-                      ),
-                      child: Column(
-                        children: [
-                          _buildDetailRow('Slip Number', slipNumber),
-                          const Divider(height: 20, color: Color(0xFFE2E8F0)),
-                          _buildDetailRow('Destination', destination),
-                          const Divider(height: 20, color: Color(0xFFE2E8F0)),
-                          _buildDetailRow('Reason', reason),
-                          const Divider(height: 20, color: Color(0xFFE2E8F0)),
-                          _buildDetailRow('Approved By', approvedBy),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-
-                    // QR Code
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))
-                        ],
-                      ),
-                      child: QrImageView(
-                        data: slipNumber,
-                        version: QrVersions.auto,
-                        size: 100.0,
-                        eyeStyle: QrEyeStyle(eyeShape: QrEyeShape.square, color: Color(0xFF1E293B)),
-                        dataModuleStyle: QrDataModuleStyle(dataModuleShape: QrDataModuleShape.square, color: Color(0xFF1E293B)),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: statusColor.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                        status,
-                        style: GoogleFonts.poppins(color: statusColor, fontWeight: FontWeight.bold, fontSize: 13),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              // Close / Print buttons
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                decoration: const BoxDecoration(
-                  color: Color(0xFFF1F5F9),
-                  borderRadius: BorderRadius.vertical(bottom: Radius.circular(24)),
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: TextButton(
-                        onPressed: () => Navigator.pop(ctx),
-                        style: TextButton.styleFrom(
-                          foregroundColor: const Color(0xFF64748B),
-                        ),
-                        child: Text('Close', style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
-                      ),
-                    ),
-                    if (status == 'APPROVED' || status == 'ACTIVE' || status == 'COMPLETED')
-                      Expanded(
-                        child: ElevatedButton.icon(
-                          onPressed: () {
-                            Navigator.pop(ctx);
-                            printGatePass(context, pass);
-                          },
-                          icon: const Icon(Icons.print_rounded, size: 18, color: Colors.white),
-                          label: Text('Print', style: GoogleFonts.poppins(fontWeight: FontWeight.w600, color: Colors.white)),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF10B981),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                            elevation: 0,
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDetailRow(String label, String value) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        SizedBox(
-          width: 90,
-          child: Text(
-            label,
-            style: GoogleFonts.poppins(color: const Color(0xFF94A3B8), fontSize: 12),
-          ),
-        ),
-        Expanded(
-          child: Text(
-            value,
-            style: GoogleFonts.poppins(color: const Color(0xFF1E293B), fontSize: 12, fontWeight: FontWeight.w600),
-            textAlign: TextAlign.right,
-          ),
-        ),
-      ],
-    );
-  }
+  // Removed _showGatePassSlipDialog and _buildDetailRow, moved to GatePassViewScreen
 
   @override
   Widget build(BuildContext context) {
@@ -1565,28 +1345,39 @@ class _QRScannerTab extends StatefulWidget {
   State<_QRScannerTab> createState() => _QRScannerTabState();
 }
 
-class _QRScannerTabState extends State<_QRScannerTab> {
-  bool _isScanning = false;
-  MobileScannerController cameraController = MobileScannerController();
+class _QRScannerTabState extends State<_QRScannerTab> with SingleTickerProviderStateMixin {
+  bool _isProcessing = false;
+  MobileScannerController cameraController = MobileScannerController(
+    detectionSpeed: DetectionSpeed.noDuplicates,
+    facing: CameraFacing.back,
+  );
+  late AnimationController _animationController;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(vsync: this, duration: const Duration(seconds: 2))..repeat(reverse: true);
+  }
 
   @override
   void dispose() {
     cameraController.dispose();
+    _animationController.dispose();
     super.dispose();
   }
 
   void _onDetect(BarcodeCapture capture) async {
+    if (_isProcessing) return;
+    
     final List<Barcode> barcodes = capture.barcodes;
     if (barcodes.isNotEmpty) {
       final String? code = barcodes.first.rawValue;
       if (code != null) {
-        cameraController.stop();
         setState(() {
-          _isScanning = false;
+          _isProcessing = true;
         });
         
-        // Assume code is the gate pass ID
-        _handleScannedCode(code);
+        await _handleScannedCode(code);
       }
     }
   }
@@ -1599,7 +1390,6 @@ class _QRScannerTabState extends State<_QRScannerTab> {
     );
 
     try {
-      // First get the pass details to see current status
       final res = await ApiService.getGatePasses();
       final passes = res['data'] as List<dynamic>? ?? [];
       final pass = passes.firstWhere((p) => p['id'] == id || p['slipNumber'] == id, orElse: () => null);
@@ -1608,6 +1398,7 @@ class _QRScannerTabState extends State<_QRScannerTab> {
 
       if (pass == null) {
         if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Gate Pass not found!')));
+        setState(() => _isProcessing = false);
         return;
       }
 
@@ -1630,7 +1421,7 @@ class _QRScannerTabState extends State<_QRScannerTab> {
               content: Text('This gate pass is currently $status and cannot be scanned for exit/return.'),
               actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('OK'))],
             ),
-          );
+          ).then((_) => setState(() => _isProcessing = false));
         }
         return;
       }
@@ -1638,129 +1429,169 @@ class _QRScannerTabState extends State<_QRScannerTab> {
       if (mounted) {
         showDialog(
           context: context,
+          barrierDismissible: false,
           builder: (ctx) => AlertDialog(
-            title: const Text('Gate Pass Scanned'),
+            title: Text('Scan Successful', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: const Color(0xFF10B981))),
             content: Text("Pass for ${pass['requestType'] == 'STUDENT' ? (pass['student'] as Map?)?['user']?['name'] : (pass['requester'] as Map?)?['name']}\nCurrent Status: $status\n\nDo you want to $actionText?"),
             actions: [
-              TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+              TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF10B981)),
-                onPressed: () async {
-                  Navigator.pop(ctx);
-                  await ApiService.updateGatePass(pass['id'], {'status': nextStatus});
-                  if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Gate pass marked as $nextStatus')));
-                  }
-                },
+                onPressed: () => Navigator.pop(ctx, true),
                 child: Text(actionText, style: const TextStyle(color: Colors.white)),
               ),
             ],
           ),
-        );
+        ).then((proceed) async {
+          if (proceed == true) {
+            try {
+              await ApiService.updateGatePass(pass['id'], {'status': nextStatus});
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                  content: Text('Gate pass successfully marked as $nextStatus'),
+                  backgroundColor: const Color(0xFF10B981),
+                ));
+              }
+            } catch (e) {
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Update failed: $e')));
+              }
+            }
+          }
+          // Resume scanning after a small delay
+          Future.delayed(const Duration(seconds: 2), () {
+            if (mounted) setState(() => _isProcessing = false);
+          });
+        });
       }
     } catch (e) {
       if (mounted) {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+        setState(() => _isProcessing = false);
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_isScanning) {
-      return Stack(
-        children: [
-          MobileScanner(
-            controller: cameraController,
-            onDetect: _onDetect,
+    return Stack(
+      children: [
+        MobileScanner(
+          controller: cameraController,
+          onDetect: _onDetect,
+        ),
+        // Scanner Overlay (Dark background with clear center)
+        ColorFiltered(
+          colorFilter: ColorFilter.mode(
+            Colors.black.withOpacity(0.7),
+            BlendMode.srcOut,
           ),
-          Positioned(
-            bottom: 40,
-            left: 0,
-            right: 0,
-            child: Center(
-              child: ElevatedButton.icon(
-                onPressed: () {
-                  cameraController.stop();
-                  setState(() => _isScanning = false);
-                },
-                icon: const Icon(Icons.close, color: Colors.white),
-                label: const Text('Cancel Scan', style: TextStyle(color: Colors.white)),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.redAccent,
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+          child: Stack(
+            children: [
+              Container(
+                decoration: const BoxDecoration(
+                  color: Colors.black,
+                  backgroundBlendMode: BlendMode.dstOut,
+                ), // This one will handle background
+              ),
+              Align(
+                alignment: Alignment.center,
+                child: Container(
+                  height: 250,
+                  width: 250,
+                  decoration: BoxDecoration(
+                    color: Colors.white, // This part will be transparent
+                    borderRadius: BorderRadius.circular(24),
+                  ),
                 ),
               ),
+            ],
+          ),
+        ),
+        // Scanner Frame Guidelines
+        Align(
+          alignment: Alignment.center,
+          child: Container(
+            height: 250,
+            width: 250,
+            decoration: BoxDecoration(
+              border: Border.all(color: const Color(0xFF10B981), width: 3),
+              borderRadius: BorderRadius.circular(24),
             ),
           ),
-        ],
-      );
-    }
-
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(36),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF10B981), Color(0xFF34D399)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(36),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF10B981).withOpacity(0.4),
-                    blurRadius: 40,
-                    offset: const Offset(0, 16),
-                  ),
+        ),
+        // Animated Scanning Line
+        Align(
+          alignment: Alignment.center,
+          child: SizedBox(
+            height: 250,
+            width: 250,
+            child: AnimatedBuilder(
+              animation: _animationController,
+              builder: (context, child) {
+                return Stack(
+                  children: [
+                    Positioned(
+                      top: _animationController.value * 230, // move up and down
+                      left: 10,
+                      right: 10,
+                      child: Container(
+                        height: 3,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF10B981),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFF10B981).withOpacity(0.8),
+                              blurRadius: 10,
+                              spreadRadius: 2,
+                            )
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ),
+        ),
+        // Instructions Text
+        Positioned(
+          top: 80,
+          left: 0,
+          right: 0,
+          child: Column(
+            children: [
+              const Icon(Icons.qr_code_scanner_rounded, color: Colors.white, size: 40),
+              const SizedBox(height: 16),
+              Text(
+                'Scan QR Code',
+                style: GoogleFonts.outfit(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Align the QR code within the frame to scan',
+                style: GoogleFonts.poppins(color: Colors.white70, fontSize: 14),
+              ),
+            ],
+          ),
+        ),
+        if (_isProcessing)
+          Container(
+            color: Colors.black.withOpacity(0.5),
+            child: Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const CircularProgressIndicator(color: Color(0xFF10B981)),
+                  const SizedBox(height: 16),
+                  Text('Processing...', style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold)),
                 ],
               ),
-              child: const Icon(Icons.qr_code_scanner_rounded, size: 80, color: Colors.white),
             ),
-            const SizedBox(height: 32),
-            Text(
-              "Security QR Scanner",
-              style: GoogleFonts.outfit(color: const Color(0xFF1E293B), fontSize: 24, fontWeight: FontWeight.w800),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              "Scan student or staff ID card\nto log Gate IN / OUT instantly",
-              style: GoogleFonts.poppins(color: const Color(0xFF64748B), fontSize: 14, height: 1.6),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 40),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: () {
-                  setState(() {
-                    _isScanning = true;
-                  });
-                  cameraController.start();
-                },
-                icon: const Icon(Icons.camera_alt_rounded, color: Colors.white),
-                label: Text(
-                  'TAP TO SCAN',
-                  style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold, letterSpacing: 1.2, fontSize: 15),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF10B981),
-                  padding: const EdgeInsets.symmetric(vertical: 18),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-                  elevation: 0,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
+          ),
+      ],
     );
   }
 }

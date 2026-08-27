@@ -83,10 +83,10 @@ export const getStructures = async (req: AuthRequest, res: Response): Promise<vo
 
   const structures = await prisma.feeStructure.findMany({
     where,
-    include: { 
-      class: { select: { name: true, section: true } }, 
-      student: { select: { rollNo: true, user: { select: { name: true } } } },
-      _count: { select: { payments: true } } 
+    include: {        
+        class: { select: { name: true, section: true } }, 
+        student: { select: { rollNo: true, class: { select: { name: true, section: true } }, user: { select: { name: true } } } },
+        _count: { select: { payments: true } } 
     },
     orderBy: { dueDate: 'asc' },
   });
@@ -615,7 +615,7 @@ export const getStudentFeeStatus = async (req: AuthRequest, res: Response, next:
   const structures = await prisma.feeStructure.findMany({
     where: { 
       OR: [
-        { classId: student.classId || '' },
+        { classId: student.classId || '', studentId: null },
         { studentId: student.id }
       ]
     },

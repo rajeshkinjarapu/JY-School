@@ -20,6 +20,7 @@ class _FinanceReportsScreenState extends State<FinanceReportsScreen> {
 
   double _totalCollected = 0.0;
   double _totalExpected = 0.0;
+  double _totalCashCollected = 0.0;
   
   Map<String, double> _classWiseCollection = {};
   Map<String, double> _paymentMethods = {};
@@ -44,6 +45,7 @@ class _FinanceReportsScreenState extends State<FinanceReportsScreen> {
 
         double expected = 0.0;
         double collected = 0.0;
+        double cashCollected = 0.0;
         Map<String, double> classCol = {};
         Map<String, double> methods = {};
 
@@ -58,6 +60,10 @@ class _FinanceReportsScreenState extends State<FinanceReportsScreen> {
           if (p['status'] == 'PAID' || p['status'] == null) {
             collected += amt;
             methods[method] = (methods[method] ?? 0) + amt;
+            
+            if (method == 'CASH') {
+              cashCollected += amt;
+            }
 
             if (p['student'] != null && p['student']['class'] != null) {
               final className = '${p['student']['class']['className'] ?? p['student']['class']['name'] ?? 'Unknown'} ${p['student']['class']['section'] ?? ''}'.trim();
@@ -72,6 +78,7 @@ class _FinanceReportsScreenState extends State<FinanceReportsScreen> {
           setState(() {
             _totalCollected = collected;
             _totalExpected = expected;
+            _totalCashCollected = cashCollected;
             _classWiseCollection = classCol;
             _paymentMethods = methods;
             _isLoading = false;
@@ -211,14 +218,26 @@ class _FinanceReportsScreenState extends State<FinanceReportsScreen> {
 
   Widget _buildHeaderStats() {
     final fmt = NumberFormat.currency(symbol: '₹', decimalDigits: 0, locale: 'en_IN');
-    return Row(
+    return Column(
       children: [
-        Expanded(
-          child: _buildStatCard('Total Collected', fmt.format(_totalCollected), const Color(0xFF10B981), Icons.account_balance_wallet_rounded),
+        Row(
+          children: [
+            Expanded(
+              child: _buildStatCard('Total Collected', fmt.format(_totalCollected), const Color(0xFF10B981), Icons.account_balance_wallet_rounded),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: _buildStatCard('Total Expected', fmt.format(_totalExpected), const Color(0xFF6366F1), Icons.trending_up_rounded),
+            ),
+          ],
         ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: _buildStatCard('Total Expected', fmt.format(_totalExpected), const Color(0xFF6366F1), Icons.trending_up_rounded),
+        const SizedBox(height: 16),
+        Row(
+          children: [
+            Expanded(
+              child: _buildStatCard('Cash-in-Hand Settlement', fmt.format(_totalCashCollected), const Color(0xFF0EA5E9), Icons.money_rounded),
+            ),
+          ],
         ),
       ],
     );

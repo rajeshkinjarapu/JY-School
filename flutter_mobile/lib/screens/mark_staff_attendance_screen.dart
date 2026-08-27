@@ -358,7 +358,7 @@ class _MarkStaffAttendanceScreenState extends State<MarkStaffAttendanceScreen> {
           
           if (!_isLoading && _teachers.isNotEmpty)
             Container(
-              padding: const EdgeInsets.all(16),
+              padding: EdgeInsets.fromLTRB(16, 16, 16, 16 + MediaQuery.of(context).padding.bottom),
               decoration: BoxDecoration(
                 color: Colors.white,
                 boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, -5))],

@@ -28,6 +28,7 @@ import 'progress_card_screen.dart';
 import 'results_screen.dart';
 import 'answer_keys_screen.dart';
 import 'settings_screen.dart';
+import 'fee_installment_report_screen.dart';
 import 'announcement_detail_screen.dart';
 import 'leave_dashboard_screen.dart';
 import 'gate_pass_screen.dart';
@@ -504,12 +505,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 color: Colors.white.withOpacity(0.2),
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(color: Colors.white.withOpacity(0.3), width: 2),
-                image: const DecorationImage(
-                  image: AssetImage('assets/images/default_avatar.png'),
-                  fit: BoxFit.cover,
-                ),
               ),
-              child: const Icon(Icons.person, color: Colors.white, size: 40),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(18),
+                child: (() {
+                  final avatar = _user?['avatar'] ?? _user?['photo'] ?? _user?['photoUrl'];
+                  if (avatar != null && avatar.toString().isNotEmpty && avatar.toString() != 'null' && avatar.toString() != 'undefined') {
+                    return Image.network(
+                      ApiService.getImageUrl(avatar.toString()),
+                      fit: BoxFit.cover,
+                      errorBuilder: (c, e, s) => const Icon(Icons.person, color: Colors.white, size: 40),
+                    );
+                  }
+                  return const Icon(Icons.person, color: Colors.white, size: 40);
+                })(),
+              ),
             ),
           ),
         ],
@@ -924,14 +934,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(16),
-                child: _user?['photoUrl'] != null && _user!['photoUrl'].toString().isNotEmpty && _user!['photoUrl'].toString() != 'null' && _user!['photoUrl'].toString() != 'undefined'
-                    ? Image.network(
-                        ApiService.getImageUrl(_user!['photoUrl'].toString()),
-                        fit: BoxFit.cover,
-                        headers: const {'ngrok-skip-browser-warning': '69420'},
-                        errorBuilder: (c, e, s) => Icon(Icons.person, color: Colors.white.withOpacity(0.7), size: 42),
-                      )
-                    : Icon(Icons.person, color: Colors.white.withOpacity(0.7), size: 42),
+                child: (() {
+                  final avatar = _user?['avatar'] ?? _user?['photo'] ?? _user?['photoUrl'];
+                  if (avatar != null && avatar.toString().isNotEmpty && avatar.toString() != 'null' && avatar.toString() != 'undefined') {
+                    return Image.network(
+                      ApiService.getImageUrl(avatar.toString()),
+                      fit: BoxFit.cover,
+                      headers: const {'ngrok-skip-browser-warning': '69420'},
+                      errorBuilder: (c, e, s) => Icon(Icons.person, color: Colors.white.withOpacity(0.7), size: 42),
+                    );
+                  }
+                  return Icon(Icons.person, color: Colors.white.withOpacity(0.7), size: 42);
+                })(),
               ),
             ),
           ),
@@ -1320,7 +1334,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     
     double itemWidth = (screenWidth - 46) / 2; // 2 columns, padding 16*2, gap 14
     double itemHeight = (availableHeight - (14 * 3)) / 4; // 4 rows, 3 gaps of 14
-    double dynamicAspectRatio = itemWidth / itemHeight;
+    // Increased aspect ratio to reduce box height so all 8 fit seamlessly
+    double dynamicAspectRatio = (itemWidth / itemHeight) + 0.15; 
 
     return GridView.count(
       shrinkWrap: true,
@@ -1392,13 +1407,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ),
         _buildMenuPremiumCard(
           subtitle: 'FEE DETAILS',
-          title: 'Balances',
+          title: 'Installment Log',
           bottomText: 'Invoices & Dues',
           icon: Icons.receipt_long_rounded,
           gradientColors: [const Color(0xFFFF8F00), const Color(0xFFFF6F00)],
           accentColor: const Color(0xFFFFA000),
           imagePath: 'assets/images/admin_icons/student_fees.jpg',
-          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const StudentFeeSearchScreen())),
+          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const FeeInstallmentReportScreen())),
         ),
         _buildMenuPremiumCard(
           subtitle: 'REPORTS & ANALYTICS',
@@ -1445,21 +1460,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
         child: Stack(
           clipBehavior: Clip.hardEdge,
           children: [
-            // Background Image Overlay for Premium Look
-            Positioned(
-              right: -20,
-              bottom: -20,
-              child: Opacity(
-                opacity: 0.35,
-                child: Image.asset(
-                  imagePath,
-                  width: 140,
-                  height: 140,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) => const SizedBox(),
-                ),
-              ),
-            ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
               child: Column(
@@ -1495,7 +1495,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16),
+                  const Spacer(),
                   FittedBox(
                     fit: BoxFit.scaleDown,
                     alignment: Alignment.centerLeft,
@@ -1509,7 +1509,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 4),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
@@ -1621,7 +1621,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           _buildImageCard(imagePath: 'assets/images/admin_icons/exams.jpg',      title: 'Answer Key',    borderColor: const Color(0xFFF59E0B), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AnswerKeysScreen()))),
           _buildImageCard(imagePath: 'assets/images/admin_icons/teacher.jpg',    title: 'Timetable',     borderColor: const Color(0xFF6366F1), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TimetableScreen()))),
           _buildImageCard(imagePath: 'assets/images/admin_icons/reports.jpg',    title: 'Marks Entry',   borderColor: const Color(0xFFF97316), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TeacherMarksScreen()))),
-          _buildImageCard(imagePath: 'assets/images/admin_icons/results.png',    title: 'Results',       borderColor: const Color(0xFF10B981), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ResultsScreen()))),
+          _buildImageCard(imagePath: 'assets/images/admin_icons/exams.jpg',    title: 'Results',       borderColor: const Color(0xFF10B981), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ResultsScreen()))),
           _buildImageCard(imagePath: 'assets/images/admin_icons/student.jpg',    title: 'Progress Cards',borderColor: const Color(0xFFD946EF), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ProgressCardScreen()))),
           _buildImageCard(imagePath: 'assets/images/admin_icons/student_fees.jpg', title: 'Fee Reminder', borderColor: const Color(0xFF14B8A6), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const FeeReminderSearchScreen()))),
           _buildImageCard(imagePath: 'assets/images/admin_icons/revenue.jpg',    title: 'Messaging',     borderColor: const Color(0xFF06B6D4), onTap: () => ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Messaging coming soon!')))),

@@ -3,11 +3,10 @@ import axios from 'axios';
 const getApiUrl = () => {
   if (typeof window !== 'undefined') {
     const host = window.location.hostname;
-    // If accessing via Vercel or DuckDNS (HTTPS), use relative URLs for API to avoid mixed content.
-    // Vercel rewrites will proxy these to the backend.
-    if (host.includes('vercel.app')) {
-      // NOTE: Update this to your current ngrok URL when using Vercel
-      return 'https://jy-school-production-f159.up.railway.app';
+    // If accessing via Vercel or DuckDNS (HTTPS), use environment variable or fallback
+    if (host.includes('vercel.app') || host.includes('duckdns.org')) {
+      // Use the environment variable VITE_API_URL from Vercel settings
+      return import.meta.env.VITE_API_URL || 'https://jy-school-production-f159.up.railway.app';
     }
     
     // For local development on network
@@ -15,7 +14,7 @@ const getApiUrl = () => {
       return `http://${host}:5000`;
     }
   }
-  return 'https://jy-school-production-f159.up.railway.app';
+  return import.meta.env.VITE_API_URL || 'https://jy-school-production-f159.up.railway.app';
 };
 
 const API_URL = getApiUrl();

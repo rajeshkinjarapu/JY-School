@@ -9,3 +9,5 @@
 - **Exact Terminal Commands with Path (Strict Order):** Whenever providing a terminal command for the user to run, always include the exact cd command to navigate to the required folder path first, so the user can copy and paste the entire block seamlessly.
 
 - **Automatic Project State Sync (Strict Order):** At the end of every task or conversation, you MUST automatically update `PROJECT_STATE.md` with a summary of the latest conversation, decisions made, bugs fixed, and work accomplished. Do this autonomously without waiting for the user to ask. This ensures the chat history and project context is saved for the next agent session.
+
+- **Flutter Safe Area Padding (Strict Order):** Whenever designing a new screen in the Flutter app that has a bottom button, bottom sheet, or bottom navigation bar, ALWAYS wrap the bottom-most widget (like a sticky button at the bottom) in a `SafeArea(bottom: true, child: ...)` or add sufficient bottom padding using `MediaQuery.of(context).padding.bottom`. This is to prevent the UI elements from overlapping with the Android System Navigation Bar.

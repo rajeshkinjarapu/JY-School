@@ -150,14 +150,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             ClipOval(
                               child: SizedBox(
                                 width: 98, height: 98,
-                                child: (photoUrl != null && photoUrl.toString().isNotEmpty && photoUrl.toString() != 'null' && photoUrl.toString() != 'undefined')
-                                    ? Image.network(
-                                        ApiService.getImageUrl(photoUrl.toString()),
-                                        fit: BoxFit.cover,
-                                        headers: const {'ngrok-skip-browser-warning': '69420'},
-                                        errorBuilder: (c, e, s) => _avatarFallback(name),
-                                      )
-                                    : _avatarFallback(name),
+                                child: (() {
+                                  final avatar = _user?['avatar'] ?? _user?['photo'] ?? _user?['photoUrl'];
+                                  if (avatar != null && avatar.toString().isNotEmpty && avatar.toString() != 'null' && avatar.toString() != 'undefined') {
+                                    return Image.network(
+                                      ApiService.getImageUrl(avatar.toString()),
+                                      fit: BoxFit.cover,
+                                      headers: const {'ngrok-skip-browser-warning': '69420'},
+                                      errorBuilder: (c, e, s) => _avatarFallback(name),
+                                    );
+                                  }
+                                  return _avatarFallback(name);
+                                })(),
                               ),
                             ),
                           ],

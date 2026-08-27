@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/api_service.dart';
-import 'student_fee_details_screen.dart';
+import 'record_fee_payment_screen.dart';
 import '../widgets/app_drawer.dart';
 
 class StudentFeeSearchScreen extends StatefulWidget {
@@ -70,13 +70,28 @@ class _StudentFeeSearchScreenState extends State<StudentFeeSearchScreen> {
     }
   }
 
-  void _navigateToStudentFeeDetails(Map<String, dynamic> student) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => StudentFeeDetailsScreen(student: student),
-      ),
-    );
+  void _navigateToStudentFeeDetails(Map<String, dynamic> student) async {
+    showDialog(context: context, barrierDismissible: false, builder: (_) => const Center(child: CircularProgressIndicator()));
+    final res = await ApiService.getFeeStatus(student['id']);
+    if (!mounted) return;
+    Navigator.pop(context);
+    if (res['success']) {
+      final data = res['data'] ?? {};
+      final structures = data['structures'] ?? [];
+      final pendingAmount = (data['totalPending'] ?? 0).toDouble();
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => RecordFeePaymentScreen(
+            student: student,
+            pendingAmount: pendingAmount,
+            structures: structures,
+          ),
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(res['message'] ?? 'Failed to load fee details')));
+    }
   }
 
   @override

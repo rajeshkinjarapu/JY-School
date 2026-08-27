@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import '../services/api_service.dart';
 import 'record_fee_payment_screen.dart';
+import 'edit_transaction_screen.dart';
 
 class StudentProfileScreen extends StatefulWidget {
   final dynamic student;
@@ -833,9 +834,11 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
       context: context, isScrollControlled: true, backgroundColor: Colors.transparent,
       builder: (ctx) {
         bool isSaving = false;
-        return StatefulBuilder(builder: (ctx, setSS) => Padding(
-          padding: EdgeInsets.fromLTRB(0, 0, 0, MediaQuery.of(ctx).viewInsets.bottom),
-          child: Container(
+        return StatefulBuilder(builder: (ctx, setSS) => SafeArea(
+          bottom: true,
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(0, 0, 0, MediaQuery.of(ctx).viewInsets.bottom),
+            child: Container(
             decoration: const BoxDecoration(color: Colors.white, borderRadius: BorderRadius.vertical(top: Radius.circular(28))),
             padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
             child: Column(mainAxisSize: MainAxisSize.min, children: [
@@ -894,91 +897,22 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
               ),
             ]),
           ),
-        ));
+        )));
       },
     );
   }
 
-  // EDIT TRANSACTION SHEET
+  // EDIT TRANSACTION SHEET - Moved to separate screen
   void _showEditTxSheet(dynamic t) {
-    final amountC = TextEditingController(text: t['amountPaid']?.toString() ?? '');
-    final remarksC = TextEditingController(text: t['remarks'] ?? '');
-    String selectedMethod = t['method'] ?? t['paymentMethod'] ?? 'CASH';
-    final methods = ['CASH', 'UPI', 'CHEQUE', 'NEFT', 'RTGS', 'CARD'];
-    showModalBottomSheet(
-      context: context, isScrollControlled: true, backgroundColor: Colors.transparent,
-      builder: (ctx) {
-        bool isSaving = false;
-        return StatefulBuilder(builder: (ctx, setSS) => Padding(
-          padding: EdgeInsets.fromLTRB(0, 0, 0, MediaQuery.of(ctx).viewInsets.bottom),
-          child: Container(
-            decoration: const BoxDecoration(color: Colors.white, borderRadius: BorderRadius.vertical(top: Radius.circular(28))),
-            padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
-            child: Column(mainAxisSize: MainAxisSize.min, children: [
-              Container(width: 40, height: 4, margin: const EdgeInsets.symmetric(vertical: 12), decoration: BoxDecoration(color: const Color(0xFFE2E8F0), borderRadius: BorderRadius.circular(2))),
-              Row(children: [
-                Container(padding: const EdgeInsets.all(8), decoration: BoxDecoration(color: const Color(0xFFEEF2FF), borderRadius: BorderRadius.circular(10)), child: const Icon(Icons.edit_rounded, color: Color(0xFF6366F1), size: 20)),
-                const SizedBox(width: 12),
-                Text('Edit Transaction', style: GoogleFonts.outfit(fontSize: 17, fontWeight: FontWeight.bold)),
-              ]),
-              const SizedBox(height: 20),
-              TextField(
-                controller: amountC, keyboardType: TextInputType.number,
-                style: GoogleFonts.outfit(fontSize: 22, fontWeight: FontWeight.bold, color: const Color(0xFF10B981)),
-                textAlign: TextAlign.center,
-                decoration: InputDecoration(
-                  prefixText: '₹ ', prefixStyle: GoogleFonts.outfit(fontSize: 22, color: const Color(0xFF10B981)),
-                  hintText: '0',
-                  filled: true, fillColor: const Color(0xFFF0FDF4),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
-                  contentPadding: const EdgeInsets.symmetric(vertical: 16),
-                ),
-              ),
-              const SizedBox(height: 12),
-              Wrap(spacing: 8, runSpacing: 8, children: methods.map((m) => GestureDetector(
-                onTap: () => setSS(() => selectedMethod = m),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                  decoration: BoxDecoration(color: selectedMethod == m ? const Color(0xFF6366F1) : const Color(0xFFF8FAFC), borderRadius: BorderRadius.circular(10), border: Border.all(color: selectedMethod == m ? const Color(0xFF6366F1) : const Color(0xFFE2E8F0))),
-                  child: Text(m, style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.w700, color: selectedMethod == m ? Colors.white : const Color(0xFF64748B))),
-                ),
-              )).toList()),
-              const SizedBox(height: 12),
-              TextField(
-                controller: remarksC, style: GoogleFonts.poppins(fontSize: 13),
-                decoration: InputDecoration(
-                  hintText: 'Remarks (UTR, cheque no)...', hintStyle: GoogleFonts.poppins(fontSize: 13, color: const Color(0xFFCBD5E1)),
-                  filled: true, fillColor: const Color(0xFFF8FAFC),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
-                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                ),
-              ),
-              const SizedBox(height: 20),
-              GestureDetector(
-                onTap: isSaving ? null : () async {
-                  final amt = double.tryParse(amountC.text);
-                  if (amt == null) { ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Enter valid amount'))); return; }
-                  setSS(() => isSaving = true);
-                  final res = await ApiService.updateFeePayment(t['id']?.toString() ?? '', {'amountPaid': amt, 'method': selectedMethod, 'remarks': remarksC.text});
-                  setSS(() => isSaving = false);
-                  if (mounted) {
-                    Navigator.pop(ctx);
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(res['success'] ? 'Transaction updated!' : (res['message'] ?? 'Failed')), backgroundColor: res['success'] ? const Color(0xFF10B981) : const Color(0xFFF43F5E)));
-                    if (res['success']) { setState(() => _isLoading = true); _fetchProfile(); }
-                  }
-                },
-                child: Container(
-                  width: double.infinity, height: 52,
-                  decoration: BoxDecoration(gradient: const LinearGradient(colors: [Color(0xFF4F46E5), Color(0xFF6366F1)]), borderRadius: BorderRadius.circular(16), boxShadow: [BoxShadow(color: const Color(0xFF6366F1).withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 4))]),
-                  child: Center(child: isSaving ? const CircularProgressIndicator(color: Colors.white, strokeWidth: 2) : Text('Save Changes', style: GoogleFonts.poppins(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold))),
-                ),
-              ),
-            ]),
-          ),
-        ));
-      },
-    );
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => EditTransactionScreen(transaction: t)),
+    ).then((updated) {
+      if (updated == true && mounted) {
+        setState(() => _isLoading = true);
+        _fetchProfile();
+      }
+    });
   }
 
   void _confirmDeleteTx(String? paymentId) {
