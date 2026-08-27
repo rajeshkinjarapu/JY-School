@@ -80,7 +80,7 @@ class QuestionBankDashboardScreen extends StatelessWidget {
           ],
         ),
       ),
-      drawer: const AppDrawer(),
+      drawer: const AppDrawer(currentRoute: 'question_bank'),
       body: LayoutBuilder(
         builder: (context, constraints) {
           int crossAxisCount = 1;
