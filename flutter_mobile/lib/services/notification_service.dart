@@ -58,10 +58,14 @@ class NotificationService {
       showBadge: true,
     );
 
-    await _notificationsPlugin
+    final androidImplementation = _notificationsPlugin
         .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>()
-        ?.createNotificationChannel(channel);
+            AndroidFlutterLocalNotificationsPlugin>();
+    
+    await androidImplementation?.createNotificationChannel(channel);
+    
+    // Explicitly request notification permission for Android 13+
+    await androidImplementation?.requestNotificationsPermission();
 
     // ── 3. FCM Setup ──
     try {

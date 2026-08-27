@@ -182,7 +182,7 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen>
     final unread = _all.where((a) => a['hasRead'] != true).length;
 
     return SliverAppBar(
-      expandedHeight: 200.0,
+      expandedHeight: 240.0,
       floating: false,
       pinned: true,
       elevation: 0,

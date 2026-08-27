@@ -16,6 +16,7 @@ class SingleProgressCardScreen extends StatefulWidget {
   final Map<String, dynamic>? studentData;
   final String examName;
   final String className;
+  final bool autoShare;
 
   const SingleProgressCardScreen({
     super.key,
@@ -25,6 +26,7 @@ class SingleProgressCardScreen extends StatefulWidget {
     this.studentData,
     required this.examName,
     required this.className,
+    this.autoShare = false,
   });
 
   @override
@@ -58,6 +60,13 @@ class _SingleProgressCardScreenState extends State<SingleProgressCardScreen> {
             if (setRes['success']) _settingsData = setRes['data'];
             _isLoading = false;
           });
+          
+          if (widget.autoShare && studentResult != null) {
+            // Give UI a moment to render the repaint boundary
+            Future.delayed(const Duration(milliseconds: 800), () {
+              if (mounted) _sharePdf();
+            });
+          }
         }
       } else {
         if (mounted) {

@@ -37,42 +37,43 @@ class _SettingsScreenState extends State<SettingsScreen> with SingleTickerProvid
           'Admin Settings',
           style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white),
         ),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
         iconTheme: const IconThemeData(color: Colors.white),
         flexibleSpace: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
-              colors: [Color(0xFF2E2A66), Color(0xFF222854)],
+              colors: [Color(0xFF6366F1), Color(0xFF4F46E5), Color(0xFF4338CA)],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
           ),
         ),
-        elevation: 0,
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(60),
           child: Container(
             margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.1),
+              color: Colors.white.withOpacity(0.15),
               borderRadius: BorderRadius.circular(16),
             ),
             child: TabBar(
               controller: _tabController,
               isScrollable: true,
               tabAlignment: TabAlignment.start,
-              labelColor: const Color(0xFFD946EF),
-              unselectedLabelColor: Colors.white70,
+              labelColor: const Color(0xFF6366F1),
+              unselectedLabelColor: Colors.white.withOpacity(0.8),
               indicatorSize: TabBarIndicatorSize.tab,
               dividerColor: Colors.transparent,
               indicator: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(12),
                 boxShadow: [
-                  BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 4, offset: const Offset(0, 2)),
+                  BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 8, offset: const Offset(0, 4)),
                 ],
               ),
               labelStyle: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 14),
-              unselectedLabelStyle: GoogleFonts.outfit(fontWeight: FontWeight.w500, fontSize: 13),
+              unselectedLabelStyle: GoogleFonts.outfit(fontWeight: FontWeight.w600, fontSize: 14),
               padding: const EdgeInsets.all(4),
               labelPadding: const EdgeInsets.symmetric(horizontal: 20),
               tabs: const [

@@ -148,6 +148,10 @@ class ApiService {
     return _performGet('/api/classes', 'Failed to get classes');
   }
 
+  static Future<Map<String, dynamic>> updateProfile(Map<String, dynamic> payload) async {
+    return _performPut('/api/auth/profile', payload, 'Failed to update profile');
+  }
+
   static Future<Map<String, dynamic>> getClassDetails(String classId) async {
     return _performGet('/api/classes/$classId', 'Failed to get class details');
   }
@@ -193,6 +197,10 @@ class ApiService {
 
   static Future<Map<String, dynamic>> updateStudent(String id, Map<String, dynamic> payload) async {
     return _performPut('/api/students/$id', payload, 'Failed to update student');
+  }
+
+  static Future<Map<String, dynamic>> markAnnouncementAsRead(String id) async {
+    return _performPost('/api/announcements/$id/read', {}, 'Failed to mark as read');
   }
 
   static Future<Map<String, dynamic>> createStudent(Map<String, dynamic> payload) async {
@@ -686,7 +694,7 @@ class ApiService {
         final response = await http.get(
           Uri.parse('$baseUrl$endpoint'),
           headers: _getHeaders(token: token),
-        ).timeout(const Duration(seconds: 10));
+        );
 
         final dynamic decoded = jsonDecode(response.body);
         if (response.statusCode == 200 || response.statusCode == 201) {

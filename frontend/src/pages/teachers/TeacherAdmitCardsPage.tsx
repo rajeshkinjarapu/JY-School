@@ -67,7 +67,7 @@ export const TeacherAdmitCardsPage: React.FC = () => {
           className="input !py-2 flex-1 max-w-xs"
         >
           <option value="" className="text-xs font-medium">-- Choose Exam --</option>
-          {exams.map(e => <option key={e.id} value={e.id} className="text-xs font-medium">{formatExamOptionLabel(e.name)} ({e.term})</option>)}
+          {exams.map(e => <option key={e.id} value={e.id} className="text-xs font-medium">{formatExamOptionLabel(e.name)}{e.term?.trim() ? ` (${e.term.trim()})` : ''}</option>)}
         </select>
 
         {selectedExam && (

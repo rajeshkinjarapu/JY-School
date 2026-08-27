@@ -90,7 +90,26 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
           api.get(`/api/exams-extended/plans?examId=${selectedExamId}`),
         ]);
         setStudents(studentsRes.data?.data || studentsRes.data || []);
-        setExamPlans(plansRes.data?.data || plansRes.data || []);
+        const fetchedPlans = plansRes.data?.data || plansRes.data || [];
+        
+        // Sort examPlans by exam's subjects order
+        const subjectOrderMap = new Map();
+        (selectedExam?.subjects || []).forEach((sub: any, idx: number) => {
+          if (sub && sub.name) {
+            subjectOrderMap.set(sub.name.toUpperCase().trim(), idx);
+          }
+        });
+        
+        fetchedPlans.sort((a: any, b: any) => {
+          const nameA = (a.subject?.name || a.subject || '').toUpperCase().trim();
+          const nameB = (b.subject?.name || b.subject || '').toUpperCase().trim();
+          const weightA = subjectOrderMap.has(nameA) ? subjectOrderMap.get(nameA) : 999;
+          const weightB = subjectOrderMap.has(nameB) ? subjectOrderMap.get(nameB) : 999;
+          if (weightA !== weightB) return weightA - weightB;
+          return nameA.localeCompare(nameB);
+        });
+
+        setExamPlans(fetchedPlans);
       } catch (e) {
         console.error("Error fetching admit card data", e);
       } finally {
@@ -364,7 +383,7 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
               <option value="" className="text-xs font-medium">-- Select Exam --</option>
               {exams.map((e) => (
                 <option key={e.id} value={e.id} className="text-xs font-medium">
-                  {formatExamOptionLabel(e.name)} ({e.term})
+                  {formatExamOptionLabel(e.name)}{e.term?.trim() ? ` (${e.term.trim()})` : ''}
                 </option>
               ))}
             </select>

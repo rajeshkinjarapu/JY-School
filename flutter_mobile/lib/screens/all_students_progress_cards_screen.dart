@@ -101,32 +101,66 @@ class _AllStudentsProgressCardsScreenState extends State<AllStudentsProgressCard
                           ],
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: 8),
                       // Card View Button
-                      ElevatedButton.icon(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => SingleProgressCardScreen(
-                                examId: widget.examId,
-                                classId: widget.classId,
-                                studentId: student['id'].toString(),
-                                studentData: student,
-                                examName: widget.examName,
-                                className: widget.className,
+                      SizedBox(
+                        height: 36,
+                        child: ElevatedButton.icon(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => SingleProgressCardScreen(
+                                  examId: widget.examId,
+                                  classId: widget.classId,
+                                  studentId: student['id'].toString(),
+                                  studentData: student,
+                                  examName: widget.examName,
+                                  className: widget.className,
+                                ),
                               ),
-                            ),
-                          );
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF6366F1),
-                          elevation: 0,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                            );
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF6366F1),
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                          ),
+                          icon: const Icon(Icons.credit_card_rounded, size: 14, color: Colors.white),
+                          label: Text('Card View', style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white)),
                         ),
-                        icon: const Icon(Icons.credit_card_rounded, size: 16, color: Colors.white),
-                        label: Text('Card View', style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.white)),
+                      ),
+                      const SizedBox(width: 8),
+                      // WhatsApp Share Button
+                      SizedBox(
+                        height: 36,
+                        width: 36,
+                        child: ElevatedButton(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => SingleProgressCardScreen(
+                                  examId: widget.examId,
+                                  classId: widget.classId,
+                                  studentId: student['id'].toString(),
+                                  studentData: student,
+                                  examName: widget.examName,
+                                  className: widget.className,
+                                  autoShare: true,
+                                ),
+                              ),
+                            );
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF25D366),
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                            padding: EdgeInsets.zero,
+                          ),
+                          child: const Icon(Icons.wechat_rounded, size: 18, color: Colors.white), // Using wechat icon as whatsapp placeholder if fontawesome is not available, or I can use Icons.share
+                        ),
                       ),
                     ],
                   ),

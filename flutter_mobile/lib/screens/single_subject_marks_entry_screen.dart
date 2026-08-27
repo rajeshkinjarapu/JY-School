@@ -5,19 +5,17 @@ import '../services/api_service.dart';
 class SingleSubjectMarksEntryScreen extends StatefulWidget {
   final String examId;
   final String classId;
-  final String subjectId;
-  final String subjectName;
-  final double maxMarks;
+  final List<dynamic> subjects;
   final List<dynamic> students;
+  final String? initialSubjectId;
 
   const SingleSubjectMarksEntryScreen({
     super.key,
     required this.examId,
     required this.classId,
-    required this.subjectId,
-    required this.subjectName,
-    required this.maxMarks,
+    required this.subjects,
     required this.students,
+    this.initialSubjectId,
   });
 
   @override
@@ -30,21 +28,68 @@ class _SingleSubjectMarksEntryScreenState extends State<SingleSubjectMarksEntryS
   
   String _searchQuery = '';
   
-  // Key format: "studentId" -> Controller
+  // Key format: "studentId_subjectId" -> Controller
   final Map<String, TextEditingController> _marksControllers = {};
+
+  List<dynamic> _localSubjects = [];
+  String? _selectedSubjectId;
+  String _subjectName = 'All Subjects';
 
   @override
   void initState() {
     super.initState();
+    _localSubjects = List.from(widget.subjects);
+    if (_localSubjects.isNotEmpty && !_localSubjects.any((s) => s['id'] == 'ALL')) {
+      _localSubjects.insert(0, {'id': 'ALL', 'name': 'All Subjects', 'maxMarks': 100});
+    }
+    
+    if (_localSubjects.isNotEmpty) {
+       _selectedSubjectId = widget.initialSubjectId ?? 'ALL';
+       final subject = _localSubjects.firstWhere((s) => s['id'].toString() == _selectedSubjectId, orElse: () => null);
+       _subjectName = subject != null ? subject['name']?.toString() ?? 'All Subjects' : 'All Subjects';
+    }
+    
     _initControllers();
     _fetchExistingMarks();
   }
 
+  void _onSubjectChanged(String? subId) {
+    if (subId == null) return;
+    final subject = _localSubjects.firstWhere((s) => s['id'].toString() == subId, orElse: () => null);
+    if (subject != null) {
+      setState(() {
+        _selectedSubjectId = subId;
+        _subjectName = subject['name']?.toString() ?? 'Subject';
+        _isLoading = true; // Show loading while re-initializing
+      });
+      
+      // Re-init controllers for new selection
+      _initControllers();
+      // Fetch marks for new selection
+      _fetchExistingMarks();
+    }
+  }
+
   void _initControllers() {
+    _marksControllers.clear();
     for (var student in widget.students) {
       final sid = student['id'].toString();
-      _marksControllers[sid] = TextEditingController();
+      if (_selectedSubjectId == 'ALL') {
+        for (var sub in _localSubjects.where((s) => s['id'] != 'ALL')) {
+          _marksControllers["${sid}_${sub['id']}"] = TextEditingController();
+        }
+      } else {
+        _marksControllers["${sid}_$_selectedSubjectId"] = TextEditingController();
+      }
     }
+  }
+
+  double _getMaxMarksForSubject(String subId) {
+    final sub = _localSubjects.firstWhere((s) => s['id'].toString() == subId, orElse: () => null);
+    if (sub != null) {
+      return double.tryParse(sub['maxMarks']?.toString() ?? '100') ?? 100.0;
+    }
+    return 100.0;
   }
 
   Future<void> _fetchExistingMarks() async {
@@ -55,16 +100,30 @@ class _SingleSubjectMarksEntryScreenState extends State<SingleSubjectMarksEntryS
         for (var mark in existingMarks) {
           final sid = mark['studentId']?.toString();
           final subId = mark['subjectId']?.toString();
+          String? matchedSubId = subId;
+          if (sid != null && subId != null && !_marksControllers.containsKey('${sid}_$matchedSubId')) {
+             final realSubName = mark['subject']?['name']?.toString().toLowerCase().trim();
+             if (realSubName != null) {
+               final matchedSub = _localSubjects.firstWhere(
+                   (s) => s['name']?.toString().toLowerCase().trim() == realSubName, 
+                   orElse: () => null
+               );
+               if (matchedSub != null) {
+                 matchedSubId = matchedSub['id'].toString();
+               }
+             }
+          }
           
-          if (subId == widget.subjectId && sid != null) {
-            if (_marksControllers.containsKey(sid)) {
-              _marksControllers[sid]?.text = mark['marksObtained']?.toString() ?? '';
+          if (sid != null && matchedSubId != null) {
+            final key = "${sid}_${matchedSubId}";
+            if (_marksControllers.containsKey(key)) {
+              _marksControllers[key]?.text = mark['marksObtained']?.toString() ?? '';
             }
           }
         }
       }
     } catch (e) {
-      // Ignore errors for fetching existing marks, proceed with empty
+      // Ignore errors
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -85,19 +144,52 @@ class _SingleSubjectMarksEntryScreenState extends State<SingleSubjectMarksEntryS
 
     try {
       List<Map<String, dynamic>> finalMarks = [];
-      _marksControllers.forEach((sid, controller) {
+      String? errorMessage;
+      
+      _marksControllers.forEach((key, controller) {
+        if (errorMessage != null) return; // Skip rest if error found
+        
+        final parts = key.split('_');
+        final sid = parts[0];
+        final subId = parts[1];
         final val = controller.text.trim();
+        
+        final maxM = _getMaxMarksForSubject(subId);
+
         if (val.isNotEmpty) {
+          if (val.toUpperCase() != 'AB') {
+            final parsed = double.tryParse(val);
+            if (parsed == null) {
+              errorMessage = 'Invalid marks entered.';
+              return;
+            }
+            if (parsed > maxM) {
+              final student = widget.students.firstWhere((s) => s['id'].toString() == sid, orElse: () => null);
+              final sName = student?['user']?['name'] ?? 'Unknown';
+              final sub = _localSubjects.firstWhere((s) => s['id'].toString() == subId, orElse: () => null);
+              final subName = sub?['name'] ?? 'Subject';
+              
+              errorMessage = 'Marks for $sName in $subName cannot exceed $maxM.';
+              return;
+            }
+          }
+
           finalMarks.add({
             'studentId': sid,
             'examId': widget.examId,
-            'subjectId': widget.subjectId,
+            'subjectId': subId,
             'marksObtained': val.toUpperCase() == 'AB' ? 0.0 : (double.tryParse(val) ?? 0.0),
-            'maxMarks': widget.maxMarks,
+            'maxMarks': maxM,
             'remarks': val.toUpperCase() == 'AB' ? 'Absent' : '',
           });
         }
       });
+
+      if (errorMessage != null) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(errorMessage!), backgroundColor: Colors.red));
+        setState(() => _isSubmitting = false);
+        return;
+      }
 
       if (finalMarks.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No marks entered to save.'), backgroundColor: Colors.red));
@@ -125,7 +217,6 @@ class _SingleSubjectMarksEntryScreenState extends State<SingleSubjectMarksEntryS
 
   @override
   Widget build(BuildContext context) {
-    // We store the original index for the S.No before filtering
     final List<Map<String, dynamic>> studentsWithIndex = [];
     for (int i = 0; i < widget.students.length; i++) {
       studentsWithIndex.add({
@@ -142,9 +233,9 @@ class _SingleSubjectMarksEntryScreenState extends State<SingleSubjectMarksEntryS
     }).toList();
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF1F5F9), // Slight gray background
+      backgroundColor: const Color(0xFFF1F5F9),
       appBar: AppBar(
-        title: Text('${widget.subjectName} Marks', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 20, color: Colors.white)),
+        title: Text('$_subjectName Marks', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 20, color: Colors.white)),
         iconTheme: const IconThemeData(color: Colors.white),
         flexibleSpace: Container(
           decoration: const BoxDecoration(
@@ -161,7 +252,54 @@ class _SingleSubjectMarksEntryScreenState extends State<SingleSubjectMarksEntryS
           ? const Center(child: CircularProgressIndicator(color: Color(0xFF6366F1)))
           : Column(
               children: [
-                // Search Bar
+                if (_localSubjects.isNotEmpty)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
+                      border: Border(bottom: BorderSide(color: Color(0xFFE2E8F0))),
+                    ),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF8FAFC),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: const Color(0xFF6366F1).withOpacity(0.5), width: 1.5),
+                      ),
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<String>(
+                          isExpanded: true,
+                          value: _selectedSubjectId,
+                          icon: const Icon(Icons.keyboard_arrow_down_rounded, color: Color(0xFF6366F1)),
+                          items: _localSubjects.map<DropdownMenuItem<String>>((item) {
+                            return DropdownMenuItem<String>(
+                              value: item['id']?.toString() ?? '',
+                              child: Row(
+                                children: [
+                                  Icon(item['id'] == 'ALL' ? Icons.library_books_rounded : Icons.book_rounded, size: 20, color: const Color(0xFF6366F1)),
+                                  const SizedBox(width: 10),
+                                  Expanded(
+                                    child: Text(
+                                      item['name']?.toString() ?? 'Unknown',
+                                      style: GoogleFonts.poppins(
+                                        color: _selectedSubjectId == item['id']?.toString() ? const Color(0xFF6366F1) : const Color(0xFF1E293B),
+                                        fontSize: 15,
+                                        fontWeight: _selectedSubjectId == item['id']?.toString() ? FontWeight.bold : FontWeight.w500,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          }).toList(),
+                          onChanged: _onSubjectChanged,
+                        ),
+                      ),
+                    ),
+                  ),
+                
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
@@ -183,7 +321,6 @@ class _SingleSubjectMarksEntryScreenState extends State<SingleSubjectMarksEntryS
                   ),
                 ),
                 
-                // List of Students
                 Expanded(
                   child: filteredStudents.isEmpty
                       ? Center(
@@ -208,34 +345,36 @@ class _SingleSubjectMarksEntryScreenState extends State<SingleSubjectMarksEntryS
                         ),
                 ),
                 
-                // Bottom Submit Button
-                Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    boxShadow: [BoxShadow(color: const Color(0xFF6366F1).withOpacity(0.1), blurRadius: 20, offset: const Offset(0, -5))],
-                    borderRadius: const BorderRadius.only(topLeft: Radius.circular(24), topRight: Radius.circular(24)),
-                  ),
-                  child: SizedBox(
-                    width: double.infinity,
-                    height: 56,
-                    child: ElevatedButton(
-                      onPressed: _isSubmitting ? null : _submitMarks,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF6366F1),
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                SafeArea(
+                  bottom: true,
+                  child: Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      boxShadow: [BoxShadow(color: const Color(0xFF6366F1).withOpacity(0.1), blurRadius: 20, offset: const Offset(0, -5))],
+                      borderRadius: const BorderRadius.only(topLeft: Radius.circular(24), topRight: Radius.circular(24)),
+                    ),
+                    child: SizedBox(
+                      width: double.infinity,
+                      height: 56,
+                      child: ElevatedButton(
+                        onPressed: _isSubmitting ? null : _submitMarks,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF6366F1),
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        ),
+                        child: _isSubmitting
+                            ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5))
+                            : Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  const Icon(Icons.cloud_upload_rounded, color: Colors.white),
+                                  const SizedBox(width: 8),
+                                  Text('Submit Marks', style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+                                ],
+                              ),
                       ),
-                      child: _isSubmitting
-                          ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5))
-                          : Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                const Icon(Icons.cloud_upload_rounded, color: Colors.white),
-                                const SizedBox(width: 8),
-                                Text('Submit Marks', style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
-                              ],
-                            ),
                     ),
                   ),
                 )
@@ -258,77 +397,120 @@ class _SingleSubjectMarksEntryScreenState extends State<SingleSubjectMarksEntryS
         border: Border.all(color: const Color(0xFFF1F5F9)),
         boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.01), blurRadius: 4, offset: const Offset(0, 2))],
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Serial Number Badge
-          Container(
-            width: 28,
-            height: 28,
-            decoration: BoxDecoration(
-              color: const Color(0xFFF8FAFC),
-              shape: BoxShape.circle,
-              border: Border.all(color: const Color(0xFFE2E8F0)),
-            ),
-            alignment: Alignment.center,
-            child: Text(
-              '$sNo',
-              style: GoogleFonts.poppins(color: const Color(0xFF64748B), fontWeight: FontWeight.bold, fontSize: 11),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(name, style: GoogleFonts.poppins(color: const Color(0xFF1E293B), fontWeight: FontWeight.w600, fontSize: 14)),
-                Text('Roll: $rollNo', style: GoogleFonts.poppins(color: const Color(0xFF94A3B8), fontSize: 12)),
-              ],
-            ),
-          ),
-          const SizedBox(width: 12),
-          // Marks Input
-          SizedBox(
-            width: 100,
-            height: 44,
-            child: TextField(
-              controller: _marksControllers[sid],
-              keyboardType: TextInputType.text,
-              textAlign: TextAlign.center,
-              style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16, color: _marksControllers[sid]?.text.toUpperCase() == 'AB' ? Colors.red : const Color(0xFF1E293B)),
-              decoration: InputDecoration(
-                hintText: 'Max: ${widget.maxMarks.toInt()}',
-                hintStyle: const TextStyle(color: Color(0xFFCBD5E1), fontSize: 12),
-                filled: true,
-                fillColor: const Color(0xFFF8FAFC),
-                contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 4),
-                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
-                focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFF6366F1), width: 1.5)),
-                suffixIcon: InkWell(
-                  onTap: () {
-                    setState(() {
-                      if (_marksControllers[sid]?.text == 'AB') {
-                        _marksControllers[sid]?.text = '';
-                      } else {
-                        _marksControllers[sid]?.text = 'AB';
-                      }
-                    });
-                  },
-                  child: Container(
-                    margin: const EdgeInsets.all(4),
-                    decoration: BoxDecoration(
-                      color: _marksControllers[sid]?.text == 'AB' ? Colors.red.withOpacity(0.1) : const Color(0xFFF1F5F9),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Icon(Icons.person_off_rounded, size: 16, color: _marksControllers[sid]?.text == 'AB' ? Colors.red : const Color(0xFF94A3B8)),
-                  ),
+          Row(
+            children: [
+              Container(
+                width: 28,
+                height: 28,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF8FAFC),
+                  shape: BoxShape.circle,
+                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                ),
+                alignment: Alignment.center,
+                child: Text(
+                  '$sNo',
+                  style: GoogleFonts.poppins(color: const Color(0xFF64748B), fontWeight: FontWeight.bold, fontSize: 11),
                 ),
               ),
-              onChanged: (val) {
-                setState(() {}); // trigger UI update for text color
-              },
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(name, style: GoogleFonts.poppins(color: const Color(0xFF1E293B), fontWeight: FontWeight.w600, fontSize: 14)),
+                    Text('Roll: $rollNo', style: GoogleFonts.poppins(color: const Color(0xFF94A3B8), fontSize: 12)),
+                  ],
+                ),
+              ),
+              if (_selectedSubjectId != 'ALL') ...[
+                const SizedBox(width: 12),
+                _buildMarksInput(sid, _selectedSubjectId!),
+              ],
+            ],
+          ),
+          
+          if (_selectedSubjectId == 'ALL') ...[
+            const SizedBox(height: 16),
+            const Divider(height: 1, color: Color(0xFFF1F5F9)),
+            const SizedBox(height: 16),
+            Wrap(
+              spacing: 12,
+              runSpacing: 16,
+              children: _localSubjects.where((s) => s['id'] != 'ALL').map((sub) {
+                final subId = sub['id'].toString();
+                final subName = sub['name']?.toString() ?? 'Unknown';
+                // Calculate width for 2 items per line (accounting for padding and spacing)
+                return SizedBox(
+                  width: (MediaQuery.of(context).size.width - 32 - 32 - 12) / 2, // screen width - list padding - card padding - spacing
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        subName,
+                        style: GoogleFonts.poppins(color: const Color(0xFF64748B), fontSize: 12, fontWeight: FontWeight.w500),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 6),
+                      _buildMarksInput(sid, subId),
+                    ],
+                  ),
+                );
+              }).toList(),
+            ),
+          ]
+        ],
+      ),
+    );
+  }
+  
+  Widget _buildMarksInput(String sid, String subId) {
+    final key = "${sid}_${subId}";
+    final maxM = _getMaxMarksForSubject(subId);
+    
+    return SizedBox(
+      width: _selectedSubjectId == 'ALL' ? double.infinity : 130, // Increased width
+      height: 48,
+      child: TextField(
+        controller: _marksControllers[key],
+        keyboardType: TextInputType.text,
+        textAlign: TextAlign.center,
+        style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16, color: _marksControllers[key]?.text.toUpperCase() == 'AB' ? Colors.red : const Color(0xFF1E293B)),
+        decoration: InputDecoration(
+          hintText: 'Max: ${maxM.toInt()}',
+          hintStyle: const TextStyle(color: Color(0xFFCBD5E1), fontSize: 12),
+          filled: true,
+          fillColor: const Color(0xFFF8FAFC),
+          contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 4),
+          enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
+          focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFF6366F1), width: 1.5)),
+          suffixIcon: InkWell(
+            onTap: () {
+              setState(() {
+                if (_marksControllers[key]?.text == 'AB') {
+                  _marksControllers[key]?.text = '';
+                } else {
+                  _marksControllers[key]?.text = 'AB';
+                }
+              });
+            },
+            child: Container(
+              margin: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: _marksControllers[key]?.text == 'AB' ? Colors.red.withOpacity(0.1) : const Color(0xFFF1F5F9),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(Icons.person_off_rounded, size: 16, color: _marksControllers[key]?.text == 'AB' ? Colors.red : const Color(0xFF94A3B8)),
             ),
           ),
-        ],
+        ),
+        onChanged: (val) {
+          setState(() {}); // trigger UI update for text color
+        },
       ),
     );
   }

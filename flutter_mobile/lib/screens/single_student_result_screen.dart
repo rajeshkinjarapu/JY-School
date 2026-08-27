@@ -1,6 +1,7 @@
 import 'dart:ui' as ui;
 import 'dart:io';
 import 'dart:typed_data';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -35,9 +36,7 @@ class _SingleStudentResultScreenState extends State<SingleStudentResultScreen> {
   final GlobalKey _repaintKey = GlobalKey();
   bool _isSharing = false;
 
-  final List<String> _subjectOrder = [
-    'TELUGU', 'HINDI', 'ENGLISH', 'MATHS', 'MATHEMATICS', 'PHYSICAL SCIENCE', 'PHYSICS', 'CHEMISTRY', 'BIOLOGICAL SCIENCE', 'BIOLOGY', 'SCIENCE', 'SOCIAL'
-  ];
+
 
   @override
   void initState() {
@@ -75,13 +74,7 @@ class _SingleStudentResultScreenState extends State<SingleStudentResultScreen> {
     }
   }
 
-  int _getSubjectPriority(String subjectName) {
-    String sub = subjectName.toUpperCase();
-    for (int i = 0; i < _subjectOrder.length; i++) {
-      if (sub.contains(_subjectOrder[i])) return i;
-    }
-    return 99; // unknown subjects at the end
-  }
+
 
   Future<void> _shareResult() async {
     if (_isSharing) return;
@@ -209,31 +202,29 @@ class _SingleStudentResultScreenState extends State<SingleStudentResultScreen> {
         ),
         Container(
           width: double.infinity,
-          padding: const EdgeInsets.all(12),
+          padding: EdgeInsets.fromLTRB(12, 12, 12, MediaQuery.of(context).padding.bottom > 0 ? MediaQuery.of(context).padding.bottom + 12 : 24),
           decoration: BoxDecoration(
             color: Colors.white,
             boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, -2))],
           ),
-          child: SafeArea(
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(colors: [Color(0xFF4F46E5), Color(0xFF6366F1)]),
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [BoxShadow(color: const Color(0xFF4F46E5).withOpacity(0.3), blurRadius: 8, offset: const Offset(0, 4))],
-              ),
-              child: ElevatedButton.icon(
-                onPressed: _isSharing ? null : _shareResult,
-                icon: _isSharing 
-                    ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                    : const Icon(Icons.share_rounded, color: Colors.white, size: 20),
-                label: Text(_isSharing ? 'Preparing...' : 'Share Full Result', style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.transparent,
-                  foregroundColor: Colors.white,
-                  shadowColor: Colors.transparent,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                ),
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(colors: [Color(0xFF4F46E5), Color(0xFF6366F1)]),
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [BoxShadow(color: const Color(0xFF4F46E5).withOpacity(0.3), blurRadius: 8, offset: const Offset(0, 4))],
+            ),
+            child: ElevatedButton.icon(
+              onPressed: _isSharing ? null : _shareResult,
+              icon: _isSharing 
+                  ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                  : const Icon(Icons.share_rounded, color: Colors.white, size: 20),
+              label: Text(_isSharing ? 'Preparing...' : 'Share Full Result', style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.transparent,
+                foregroundColor: Colors.white,
+                shadowColor: Colors.transparent,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
             ),
           ),
@@ -299,13 +290,7 @@ class _SingleStudentResultScreenState extends State<SingleStudentResultScreen> {
                 ),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(6),
-                  child: (photoUrl != null && photoUrl.toString().isNotEmpty)
-                    ? Image.network(
-                        ApiService.getImageUrl(photoUrl.toString()),
-                        fit: BoxFit.cover,
-                        errorBuilder: (c, e, s) => Center(child: Icon(Icons.person_rounded, size: 36, color: const Color(0xFF94A3B8))),
-                      )
-                    : Center(child: Icon(Icons.person_rounded, size: 36, color: const Color(0xFF94A3B8))),
+                  child: _buildStudentImage(photoUrl?.toString()),
                 ),
               ),
             ],
@@ -374,7 +359,6 @@ class _SingleStudentResultScreenState extends State<SingleStudentResultScreen> {
 
   Widget _buildMarksTable() {
     final marksList = List<Map<String, dynamic>>.from(_resultData!['marks'] ?? []);
-    marksList.sort((a, b) => _getSubjectPriority(a['subject']?.toString() ?? '').compareTo(_getSubjectPriority(b['subject']?.toString() ?? '')));
 
     return Container(
       decoration: BoxDecoration(
@@ -470,5 +454,33 @@ class _SingleStudentResultScreenState extends State<SingleStudentResultScreen> {
       case 'F': case 'FAIL': return const Color(0xFFEF4444);
       default: return const Color(0xFF64748B);
     }
+  }
+
+  Widget _buildStudentImage(String? photoUrl) {
+    if (photoUrl == null || photoUrl.isEmpty) {
+      return const Center(child: Icon(Icons.person_rounded, size: 36, color: Color(0xFF94A3B8)));
+    }
+    
+    if (photoUrl.startsWith('data:image')) {
+      try {
+        final parts = photoUrl.split(',');
+        if (parts.length > 1) {
+          return Image.memory(
+            base64Decode(parts[1]),
+            fit: BoxFit.cover,
+            errorBuilder: (c, e, s) => const Center(child: Icon(Icons.person_rounded, size: 36, color: Color(0xFF94A3B8))),
+          );
+        }
+      } catch (e) {
+        // ignore
+      }
+    }
+    
+    return Image.network(
+      ApiService.getImageUrl(photoUrl),
+      fit: BoxFit.cover,
+      headers: const {'ngrok-skip-browser-warning': '69420'},
+      errorBuilder: (c, e, s) => const Center(child: Icon(Icons.person_rounded, size: 36, color: Color(0xFF94A3B8))),
+    );
   }
 }

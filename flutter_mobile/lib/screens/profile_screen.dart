@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:image_picker/image_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -50,6 +51,35 @@ class _ProfileScreenState extends State<ProfileScreen> {
         MaterialPageRoute(builder: (context) => const LoginScreen()),
         (route) => false,
       );
+    }
+  }
+
+  Future<void> _pickAndUploadImage() async {
+    try {
+      final picker = ImagePicker();
+      final pickedFile = await picker.pickImage(source: ImageSource.gallery, imageQuality: 70);
+      
+      if (pickedFile != null) {
+        setState(() => _isLoading = true);
+        final bytes = await pickedFile.readAsBytes();
+        final base64Str = base64Encode(bytes);
+        final ext = pickedFile.path.split('.').last.toLowerCase();
+        final mimeType = ext == 'png' ? 'image/png' : 'image/jpeg';
+        final dataUri = 'data:$mimeType;base64,$base64Str';
+        
+        final res = await ApiService.updateProfile({'photoUrl': dataUri});
+        
+        if (res['success']) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Profile photo updated successfully'), backgroundColor: Colors.green));
+          await _loadProfile(); // reload profile to show new image
+        } else {
+          setState(() => _isLoading = false);
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(res['message'] ?? 'Failed to update photo'), backgroundColor: Colors.red));
+        }
+      }
+    } catch (e) {
+      setState(() => _isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red));
     }
   }
 
@@ -147,21 +177,44 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 color: Colors.white,
                               ),
                             ),
-                            ClipOval(
-                              child: SizedBox(
-                                width: 98, height: 98,
-                                child: (() {
-                                  final avatar = _user?['avatar'] ?? _user?['photo'] ?? _user?['photoUrl'];
-                                  if (avatar != null && avatar.toString().isNotEmpty && avatar.toString() != 'null' && avatar.toString() != 'undefined') {
-                                    return Image.network(
-                                      ApiService.getImageUrl(avatar.toString()),
-                                      fit: BoxFit.cover,
-                                      headers: const {'ngrok-skip-browser-warning': '69420'},
-                                      errorBuilder: (c, e, s) => _avatarFallback(name),
-                                    );
-                                  }
-                                  return _avatarFallback(name);
-                                })(),
+                            InkWell(
+                              onTap: _pickAndUploadImage,
+                              child: ClipOval(
+                                child: SizedBox(
+                                  width: 98, height: 98,
+                                  child: (() {
+                                    final avatar = _user?['avatar'] ?? _user?['photo'] ?? _user?['photoUrl'];
+                                    if (avatar != null && avatar.toString().isNotEmpty && avatar.toString() != 'null' && avatar.toString() != 'undefined') {
+                                      return Image.network(
+                                        ApiService.getImageUrl(avatar.toString()),
+                                        fit: BoxFit.cover,
+                                        headers: const {'ngrok-skip-browser-warning': '69420'},
+                                        errorBuilder: (c, e, s) => _avatarFallback(name),
+                                      );
+                                    }
+                                    return _avatarFallback(name);
+                                  })(),
+                                ),
+                              ),
+                            ),
+                            // Camera Icon Badge
+                            Positioned(
+                              bottom: 0,
+                              right: 0,
+                              child: GestureDetector(
+                                onTap: _pickAndUploadImage,
+                                child: Container(
+                                  padding: const EdgeInsets.all(6),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF6366F1),
+                                    shape: BoxShape.circle,
+                                    border: Border.all(color: Colors.white, width: 2),
+                                    boxShadow: [
+                                      BoxShadow(color: Colors.black.withOpacity(0.2), blurRadius: 4, offset: const Offset(0, 2)),
+                                    ],
+                                  ),
+                                  child: const Icon(Icons.camera_alt_rounded, color: Colors.white, size: 16),
+                                ),
                               ),
                             ),
                           ],

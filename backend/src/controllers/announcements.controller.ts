@@ -78,7 +78,7 @@ export const getById = async (req: AuthRequest, res: Response, next: NextFunctio
 };
 
 export const create = async (req: AuthRequest, res: Response): Promise<void> => {
-  const { title, content, targetRoles, targetClass, priority, status, expiresAt, scheduledAt, attachments } = req.body;
+  const { title, content, targetRoles, targetClass, priority, status, expiresAt, scheduledAt, attachments, image } = req.body;
 
   const computedStatus = status || (scheduledAt ? 'SCHEDULED' : 'PUBLISHED');
 
@@ -93,6 +93,7 @@ export const create = async (req: AuthRequest, res: Response): Promise<void> => 
       expiresAt: expiresAt ? new Date(expiresAt) : null,
       scheduledAt: scheduledAt ? new Date(scheduledAt) : null,
       attachments: Array.isArray(attachments) ? attachments : [],
+      image: image || null,
       createdById: req.user!.id,
     },
     include: { createdBy: { select: { name: true, role: true } } },
@@ -124,7 +125,7 @@ export const create = async (req: AuthRequest, res: Response): Promise<void> => 
 
 export const update = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   const id = req.params.id as string;
-  const { title, content, targetRoles, targetClass, priority, status, expiresAt, scheduledAt, attachments, isPinned } = req.body;
+  const { title, content, targetRoles, targetClass, priority, status, expiresAt, scheduledAt, attachments, image, isPinned } = req.body;
 
   const existing = await prisma.announcement.findUnique({ where: { id } });
   if (!existing) return next(createError('Announcement not found', 404));
@@ -141,6 +142,7 @@ export const update = async (req: AuthRequest, res: Response, next: NextFunction
       expiresAt: expiresAt ? new Date(expiresAt) : undefined,
       scheduledAt: scheduledAt ? new Date(scheduledAt) : undefined,
       attachments: Array.isArray(attachments) ? attachments : undefined,
+      image: image !== undefined ? image : undefined,
     },
   });
   successResponse(res, announcement, 'Announcement updated');
@@ -179,11 +181,30 @@ export const togglePin = async (req: AuthRequest, res: Response, next: NextFunct
 export const markAsRead = async (req: AuthRequest, res: Response): Promise<void> => {
   const id = req.params.id as string;
   const userId = req.user!.id;
+  const userName = req.user!.name || 'A user';
+  
   await prisma.announcementRead.upsert({
     where: { announcementId_userId: { announcementId: id, userId } },
     create: { announcementId: id, userId },
     update: { readAt: new Date() },
   });
+
+  try {
+    const announcement = await prisma.announcement.findUnique({ where: { id } });
+    if (announcement) {
+      const { createSystemNotification } = await import('./notifications.controller');
+      createSystemNotification({
+        userId: announcement.createdById,
+        title: 'Announcement Read',
+        message: `${userName} read your announcement: "${announcement.title}"`,
+        type: 'SYSTEM',
+        link: `/announcements`,
+      });
+    }
+  } catch (e) {
+    console.error('Failed to send read notification to admin:', e);
+  }
+
   successResponse(res, null, 'Marked as read');
 };
 
@@ -191,10 +212,37 @@ export const getReadStats = async (req: AuthRequest, res: Response, next: NextFu
   const id = req.params.id as string;
   const existing = await prisma.announcement.findUnique({ where: { id } });
   if (!existing) return next(createError('Announcement not found', 404));
+
+  // Find all users who are supposed to receive this announcement
+  let targetUsersWhere: any = { isActive: true };
+  if (existing.targetRoles && existing.targetRoles.trim() !== '') {
+    const roles = existing.targetRoles.split(',').map(r => r.trim());
+    targetUsersWhere.role = { in: roles };
+  }
+
+  // Get all potential target users
+  const potentialUsers = await prisma.user.findMany({
+    where: targetUsersWhere,
+    select: { id: true, name: true, role: true }
+  });
+
+  // Get those who actually read it
   const reads = await prisma.announcementRead.findMany({
     where: { announcementId: id },
-    include: { user: { select: { name: true, role: true } } },
-    orderBy: { readAt: 'desc' },
   });
-  successResponse(res, { readCount: reads.length, readers: reads }, 'Read stats fetched');
+
+  const readMap = new Map();
+  for (const r of reads) {
+    readMap.set(r.userId, r.readAt);
+  }
+
+  const result = potentialUsers.map(u => ({
+    id: u.id,
+    name: u.name,
+    role: u.role,
+    hasRead: readMap.has(u.id),
+    readAt: readMap.get(u.id) || null,
+  }));
+
+  successResponse(res, { readCount: reads.length, totalCount: result.length, readers: result }, 'Read stats fetched');
 };

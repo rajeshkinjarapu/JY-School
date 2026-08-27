@@ -14,7 +14,7 @@ import 'exams_screen.dart';
 import 'timetable_screen.dart';
 import 'teacher_attendance_screen.dart';
 import 'teacher_homework_screen.dart';
-import 'teacher_marks_screen.dart';
+import '../screens/marks_upload_screen.dart';
 import 'profile_screen.dart';
 import 'notifications_screen.dart';
 import '../widgets/app_drawer.dart';
@@ -1202,20 +1202,37 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   // ===== TEACHER ANNOUNCEMENT BANNER =====
   Widget _buildTeacherAnnouncementBanner() {
+    if (_recentAnnouncements.isEmpty) return const SizedBox();
+    
+    final ann = _recentAnnouncements.first;
+    final String title = ann['title'] ?? 'New Announcement';
+    final String content = ann['content'] ?? '';
+    final String date = ann['createdAt'] != null 
+        ? DateTime.parse(ann['createdAt']).toLocal().toString().substring(0, 10)
+        : 'Recently';
+    final String sender = 'Admin';
+    final String? imagePath = ann['image'];
+    final bool hasRead = ann['hasRead'] ?? false;
+    final String annId = ann['id'] ?? '';
+
     return GestureDetector(
-      onTap: () {
-        Navigator.push(
+      onTap: () async {
+        await Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => const AnnouncementDetailScreen(
-              title: 'Annual Sports Day 2025',
-              message: 'Dear Teachers, \n\nWe are excited to announce that the Annual Sports Day will be held on the 28th of August, 2025. Please ensure all participating students have their gear ready. All teaching staff are requested to report to the school grounds by 8:00 AM sharp to assist with the arrangements.\n\nThank you for your cooperation.',
-              date: 'Aug 24, 2025',
-              sender: 'Principal Office',
-              imagePath: null, // No image to show normal title
+            builder: (context) => AnnouncementDetailScreen(
+              id: annId.isNotEmpty ? annId : null,
+              title: title,
+              message: content,
+              date: date,
+              sender: sender,
+              imagePath: imagePath,
+              hasRead: hasRead,
             ),
           ),
         );
+        // Refresh dashboard on return to update read status
+        _loadDashboardData();
       },
       child: Container(
         margin: const EdgeInsets.fromLTRB(12, 8, 12, 0),
@@ -1284,14 +1301,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           ),
                           const SizedBox(width: 8),
                           Text(
-                            'Announcement',
+                            title,
                             style: GoogleFonts.outfit(color: const Color(0xFF92400E), fontSize: 14, fontWeight: FontWeight.w800),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ],
                       ),
                       const SizedBox(height: 5),
                       Text(
-                        'Annual Sports Day on 28th Aug 2025. All teachers to report by 8 AM.',
+                        content,
                         style: GoogleFonts.poppins(color: const Color(0xFF92400E).withOpacity(0.85), fontSize: 11, height: 1.4),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
@@ -1603,31 +1622,31 @@ class _DashboardScreenState extends State<DashboardScreen> {
       const double consumed = 56 + 120 + 85 + 8 + 14 + 56 + 20 + 30;
       final double availH = screenH - consumed;
 
-      // 3 cols, spacing=6, 4 rows, spacing=6
-      final double tileW = (screenW - 24 - 6 * 2) / 3; // 24 = horizontal padding
-      final double tileH = (availH - 6 * 3) / 4;
+      // 3 cols, spacing=5, 4 rows, spacing=5
+      final double tileW = (screenW - 24 - 5 * 2) / 3; // 24 = horizontal padding
+      final double tileH = (availH - 5 * 3) / 4;
       final double ar = tileW / (tileH < 70 ? 70 : tileH);
 
       return GridView.count(
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         crossAxisCount: 3,
-        crossAxisSpacing: 6,
-        mainAxisSpacing: 6,
+        crossAxisSpacing: 5,
+        mainAxisSpacing: 5,
         childAspectRatio: ar.clamp(0.75, 1.3),
         children: [
           _buildImageCard(imagePath: 'assets/images/admin_icons/attendance_mark.jpg',title: 'Mark Attendance',borderColor: const Color(0xFF10B981), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TeacherAttendanceScreen()))),
           _buildImageCard(imagePath: 'assets/images/admin_icons/classes.jpg',    title: 'Total Students', borderColor: const Color(0xFF8B5CF6), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const StudentsScreen()))),
           _buildImageCard(imagePath: 'assets/images/admin_icons/exams.jpg',      title: 'Answer Key',    borderColor: const Color(0xFFF59E0B), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AnswerKeysScreen()))),
           _buildImageCard(imagePath: 'assets/images/admin_icons/teacher.jpg',    title: 'Timetable',     borderColor: const Color(0xFF6366F1), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TimetableScreen()))),
-          _buildImageCard(imagePath: 'assets/images/admin_icons/reports.jpg',    title: 'Marks Entry',   borderColor: const Color(0xFFF97316), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TeacherMarksScreen()))),
+          _buildImageCard(imagePath: 'assets/images/admin_icons/reports.jpg',    title: 'Marks Entry',   borderColor: const Color(0xFFF97316), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MarksUploadScreen()))),
           _buildImageCard(imagePath: 'assets/images/admin_icons/exams.jpg',    title: 'Results',       borderColor: const Color(0xFF10B981), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ResultsScreen()))),
-          _buildImageCard(imagePath: 'assets/images/admin_icons/student.jpg',    title: 'Progress Cards',borderColor: const Color(0xFFD946EF), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ProgressCardScreen()))),
+          _buildIconWidgetCard(icon: Icons.analytics_rounded,    title: 'Progress Cards',borderColor: const Color(0xFFD946EF), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ProgressCardScreen()))),
           _buildImageCard(imagePath: 'assets/images/admin_icons/student_fees.jpg', title: 'Fee Reminder', borderColor: const Color(0xFF14B8A6), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const FeeReminderSearchScreen()))),
-          _buildImageCard(imagePath: 'assets/images/admin_icons/revenue.jpg',    title: 'Messaging',     borderColor: const Color(0xFF06B6D4), onTap: () => ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Messaging coming soon!')))),
+          _buildIconWidgetCard(icon: Icons.chat_rounded,    title: 'Messaging',     borderColor: const Color(0xFF25D366), onTap: () => ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Messaging coming soon!')))),
           _buildImageCard(imagePath: 'assets/images/admin_icons/collect_fees.jpg', title: 'My Salary',   borderColor: const Color(0xFFEAB308), onTap: () => ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('My Salary coming soon!')))),
           _buildImageCard(imagePath: 'assets/images/admin_icons/leave.png',title: 'Leave Apply',  borderColor: const Color(0xFF3B82F6), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const LeaveDashboardScreen()))),
-          _buildImageCard(imagePath: 'assets/images/admin_icons/classes.jpg',    title: 'Gate Pass',          borderColor: const Color(0xFF64748B), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => CreateGatePassScreen(userRole: role)))),
+          _buildIconWidgetCard(icon: Icons.assignment_ind_rounded,    title: 'Gate Pass',          borderColor: const Color(0xFF64748B), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => CreateGatePassScreen(userRole: role)))),
         ],
       );
     } else {
@@ -2493,6 +2512,63 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 errorBuilder: (c, e, s) => Container(
                   color: borderColor.withOpacity(0.1),
                   child: Icon(Icons.image_rounded, color: borderColor, size: 30),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          // Title below the circle
+          Text(
+            title,
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: GoogleFonts.outfit(
+              color: const Color(0xFF1E293B),
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              height: 1.2,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildIconWidgetCard({
+    required IconData icon,
+    required String title,
+    required Color borderColor,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          // Circular icon tile with colourful border
+          Container(
+            width: 68,
+            height: 68,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+              border: Border.all(color: borderColor, width: 3),
+              boxShadow: [
+                BoxShadow(
+                  color: borderColor.withOpacity(0.35),
+                  blurRadius: 12,
+                  offset: const Offset(0, 5),
+                ),
+              ],
+            ),
+            child: ClipOval(
+              child: Center(
+                child: Icon(
+                  icon,
+                  size: 32,
+                  color: borderColor,
                 ),
               ),
             ),

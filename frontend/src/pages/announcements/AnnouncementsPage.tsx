@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { PageHeader } from '../../components/UI/PageHeader';
+import { AnnouncementReadersModal } from './AnnouncementReadersModal';
 
 const PRIORITY_CONFIG: Record<string, { label: string; color: string; bg: string; icon: React.ElementType; dot: string }> = {
   HIGH:   { label: 'Urgent',  color: 'text-red-600',    bg: 'bg-red-50 border-red-200',    icon: Zap,          dot: 'bg-red-500' },
@@ -35,7 +36,7 @@ const GRADIENT_BANDS = [
 const defaultForm = {
   title: '', content: '', targetRoles: ['STUDENT', 'TEACHER'],
   targetClass: '', priority: 'NORMAL', status: 'PUBLISHED',
-  expiresAt: '', scheduledAt: '',
+  expiresAt: '', scheduledAt: '', image: '',
 };
 
 export const AnnouncementsPage: React.FC = () => {
@@ -45,6 +46,7 @@ export const AnnouncementsPage: React.FC = () => {
   const [showModal, setShowModal] = useState(false);
   const [editItem, setEditItem] = useState<any | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [viewReadersAnnId, setViewReadersAnnId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterPriority, setFilterPriority] = useState('ALL');
   const [filterStatus, setFilterStatus] = useState('ALL');
@@ -96,8 +98,20 @@ export const AnnouncementsPage: React.FC = () => {
       status: ann.status || 'PUBLISHED',
       expiresAt: ann.expiresAt ? ann.expiresAt.substring(0, 16) : '',
       scheduledAt: ann.scheduledAt ? ann.scheduledAt.substring(0, 16) : '',
+      image: ann.image || '',
     });
     setShowModal(true);
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setForm(f => ({ ...f, image: reader.result as string }));
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -287,7 +301,7 @@ export const AnnouncementsPage: React.FC = () => {
                         <AnnouncementCard key={ann.id} ann={ann} idx={idx} isManagement={isManagement}
                           expandedId={expandedId} setExpandedId={setExpandedId}
                           onDelete={handleDelete} onPin={handlePin} onEdit={openEdit}
-                          onMarkRead={handleMarkRead} />
+                          onMarkRead={handleMarkRead} onViewReaders={setViewReadersAnnId} />
                       ))}
                     </div>
                   </div>
@@ -345,6 +359,18 @@ export const AnnouncementsPage: React.FC = () => {
                 <input type="text" required placeholder="e.g. Annual Sports Meet 2026"
                   value={form.title} onChange={e => setForm(f => ({...f, title: e.target.value}))}
                   className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-none transition-all font-medium" />
+              </div>
+
+              {/* Image Upload (Optional) */}
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-2">Announcement Image (Optional)</label>
+                <div className="flex items-center gap-4">
+                  {form.image && (
+                    <img src={form.image} alt="Preview" className="w-16 h-16 object-cover rounded-xl border border-gray-200" />
+                  )}
+                  <input type="file" accept="image/*" onChange={handleImageUpload}
+                    className="w-full text-sm text-gray-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 transition-all cursor-pointer" />
+                </div>
               </div>
 
               {/* Content */}
@@ -452,6 +478,14 @@ export const AnnouncementsPage: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Readers Modal */}
+      {viewReadersAnnId && (
+        <AnnouncementReadersModal 
+          announcementId={viewReadersAnnId} 
+          onClose={() => setViewReadersAnnId(null)} 
+        />
+      )}
     </div>
   );
 };
@@ -462,7 +496,8 @@ const AnnouncementCard: React.FC<{
   setExpandedId: (id: string | null) => void;
   onDelete: (id: string) => void; onPin: (id: string) => void;
   onEdit: (ann: any) => void; onMarkRead: (id: string) => void;
-}> = ({ ann, idx, isManagement, expandedId, setExpandedId, onDelete, onPin, onEdit, onMarkRead }) => {
+  onViewReaders: (id: string) => void;
+}> = ({ ann, idx, isManagement, expandedId, setExpandedId, onDelete, onPin, onEdit, onMarkRead, onViewReaders }) => {
   const isExpanded = expandedId === ann.id;
   const priorityCfg = PRIORITY_CONFIG[ann.priority] || PRIORITY_CONFIG.NORMAL;
   const statusCfg = STATUS_CONFIG[ann.status] || STATUS_CONFIG.PUBLISHED;
@@ -532,7 +567,10 @@ const AnnouncementCard: React.FC<{
             </div>
 
             {/* Content Preview */}
-            <div className={`bg-gray-50 rounded-xl p-4 border border-gray-100 ${isExpanded ? '' : 'max-h-24 overflow-hidden relative'}`}>
+            <div className={`bg-gray-50 rounded-xl p-4 border border-gray-100 ${isExpanded ? '' : 'max-h-32 overflow-hidden relative'}`}>
+              {ann.image && (
+                <img src={ann.image} alt={ann.title} className="w-full max-h-64 object-contain rounded-xl mb-4 bg-white border border-gray-200" />
+              )}
               <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line font-medium">
                 {ann.content}
               </p>
@@ -555,10 +593,10 @@ const AnnouncementCard: React.FC<{
 
               <div className="flex items-center gap-4">
                 {isManagement && (
-                  <span className="flex items-center gap-1.5 text-xs font-bold text-gray-400">
+                  <button onClick={() => onViewReaders(ann.id)} className="flex items-center gap-1.5 text-xs font-bold text-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-lg border border-indigo-100 hover:bg-indigo-100 transition-colors">
                     <Eye className="w-4 h-4" />
                     {ann.readCount || 0} Views
-                  </span>
+                  </button>
                 )}
                 {ann.hasRead && (
                   <span className="flex items-center gap-1.5 text-xs font-bold text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-100">

@@ -39,5 +39,24 @@
   - Fixed a critical bug in `fixMarks.ts` that caused it to crash and incorrectly assign the exam's total max marks to individual subjects. It now accurately extracts subject-specific max marks from the `exam.subjects` JSON array.
 
 ## Outstanding Items
+- **Exam Architecture Refactor:** Migrate the global `subjects` array in the Exam model to a class-wise mapping structure (Dynamic Class-Specific Subject Mapping) to allow different subjects and max marks for different classes under the same Exam Name. (Postponed until current marks entry period is completed).
 - Teacher Live Classes Feature (Jitsi/Agora Integration).
-- Admin Reporting of "Read" Status for Announcements.
+
+## Latest Updates
+- **Advanced Announcement System:**
+  - **Image Upload:** Enabled Admins and Super Admins to optionally attach images to announcements.
+  - **Read Tracking:** Implemented a new `AnnouncementRead` model in the backend and a new "Read Receipts" modal in the Web App to track exactly which Students and Teachers have viewed the announcement.
+  - **Push Notifications:** Set up dual notifications: target users get a push when a new announcement is posted, and the Admin who created it gets a push notification immediately when a user views it for the first time.
+  - **Flutter Integration:** Replaced hardcoded dummy text in `dashboard_screen.dart` with real latest announcement data, and fully integrated the `AnnouncementDetailScreen` with the backend `markAsRead` API, permanently hiding the "Mark as Read" button once tapped.
+- Successfully pushed the latest Flutter UI enhancements and backend fixes to GitHub.
+- **Flutter APK Fixes:** 
+  - **App Icon Update:** Replaced the generic blue icon with the official original JY School logo (from the login screen) using `flutter_launcher_icons`.
+  - Removed strict `.timeout(...)` limits from `api_service.dart` `_performGet` to prevent false offline fallbacks when the free Railway backend server takes too long to wake up.
+  - Improved `MarksUploadScreen` UI by showing 'No Exams Found' instead of a confusing disabled state when no exams are returned.
+  - Redesigned `ExamStatusScreen` (Status Overview) to display subjects in a highly premium table format instead of chips when a class is expanded, explicitly showing S.No, Subject, and Status (Entered vs Pending).
+  - Implemented dynamic global maxMarks validation for every test/exam by fully integrating the new `MarksUploadScreen` across all dashboards and deleting the legacy `TeacherMarksScreen`.
+- **Flutter Question Bank Migration:**
+  - Successfully migrated the Question Bank module to the Flutter app.
+  - Created a premium grid dashboard (question_bank_dashboard_screen.dart).
+  - Added lutter_tex for precise LaTeX math equation rendering.
+  - Created modular generator screens (AI Paper, MCQ, Navodaya, Saved Papers).

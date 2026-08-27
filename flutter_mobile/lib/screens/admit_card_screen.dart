@@ -372,7 +372,33 @@ class _AdmitCardScreenState extends State<AdmitCardScreen> {
     }
     
     if (examPlans is List && examPlans.isNotEmpty) {
-      schedule = examPlans;
+      schedule = List.from(examPlans);
+      
+      // Sort schedule by exam subjects order
+      var examSubjects = _selectedExamData?['subjects'];
+      if (examSubjects is String) {
+        try { examSubjects = jsonDecode(examSubjects); } catch(e) { examSubjects = []; }
+      }
+      if (examSubjects is List) {
+        Map<String, int> subjectOrderMap = {};
+        for (int i = 0; i < examSubjects.length; i++) {
+          final subj = examSubjects[i];
+          if (subj != null && subj['name'] != null) {
+            subjectOrderMap[subj['name'].toString().toUpperCase().trim()] = i;
+          }
+        }
+        
+        schedule.sort((a, b) {
+          final nameA = (a['subject'] != null && a['subject'] is Map ? a['subject']['name'] : a['subject']?.toString() ?? '').toString().toUpperCase().trim();
+          final nameB = (b['subject'] != null && b['subject'] is Map ? b['subject']['name'] : b['subject']?.toString() ?? '').toString().toUpperCase().trim();
+          
+          final weightA = subjectOrderMap[nameA] ?? 999;
+          final weightB = subjectOrderMap[nameB] ?? 999;
+          
+          if (weightA != weightB) return weightA.compareTo(weightB);
+          return nameA.compareTo(nameB);
+        });
+      }
     } else {
       var examSubjects = settings['subjects'] ?? _selectedExamData?['subjects'];
       if (examSubjects is String) {

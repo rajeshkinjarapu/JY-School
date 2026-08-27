@@ -106,7 +106,7 @@ class _ExamStatusScreenState extends State<ExamStatusScreen> {
             icon: const Icon(Icons.keyboard_arrow_down_rounded, color: Color(0xFF64748B)),
             onChanged: (val) => setState(() => _selectedExamId = val),
             items: _examData.map((e) {
-              final title = e['name'] + (e['term'] != null ? ' (${e['term']})' : '');
+              final title = e['name'] + (e['term'] != null && e['term'].toString().trim().isNotEmpty ? ' (${e['term']})' : '');
               return DropdownMenuItem<String>(
                 value: e['id'].toString(),
                 child: Text(title, style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w600, color: const Color(0xFF1E293B))),
@@ -234,25 +234,104 @@ class _ExamStatusScreenState extends State<ExamStatusScreen> {
                 ],
               ),
               children: [
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF8FAFC),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: const Color(0xFFE2E8F0)),
-                  ),
-                  child: totalSubjects.isEmpty
-                      ? Text('No subjects mapped to this class.', style: GoogleFonts.poppins(fontSize: 12, fontStyle: FontStyle.italic, color: const Color(0xFF94A3B8)))
-                      : Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          children: [
-                            ...enteredSubjects.map((sub) => _buildSubjectChip(sub['name'], true)),
-                            ...pendingSubjects.map((sub) => _buildSubjectChip(sub['name'], false)),
-                          ],
+                if (totalSubjects.isEmpty)
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF8FAFC),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: const Color(0xFFE2E8F0)),
+                    ),
+                    child: Text('No subjects mapped to this class.', style: GoogleFonts.poppins(fontSize: 12, fontStyle: FontStyle.italic, color: const Color(0xFF94A3B8))),
+                  )
+                else
+                  Container(
+                    margin: const EdgeInsets.only(top: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: const Color(0xFFE2E8F0)),
+                      boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 4, offset: const Offset(0, 2))],
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: Table(
+                        columnWidths: const {
+                          0: FlexColumnWidth(1),
+                          1: FlexColumnWidth(2.5),
+                          2: FlexColumnWidth(1.5),
+                        },
+                        border: TableBorder(
+                          horizontalInside: BorderSide(color: const Color(0xFFF1F5F9), width: 1),
                         ),
-                )
+                        children: [
+                          TableRow(
+                            decoration: const BoxDecoration(color: Color(0xFFF8FAFC)),
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+                                child: Text('S.No', style: GoogleFonts.poppins(fontSize: 11, fontWeight: FontWeight.bold, color: const Color(0xFF64748B))),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+                                child: Text('Subject', style: GoogleFonts.poppins(fontSize: 11, fontWeight: FontWeight.bold, color: const Color(0xFF64748B))),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+                                child: Text('Status', style: GoogleFonts.poppins(fontSize: 11, fontWeight: FontWeight.bold, color: const Color(0xFF64748B))),
+                              ),
+                            ],
+                          ),
+                          ...List.generate(totalSubjects.length, (i) {
+                            final sub = totalSubjects[i];
+                            final subId = sub['id']?.toString();
+                            final subName = sub['name']?.toString() ?? 'Subject';
+                            // Check if it's entered
+                            final isEntered = enteredSubjects.any((e) => e['id']?.toString() == subId || e['name']?.toString() == subName);
+                            final color = isEntered ? const Color(0xFF10B981) : const Color(0xFFF59E0B);
+                            final icon = isEntered ? Icons.check_circle_rounded : Icons.pending_rounded;
+                            final statusText = isEntered ? 'Entered' : 'Pending';
+                            final bgColor = isEntered ? const Color(0xFF10B981).withOpacity(0.1) : const Color(0xFFF59E0B).withOpacity(0.1);
+
+                            return TableRow(
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+                                  child: Text('${i + 1}', style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF475569))),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+                                  child: Text(subName, style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF1E293B))),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                                  child: Align(
+                                    alignment: Alignment.centerLeft,
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                      decoration: BoxDecoration(
+                                        color: bgColor,
+                                        borderRadius: BorderRadius.circular(6),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(icon, size: 14, color: color),
+                                          const SizedBox(width: 4),
+                                          Text(statusText, style: GoogleFonts.poppins(fontSize: 11, fontWeight: FontWeight.bold, color: color)),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            );
+                          }),
+                        ],
+                      ),
+                    ),
+                  )
               ],
             ),
           ),

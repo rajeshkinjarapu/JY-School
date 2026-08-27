@@ -74,7 +74,7 @@ export const ExamStatusTab: React.FC<{ exams: any[] }> = ({ exams }) => {
             <option value="" disabled>Select an Exam...</option>
             {examData.map(e => (
               <option key={e.id} value={e.id} className="text-xs font-medium">
-                {formatExamOptionLabel(e.name)}{e.term ? ` (${e.term})` : ''}
+                {formatExamOptionLabel(e.name)}{e.term?.trim() ? ` (${e.term.trim()})` : ''}
               </option>
             ))}
           </select>

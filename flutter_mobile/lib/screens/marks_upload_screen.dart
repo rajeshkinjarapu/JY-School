@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/api_service.dart';
 import '../widgets/app_drawer.dart';
-import 'all_subjects_marks_entry_screen.dart';
 import 'single_subject_marks_entry_screen.dart';
 
 class MarksUploadScreen extends StatefulWidget {
@@ -22,7 +21,7 @@ class _MarksUploadScreenState extends State<MarksUploadScreen> {
 
   String? _selectedExamId;
   String? _selectedClassId;
-  String? _selectedSubjectId;
+  String? _selectedSubjectId = 'ALL';
   
   bool _isLoadingDropdowns = true;
   bool _isLoadingStudents = false;
@@ -150,8 +149,8 @@ class _MarksUploadScreenState extends State<MarksUploadScreen> {
   }
 
   Future<void> _submitMarks() async {
-    if (_selectedExamId == null || _selectedClassId == null || _selectedSubjectId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please select Exam, Class and Subject'), backgroundColor: Colors.red));
+    if (_selectedExamId == null || _selectedClassId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please select Exam and Class'), backgroundColor: Colors.red));
       return;
     }
 
@@ -224,12 +223,14 @@ class _MarksUploadScreenState extends State<MarksUploadScreen> {
       ),
       body: _isLoadingDropdowns
           ? const Center(child: CircularProgressIndicator(color: Color(0xFF6366F1)))
-          : Column(
-              children: [
+          : _errorMessage != null
+              ? Center(child: Text(_errorMessage!, style: const TextStyle(color: Colors.red, fontSize: 16)))
+              : Column(
+                  children: [
                 _buildFiltersPanel(),
                 
                 // Show Proceed Button only when all 3 filters are selected
-                if (_selectedExamId != null && _selectedClassId != null && _selectedSubjectId != null)
+                if (_selectedExamId != null && _selectedClassId != null)
                   Expanded(
                     child: Center(
                       child: Padding(
@@ -259,35 +260,23 @@ class _MarksUploadScreenState extends State<MarksUploadScreen> {
                               height: 56,
                               child: ElevatedButton(
                                 onPressed: _isLoadingStudents ? null : () {
-                                  if (_selectedSubjectId == 'ALL') {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => AllSubjectsMarksEntryScreen(
-                                          examId: _selectedExamId!,
-                                          classId: _selectedClassId!,
-                                          subjects: _getFilteredSubjects().where((s) => s['id'] != 'ALL').toList(),
-                                          students: _students,
-                                        ),
-                                      ),
-                                    );
-                                  } else {
-                                    final subject = _getFilteredSubjects().firstWhere((s) => s['id'].toString() == _selectedSubjectId, orElse: () => null);
-                                    final subName = subject != null ? subject['name']?.toString() ?? 'Subject' : 'Subject';
+                                  final subjects = _getFilteredSubjects();
+                                  if (subjects.isEmpty) {
+                                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No subjects found for this exam.'), backgroundColor: Colors.red));
+                                    return;
+                                  }
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
                                         builder: (context) => SingleSubjectMarksEntryScreen(
                                           examId: _selectedExamId!,
                                           classId: _selectedClassId!,
-                                          subjectId: _selectedSubjectId!,
-                                          subjectName: subName,
-                                          maxMarks: _maxMarks,
+                                          subjects: subjects,
                                           students: _students,
+                                          initialSubjectId: _selectedSubjectId,
                                         ),
                                       ),
                                     );
-                                  }
                                 },
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: const Color(0xFF6366F1),
@@ -336,9 +325,7 @@ class _MarksUploadScreenState extends State<MarksUploadScreen> {
         try { examSubjects = jsonDecode(examSubjects); } catch(e) { examSubjects = []; }
       }
       if (examSubjects is List) {
-        final List<dynamic> filtered = List<dynamic>.from(examSubjects);
-        filtered.insert(0, {'id': 'ALL', 'name': 'All Subjects'});
-        return filtered;
+        return List<dynamic>.from(examSubjects);
       }
     }
     return [];
@@ -373,7 +360,7 @@ class _MarksUploadScreenState extends State<MarksUploadScreen> {
       child: Column(
         children: [
           _buildDropdown(
-            hint: 'Select Exam',
+            hint: _exams.isEmpty ? 'No Exams Found' : 'Select Exam',
             value: _selectedExamId,
             items: _exams,
             icon: Icons.assignment_rounded,
@@ -390,23 +377,26 @@ class _MarksUploadScreenState extends State<MarksUploadScreen> {
           Column(
             children: [
               _buildDropdown(
-                hint: _selectedExamId == null ? 'Exam First' : 'Class',
+                hint: _selectedExamId == null ? 'Select Exam First' : 'Class',
                 value: _selectedClassId,
                 items: filteredClasses,
                 icon: Icons.class_rounded,
-                onChanged: _selectedExamId == null ? (val) {} : (val) {
+                onChanged: _selectedExamId == null ? null : (val) {
                   setState(() { _selectedClassId = val; });
                   _fetchStudentsForClass();
                 },
               ),
               const SizedBox(height: 16),
               _buildDropdown(
-                hint: _selectedExamId == null ? 'Exam First' : 'Subject',
+                hint: _selectedExamId == null ? 'Select Exam First' : 'Subject',
                 value: _selectedSubjectId,
-                items: filteredSubjects,
-                icon: Icons.book_rounded,
-                onChanged: _selectedExamId == null ? (val) {} : (val) {
-                  setState(() { _selectedSubjectId = val; });
+                items: [
+                  {'id': 'ALL', 'name': 'All Subjects (Grid View)'},
+                  ...filteredSubjects
+                ],
+                icon: Icons.menu_book_rounded,
+                onChanged: _selectedExamId == null ? null : (val) {
+                  setState(() { _selectedSubjectId = val ?? 'ALL'; });
                 },
               ),
             ],
@@ -421,7 +411,7 @@ class _MarksUploadScreenState extends State<MarksUploadScreen> {
     required String? value,
     required List<dynamic> items,
     required IconData icon,
-    required Function(String?) onChanged,
+    required void Function(String?)? onChanged,
   }) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),

@@ -1,20 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../services/api_service.dart';
 
 class AnnouncementDetailScreen extends StatefulWidget {
+  final String? id;
   final String title;
   final String message;
   final String date;
   final String sender;
   final String? imagePath;
+  final bool hasRead;
 
   const AnnouncementDetailScreen({
     Key? key,
+    this.id,
     required this.title,
     required this.message,
     required this.date,
     required this.sender,
     this.imagePath,
+    this.hasRead = false,
   }) : super(key: key);
 
   @override
@@ -22,7 +27,13 @@ class AnnouncementDetailScreen extends StatefulWidget {
 }
 
 class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
-  bool _isRead = false;
+  late bool _isRead;
+
+  @override
+  void initState() {
+    super.initState();
+    _isRead = widget.hasRead;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -78,8 +89,15 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
           duration: const Duration(milliseconds: 300),
           curve: Curves.easeInOut,
           child: InkWell(
-            onTap: () {
+            onTap: () async {
               if (!_isRead) {
+                if (widget.id != null) {
+                  try {
+                    await ApiService.markAnnouncementAsRead(widget.id!);
+                  } catch (e) {
+                    debugPrint('Error marking as read: $e');
+                  }
+                }
                 setState(() {
                   _isRead = true;
                 });

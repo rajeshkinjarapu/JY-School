@@ -13,7 +13,7 @@ import '../screens/timetable_screen.dart';
 import '../screens/homework_screen.dart';
 import '../screens/teacher_attendance_screen.dart';
 import '../screens/teacher_homework_screen.dart';
-import '../screens/teacher_marks_screen.dart';
+
 import '../screens/profile_screen.dart';
 import '../screens/leave_screen.dart';
 import '../screens/transport_screen.dart';
@@ -34,7 +34,7 @@ import '../screens/announcements_screen.dart';
 import '../screens/reports_screen.dart';
 import '../screens/hr_salary_screen.dart';
 import '../screens/office_tools_screen.dart';
-import '../screens/question_bank_screen.dart';
+import '../screens/question_bank/question_bank_dashboard_screen.dart';
 import '../screens/answer_key_screen.dart';
 import '../screens/settings_screen.dart';
 import '../screens/teacher_profile_screen.dart';
@@ -113,9 +113,26 @@ class _AppDrawerState extends State<AppDrawer> {
     const Color textInactive = Color(0xFF9EA3CB);
     
     final avatar = _user?['avatar'] ?? _user?['photo'] ?? _user?['photoUrl'];
-    final String avatarUrl = (avatar != null && avatar.toString().isNotEmpty && avatar.toString() != 'null' && avatar.toString() != 'undefined') 
-        ? ApiService.getImageUrl(avatar.toString())
+    final String avatarStr = avatar?.toString() ?? '';
+    final bool isBase64 = avatarStr.startsWith('data:image');
+    
+    final String avatarUrl = (avatarStr.isNotEmpty && avatarStr != 'null' && avatarStr != 'undefined' && !isBase64) 
+        ? ApiService.getImageUrl(avatarStr)
         : 'https://ui-avatars.com/api/?name=${Uri.encodeComponent(name)}&background=8B5CF6&color=fff';
+    
+    ImageProvider? getAvatarImage() {
+      if (isBase64) {
+        final parts = avatarStr.split(',');
+        if (parts.length > 1) {
+          try {
+            return MemoryImage(base64Decode(parts[1]));
+          } catch (e) {
+            return NetworkImage(avatarUrl);
+          }
+        }
+      }
+      return NetworkImage(avatarUrl);
+    }
 
     return Drawer(
       backgroundColor: sidebarBg,
@@ -304,7 +321,7 @@ class _AppDrawerState extends State<AppDrawer> {
                         title: 'Question Bank',
                         routeName: 'question_bank',
                         isActive: widget.currentRoute == 'question_bank',
-                        onTap: () => _navigateTo(const QuestionBankScreen(), 'question_bank'),
+                        onTap: () => _navigateTo(const QuestionBankDashboardScreen(), 'question_bank'),
                       ),
                     ],
                     _buildDrawerItem(
@@ -488,7 +505,7 @@ class _AppDrawerState extends State<AppDrawer> {
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           image: DecorationImage(
-                            image: NetworkImage(avatarUrl),
+                            image: getAvatarImage()!,
                             fit: BoxFit.cover,
                           ),
                         ),

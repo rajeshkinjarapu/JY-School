@@ -347,6 +347,7 @@ model Announcement {
   priority    String   @default("NORMAL") // HIGH, NORMAL, LOW
   status      String   @default("PUBLISHED") // DRAFT, PUBLISHED, SCHEDULED, EXPIRED
   isPinned    Boolean  @default(false)
+  image       String?  // Optional image attachment (URL or Base64)
   attachments String[] @default([])
   scheduledAt DateTime?
   createdById String
