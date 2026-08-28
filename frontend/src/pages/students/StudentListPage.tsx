@@ -6,7 +6,6 @@ import toast from "react-hot-toast";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { DataCache } from '../../services/dataCache';
-import { sortClasses } from '../../utils/sortClasses';
 import { getPhotoUrl } from "../../utils/photo";
 import { StudentListExportModal } from "./StudentListExportModal";
 
