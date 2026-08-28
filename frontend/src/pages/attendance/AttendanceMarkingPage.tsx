@@ -6,6 +6,7 @@ import { ShieldAlert, Search, Calendar, Users, ListFilter, CheckCircle, XCircle 
 import toast from 'react-hot-toast';
 import { useAuth } from '../../hooks/useAuth';
 import { PageHeader } from '../../components/UI/PageHeader';
+import { DataCache } from '../../services/dataCache';
 
 export const AttendanceMarkingPage: React.FC = () => {
   const { user } = useAuth();
@@ -24,11 +25,10 @@ export const AttendanceMarkingPage: React.FC = () => {
 
   const fetchClasses = async () => {
     try {
-      const res: any = await api.get('/api/classes');
-      const data = res.data || res || [];
-      setClasses(data);
+      const data = await DataCache.get('classes');
+      setClasses(data || []);
       
-      if (data.length > 0) {
+      if (data && data.length > 0) {
         const uniqueNames = Array.from(new Set(data.map((c: any) => c.name)));
         setSelectedClassName(uniqueNames[0] as string);
         const sections = data.filter((c: any) => c.name === uniqueNames[0]).map((c: any) => c.section);
@@ -64,12 +64,11 @@ export const AttendanceMarkingPage: React.FC = () => {
     setLoading(true);
 
     try {
-      const attendanceRes: any = await api.get(`/api/attendance/class`, {
-        params: { classId, date },
-      });
+      const [attendanceRes, studentsRes]: any = await Promise.all([
+        api.get(`/api/attendance/class`, { params: { classId, date } }),
+        api.get(`/api/classes/${classId}/students`),
+      ]);
       const attendanceList = attendanceRes.data || [];
-
-      const studentsRes: any = await api.get(`/api/classes/${classId}/students`);
       const studentList = studentsRes.data || [];
 
       setStudents(studentList);

@@ -5,6 +5,8 @@ import { Search, UserPlus, Trash2, Edit, FileDown, Eye, Filter, ChevronLeft, Che
 import toast from "react-hot-toast";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
+import { DataCache } from '../../services/dataCache';
+import { sortClasses } from '../../utils/sortClasses';
 import { getPhotoUrl } from "../../utils/photo";
 import { StudentListExportModal } from "./StudentListExportModal";
 
@@ -73,37 +75,38 @@ export const StudentListPage: React.FC = () => {
 
   const fetchClasses = useCallback(async () => {
     try {
-      const res: any = await api.get("/api/classes");
-      const data = res.data.data || res.data || [];
-      setClasses(data);
-      localStorage.setItem('sl_classes_cache', JSON.stringify(data));
+      const classList = await DataCache.get('classes');
+      setClasses(classList);
     } catch {}
   }, []);
 
   const fetchStudents = useCallback(async () => {
-    // If we have cached data, show it first without spinner
-    const hasCached = students.length > 0;
-    if (!hasCached) setLoading(true);
+    // If no filters and page 1, try cache first for instant load
+    if (!search && !classId && page === 1) {
+      try {
+        const cachedStudents = await DataCache.get('students');
+        if (cachedStudents && cachedStudents.length > 0) {
+          setStudents(cachedStudents);
+          setTotal(cachedStudents.length > LIMIT ? cachedStudents.length : parseInt(localStorage.getItem('sl_total_cache') || '0'));
+          setLoading(false);
+        }
+      } catch (_) {}
+    }
+
+    if (students.length === 0) setLoading(true);
+    
     try {
       const response: any = await api.get("/api/students", {
         params: { search, classId, limit: LIMIT, page },
       });
       const data = response.data.data || response.data || [];
       const totalCount = response.data.meta?.total || data.length;
+      
       setStudents(data);
       setTotal(totalCount);
-      // Cache only the first page with no filters (wrap in try-catch to prevent quota errors)
+      
       if (!search && !classId && page === 1) {
-        try {
-          const lightData = data.map((s: any) => ({
-            ...s,
-            user: s.user ? { ...s.user, photoUrl: s.user.photoUrl?.startsWith('data:') ? null : s.user.photoUrl } : null
-          }));
-          localStorage.setItem('sl_students_cache', JSON.stringify(lightData));
-          localStorage.setItem('sl_total_cache', String(totalCount));
-        } catch (cacheErr) {
-          console.warn('Student list caching skipped due to quota:', cacheErr);
-        }
+        localStorage.setItem('sl_total_cache', String(totalCount));
       }
     } catch (err: any) {
       console.error("Failed to load students:", err);
