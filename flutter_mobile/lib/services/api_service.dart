@@ -4,7 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'offline_sync_service.dart';
 
 class ApiService {
-  static const String baseUrl = 'https://jy-school-production-f159.up.railway.app';
+  static const String baseUrl = 'http://66.116.252.191:19998';
 
   static String getImageUrl(String? photoUrl) {
     if (photoUrl == null || photoUrl.isEmpty) return '';
