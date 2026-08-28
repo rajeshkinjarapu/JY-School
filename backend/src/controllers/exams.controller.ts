@@ -19,9 +19,21 @@ export const getAll = async (req: AuthRequest, res: Response): Promise<void> => 
 
   const exams = await prisma.exam.findMany({
     where,
-    include: {
+    select: {
+      id: true,
+      name: true,
+      term: true,
+      examDate: true,
+      maxMarks: true,
+      passingMarks: true,
+      admitCardPublished: true,
+      frozenClasses: true,
+      subjects: true,
+      createdAt: true,
       classes: { select: { id: true, name: true, section: true } },
       _count: { select: { marks: true } },
+      // admitCardSettings is EXCLUDED from list - it contains heavy Base64 images
+      // It is included only in getById for individual exam editing
     },
     orderBy: { examDate: 'desc' },
   });
