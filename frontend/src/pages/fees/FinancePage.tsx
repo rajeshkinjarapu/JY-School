@@ -219,35 +219,35 @@ export const FinancePage: React.FC = () => {
       }
     } catch (_) {}
 
-    // Fetch page 1 to get pagination info. Use limit=100 to trigger backend cache and avoid Vercel 10s timeout
-    const firstRes: any = await api.get('/api/students?limit=100&page=1', { timeout: 60000 });
+    // Fetch page 1 with limit=200 (no photos since limit>50) to get pagination info
+    const firstRes: any = await api.get('/api/students?limit=200&page=1', { timeout: 60000 });
     
-    // axios interceptor might unwrap to an array directly, or keep it wrapped.
-    let firstPayload = firstRes?.data;
-    if (firstPayload && !Array.isArray(firstPayload) && Array.isArray(firstPayload.data)) {
-      firstPayload = firstPayload.data;
-    } else if (!Array.isArray(firstPayload) && Array.isArray(firstRes?.data?.data)) {
-      firstPayload = firstRes.data.data;
-    }
-    if (!Array.isArray(firstPayload)) firstPayload = [];
+    const extractArray = (res: any) => {
+      let d = res?.data;
+      if (d && !Array.isArray(d) && Array.isArray(d.data)) return d.data;
+      if (!Array.isArray(d) && Array.isArray(res?.data?.data)) return res.data.data;
+      return Array.isArray(d) ? d : [];
+    };
 
-    // Extract pagination from either unwrapped .meta or wrapped .pagination
+    const firstPayload = extractArray(firstRes);
     const pagination = firstRes?.data?.meta || firstRes?.data?.pagination || {};
     const totalPages: number = pagination.totalPages || 1;
 
     let allStudents: any[] = firstPayload;
 
+    // Fetch remaining pages IN PARALLEL (not sequentially) for maximum speed
     if (totalPages > 1) {
+      const pagePromises = [];
       for (let p = 2; p <= totalPages; p++) {
-        try {
-          const r: any = await api.get(`/api/students?limit=100&page=${p}`, { timeout: 60000 });
-          let d = r?.data;
-          if (d && !Array.isArray(d) && Array.isArray(d.data)) d = d.data;
-          else if (!Array.isArray(d) && Array.isArray(r?.data?.data)) d = r.data.data;
-          if (Array.isArray(d)) allStudents = [...allStudents, ...d];
-        } catch (err) {
-          console.error(`Failed to fetch page ${p}`, err);
-        }
+        pagePromises.push(
+          api.get(`/api/students?limit=200&page=${p}`, { timeout: 60000 })
+            .then((r: any) => extractArray(r))
+            .catch((err: any) => { console.error(`Failed to fetch students page ${p}`, err); return []; })
+        );
+      }
+      const pageResults = await Promise.all(pagePromises);
+      for (const pageData of pageResults) {
+        if (Array.isArray(pageData)) allStudents = [...allStudents, ...pageData];
       }
     }
 
@@ -259,34 +259,36 @@ export const FinancePage: React.FC = () => {
     return allStudents;
   };
 
-  // Helper to get all payments with pagination
+  // Helper to get all payments with pagination — fetch all pages in parallel
   const fetchAllPayments = async (): Promise<any[]> => {
     try {
-      const firstRes: any = await api.get('/api/fees/payments?limit=500&page=1', { timeout: 60000 });
-      let firstPayload = firstRes?.data;
-      if (firstPayload && !Array.isArray(firstPayload) && Array.isArray(firstPayload.data)) {
-        firstPayload = firstPayload.data;
-      } else if (!Array.isArray(firstPayload) && Array.isArray(firstRes?.data?.data)) {
-        firstPayload = firstRes.data.data;
-      }
-      if (!Array.isArray(firstPayload)) firstPayload = [];
+      const extractArray = (res: any) => {
+        let d = res?.data;
+        if (d && !Array.isArray(d) && Array.isArray(d.data)) return d.data;
+        if (!Array.isArray(d) && Array.isArray(res?.data?.data)) return res.data.data;
+        return Array.isArray(d) ? d : [];
+      };
 
+      const firstRes: any = await api.get('/api/fees/payments?limit=500&page=1', { timeout: 60000 });
+      const firstPayload = extractArray(firstRes);
       const pagination = firstRes?.data?.meta || firstRes?.data?.pagination || {};
       const totalPages: number = pagination.totalPages || 1;
 
       let allPayments: any[] = firstPayload;
 
+      // Fetch remaining pages IN PARALLEL for maximum speed
       if (totalPages > 1) {
+        const pagePromises = [];
         for (let p = 2; p <= totalPages; p++) {
-          try {
-            const r: any = await api.get(`/api/fees/payments?limit=500&page=${p}`, { timeout: 60000 });
-            let d = r?.data;
-            if (d && !Array.isArray(d) && Array.isArray(d.data)) d = d.data;
-            else if (!Array.isArray(d) && Array.isArray(r?.data?.data)) d = r.data.data;
-            if (Array.isArray(d)) allPayments = [...allPayments, ...d];
-          } catch (err) {
-            console.error(`Failed to fetch page ${p}`, err);
-          }
+          pagePromises.push(
+            api.get(`/api/fees/payments?limit=500&page=${p}`, { timeout: 60000 })
+              .then((r: any) => extractArray(r))
+              .catch((err: any) => { console.error(`Failed to fetch payments page ${p}`, err); return []; })
+          );
+        }
+        const pageResults = await Promise.all(pagePromises);
+        for (const pageData of pageResults) {
+          if (Array.isArray(pageData)) allPayments = [...allPayments, ...pageData];
         }
       }
       return allPayments;
