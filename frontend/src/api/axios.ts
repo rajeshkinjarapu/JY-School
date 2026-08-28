@@ -1,20 +1,19 @@
 import axios from 'axios';
 
 const getApiUrl = () => {
+  if (import.meta.env.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL;
+  }
   if (typeof window !== 'undefined') {
     const host = window.location.hostname;
-    // If accessing via Vercel or DuckDNS (HTTPS), use environment variable or fallback
     if (host.includes('vercel.app') || host.includes('duckdns.org')) {
-      // Use the environment variable VITE_API_URL from Vercel settings
-      return import.meta.env.VITE_API_URL || 'https://jy-school-production-f159.up.railway.app';
+      return 'https://jy-school-production-f159.up.railway.app';
     }
-    
-    // For local development on network
     if (host !== 'localhost' && host !== '127.0.0.1') {
       return `http://${host}:5000`;
     }
   }
-  return import.meta.env.VITE_API_URL || 'https://jy-school-production-f159.up.railway.app';
+  return 'https://jy-school-production-f159.up.railway.app';
 };
 
 const API_URL = getApiUrl();

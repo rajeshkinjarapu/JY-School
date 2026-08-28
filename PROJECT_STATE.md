@@ -67,3 +67,4 @@
   - Fixed a critical regex parsing bug in `LiveLatexPreview.tsx` where math formulas containing `(B)` (like `$n(A) - n(B)$`) were incorrectly split, breaking LaTeX rendering for multiple-choice options.
   - Improved the `maxLen` calculation logic for multiple-choice options by trimming inner spaces, fixing a bug where 4-column or 2-column layouts would incorrectly stack vertically (like in Question 25).
 - Provided the user with the git pull command to fetch the latest updates from the repository.
+- **BigRock VPS Server Deployment**: Created an automated `SETUP_BIGROCK.bat` script to deploy the JY-School ERP to a new BigRock Ubuntu 22 VPS (66.116.252.191). Successfully connected via SSH, installed Node.js 20, Git, PM2, and Unzip (for Puppeteer Chrome extraction), and deployed both the Node.js backend (Port 19998) and React frontend (Port 19999).
