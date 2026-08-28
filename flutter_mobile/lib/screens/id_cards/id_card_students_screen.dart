@@ -5,25 +5,24 @@ import 'id_card_preview_screen.dart';
 
 class IdCardStudentsScreen extends StatefulWidget {
   final String templateId;
-  final String templateName;
-  final Color themeColor;
+  final Color templateColor;
 
   const IdCardStudentsScreen({
-    super.key,
+    Key? key,
     required this.templateId,
-    required this.templateName,
-    required this.themeColor,
-  });
+    required this.templateColor,
+  }) : super(key: key);
 
   @override
   State<IdCardStudentsScreen> createState() => _IdCardStudentsScreenState();
 }
 
 class _IdCardStudentsScreenState extends State<IdCardStudentsScreen> {
-  bool _isLoading = true;
+  bool _isLoading = false;
   List<dynamic> _classes = [];
   List<dynamic> _students = [];
   String? _selectedClassId;
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
@@ -34,36 +33,28 @@ class _IdCardStudentsScreenState extends State<IdCardStudentsScreen> {
   Future<void> _fetchClasses() async {
     setState(() => _isLoading = true);
     final res = await ApiService.getClasses();
-    if (mounted) {
-      if (res['success']) {
-        setState(() {
-          _classes = res['data'] ?? [];
-          if (_classes.isNotEmpty) {
-            _selectedClassId = _classes[0]['id'];
-            _fetchStudents(_selectedClassId!);
-          } else {
-            _isLoading = false;
-          }
-        });
-      } else {
-        setState(() => _isLoading = false);
-      }
+    if (res['success'] == true) {
+      setState(() {
+        _classes = res['data'] ?? [];
+      });
     }
+    setState(() => _isLoading = false);
   }
 
-  Future<void> _fetchStudents(String classId) async {
+  Future<void> _fetchStudents() async {
+    if (_selectedClassId == null) return;
     setState(() => _isLoading = true);
-    final res = await ApiService.getStudents(classId: classId, limit: 500);
-    if (mounted) {
-      if (res['success']) {
-        setState(() {
-          _students = res['data']?['data'] ?? res['data'] ?? [];
-          _isLoading = false;
-        });
-      } else {
-        setState(() => _isLoading = false);
-      }
+    final res = await ApiService.getStudents(
+      classId: _selectedClassId,
+      search: _searchController.text,
+      limit: 200,
+    );
+    if (res['success'] == true) {
+      setState(() {
+        _students = res['data'] ?? [];
+      });
     }
+    setState(() => _isLoading = false);
   }
 
   @override
@@ -71,84 +62,132 @@ class _IdCardStudentsScreenState extends State<IdCardStudentsScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
-        title: Text('Select Student', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white)),
-        backgroundColor: widget.themeColor,
-        iconTheme: const IconThemeData(color: Colors.white),
+        title: Text('Select Student',
+            style: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 18, color: Colors.black87)),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.black87),
       ),
       body: Column(
         children: [
           Container(
-            padding: const EdgeInsets.all(16),
             color: Colors.white,
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Filter by Class', style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
-                const SizedBox(height: 8),
-                DropdownButtonFormField<String>(
-                  value: _selectedClassId,
-                  decoration: InputDecoration(
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-                    filled: true,
-                    fillColor: const Color(0xFFF1F5F9),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                if (_classes.isNotEmpty)
+                  Container(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade50,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.grey.shade200),
+                    ),
+                    child: DropdownButtonHideUnderline(
+                      child: DropdownButton<String>(
+                        isExpanded: true,
+                        hint: Text('Select Class & Section', style: GoogleFonts.inter()),
+                        value: _selectedClassId,
+                        items: _classes.map<DropdownMenuItem<String>>((c) {
+                          return DropdownMenuItem<String>(
+                            value: c['id'],
+                            child: Text('${c['name']} - ${c['section']}', style: GoogleFonts.inter(fontWeight: FontWeight.w500)),
+                          );
+                        }).toList(),
+                        onChanged: (val) {
+                          setState(() {
+                            _selectedClassId = val;
+                          });
+                          _fetchStudents();
+                        },
+                      ),
+                    ),
                   ),
-                  items: _classes.map((c) {
-                    return DropdownMenuItem<String>(
-                      value: c['id'],
-                      child: Text('${c['name']} - ${c['section']}'),
-                    );
-                  }).toList(),
-                  onChanged: (val) {
-                    if (val != null) {
-                      setState(() => _selectedClassId = val);
-                      _fetchStudents(val);
-                    }
-                  },
+                TextField(
+                  controller: _searchController,
+                  onChanged: (val) => _fetchStudents(),
+                  decoration: InputDecoration(
+                    hintText: 'Search by name or ID...',
+                    prefixIcon: const Icon(Icons.search),
+                    filled: true,
+                    fillColor: Colors.grey.shade50,
+                    contentPadding: const EdgeInsets.symmetric(vertical: 0),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: Colors.grey.shade200),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: Colors.grey.shade200),
+                    ),
+                  ),
                 ),
               ],
             ),
           ),
           Expanded(
             child: _isLoading
-                ? Center(child: CircularProgressIndicator(color: widget.themeColor))
+                ? Center(child: CircularProgressIndicator(color: widget.templateColor))
                 : _students.isEmpty
-                    ? Center(child: Text('No students found', style: GoogleFonts.outfit()))
+                    ? Center(
+                        child: Text(
+                          _selectedClassId == null
+                              ? 'Please select a class first.'
+                              : 'No students found.',
+                          style: GoogleFonts.inter(color: Colors.grey.shade500),
+                        ),
+                      )
                     : ListView.builder(
                         padding: const EdgeInsets.all(16),
                         itemCount: _students.length,
                         itemBuilder: (context, index) {
                           final student = _students[index];
-                          return Card(
-                            elevation: 0,
+                          final user = student['user'] ?? {};
+                          final String name = user['name'] ?? 'Unknown';
+                          final String rollNo = student['rollNo'] ?? '';
+                          final String photoUrl = ApiService.getImageUrl(user['photoUrl']);
+
+                          return Container(
                             margin: const EdgeInsets.only(bottom: 12),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16), side: BorderSide(color: Colors.grey.shade200)),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(12),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.02),
+                                  blurRadius: 5,
+                                  offset: const Offset(0, 2),
+                                )
+                              ],
+                              border: Border.all(color: Colors.grey.shade100),
+                            ),
                             child: ListTile(
-                              contentPadding: const EdgeInsets.all(8),
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                               leading: CircleAvatar(
-                                radius: 25,
-                                backgroundImage: NetworkImage(student['user']?['photoUrl'] ?? 'https://ui-avatars.com/api/?name=${student['user']?['name'] ?? 'User'}'),
+                                radius: 22,
+                                backgroundColor: widget.templateColor.withOpacity(0.1),
+                                backgroundImage: photoUrl.isNotEmpty ? NetworkImage(photoUrl) : null,
+                                child: photoUrl.isEmpty
+                                    ? Text(name.isNotEmpty ? name[0].toUpperCase() : '?',
+                                        style: TextStyle(color: widget.templateColor, fontWeight: FontWeight.bold))
+                                    : null,
                               ),
-                              title: Text(student['user']?['name'] ?? '', style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
-                              subtitle: Text(student['rollNo'] ?? ''),
-                              trailing: ElevatedButton(
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: widget.themeColor,
-                                  foregroundColor: Colors.white,
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                                ),
-                                onPressed: () {
-                                  Navigator.push(context, MaterialPageRoute(
+                              title: Text(name, style: GoogleFonts.inter(fontWeight: FontWeight.bold)),
+                              subtitle: Text('ID: $rollNo', style: GoogleFonts.inter(fontSize: 12, color: Colors.grey.shade600)),
+                              trailing: Icon(Icons.arrow_forward_ios, size: 16, color: widget.templateColor),
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
                                     builder: (_) => IdCardPreviewScreen(
-                                      student: student,
                                       templateId: widget.templateId,
-                                      templateName: widget.templateName,
-                                      themeColor: widget.themeColor,
-                                    )
-                                  ));
-                                },
-                                child: const Text('Generate'),
-                              ),
+                                      templateColor: widget.templateColor,
+                                      studentData: student,
+                                    ),
+                                  ),
+                                );
+                              },
                             ),
                           );
                         },

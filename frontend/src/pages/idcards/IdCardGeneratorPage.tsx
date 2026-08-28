@@ -1,208 +1,318 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useReactToPrint } from 'react-to-print';
+import { Printer, ArrowLeft, Loader2, Search, CheckSquare, Square, Download } from 'lucide-react';
 import api from '../../api/axios';
-import { PageHeader } from '../../components/UI/PageHeader';
-import { Printer, ArrowLeft, Download, CheckSquare, Square } from 'lucide-react';
-import { templates } from '../../components/idcards/Templates';
 import toast from 'react-hot-toast';
+import { TEMPLATES_LIST, getTemplateComponent, getBacksideComponent, IDCardData, SchoolInfo } from '../../components/idcards/Templates';
 
-export const IdCardGeneratorPage = () => {
-  const { templateId } = useParams();
+// A4 paper size in CSS: 210mm x 297mm. We'll use CSS to force page breaks.
+const PrintableContent = React.forwardRef<HTMLDivElement, { 
+  students: IDCardData[], 
+  school: SchoolInfo, 
+  templateId: string 
+}>(({ students, school, templateId }, ref) => {
+  const FrontTemplate = getTemplateComponent(templateId);
+  const BackTemplate = getBacksideComponent();
+  const templateConfig = TEMPLATES_LIST.find(t => t.id === templateId);
+  const isHorizontal = templateConfig?.isHorizontal || false;
+
+  return (
+    <div ref={ref} className="print-container hidden print:block bg-white p-4">
+      <style type="text/css" media="print">
+        {`
+          @page { size: A4 portrait; margin: 10mm; }
+          .print-container { background: white; }
+          .page-break { page-break-after: always; }
+          .card-grid { 
+            display: grid; 
+            grid-template-columns: repeat(${isHorizontal ? 2 : 3}, 1fr); 
+            gap: 15px; 
+            justify-items: center; 
+            align-content: start;
+          }
+        `}
+      </style>
+      
+      {/* We will print front sides first, then back sides. So they can be printed double-sided easily. */}
+      {/* Front Sides Page(s) */}
+      <div className="card-grid">
+        {students.map((student) => (
+          <div key={`front-${student.id}`} className="mb-4" style={{ breakInside: 'avoid' }}>
+            <FrontTemplate data={student} school={school} />
+          </div>
+        ))}
+      </div>
+      
+      <div className="page-break" />
+      
+      {/* Back Sides Page(s) */}
+      <div className="card-grid">
+        {students.map((student) => (
+          <div key={`back-${student.id}`} className="mb-4" style={{ breakInside: 'avoid' }}>
+            <BackTemplate data={student} school={school} />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+});
+
+const IdCardGeneratorPage: React.FC = () => {
+  const [searchParams] = useSearchParams();
+  const templateId = searchParams.get('templateId') || 'template_1';
   const navigate = useNavigate();
   const printRef = useRef<HTMLDivElement>(null);
-  
-  const [students, setStudents] = useState<any[]>([]);
+
   const [classes, setClasses] = useState<any[]>([]);
   const [selectedClass, setSelectedClass] = useState<string>('');
-  const [selectedStudents, setSelectedStudents] = useState<Set<string>>(new Set());
+  const [students, setStudents] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [search, setSearch] = useState('');
   
-  const template = templates.find(t => t.id === templateId) || templates[0];
-  const TemplateComponent = template.component;
+  const [selectedStudentIds, setSelectedStudentIds] = useState<Set<string>>(new Set());
+
+  // Dummy school info (until we fetch from settings)
+  const schoolInfo: SchoolInfo = {
+    schoolName: 'JY INTERNATIONAL SCHOOL',
+    address: '123 Main Street, Education Hub, City, State 12345',
+    phone: '+91 98765 43210',
+  };
 
   useEffect(() => {
     fetchClasses();
   }, []);
 
   useEffect(() => {
-    if (selectedClass) fetchStudents(selectedClass);
+    if (selectedClass) {
+      fetchStudents(selectedClass);
+    } else {
+      setStudents([]);
+      setSelectedStudentIds(new Set());
+    }
   }, [selectedClass]);
 
   const fetchClasses = async () => {
     try {
       const res = await api.get('/api/classes');
-      setClasses(res.data);
-      if (res.data.length > 0) setSelectedClass(res.data[0].id);
-    } catch (e) {
-      toast.error('Failed to load classes');
+      setClasses(res.data.data || []);
+    } catch (error) {
+      toast.error('Failed to fetch classes');
     }
   };
 
   const fetchStudents = async (classId: string) => {
-    setLoading(true);
     try {
-      const res = await api.get(`/api/students?classId=${classId}&limit=500`);
-      setStudents(res.data.data || res.data);
-      setSelectedStudents(new Set()); // reset selection
-    } catch (e) {
-      toast.error('Failed to load students');
+      setLoading(true);
+      const res = await api.get(`/api/students?classId=${classId}&limit=1000`);
+      setStudents(res.data.data || []);
+      // Auto-select all by default
+      setSelectedStudentIds(new Set((res.data.data || []).map((s: any) => s.id)));
+    } catch (error) {
+      toast.error('Failed to fetch students');
     } finally {
       setLoading(false);
     }
   };
 
-  const toggleStudent = (id: string) => {
-    const newSet = new Set(selectedStudents);
-    if (newSet.has(id)) newSet.delete(id);
-    else newSet.add(id);
-    setSelectedStudents(newSet);
-  };
+  const handlePrint = useReactToPrint({
+    content: () => printRef.current,
+    documentTitle: 'Student_ID_Cards',
+    onAfterPrint: () => toast.success('Sent to printer successfully!'),
+  });
 
-  const toggleAll = () => {
-    if (selectedStudents.size === students.length) {
-      setSelectedStudents(new Set());
+  const toggleStudentSelection = (id: string) => {
+    const newSelection = new Set(selectedStudentIds);
+    if (newSelection.has(id)) {
+      newSelection.delete(id);
     } else {
-      setSelectedStudents(new Set(students.map(s => s.id)));
+      newSelection.add(id);
+    }
+    setSelectedStudentIds(newSelection);
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedStudentIds.size === filteredStudents.length) {
+      setSelectedStudentIds(new Set());
+    } else {
+      setSelectedStudentIds(new Set(filteredStudents.map(s => s.id)));
     }
   };
 
-  const handlePrint = () => {
-    if (selectedStudents.size === 0) {
-      toast.error('Please select at least one student');
-      return;
-    }
-    
-    // Simple window print
-    window.print();
-  };
+  const filteredStudents = students.filter(s => 
+    s.user?.name?.toLowerCase().includes(search.toLowerCase()) || 
+    s.rollNo?.toLowerCase().includes(search.toLowerCase())
+  );
 
-  const selectedStudentsList = students.filter(s => selectedStudents.has(s.id));
+  // Map API student data to IDCardData format
+  const mappedSelectedStudents: IDCardData[] = students
+    .filter(s => selectedStudentIds.has(s.id))
+    .map(s => ({
+      id: s.id,
+      name: s.user?.name || 'Unknown',
+      rollNo: s.rollNo,
+      className: s.class?.name || '',
+      section: s.class?.section || '',
+      bloodGroup: s.bloodGroup || '',
+      address: s.address || '',
+      phone: s.user?.phone || 'N/A',
+      photoUrl: s.user?.photoUrl,
+      fatherName: s.fatherName,
+    }));
+
+  const TemplatePreview = getTemplateComponent(templateId);
 
   return (
-    <div className="flex flex-col h-full bg-gray-50 id-card-page" style={{ minHeight: 'calc(100vh - 64px)' }}>
-      {/* Hide the header and sidebar elements during printing using standard media queries in a global CSS or style tag */}
-      <style>{`
-        @media print {
-          body * {
-            visibility: hidden;
-          }
-          #print-area, #print-area * {
-            visibility: visible;
-          }
-          #print-area {
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 100%;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 16px;
-            padding: 10px;
-          }
-          .no-print { display: none !important; }
-          .print-card {
-             page-break-inside: avoid;
-             margin-bottom: 20px;
-          }
-        }
-      `}</style>
-      
-      <div className="no-print flex-1 flex flex-col">
-        <PageHeader 
-          title={`Generate ID Cards: ${template.name}`} 
-          icon={<button onClick={() => navigate('/id-cards')} className="mr-2 hover:bg-gray-100 p-2 rounded-full"><ArrowLeft className="w-5 h-5" /></button>} 
-          action={
-            <button 
-              onClick={handlePrint}
-              disabled={selectedStudents.size === 0}
-              className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 text-white rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all font-bold disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <Printer className="w-5 h-5" /> Print Selected ({selectedStudents.size})
-            </button>
-          }
-        />
+    <div className="h-[calc(100vh-4rem)] flex flex-col bg-gray-50">
+      <div className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between shrink-0">
+        <div className="flex items-center gap-4">
+          <button onClick={() => navigate('/id-cards')} className="p-2 hover:bg-gray-100 rounded-full text-gray-500 transition-colors">
+            <ArrowLeft size={20} />
+          </button>
+          <div>
+            <h1 className="text-xl font-bold text-gray-900">Generate ID Cards</h1>
+            <p className="text-sm text-gray-500">Select students and print</p>
+          </div>
+        </div>
         
-        <div className="flex-1 overflow-auto p-4 md:p-6 lg:p-8 flex gap-6">
-          {/* Left Panel - Student Selection */}
-          <div className="w-1/3 bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex flex-col h-[calc(100vh-200px)]">
-            <h3 className="font-bold text-gray-800 mb-4">Select Students</h3>
-            <select 
-              className="w-full p-2 border border-gray-200 rounded-lg mb-4 bg-gray-50 focus:ring-2 focus:ring-indigo-500 outline-none"
-              value={selectedClass}
-              onChange={(e) => setSelectedClass(e.target.value)}
-            >
-              {classes.map(c => <option key={c.id} value={c.id}>{c.name} - {c.section}</option>)}
-            </select>
-            
-            <div className="flex items-center justify-between mb-2 px-2 pb-2 border-b border-gray-100">
-              <span className="text-sm font-medium text-gray-600">Total: {students.length}</span>
-              <button onClick={toggleAll} className="text-sm text-indigo-600 font-bold flex items-center gap-1 hover:text-indigo-800">
-                {selectedStudents.size === students.length ? <CheckSquare className="w-4 h-4" /> : <Square className="w-4 h-4" />}
-                Select All
-              </button>
+        <div className="flex items-center gap-4">
+          <select 
+            value={selectedClass} 
+            onChange={(e) => setSelectedClass(e.target.value)}
+            className="border border-gray-300 rounded-lg px-4 py-2 bg-white text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+          >
+            <option value="">Select Class & Section</option>
+            {classes.map(cls => (
+              <option key={cls.id} value={cls.id}>{cls.name} - {cls.section}</option>
+            ))}
+          </select>
+          
+          <button 
+            onClick={handlePrint}
+            disabled={mappedSelectedStudents.length === 0}
+            className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition-colors shadow-sm"
+          >
+            <Printer size={18} />
+            <span>Print {mappedSelectedStudents.length > 0 ? `(${mappedSelectedStudents.length})` : ''}</span>
+          </button>
+        </div>
+      </div>
+
+      <div className="flex-1 flex overflow-hidden">
+        {/* Left Panel: Student Selection */}
+        <div className="w-1/3 min-w-[300px] border-r border-gray-200 bg-white flex flex-col h-full z-10 shadow-sm">
+          <div className="p-4 border-b border-gray-200">
+            <div className="relative mb-4">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+              <input 
+                type="text" 
+                placeholder="Search students..." 
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 text-sm"
+              />
             </div>
             
-            <div className="flex-1 overflow-auto">
-              {loading ? (
-                <div className="flex justify-center items-center h-32"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div></div>
-              ) : students.length === 0 ? (
-                <div className="text-center text-gray-500 py-10">No students found</div>
-              ) : (
-                <ul className="space-y-1">
-                  {students.map(s => (
-                    <li 
-                      key={s.id} 
-                      onClick={() => toggleStudent(s.id)}
-                      className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer transition-colors ${selectedStudents.has(s.id) ? 'bg-indigo-50' : 'hover:bg-gray-50'}`}
-                    >
-                      {selectedStudents.has(s.id) ? <CheckSquare className="w-5 h-5 text-indigo-600" /> : <Square className="w-5 h-5 text-gray-400" />}
-                      <div>
-                        <p className="font-medium text-sm text-gray-800">{s.user?.name}</p>
-                        <p className="text-xs text-gray-500">{s.rollNo}</p>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              )}
+            <div className="flex items-center justify-between text-sm">
+              <button onClick={toggleSelectAll} className="flex items-center gap-2 text-indigo-600 font-medium hover:text-indigo-800 transition-colors">
+                {selectedStudentIds.size === filteredStudents.length && filteredStudents.length > 0 ? (
+                  <><CheckSquare size={18} /> Unselect All</>
+                ) : (
+                  <><Square size={18} /> Select All</>
+                )}
+              </button>
+              <span className="text-gray-500 font-medium">{selectedStudentIds.size} selected</span>
             </div>
           </div>
           
-          {/* Right Panel - Preview Area */}
-          <div className="w-2/3 bg-gray-200 rounded-2xl p-6 overflow-auto h-[calc(100vh-200px)] border-4 border-dashed border-gray-300">
-            {selectedStudents.size === 0 ? (
-              <div className="h-full flex flex-col items-center justify-center text-gray-500">
-                <BadgeCheck className="w-16 h-16 mb-4 opacity-50" />
-                <p>Select students to preview ID cards</p>
+          <div className="flex-1 overflow-y-auto p-2">
+            {loading ? (
+              <div className="flex flex-col items-center justify-center h-40 text-gray-400">
+                <Loader2 className="animate-spin mb-2" size={24} />
+                <p className="text-sm">Loading students...</p>
+              </div>
+            ) : filteredStudents.length === 0 ? (
+              <div className="flex items-center justify-center h-40 text-gray-500 text-sm">
+                {selectedClass ? 'No students found.' : 'Select a class to view students.'}
               </div>
             ) : (
-              <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 place-items-center">
-                {selectedStudentsList.map(s => (
-                  <div key={s.id} className="relative group">
-                    <div className="absolute -top-3 -right-3 w-6 h-6 bg-green-500 text-white rounded-full flex items-center justify-center text-xs font-bold shadow-sm z-10">
-                      ✓
+              <div className="space-y-1">
+                {filteredStudents.map(student => (
+                  <div 
+                    key={student.id} 
+                    onClick={() => toggleStudentSelection(student.id)}
+                    className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-colors ${
+                      selectedStudentIds.has(student.id) ? 'bg-indigo-50 border border-indigo-100' : 'hover:bg-gray-50 border border-transparent'
+                    }`}
+                  >
+                    <div className="text-indigo-600">
+                      {selectedStudentIds.has(student.id) ? <CheckSquare size={20} /> : <Square size={20} className="text-gray-300" />}
                     </div>
-                    <TemplateComponent student={s} schoolName="JY INTERNATIONAL SCHOOL" showQR={true} />
+                    <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden shrink-0 border border-gray-300">
+                      {student.user?.photoUrl ? (
+                        <img src={student.user.photoUrl} alt={student.user.name} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-gray-500 text-xs">{student.user?.name?.charAt(0)}</div>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-gray-900 truncate">{student.user?.name}</p>
+                      <p className="text-xs text-gray-500">{student.rollNo}</p>
+                    </div>
                   </div>
                 ))}
               </div>
             )}
           </div>
         </div>
+
+        {/* Right Panel: Live Preview */}
+        <div className="flex-1 overflow-y-auto bg-gray-100 p-8">
+          <div className="max-w-4xl mx-auto">
+            <div className="mb-6 flex justify-between items-end">
+              <div>
+                <h2 className="text-lg font-bold text-gray-900">Live Preview</h2>
+                <p className="text-sm text-gray-500">Previewing first selected student</p>
+              </div>
+              <div className="bg-white px-3 py-1.5 rounded-md border border-gray-200 text-xs font-semibold text-gray-600 shadow-sm">
+                Design: {TEMPLATES_LIST.find(t => t.id === templateId)?.name}
+              </div>
+            </div>
+
+            {mappedSelectedStudents.length > 0 ? (
+              <div className="flex flex-col md:flex-row gap-8 items-start justify-center">
+                <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-200 flex flex-col items-center">
+                  <h3 className="text-sm font-bold text-gray-700 mb-4 border-b w-full pb-2 text-center uppercase tracking-wider">Front Side</h3>
+                  <div className="shadow-md rounded-lg overflow-hidden border border-gray-100 transform transition-transform hover:scale-105">
+                     <TemplatePreview data={mappedSelectedStudents[0]} school={schoolInfo} />
+                  </div>
+                </div>
+                
+                <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-200 flex flex-col items-center">
+                  <h3 className="text-sm font-bold text-gray-700 mb-4 border-b w-full pb-2 text-center uppercase tracking-wider">Back Side</h3>
+                  <div className="shadow-md rounded-lg overflow-hidden border border-gray-100 transform transition-transform hover:scale-105">
+                     {React.createElement(getBacksideComponent(), { data: mappedSelectedStudents[0], school: schoolInfo })}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center h-64 bg-white rounded-xl shadow-sm border border-gray-200 border-dashed">
+                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4 text-gray-400">
+                  <Printer size={32} />
+                </div>
+                <p className="text-gray-500 font-medium">Select students to preview ID cards</p>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
       
-      {/* Hidden Print Container */}
-      <div id="print-area" className="hidden print:flex" ref={printRef}>
-        {selectedStudentsList.map(s => (
-          <div key={`print-${s.id}`} style={{ marginBottom: '20px' }}>
-            <TemplateComponent student={s} schoolName="JY INTERNATIONAL SCHOOL" showQR={true} />
-          </div>
-        ))}
+      {/* Hidden printable content */}
+      <div className="hidden">
+        <PrintableContent ref={printRef} students={mappedSelectedStudents} school={schoolInfo} templateId={templateId} />
       </div>
     </div>
   );
 };
 
-// Extracted from lucide imports above that were missing
-const BadgeCheck = ({ className }: { className?: string }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z"/><path d="m9 12 2 2 4-4"/></svg>
-);
+export default IdCardGeneratorPage;

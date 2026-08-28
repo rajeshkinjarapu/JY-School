@@ -31,6 +31,9 @@ import 'settings_screen.dart';
 import 'fee_installment_report_screen.dart';
 import 'announcement_detail_screen.dart';
 import 'leave_dashboard_screen.dart';
+import 'question_bank/question_bank_dashboard_screen.dart';
+import 'transport_screen.dart';
+import 'id_cards/id_card_templates_screen.dart';
 import 'gate_pass_screen.dart';
 import 'create_gate_pass_screen.dart';
 import 'leave_screen.dart';
@@ -1444,6 +1447,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
           imagePath: 'assets/images/admin_icons/reports.jpg',
           onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ProgressCardScreen())),
         ),
+        _buildMenuPremiumCard(
+          subtitle: 'ID CARDS',
+          title: 'Generator',
+          bottomText: 'Generate & Print ID Cards',
+          icon: Icons.badge_rounded,
+          gradientColors: [const Color(0xFF6366F1), const Color(0xFF4F46E5)],
+          accentColor: const Color(0xFF818CF8),
+          imagePath: 'assets/images/admin_icons/student.jpg',
+          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const IdCardTemplatesScreen())),
+        ),
       ],
     );
   }
@@ -1713,6 +1726,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
             gradientEnd: const Color(0xFFFFC074),
             onTap: () {
               Navigator.push(context, MaterialPageRoute(builder: (context) => const LeaveScreen()));
+            },
+          ),
+          _buildAdminActionCard(
+            title: 'ID Cards',
+            subtitle: 'GENERATOR',
+            bottomText: 'Generate & Print ID Cards',
+            icon: Icons.badge_outlined,
+            gradientStart: const Color(0xFF6366F1),
+            gradientEnd: const Color(0xFF8B5CF6),
+            onTap: () {
+              Navigator.push(context, MaterialPageRoute(builder: (context) => const IdCardTemplatesScreen()));
             },
           ),
         ],

@@ -58,5 +58,11 @@
 - **Flutter Question Bank Migration:**
   - Successfully migrated the Question Bank module to the Flutter app.
   - Created a premium grid dashboard (question_bank_dashboard_screen.dart).
-  - Added lutter_tex for precise LaTeX math equation rendering.
+  - Added flutter_tex for precise LaTeX math equation rendering.
   - Created modular generator screens (AI Paper, MCQ, Navodaya, Saved Papers).
+- **ID Card Generation Module (Full-Stack):**
+  - **Web App**: Developed a complete module (`IdCardDashboard` & `IdCardGeneratorPage`) with 3 unique modern ID card templates (Standard, Corporate, Premium Gradient). Implemented live rendering, QR code generation (`qrcode.react`), and precise A4 printing capabilities (`react-to-print`).
+  - **Mobile App (Flutter)**: Mirrored the web app's functionality with a highly premium mobile design. Created a swipeable Carousel for template selection (`id_card_templates_screen.dart`), a dynamic student search screen (`id_card_students_screen.dart`), and a 3D flip-animated ID card preview screen (`id_card_preview_screen.dart`). Integrated the module into the Admin Dashboards.
+- **Question Bank LaTeX Rendering Fixes:**
+  - Fixed a critical regex parsing bug in `LiveLatexPreview.tsx` where math formulas containing `(B)` (like `$n(A) - n(B)$`) were incorrectly split, breaking LaTeX rendering for multiple-choice options.
+  - Improved the `maxLen` calculation logic for multiple-choice options by trimming inner spaces, fixing a bug where 4-column or 2-column layouts would incorrectly stack vertically (like in Question 25).

@@ -155,10 +155,10 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
             })()
           ) : (
             (() => {
-              // Make regex very lenient to handle whitespace or slight variations from AI
-              const optARegex = /\(A\)\s*(.*?)(?=\s*\(B\)|$)/s;
-              const optBRegex = /\(B\)\s*(.*?)(?=\s*\(C\)|$)/s;
-              const optCRegex = /\(C\)\s*(.*?)(?=\s*\(D\)|$)/s;
+              // Make regex robust to avoid matching (B) inside math formulas like $n(A) - n(B)$
+              const optARegex = /\(A\)\s*(.*?)(?=\n\s*\(B\)|\s{2,}\(B\)|\t\(B\)|$)/s;
+              const optBRegex = /\(B\)\s*(.*?)(?=\n\s*\(C\)|\s{2,}\(C\)|\t\(C\)|$)/s;
+              const optCRegex = /\(C\)\s*(.*?)(?=\n\s*\(D\)|\s{2,}\(D\)|\t\(D\)|$)/s;
               const optDRegex = /\(D\)\s*(.*)/s;
 
               const splitIndexA = block.indexOf('(A)');
@@ -175,7 +175,7 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
               const optC = matchC ? matchC[1].trim() : '';
               const optD = matchD ? matchD[1].trim() : '';
               const estimateVisualLength = (text: string) => {
-                return text.replace(/\$|\\[a-zA-Z]+|{|}|_|\\/g, '').trim().length;
+                return text.replace(/\$|\\[a-zA-Z]+|{|}|_|\\/g, '').replace(/\s+/g, ' ').trim().length;
               };
 
               const maxLen = Math.max(
@@ -186,9 +186,9 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
               );
               
               let optionsLayout = '';
-              if (maxLen < 15) {
+              if (maxLen < 25) {
                 optionsLayout = 'grid grid-cols-4 w-full gap-x-2 gap-y-0.5';
-              } else if (maxLen < 80) {
+              } else if (maxLen < 65) {
                 optionsLayout = 'grid grid-cols-2 w-full gap-x-2 gap-y-0.5';
               } else {
                 optionsLayout = 'flex flex-col w-full gap-0.5';
