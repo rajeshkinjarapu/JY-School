@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
+import '../widgets/custom_network_image.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/api_service.dart';
 import 'record_fee_payment_screen.dart';
@@ -76,9 +77,20 @@ class _StudentFeeSearchScreenState extends State<StudentFeeSearchScreen> {
     if (!mounted) return;
     Navigator.pop(context);
     if (res['success']) {
-      final data = res['data'] ?? {};
-      final structures = data['structures'] ?? [];
-      final pendingAmount = (data['totalPending'] ?? 0).toDouble();
+      final List<dynamic> data = res['data'] ?? [];
+      final List<Map<String, dynamic>> structures = [];
+      for (final d in data) {
+         final amountDue = (d['amountDue'] ?? 0.0).toDouble();
+         if (amountDue > 0) {
+            final stRaw = d['feeStructure'] ?? {};
+            final st = Map<String, dynamic>.from(stRaw);
+            st['amount'] = amountDue; // Override with pending amount
+            final feeHead = st['feeHead'] ?? {};
+            st['name'] = feeHead['name'] ?? st['name'] ?? 'Fee Component';
+            structures.add(st);
+         }
+      }
+      final pendingAmount = data.fold<double>(0.0, (sum, d) => sum + (d['amountDue'] ?? 0.0));
       Navigator.push(
         context,
         MaterialPageRoute(
@@ -287,7 +299,7 @@ class _StudentFeeSearchScreenState extends State<StudentFeeSearchScreen> {
                                         child: ClipRRect(
                                           borderRadius: BorderRadius.circular(30),
                                           child: photoUrl != null && photoUrl.toString().isNotEmpty
-                                              ? Image.network(
+                                              ? CustomNetworkImage(
                                                   ApiService.getImageUrl(photoUrl.toString()),
                                                   fit: BoxFit.cover,
                                                   headers: const {'ngrok-skip-browser-warning': '69420'},
@@ -365,3 +377,4 @@ class _StudentFeeSearchScreenState extends State<StudentFeeSearchScreen> {
     );
   }
 }
+

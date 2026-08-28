@@ -143,13 +143,32 @@ export const ExamListPage: React.FC = () => {
   const [excelExamId, setExcelExamId] = useState('');
   const [expandedExam, setExpandedExam] = useState<string | null>(null);
 
-  const fetchExams = async () => {
+  const fetchExams = async (silent = false) => {
     try {
+      // Serve from localStorage cache instantly, then refresh in background
+      const CACHE_KEY = 'jy_exams_cache';
+      const CACHE_TTL = 5 * 60 * 1000; // 5 min
+      if (!silent) {
+        try {
+          const raw = localStorage.getItem(CACHE_KEY);
+          if (raw) {
+            const { data, ts } = JSON.parse(raw);
+            if (Date.now() - ts < CACHE_TTL && Array.isArray(data) && data.length > 0) {
+              setExams(data);
+              setLoading(false);
+              // Still refresh in background silently
+              fetchExams(true);
+              return;
+            }
+          }
+        } catch (_) {}
+      }
       const res: any = await api.get('/api/exams?limit=500');
       const list = Array.isArray(res) ? res : (res?.data || []);
       setExams(list);
+      try { localStorage.setItem(CACHE_KEY, JSON.stringify({ data: list, ts: Date.now() })); } catch (_) {}
     } catch (e) {
-      toast.error('Failed to load exams');
+      if (!silent) toast.error('Failed to load exams');
     }
   };
 
@@ -610,23 +629,43 @@ export const ExamListPage: React.FC = () => {
   // -------------------------------------------------------------
   const fetchBaseFilters = async () => {
     try {
-      const classRes: any = await api.get('/api/classes?limit=500');
-      const classList = classRes.data || classRes || [];
-      setClasses(classList);
+      // Check classes cache
+      const CLS_CACHE_KEY = 'jy_classes_cache_exam';
+      const CLS_CACHE_TTL = 2 * 60 * 1000;
+      let classList: any[] = [];
+      try {
+        const raw = localStorage.getItem(CLS_CACHE_KEY);
+        if (raw) {
+          const { data, ts } = JSON.parse(raw);
+          if (Date.now() - ts < CLS_CACHE_TTL && Array.isArray(data) && data.length > 0) {
+            classList = data;
+          }
+        }
+      } catch (_) {}
 
+      // Fetch classes + teachers IN PARALLEL (not sequential)
+      const promises: Promise<any>[] = [
+        classList.length === 0
+          ? api.get('/api/classes?limit=500')
+          : Promise.resolve(null),
+        isAdmin ? api.get('/api/teachers?limit=500') : Promise.resolve(null),
+      ];
+
+      const [classRes, teachRes] = await Promise.all(promises);
+
+      if (classRes !== null) {
+        classList = classRes?.data || classRes || [];
+        try { localStorage.setItem(CLS_CACHE_KEY, JSON.stringify({ data: classList, ts: Date.now() })); } catch (_) {}
+      }
+      setClasses(classList);
       if (classList.length > 0) {
         setOnlineClassId(classList[0].id);
         setSelectedClassId(classList[0].id);
       }
 
-      if (isAdmin) {
-        try {
-          const teachRes: any = await api.get('/api/teachers?limit=500');
-          const teacherList = teachRes.data?.data || teachRes.data || [];
-          setTeachers(teacherList);
-        } catch (e) {
-          console.warn('Could not fetch teachers', e);
-        }
+      if (isAdmin && teachRes !== null) {
+        const teacherList = teachRes?.data?.data || teachRes?.data || [];
+        setTeachers(teacherList);
       }
     } catch {
       toast.error('Failed to bootstrap filters');
@@ -643,7 +682,14 @@ export const ExamListPage: React.FC = () => {
   const [qpTitle, setQpTitle] = useState('');
   const [qpClassId, setQpClassId] = useState('');
   const [qpSubjectId, setQpSubjectId] = useState('');
+  const [qpExamId, setQpExamId] = useState('');
   const [qpFileUrl, setQpFileUrl] = useState('');
+  
+  // Teacher Answer Key States
+  const [showAnswerKeyModal, setShowAnswerKeyModal] = useState(false);
+  const [selectedQpForAnswerKey, setSelectedQpForAnswerKey] = useState<any>(null);
+  const [answerKeyText, setAnswerKeyText] = useState('');
+  const [answerKeyUrl, setAnswerKeyUrl] = useState('');
 
   const fetchQuestionPapers = async () => {
     try {
@@ -661,13 +707,16 @@ export const ExamListPage: React.FC = () => {
     try {
       await api.post('/api/question-papers', {
         title: qpTitle,
+        examId: qpExamId,
         classId: qpClassId,
-        subjectId: qpSubjectId,
+        subjectId: qpSubjectId || undefined,
         fileUrl: qpFileUrl
       });
       toast.success('Question paper uploaded successfully');
       setShowQpModal(false);
       setQpTitle('');
+      setQpExamId('');
+      setQpSubjectId('');
       setQpFileUrl('');
       fetchQuestionPapers();
     } catch {
@@ -686,12 +735,32 @@ export const ExamListPage: React.FC = () => {
     }
   };
 
+  const handleUpdateAnswerKey = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedQpForAnswerKey) return;
+    try {
+      await api.put(`/api/question-papers/${selectedQpForAnswerKey.id}/answer-key`, {
+        answerKey: answerKeyText,
+        answerKeyUrl: answerKeyUrl
+      });
+      toast.success('Answer Key updated successfully');
+      setShowAnswerKeyModal(false);
+      setSelectedQpForAnswerKey(null);
+      fetchQuestionPapers();
+    } catch {
+      toast.error('Error updating Answer Key');
+    }
+  };
+
   useEffect(() => {
-    fetchBaseFilters();
-    fetchExams();
-    fetchQuestionGroups();
-    fetchOnlineExams();
-    fetchQuestionPapers();
+    // Run ALL initial fetches IN PARALLEL — maximum speed boot
+    Promise.all([
+      fetchBaseFilters(),
+      fetchExams(),
+      fetchQuestionGroups(),
+      fetchOnlineExams(),
+      fetchQuestionPapers(),
+    ]);
   }, []);
 
   // Fetch plans when selected exam changes
@@ -1514,19 +1583,40 @@ export const ExamListPage: React.FC = () => {
               <div key={qp.id} className="card p-6 space-y-4 hover:shadow-md relative group border-t-4 border-emerald-500">
                 <div>
                   <h4 className="font-bold text-base text-gray-900 dark:text-white">{qp.title}</h4>
-                  <p className="text-[11px] text-gray-400 mt-1">Class: {qp.class?.name}-{qp.class?.section} | Subject: {qp.subject?.name}</p>
+                  <p className="text-[11px] text-gray-400 mt-1">
+                    {qp.exam?.name && <span className="font-bold text-indigo-500 mr-2">{qp.exam.name}</span>}
+                    Class: {qp.class?.name}-{qp.class?.section} {qp.subject?.name && `| Subject: ${qp.subject?.name}`}
+                  </p>
                 </div>
                 
-                <div className="flex gap-2 pt-2">
                   <a href={qp.fileUrl} target="_blank" rel="noreferrer" className="btn-primary flex-1 text-center text-xs flex items-center justify-center gap-2">
-                    <ExternalLink className="w-4 h-4" /> View/Download
+                    <FileText className="w-4 h-4" /> Paper
                   </a>
+                  
+                  {qp.answerKeyUrl && (
+                    <a href={qp.answerKeyUrl} target="_blank" rel="noreferrer" className="btn-secondary flex-1 text-center text-xs flex items-center justify-center gap-2">
+                       <Key className="w-4 h-4" /> Key
+                    </a>
+                  )}
+
                   {(isAdmin || isTeacher) && (
-                    <button onClick={() => handleDeleteQp(qp.id)} className="p-2 border border-red-200 dark:border-red-900/40 text-red-500 hover:bg-red-50 rounded-xl cursor-pointer">
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                    <>
+                      <button onClick={() => { setSelectedQpForAnswerKey(qp); setAnswerKeyText(qp.answerKey || ''); setAnswerKeyUrl(qp.answerKeyUrl || ''); setShowAnswerKeyModal(true); }} className="p-2 border border-blue-200 text-blue-500 hover:bg-blue-50 rounded-xl cursor-pointer" title="Manage Answer Key">
+                        <Key className="w-4 h-4" />
+                      </button>
+                      <button onClick={() => handleDeleteQp(qp.id)} className="p-2 border border-red-200 dark:border-red-900/40 text-red-500 hover:bg-red-50 rounded-xl cursor-pointer" title="Delete Paper">
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </>
                   )}
                 </div>
+                
+                {qp.answerKey && (
+                  <div className="mt-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg text-xs border border-gray-100 dark:border-gray-700">
+                    <p className="font-bold mb-1 flex items-center gap-1"><Key className="w-3 h-3 text-emerald-500"/> Typed Answer Key:</p>
+                    <div className="whitespace-pre-wrap text-gray-600 dark:text-gray-300">{qp.answerKey}</div>
+                  </div>
+                )}
               </div>
             ))}
             {questionPapers.length === 0 && (
@@ -1550,19 +1640,26 @@ export const ExamListPage: React.FC = () => {
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
+                      <label className="label">Exam (Optional)</label>
+                      <select value={qpExamId} onChange={e => setQpExamId(e.target.value)} className="input">
+                        <option value="">Select Exam...</option>
+                        {exams.map(e => <option key={e.id} value={e.id}>{formatExamOptionLabel(e)}</option>)}
+                      </select>
+                    </div>
+                    <div>
                       <label className="label">Class</label>
                       <select required value={qpClassId} onChange={e => setQpClassId(e.target.value)} className="input">
                         <option value="">Select...</option>
                         {classes.map(c => <option key={c.id} value={c.id}>{c.name}-{c.section}</option>)}
                       </select>
                     </div>
-                    <div>
-                      <label className="label">Subject</label>
-                      <select required value={qpSubjectId} onChange={e => setQpSubjectId(e.target.value)} className="input">
-                        <option value="">Select...</option>
-                        {subjects.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-                      </select>
-                    </div>
+                  </div>
+                  <div>
+                    <label className="label">Subject (Optional)</label>
+                    <select value={qpSubjectId} onChange={e => setQpSubjectId(e.target.value)} className="input">
+                      <option value="">All Subjects / Combined</option>
+                      {subjects.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                    </select>
                   </div>
                   <div>
                     <label className="label">File URL (PDF/Word)</label>
@@ -1571,6 +1668,56 @@ export const ExamListPage: React.FC = () => {
                   <div className="flex gap-3 justify-end pt-2">
                     <button type="button" onClick={() => setShowQpModal(false)} className="btn-secondary text-sm">Cancel</button>
                     <button type="submit" className="btn-primary text-sm">Upload Paper</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+
+          {/* ANSWER KEY MODAL */}
+          {showAnswerKeyModal && selectedQpForAnswerKey && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/50 backdrop-blur-sm p-4">
+              <div className="card w-full max-w-lg p-6 space-y-5 shadow-2xl border border-white/20">
+                <div className="flex justify-between items-center border-b pb-4">
+                  <div>
+                    <h3 className="text-lg font-bold flex items-center gap-2"><Key className="w-5 h-5 text-indigo-500" /> Answer Key</h3>
+                    <p className="text-xs text-gray-500 mt-1">{selectedQpForAnswerKey.title}</p>
+                  </div>
+                  <button onClick={() => setShowAnswerKeyModal(false)} className="p-2 hover:bg-gray-100 rounded-xl cursor-pointer"><X className="w-5 h-5" /></button>
+                </div>
+                
+                <form onSubmit={handleUpdateAnswerKey} className="space-y-4">
+                  <div>
+                    <label className="label font-bold">Answer Key Document URL (PDF/Image) - Optional</label>
+                    <input type="url" placeholder="https://link-to-answer-key.pdf" value={answerKeyUrl} onChange={e => setAnswerKeyUrl(e.target.value)} className="input border-indigo-100 focus:border-indigo-500" />
+                    <p className="text-[10px] text-gray-400 mt-1">If you have a PDF answer key, paste the link here.</p>
+                  </div>
+                  
+                  <div className="relative">
+                    <div className="absolute inset-0 flex items-center" aria-hidden="true">
+                      <div className="w-full border-t border-gray-200"></div>
+                    </div>
+                    <div className="relative flex justify-center">
+                      <span className="bg-white px-2 text-sm text-gray-500 font-bold uppercase tracking-wider">OR</span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="label font-bold">Type Answers Manually</label>
+                    <textarea 
+                      placeholder="1. A&#10;2. B&#10;3. C&#10;..." 
+                      value={answerKeyText} 
+                      onChange={e => setAnswerKeyText(e.target.value)} 
+                      className="input min-h-[150px] resize-y font-mono text-sm leading-relaxed" 
+                    />
+                    <p className="text-[10px] text-gray-400 mt-1">Type the answers line by line or paste them from a document.</p>
+                  </div>
+
+                  <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
+                    <button type="button" onClick={() => setShowAnswerKeyModal(false)} className="btn-secondary">Cancel</button>
+                    <button type="submit" className="btn-primary bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-500/30 flex items-center gap-2">
+                      <Save className="w-4 h-4"/> Save Answer Key
+                    </button>
                   </div>
                 </form>
               </div>

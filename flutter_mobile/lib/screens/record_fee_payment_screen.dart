@@ -212,12 +212,13 @@ class _RecordFeePaymentScreenState extends State<RecordFeePaymentScreen> {
       body: _isSubmitting
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Payment Date', style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: const Color(0xFF1E293B))),
-                  const SizedBox(height: 12),
+                  _buildStudentInfoCard(),
+                  Text('Payment Date', style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold, color: const Color(0xFF1E293B))),
+                  const SizedBox(height: 8),
                   GestureDetector(
                     onTap: _pickDate,
                     child: Container(
@@ -239,22 +240,23 @@ class _RecordFeePaymentScreenState extends State<RecordFeePaymentScreen> {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 16),
                   _buildPaymentMethods(),
-                  const SizedBox(height: 24),
-                  Text('Fee Components', style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: const Color(0xFF1E293B))),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 16),
+                  Text('Fee Components', style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold, color: const Color(0xFF1E293B))),
+                  const SizedBox(height: 8),
                   _buildStructuresList(),
-                  const SizedBox(height: 24),
-                  Text('Remarks / Notes', style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: const Color(0xFF1E293B))),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 16),
+                  Text('Remarks / Notes', style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold, color: const Color(0xFF1E293B))),
+                  const SizedBox(height: 8),
                   _buildRemarksField(),
                 ],
               ),
             ),
       bottomNavigationBar: SafeArea(
+        bottom: true,
         child: Container(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
           decoration: BoxDecoration(
             color: Colors.white,
             boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, -5))],
@@ -287,12 +289,47 @@ class _RecordFeePaymentScreenState extends State<RecordFeePaymentScreen> {
     );
   }
 
+  Widget _buildStudentInfoCard() {
+    final user = widget.student['user'] ?? {};
+    final name = user['name'] ?? '${widget.student['firstName']} ${widget.student['lastName']}';
+    final rollNo = widget.student['rollNo'] ?? '-';
+    
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFEEF2FF),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFC7D2FE)),
+      ),
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 24,
+            backgroundColor: const Color(0xFF4F46E5),
+            child: Text(name.isNotEmpty ? name[0].toUpperCase() : '?', style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 20)),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(name, style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: const Color(0xFF1E293B))),
+                Text('Roll No: $rollNo', style: GoogleFonts.poppins(fontSize: 14, color: const Color(0xFF64748B))),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildPaymentMethods() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Payment Method', style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: const Color(0xFF1E293B))),
-        const SizedBox(height: 12),
+        Text('Payment Method', style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold, color: const Color(0xFF1E293B))),
+        const SizedBox(height: 8),
         Row(
           children: _methods.map((m) {
             final isSelected = _method == m['id'];
@@ -303,7 +340,7 @@ class _RecordFeePaymentScreenState extends State<RecordFeePaymentScreen> {
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 300),
                   margin: const EdgeInsets.only(right: 8),
-                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
                   decoration: BoxDecoration(
                     color: isSelected ? color.withOpacity(0.1) : Colors.white,
                     borderRadius: BorderRadius.circular(16),
@@ -407,7 +444,7 @@ class _RecordFeePaymentScreenState extends State<RecordFeePaymentScreen> {
   Widget _buildRemarksField() {
     return TextField(
       controller: _remarksCtrl,
-      maxLines: 3,
+      maxLines: 2,
       style: GoogleFonts.poppins(fontSize: 14, color: const Color(0xFF1E293B)),
       decoration: InputDecoration(
         hintText: 'Add remarks, cheque no, UTR etc. (Optional)',

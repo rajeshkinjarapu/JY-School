@@ -11,8 +11,8 @@ class ApiService {
     final trimmed = photoUrl.trim();
     if (trimmed.isEmpty || trimmed == 'null' || trimmed == 'undefined') return '';
     
-    // Fix for localhost URLs from backend in mobile app
-    if (trimmed.contains('localhost:')) {
+    // Fix for localhost / 127.0.0.1 URLs from backend in mobile app
+    if (trimmed.contains('localhost:') || trimmed.contains('127.0.0.1:')) {
       final uri = Uri.tryParse(trimmed);
       if (uri != null && uri.path.isNotEmpty) {
         return '$baseUrl${uri.path}';
@@ -329,10 +329,17 @@ class ApiService {
     }
   }
 
-  static Future<Map<String, dynamic>> getExamResults(String examId, {String classId = ''}) async {
+  static Future<Map<String, dynamic>> getExamResults(String examId, {String classId = '', bool includePhoto = false}) async {
     String url = '/api/exams/$examId/results';
+    List<String> queryParams = [];
     if (classId.isNotEmpty) {
-      url += '?classId=$classId';
+      queryParams.add('classId=$classId');
+    }
+    if (includePhoto) {
+      queryParams.add('includePhoto=true');
+    }
+    if (queryParams.isNotEmpty) {
+      url += '?' + queryParams.join('&');
     }
     return _performGet(url, 'Failed to get exam results');
   }
@@ -694,7 +701,7 @@ class ApiService {
         final response = await http.get(
           Uri.parse('$baseUrl$endpoint'),
           headers: _getHeaders(token: token),
-        );
+        ).timeout(const Duration(seconds: 15));
 
         final dynamic decoded = jsonDecode(response.body);
         if (response.statusCode == 200 || response.statusCode == 201) {
@@ -731,7 +738,7 @@ class ApiService {
         Uri.parse('$baseUrl$endpoint'),
         headers: _getHeaders(token: token),
         body: jsonEncode(payload),
-      );
+      ).timeout(const Duration(seconds: 15));
 
       final dynamic decoded = jsonDecode(response.body);
       if (response.statusCode == 200 || response.statusCode == 201) {
@@ -752,7 +759,7 @@ class ApiService {
         Uri.parse('$baseUrl$endpoint'),
         headers: _getHeaders(token: token),
         body: jsonEncode(payload),
-      );
+      ).timeout(const Duration(seconds: 15));
 
       final dynamic decoded = jsonDecode(response.body);
       if (response.statusCode == 200 || response.statusCode == 201) {
@@ -773,7 +780,7 @@ class ApiService {
       final response = await http.delete(
         Uri.parse('$baseUrl$endpoint'),
         headers: _getHeaders(token: token),
-      );
+      ).timeout(const Duration(seconds: 15));
 
       final dynamic decoded = response.body.isNotEmpty ? jsonDecode(response.body) : {};
       if (response.statusCode == 200 || response.statusCode == 204) {
@@ -795,7 +802,7 @@ class ApiService {
   }
 
   static Future<Map<String, dynamic>> getQuestionPapers() async {
-    return _performGet('/api/questionPapers', 'Failed to get question papers');
+    return _performGet('/api/question-papers', 'Failed to get question papers');
   }
 
   static Future<Map<String, dynamic>> getGeneratedPapers() async {

@@ -622,39 +622,55 @@ export const getStudentFeeStatus = async (req: AuthRequest, res: Response, next:
     orderBy: { dueDate: 'asc' },
   });
 
-  const result = await Promise.all(
-    structures.map(async (structure) => {
-      const payments = await prisma.feePayment.findMany({
-        where: { studentId, feeStructureId: structure.id },
-        orderBy: { paymentDate: 'desc' },
-      });
-      
-      const discountRecord = await prisma.feeDiscount.findUnique({
-        where: { studentId_feeStructureId: { studentId, feeStructureId: structure.id } }
-      });
-      const discount = discountRecord ? discountRecord.amount : 0;
-      
-      const amountPaid = payments.reduce((s, p) => s + p.amountPaid, 0);
-      const effectiveAmount = structure.amount - discount;
-      const amountDue = effectiveAmount - amountPaid;
-      const latestPayment = payments[0];
-      let status = 'PENDING';
-      if (amountPaid >= effectiveAmount) status = 'PAID';
-      else if (amountPaid > 0) status = 'PARTIAL';
-      else if (structure.dueDate < new Date()) status = 'OVERDUE';
+  const structureIds = structures.map(s => s.id);
 
-      return {
-        feeStructure: structure,
-        originalAmount: structure.amount,
-        discount,
-        effectiveAmount,
-        amountDue: Math.max(0, amountDue),
-        amountPaid,
-        status,
-        paymentDate: latestPayment?.paymentDate || null,
-      };
+  const [allPayments, allDiscounts] = await Promise.all([
+    prisma.feePayment.findMany({
+      where: { studentId, feeStructureId: { in: structureIds } },
+      orderBy: { paymentDate: 'desc' },
+    }),
+    prisma.feeDiscount.findMany({
+      where: { studentId, feeStructureId: { in: structureIds } }
     })
-  );
+  ]);
+
+  const paymentsMap = allPayments.reduce((acc, p) => {
+    if (!acc[p.feeStructureId]) acc[p.feeStructureId] = [];
+    acc[p.feeStructureId].push(p);
+    return acc;
+  }, {} as Record<string, any[]>);
+
+  const discountsMap = allDiscounts.reduce((acc, d) => {
+    acc[d.feeStructureId] = d;
+    return acc;
+  }, {} as Record<string, any>);
+
+  const result = structures.map((structure) => {
+    const payments = paymentsMap[structure.id] || [];
+    const discountRecord = discountsMap[structure.id];
+    
+    const discount = discountRecord ? discountRecord.amount : 0;
+    
+    const amountPaid = payments.reduce((s, p) => s + p.amountPaid, 0);
+    const effectiveAmount = structure.amount - discount;
+    const amountDue = effectiveAmount - amountPaid;
+    const latestPayment = payments[0];
+    let status = 'PENDING';
+    if (amountPaid >= effectiveAmount) status = 'PAID';
+    else if (amountPaid > 0) status = 'PARTIAL';
+    else if (structure.dueDate < new Date()) status = 'OVERDUE';
+
+    return {
+      feeStructure: structure,
+      originalAmount: structure.amount,
+      discount,
+      effectiveAmount,
+      amountDue: Math.max(0, amountDue),
+      amountPaid,
+      status,
+      paymentDate: latestPayment?.paymentDate || null,
+    };
+  });
 
   successResponse(res, result, 'Fee status fetched');
 };
@@ -698,25 +714,47 @@ export const getOverdue = async (_req: AuthRequest, res: Response): Promise<void
   });
 
   const result = [];
-  for (const structure of structures) {
-    let students = [];
-    if (structure.studentId) {
-      const student = await prisma.student.findUnique({ where: { id: structure.studentId } });
-      if (student) students.push(student);
-    } else if (structure.classId) {
-      students = await prisma.student.findMany({ where: { classId: structure.classId } });
-    }
+  const classIds = structures.map(s => s.classId).filter(Boolean) as string[];
+  const studentIds = structures.map(s => s.studentId).filter(Boolean) as string[];
+  const structureIds = structures.map(s => s.id);
 
-    for (const student of students) {
-      const payments = await prisma.feePayment.aggregate({
-        where: { studentId: student.id, feeStructureId: structure.id },
-        _sum: { amountPaid: true },
-      });
-      const paid = payments._sum.amountPaid || 0;
+  if (structures.length === 0) {
+    successResponse(res, result, 'Overdue fees fetched');
+    return;
+  }
+
+  const [allStudents, allPayments] = await Promise.all([
+    prisma.student.findMany({
+      where: {
+        OR: [
+          { classId: { in: classIds } },
+          { id: { in: studentIds } }
+        ]
+      },
+      include: { user: { select: { name: true, email: true } } }
+    }),
+    prisma.feePayment.groupBy({
+      by: ['studentId', 'feeStructureId'],
+      where: { feeStructureId: { in: structureIds } },
+      _sum: { amountPaid: true }
+    })
+  ]);
+
+  const paymentMap = allPayments.reduce((acc, p) => {
+    acc[`${p.studentId}_${p.feeStructureId}`] = p._sum.amountPaid || 0;
+    return acc;
+  }, {} as Record<string, number>);
+
+  for (const structure of structures) {
+    const applicableStudents = structure.studentId
+      ? allStudents.filter(s => s.id === structure.studentId)
+      : allStudents.filter(s => s.classId === structure.classId);
+
+    for (const student of applicableStudents) {
+      const paid = paymentMap[`${student.id}_${structure.id}`] || 0;
       if (paid < structure.amount) {
-        const user = await prisma.user.findUnique({ where: { id: student.userId }, select: { name: true, email: true } });
         result.push({
-          student: { id: student.id, rollNo: student.rollNo, name: user?.name, email: user?.email },
+          student: { id: student.id, rollNo: student.rollNo, name: student.user?.name, email: student.user?.email },
           feeStructure: structure,
           amountPaid: paid,
           amountDue: structure.amount - paid,
@@ -725,6 +763,7 @@ export const getOverdue = async (_req: AuthRequest, res: Response): Promise<void
       }
     }
   }
+
   successResponse(res, result, 'Overdue fees fetched');
 };
 

@@ -1,4 +1,5 @@
-import 'dart:ui' as ui;
+﻿import 'dart:ui' as ui;
+import '../widgets/custom_network_image.dart';
 import 'dart:io';
 import 'dart:typed_data';
 import 'dart:convert';
@@ -476,7 +477,7 @@ class _SingleStudentResultScreenState extends State<SingleStudentResultScreen> {
       }
     }
     
-    return Image.network(
+    return CustomNetworkImage(
       ApiService.getImageUrl(photoUrl),
       fit: BoxFit.cover,
       headers: const {'ngrok-skip-browser-warning': '69420'},
@@ -484,3 +485,4 @@ class _SingleStudentResultScreenState extends State<SingleStudentResultScreen> {
     );
   }
 }
+

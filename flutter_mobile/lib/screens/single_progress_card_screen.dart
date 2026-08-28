@@ -1,4 +1,5 @@
-import 'dart:ui' as ui;
+﻿import 'dart:ui' as ui;
+import '../widgets/custom_network_image.dart';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -38,6 +39,7 @@ class _SingleProgressCardScreenState extends State<SingleProgressCardScreen> {
   String? _errorMessage;
   Map<String, dynamic>? _resultData;
   Map<String, dynamic>? _settingsData;
+  Map<String, dynamic>? _examData;
   final GlobalKey _repaintKey = GlobalKey();
   bool _isExporting = false;
 
@@ -49,8 +51,9 @@ class _SingleProgressCardScreenState extends State<SingleProgressCardScreen> {
 
   Future<void> _fetchResult() async {
     try {
-      final res = await ApiService.getExamResults(widget.examId, classId: widget.classId);
+      final res = await ApiService.getExamResults(widget.examId, classId: widget.classId, includePhoto: true);
       final setRes = await ApiService.getSettings();
+      final examRes = await ApiService.getExamById(widget.examId);
       if (res['success']) {
         final List<dynamic> allResults = res['data'] ?? [];
         final studentResult = allResults.firstWhere((r) => r['studentId']?.toString() == widget.studentId, orElse: () => null);
@@ -58,6 +61,7 @@ class _SingleProgressCardScreenState extends State<SingleProgressCardScreen> {
           setState(() {
             _resultData = studentResult;
             if (setRes['success']) _settingsData = setRes['data'];
+            if (examRes['success']) _examData = examRes['data'];
             _isLoading = false;
           });
           
@@ -348,7 +352,7 @@ class _SingleProgressCardScreenState extends State<SingleProgressCardScreen> {
                         border: Border.all(color: const Color(0xFF1A4A7A), width: 2),
                       ),
                       child: (_settingsData != null && _settingsData!['logoUrl'] != null && _settingsData!['logoUrl'].toString().isNotEmpty)
-                          ? ClipOval(child: Image.network(ApiService.getImageUrl(_settingsData!['logoUrl']), fit: BoxFit.cover, headers: const {'ngrok-skip-browser-warning': '69420'}, errorBuilder: (_,__,___) => Icon(Icons.workspace_premium, size: isMobile ? 26 : 30, color: const Color(0xFF1A4A7A))))
+                          ? ClipOval(child: CustomNetworkImage(ApiService.getImageUrl(_settingsData!['logoUrl']), fit: BoxFit.cover, headers: const {'ngrok-skip-browser-warning': '69420'}, errorBuilder: (_,__,___) => Icon(Icons.workspace_premium, size: isMobile ? 26 : 30, color: const Color(0xFF1A4A7A))))
                           : Icon(Icons.workspace_premium, size: isMobile ? 26 : 30, color: const Color(0xFF1A4A7A)),
                     ),
                     const SizedBox(width: 8),
@@ -358,15 +362,13 @@ class _SingleProgressCardScreenState extends State<SingleProgressCardScreen> {
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
                           Text(
-                            (_settingsData != null && _settingsData!['schoolName'] != null) 
-                                ? _settingsData!['schoolName'].toString().toUpperCase()
-                                : 'SRI VENKATESWARA JY SCHOOL',
+                            'SRI VENKATESWARA JY SCHOOL',
                             textAlign: TextAlign.center,
                             style: GoogleFonts.lora(fontSize: isMobile ? 15 : 22, fontWeight: FontWeight.w900, color: const Color(0xFF0B1A33), letterSpacing: 1.0),
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            '(IIT-JEE / NEET Foundation · Olympiads)',
+                            '(IIT-JEE / NEET Foundation Â· Olympiads)',
                             textAlign: TextAlign.center,
                             style: GoogleFonts.poppins(fontSize: isMobile ? 10 : 11, fontWeight: FontWeight.w500, color: const Color(0xFF1A4A7A), letterSpacing: 0.5),
                           ),
@@ -386,7 +388,7 @@ class _SingleProgressCardScreenState extends State<SingleProgressCardScreen> {
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            '✦ RESULT CARD ✦',
+                            'âœ¦ RESULT CARD âœ¦',
                             textAlign: TextAlign.center,
                             style: GoogleFonts.outfit(fontSize: isMobile ? 10 : 12, fontWeight: FontWeight.bold, color: const Color(0xFFD4A017), letterSpacing: 2),
                           ),
@@ -404,15 +406,15 @@ class _SingleProgressCardScreenState extends State<SingleProgressCardScreen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Text('✦', style: TextStyle(color: Color(0xFFD4A017), fontSize: 12)),
+                    const Text('âœ¦', style: TextStyle(color: Color(0xFFD4A017), fontSize: 12)),
                     const SizedBox(width: 8),
                     Container(width: 40, height: 1.5, color: const Color(0xFFF39C12)),
                     const SizedBox(width: 8),
-                    const Text('★', style: TextStyle(color: Color(0xFFD4A017), fontSize: 14)),
+                    const Text('â˜…', style: TextStyle(color: Color(0xFFD4A017), fontSize: 14)),
                     const SizedBox(width: 8),
                     Container(width: 40, height: 1.5, color: const Color(0xFFF39C12)),
                     const SizedBox(width: 8),
-                    const Text('✦', style: TextStyle(color: Color(0xFFD4A017), fontSize: 12)),
+                    const Text('âœ¦', style: TextStyle(color: Color(0xFFD4A017), fontSize: 12)),
                   ],
                 ),
               ),
@@ -432,15 +434,15 @@ class _SingleProgressCardScreenState extends State<SingleProgressCardScreen> {
                     Expanded(
                       child: Column(
                         children: [
-                          _buildPremiumInfoRow('👤 Name', name.toUpperCase(), isEven: false, isMobile: isMobile),
-                          _buildPremiumInfoRow('🆔 ID', rollNo.toString(), isEven: true, isMobile: isMobile),
-                          _buildPremiumInfoRow('📚 Class', className, isEven: false, isMobile: isMobile),
-                          _buildPremiumInfoRow('📖 Section', section, isEven: true, isMobile: isMobile),
-                          _buildPremiumInfoRow('📞 Mobile', widget.studentData?['mobile']?.toString() ?? 'N/A', isEven: false, isMobile: isMobile),
-                          _buildPremiumInfoRow('📅 Year', '2026-2027', isEven: true, isMobile: isMobile),
-                          _buildPremiumInfoRow('📍 Location', widget.studentData?['address']?.toString() ?? 'N/A', isEven: false, isLast: rank == null, isMobile: isMobile),
+                          _buildPremiumInfoRow('ðŸ‘¤ Name', name.toUpperCase(), isEven: false, isMobile: isMobile),
+                          _buildPremiumInfoRow('ðŸ†” ID', rollNo.toString(), isEven: true, isMobile: isMobile),
+                          _buildPremiumInfoRow('ðŸ“š Class', className, isEven: false, isMobile: isMobile),
+                          _buildPremiumInfoRow('ðŸ“– Section', section, isEven: true, isMobile: isMobile),
+                          _buildPremiumInfoRow('ðŸ“ž Mobile', widget.studentData?['mobile']?.toString() ?? 'N/A', isEven: false, isMobile: isMobile),
+                          _buildPremiumInfoRow('ðŸ“… Year', '2026-2027', isEven: true, isMobile: isMobile),
+                          _buildPremiumInfoRow('ðŸ“ Location', widget.studentData?['address']?.toString() ?? 'N/A', isEven: false, isLast: rank == null, isMobile: isMobile),
                           if (rank != null)
-                            _buildPremiumInfoRow('🏅 Rank', '#' + rank, isEven: true, isLast: true, isMobile: isMobile),
+                            _buildPremiumInfoRow('ðŸ… Rank', '#' + rank, isEven: true, isLast: true, isMobile: isMobile),
                         ],
                       ),
                     ),
@@ -461,8 +463,8 @@ class _SingleProgressCardScreenState extends State<SingleProgressCardScreen> {
                             boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 8)],
                           ),
                           child: (photoUrl != null && photoUrl.toString().isNotEmpty)
-                            ? ClipRRect(borderRadius: BorderRadius.circular(2), child: Image.network(ApiService.getImageUrl(photoUrl.toString()), fit: BoxFit.cover, errorBuilder: (c, e, s) => _buildPhotoPlaceholder(initials, isMobile)))
-                            : _buildPhotoPlaceholder('📷', isMobile),
+                            ? ClipRRect(borderRadius: BorderRadius.circular(2), child: CustomNetworkImage(ApiService.getImageUrl(photoUrl.toString()), fit: BoxFit.cover, errorBuilder: (c, e, s) => _buildPhotoPlaceholder(initials, isMobile)))
+                            : _buildPhotoPlaceholder('ðŸ“·', isMobile),
                         ),
                       ),
                     ),
@@ -482,7 +484,7 @@ class _SingleProgressCardScreenState extends State<SingleProgressCardScreen> {
                         Expanded(
                           child: Row(
                             children: [
-                              const Text('📊', style: TextStyle(fontSize: 16)),
+                              const Text('ðŸ“Š', style: TextStyle(fontSize: 16)),
                               const SizedBox(width: 8),
                               Expanded(child: Text('Performance Summary', style: GoogleFonts.poppins(fontSize: isMobile ? 13 : 15, fontWeight: FontWeight.bold, color: const Color(0xFF0B1A33)), overflow: TextOverflow.ellipsis)),
                             ],
@@ -537,7 +539,7 @@ class _SingleProgressCardScreenState extends State<SingleProgressCardScreen> {
                                   children: [
                                     Expanded(flex: 3, child: Row(
                                       children: [
-                                        const Text('📘', style: TextStyle(fontSize: 10)),
+                                        const Text('ðŸ“˜', style: TextStyle(fontSize: 10)),
                                         const SizedBox(width: 6),
                                         Expanded(child: Text(subName, style: GoogleFonts.poppins(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFF1A3A5A)), overflow: TextOverflow.ellipsis)),
                                       ],
@@ -558,7 +560,7 @@ class _SingleProgressCardScreenState extends State<SingleProgressCardScreen> {
                               padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
                               child: Row(
                                 children: [
-                                  Expanded(flex: 3, child: Text('📌 TOTAL', style: GoogleFonts.poppins(fontSize: 11, fontWeight: FontWeight.w900, color: const Color(0xFF0B1A33), letterSpacing: 0.5))),
+                                  Expanded(flex: 3, child: Text('ðŸ“Œ TOTAL', style: GoogleFonts.poppins(fontSize: 11, fontWeight: FontWeight.w900, color: const Color(0xFF0B1A33), letterSpacing: 0.5))),
                                   Expanded(flex: 1, child: Text(totalMarksObtained.toString(), textAlign: TextAlign.center, style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.w900, color: const Color(0xFFC0392B)))),
                                   Expanded(flex: 1, child: Text(totalMaxMarks.toString(), textAlign: TextAlign.center, style: GoogleFonts.poppins(fontSize: 11, color: const Color(0xFF6A8AAA)))),
                                   Expanded(flex: 1, child: Text(percentage.toStringAsFixed(1) + '%', textAlign: TextAlign.center, style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.bold, color: const Color(0xFF1A4A7A)))),
@@ -638,7 +640,7 @@ class _SingleProgressCardScreenState extends State<SingleProgressCardScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('📋 TOTAL MARKS: ' + totalMarksObtained.toString() + ' / ' + totalMaxMarks.toString(), style: GoogleFonts.poppins(fontSize: isMobile ? 12 : 14, fontWeight: FontWeight.w800, color: const Color(0xFF1A4A7A))),
+                          Text('ðŸ“‹ TOTAL MARKS: ' + totalMarksObtained.toString() + ' / ' + totalMaxMarks.toString(), style: GoogleFonts.poppins(fontSize: isMobile ? 12 : 14, fontWeight: FontWeight.w800, color: const Color(0xFF1A4A7A))),
                           Text(percentage.toStringAsFixed(1) + '%', style: GoogleFonts.outfit(fontSize: isMobile ? 32 : 40, fontWeight: FontWeight.w900, color: const Color(0xFFC0392B), height: 1.1)),
                         ],
                       ),
@@ -648,15 +650,45 @@ class _SingleProgressCardScreenState extends State<SingleProgressCardScreen> {
                       children: [
                         Column(
                           children: [
-                            Container(width: isMobile ? 70 : 90, height: 1.5, color: const Color(0xFFC8D6E4), margin: const EdgeInsets.only(bottom: 6, top: 20)),
-                            Text('✍ Teacher Signature', style: GoogleFonts.poppins(fontSize: isMobile ? 9 : 10, fontWeight: FontWeight.w600, color: const Color(0xFF1A3A5A))),
+                            Builder(builder: (ctx) {
+                              final admitCardSettings = _examData?['admitCardSettings'];
+                              final url = (admitCardSettings != null && admitCardSettings['teacherSignatureUrl'] != null && admitCardSettings['teacherSignatureUrl'].toString().isNotEmpty)
+                                  ? admitCardSettings['teacherSignatureUrl']
+                                  : (_settingsData?['teacherSignatureUrl']);
+                              if (url != null && url.toString().isNotEmpty) {
+                                return Container(
+                                  width: isMobile ? 80 : 100,
+                                  height: isMobile ? 35 : 45,
+                                  margin: const EdgeInsets.only(bottom: 2, top: 2),
+                                  child: CustomNetworkImage(ApiService.getImageUrl(url), fit: BoxFit.contain),
+                                );
+                              } else {
+                                return Container(width: isMobile ? 70 : 90, height: 1.5, color: const Color(0xFFC8D6E4), margin: const EdgeInsets.only(bottom: 6, top: 40));
+                              }
+                            }),
+                            Text('âœ Teacher Signature', style: GoogleFonts.poppins(fontSize: isMobile ? 9 : 10, fontWeight: FontWeight.w600, color: const Color(0xFF1A3A5A))),
                           ],
                         ),
                         SizedBox(width: isMobile ? 12 : 24),
                         Column(
                           children: [
-                            Container(width: isMobile ? 70 : 90, height: 1.5, color: const Color(0xFFC8D6E4), margin: const EdgeInsets.only(bottom: 6, top: 20)),
-                            Text('✍ Principal Signature', style: GoogleFonts.poppins(fontSize: isMobile ? 9 : 10, fontWeight: FontWeight.w600, color: const Color(0xFF1A3A5A))),
+                            Builder(builder: (ctx) {
+                              final admitCardSettings = _examData?['admitCardSettings'];
+                              final url = (admitCardSettings != null && admitCardSettings['signatureUrl'] != null && admitCardSettings['signatureUrl'].toString().isNotEmpty)
+                                  ? admitCardSettings['signatureUrl']
+                                  : (_settingsData?['signatureUrl']);
+                              if (url != null && url.toString().isNotEmpty) {
+                                return Container(
+                                  width: isMobile ? 80 : 100,
+                                  height: isMobile ? 35 : 45,
+                                  margin: const EdgeInsets.only(bottom: 2, top: 2),
+                                  child: CustomNetworkImage(ApiService.getImageUrl(url), fit: BoxFit.contain),
+                                );
+                              } else {
+                                return Container(width: isMobile ? 70 : 90, height: 1.5, color: const Color(0xFFC8D6E4), margin: const EdgeInsets.only(bottom: 6, top: 40));
+                              }
+                            }),
+                            Text('âœ Principal Signature', style: GoogleFonts.poppins(fontSize: isMobile ? 9 : 10, fontWeight: FontWeight.w600, color: const Color(0xFF1A3A5A))),
                           ],
                         ),
                       ],
@@ -674,7 +706,7 @@ class _SingleProgressCardScreenState extends State<SingleProgressCardScreen> {
                   borderRadius: BorderRadius.only(bottomLeft: Radius.circular(10), bottomRight: Radius.circular(10)),
                 ),
                 child: Text(
-                  '★ System generated result card for ' + widget.examName + ' ★',
+                  'â˜… System generated result card for ' + widget.examName + ' â˜…',
                   textAlign: TextAlign.center,
                   style: GoogleFonts.poppins(fontSize: 9, fontWeight: FontWeight.w500, color: const Color(0xFFAABACA), letterSpacing: 0.5),
                 ),
@@ -721,6 +753,7 @@ class _SingleProgressCardScreenState extends State<SingleProgressCardScreen> {
     );
   }
 }
+
 
 
 

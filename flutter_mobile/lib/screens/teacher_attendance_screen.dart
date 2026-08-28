@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
+import '../widgets/custom_network_image.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/api_service.dart';
 import '../widgets/app_drawer.dart';
@@ -446,7 +447,7 @@ class _TeacherAttendanceScreenState extends State<TeacherAttendanceScreen> {
                                                   ),
                                                   child: profilePic.isNotEmpty
                                                       ? ClipOval(
-                                                          child: Image.network(
+                                                          child: CustomNetworkImage(
                                                             profilePic,
                                                             width: 56,
                                                             height: 56,
@@ -605,5 +606,6 @@ class _TeacherAttendanceScreenState extends State<TeacherAttendanceScreen> {
     );
   }
 }
+
 
 

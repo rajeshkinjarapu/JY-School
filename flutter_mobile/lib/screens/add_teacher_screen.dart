@@ -1,4 +1,5 @@
-import 'dart:io';
+﻿import 'dart:io';
+import '../widgets/custom_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
@@ -177,7 +178,7 @@ class _AddTeacherScreenState extends State<AddTeacherScreen> {
                                   : _photoUrl != null
                                       ? ClipRRect(
                                           borderRadius: BorderRadius.circular(50),
-                                          child: Image.network(
+                                          child: CustomNetworkImage(
                                             ApiService.getImageUrl(_photoUrl!),
                                             fit: BoxFit.cover,
                                             headers: const {'ngrok-skip-browser-warning': '69420'},
@@ -293,3 +294,4 @@ class _AddTeacherScreenState extends State<AddTeacherScreen> {
     );
   }
 }
+

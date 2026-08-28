@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
+import '../widgets/custom_network_image.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -181,7 +182,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(20),
                       child: (photoUrl != null && (photoUrl as String).isNotEmpty)
-                          ? Image.network(
+                          ? CustomNetworkImage(
                               ApiService.getImageUrl(photoUrl as String),
                               fit: BoxFit.cover,
                               headers: const {'ngrok-skip-browser-warning': '69420'},
@@ -244,15 +245,41 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
         onPressed: () async {
           final s2 = _studentDetails ?? widget.student;
           if (s2['id'] == null) return;
-          final result = await Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => RecordFeePaymentScreen(
-              student: s2, 
-              structures: _feeStructures,
-              pendingAmount: 0.0,
-            )),
-          );
-          if (result == true) { setState(() => _isLoading = true); _fetchProfile(); }
+          
+          showDialog(context: context, barrierDismissible: false, builder: (_) => const Center(child: CircularProgressIndicator(color: Color(0xFF6366F1))));
+          final res = await ApiService.getFeeStatus(s2['id']);
+          if (!mounted) return;
+          Navigator.pop(context);
+
+          if (res['success']) {
+            final List<dynamic> data = res['data'] ?? [];
+            final List<Map<String, dynamic>> structures = [];
+            for (final d in data) {
+               final amountDue = (d['amountDue'] ?? 0.0).toDouble();
+               if (amountDue > 0) {
+                  final stRaw = d['feeStructure'] ?? {};
+                  final st = Map<String, dynamic>.from(stRaw);
+                  st['amount'] = amountDue; // Overriding with actual pending amount
+                  final feeHead = st['feeHead'] ?? {};
+                  st['name'] = feeHead['name'] ?? st['name'] ?? 'Fee Component';
+                  structures.add(st);
+               }
+            }
+            
+            final pendingAmount = data.fold<double>(0.0, (sum, d) => sum + (d['amountDue'] ?? 0.0));
+
+            final result = await Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => RecordFeePaymentScreen(
+                student: s2, 
+                structures: structures,
+                pendingAmount: pendingAmount,
+              )),
+            );
+            if (result == true) { setState(() => _isLoading = true); _fetchProfile(); }
+          } else {
+             ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(res['message'] ?? 'Failed to load fee details')));
+          }
         },
         backgroundColor: const Color(0xFF4F46E5),
         icon: const Icon(Icons.credit_card_rounded, color: Colors.white),
@@ -476,11 +503,11 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 120),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(children: [
-          _feeSumCard('Total Fee', '₹${totalFee.toStringAsFixed(0)}', const Color(0xFF6366F1), Icons.account_balance_wallet_rounded),
+          _feeSumCard('Total Fee', 'â‚¹${totalFee.toStringAsFixed(0)}', const Color(0xFF6366F1), Icons.account_balance_wallet_rounded),
           const SizedBox(width: 8),
-          _feeSumCard('Paid', '₹${totalPaid.toStringAsFixed(0)}', const Color(0xFF10B981), Icons.check_circle_rounded),
+          _feeSumCard('Paid', 'â‚¹${totalPaid.toStringAsFixed(0)}', const Color(0xFF10B981), Icons.check_circle_rounded),
           const SizedBox(width: 8),
-          _feeSumCard('Pending', '₹${totalPending.toStringAsFixed(0)}', totalPending > 0 ? const Color(0xFFF43F5E) : const Color(0xFF94A3B8), Icons.pending_rounded),
+          _feeSumCard('Pending', 'â‚¹${totalPending.toStringAsFixed(0)}', totalPending > 0 ? const Color(0xFFF43F5E) : const Color(0xFF94A3B8), Icons.pending_rounded),
         ]),
         const SizedBox(height: 20),
         Row(children: [
@@ -549,9 +576,9 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
           Row(children: [
             Expanded(child: Text(st['name'] ?? 'Fee', style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.bold, color: const Color(0xFF1E293B)))),
             if (disc > 0) Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
-              Text('₹${total.toStringAsFixed(0)}', style: GoogleFonts.poppins(fontSize: 11, decoration: TextDecoration.lineThrough, color: const Color(0xFF94A3B8))),
-              Text('₹${effective.toStringAsFixed(0)}', style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold, color: color)),
-            ]) else Text('₹${effective.toStringAsFixed(0)}', style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold, color: color)),
+              Text('â‚¹${total.toStringAsFixed(0)}', style: GoogleFonts.poppins(fontSize: 11, decoration: TextDecoration.lineThrough, color: const Color(0xFF94A3B8))),
+              Text('â‚¹${effective.toStringAsFixed(0)}', style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold, color: color)),
+            ]) else Text('â‚¹${effective.toStringAsFixed(0)}', style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold, color: color)),
             const SizedBox(width: 10),
             GestureDetector(
               onTap: () => _showDiscountSheet(studentId, st['id'] ?? '', st['name'] ?? 'Fee', disc),
@@ -569,12 +596,12 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
             Row(children: [
               Container(width: 8, height: 8, decoration: const BoxDecoration(color: Color(0xFF10B981), shape: BoxShape.circle)),
               const SizedBox(width: 5),
-              Text('Paid ₹${paid.toStringAsFixed(0)}', style: GoogleFonts.poppins(fontSize: 11.5, fontWeight: FontWeight.w700, color: const Color(0xFF10B981))),
+              Text('Paid â‚¹${paid.toStringAsFixed(0)}', style: GoogleFonts.poppins(fontSize: 11.5, fontWeight: FontWeight.w700, color: const Color(0xFF10B981))),
             ]),
             Row(children: [
               Container(width: 8, height: 8, decoration: BoxDecoration(color: pending > 0 ? const Color(0xFFF43F5E) : const Color(0xFFCBD5E1), shape: BoxShape.circle)),
               const SizedBox(width: 5),
-              Text('Pending ₹${pending.toStringAsFixed(0)}', style: GoogleFonts.poppins(fontSize: 11.5, fontWeight: FontWeight.w700, color: pending > 0 ? const Color(0xFFF43F5E) : const Color(0xFF94A3B8))),
+              Text('Pending â‚¹${pending.toStringAsFixed(0)}', style: GoogleFonts.poppins(fontSize: 11.5, fontWeight: FontWeight.w700, color: pending > 0 ? const Color(0xFFF43F5E) : const Color(0xFF94A3B8))),
             ]),
           ]),
           if (disc > 0) Padding(
@@ -582,7 +609,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
             child: Row(children: [
               const Icon(Icons.discount_rounded, size: 12, color: Color(0xFFF97316)),
               const SizedBox(width: 4),
-              Text('Discount: ₹${disc.toStringAsFixed(0)}', style: GoogleFonts.poppins(fontSize: 11, color: const Color(0xFFF97316), fontWeight: FontWeight.w600)),
+              Text('Discount: â‚¹${disc.toStringAsFixed(0)}', style: GoogleFonts.poppins(fontSize: 11, color: const Color(0xFFF97316), fontWeight: FontWeight.w600)),
             ]),
           ),
         ]),
@@ -620,7 +647,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
             ]),
           ])),
           Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
-            Text('₹$amount', style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold, color: const Color(0xFF10B981))),
+            Text('â‚¹$amount', style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold, color: const Color(0xFF10B981))),
             if (receipt.isNotEmpty) Text(receipt, style: GoogleFonts.poppins(fontSize: 9, color: const Color(0xFF94A3B8))),
           ]),
           const SizedBox(width: 4),
@@ -857,7 +884,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
                 style: GoogleFonts.outfit(fontSize: 22, fontWeight: FontWeight.bold, color: const Color(0xFFF97316)),
                 textAlign: TextAlign.center,
                 decoration: InputDecoration(
-                  prefixText: '₹ ', prefixStyle: GoogleFonts.outfit(fontSize: 22, color: const Color(0xFFF97316)),
+                  prefixText: 'â‚¹ ', prefixStyle: GoogleFonts.outfit(fontSize: 22, color: const Color(0xFFF97316)),
                   hintText: '0', hintStyle: GoogleFonts.outfit(fontSize: 22, color: const Color(0xFFCBD5E1)),
                   filled: true, fillColor: const Color(0xFFFFF7ED),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
@@ -885,7 +912,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
                   setSS(() => isSaving = false);
                   if (mounted) {
                     Navigator.pop(ctx);
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(res['success'] ? 'Discount ₹$amt applied!' : (res['message'] ?? 'Failed')), backgroundColor: res['success'] ? const Color(0xFF10B981) : const Color(0xFFF43F5E)));
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(res['success'] ? 'Discount â‚¹$amt applied!' : (res['message'] ?? 'Failed')), backgroundColor: res['success'] ? const Color(0xFF10B981) : const Color(0xFFF43F5E)));
                     if (res['success']) { setState(() => _isLoading = true); _fetchProfile(); }
                   }
                 },
@@ -946,3 +973,4 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
     );
   }
 }
+

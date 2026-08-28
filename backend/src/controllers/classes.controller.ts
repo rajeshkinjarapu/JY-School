@@ -201,16 +201,34 @@ export const deleteClass = async (req: AuthRequest, res: Response, next: NextFun
 
 export const getStudents = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   const id = req.params.id as string;
+
+  const cacheKey = `class:students:${id}`;
+  const cached = await cache.get<any>(cacheKey);
+  if (cached) { res.json(cached); return; }
+
   const cls = await prisma.class.findUnique({ where: { id } });
   if (!cls) return next(createError('Class not found', 404));
 
   const students = await prisma.student.findMany({
     where: { classId: id },
-    include: { user: { select: { name: true, email: true, phone: true, photoUrl: true } } },
+    include: {
+      user: {
+        select: {
+          name: true,
+          email: true,
+          phone: true,
+          photoUrl: true, // Needed for admit card template rendering
+        }
+      }
+    },
     orderBy: { rollNo: 'asc' },
   });
-  successResponse(res, students, 'Class students fetched');
+
+  const responseBody = { success: true, data: students };
+  await cache.set(cacheKey, responseBody, 180); // 3 min cache
+  res.json(responseBody);
 };
+
 
 export const getSubjects = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   const id = req.params.id as string;

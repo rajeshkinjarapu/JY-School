@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
+import '../widgets/custom_network_image.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/api_service.dart';
 import 'single_progress_card_screen.dart';
@@ -85,7 +86,7 @@ class _AllStudentsProgressCardsScreenState extends State<AllStudentsProgressCard
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(25),
                           child: (photoUrl != null && photoUrl.toString().isNotEmpty)
-                            ? Image.network(ApiService.getImageUrl(photoUrl.toString()), fit: BoxFit.cover, errorBuilder: (c, e, s) => Center(child: Text(initials, style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 20))))
+                            ? CustomNetworkImage(ApiService.getImageUrl(photoUrl.toString()), fit: BoxFit.cover, errorBuilder: (c, e, s) => Center(child: Text(initials, style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 20))))
                             : Center(child: Text(initials, style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 20))),
                         ),
                       ),
@@ -170,3 +171,4 @@ class _AllStudentsProgressCardsScreenState extends State<AllStudentsProgressCard
     );
   }
 }
+

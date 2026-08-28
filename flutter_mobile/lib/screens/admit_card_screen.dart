@@ -1,4 +1,5 @@
-import 'dart:convert';
+﻿import 'dart:convert';
+import '../widgets/custom_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/api_service.dart';
@@ -501,7 +502,7 @@ class _AdmitCardScreenState extends State<AdmitCardScreen> {
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
-                                  '(IIT-JEE/NEET FOUNDATION – OLYMPIADS)',
+                                  '(IIT-JEE/NEET FOUNDATION â€“ OLYMPIADS)',
                                   textAlign: TextAlign.center,
                                   style: TextStyle(
                                     fontSize: 12,
@@ -732,7 +733,7 @@ class _AdmitCardScreenState extends State<AdmitCardScreen> {
                                           child: Row(
                                             crossAxisAlignment: CrossAxisAlignment.start,
                                             children: [
-                                              const Text('• ', style: TextStyle(fontSize: 12, color: Color(0xFF475569))),
+                                              const Text('â€¢ ', style: TextStyle(fontSize: 12, color: Color(0xFF475569))),
                                               Expanded(child: Text(line, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: const Color(0xFF334155), height: 1.5))),
                                             ],
                                           ),
@@ -744,7 +745,7 @@ class _AdmitCardScreenState extends State<AdmitCardScreen> {
                                   Column(
                                     children: [
                                       if (signatureUrl.isNotEmpty)
-                                        Image.network(signatureUrl, height: 60, width: 120, fit: BoxFit.contain)
+                                        CustomNetworkImage(signatureUrl, height: 60, width: 120, fit: BoxFit.contain)
                                       else
                                         const SizedBox(height: 60, width: 120),
                                       Container(width: 150, height: 1, color: const Color(0xFFCBD5E1)),
@@ -854,3 +855,4 @@ class _AdmitCardScreenState extends State<AdmitCardScreen> {
     );
   }
 }
+

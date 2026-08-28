@@ -67,4 +67,14 @@
   - Fixed a critical regex parsing bug in `LiveLatexPreview.tsx` where math formulas containing `(B)` (like `$n(A) - n(B)$`) were incorrectly split, breaking LaTeX rendering for multiple-choice options.
   - Improved the `maxLen` calculation logic for multiple-choice options by trimming inner spaces, fixing a bug where 4-column or 2-column layouts would incorrectly stack vertically (like in Question 25).
 - Provided the user with the git pull command to fetch the latest updates from the repository.
-- **BigRock VPS Server Deployment**: Created an automated `SETUP_BIGROCK.bat` script to deploy the JY-School ERP to a new BigRock Ubuntu 22 VPS (66.116.252.191). Successfully connected via SSH, installed Node.js 20, Git, PM2, and Unzip (for Puppeteer Chrome extraction), and deployed both the Node.js backend (Port 19998) and React frontend (Port 19999).
+- **BigRock VPS Server Deployment**: 
+  - Created an automated `SETUP_BIGROCK.bat` script to deploy the JY-School ERP to a new BigRock Ubuntu 22 VPS (66.116.252.191). Successfully connected via SSH, installed Node.js 20, Git, PM2, and Unzip (for Puppeteer Chrome extraction), and deployed both the Node.js backend (Port 19998) and React frontend (Port 19999).
+  - Fixed a `Network Error` on the frontend by updating `axios.ts` to respect `VITE_API_URL` instead of falling back to a hardcoded port 5000 logic for non-localhost IP domains.
+  - Resolved a `PrismaClientKnownRequestError` (500 Error on Dashboard) by pushing un-migrated schema changes (`Announcement.image`) directly to the Supabase database using `npx prisma db push`.
+- **Global Performance & Speed Optimization (Backend):**
+  - **Database Indexing:** Added composite performance indexes to `prisma/schema.prisma` for `FeePayment`, `FeeDiscount`, `Mark`, and `Attendance` to drastically speed up database lookups.
+  - **Eliminated N+1 Queries:** Refactored `fees.controller.ts` (`getStudentFeeStatus` and `getOverdue`). Replaced disastrous `O(N^2)` loops that executed thousands of database queries sequentially with highly efficient bulk `IN` queries and `groupBy` aggregations, ensuring the app opens in fractions of a second even with massive data.
+- **Question Papers & Answer Keys Module:**
+  - **Database Schema**: Upgraded the `QuestionPaper` model in Prisma to link directly to `Exam` (`examId`), added `answerKey` text and `answerKeyUrl` fields, and made `subjectId` optional for combined papers.
+  - **Web App**: Integrated a new "Question Papers" tab inside the Admin Exams Module. Updated the Teacher's "Answer Key" sidebar link to route directly to this new module, allowing teachers to easily add typed answer keys or PDF links. Students can now directly access both Question Papers and Answer Keys from their "Downloads" tab.
+  - **Flutter App**: Upgraded the `QuestionPapersScreen` with a premium glassmorphism card layout. Added `url_launcher` integration to download/view papers and PDFs, and built a sleek Bottom Sheet to view manually typed Answer Keys directly in the app.
