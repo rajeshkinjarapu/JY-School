@@ -66,3 +66,4 @@
 - **Question Bank LaTeX Rendering Fixes:**
   - Fixed a critical regex parsing bug in `LiveLatexPreview.tsx` where math formulas containing `(B)` (like `$n(A) - n(B)$`) were incorrectly split, breaking LaTeX rendering for multiple-choice options.
   - Improved the `maxLen` calculation logic for multiple-choice options by trimming inner spaces, fixing a bug where 4-column or 2-column layouts would incorrectly stack vertically (like in Question 25).
+- Provided the user with the git pull command to fetch the latest updates from the repository.
