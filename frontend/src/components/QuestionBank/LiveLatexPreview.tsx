@@ -156,10 +156,10 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
           ) : (
             (() => {
               // Make regex robust to avoid matching (B) inside math formulas like $n(A) - n(B)$
-              const optARegex = /\(A\)\s*(.*?)(?=\n\s*\(B\)|\s{2,}\(B\)|\t\(B\)|$)/s;
-              const optBRegex = /\(B\)\s*(.*?)(?=\n\s*\(C\)|\s{2,}\(C\)|\t\(C\)|$)/s;
-              const optCRegex = /\(C\)\s*(.*?)(?=\n\s*\(D\)|\s{2,}\(D\)|\t\(D\)|$)/s;
-              const optDRegex = /\(D\)\s*(.*)/s;
+              const optARegex = /(?:^|\n|\s{2,}|\t)\(A\)\s*(.*?)(?=\n\s*\(B\)|\s{2,}\(B\)|\t\(B\)|$)/s;
+              const optBRegex = /(?:^|\n|\s{2,}|\t)\(B\)\s*(.*?)(?=\n\s*\(C\)|\s{2,}\(C\)|\t\(C\)|$)/s;
+              const optCRegex = /(?:^|\n|\s{2,}|\t)\(C\)\s*(.*?)(?=\n\s*\(D\)|\s{2,}\(D\)|\t\(D\)|$)/s;
+              const optDRegex = /(?:^|\n|\s{2,}|\t)\(D\)\s*(.*)/s;
 
               const splitIndexA = block.indexOf('(A)');
               const questionText = block.substring(0, splitIndexA).trim();
@@ -175,7 +175,11 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
               const optC = matchC ? matchC[1].trim() : '';
               const optD = matchD ? matchD[1].trim() : '';
               const estimateVisualLength = (text: string) => {
-                return text.replace(/\$|\\[a-zA-Z]+|{|}|_|\\/g, '').replace(/\s+/g, ' ').trim().length;
+                let s = text.replace(/\\\(|\\\)|\\\[|\\\]|\$/g, ''); // Remove math delimiters
+                s = s.replace(/\\mathbb|\\mathbf|\\text|\\mathrm/g, ''); // Remove formatting commands
+                s = s.replace(/\\[a-zA-Z]+/g, 'X'); // Replace math commands (\subset, \cup, etc) with a single character 'X'
+                s = s.replace(/[{}_^]/g, ''); // Remove brackets and sub/superscripts
+                return s.replace(/\s+/g, ' ').trim().length;
               };
 
               const maxLen = Math.max(
@@ -186,9 +190,9 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
               );
               
               let optionsLayout = '';
-              if (maxLen < 25) {
+              if (maxLen < 10) {
                 optionsLayout = 'grid grid-cols-4 w-full gap-x-2 gap-y-0.5';
-              } else if (maxLen < 65) {
+              } else if (maxLen < 85) {
                 optionsLayout = 'grid grid-cols-2 w-full gap-x-2 gap-y-0.5';
               } else {
                 optionsLayout = 'flex flex-col w-full gap-0.5';
