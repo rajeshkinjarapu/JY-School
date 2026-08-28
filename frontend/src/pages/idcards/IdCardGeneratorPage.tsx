@@ -4,7 +4,7 @@ import { useReactToPrint } from 'react-to-print';
 import { Printer, ArrowLeft, Loader2, Search, CheckSquare, Square, Download } from 'lucide-react';
 import api from '../../api/axios';
 import toast from 'react-hot-toast';
-import { TEMPLATES_LIST, getTemplateComponent, getBacksideComponent, IDCardData, SchoolInfo } from '../../components/idcards/Templates';
+import { TEMPLATES_LIST, getTemplateComponent, getBacksideComponent, type IDCardData, type SchoolInfo } from '../../components/idcards/Templates';
 
 // A4 paper size in CSS: 210mm x 297mm. We'll use CSS to force page breaks.
 const PrintableContent = React.forwardRef<HTMLDivElement, { 

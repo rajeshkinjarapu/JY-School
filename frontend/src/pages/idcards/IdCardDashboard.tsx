@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { TEMPLATES_LIST, getTemplateComponent, IDCardData, SchoolInfo } from '../../components/idcards/Templates';
+import { TEMPLATES_LIST, getTemplateComponent, type IDCardData, type SchoolInfo } from '../../components/idcards/Templates';
 
 // Dummy data for previewing templates on the dashboard
 const dummyStudent: IDCardData = {
