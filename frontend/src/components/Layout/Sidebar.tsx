@@ -6,7 +6,7 @@ import {
   LayoutDashboard, Users, GraduationCap, School, BookOpen,
   CalendarCheck, ClipboardList, PenTool, Calendar, CreditCard,
   Megaphone, MessageSquare, BarChart3, Settings, LogOut,
-  Shield, FileText, UserCheck, X, ChevronDown, Smartphone, MapPin, Target, Briefcase, Bus, Database, Key
+  Shield, FileText, UserCheck, X, ChevronDown, Smartphone, MapPin, Target, Briefcase, Bus, Database, Key, IdCard
 } from 'lucide-react';
 import { usePWA } from '../../hooks/usePWA';
 import { getPhotoUrl } from '../../utils/photo';
@@ -42,6 +42,7 @@ const NAV_COLORS: Record<string, { text: string; bg: string; glow: string }> = {
   Reports:       { text: '#fda4af', bg: 'rgba(244,63,94,0.18)',  glow: '0 0 12px rgba(244,63,94,.5)'   },
   Settings:      { text: '#94a3b8', bg: 'rgba(100,116,139,0.18)',glow: '0 0 12px rgba(100,116,139,.5)' },
   'Office Tools':{ text: '#67e8f9', bg: 'rgba(6,182,212,0.18)', glow: '0 0 12px rgba(6,182,212,.5)' },
+  'ID Cards':    { text: '#818cf8', bg: 'rgba(99,102,241,0.18)', glow: '0 0 12px rgba(99,102,241,.5)' },
   'Question Bank':{ text: '#6366f1', bg: 'rgba(99,102,241,0.18)', glow: '0 0 12px rgba(99,102,241,.5)' },
   'Answer Key':  { text: '#fca5a5', bg: 'rgba(239,68,68,0.18)',   glow: '0 0 12px rgba(239,68,68,.5)'   },
   Transport:     { text: '#fcd34d', bg: 'rgba(251,191,36,0.18)', glow: '0 0 12px rgba(251,191,36,.5)' },
@@ -94,6 +95,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
       { to: '/teacher-attendance', label: 'Staff Attendance', icon: UserCheck },
       { to: '/homework',         label: 'Homework',          icon: BookOpen  },
       ...(role === 'SUPER_ADMIN' ? [{ to: '/office-tools', label: 'Office Tools', icon: Briefcase }] : []),
+      ...(role === 'SUPER_ADMIN' || role === 'ADMIN' ? [{ to: '/id-cards', label: 'ID Cards', icon: IdCard }] : []),
       ...(role === 'SUPER_ADMIN' ? [{ to: '/question-bank', label: 'Question Bank', icon: Database }] : []),
       
       { to: '/transport',     label: 'Transport',     icon: Bus },
