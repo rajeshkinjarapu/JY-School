@@ -65,13 +65,22 @@ class _QuestionPapersScreenState extends State<QuestionPapersScreen> {
   }
 
   Future<void> _launchUrl(String url) async {
-    final uri = Uri.parse(url);
+    String finalUrl = url.trim();
+    if (!finalUrl.startsWith('http')) {
+      if (finalUrl.startsWith('/')) {
+        finalUrl = '${ApiService.baseUrl}$finalUrl';
+      } else {
+        finalUrl = '${ApiService.baseUrl}/$finalUrl';
+      }
+    }
+
+    final uri = Uri.parse(finalUrl);
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     } else {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Could not open the file link.')),
+          SnackBar(content: Text('Could not open the file link: $finalUrl')),
         );
       }
     }

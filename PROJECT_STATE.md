@@ -49,9 +49,11 @@
   - Added checkbox lists for both Classes and Subjects in React and Flutter modals to allow users to select multiple options.
   - Submitting now loops through both selected classes and selected subjects in a nested loop to create individual question paper entries in the database.
   - Made the `Paper Title` field optional in both Web and Mobile apps. If left blank, the app now automatically generates a title based on the selected Exam name and Subject name (or falls back to the uploaded filename). This resolved the submit block where empty titles prevented the submit handler from executing.
+  - Fixed relative PDF launch URLs in Flutter by auto-prepending `ApiService.baseUrl` to file paths that do not start with `http`, resolving the `Could not open the file link` error.
 - **Web App React Syntax & Layout Fix:**
   - Fixed a syntax bug in `ExamListPage.tsx` where closing tags for the `add-online-exam` form were accidentally removed during the `question-papers` tab modification. This was preventing the entire page layout from compiling and rendering properly.
   - Fixed a `TypeError: e.replace is not a function` crash in the Exam Selection dropdown by passing `e.name` instead of the entire `e` object to `formatExamOptionLabel` helper.
+  - Fixed a `ReferenceError: Key is not defined` crash on page load by importing the `Key` icon from `lucide-react` in `ExamListPage.tsx`.
   - Corrected `fetchQpStats` to store `res.data` (or `res`) instead of the raw axios response object, ensuring dashboard KPI cards render correctly once data exists.
 - **Flutter Question Papers Screen Bugs Fix:**
   - Fixed compilation errors in `question_papers_screen.dart` related to invalid `Colors.emerald` reference and incorrect named parameter `py` in `EdgeInsets.symmetric`.
