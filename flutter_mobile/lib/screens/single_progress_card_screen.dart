@@ -1,4 +1,4 @@
-﻿import 'dart:ui' as ui;
+import 'dart:ui' as ui;
 import '../widgets/custom_network_image.dart';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
@@ -51,7 +51,7 @@ class _SingleProgressCardScreenState extends State<SingleProgressCardScreen> {
 
   Future<void> _fetchResult() async {
     try {
-      final res = await ApiService.getExamResults(widget.examId, classId: widget.classId, includePhoto: true);
+      final res = await ApiService.getExamResults(widget.examId, classId: widget.classId);
       final setRes = await ApiService.getSettings();
       final examRes = await ApiService.getExamById(widget.examId);
       if (res['success']) {

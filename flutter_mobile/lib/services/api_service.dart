@@ -1205,9 +1205,14 @@ class ApiService {
         headers: _getHeaders(token: token),
       );
 
-      return _handleResponse(response);
+      if (response.statusCode == 200 || response.statusCode == 204) {
+        return {'success': true};
+      } else {
+        final data = jsonDecode(response.body);
+        return {'success': false, 'message': data['message'] ?? 'Failed to delete'};
+      }
     } catch (e) {
-      return {'success': false, 'message': 'Network error'};
+      return {'success': false, 'message': 'Network error: ${e.toString()}'};
     }
   }
 }
