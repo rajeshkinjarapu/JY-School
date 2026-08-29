@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:file_picker/file_picker.dart';
+import 'dart:typed_data';
+import 'dart:convert';
 import '../services/api_service.dart';
 
 class UploadQuestionPaperScreen extends StatefulWidget {
@@ -14,18 +17,62 @@ class _UploadQuestionPaperScreenState extends State<UploadQuestionPaperScreen> {
   
   String _title = '';
   String? _examId;
-  String? _classId;
-  String? _subjectId;
+  List<String> _selectedClassIds = [];
+  List<String> _selectedSubjectIds = [];
   String _fileUrl = '';
   String _answerKeyUrl = '';
   String _answerKeyText = '';
 
   List<dynamic> _exams = [];
   List<dynamic> _classes = [];
+  List<dynamic> _allClasses = [];
   List<dynamic> _subjects = [];
+  List<dynamic> _allSubjects = [];
   
   bool _isLoadingData = true;
   bool _isUploading = false;
+  bool _isUploadingFile = false;
+  String? _fileName;
+
+  final _fileUrlController = TextEditingController();
+
+  @override
+  void dispose() {
+    _fileUrlController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _pickAndUploadFile() async {
+    try {
+      FilePickerResult? result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['pdf', 'doc', 'docx'],
+        withData: true,
+      );
+
+      if (result != null && result.files.single.bytes != null) {
+        setState(() => _isUploadingFile = true);
+        final bytes = result.files.single.bytes!;
+        final name = result.files.single.name;
+        
+        final res = await ApiService.uploadDocument(bytes, name);
+        setState(() {
+          _isUploadingFile = false;
+          if (res['success']) {
+            _fileUrl = res['url'] ?? '';
+            _fileUrlController.text = _fileUrl;
+            _fileName = name;
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('File uploaded successfully!')));
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(res['message'] ?? 'Upload failed')));
+          }
+        });
+      }
+    } catch (e) {
+      setState(() => _isUploadingFile = false);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error picking/uploading file: $e')));
+    }
+  }
 
   @override
   void initState() {
@@ -41,8 +88,14 @@ class _UploadQuestionPaperScreenState extends State<UploadQuestionPaperScreen> {
 
       setState(() {
         if (examsRes['success']) _exams = examsRes['data'] ?? [];
-        if (classesRes['success']) _classes = classesRes['data'] ?? [];
-        if (subjectsRes['success']) _subjects = subjectsRes['data'] ?? [];
+        if (classesRes['success']) {
+          _allClasses = classesRes['data'] ?? [];
+          _classes = List<dynamic>.from(_allClasses);
+        }
+        if (subjectsRes['success']) {
+          _allSubjects = subjectsRes['data'] ?? [];
+          _subjects = List<dynamic>.from(_allSubjects);
+        }
         _isLoadingData = false;
       });
     } catch (e) {
@@ -57,33 +110,83 @@ class _UploadQuestionPaperScreenState extends State<UploadQuestionPaperScreen> {
     if (!_formKey.currentState!.validate()) return;
     _formKey.currentState!.save();
 
-    if (_classId == null || _classId!.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please select a class')));
+    if (_selectedClassIds.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please select at least one class')));
+      return;
+    }
+
+    _fileUrl = _fileUrlController.text.trim();
+    if (_fileUrl.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please upload a file or enter a document URL')));
       return;
     }
 
     setState(() => _isUploading = true);
 
     try {
-      final payload = {
-        'title': _title,
-        'classId': _classId,
-        'subjectId': _subjectId?.isEmpty ?? true ? null : _subjectId,
-        'examId': _examId?.isEmpty ?? true ? null : _examId,
-        'fileUrl': _fileUrl,
-        'answerKeyUrl': _answerKeyUrl.isEmpty ? null : _answerKeyUrl,
-        'answerKey': _answerKeyText.isEmpty ? null : _answerKeyText,
-      };
+      bool allSuccess = true;
+      String? lastError;
 
-      final res = await ApiService.createQuestionPaper(payload);
-      if (res['success']) {
+      // If no subjects are selected, we upload once per class with null subject
+      final List<String?> subjectsToUpload = _selectedSubjectIds.isEmpty
+          ? [null]
+          : _selectedSubjectIds.map((id) => id as String?).toList();
+
+      for (final classId in _selectedClassIds) {
+        for (final subjectId in subjectsToUpload) {
+          String finalTitle = _title.trim();
+          if (finalTitle.isEmpty) {
+            String examPart = '';
+            if (_examId != null && _examId!.isNotEmpty) {
+              final examObj = _exams.firstWhere((e) => e['id'] == _examId, orElse: () => null);
+              if (examObj != null) {
+                examPart = examObj['name'] ?? '';
+              }
+            }
+            String subjectPart = '';
+            if (subjectId != null) {
+              final subObj = _subjects.firstWhere((s) => s['id'] == subjectId, orElse: () => null);
+              if (subObj != null) {
+                subjectPart = subObj['name'] ?? '';
+              }
+            }
+            if (examPart.isNotEmpty && subjectPart.isNotEmpty) {
+              finalTitle = '$examPart - $subjectPart';
+            } else if (examPart.isNotEmpty) {
+              finalTitle = examPart;
+            } else if (subjectPart.isNotEmpty) {
+              finalTitle = subjectPart;
+            } else {
+              finalTitle = _fileName ?? 'Question Paper';
+            }
+          }
+
+          final payload = {
+            'title': finalTitle,
+            'classId': classId,
+            'subjectId': subjectId,
+            'examId': _examId?.isEmpty ?? true ? null : _examId,
+            'fileUrl': _fileUrl,
+            'answerKeyUrl': _answerKeyUrl.isEmpty ? null : _answerKeyUrl,
+            'answerKey': _answerKeyText.isEmpty ? null : _answerKeyText,
+          };
+
+          final res = await ApiService.createQuestionPaper(payload);
+          if (!res['success']) {
+            allSuccess = false;
+            lastError = res['message'];
+          }
+        }
+      }
+
+      if (allSuccess) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Question paper uploaded successfully!')));
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Question paper(s) uploaded successfully!')));
           Navigator.pop(context, true); // Return true to trigger refresh
         }
       } else {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(res['message'] ?? 'Failed to upload')));
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(lastError ?? 'Failed to upload question paper(s)')));
         }
       }
     } catch (e) {
@@ -95,6 +198,92 @@ class _UploadQuestionPaperScreenState extends State<UploadQuestionPaperScreen> {
         setState(() => _isUploading = false);
       }
     }
+  }
+
+  void _showMultiClassSelector() {
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return AlertDialog(
+              title: const Text('Select Classes'),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: _classes.map((c) {
+                    final isChecked = _selectedClassIds.contains(c['id']);
+                    return CheckboxListTile(
+                      title: Text('${c['name']}-${c['section']}'),
+                      value: isChecked,
+                      onChanged: (val) {
+                        setModalState(() {
+                          if (val == true) {
+                            _selectedClassIds.add(c['id']);
+                          } else {
+                            _selectedClassIds.remove(c['id']);
+                          }
+                        });
+                        setState(() {}); // refresh main screen
+                      },
+                    );
+                  }).toList(),
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: const Text('Done'),
+                )
+              ],
+            );
+          }
+        );
+      }
+    );
+  }
+
+  void _showMultiSubjectSelector() {
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return AlertDialog(
+              title: const Text('Select Subjects'),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: _subjects.map((s) {
+                    final isChecked = _selectedSubjectIds.contains(s['id']);
+                    return CheckboxListTile(
+                      title: Text(s['name'] ?? ''),
+                      value: isChecked,
+                      onChanged: (val) {
+                        setModalState(() {
+                          if (val == true) {
+                            _selectedSubjectIds.add(s['id']);
+                          } else {
+                            _selectedSubjectIds.remove(s['id']);
+                          }
+                        });
+                        setState(() {}); // refresh main screen
+                      },
+                    );
+                  }).toList(),
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: const Text('Done'),
+                )
+              ],
+            );
+          }
+        );
+      }
+    );
   }
 
   @override
@@ -130,46 +319,96 @@ class _UploadQuestionPaperScreenState extends State<UploadQuestionPaperScreen> {
                   _buildSectionTitle('Paper Details'),
                   const SizedBox(height: 16),
                   _buildTextField(
-                    label: 'Paper Title',
+                    label: 'Paper Title (Optional)',
                     hint: 'e.g. Mid Term Physics Paper',
                     icon: Icons.title,
-                    validator: (v) => v == null || v.isEmpty ? 'Title is required' : null,
                     onSaved: (v) => _title = v ?? '',
                   ),
                   const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _buildDropdown(
-                          label: 'Exam (Optional)',
-                          value: _examId,
-                          items: _exams,
-                          onChanged: (v) => setState(() => _examId = v as String?),
-                          getLabel: (e) => e['name'],
-                          getValue: (e) => e['id'],
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: _buildDropdown(
-                          label: 'Class *',
-                          value: _classId,
-                          items: _classes,
-                          onChanged: (v) => setState(() => _classId = v as String?),
-                          getLabel: (c) => '${c['name']}-${c['section']}',
-                          getValue: (c) => c['id'],
-                        ),
-                      ),
-                    ],
+                  _buildDropdown(
+                    label: 'Exam (Optional)',
+                    value: _examId,
+                    items: _exams,
+                    onChanged: (v) {
+                      setState(() {
+                        _examId = v as String?;
+                        if (_examId != null && _examId!.isNotEmpty) {
+                          final selectedExam = _exams.firstWhere((e) => e['id'] == _examId, orElse: () => null);
+                          if (selectedExam != null && selectedExam['classes'] != null) {
+                            _classes = List<dynamic>.from(selectedExam['classes']);
+                          } else {
+                            _classes = [];
+                          }
+                          // Filter subjects based on selected exam
+                          if (selectedExam != null && selectedExam['subjects'] != null) {
+                            final examSubs = selectedExam['subjects'] is String 
+                                ? jsonDecode(selectedExam['subjects']) 
+                                : selectedExam['subjects'] as List<dynamic>;
+                            _subjects = examSubs.map((es) {
+                              final subId = es['id'] ?? es['subjectId'] ?? es['subject']?['id'];
+                              final foundSub = _allSubjects.firstWhere((s) => s['id'] == subId, orElse: () => null);
+                              return foundSub ?? { 'id': subId, 'name': es['name'] ?? es['subject']?['name'] };
+                            }).toList();
+                          } else {
+                            _subjects = [];
+                          }
+                        } else {
+                          _classes = List<dynamic>.from(_allClasses);
+                          _subjects = List<dynamic>.from(_allSubjects);
+                        }
+                        // Reset selections if they are no longer in the filtered list
+                        _selectedClassIds.clear();
+                        _selectedSubjectIds.clear();
+                      });
+                    },
+                    getLabel: (e) => e['name'],
+                    getValue: (e) => e['id'],
                   ),
                   const SizedBox(height: 16),
-                  _buildDropdown(
-                    label: 'Subject (Optional)',
-                    value: _subjectId,
-                    items: _subjects,
-                    onChanged: (v) => setState(() => _subjectId = v as String?),
-                    getLabel: (s) => s['name'],
-                    getValue: (s) => s['id'],
+                  InkWell(
+                    onTap: _showMultiClassSelector,
+                    child: InputDecorator(
+                      decoration: InputDecoration(
+                        labelText: 'Classes *',
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                        prefixIcon: const Icon(Icons.class_outlined, color: Color(0xFF6366F1)),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                      ),
+                      child: Text(
+                        _selectedClassIds.isEmpty
+                            ? 'Select Classes'
+                            : _selectedClassIds.map((id) {
+                                final cls = _classes.firstWhere((c) => c['id'] == id, orElse: () => null);
+                                return cls != null ? '${cls['name']}-${cls['section']}' : '';
+                              }).join(', '),
+                        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  InkWell(
+                    onTap: _showMultiSubjectSelector,
+                    child: InputDecorator(
+                      decoration: InputDecoration(
+                        labelText: 'Subjects (Optional)',
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                        prefixIcon: const Icon(Icons.book_outlined, color: Color(0xFF6366F1)),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                      ),
+                      child: Text(
+                        _selectedSubjectIds.isEmpty
+                            ? 'All Subjects / Combined'
+                            : _selectedSubjectIds.map((id) {
+                                final sub = _subjects.firstWhere((s) => s['id'] == id, orElse: () => null);
+                                return sub != null ? sub['name'] : '';
+                              }).join(', '),
+                        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
                   ),
                   
                   const SizedBox(height: 32),
@@ -189,23 +428,48 @@ class _UploadQuestionPaperScreenState extends State<UploadQuestionPaperScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('File Link (PDF/Word) *', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 14)),
-                        const SizedBox(height: 8),
-                        TextFormField(
-                          decoration: InputDecoration(
-                            hintText: 'https://link-to-file.pdf',
-                            hintStyle: GoogleFonts.poppins(color: Colors.grey.shade400, fontSize: 13),
-                            prefixIcon: const Icon(Icons.link, color: Color(0xFF6366F1)),
-                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey.shade300)),
-                            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey.shade300)),
-                            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFF6366F1))),
-                            filled: true,
-                            fillColor: const Color(0xFFF8FAFC),
-                          ),
-                          keyboardType: TextInputType.url,
-                          validator: (v) => v == null || v.isEmpty ? 'File URL is required' : null,
-                          onSaved: (v) => _fileUrl = v ?? '',
+                        Text('Document File (PDF/Word/Link) *', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 14)),
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: TextFormField(
+                                controller: _fileUrlController,
+                                decoration: InputDecoration(
+                                  hintText: 'https://link-to-file.pdf or Upload',
+                                  hintStyle: GoogleFonts.poppins(color: Colors.grey.shade400, fontSize: 13),
+                                  prefixIcon: const Icon(Icons.link, color: Color(0xFF6366F1)),
+                                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey.shade300)),
+                                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey.shade300)),
+                                  focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFF6366F1))),
+                                  filled: true,
+                                  fillColor: const Color(0xFFF8FAFC),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            if (_isUploadingFile)
+                              const CircularProgressIndicator(color: Color(0xFF6366F1))
+                            else
+                              IconButton.filled(
+                                onPressed: _pickAndUploadFile,
+                                icon: const Icon(Icons.upload_file),
+                                style: IconButton.styleFrom(
+                                  backgroundColor: const Color(0xFF6366F1),
+                                  foregroundColor: Colors.white,
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                  padding: const EdgeInsets.all(14),
+                                ),
+                              ),
+                          ],
                         ),
+                        if (_fileName != null) ...[
+                          const SizedBox(height: 8),
+                          Text(
+                            '✓ Selected: $_fileName',
+                            style: GoogleFonts.poppins(color: Colors.green, fontSize: 11, fontWeight: FontWeight.bold),
+                          ),
+                        ],
                       ],
                     ),
                   ),

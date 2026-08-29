@@ -29,39 +29,43 @@
   - Modified `marks.controller.ts` in the backend to explicitly pre-fetch `ExamPlans` and strictly enforce the database truth for `maxMarks`, preventing the client (Web or Mobile) from manipulating it.
   - Wrote a batched database cleanup script (`fixMarks.ts`) to repair existing corrupted records (like the Hindi 100 maxMarks issue) without causing memory exhaustion.
 - **Flutter Progress Card UI Overhaul:**
-  - Redesigned `single_progress_card_screen.dart` in the Flutter mobile app to perfectly match the premium Web App design.
-  - Added missing fields (Mobile, Location) and matched the Row-based layout of the Academic Rating Box.
-- **Subject Ordering Bug Fix:**
-  - Fixed an issue where the custom order of subjects entered during Exam Creation was ignored in Results, Progress Card, and Flutter App.
-  - Removed conflicting hardcoded sorting logic from the backend (`exams.controller.ts` `getResults`), Web App (`ResultsTab.tsx`), and Flutter (`single_progress_card_screen.dart`).
-  - The system now strictly respects the order of subjects as stored in `exam.subjects` JSON.
-- **Max Marks Data Repair Script Fix:**
-  - Fixed a critical bug in `fixMarks.ts` that caused it to crash and incorrectly assign the exam's total max marks to individual subjects. It now accurately extracts subject-specific max marks from the `exam.subjects` JSON array.
-
-## Outstanding Items
-- **Exam Architecture Refactor:** Migrate the global `subjects` array in the Exam model to a class-wise mapping structure (Dynamic Class-Specific Subject Mapping) to allow different subjects and max marks for different classes under the same Exam Name. (Postponed until current marks entry period is completed).
-- Teacher Live Classes Feature (Jitsi/Agora Integration).
-
-## Latest Updates
-- **Advanced Announcement System:**
-  - **Image Upload:** Enabled Admins and Super Admins to optionally attach images to announcements.
-  - **Read Tracking:** Implemented a new `AnnouncementRead` model in the backend and a new "Read Receipts" modal in the Web App to track exactly which Students and Teachers have viewed the announcement.
-  - **Push Notifications:** Set up dual notifications: target users get a push when a new announcement is posted, and the Admin who created it gets a push notification immediately when a user views it for the first time.
-  - **Flutter Integration:** Replaced hardcoded dummy text in `dashboard_screen.dart` with real latest announcement data, and fully integrated the `AnnouncementDetailScreen` with the backend `markAsRead` API, permanently hiding the "Mark as Read" button once tapped.
-- Successfully pushed the latest Flutter UI enhancements and backend fixes to GitHub.
-- **Flutter APK Fixes:** 
-  - **App Icon Update:** Replaced the generic blue icon with the official original JY School logo (from the login screen) using `flutter_launcher_icons`.
-  - Removed strict `.timeout(...)` limits from `api_service.dart` `_performGet` to prevent false offline fallbacks when the free Railway backend server takes too long to wake up.
-  - Improved `MarksUploadScreen` UI by showing 'No Exams Found' instead of a confusing disabled state when no exams are returned.
-  - Redesigned `ExamStatusScreen` (Status Overview) to display subjects in a highly premium table format instead of chips when a class is expanded, explicitly showing S.No, Subject, and Status (Entered vs Pending).
-  - Implemented dynamic global maxMarks validation for every test/exam by fully integrating the new `MarksUploadScreen` across all dashboards and deleting the legacy `TeacherMarksScreen`.
 - **Flutter Question Bank Migration:**
   - Successfully migrated the Question Bank module to the Flutter app.
-- **Flutter Question Papers Integration:**
-  - Fixed an API route mismatch (404 error) where the mobile app hit `/api/questionPapers` instead of `/api/question-papers`.
-  - Linked the highly premium `QuestionPapersScreen` to the Teacher Dashboard by replacing the redundant "Answer Keys" tile (Answer Keys are now viewed directly from within the Question Papers screen).
-  - Redesigned the "Question Papers" empty state screen from a blank white page to a premium, modern design with an empty folder icon, bold typography, and a clear subtitle matching the rest of the application's premium UI.
-  - **New Feature: Upload Question Paper:** Created `upload_question_paper_screen.dart` allowing Teachers and Admins to upload question papers (PDF links) and answer keys directly from the mobile app. Added a conditionally rendered Floating Action Button in `question_papers_screen.dart` that is only visible to authorized roles, leaving the student view untouched as a simple list.
+- **Answer Key Module & Printable Booklet (Web & Mobile):**
+  - Fully rewrote the `AnswerKeyPage.tsx` page to allow teachers and admins to select exam batches and classes, view subject-wise question papers, and edit/upload answer keys.
+  - Provided a booklet-style printable layout for Super Admins to print all class answer keys.
+  - Linked the Teacher sidebar card to the newly redesigned `AnswerKeyPage.tsx`.
+- **Direct File Uploading & Manual URL Entries:**
+  - Replaced the manual text URL inputs with dual-input containers (Upload File + Manual Link paste input) in both React (`ExamListPage.tsx`) and Flutter (`upload_question_paper_screen.dart`).
+  - Added a Multipart file upload helper `ApiService.uploadDocument()` in Flutter using `file_picker`.
+- **Exam-Specific Class & Subject Dynamic Filtering:**
+  - Updated class selector options to filter dynamically based on the chosen Exam.
+  - Resolved duplicate subject entries by filtering the Subject list to only show subjects configured under the selected Exam.
+- **Multi-Class Question Paper Upload:**
+  - Added multi-checkbox list inside both React and Flutter modals to allow users to select multiple classes (e.g. 10th-A, 10th-B) to upload the same paper simultaneously, creating separate paper records on submit loop.
+  - Resolved a 53px layout overflow issue in the Flutter upload screen by shifting the Exam and Classes selection layout from a horizontal Row to a vertical layout (Column/Stack style).
+  - Added `import 'dart:convert';` to `upload_question_paper_screen.dart` to resolve `jsonDecode` compiler error.
+- **Multi-Class & Multi-Subject Uploads:**
+  - Added checkbox lists for both Classes and Subjects in React and Flutter modals to allow users to select multiple options.
+  - Submitting now loops through both selected classes and selected subjects in a nested loop to create individual question paper entries in the database.
+  - Made the `Paper Title` field optional in both Web and Mobile apps. If left blank, the app now automatically generates a title based on the selected Exam name and Subject name (or falls back to the uploaded filename). This resolved the submit block where empty titles prevented the submit handler from executing.
+- **Web App React Syntax & Layout Fix:**
+  - Fixed a syntax bug in `ExamListPage.tsx` where closing tags for the `add-online-exam` form were accidentally removed during the `question-papers` tab modification. This was preventing the entire page layout from compiling and rendering properly.
+  - Fixed a `TypeError: e.replace is not a function` crash in the Exam Selection dropdown by passing `e.name` instead of the entire `e` object to `formatExamOptionLabel` helper.
+  - Corrected `fetchQpStats` to store `res.data` (or `res`) instead of the raw axios response object, ensuring dashboard KPI cards render correctly once data exists.
+- **Flutter Question Papers Screen Bugs Fix:**
+  - Fixed compilation errors in `question_papers_screen.dart` related to invalid `Colors.emerald` reference and incorrect named parameter `py` in `EdgeInsets.symmetric`.
+  - Refactored `ApiService` methods for question papers to delegate to standard API helpers (`_performPut` / `_performDelete`) instead of undefined `_processResponse`.
+- **Progress Card Student Image Load Fix:**
+  - Updated `ApiService.getExamResults` in Flutter app to pass `includePhoto: true` query parameter.
+  - Enabled photo fetching in `single_progress_card_screen.dart`'s `_fetchResult` call, allowing real student photos to load on the PDF and progress card layout instead of a camera icon placeholder.
+- **Flutter & Web App Question Papers Advanced Workflow:**
+  - **Local Database Migration:** Added `status`, `scheduledFor`, `isKeyPublished`, and `approvedBy` to local `QuestionPaper` model schema to support draft/approval statuses.
+  - **Backend API Role Filtering:** Adjusted GET `/api/question-papers` to filter based on user role (Students only see `PUBLISHED` papers, Teachers see published/approved/their drafts, Admin/Super Admin see all).
+  - **Admin Workflow Endpoints:** Added API endpoints for `/approve`, `/reject`, `/publish` of drafts, as well as `/dashboard-stats` for KPIs and `/toggle-permission` to manage teacher upload permissions.
+  - **Web Dashboard & KPI Cards:** Added a 5-card KPI analytics section (Total, Keys, Published, Scheduled, Total Questions) in React Web App `ExamListPage.tsx`, alongside a Teacher Permissions Modal and approval controls.
+  - **Flutter Question Paper Screen Upgrade:** Redesigned `question_papers_screen.dart` with Admin statistics, Status badges, and quick actions for Admins (Approve/Reject/Publish/Delete). Restricted FAB upload permissions.
+  - **Teacher Answer Key Integration:** Created a bottom sheet in Flutter allowing Teachers to type/attach PDF links for Answer Keys directly on existing question papers.
 ## Infrastructure & Hosting Migration (Completed)
 - **VPS Setup Complete:** Successfully provisioned and configured the BigRock VPS (Ubuntu 22.04).
 - **Dual Database Architecture:** 

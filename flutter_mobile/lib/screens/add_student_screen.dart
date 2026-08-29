@@ -17,14 +17,12 @@ class _AddStudentScreenState extends State<AddStudentScreen> {
   // Controllers
   final _nameController = TextEditingController();
   final _studentIdController = TextEditingController();
-  final _passwordController = TextEditingController();
   final _dobController = TextEditingController();
   final _fatherNameController = TextEditingController();
   final _motherNameController = TextEditingController();
   final _phoneController = TextEditingController();
   final _aadharController = TextEditingController();
   final _bloodGroupController = TextEditingController();
-  final _medicalInfoController = TextEditingController();
   final _penNumberController = TextEditingController();
   final _addressController = TextEditingController();
 
@@ -48,14 +46,12 @@ class _AddStudentScreenState extends State<AddStudentScreen> {
   void dispose() {
     _nameController.dispose();
     _studentIdController.dispose();
-    _passwordController.dispose();
     _dobController.dispose();
     _fatherNameController.dispose();
     _motherNameController.dispose();
     _phoneController.dispose();
     _aadharController.dispose();
     _bloodGroupController.dispose();
-    _medicalInfoController.dispose();
     _penNumberController.dispose();
     _addressController.dispose();
     super.dispose();
@@ -168,7 +164,7 @@ class _AddStudentScreenState extends State<AddStudentScreen> {
       final payload = {
         'name': _nameController.text.trim(),
         'studentId': _studentIdController.text.trim(),
-        'password': _passwordController.text.trim(),
+        'password': 'Student@123',
         'classId': _selectedClassId,
         'dob': _dobController.text.trim(),
         'gender': _selectedGender ?? '',
@@ -177,7 +173,6 @@ class _AddStudentScreenState extends State<AddStudentScreen> {
         'phone': _phoneController.text.trim(),
         'aadharNo': _aadharController.text.trim(),
         'bloodGroup': _bloodGroupController.text.trim(),
-        'medicalInfo': _medicalInfoController.text.trim(),
         'penNumber': _penNumberController.text.trim(),
         'address': _addressController.text.trim(),
         'photoUrl': _photoUrl,
@@ -438,8 +433,6 @@ class _AddStudentScreenState extends State<AddStudentScreen> {
                           
                           _buildTextField(label: 'Student ID', controller: _studentIdController, hint: 'Leave blank to auto-generate'),
                           
-                          _buildTextField(label: 'Password', controller: _passwordController, hint: 'Create temporary password', isRequired: true, isPassword: true),
-                          
                           // Class Dropdown
                           Padding(
                             padding: const EdgeInsets.only(bottom: 16),
@@ -549,7 +542,6 @@ class _AddStudentScreenState extends State<AddStudentScreen> {
                           _buildTextField(label: "Contact Phone", controller: _phoneController, hint: "Phone number", keyboardType: TextInputType.phone),
                           _buildTextField(label: "Aadhar Number", controller: _aadharController, hint: "12-digit Aadhar", keyboardType: TextInputType.number),
                           _buildTextField(label: "Blood Group", controller: _bloodGroupController, hint: "e.g. O+, A-"),
-                          _buildTextField(label: "Medical Info", controller: _medicalInfoController, hint: "Allergies, conditions"),
                           _buildTextField(label: "PEN Number", controller: _penNumberController, hint: "Permanent Education Number"),
                           _buildTextField(label: "Home Address", controller: _addressController, hint: "Full residential address", maxLines: 3),
                         ],

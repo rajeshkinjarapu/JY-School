@@ -17,8 +17,18 @@ model QuestionPaper {
   section      String?
   title        String
   fileUrl      String
+  
+  // New Status & Workflow Fields
+  status       String   @default("PENDING_APPROVAL") // PENDING_APPROVAL, APPROVED, REJECTED, PUBLISHED
+  scheduledFor DateTime?
+  
+  // Answer Key Management
   answerKey    String?
   answerKeyUrl String?
+  isKeyPublished Boolean @default(false)
+  
+  // Audit Trail
   uploadedAt   DateTime @default(now())
   uploadedBy   String
+  approvedBy   String?
 }

@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import '../widgets/custom_network_image.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'exams_screen.dart';
@@ -144,41 +144,52 @@ class _ExaminationDashboardScreenState extends State<ExaminationDashboardScreen>
     ];
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: const Color(0xFFF1F5F9), // Light modern background
       drawer: const AppDrawer(currentRoute: 'exams'),
       appBar: AppBar(
         title: Text(
           'Examination Dashboard',
           style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 18),
         ),
-        backgroundColor: const Color(0xFF0F172A),
+        backgroundColor: Colors.transparent,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF4C4296), Color(0xFF2E2A66)], // Signature JY School Purple
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
         foregroundColor: Colors.white,
         elevation: 0,
+        centerTitle: true,
       ),
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          // Calculate available height
-          double availableHeight = constraints.maxHeight - 48;
-          if (availableHeight < 400) availableHeight = 400; 
-          
-          double itemWidth = (constraints.maxWidth - 32 - 12) / 2;
-          
-          // Always calculate itemHeight based on 5 rows to keep card sizes consistent
-          double itemHeight = (availableHeight - (12 * 4)) / 5; 
-          double dynamicAspectRatio = itemWidth / itemHeight;
-
-          return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 24.0),
-            child: GridView.count(
-              physics: const NeverScrollableScrollPhysics(),
-              crossAxisCount: 2,
-              crossAxisSpacing: 12,
-              mainAxisSpacing: 12,
-              childAspectRatio: dynamicAspectRatio,
-              children: cards,
+      body: Stack(
+        children: [
+          // Subtle background decorative circles
+          Positioned(
+            top: -50,
+            right: -50,
+            child: Container(
+              width: 200,
+              height: 200,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: const Color(0xFF4C4296).withOpacity(0.03),
+              ),
             ),
-          );
-        },
+          ),
+          GridView.count(
+            physics: const BouncingScrollPhysics(),
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
+            crossAxisCount: 3,
+            crossAxisSpacing: 12,
+            mainAxisSpacing: 12,
+            childAspectRatio: 0.9, 
+            children: cards,
+          ),
+        ],
       ),
     );
   }
@@ -193,71 +204,64 @@ class _ExaminationDashboardScreenState extends State<ExaminationDashboardScreen>
   }) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(20),
+      splashColor: color.withOpacity(0.1),
+      highlightColor: color.withOpacity(0.05),
       child: Container(
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: color.withOpacity(0.12),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
+              color: color.withOpacity(0.15),
+              blurRadius: 16,
+              offset: const Offset(0, 8),
             ),
           ],
-          border: Border.all(color: color.withOpacity(0.4), width: 1.5),
         ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12.0),
-          child: Row(
-            children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: color.withOpacity(0.08),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                alignment: Alignment.center,
-                child: CustomNetworkImage(
-                  imageUrl,
-                  width: 28,
-                  height: 28,
-                  errorBuilder: (context, error, stackTrace) => Icon(Icons.apps_rounded, color: color, size: 24),
-                ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 50,
+              height: 50,
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.08),
+                shape: BoxShape.circle,
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      title,
-                      style: GoogleFonts.outfit(
-                        color: const Color(0xFF1E293B),
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      subtitle,
-                      style: GoogleFonts.poppins(
-                        color: const Color(0xFF64748B),
-                        fontSize: 10,
-                        fontWeight: FontWeight.w500,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
+              alignment: Alignment.center,
+              child: CustomNetworkImage(
+                imageUrl,
+                width: 26,
+                height: 26,
+                errorBuilder: (context, error, stackTrace) => Icon(Icons.apps_rounded, color: color, size: 24),
               ),
-            ],
-          ),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: GoogleFonts.outfit(
+                color: const Color(0xFF1E293B),
+                fontSize: 13,
+                fontWeight: FontWeight.bold,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 2),
+            Text(
+              subtitle,
+              textAlign: TextAlign.center,
+              style: GoogleFonts.poppins(
+                color: const Color(0xFF64748B),
+                fontSize: 9,
+                fontWeight: FontWeight.w500,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
         ),
       ),
     );

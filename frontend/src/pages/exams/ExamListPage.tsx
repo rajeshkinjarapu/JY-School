@@ -681,7 +681,9 @@ export const ExamListPage: React.FC = () => {
   const [showQpModal, setShowQpModal] = useState(false);
   const [qpTitle, setQpTitle] = useState('');
   const [qpClassId, setQpClassId] = useState('');
+  const [qpClassIds, setQpClassIds] = useState<string[]>([]);
   const [qpSubjectId, setQpSubjectId] = useState('');
+  const [qpSubjectIds, setQpSubjectIds] = useState<string[]>([]);
   const [qpExamId, setQpExamId] = useState('');
   const [qpFileUrl, setQpFileUrl] = useState('');
   
@@ -691,35 +693,125 @@ export const ExamListPage: React.FC = () => {
   const [answerKeyText, setAnswerKeyText] = useState('');
   const [answerKeyUrl, setAnswerKeyUrl] = useState('');
 
+  // New Workflow States & Methods
+  const [qpStats, setQpStats] = useState<any>(null);
+  const [showPermissionsModal, setShowPermissionsModal] = useState(false);
+
+  const fetchQpStats = async () => {
+    if (!isAdmin) return;
+    try {
+      const res: any = await api.get('/api/question-papers/dashboard-stats');
+      setQpStats(res?.data || res);
+    } catch {
+      setQpStats(null);
+    }
+  };
+
   const fetchQuestionPapers = async () => {
     try {
       const res: any = await api.get('/api/question-papers');
-      // axios interceptor returns response.data directly, so res is already the array
       setQuestionPapers(Array.isArray(res) ? res : (res?.data || []));
+      fetchQpStats();
     } catch {
-      // Silently fail - question papers are optional, don't block the page with a toast
       setQuestionPapers([]);
+    }
+  };
+
+  const handleApproveQp = async (id: string) => {
+    try {
+      await api.put(`/api/question-papers/${id}/approve`);
+      toast.success('Question paper approved');
+      fetchQuestionPapers();
+    } catch {
+      toast.error('Failed to approve question paper');
+    }
+  };
+
+  const handleRejectQp = async (id: string) => {
+    try {
+      await api.put(`/api/question-papers/${id}/reject`);
+      toast.success('Question paper rejected');
+      fetchQuestionPapers();
+    } catch {
+      toast.error('Failed to reject question paper');
+    }
+  };
+
+  const handlePublishQp = async (id: string) => {
+    try {
+      await api.put(`/api/question-papers/${id}/publish`);
+      toast.success('Question paper published');
+      fetchQuestionPapers();
+    } catch {
+      toast.error('Failed to publish question paper');
+    }
+  };
+
+  const handleToggleTeacherPermission = async (teacherId: string, canUpload: boolean) => {
+    try {
+      await api.post('/api/question-papers/toggle-permission', { teacherId, canUpload });
+      toast.success('Teacher permission updated');
+      setTeachers(prev => prev.map((t: any) => t.id === teacherId ? { ...t, canUploadQuestionPapers: canUpload } : t));
+    } catch {
+      toast.error('Failed to update teacher permission');
     }
   };
 
   const handleCreateQp = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (qpClassIds.length === 0) {
+      toast.error('Please select at least one class');
+      return;
+    }
+    if (!qpFileUrl.trim()) {
+      toast.error('Please upload a file or enter a document URL');
+      return;
+    }
+
+    const loadingToast = toast.loading('Uploading question paper(s)...');
     try {
-      await api.post('/api/question-papers', {
-        title: qpTitle,
-        examId: qpExamId,
-        classId: qpClassId,
-        subjectId: qpSubjectId || undefined,
-        fileUrl: qpFileUrl
-      });
-      toast.success('Question paper uploaded successfully');
+      const subjectsToUpload = qpSubjectIds.length === 0 ? [undefined] : qpSubjectIds;
+
+      for (const classId of qpClassIds) {
+        for (const subjectId of subjectsToUpload) {
+          let finalTitle = qpTitle.trim();
+          if (!finalTitle) {
+            const examObj = exams.find(ex => ex.id === qpExamId);
+            const examPart = examObj ? examObj.name : '';
+            const subObj = subjects.find(s => s.id === subjectId);
+            const subjectPart = subObj ? subObj.name : '';
+            
+            if (examPart && subjectPart) {
+              finalTitle = `${examPart} - ${subjectPart}`;
+            } else if (examPart) {
+              finalTitle = examPart;
+            } else if (subjectPart) {
+              finalTitle = subjectPart;
+            } else {
+              finalTitle = qpFileUrl.split('/').pop() || 'Question Paper';
+            }
+          }
+
+          await api.post('/api/question-papers', {
+            title: finalTitle,
+            examId: qpExamId || undefined,
+            classId,
+            subjectId,
+            fileUrl: qpFileUrl
+          });
+        }
+      }
+      toast.dismiss(loadingToast);
+      toast.success('Question paper(s) uploaded successfully');
       setShowQpModal(false);
       setQpTitle('');
       setQpExamId('');
-      setQpSubjectId('');
+      setQpSubjectIds([]);
       setQpFileUrl('');
+      setQpClassIds([]);
       fetchQuestionPapers();
     } catch {
+      toast.dismiss(loadingToast);
       toast.error('Error uploading question paper');
     }
   };
@@ -1569,57 +1661,138 @@ export const ExamListPage: React.FC = () => {
       {/* ══ TAB 8: QUESTION PAPERS (UPLOAD/DOWNLOAD) ══ */}
       {activeTab === 'question-papers' && (
         <div className="space-y-6">
+          {/* Admin/Super Admin Dashboard Stats */}
+          {isAdmin && qpStats && (
+            <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+              <div className="bg-white dark:bg-gray-900 p-4 rounded-2xl border border-gray-150 dark:border-gray-800 shadow-sm">
+                <span className="text-[10px] font-extrabold uppercase text-gray-400">Total Papers</span>
+                <p className="text-2xl font-black text-slate-800 dark:text-white mt-1">{qpStats.totalPapers}</p>
+              </div>
+              <div className="bg-white dark:bg-gray-900 p-4 rounded-2xl border border-gray-150 dark:border-gray-800 shadow-sm">
+                <span className="text-[10px] font-extrabold uppercase text-gray-400">Answer Keys</span>
+                <p className="text-2xl font-black text-slate-800 dark:text-white mt-1">{qpStats.answerKeys}</p>
+              </div>
+              <div className="bg-white dark:bg-gray-900 p-4 rounded-2xl border border-gray-150 dark:border-gray-800 shadow-sm">
+                <span className="text-[10px] font-extrabold uppercase text-gray-400">Published Papers</span>
+                <p className="text-2xl font-black text-slate-800 dark:text-white mt-1">{qpStats.publishedPapers}</p>
+              </div>
+              <div className="bg-white dark:bg-gray-900 p-4 rounded-2xl border border-gray-150 dark:border-gray-800 shadow-sm">
+                <span className="text-[10px] font-extrabold uppercase text-gray-400">Scheduled Papers</span>
+                <p className="text-2xl font-black text-slate-800 dark:text-white mt-1">{qpStats.scheduledPapers}</p>
+              </div>
+              <div className="bg-white dark:bg-gray-900 p-4 rounded-2xl border border-gray-150 dark:border-gray-800 shadow-sm">
+                <span className="text-[10px] font-extrabold uppercase text-gray-400">Total Questions</span>
+                <p className="text-2xl font-black text-slate-800 dark:text-white mt-1">{qpStats.totalQuestions}</p>
+              </div>
+            </div>
+          )}
+
           <div className="flex justify-between items-center bg-white dark:bg-gray-900 p-4 rounded-xl border border-gray-150 dark:border-gray-800">
             <span className="text-xs font-extrabold uppercase text-gray-400">Manage Question Papers</span>
-            {(isAdmin || isTeacher) && (
-              <button onClick={() => setShowQpModal(true)} className="btn-primary flex items-center gap-2 text-xs font-bold">
-                <Plus className="w-4 h-4" /> Upload Paper
-              </button>
-            )}
+            <div className="flex gap-2">
+              {isAdmin && (
+                <button onClick={() => setShowPermissionsModal(true)} className="btn-secondary flex items-center gap-2 text-xs font-bold px-3 py-1.5 rounded-lg border border-gray-200">
+                  Teacher Permissions
+                </button>
+              )}
+              {isAdmin && (
+                <button onClick={() => setShowQpModal(true)} className="btn-primary flex items-center gap-2 text-xs font-bold px-3 py-1.5 rounded-lg bg-indigo-600 text-white">
+                  <Plus className="w-4 h-4" /> Upload Paper
+                </button>
+              )}
+            </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {questionPapers.map(qp => (
-              <div key={qp.id} className="card p-6 space-y-4 hover:shadow-md relative group border-t-4 border-emerald-500">
-                <div>
-                  <h4 className="font-bold text-base text-gray-900 dark:text-white">{qp.title}</h4>
-                  <p className="text-[11px] text-gray-400 mt-1">
-                    {qp.exam?.name && <span className="font-bold text-indigo-500 mr-2">{qp.exam.name}</span>}
-                    Class: {qp.class?.name}-{qp.class?.section} {qp.subject?.name && `| Subject: ${qp.subject?.name}`}
-                  </p>
-                </div>
-                
-                <div className="flex gap-2 mt-2">
-                  <a href={qp.fileUrl} target="_blank" rel="noreferrer" className="btn-primary flex-1 text-center text-xs flex items-center justify-center gap-2">
-                    <FileText className="w-4 h-4" /> Paper
-                  </a>
-                  
-                  {qp.answerKeyUrl && (
-                    <a href={qp.answerKeyUrl} target="_blank" rel="noreferrer" className="btn-secondary flex-1 text-center text-xs flex items-center justify-center gap-2">
-                       <Key className="w-4 h-4" /> Key
-                    </a>
-                  )}
+            {questionPapers.map(qp => {
+              let borderCol = "border-amber-500";
+              let statusText = qp.status || "PENDING_APPROVAL";
+              let badgeBg = "bg-amber-50 text-amber-600 border-amber-200";
 
-                  {(isAdmin || isTeacher) && (
-                    <>
+              if (statusText === 'PUBLISHED') {
+                borderCol = "border-emerald-500";
+                badgeBg = "bg-emerald-50 text-emerald-600 border-emerald-200";
+              } else if (statusText === 'APPROVED') {
+                borderCol = "border-blue-500";
+                badgeBg = "bg-blue-50 text-blue-600 border-blue-200";
+              } else if (statusText === 'REJECTED') {
+                borderCol = "border-rose-500";
+                badgeBg = "bg-rose-50 text-rose-600 border-rose-200";
+              }
+
+              return (
+                <div key={qp.id} className={`card p-6 space-y-4 hover:shadow-md relative group border-t-4 ${borderCol}`}>
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h4 className="font-bold text-base text-gray-900 dark:text-white">{qp.title}</h4>
+                      <p className="text-[11px] text-gray-400 mt-1">
+                        {qp.exam?.name && <span className="font-bold text-indigo-500 mr-2">{qp.exam.name}</span>}
+                        Class: {qp.class?.name}-{qp.class?.section} {qp.subject?.name && `| Subject: ${qp.subject?.name}`}
+                      </p>
+                    </div>
+                    {isAdmin && (
+                      <span className={`text-[9px] font-black uppercase tracking-wider px-2 py-1 rounded border ${badgeBg}`}>
+                        {statusText}
+                      </span>
+                    )}
+                  </div>
+                  
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    <a href={qp.fileUrl} target="_blank" rel="noreferrer" className="btn-primary flex-1 text-center text-xs flex items-center justify-center gap-2 py-1.5 px-3 rounded-lg bg-emerald-600 text-white font-bold">
+                      <FileText className="w-4 h-4" /> Paper
+                    </a>
+                    
+                    {qp.answerKeyUrl && (
+                      <a href={qp.answerKeyUrl} target="_blank" rel="noreferrer" className="btn-secondary flex-1 text-center text-xs flex items-center justify-center gap-2 py-1.5 px-3 rounded-lg border border-gray-200 text-gray-700 dark:text-gray-200 font-bold">
+                         <Key className="w-4 h-4" /> Key
+                      </a>
+                    )}
+
+                    {(isAdmin || isTeacher) && (
                       <button onClick={() => { setSelectedQpForAnswerKey(qp); setAnswerKeyText(qp.answerKey || ''); setAnswerKeyUrl(qp.answerKeyUrl || ''); setShowAnswerKeyModal(true); }} className="p-2 border border-blue-200 text-blue-500 hover:bg-blue-50 rounded-xl cursor-pointer" title="Manage Answer Key">
                         <Key className="w-4 h-4" />
                       </button>
-                      <button onClick={() => handleDeleteQp(qp.id)} className="p-2 border border-red-200 dark:border-red-900/40 text-red-500 hover:bg-red-50 rounded-xl cursor-pointer" title="Delete Paper">
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </>
+                    )}
+
+                    {isAdmin && (
+                      <>
+                        <button onClick={() => handleDeleteQp(qp.id)} className="p-2 border border-red-200 dark:border-red-900/40 text-red-500 hover:bg-red-50 rounded-xl cursor-pointer" title="Delete Paper">
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </>
+                    )}
+                  </div>
+
+                  {/* Admin Workflow Buttons */}
+                  {isAdmin && (
+                    <div className="flex gap-2 pt-2 border-t border-gray-100 dark:border-gray-800 text-xs">
+                      {statusText === 'PENDING_APPROVAL' && (
+                        <>
+                          <button onClick={() => handleApproveQp(qp.id)} className="flex-1 py-1.5 px-2 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg font-bold border border-blue-200 text-center">
+                            Approve
+                          </button>
+                          <button onClick={() => handleRejectQp(qp.id)} className="flex-1 py-1.5 px-2 bg-rose-50 text-rose-600 hover:bg-rose-100 rounded-lg font-bold border border-rose-200 text-center">
+                            Reject
+                          </button>
+                        </>
+                      )}
+                      {(statusText === 'APPROVED' || statusText === 'REJECTED') && (
+                        <button onClick={() => handlePublishQp(qp.id)} className="w-full py-1.5 px-2 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 rounded-lg font-bold border border-emerald-200 text-center">
+                          Publish Paper
+                        </button>
+                      )}
+                    </div>
+                  )}
+                  
+                  {qp.answerKey && (
+                    <div className="mt-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg text-xs border border-gray-100 dark:border-gray-700">
+                      <p className="font-bold mb-1 flex items-center gap-1"><Key className="w-3 h-3 text-emerald-500"/> Typed Answer Key:</p>
+                      <div className="whitespace-pre-wrap text-gray-600 dark:text-gray-300">{qp.answerKey}</div>
+                    </div>
                   )}
                 </div>
-                
-                {qp.answerKey && (
-                  <div className="mt-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg text-xs border border-gray-100 dark:border-gray-700">
-                    <p className="font-bold mb-1 flex items-center gap-1"><Key className="w-3 h-3 text-emerald-500"/> Typed Answer Key:</p>
-                    <div className="whitespace-pre-wrap text-gray-600 dark:text-gray-300">{qp.answerKey}</div>
-                  </div>
-                )}
-              </div>
-            ))}
+              );
+            })}
             {questionPapers.length === 0 && (
               <div className="col-span-full py-12 text-center text-gray-400">
                 No question papers uploaded yet.
@@ -1636,35 +1809,142 @@ export const ExamListPage: React.FC = () => {
                 </div>
                 <form onSubmit={handleCreateQp} className="space-y-4">
                   <div>
-                    <label className="label">Title</label>
-                    <input type="text" required placeholder="e.g. Mid Term Physics Paper" value={qpTitle} onChange={e => setQpTitle(e.target.value)} className="input" />
+                    <label className="label">Title (Optional)</label>
+                    <input type="text" placeholder="e.g. Mid Term Physics Paper" value={qpTitle} onChange={e => setQpTitle(e.target.value)} className="input" />
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <label className="label">Exam (Optional)</label>
-                      <select value={qpExamId} onChange={e => setQpExamId(e.target.value)} className="input">
+                      <select value={qpExamId} onChange={e => {
+                        const newExamId = e.target.value;
+                        setQpExamId(newExamId);
+                        setQpClassIds([]);
+                        setQpSubjectId('');
+                      }} className="input">
                         <option value="">Select Exam...</option>
-                        {exams.map(e => <option key={e.id} value={e.id}>{formatExamOptionLabel(e)}</option>)}
+                        {exams.map(e => <option key={e.id} value={e.id}>{formatExamOptionLabel(e.name)}</option>)}
                       </select>
                     </div>
+                    
                     <div>
-                      <label className="label">Class</label>
-                      <select required value={qpClassId} onChange={e => setQpClassId(e.target.value)} className="input">
-                        <option value="">Select...</option>
-                        {classes.map(c => <option key={c.id} value={c.id}>{c.name}-{c.section}</option>)}
-                      </select>
+                      <label className="label">Classes * (Select multiple if same paper)</label>
+                      <div className="grid grid-cols-2 gap-2 mt-1 max-h-24 overflow-y-auto p-2 bg-slate-50 rounded-xl border border-slate-200">
+                        {(() => {
+                          if (!qpExamId) return classes;
+                          const selectedExam = exams.find(ex => ex.id === qpExamId);
+                          return selectedExam?.classes || [];
+                        })().map(c => {
+                          const checked = qpClassIds.includes(c.id);
+                          return (
+                            <label key={c.id} className="flex items-center gap-1.5 cursor-pointer text-xs font-bold text-slate-700">
+                              <input 
+                                type="checkbox" 
+                                checked={checked} 
+                                onChange={(e) => {
+                                  if (e.target.checked) {
+                                    setQpClassIds(prev => [...prev, c.id]);
+                                  } else {
+                                    setQpClassIds(prev => prev.filter(id => id !== c.id));
+                                  }
+                                }} 
+                                className="w-3.5 h-3.5 text-indigo-600 rounded focus:ring-indigo-500" 
+                              />
+                              {c.name}-{c.section}
+                            </label>
+                          );
+                        })}
+                      </div>
                     </div>
                   </div>
+                  
                   <div>
-                    <label className="label">Subject (Optional)</label>
-                    <select value={qpSubjectId} onChange={e => setQpSubjectId(e.target.value)} className="input">
-                      <option value="">All Subjects / Combined</option>
-                      {subjects.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-                    </select>
+                    <label className="label">Subjects (Optional - Select multiple if same paper or combined)</label>
+                    <div className="grid grid-cols-2 gap-2 mt-1 max-h-24 overflow-y-auto p-2 bg-slate-50 rounded-xl border border-slate-200">
+                      {(() => {
+                        if (!qpExamId) return subjects;
+                        const selectedExam = exams.find(e => e.id === qpExamId);
+                        if (!selectedExam || !selectedExam.subjects) return [];
+                        const examSubs = Array.isArray(selectedExam.subjects) 
+                          ? selectedExam.subjects 
+                          : (typeof selectedExam.subjects === 'string' ? JSON.parse(selectedExam.subjects) : []);
+                        
+                        return examSubs.map((es: any) => {
+                          const subId = es.id || es.subjectId || es.subject?.id;
+                          const foundSub = subjects.find(s => s.id === subId);
+                          return foundSub || { id: subId, name: es.name || es.subject?.name };
+                        }).filter(Boolean);
+                      })().map(s => {
+                        const checked = qpSubjectIds.includes(s.id);
+                        return (
+                          <label key={s.id} className="flex items-center gap-1.5 cursor-pointer text-xs font-bold text-slate-700">
+                            <input 
+                              type="checkbox" 
+                              checked={checked} 
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  setQpSubjectIds(prev => [...prev, s.id]);
+                                } else {
+                                  setQpSubjectIds(prev => prev.filter(id => id !== s.id));
+                                }
+                              }} 
+                              className="w-3.5 h-3.5 text-indigo-600 rounded focus:ring-indigo-500" 
+                            />
+                            {s.name}
+                          </label>
+                        );
+                      })}
+                    </div>
                   </div>
-                  <div>
-                    <label className="label">File URL (PDF/Word)</label>
-                    <input type="url" required placeholder="https://link-to-file.pdf" value={qpFileUrl} onChange={e => setQpFileUrl(e.target.value)} className="input" />
+
+                  <div className="space-y-3 border border-slate-100 rounded-xl p-3 bg-slate-50/50">
+                    <div>
+                      <label className="label font-bold text-xs text-slate-500">Upload Document (PDF/Word)</label>
+                      <input 
+                        type="file" 
+                        accept=".pdf,.doc,.docx" 
+                        onChange={async (e) => {
+                          const file = e.target.files?.[0];
+                          if (!file) return;
+                          const formData = new FormData();
+                          formData.append('file', file);
+                          const loadingToast = toast.loading('Uploading document...');
+                          try {
+                            const res: any = await api.post('/api/uploads/document', formData, {
+                              headers: { 'Content-Type': 'multipart/form-data' }
+                            });
+                            toast.dismiss(loadingToast);
+                            const urlVal = res.data?.url || res.url || res.data?.data?.url;
+                            if (urlVal) {
+                              setQpFileUrl(urlVal);
+                              toast.success('Document uploaded successfully');
+                            } else {
+                              toast.error('Upload failed: Invalid response');
+                            }
+                          } catch {
+                            toast.dismiss(loadingToast);
+                            toast.error('Error uploading document');
+                          }
+                        }} 
+                        className="input bg-white" 
+                      />
+                    </div>
+                    
+                    <div className="relative flex py-1 items-center">
+                      <div className="flex-grow border-t border-slate-200"></div>
+                      <span className="flex-shrink mx-4 text-slate-400 text-[10px] font-bold">OR PASTE LINK MANUALLY</span>
+                      <div className="flex-grow border-t border-slate-200"></div>
+                    </div>
+
+                    <div>
+                      <label className="label font-bold text-xs text-slate-500">File Link (PDF/Word/Drive)</label>
+                      <input 
+                        type="text" 
+                        placeholder="https://link-to-file.pdf or drive link" 
+                        value={qpFileUrl} 
+                        onChange={e => setQpFileUrl(e.target.value)} 
+                        className="input bg-white" 
+                      />
+                    </div>
                   </div>
                   <div className="flex gap-3 justify-end pt-2">
                     <button type="button" onClick={() => setShowQpModal(false)} className="btn-secondary text-sm">Cancel</button>
@@ -2038,6 +2318,50 @@ export const ExamListPage: React.FC = () => {
               <button onClick={handleSendMarksSMS} disabled={isSendingSms || !smsExamId || !smsClassId} className="px-5 py-2.5 rounded-xl text-sm font-bold bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:from-amber-600 hover:to-orange-600 shadow-md shadow-orange-500/20 transition-all disabled:opacity-50 flex items-center gap-2">
                 {isSendingSms ? 'Sending...' : 'Send SMS'}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Teacher Permissions Modal */}
+      {showPermissionsModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white dark:bg-gray-900 rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl border border-gray-100 dark:border-gray-800 animate-scale-up">
+            <div className="p-6 bg-gradient-to-r from-indigo-500 to-purple-500 text-white flex justify-between items-center">
+              <div>
+                <h3 className="text-lg font-black uppercase tracking-wider">Teacher Permissions</h3>
+                <p className="text-xs text-indigo-100 mt-1">Allow teachers to upload draft question papers</p>
+              </div>
+              <button onClick={() => setShowPermissionsModal(false)} className="p-2 hover:bg-white/10 rounded-full transition-colors">
+                <X className="w-5 h-5 text-white" />
+              </button>
+            </div>
+            
+            <div className="p-6 max-h-96 overflow-y-auto divide-y divide-gray-100 dark:divide-gray-800">
+              {teachers.map((teacher: any) => (
+                <div key={teacher.id} className="py-3.5 flex justify-between items-center">
+                  <div>
+                    <p className="text-sm font-bold text-gray-800 dark:text-gray-200">{teacher.user?.name || 'Unknown'}</p>
+                    <p className="text-[10px] font-semibold text-gray-400 mt-0.5">{teacher.employeeId || 'No ID'} · {teacher.specialization || 'General'}</p>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input 
+                      type="checkbox" 
+                      checked={teacher.canUploadQuestionPapers || false} 
+                      onChange={(e) => handleToggleTeacherPermission(teacher.id, e.target.checked)}
+                      className="sr-only peer" 
+                    />
+                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-indigo-600"></div>
+                  </label>
+                </div>
+              ))}
+              {teachers.length === 0 && (
+                <p className="text-center py-6 text-sm text-gray-400">No teachers found.</p>
+              )}
+            </div>
+
+            <div className="p-5 border-t border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50 flex justify-end">
+              <button onClick={() => setShowPermissionsModal(false)} className="px-5 py-2.5 bg-gray-200 text-gray-700 hover:bg-gray-300 rounded-xl text-sm font-bold transition-colors">Close</button>
             </div>
           </div>
         </div>

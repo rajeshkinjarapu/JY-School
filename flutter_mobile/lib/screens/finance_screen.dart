@@ -146,14 +146,14 @@ class _FinanceScreenState extends State<FinanceScreen> {
       children: [
         _buildKPIGrid(),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 8.0),
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 0.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Finance Services', style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.w800, color: const Color(0xFF1E293B))),
-              const SizedBox(height: 16),
+              Text('Finance Services', style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.w800, color: const Color(0xFF1E293B))),
+              const SizedBox(height: 10),
               _buildModulesGrid(),
-              const SizedBox(height: 80),
+              const SizedBox(height: 20),
             ],
           ),
         ),
@@ -163,7 +163,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
 
   Widget _buildKPIGrid() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
       child: Column(
         children: [
           Row(
@@ -176,7 +176,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
                   colors: [const Color(0xFF10B981), const Color(0xFF34D399)],
                 ),
               ),
-              const SizedBox(width: 16),
+              const SizedBox(width: 12),
               Expanded(
                 child: _buildStatCard(
                   title: 'Pending Dues',
@@ -187,7 +187,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
           Row(
             children: [
               Expanded(
@@ -198,7 +198,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
                   colors: [const Color(0xFF3B82F6), const Color(0xFF60A5FA)],
                 ),
               ),
-              const SizedBox(width: 16),
+              const SizedBox(width: 12),
               Expanded(
                 child: _buildStatCard(
                   title: 'Total Expected',
@@ -216,10 +216,10 @@ class _FinanceScreenState extends State<FinanceScreen> {
 
   Widget _buildStatCard({required String title, required String value, required IconData icon, required List<Color> colors}) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
         gradient: LinearGradient(colors: colors, begin: Alignment.topLeft, end: Alignment.bottomRight),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(14),
         boxShadow: [
           BoxShadow(color: colors[0].withOpacity(0.3), blurRadius: 8, offset: const Offset(0, 4)),
         ],
@@ -228,16 +228,16 @@ class _FinanceScreenState extends State<FinanceScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            padding: const EdgeInsets.all(6),
+            padding: const EdgeInsets.all(5),
             decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), shape: BoxShape.circle),
-            child: Icon(icon, color: Colors.white, size: 16),
+            child: Icon(icon, color: Colors.white, size: 14),
           ),
-          const SizedBox(height: 8),
-          Text(title, style: GoogleFonts.poppins(color: Colors.white.withOpacity(0.9), fontSize: 11, fontWeight: FontWeight.w600)),
-          const SizedBox(height: 2),
+          const SizedBox(height: 6),
+          Text(title, style: GoogleFonts.poppins(color: Colors.white.withOpacity(0.9), fontSize: 10, fontWeight: FontWeight.w600)),
+          const SizedBox(height: 0),
           FittedBox(
             fit: BoxFit.scaleDown,
-            child: Text(value, style: GoogleFonts.outfit(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+            child: Text(value, style: GoogleFonts.outfit(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -286,9 +286,9 @@ class _FinanceScreenState extends State<FinanceScreen> {
       itemCount: modules.length,
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 3,
-        crossAxisSpacing: 12,
-        mainAxisSpacing: 12,
-        childAspectRatio: 0.85,
+        crossAxisSpacing: 10,
+        mainAxisSpacing: 10,
+        childAspectRatio: 1.05, // Much shorter cards so they fit perfectly
       ),
       itemBuilder: (context, index) {
         final mod = modules[index];
@@ -310,7 +310,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
       splashColor: color.withOpacity(0.1),
       highlightColor: color.withOpacity(0.05),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
@@ -327,17 +327,17 @@ class _FinanceScreenState extends State<FinanceScreen> {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Container(
-              padding: const EdgeInsets.all(10),
+              padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
                 color: color.withOpacity(0.1),
                 shape: BoxShape.circle,
               ),
-              child: Icon(icon, color: color, size: 24),
+              child: Icon(icon, color: color, size: 22),
             ),
-            const SizedBox(height: 10),
-            Text(title, textAlign: TextAlign.center, style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13, color: const Color(0xFF1E293B))),
-            const SizedBox(height: 2),
-            Text(desc, textAlign: TextAlign.center, style: GoogleFonts.poppins(fontSize: 9, color: const Color(0xFF94A3B8))),
+            const SizedBox(height: 8),
+            Text(title, textAlign: TextAlign.center, style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 11, color: const Color(0xFF1E293B))),
+            const SizedBox(height: 0),
+            Text(desc, textAlign: TextAlign.center, style: GoogleFonts.poppins(fontSize: 8, color: const Color(0xFF94A3B8))),
           ],
         ),
       ),

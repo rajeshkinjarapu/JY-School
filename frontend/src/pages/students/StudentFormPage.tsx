@@ -43,7 +43,6 @@ export const StudentFormPage: React.FC = () => {
         gender: student.gender || '',
         address: student.address || '',
         bloodGroup: student.bloodGroup || '',
-        medicalInfo: student.medicalInfo || '',
         fatherName: student.fatherName || '',
         motherName: student.motherName || '',
         aadharNo: student.aadharNo || '',
@@ -86,7 +85,7 @@ export const StudentFormPage: React.FC = () => {
 
   const onSubmit = async (data: any) => {
     try {
-      const payload = { ...data, photoUrl };
+      const payload = { ...data, photoUrl, ...(id ? {} : { password: 'Student@123' }) };
       if (id) {
         await api.put(`/api/students/${id}`, payload);
         toast.success('Student profile updated successfully!');
@@ -155,12 +154,6 @@ export const StudentFormPage: React.FC = () => {
                 <label className="text-[11px] font-black uppercase tracking-wider text-gray-500">Student ID</label>
                 <input type="text" className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all font-semibold" placeholder="Leave blank to auto-generate" {...register('studentId')} />
               </div>
-              {!id && (
-                <div className="space-y-1">
-                  <label className="text-[11px] font-black uppercase tracking-wider text-gray-500">Password <span className="text-red-500">*</span></label>
-                  <input type="password" required className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all font-semibold" placeholder="Create temporary password" {...register('password')} />
-                </div>
-              )}
               <div className="space-y-1">
                 <label className="text-[11px] font-black uppercase tracking-wider text-gray-500">Assign Class</label>
                 <select className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all font-semibold" {...register('classId')}>
@@ -207,10 +200,6 @@ export const StudentFormPage: React.FC = () => {
               <div className="space-y-1">
                 <label className="text-[11px] font-black uppercase tracking-wider text-gray-500">Blood Group</label>
                 <input type="text" className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all font-semibold" placeholder="e.g. O+, A-" {...register('bloodGroup')} />
-              </div>
-              <div className="space-y-1">
-                <label className="text-[11px] font-black uppercase tracking-wider text-gray-500">Medical Info</label>
-                <input type="text" className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all font-semibold" placeholder="Allergies, conditions" {...register('medicalInfo')} />
               </div>
               <div className="space-y-1">
                 <label className="text-[11px] font-black uppercase tracking-wider text-gray-500">PEN Number</label>

@@ -3,7 +3,25 @@ import { prisma, prismaLocal } from '../utils/prisma';
 
 export const getAllQuestionPapers = async (req: Request, res: Response) => {
   try {
+    const userRole = (req as any).user?.role;
+    const userId = (req as any).user?.id;
+
+    let filter: any = {};
+
+    // Filter based on roles
+    if (userRole === 'STUDENT' || userRole === 'PARENT') {
+      filter.status = 'PUBLISHED';
+    } else if (userRole === 'TEACHER') {
+      // Teachers can see approved/published papers, or drafts they uploaded themselves
+      filter.OR = [
+        { status: 'PUBLISHED' },
+        { status: 'APPROVED' },
+        { uploadedBy: userId }
+      ];
+    } // ADMIN and SUPER_ADMIN see all
+
     const papers = await prismaLocal.questionPaper.findMany({
+      where: filter,
       orderBy: { uploadedAt: 'desc' }
     });
 
@@ -34,17 +52,31 @@ export const getAllQuestionPapers = async (req: Request, res: Response) => {
 
 export const createQuestionPaper = async (req: Request, res: Response) => {
   try {
-    const { title, classId, subjectId, fileUrl, examId, section } = req.body;
+    const { title, classId, subjectId, fileUrl, examId, section, scheduledFor } = req.body;
+    const userRole = (req as any).user?.role;
+    const userId = (req as any).user?.id;
+
+    // Check teacher permission if uploader is a teacher
+    if (userRole === 'TEACHER') {
+      const teacher = await prisma.teacher.findUnique({
+        where: { userId }
+      });
+      if (!teacher || !teacher.canUploadQuestionPapers) {
+        return res.status(403).json({ message: 'You do not have permission to upload question papers.' });
+      }
+    }
 
     const data: any = {
       title,
       fileUrl,
       classId,
-      uploadedBy: req.body.uploadedBy || 'system',
+      uploadedBy: userId || 'system',
+      status: (userRole === 'SUPER_ADMIN' || userRole === 'ADMIN') ? 'PUBLISHED' : 'PENDING_APPROVAL'
     };
     if (subjectId) data.subjectId = subjectId;
     if (examId) data.examId = examId;
     if (section) data.section = section;
+    if (scheduledFor) data.scheduledFor = new Date(scheduledFor);
 
     const paper = await prismaLocal.questionPaper.create({
       data
@@ -91,11 +123,104 @@ export const updateAnswerKey = async (req: Request, res: Response) => {
       data: { answerKey, answerKeyUrl }
     });
     
-    // We don't necessarily need to attach relations for an update response, 
-    // but we can if the frontend expects it.
     res.json(updatedPaper);
   } catch (error) {
     console.error('Error updating answer key:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+export const approveQuestionPaper = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const userId = (req as any).user?.id;
+
+    const updatedPaper = await prismaLocal.questionPaper.update({
+      where: { id },
+      data: { 
+        status: 'APPROVED',
+        approvedBy: userId
+      }
+    });
+    res.json(updatedPaper);
+  } catch (error) {
+    console.error('Error approving paper:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+export const rejectQuestionPaper = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const updatedPaper = await prismaLocal.questionPaper.update({
+      where: { id },
+      data: { status: 'REJECTED' }
+    });
+    res.json(updatedPaper);
+  } catch (error) {
+    console.error('Error rejecting paper:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+export const publishQuestionPaper = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const updatedPaper = await prismaLocal.questionPaper.update({
+      where: { id },
+      data: { status: 'PUBLISHED' }
+    });
+    res.json(updatedPaper);
+  } catch (error) {
+    console.error('Error publishing paper:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+export const getQuestionPaperDashboardStats = async (req: Request, res: Response) => {
+  try {
+    const [totalPapers, publishedPapers, answerKeys, scheduledPapers, totalQuestions] = await Promise.all([
+      prismaLocal.questionPaper.count(),
+      prismaLocal.questionPaper.count({ where: { status: 'PUBLISHED' } }),
+      prismaLocal.questionPaper.count({ where: { answerKeyUrl: { not: null } } }),
+      prismaLocal.questionPaper.count({
+        where: {
+          scheduledFor: { not: null, gt: new Date() }
+        }
+      }),
+      prisma.questionBank.count()
+    ]);
+
+    res.json({
+      totalPapers,
+      publishedPapers,
+      answerKeys,
+      scheduledPapers,
+      totalQuestions
+    });
+  } catch (error) {
+    console.error('Error fetching dashboard stats:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+export const toggleTeacherPermission = async (req: Request, res: Response) => {
+  try {
+    const { teacherId } = req.body; // Primary ID of the Teacher model
+    const { canUpload } = req.body;
+
+    const updatedTeacher = await prisma.teacher.update({
+      where: { id: teacherId },
+      data: { canUploadQuestionPapers: canUpload },
+      include: { user: { select: { name: true, email: true } } }
+    });
+
+    res.json({
+      message: `Permissions updated successfully for ${updatedTeacher.user.name}`,
+      teacher: updatedTeacher
+    });
+  } catch (error) {
+    console.error('Error toggling teacher permission:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 };
