@@ -201,41 +201,73 @@ class _UploadQuestionPaperScreenState extends State<UploadQuestionPaperScreen> {
   }
 
   void _showMultiClassSelector() {
-    showDialog(
+    showModalBottomSheet(
       context: context,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(30))),
+      backgroundColor: Colors.white,
+      isScrollControlled: true,
       builder: (ctx) {
         return StatefulBuilder(
           builder: (context, setModalState) {
-            return AlertDialog(
-              title: const Text('Select Classes'),
-              content: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: _classes.map((c) {
-                    final isChecked = _selectedClassIds.contains(c['id']);
-                    return CheckboxListTile(
-                      title: Text('${c['name']}-${c['section']}'),
-                      value: isChecked,
-                      onChanged: (val) {
-                        setModalState(() {
-                          if (val == true) {
-                            _selectedClassIds.add(c['id']);
-                          } else {
-                            _selectedClassIds.remove(c['id']);
-                          }
-                        });
-                        setState(() {}); // refresh main screen
-                      },
-                    );
-                  }).toList(),
-                ),
+            return Padding(
+              padding: EdgeInsets.only(
+                left: 24, right: 24, top: 20,
+                bottom: MediaQuery.of(context).padding.bottom + 20
               ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(ctx),
-                  child: const Text('Done'),
-                )
-              ],
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 40, height: 4,
+                      decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(10)),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text('Select Classes', style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: const Color(0xFF1E293B))),
+                  const SizedBox(height: 12),
+                  ConstrainedBox(
+                    constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.4),
+                    child: ListView(
+                      shrinkWrap: true,
+                      children: _classes.map((c) {
+                        final isChecked = _selectedClassIds.contains(c['id']);
+                        return CheckboxListTile(
+                          title: Text('${c['name']}-${c['section']}', style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w600)),
+                          value: isChecked,
+                          activeColor: const Color(0xFF6366F1),
+                          checkboxShape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
+                          onChanged: (val) {
+                            setModalState(() {
+                              if (val == true) {
+                                _selectedClassIds.add(c['id']);
+                              } else {
+                                _selectedClassIds.remove(c['id']);
+                              }
+                            });
+                            setState(() {}); // refresh main screen
+                          },
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: ElevatedButton(
+                      onPressed: () => Navigator.pop(ctx),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF6366F1),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        elevation: 0,
+                      ),
+                      child: Text('Done', style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
+                    ),
+                  ),
+                ],
+              ),
             );
           }
         );
@@ -244,41 +276,73 @@ class _UploadQuestionPaperScreenState extends State<UploadQuestionPaperScreen> {
   }
 
   void _showMultiSubjectSelector() {
-    showDialog(
+    showModalBottomSheet(
       context: context,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(30))),
+      backgroundColor: Colors.white,
+      isScrollControlled: true,
       builder: (ctx) {
         return StatefulBuilder(
           builder: (context, setModalState) {
-            return AlertDialog(
-              title: const Text('Select Subjects'),
-              content: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: _subjects.map((s) {
-                    final isChecked = _selectedSubjectIds.contains(s['id']);
-                    return CheckboxListTile(
-                      title: Text(s['name'] ?? ''),
-                      value: isChecked,
-                      onChanged: (val) {
-                        setModalState(() {
-                          if (val == true) {
-                            _selectedSubjectIds.add(s['id']);
-                          } else {
-                            _selectedSubjectIds.remove(s['id']);
-                          }
-                        });
-                        setState(() {}); // refresh main screen
-                      },
-                    );
-                  }).toList(),
-                ),
+            return Padding(
+              padding: EdgeInsets.only(
+                left: 24, right: 24, top: 20,
+                bottom: MediaQuery.of(context).padding.bottom + 20
               ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(ctx),
-                  child: const Text('Done'),
-                )
-              ],
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 40, height: 4,
+                      decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(10)),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text('Select Subjects', style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: const Color(0xFF1E293B))),
+                  const SizedBox(height: 12),
+                  ConstrainedBox(
+                    constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.4),
+                    child: ListView(
+                      shrinkWrap: true,
+                      children: _subjects.map((s) {
+                        final isChecked = _selectedSubjectIds.contains(s['id']);
+                        return CheckboxListTile(
+                          title: Text(s['name'] ?? '', style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w600)),
+                          value: isChecked,
+                          activeColor: const Color(0xFF6366F1),
+                          checkboxShape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
+                          onChanged: (val) {
+                            setModalState(() {
+                              if (val == true) {
+                                _selectedSubjectIds.add(s['id']);
+                              } else {
+                                _selectedSubjectIds.remove(s['id']);
+                              }
+                            });
+                            setState(() {}); // refresh main screen
+                          },
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: ElevatedButton(
+                      onPressed: () => Navigator.pop(ctx),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF6366F1),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        elevation: 0,
+                      ),
+                      child: Text('Done', style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
+                    ),
+                  ),
+                ],
+              ),
             );
           }
         );

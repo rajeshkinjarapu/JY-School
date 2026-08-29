@@ -308,45 +308,59 @@ class _QuestionPapersScreenState extends State<QuestionPapersScreen> {
   Widget _buildDashboardStats() {
     if (_stats == null) return const SizedBox.shrink();
     return Container(
-      height: 85,
-      margin: const EdgeInsets.only(bottom: 12, top: 12),
+      height: 100,
+      margin: const EdgeInsets.only(bottom: 8, top: 12),
       child: ListView(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 16),
         children: [
-          _buildStatCard('Total Papers', _stats!['totalPapers']?.toString() ?? '0', Colors.indigo),
+          _buildStatCard('Total Papers', _stats!['totalPapers']?.toString() ?? '0', const Color(0xFF6366F1), Icons.file_copy_rounded),
           const SizedBox(width: 12),
-          _buildStatCard('Keys Uploaded', _stats!['answerKeys']?.toString() ?? '0', Colors.teal),
+          _buildStatCard('Keys Uploaded', _stats!['answerKeys']?.toString() ?? '0', const Color(0xFF10B981), Icons.key_rounded),
           const SizedBox(width: 12),
-          _buildStatCard('Published', _stats!['publishedPapers']?.toString() ?? '0', Colors.teal),
+          _buildStatCard('Published', _stats!['publishedPapers']?.toString() ?? '0', const Color(0xFF06B6D4), Icons.check_circle_rounded),
           const SizedBox(width: 12),
-          _buildStatCard('Scheduled', _stats!['scheduledPapers']?.toString() ?? '0', Colors.orange),
+          _buildStatCard('Scheduled', _stats!['scheduledPapers']?.toString() ?? '0', const Color(0xFFF59E0B), Icons.watch_later_rounded),
           const SizedBox(width: 12),
-          _buildStatCard('Total Qs', _stats!['totalQuestions']?.toString() ?? '0', Colors.purple),
+          _buildStatCard('Total Qs', _stats!['totalQuestions']?.toString() ?? '0', const Color(0xFFEC4899), Icons.help_outline_rounded),
         ],
       ),
     );
   }
 
-  Widget _buildStatCard(String label, String value, Color color) {
+  Widget _buildStatCard(String label, String value, Color color, IconData icon) {
     return Container(
-      width: 130,
-      padding: const EdgeInsets.all(12),
+      width: 140,
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(24),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 8, offset: const Offset(0, 4)),
+          BoxShadow(color: color.withOpacity(0.06), blurRadius: 10, offset: const Offset(0, 4)),
         ],
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: const Color(0xFFF1F5F9)),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.center,
+      child: Row(
         children: [
-          Text(label.toUpperCase(), style: GoogleFonts.poppins(fontSize: 9, color: Colors.grey, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 4),
-          Text(value, style: GoogleFonts.outfit(fontSize: 18, color: color, fontWeight: FontWeight.bold)),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(label.toUpperCase(), style: GoogleFonts.poppins(fontSize: 8, color: Colors.grey.shade500, fontWeight: FontWeight.bold, letterSpacing: 0.5)),
+                const SizedBox(height: 4),
+                Text(value, style: GoogleFonts.outfit(fontSize: 22, color: const Color(0xFF1E293B), fontWeight: FontWeight.black)),
+              ],
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.08),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: color, size: 18),
+          )
         ],
       ),
     );
@@ -483,213 +497,263 @@ class _QuestionPapersScreenState extends State<QuestionPapersScreen> {
 
                                     return Container(
                                       margin: const EdgeInsets.only(bottom: 16),
-                                      padding: const EdgeInsets.all(16),
                                       decoration: BoxDecoration(
                                         color: Colors.white,
-                                        borderRadius: BorderRadius.circular(20),
+                                        borderRadius: BorderRadius.circular(24),
                                         boxShadow: [
-                                          BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4)),
+                                          BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 12, offset: const Offset(0, 4)),
                                         ],
-                                        border: Border.all(color: const Color(0xFFE2E8F0)),
+                                        border: Border.all(color: const Color(0xFFF1F5F9)),
                                       ),
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Row(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                            children: [
-                                              Container(
-                                                padding: const EdgeInsets.all(14),
-                                                decoration: BoxDecoration(
-                                                  color: const Color(0xFFEEF2FF),
-                                                  borderRadius: BorderRadius.circular(16),
-                                                ),
-                                                child: const Icon(Icons.picture_as_pdf, color: Color(0xFF6366F1), size: 28),
-                                              ),
-                                              const SizedBox(width: 16),
-                                              Expanded(
-                                                child: Column(
-                                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                                  children: [
-                                                    Row(
-                                                      children: [
-                                                        Expanded(
-                                                          child: Text(
-                                                            title,
-                                                            style: GoogleFonts.outfit(color: const Color(0xFF1E293B), fontSize: 16, fontWeight: FontWeight.bold),
-                                                            maxLines: 2,
-                                                            overflow: TextOverflow.ellipsis,
-                                                          ),
+                                      child: ClipRRect(
+                                        borderRadius: BorderRadius.circular(24),
+                                        child: Stack(
+                                          children: [
+                                            // Left indicator line
+                                            Positioned(
+                                              left: 0,
+                                              top: 0,
+                                              bottom: 0,
+                                              width: 5,
+                                              child: Container(color: statusColor),
+                                            ),
+                                            Padding(
+                                              padding: const EdgeInsets.all(20),
+                                              child: Column(
+                                                crossAxisAlignment: CrossAxisAlignment.start,
+                                                children: [
+                                                  Row(
+                                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                                    children: [
+                                                      Container(
+                                                        padding: const EdgeInsets.all(12),
+                                                        decoration: BoxDecoration(
+                                                          color: const Color(0xFFEEF2FF),
+                                                          borderRadius: BorderRadius.circular(16),
                                                         ),
-                                                        if (isAdmin)
-                                                          Container(
-                                                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                                            decoration: BoxDecoration(
-                                                              color: statusColor.withOpacity(0.1),
-                                                              borderRadius: BorderRadius.circular(8),
-                                                              border: Border.all(color: statusColor.withOpacity(0.3)),
-                                                            ),
-                                                            child: Text(
-                                                              status,
-                                                              style: GoogleFonts.poppins(color: statusColor, fontSize: 9, fontWeight: FontWeight.bold),
-                                                            ),
-                                                          ),
-                                                      ],
-                                                    ),
-                                                    const SizedBox(height: 4),
-                                                    if (examName != null)
-                                                      Text(
-                                                        examName,
-                                                        style: GoogleFonts.poppins(color: const Color(0xFF6366F1), fontSize: 12, fontWeight: FontWeight.w600),
+                                                        child: const Icon(Icons.picture_as_pdf, color: Color(0xFF6366F1), size: 24),
                                                       ),
-                                                    const SizedBox(height: 4),
-                                                    Row(
-                                                      children: [
-                                                        const Icon(Icons.class_outlined, size: 12, color: Color(0xFF64748B)),
-                                                        const SizedBox(width: 4),
-                                                        Expanded(
-                                                          child: Text(
-                                                            '$className • $subject',
-                                                            style: GoogleFonts.poppins(color: const Color(0xFF64748B), fontSize: 11, fontWeight: FontWeight.w500),
-                                                            maxLines: 1,
-                                                            overflow: TextOverflow.ellipsis,
+                                                      const SizedBox(width: 14),
+                                                      Expanded(
+                                                        child: Column(
+                                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                                          children: [
+                                                            Row(
+                                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                                              children: [
+                                                                Expanded(
+                                                                  child: Text(
+                                                                    title,
+                                                                    style: GoogleFonts.outfit(color: const Color(0xFF1E293B), fontSize: 15, fontWeight: FontWeight.bold, height: 1.3),
+                                                                    maxLines: 2,
+                                                                    overflow: TextOverflow.ellipsis,
+                                                                  ),
+                                                                ),
+                                                                const SizedBox(width: 6),
+                                                                if (isAdmin)
+                                                                  Container(
+                                                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                                                    decoration: BoxDecoration(
+                                                                      color: statusColor.withOpacity(0.08),
+                                                                      borderRadius: BorderRadius.circular(20),
+                                                                      border: Border.all(color: statusColor.withOpacity(0.2)),
+                                                                    ),
+                                                                    child: Text(
+                                                                      status == 'PENDING_APPROVAL' ? 'Pending' : status,
+                                                                      style: GoogleFonts.poppins(color: statusColor, fontSize: 8, fontWeight: FontWeight.bold),
+                                                                    ),
+                                                                  ),
+                                                              ],
+                                                            ),
+                                                            const SizedBox(height: 4),
+                                                            if (examName != null)
+                                                              Text(
+                                                                examName,
+                                                                style: GoogleFonts.poppins(color: const Color(0xFF6366F1), fontSize: 11, fontWeight: FontWeight.bold),
+                                                              ),
+                                                          ],
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  const SizedBox(height: 16),
+                                                  Wrap(
+                                                    spacing: 8,
+                                                    runSpacing: 8,
+                                                    children: [
+                                                      Container(
+                                                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                                        decoration: BoxDecoration(
+                                                          color: const Color(0xFFF8FAFC),
+                                                          borderRadius: BorderRadius.circular(12),
+                                                          border: Border.all(color: const Color(0xFFF1F5F9)),
+                                                        ),
+                                                        child: Row(
+                                                          mainAxisSize: MainAxisSize.min,
+                                                          children: [
+                                                            const Icon(Icons.class_outlined, size: 12, color: Color(0xFF64748B)),
+                                                            const SizedBox(width: 4),
+                                                            Text(className, style: GoogleFonts.poppins(color: const Color(0xFF475569), fontSize: 10, fontWeight: FontWeight.bold)),
+                                                          ],
+                                                        ),
+                                                      ),
+                                                      Container(
+                                                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                                        decoration: BoxDecoration(
+                                                          color: const Color(0xFFF8FAFC),
+                                                          borderRadius: BorderRadius.circular(12),
+                                                          border: Border.all(color: const Color(0xFFF1F5F9)),
+                                                        ),
+                                                        child: Row(
+                                                          mainAxisSize: MainAxisSize.min,
+                                                          children: [
+                                                            const Icon(Icons.book_outlined, size: 12, color: Color(0xFF64748B)),
+                                                            const SizedBox(width: 4),
+                                                            Text(subject, style: GoogleFonts.poppins(color: const Color(0xFF475569), fontSize: 10, fontWeight: FontWeight.bold)),
+                                                          ],
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  const SizedBox(height: 16),
+                                                  Row(
+                                                    children: [
+                                                      Expanded(
+                                                        child: OutlinedButton.icon(
+                                                          onPressed: () {
+                                                            if (fileUrl != null && fileUrl.isNotEmpty) {
+                                                              _launchUrl(fileUrl);
+                                                            } else {
+                                                              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Paper link is missing.')));
+                                                            }
+                                                          },
+                                                          icon: const Icon(Icons.description_outlined, size: 14),
+                                                          label: const Text('View Paper', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
+                                                          style: OutlinedButton.styleFrom(
+                                                            foregroundColor: const Color(0xFF1E293B),
+                                                            side: const BorderSide(color: Color(0xFFE2E8F0)),
+                                                            padding: const EdgeInsets.symmetric(vertical: 12),
+                                                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                                                           ),
                                                         ),
+                                                      ),
+                                                      if (answerKeyUrl != null && answerKeyUrl.isNotEmpty) ...[
+                                                        const SizedBox(width: 8),
+                                                        Expanded(
+                                                          child: OutlinedButton.icon(
+                                                            onPressed: () => _launchUrl(answerKeyUrl),
+                                                            icon: const Icon(Icons.key, size: 14),
+                                                            label: const Text('PDF Key', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
+                                                            style: OutlinedButton.styleFrom(
+                                                              foregroundColor: const Color(0xFF10B981),
+                                                              side: BorderSide(color: const Color(0xFF10B981).withOpacity(0.3)),
+                                                              backgroundColor: const Color(0xFF10B981).withOpacity(0.04),
+                                                              padding: const EdgeInsets.symmetric(vertical: 12),
+                                                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ] else if (answerKey != null && answerKey.isNotEmpty) ...[
+                                                        const SizedBox(width: 8),
+                                                        Expanded(
+                                                          child: OutlinedButton.icon(
+                                                            onPressed: () => _showAnswerKeyDialog(title, answerKey),
+                                                            icon: const Icon(Icons.key, size: 14),
+                                                            label: const Text('View Key', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
+                                                            style: OutlinedButton.styleFrom(
+                                                              foregroundColor: const Color(0xFF10B981),
+                                                              side: BorderSide(color: const Color(0xFF10B981).withOpacity(0.3)),
+                                                              backgroundColor: const Color(0xFF10B981).withOpacity(0.04),
+                                                              padding: const EdgeInsets.symmetric(vertical: 12),
+                                                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ],
+                                                      if (_userRole == 'TEACHER') ...[
+                                                        const SizedBox(width: 8),
+                                                        IconButton(
+                                                          icon: const Icon(Icons.edit_note, color: Colors.indigo),
+                                                          onPressed: () => _showAnswerKeyUpdateSheet(paper['id'], answerKey, answerKeyUrl),
+                                                          style: IconButton.styleFrom(
+                                                            backgroundColor: Colors.indigo.withOpacity(0.06),
+                                                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                                            padding: const EdgeInsets.all(12),
+                                                          ),
+                                                        ),
+                                                      ],
+                                                      if (isAdmin) ...[
+                                                        const SizedBox(width: 8),
+                                                        IconButton(
+                                                          icon: const Icon(Icons.delete_outline_rounded, color: Colors.red),
+                                                          onPressed: () => _deletePaper(paper['id']),
+                                                          style: IconButton.styleFrom(
+                                                            backgroundColor: Colors.red.withOpacity(0.06),
+                                                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                                            padding: const EdgeInsets.all(12),
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ],
+                                                  ),
+                                                  if (isAdmin && (status == 'PENDING_APPROVAL' || status == 'APPROVED' || status == 'REJECTED')) ...[
+                                                    const SizedBox(height: 12),
+                                                    const Divider(height: 1),
+                                                    const SizedBox(height: 12),
+                                                    Row(
+                                                      children: [
+                                                        if (status == 'PENDING_APPROVAL') ...[
+                                                          Expanded(
+                                                            child: OutlinedButton(
+                                                              onPressed: () => _approvePaper(paper['id']),
+                                                              style: OutlinedButton.styleFrom(
+                                                                foregroundColor: const Color(0xFF10B981),
+                                                                side: BorderSide(color: const Color(0xFF10B981).withOpacity(0.5)),
+                                                                backgroundColor: const Color(0xFF10B981).withOpacity(0.04),
+                                                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                                              ),
+                                                              child: const Text('Approve', style: TextStyle(fontWeight: FontWeight.bold)),
+                                                            ),
+                                                          ),
+                                                          const SizedBox(width: 12),
+                                                          Expanded(
+                                                            child: OutlinedButton(
+                                                              onPressed: () => _rejectPaper(paper['id']),
+                                                              style: OutlinedButton.styleFrom(
+                                                                foregroundColor: Colors.red,
+                                                                side: BorderSide(color: Colors.red.withOpacity(0.5)),
+                                                                backgroundColor: Colors.red.withOpacity(0.04),
+                                                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                                              ),
+                                                              child: const Text('Reject', style: TextStyle(fontWeight: FontWeight.bold)),
+                                                            ),
+                                                          ),
+                                                        ],
+                                                        if (status == 'APPROVED' || status == 'REJECTED') ...[
+                                                          Expanded(
+                                                            child: ElevatedButton(
+                                                              onPressed: () => _publishPaper(paper['id']),
+                                                              style: ElevatedButton.styleFrom(
+                                                                backgroundColor: const Color(0xFF6366F1),
+                                                                foregroundColor: Colors.white,
+                                                                elevation: 0,
+                                                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                                              ),
+                                                              child: const Text('Publish Paper', style: TextStyle(fontWeight: FontWeight.bold)),
+                                                            ),
+                                                          ),
+                                                        ],
                                                       ],
                                                     ),
                                                   ],
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                          const SizedBox(height: 16),
-                                          Row(
-                                            children: [
-                                              Expanded(
-                                                child: ElevatedButton.icon(
-                                                  onPressed: () {
-                                                    if (fileUrl != null && fileUrl.isNotEmpty) {
-                                                      _launchUrl(fileUrl);
-                                                    } else {
-                                                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Paper link is missing.')));
-                                                    }
-                                                  },
-                                                  icon: const Icon(Icons.download_rounded, size: 16, color: Colors.white),
-                                                  label: const Text('View Paper', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
-                                                  style: ElevatedButton.styleFrom(
-                                                    backgroundColor: const Color(0xFF6366F1),
-                                                    foregroundColor: Colors.white,
-                                                    elevation: 0,
-                                                    padding: const EdgeInsets.symmetric(vertical: 12),
-                                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                                  ),
-                                                ),
-                                              ),
-                                              if (answerKeyUrl != null && answerKeyUrl.isNotEmpty) ...[
-                                                const SizedBox(width: 12),
-                                                Expanded(
-                                                  child: ElevatedButton.icon(
-                                                    onPressed: () => _launchUrl(answerKeyUrl),
-                                                    icon: const Icon(Icons.key, size: 16, color: Color(0xFF10B981)),
-                                                    label: const Text('Key PDF', style: TextStyle(color: Color(0xFF10B981), fontWeight: FontWeight.bold, fontSize: 13)),
-                                                    style: ElevatedButton.styleFrom(
-                                                      backgroundColor: const Color(0xFF10B981).withOpacity(0.1),
-                                                      elevation: 0,
-                                                      padding: const EdgeInsets.symmetric(vertical: 12),
-                                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                                    ),
-                                                  ),
-                                                ),
-                                              ] else if (answerKey != null && answerKey.isNotEmpty) ...[
-                                                const SizedBox(width: 12),
-                                                Expanded(
-                                                  child: ElevatedButton.icon(
-                                                    onPressed: () => _showAnswerKeyDialog(title, answerKey),
-                                                    icon: const Icon(Icons.key, size: 16, color: Color(0xFF10B981)),
-                                                    label: const Text('View Key', style: TextStyle(color: Color(0xFF10B981), fontWeight: FontWeight.bold, fontSize: 13)),
-                                                    style: ElevatedButton.styleFrom(
-                                                      backgroundColor: const Color(0xFF10B981).withOpacity(0.1),
-                                                      elevation: 0,
-                                                      padding: const EdgeInsets.symmetric(vertical: 12),
-                                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                                    ),
-                                                  ),
-                                                ),
-                                              ],
-                                              if (_userRole == 'TEACHER') ...[
-                                                const SizedBox(width: 12),
-                                                IconButton(
-                                                  icon: const Icon(Icons.edit_note, color: Colors.indigo),
-                                                  onPressed: () => _showAnswerKeyUpdateSheet(paper['id'], answerKey, answerKeyUrl),
-                                                  style: IconButton.styleFrom(
-                                                    backgroundColor: Colors.indigo.withOpacity(0.1),
-                                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                                    padding: const EdgeInsets.all(12),
-                                                  ),
-                                                ),
-                                              ],
-                                              if (isAdmin) ...[
-                                                const SizedBox(width: 12),
-                                                IconButton(
-                                                  icon: const Icon(Icons.delete, color: Colors.red),
-                                                  onPressed: () => _deletePaper(paper['id']),
-                                                  style: IconButton.styleFrom(
-                                                    backgroundColor: Colors.red.withOpacity(0.1),
-                                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                                    padding: const EdgeInsets.all(12),
-                                                  ),
-                                                ),
-                                              ],
-                                            ],
-                                          ),
-                                          if (isAdmin && (status == 'PENDING_APPROVAL' || status == 'APPROVED' || status == 'REJECTED')) ...[
-                                            const SizedBox(height: 12),
-                                            const Divider(),
-                                            const SizedBox(height: 8),
-                                            Row(
-                                              children: [
-                                                if (status == 'PENDING_APPROVAL') ...[
-                                                  Expanded(
-                                                    child: OutlinedButton(
-                                                      onPressed: () => _approvePaper(paper['id']),
-                                                      style: OutlinedButton.styleFrom(
-                                                        foregroundColor: Colors.blue,
-                                                        side: const BorderSide(color: Colors.blue),
-                                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                                                      ),
-                                                      child: const Text('Approve', style: TextStyle(fontWeight: FontWeight.bold)),
-                                                    ),
-                                                  ),
-                                                  const SizedBox(width: 12),
-                                                  Expanded(
-                                                    child: OutlinedButton(
-                                                      onPressed: () => _rejectPaper(paper['id']),
-                                                      style: OutlinedButton.styleFrom(
-                                                        foregroundColor: Colors.red,
-                                                        side: const BorderSide(color: Colors.red),
-                                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                                                      ),
-                                                      child: const Text('Reject', style: TextStyle(fontWeight: FontWeight.bold)),
-                                                    ),
-                                                  ),
                                                 ],
-                                                if (status == 'APPROVED' || status == 'REJECTED') ...[
-                                                  Expanded(
-                                                    child: ElevatedButton(
-                                                      onPressed: () => _publishPaper(paper['id']),
-                                                      style: ElevatedButton.styleFrom(
-                                                        backgroundColor: Colors.green,
-                                                        foregroundColor: Colors.white,
-                                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                                                      ),
-                                                      child: const Text('Publish Paper', style: TextStyle(fontWeight: FontWeight.bold)),
-                                                    ),
-                                                  ),
-                                                ],
-                                              ],
+                                              ),
                                             ),
                                           ],
-                                        ],
+                                        ),
                                       ),
                                     );
                                   },

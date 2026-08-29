@@ -667,7 +667,8 @@ export const ExamListPage: React.FC = () => {
         const teacherList = teachRes?.data?.data || teachRes?.data || [];
         setTeachers(teacherList);
       }
-    } catch {
+    } catch (err) {
+      console.error('Failed to bootstrap filters:', err);
       toast.error('Failed to bootstrap filters');
     } finally {
       setLoading(false);
@@ -1664,39 +1665,62 @@ export const ExamListPage: React.FC = () => {
           {/* Admin/Super Admin Dashboard Stats */}
           {isAdmin && qpStats && (
             <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-              <div className="bg-white dark:bg-gray-900 p-4 rounded-2xl border border-gray-150 dark:border-gray-800 shadow-sm">
-                <span className="text-[10px] font-extrabold uppercase text-gray-400">Total Papers</span>
-                <p className="text-2xl font-black text-slate-800 dark:text-white mt-1">{qpStats.totalPapers}</p>
+              <div className="relative overflow-hidden bg-gradient-to-br from-indigo-500 to-purple-600 text-white p-5 rounded-3xl shadow-lg shadow-indigo-500/10 hover:shadow-indigo-500/25 transition-all duration-300 transform hover:-translate-y-1">
+                <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full translate-x-8 -translate-y-8 blur-md"></div>
+                <div className="flex justify-between items-start">
+                  <span className="text-[10px] font-black uppercase tracking-wider text-indigo-100">Total Papers</span>
+                  <FileText className="w-4 h-4 text-indigo-200" />
+                </div>
+                <p className="text-3xl font-black mt-2">{qpStats.totalPapers}</p>
               </div>
-              <div className="bg-white dark:bg-gray-900 p-4 rounded-2xl border border-gray-150 dark:border-gray-800 shadow-sm">
-                <span className="text-[10px] font-extrabold uppercase text-gray-400">Answer Keys</span>
-                <p className="text-2xl font-black text-slate-800 dark:text-white mt-1">{qpStats.answerKeys}</p>
+              <div className="relative overflow-hidden bg-gradient-to-br from-amber-500 to-orange-600 text-white p-5 rounded-3xl shadow-lg shadow-orange-500/10 hover:shadow-orange-500/25 transition-all duration-300 transform hover:-translate-y-1">
+                <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full translate-x-8 -translate-y-8 blur-md"></div>
+                <div className="flex justify-between items-start">
+                  <span className="text-[10px] font-black uppercase tracking-wider text-orange-100">Answer Keys</span>
+                  <Key className="w-4 h-4 text-orange-200" />
+                </div>
+                <p className="text-3xl font-black mt-2">{qpStats.answerKeys}</p>
               </div>
-              <div className="bg-white dark:bg-gray-900 p-4 rounded-2xl border border-gray-150 dark:border-gray-800 shadow-sm">
-                <span className="text-[10px] font-extrabold uppercase text-gray-400">Published Papers</span>
-                <p className="text-2xl font-black text-slate-800 dark:text-white mt-1">{qpStats.publishedPapers}</p>
+              <div className="relative overflow-hidden bg-gradient-to-br from-emerald-500 to-teal-600 text-white p-5 rounded-3xl shadow-lg shadow-emerald-500/10 hover:shadow-emerald-500/25 transition-all duration-300 transform hover:-translate-y-1">
+                <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full translate-x-8 -translate-y-8 blur-md"></div>
+                <div className="flex justify-between items-start">
+                  <span className="text-[10px] font-black uppercase tracking-wider text-emerald-100">Published</span>
+                  <CheckCircle className="w-4 h-4 text-emerald-200" />
+                </div>
+                <p className="text-3xl font-black mt-2">{qpStats.publishedPapers}</p>
               </div>
-              <div className="bg-white dark:bg-gray-900 p-4 rounded-2xl border border-gray-150 dark:border-gray-800 shadow-sm">
-                <span className="text-[10px] font-extrabold uppercase text-gray-400">Scheduled Papers</span>
-                <p className="text-2xl font-black text-slate-800 dark:text-white mt-1">{qpStats.scheduledPapers}</p>
+              <div className="relative overflow-hidden bg-gradient-to-br from-cyan-500 to-blue-600 text-white p-5 rounded-3xl shadow-lg shadow-blue-500/10 hover:shadow-blue-500/25 transition-all duration-300 transform hover:-translate-y-1">
+                <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full translate-x-8 -translate-y-8 blur-md"></div>
+                <div className="flex justify-between items-start">
+                  <span className="text-[10px] font-black uppercase tracking-wider text-cyan-100">Scheduled</span>
+                  <Clock className="w-4 h-4 text-cyan-200" />
+                </div>
+                <p className="text-3xl font-black mt-2">{qpStats.scheduledPapers}</p>
               </div>
-              <div className="bg-white dark:bg-gray-900 p-4 rounded-2xl border border-gray-150 dark:border-gray-800 shadow-sm">
-                <span className="text-[10px] font-extrabold uppercase text-gray-400">Total Questions</span>
-                <p className="text-2xl font-black text-slate-800 dark:text-white mt-1">{qpStats.totalQuestions}</p>
+              <div className="relative overflow-hidden bg-gradient-to-br from-rose-500 to-pink-600 text-white p-5 rounded-3xl shadow-lg shadow-rose-500/10 hover:shadow-rose-500/25 transition-all duration-300 transform hover:-translate-y-1">
+                <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full translate-x-8 -translate-y-8 blur-md"></div>
+                <div className="flex justify-between items-start">
+                  <span className="text-[10px] font-black uppercase tracking-wider text-rose-100">Total Questions</span>
+                  <HelpCircle className="w-4 h-4 text-rose-200" />
+                </div>
+                <p className="text-3xl font-black mt-2">{qpStats.totalQuestions}</p>
               </div>
             </div>
           )}
 
-          <div className="flex justify-between items-center bg-white dark:bg-gray-900 p-4 rounded-xl border border-gray-150 dark:border-gray-800">
-            <span className="text-xs font-extrabold uppercase text-gray-400">Manage Question Papers</span>
+          <div className="flex justify-between items-center bg-gradient-to-r from-slate-50 to-white dark:from-gray-900 dark:to-gray-800 p-5 rounded-3xl border border-slate-100 dark:border-gray-800 shadow-sm">
+            <div>
+              <h3 className="text-sm font-black text-slate-800 dark:text-white uppercase tracking-wider">Question Papers Directory</h3>
+              <p className="text-[11px] text-slate-400 mt-0.5">Manage, approve and publish question papers and answer keys</p>
+            </div>
             <div className="flex gap-2">
               {isAdmin && (
-                <button onClick={() => setShowPermissionsModal(true)} className="btn-secondary flex items-center gap-2 text-xs font-bold px-3 py-1.5 rounded-lg border border-gray-200">
+                <button onClick={() => setShowPermissionsModal(true)} className="flex items-center gap-2 text-xs font-bold px-4 py-2.5 rounded-2xl border border-slate-200 dark:border-gray-700 hover:bg-slate-50 dark:hover:bg-gray-800 text-slate-700 dark:text-slate-200 transition-all cursor-pointer">
                   Teacher Permissions
                 </button>
               )}
               {isAdmin && (
-                <button onClick={() => setShowQpModal(true)} className="btn-primary flex items-center gap-2 text-xs font-bold px-3 py-1.5 rounded-lg bg-indigo-600 text-white">
+                <button onClick={() => setShowQpModal(true)} className="flex items-center gap-2 text-xs font-bold px-4 py-2.5 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-600/25 transition-all cursor-pointer">
                   <Plus className="w-4 h-4" /> Upload Paper
                 </button>
               )}
@@ -1705,91 +1729,108 @@ export const ExamListPage: React.FC = () => {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {questionPapers.map(qp => {
-              let borderCol = "border-amber-500";
+              let borderCol = "bg-amber-500";
               let statusText = qp.status || "PENDING_APPROVAL";
-              let badgeBg = "bg-amber-50 text-amber-600 border-amber-200";
+              let badgeStyle = "bg-amber-50 text-amber-600 border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20";
+              let statusLabel = "Pending Approval";
 
               if (statusText === 'PUBLISHED') {
-                borderCol = "border-emerald-500";
-                badgeBg = "bg-emerald-50 text-emerald-600 border-emerald-200";
+                borderCol = "bg-emerald-500";
+                badgeStyle = "bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20";
+                statusLabel = "Published";
               } else if (statusText === 'APPROVED') {
-                borderCol = "border-blue-500";
-                badgeBg = "bg-blue-50 text-blue-600 border-blue-200";
+                borderCol = "bg-blue-500";
+                badgeStyle = "bg-blue-50 text-blue-600 border-blue-200 dark:bg-blue-500/10 dark:text-blue-400 dark:border-blue-500/20";
+                statusLabel = "Approved";
               } else if (statusText === 'REJECTED') {
-                borderCol = "border-rose-500";
-                badgeBg = "bg-rose-50 text-rose-600 border-rose-200";
+                borderCol = "bg-rose-500";
+                badgeStyle = "bg-rose-50 text-rose-600 border-rose-200 dark:bg-rose-500/10 dark:text-rose-400 dark:border-rose-500/20";
+                statusLabel = "Rejected";
               }
 
               return (
-                <div key={qp.id} className={`card p-6 space-y-4 hover:shadow-md relative group border-t-4 ${borderCol}`}>
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h4 className="font-bold text-base text-gray-900 dark:text-white">{qp.title}</h4>
-                      <p className="text-[11px] text-gray-400 mt-1">
-                        {qp.exam?.name && <span className="font-bold text-indigo-500 mr-2">{qp.exam.name}</span>}
-                        Class: {qp.class?.name}-{qp.class?.section} {qp.subject?.name && `| Subject: ${qp.subject?.name}`}
-                      </p>
-                    </div>
-                    {isAdmin && (
-                      <span className={`text-[9px] font-black uppercase tracking-wider px-2 py-1 rounded border ${badgeBg}`}>
-                        {statusText}
-                      </span>
-                    )}
-                  </div>
+                <div key={qp.id} className="relative overflow-hidden bg-white dark:bg-gray-900 border border-slate-100 dark:border-gray-800 rounded-3xl p-6 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between group">
+                  {/* Left Status Bar */}
+                  <div className={`absolute top-0 left-0 w-1.5 h-full ${borderCol}`}></div>
                   
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    <a href={qp.fileUrl} target="_blank" rel="noreferrer" className="btn-primary flex-1 text-center text-xs flex items-center justify-center gap-2 py-1.5 px-3 rounded-lg bg-emerald-600 text-white font-bold">
-                      <FileText className="w-4 h-4" /> Paper
-                    </a>
-                    
-                    {qp.answerKeyUrl && (
-                      <a href={qp.answerKeyUrl} target="_blank" rel="noreferrer" className="btn-secondary flex-1 text-center text-xs flex items-center justify-center gap-2 py-1.5 px-3 rounded-lg border border-gray-200 text-gray-700 dark:text-gray-200 font-bold">
-                         <Key className="w-4 h-4" /> Key
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-start pl-2">
+                      <div>
+                        <h4 className="font-extrabold text-base text-slate-800 dark:text-white leading-snug group-hover:text-indigo-600 transition-all">{qp.title}</h4>
+                        <span className="inline-block mt-2 text-[10px] font-bold bg-slate-50 dark:bg-gray-800 text-slate-500 dark:text-slate-400 px-2 py-1 rounded-md border border-slate-100 dark:border-gray-700">
+                          {qp.exam?.name ? formatExamOptionLabel(qp.exam.name) : 'General Exam'}
+                        </span>
+                      </div>
+                      <span className={`text-[9px] font-black uppercase tracking-wider px-2 py-1 rounded-full border ${badgeStyle}`}>
+                        {statusLabel}
+                      </span>
+                    </div>
+
+                    <div className="pl-2 space-y-2">
+                      <div className="flex items-center gap-1.5 text-xs text-slate-500">
+                        <Layers className="w-3.5 h-3.5 text-slate-400" />
+                        <span>Class: <strong className="text-slate-700 dark:text-slate-200">{qp.class?.name}-{qp.class?.section}</strong></span>
+                      </div>
+                      <div className="flex items-center gap-1.5 text-xs text-slate-500">
+                        <BookOpen className="w-3.5 h-3.5 text-slate-400" />
+                        <span>Subject: <strong className="text-slate-700 dark:text-slate-200">{qp.subject?.name || 'All Subjects / Combined'}</strong></span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="pt-4 mt-4 border-t border-slate-50 dark:border-gray-800 pl-2">
+                    <div className="flex gap-2">
+                      <a href={qp.fileUrl} target="_blank" rel="noreferrer" className="flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-gray-800 dark:hover:bg-gray-700 dark:text-slate-200 text-xs font-black transition-all">
+                        <FileText className="w-4 h-4 text-emerald-500" /> View Paper
                       </a>
-                    )}
+                      
+                      {qp.answerKeyUrl && (
+                        <a href={qp.answerKeyUrl} target="_blank" rel="noreferrer" className="flex items-center justify-center gap-2 p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-gray-800 dark:hover:bg-gray-700 dark:text-slate-200 transition-all" title="View Key Link">
+                           <ExternalLink className="w-4 h-4 text-blue-500" />
+                        </a>
+                      )}
 
-                    {(isAdmin || isTeacher) && (
-                      <button onClick={() => { setSelectedQpForAnswerKey(qp); setAnswerKeyText(qp.answerKey || ''); setAnswerKeyUrl(qp.answerKeyUrl || ''); setShowAnswerKeyModal(true); }} className="p-2 border border-blue-200 text-blue-500 hover:bg-blue-50 rounded-xl cursor-pointer" title="Manage Answer Key">
-                        <Key className="w-4 h-4" />
-                      </button>
-                    )}
+                      {(isAdmin || isTeacher) && (
+                        <button onClick={() => { setSelectedQpForAnswerKey(qp); setAnswerKeyText(qp.answerKey || ''); setAnswerKeyUrl(qp.answerKeyUrl || ''); setShowAnswerKeyModal(true); }} className="p-2 border border-slate-100 hover:border-slate-200 dark:border-gray-800 dark:hover:border-gray-700 text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 rounded-xl cursor-pointer transition-all" title="Manage Answer Key">
+                          <Key className="w-4 h-4" />
+                        </button>
+                      )}
 
-                    {isAdmin && (
-                      <>
-                        <button onClick={() => handleDeleteQp(qp.id)} className="p-2 border border-red-200 dark:border-red-900/40 text-red-500 hover:bg-red-50 rounded-xl cursor-pointer" title="Delete Paper">
+                      {isAdmin && (
+                        <button onClick={() => handleDeleteQp(qp.id)} className="p-2 border border-slate-100 hover:border-rose-100 hover:bg-rose-50 dark:border-gray-800 dark:hover:border-rose-950/40 text-rose-500 rounded-xl cursor-pointer transition-all" title="Delete Paper">
                           <Trash2 className="w-4 h-4" />
                         </button>
-                      </>
+                      )}
+                    </div>
+
+                    {/* Admin Workflow Buttons */}
+                    {isAdmin && (
+                      <div className="flex gap-2 mt-3 pt-3 border-t border-slate-50 dark:border-gray-800/50">
+                        {statusText === 'PENDING_APPROVAL' && (
+                          <>
+                            <button onClick={() => handleApproveQp(qp.id)} className="flex-1 py-2 px-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-600 dark:bg-emerald-500/10 dark:hover:bg-emerald-500/20 dark:text-emerald-400 rounded-xl font-extrabold border border-emerald-100 dark:border-emerald-500/20 text-xs transition-all cursor-pointer">
+                              Approve
+                            </button>
+                            <button onClick={() => handleRejectQp(qp.id)} className="flex-1 py-2 px-2 bg-rose-50 hover:bg-rose-100 text-rose-600 dark:bg-rose-500/10 dark:hover:bg-rose-500/20 dark:text-rose-400 rounded-xl font-extrabold border border-rose-100 dark:border-rose-500/20 text-xs transition-all cursor-pointer">
+                              Reject
+                            </button>
+                          </>
+                        )}
+                        {(statusText === 'APPROVED' || statusText === 'REJECTED') && (
+                          <button onClick={() => handlePublishQp(qp.id)} className="w-full py-2 px-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 dark:bg-indigo-500/10 dark:hover:bg-indigo-500/20 dark:text-indigo-400 rounded-xl font-extrabold border border-indigo-100 dark:border-indigo-500/20 text-xs transition-all cursor-pointer">
+                            Publish Paper
+                          </button>
+                        )}
+                      </div>
+                    )}
+                    
+                    {qp.answerKey && (
+                      <div className="mt-3 p-3 bg-slate-50 dark:bg-gray-800/50 rounded-2xl text-[11px] border border-slate-100 dark:border-gray-800/80">
+                        <p className="font-extrabold mb-1 flex items-center gap-1 text-slate-700 dark:text-slate-300"><Key className="w-3.5 h-3.5 text-indigo-500"/> Typed Answer Key:</p>
+                        <div className="whitespace-pre-wrap text-slate-500 dark:text-slate-400 font-medium leading-relaxed">{qp.answerKey}</div>
+                      </div>
                     )}
                   </div>
-
-                  {/* Admin Workflow Buttons */}
-                  {isAdmin && (
-                    <div className="flex gap-2 pt-2 border-t border-gray-100 dark:border-gray-800 text-xs">
-                      {statusText === 'PENDING_APPROVAL' && (
-                        <>
-                          <button onClick={() => handleApproveQp(qp.id)} className="flex-1 py-1.5 px-2 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg font-bold border border-blue-200 text-center">
-                            Approve
-                          </button>
-                          <button onClick={() => handleRejectQp(qp.id)} className="flex-1 py-1.5 px-2 bg-rose-50 text-rose-600 hover:bg-rose-100 rounded-lg font-bold border border-rose-200 text-center">
-                            Reject
-                          </button>
-                        </>
-                      )}
-                      {(statusText === 'APPROVED' || statusText === 'REJECTED') && (
-                        <button onClick={() => handlePublishQp(qp.id)} className="w-full py-1.5 px-2 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 rounded-lg font-bold border border-emerald-200 text-center">
-                          Publish Paper
-                        </button>
-                      )}
-                    </div>
-                  )}
-                  
-                  {qp.answerKey && (
-                    <div className="mt-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg text-xs border border-gray-100 dark:border-gray-700">
-                      <p className="font-bold mb-1 flex items-center gap-1"><Key className="w-3 h-3 text-emerald-500"/> Typed Answer Key:</p>
-                      <div className="whitespace-pre-wrap text-gray-600 dark:text-gray-300">{qp.answerKey}</div>
-                    </div>
-                  )}
                 </div>
               );
             })}
@@ -1896,53 +1937,58 @@ export const ExamListPage: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="space-y-3 border border-slate-100 rounded-xl p-3 bg-slate-50/50">
+                  <div className="space-y-4 border border-slate-100 dark:border-gray-800 rounded-3xl p-5 bg-slate-50/50 dark:bg-gray-800/10">
                     <div>
-                      <label className="label font-bold text-xs text-slate-500">Upload Document (PDF/Word)</label>
-                      <input 
-                        type="file" 
-                        accept=".pdf,.doc,.docx" 
-                        onChange={async (e) => {
-                          const file = e.target.files?.[0];
-                          if (!file) return;
-                          const formData = new FormData();
-                          formData.append('file', file);
-                          const loadingToast = toast.loading('Uploading document...');
-                          try {
-                            const res: any = await api.post('/api/uploads/document', formData, {
-                              headers: { 'Content-Type': 'multipart/form-data' }
-                            });
-                            toast.dismiss(loadingToast);
-                            const urlVal = res.data?.url || res.url || res.data?.data?.url;
-                            if (urlVal) {
-                              setQpFileUrl(urlVal);
-                              toast.success('Document uploaded successfully');
-                            } else {
-                              toast.error('Upload failed: Invalid response');
+                      <label className="text-xs font-black uppercase tracking-wider text-slate-400 mb-2 block">Upload Document (PDF/Word)</label>
+                      <div className="relative border-2 border-dashed border-slate-200 dark:border-gray-700 hover:border-indigo-500 dark:hover:border-indigo-500 transition-all rounded-2xl p-6 flex flex-col items-center justify-center bg-white dark:bg-gray-900 cursor-pointer group">
+                        <input 
+                          type="file" 
+                          accept=".pdf,.doc,.docx" 
+                          onChange={async (e) => {
+                            const file = e.target.files?.[0];
+                            if (!file) return;
+                            const formData = new FormData();
+                            formData.append('file', file);
+                            const loadingToast = toast.loading('Uploading document...');
+                            try {
+                              const res: any = await api.post('/api/uploads/document', formData, {
+                                headers: { 'Content-Type': 'multipart/form-data' }
+                              });
+                              toast.dismiss(loadingToast);
+                              const urlVal = res.data?.url || res.url || res.data?.data?.url;
+                              if (urlVal) {
+                                setQpFileUrl(urlVal);
+                                toast.success('Document uploaded successfully');
+                              } else {
+                                toast.error('Upload failed: Invalid response');
+                              }
+                            } catch {
+                              toast.dismiss(loadingToast);
+                              toast.error('Error uploading document');
                             }
-                          } catch {
-                            toast.dismiss(loadingToast);
-                            toast.error('Error uploading document');
-                          }
-                        }} 
-                        className="input bg-white" 
-                      />
+                          }} 
+                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                        />
+                        <Download className="w-8 h-8 text-slate-400 group-hover:text-indigo-600 group-hover:scale-110 transition-all mb-2" />
+                        <span className="text-xs text-slate-600 dark:text-slate-400 font-extrabold group-hover:text-indigo-600 transition-all">Click or drag file to upload</span>
+                        <span className="text-[10px] text-slate-400 mt-1">PDF, DOC, DOCX up to 10MB</span>
+                      </div>
                     </div>
                     
                     <div className="relative flex py-1 items-center">
-                      <div className="flex-grow border-t border-slate-200"></div>
-                      <span className="flex-shrink mx-4 text-slate-400 text-[10px] font-bold">OR PASTE LINK MANUALLY</span>
-                      <div className="flex-grow border-t border-slate-200"></div>
+                      <div className="flex-grow border-t border-slate-200 dark:border-gray-800"></div>
+                      <span className="flex-shrink mx-4 text-slate-400 text-[10px] font-black uppercase tracking-wider">OR PASTE LINK MANUALLY</span>
+                      <div className="flex-grow border-t border-slate-200 dark:border-gray-800"></div>
                     </div>
 
                     <div>
-                      <label className="label font-bold text-xs text-slate-500">File Link (PDF/Word/Drive)</label>
+                      <label className="text-xs font-black uppercase tracking-wider text-slate-400 mb-2 block">File Link (PDF/Word/Drive)</label>
                       <input 
                         type="text" 
                         placeholder="https://link-to-file.pdf or drive link" 
                         value={qpFileUrl} 
                         onChange={e => setQpFileUrl(e.target.value)} 
-                        className="input bg-white" 
+                        className="w-full bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-700 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 text-slate-700 dark:text-slate-200 font-bold" 
                       />
                     </div>
                   </div>

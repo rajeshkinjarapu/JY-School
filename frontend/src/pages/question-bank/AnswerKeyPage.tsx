@@ -146,11 +146,15 @@ export const AnswerKeyPage = () => {
 
     const paperRows = papers.map(p => `
       <div class="paper-block">
-        <h3>Subject: ${p.subject?.name || 'All Subjects'} - ${p.title}</h3>
-        ${p.answerKey ? `<pre>${p.answerKey}</pre>` : '<p class="no-key">No typed answer key entries.</p>'}
-        ${p.answerKeyUrl ? `<p class="key-link"><b>PDF Link:</b> ${p.answerKeyUrl}</p>` : ''}
+        <div class="paper-header">
+          <span>SUBJECT: ${p.subject?.name || 'All Subjects'}</span>
+          <span>${p.title}</span>
+        </div>
+        <div class="paper-content">
+          ${p.answerKey ? `<pre>${p.answerKey}</pre>` : '<p class="no-key">No typed answer key entries.</p>'}
+          ${p.answerKeyUrl ? `<p class="key-link"><b>PDF Attachment Link:</b> ${p.answerKeyUrl}</p>` : ''}
+        </div>
       </div>
-      <hr />
     `).join('');
 
     printWindow.document.write(`
@@ -158,24 +162,33 @@ export const AnswerKeyPage = () => {
         <head>
           <title>Answer Keys - ${examName} - ${classNameStr}</title>
           <style>
-            body { font-family: 'Courier New', Courier, monospace; padding: 40px; color: #1e293b; }
-            h1 { text-align: center; margin-bottom: 5px; font-family: sans-serif; font-size: 24px; text-transform: uppercase; }
-            h2 { text-align: center; font-family: sans-serif; font-size: 16px; color: #64748b; margin-top: 0; margin-bottom: 30px; }
-            .paper-block { margin-bottom: 20px; page-break-inside: avoid; }
-            h3 { font-family: sans-serif; color: #4338ca; border-bottom: 2px solid #e2e8f0; padding-bottom: 5px; font-size: 16px; }
-            pre { background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; font-size: 14px; white-space: pre-wrap; font-family: monospace; }
-            .key-link { font-size: 11px; color: #64748b; word-break: break-all; }
+            body { font-family: 'Inter', system-ui, sans-serif; padding: 40px; color: #1e293b; line-height: 1.5; }
+            .header { text-align: center; border-bottom: 3px double #cbd5e1; padding-bottom: 20px; margin-bottom: 30px; }
+            .school-logo { font-size: 24px; font-weight: 900; color: #1e1b4b; text-transform: uppercase; letter-spacing: 1px; }
+            .doc-title { font-size: 14px; font-weight: 700; color: #6366f1; text-transform: uppercase; letter-spacing: 2px; margin-top: 5px; }
+            .meta-info { display: flex; justify-content: space-between; font-size: 12px; color: #64748b; margin-top: 15px; background: #f8fafc; padding: 10px 15px; border-radius: 12px; }
+            .paper-block { margin-top: 30px; page-break-inside: avoid; border: 1px solid #e2e8f0; border-radius: 16px; overflow: hidden; }
+            .paper-header { background: #f1f5f9; padding: 12px 20px; font-size: 13px; font-weight: 800; color: #1e293b; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; }
+            .paper-content { padding: 20px; }
+            pre { background: #fafafa; padding: 15px; border-radius: 12px; font-size: 13px; font-family: monospace; white-space: pre-wrap; margin: 0; line-height: 1.6; }
+            .key-link { font-size: 11px; color: #4f46e5; word-break: break-all; margin-top: 10px; font-weight: bold; }
             .no-key { color: #94a3b8; font-style: italic; }
-            hr { border: 0; border-top: 1px dashed #cbd5e1; margin: 30px 0; }
             @media print {
               body { padding: 0; }
-              hr { margin: 20px 0; }
+              .paper-block { border-color: #cbd5e1; }
             }
           </style>
         </head>
         <body>
-          <h1>Answer Key Booklet</h1>
-          <h2>Exam: ${examName} | Class: ${classNameStr}</h2>
+          <div class="header">
+            <div class="school-logo">JY Global School</div>
+            <div class="doc-title">Official Answer Key Booklet</div>
+            <div class="meta-info">
+              <span><b>EXAMINATION:</b> ${examName}</span>
+              <span><b>CLASS & SECTION:</b> ${classNameStr}</span>
+              <span><b>DATE:</b> ${new Date().toLocaleDateString('en-GB')}</span>
+            </div>
+          </div>
           ${paperRows}
           <script>
             window.onload = function() {
@@ -191,17 +204,18 @@ export const AnswerKeyPage = () => {
 
   return (
     <div className="flex flex-col h-full bg-slate-50/50 w-full" style={{ minHeight: 'calc(100vh - 64px)' }}>
-      <PageHeader title="Answer Keys Entry" icon={<Key className="w-5 h-5" />} />
+      <PageHeader title="Answer Keys Master Entry" icon={<Key className="w-5 h-5 text-indigo-600" />} />
 
       <div className="flex-1 p-4 sm:p-6 lg:p-8 space-y-6 max-w-6xl mx-auto w-full">
         {/* Step 1: Selection Dropdowns */}
-        <div className="bg-white dark:bg-slate-900/60 backdrop-blur-md p-6 rounded-3xl border border-gray-150 shadow-[0_8px_30px_rgb(0,0,0,0.02)] grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="bg-gradient-to-r from-slate-50 to-white dark:from-gray-900 dark:to-gray-800 p-8 rounded-3xl border border-slate-100 dark:border-gray-800 shadow-sm grid grid-cols-1 md:grid-cols-2 gap-6 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50/40 rounded-full translate-x-12 -translate-y-12 blur-xl"></div>
           <div>
-            <label className="text-xs font-black uppercase text-indigo-500 tracking-wider mb-2 block">Select Exam Batch</label>
+            <label className="text-xs font-black uppercase text-indigo-600 tracking-wider mb-2 block">Select Exam Batch</label>
             <select
               value={selectedExamId}
               onChange={e => setSelectedExamId(e.target.value)}
-              className="w-full bg-slate-50 border border-gray-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+              className="w-full bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-700 rounded-2xl px-4 py-3 text-sm font-bold text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all"
             >
               <option value="">-- Select Examination --</option>
               {exams.map(e => (
@@ -211,12 +225,12 @@ export const AnswerKeyPage = () => {
           </div>
 
           <div>
-            <label className="text-xs font-black uppercase text-indigo-500 tracking-wider mb-2 block">Select Class & Section</label>
+            <label className="text-xs font-black uppercase text-indigo-600 tracking-wider mb-2 block">Select Class & Section</label>
             <select
               value={selectedClassId}
               disabled={!selectedExamId}
               onChange={e => setSelectedClassId(e.target.value)}
-              className="w-full bg-slate-50 border border-gray-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 disabled:opacity-50"
+              className="w-full bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-700 rounded-2xl px-4 py-3 text-sm font-bold text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 disabled:opacity-50 transition-all"
             >
               <option value="">-- Select Class --</option>
               {classes.map(c => (
@@ -228,17 +242,17 @@ export const AnswerKeyPage = () => {
 
         {/* Step 2: Print & Actions Bar */}
         {selectedExamId && selectedClassId && papers.length > 0 && (
-          <div className="flex justify-between items-center bg-white p-4 rounded-2xl border border-gray-150 shadow-sm animate-fade-in">
+          <div className="flex justify-between items-center bg-white dark:bg-gray-900 p-5 rounded-3xl border border-slate-100 dark:border-gray-800 shadow-sm animate-fade-in">
             <div>
-              <h3 className="font-bold text-slate-800 text-sm">Subject-wise Papers</h3>
-              <p className="text-xs text-gray-400">Total uploaded papers: {papers.length}</p>
+              <h3 className="font-extrabold text-slate-800 dark:text-white text-sm">Subject-wise Answer Keys</h3>
+              <p className="text-[11px] text-slate-400 mt-0.5">Manage keys for {papers.length} subject papers</p>
             </div>
             {isSuperAdmin && (
               <button 
                 onClick={handlePrintKeys}
-                className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-4 py-2 rounded-xl flex items-center gap-2 text-xs shadow-md transition-all"
+                className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-4 py-2.5 rounded-2xl flex items-center gap-2 text-xs shadow-lg shadow-indigo-600/25 transition-all cursor-pointer"
               >
-                <Printer className="w-4 h-4" /> Print All Keys
+                <Printer className="w-4 h-4" /> Print Key Booklet
               </button>
             )}
           </div>
@@ -250,108 +264,111 @@ export const AnswerKeyPage = () => {
             <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
           </div>
         ) : selectedExamId && selectedClassId ? (
-          <div className="space-y-4">
+          <div className="space-y-6">
             {papers.map(p => {
               const isEditing = editingKeyId === p.id;
               return (
-                <div key={p.id} className="bg-white dark:bg-gray-900 p-6 rounded-3xl border border-gray-150 shadow-sm space-y-4">
-                  <div className="flex justify-between items-start">
+                <div key={p.id} className="relative overflow-hidden bg-white dark:bg-gray-900 p-6 rounded-3xl border border-slate-150 dark:border-gray-800 shadow-sm space-y-5 transition-all duration-300">
+                  {/* Left Accent Bar */}
+                  <div className="absolute top-0 left-0 w-1.5 h-full bg-indigo-600"></div>
+
+                  <div className="flex justify-between items-start pl-2">
                     <div>
-                      <span className="bg-indigo-50 text-indigo-700 text-[10px] font-black uppercase px-2.5 py-1 rounded-lg border border-indigo-100">
+                      <span className="bg-indigo-50 text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-400 text-[10px] font-black uppercase px-2.5 py-1 rounded-lg border border-indigo-100 dark:border-indigo-500/20">
                         {p.subject?.name || 'All Subjects'}
                       </span>
-                      <h4 className="font-extrabold text-slate-800 dark:text-white text-base mt-2">{p.title}</h4>
-                      <p className="text-xs text-gray-400 mt-1">Uploaded by: {p.uploadedBy}</p>
+                      <h4 className="font-extrabold text-slate-800 dark:text-white text-base mt-3 leading-snug">{p.title}</h4>
+                      <p className="text-[11px] text-slate-400 mt-1">Uploaded by: <strong className="text-slate-600 dark:text-slate-300">{p.uploadedBy}</strong></p>
                     </div>
 
                     {!isEditing && (
                       <button 
                         onClick={() => handleStartEdit(p)}
-                        className="bg-slate-50 hover:bg-indigo-50 text-indigo-600 border border-slate-200 hover:border-indigo-100 font-bold px-3 py-1.5 rounded-lg text-xs transition-all flex items-center gap-1.5"
+                        className="bg-slate-50 hover:bg-indigo-50 text-indigo-600 dark:bg-gray-800 dark:hover:bg-indigo-500/10 dark:text-indigo-400 border border-slate-200 dark:border-gray-700 font-extrabold px-3 py-2 rounded-xl text-xs transition-all flex items-center gap-1.5 cursor-pointer"
                       >
-                        <Save className="w-3.5 h-3.5" /> Edit Answer Key
+                        <Edit3 className="w-3.5 h-3.5" /> Edit Answer Key
                       </button>
                     )}
                   </div>
 
                   {isEditing ? (
-                    <div className="space-y-4 border-t pt-4">
+                    <div className="space-y-4 border-t border-slate-50 dark:border-gray-800/80 pt-5 pl-2 animate-fade-in">
                       {/* PDF Upload inside Key Edit */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                          <label className="text-xs font-bold text-gray-500 mb-1.5 block">Typed Key Entries</label>
+                          <label className="text-xs font-black uppercase tracking-wider text-slate-400 mb-2 block">Typed Key Entries</label>
                           <textarea
                             rows={6}
                             placeholder="1. A&#10;2. B&#10;3. C&#10;..."
                             value={editAnswerKeyText}
                             onChange={e => setEditAnswerKeyText(e.target.value)}
-                            className="w-full bg-slate-50 border border-gray-200 rounded-xl p-3 text-sm font-mono leading-relaxed focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                            className="w-full bg-slate-50/50 dark:bg-gray-800/50 border border-slate-200 dark:border-gray-700 rounded-2xl p-3.5 text-sm font-mono leading-relaxed focus:outline-none focus:ring-2 focus:ring-indigo-500/20 text-slate-700 dark:text-slate-200"
                           />
                         </div>
 
                         <div className="space-y-4">
                           <div>
-                            <label className="text-xs font-bold text-gray-500 mb-1.5 block">Answer Key PDF URL (Optional)</label>
+                            <label className="text-xs font-black uppercase tracking-wider text-slate-400 mb-2 block">Answer Key PDF URL (Optional)</label>
                             <input 
                               type="text"
                               placeholder="https://link-to-key.pdf"
                               value={editAnswerKeyUrl}
                               onChange={e => setEditAnswerKeyUrl(e.target.value)}
-                              className="w-full bg-slate-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                              className="w-full bg-slate-50/50 dark:bg-gray-800/50 border border-slate-200 dark:border-gray-700 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 text-slate-700 dark:text-slate-200"
                             />
                           </div>
 
-                          <div className="border-2 border-dashed border-gray-200 rounded-xl p-4 flex flex-col items-center justify-center bg-slate-50">
-                            <FileText className="w-8 h-8 text-gray-400 mb-2" />
-                            <span className="text-xs text-gray-500 font-bold mb-2">Upload PDF File instead</span>
+                          <div className="border-2 border-dashed border-slate-200 dark:border-gray-700 rounded-2xl p-5 flex flex-col items-center justify-center bg-slate-50/50 dark:bg-gray-800/20">
+                            <FileText className="w-8 h-8 text-slate-400 mb-2" />
+                            <span className="text-xs text-slate-500 dark:text-slate-400 font-bold mb-2">Upload Answer Key File</span>
                             <input 
                               type="file" 
                               accept=".pdf,.doc,.docx"
                               onChange={(e) => handleUploadKeyFile(e, p.id)} 
-                              className="text-xs text-gray-500 file:mr-4 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-black file:bg-indigo-50 file:text-indigo-600 hover:file:bg-indigo-100 cursor-pointer"
+                              className="text-xs text-slate-500 file:mr-4 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-black file:bg-indigo-50 file:text-indigo-600 hover:file:bg-indigo-100 cursor-pointer"
                             />
                           </div>
                         </div>
                       </div>
 
-                      <div className="flex gap-2 justify-end border-t pt-4">
+                      <div className="flex gap-2 justify-end border-t border-slate-50 dark:border-gray-800/80 pt-4">
                         <button 
                           onClick={() => setEditingKeyId(null)}
-                          className="px-4 py-2 rounded-xl border border-gray-200 text-xs font-bold text-gray-600 hover:bg-gray-100"
+                          className="px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-extrabold text-slate-600 hover:bg-slate-100 cursor-pointer"
                         >
                           Cancel
                         </button>
                         <button 
                           onClick={() => handleSaveKey(p.id)}
-                          className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-md shadow-indigo-500/20 flex items-center gap-1.5"
+                          className="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-extrabold shadow-lg shadow-indigo-600/25 flex items-center gap-1.5 cursor-pointer"
                         >
                           <Save className="w-3.5 h-3.5" /> Save Changes
                         </button>
                       </div>
                     </div>
                   ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-50 p-4 rounded-2xl border border-gray-100 text-xs">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-50/50 dark:bg-gray-800/20 p-5 rounded-2xl border border-slate-100 dark:border-gray-800/40 text-xs pl-8 relative">
                       <div>
-                        <span className="font-bold text-gray-400 uppercase tracking-wider block mb-1">Typed Answers</span>
+                        <span className="font-black text-slate-400 uppercase tracking-wider block mb-2">Typed Answers</span>
                         {p.answerKey ? (
-                          <pre className="whitespace-pre-wrap font-mono text-gray-700 leading-relaxed max-h-36 overflow-y-auto">{p.answerKey}</pre>
+                          <pre className="whitespace-pre-wrap font-mono text-slate-700 dark:text-slate-300 leading-relaxed max-h-36 overflow-y-auto bg-white dark:bg-gray-900 border border-slate-100 dark:border-gray-850 p-3 rounded-xl">{p.answerKey}</pre>
                         ) : (
-                          <span className="text-gray-400 italic">No answers entered yet.</span>
+                          <span className="text-slate-400 italic font-semibold">No answers entered yet.</span>
                         )}
                       </div>
                       <div>
-                        <span className="font-bold text-gray-400 uppercase tracking-wider block mb-1">PDF File Link</span>
+                        <span className="font-black text-slate-400 uppercase tracking-wider block mb-2">PDF File Link</span>
                         {p.answerKeyUrl ? (
                           <a 
                             href={p.answerKeyUrl} 
                             target="_blank" 
                             rel="noreferrer"
-                            className="inline-flex items-center gap-1.5 font-bold text-indigo-600 hover:underline mt-1"
+                            className="inline-flex items-center gap-1.5 font-extrabold text-indigo-600 hover:underline mt-1 bg-white dark:bg-gray-900 border border-slate-100 dark:border-gray-850 px-3 py-2 rounded-xl"
                           >
-                            <FileText className="w-4 h-4" /> View PDF Answer Key
+                            <FileText className="w-4 h-4 text-emerald-500" /> View PDF Answer Key
                           </a>
                         ) : (
-                          <span className="text-gray-400 italic">No PDF key uploaded yet.</span>
+                          <span className="text-slate-400 italic font-semibold">No PDF key uploaded yet.</span>
                         )}
                       </div>
                     </div>
@@ -361,18 +378,18 @@ export const AnswerKeyPage = () => {
             })}
 
             {papers.length === 0 && (
-              <div className="bg-white/50 border-2 border-dashed border-gray-200 p-12 text-center rounded-3xl">
-                <FileText className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                <h4 className="text-base font-bold text-slate-700">No Question Papers Found</h4>
-                <p className="text-xs text-gray-400 mt-1">Please upload question papers for this exam & class first.</p>
+              <div className="bg-white/50 border-2 border-dashed border-slate-200 p-12 text-center rounded-3xl">
+                <FileText className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+                <h4 className="text-base font-extrabold text-slate-700">No Question Papers Found</h4>
+                <p className="text-xs text-slate-400 mt-1">Please upload question papers for this exam & class first.</p>
               </div>
             )}
           </div>
         ) : (
-          <div className="bg-white/40 border border-gray-200 p-12 text-center rounded-3xl">
-            <Key className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-            <h4 className="text-base font-bold text-slate-700">Select Exam and Class</h4>
-            <p className="text-xs text-gray-400 mt-1">Please choose options above to load and enter answer keys.</p>
+          <div className="bg-white/40 border border-slate-200 p-12 text-center rounded-3xl">
+            <Key className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+            <h4 className="text-base font-extrabold text-slate-700">Select Exam and Class</h4>
+            <p className="text-xs text-slate-400 mt-1">Please choose options above to load and enter answer keys.</p>
           </div>
         )}
       </div>

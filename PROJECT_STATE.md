@@ -28,14 +28,44 @@
   - Discovered a data inconsistency where marks entered via the Mobile App ignored subject-specific max marks (e.g., 20) and defaulted to the global exam max marks (100).
   - Modified `marks.controller.ts` in the backend to explicitly pre-fetch `ExamPlans` and strictly enforce the database truth for `maxMarks`, preventing the client (Web or Mobile) from manipulating it.
   - Wrote a batched database cleanup script (`fixMarks.ts`) to repair existing corrupted records (like the Hindi 100 maxMarks issue) without causing memory exhaustion.
+# Project State: JY-School ERP
+
+## Recent Changes & Fixes
+- **Record Fee Payment Flow (Mobile App & Backend):**
+  - **Backend Fix**: Fixed a data fetch bug in `fees.controller.ts` where `getStudentFeeStatus` erroneously returned global fee structures *alongside* other individual students' fee structures due to improper `classId` OR logic.
+  - **UI Overhaul**: Redesigned `record_fee_payment_screen.dart` to be highly premium and professional. Replaced the `bottomSheet` with a `SafeArea`-wrapped `bottomNavigationBar` to fix Android system navigation bar overlap.
+  - **Date Picker**: Added a new Payment Date field in the "Record Payment" screen for retroactive entries.
+- **Flutter UI Enhancements & Fixes:**
+  - **Staff Attendance Screen**: Fixed a UI issue in `mark_staff_attendance_screen.dart` where the "Save Attendance" button overlapped with the Android System Navigation Bar by properly implementing `MediaQuery` bottom padding.
+  - Scaled down the Dashboard Grid items to fit exactly 8 boxes on a single screen without scrolling, and removed background images for a cleaner look.
+  - Migrated the "Edit Transaction" Bottom Sheet to a separate standalone screen (`edit_transaction_screen.dart`) to solve Navigation Bar overlap issues and improve UX.
+  - Added a `Date Picker` to the Edit Transaction flow, enabling users to modify the transaction's `paymentDate`.
+  - Applied `SafeArea` to the "Apply Discount" bottom sheet to prevent the "Apply" button from overlapping with the Android System Navigation Bar.
+- **Gate Pass Mobile App Module Overhaul:**
+  - **Issue Gate Pass:** Added a Floating Action Button in `gate_pass_screen.dart` to allow Admins and Teachers to issue gate passes easily.
+  - **Premium View Screen:** Replaced the cramped bottom sheet in the History tab with a dedicated, beautifully designed full-page `GatePassViewScreen` displaying the photo, details, and large QR code.
+  - **QR Scanner Redesign:** Completely rewrote the `_QRScannerTab` using `mobile_scanner` to feature a premium, Paytm-like full-screen layout with a central cutout overlay and scanning animation. The scanner now automatically processes codes, interacts with the backend to update status (IN/OUT), and shows professional dialogs.
+- **Finance Mobile App Module Overhaul:**
+  - **Wallet Dashboard:** Redesigned `finance_screen.dart` from a dull grid to a premium, glassmorphism-inspired "Wallet/Bank" style dashboard featuring beautiful KPI cards and quick-access circular icons. Added new quick-action cards: "Fee Category", "Transactions", and "Fee Details".
+  - **Payment Receipts (New):** Created `fee_receipts_screen.dart`, a dedicated hub that lists all successful payments and generates professional PDF receipts for parents.
+  - **Finance Reports Upgrade:** Upgraded `finance_reports_screen.dart` with a new "Cash-in-Hand Settlement" metric and better chart integrations, bringing the mobile analytics on par with the Web App.
+  - **Transactions Management:** Upgraded the transactions screen (`transactions_screen.dart`) to support Editing and Deleting payments directly from the mobile app via a popup menu.
+  - **Student Fee Details (New):** Developed `student_fee_details_screen.dart` to perfectly mirror the Web App's `StudentFeeDetailsTab`. Features advanced Class & Status filtering, live balances, PDF/CSV export (via `share_plus`), and 1-tap WhatsApp fee reminders.
+- **Leave Apply / My History Tabs:** Fixed the UI contrast issue in the Teacher Mobile App (`leave_dashboard_screen.dart`) by setting `labelColor: Colors.white` for the TabBar.
+- **Gate Pass Class/Section Filtering:** Added `Class` and `Section` Dropdown filters in the Gate Pass issuance screen (`create_gate_pass_screen.dart`).
+- **Fee Reminder Navigation Fix:** Corrected a bug in the Teacher Mobile App (`dashboard_screen.dart`) where the 'Fee Reminder' button mistakenly routed to the 'Collect Fee' screen (`StudentFeeSearchScreen`) instead of the correct `FeeReminderSearchScreen`.
+- **Max Marks Data Integrity (Backend):** 
+  - Discovered a data inconsistency where marks entered via the Mobile App ignored subject-specific max marks (e.g., 20) and defaulted to the global exam max marks (100).
+  - Modified `marks.controller.ts` in the backend to explicitly pre-fetch `ExamPlans` and strictly enforce the database truth for `maxMarks`, preventing the client (Web or Mobile) from manipulating it.
+  - Wrote a batched database cleanup script (`fixMarks.ts`) to repair existing corrupted records (like the Hindi 100 maxMarks issue) without causing memory exhaustion.
 - **Flutter Progress Card UI Overhaul:**
 - **Flutter Question Bank Migration:**
   - Successfully migrated the Question Bank module to the Flutter app.
 - **Answer Key Module & Printable Booklet (Web & Mobile):**
-  - Fully rewrote the `AnswerKeyPage.tsx` page to allow teachers and admins to select exam batches and classes, view subject-wise question papers, and edit/upload answer keys.
-  - Provided a booklet-style printable layout for Super Admins to print all class answer keys.
-  - Linked the Teacher sidebar card to the newly redesigned `AnswerKeyPage.tsx`.
-- **Direct File Uploading & Manual URL Entries:**
+  - [x] Web App - UI Overhaul of `AnswerKeyPage.tsx`
+  - [x] Redesign filter selection board.
+  - [x] Implement beautiful subject grids with inline editing.
+  - [x] Beautify PDF print templates with a professional school letterhead styling.
   - Replaced the manual text URL inputs with dual-input containers (Upload File + Manual Link paste input) in both React (`ExamListPage.tsx`) and Flutter (`upload_question_paper_screen.dart`).
   - Added a Multipart file upload helper `ApiService.uploadDocument()` in Flutter using `file_picker`.
 - **Exam-Specific Class & Subject Dynamic Filtering:**
@@ -54,6 +84,7 @@
   - Fixed a syntax bug in `ExamListPage.tsx` where closing tags for the `add-online-exam` form were accidentally removed during the `question-papers` tab modification. This was preventing the entire page layout from compiling and rendering properly.
   - Fixed a `TypeError: e.replace is not a function` crash in the Exam Selection dropdown by passing `e.name` instead of the entire `e` object to `formatExamOptionLabel` helper.
   - Fixed a `ReferenceError: Key is not defined` crash on page load by importing the `Key` icon from `lucide-react` in `ExamListPage.tsx`.
+  - Added console error logging in `fetchBaseFilters` inside `ExamListPage.tsx` to print the exact network error causing bootstrap filter failures.
   - Corrected `fetchQpStats` to store `res.data` (or `res`) instead of the raw axios response object, ensuring dashboard KPI cards render correctly once data exists.
 - **Flutter Question Papers Screen Bugs Fix:**
   - Fixed compilation errors in `question_papers_screen.dart` related to invalid `Colors.emerald` reference and incorrect named parameter `py` in `EdgeInsets.symmetric`.
