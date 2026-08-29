@@ -28,6 +28,7 @@ import 'student_fee_search_screen.dart';
 import 'progress_card_screen.dart';
 import 'results_screen.dart';
 import 'answer_keys_screen.dart';
+import 'question_papers_screen.dart';
 import 'settings_screen.dart';
 import 'fee_installment_report_screen.dart';
 import 'announcement_detail_screen.dart';
@@ -1635,7 +1636,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         children: [
           _buildImageCard(imagePath: 'assets/images/admin_icons/attendance_mark.jpg',title: 'Mark Attendance',borderColor: const Color(0xFF10B981), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TeacherAttendanceScreen()))),
           _buildImageCard(imagePath: 'assets/images/admin_icons/classes.jpg',    title: 'My Students', borderColor: const Color(0xFF8B5CF6), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const StudentsScreen()))),
-          _buildImageCard(imagePath: 'assets/images/admin_icons/exams.jpg',      title: 'Answer Key',    borderColor: const Color(0xFFF59E0B), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AnswerKeysScreen()))),
+          _buildImageCard(imagePath: 'assets/images/admin_icons/exams.jpg',      title: 'Question Papers', borderColor: const Color(0xFFF59E0B), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const QuestionPapersScreen()))),
           _buildImageCard(imagePath: 'assets/images/admin_icons/teacher.jpg',    title: 'Timetable',     borderColor: const Color(0xFF6366F1), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TimetableScreen()))),
           _buildImageCard(imagePath: 'assets/images/admin_icons/reports.jpg',    title: 'Marks Entry',   borderColor: const Color(0xFFF97316), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MarksUploadScreen()))),
           _buildImageCard(imagePath: 'assets/images/admin_icons/exams.jpg',    title: 'Results',       borderColor: const Color(0xFF10B981), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ResultsScreen()))),

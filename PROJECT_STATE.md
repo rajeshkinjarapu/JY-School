@@ -57,6 +57,9 @@
   - Implemented dynamic global maxMarks validation for every test/exam by fully integrating the new `MarksUploadScreen` across all dashboards and deleting the legacy `TeacherMarksScreen`.
 - **Flutter Question Bank Migration:**
   - Successfully migrated the Question Bank module to the Flutter app.
+- **Flutter Question Papers Integration:**
+  - Fixed an API route mismatch (404 error) where the mobile app hit `/api/questionPapers` instead of `/api/question-papers`.
+  - Linked the highly premium `QuestionPapersScreen` to the Teacher Dashboard by replacing the redundant "Answer Keys" tile (Answer Keys are now viewed directly from within the Question Papers screen).
 ## Infrastructure & Hosting Migration (Completed)
 - **VPS Setup Complete:** Successfully provisioned and configured the BigRock VPS (Ubuntu 22.04).
 - **Dual Database Architecture:** 
