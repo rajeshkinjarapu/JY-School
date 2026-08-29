@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useAuth } from '../../hooks/useAuth';
 import { login as loginApi } from '../../api/auth';
+import api from '../../api/axios';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { Eye, EyeOff, Lock, Mail, ArrowRight, GraduationCap } from 'lucide-react';
