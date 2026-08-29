@@ -798,6 +798,10 @@ class ApiService {
     return _performGet('/api/question-papers', 'Failed to get question papers');
   }
 
+  static Future<Map<String, dynamic>> createQuestionPaper(Map<String, dynamic> data) async {
+    return _performPost('/api/question-papers', data, 'Failed to create question paper');
+  }
+
   static Future<Map<String, dynamic>> getGeneratedPapers() async {
     return _performGet('/api/generatedPapers', 'Failed to get generated papers');
   }

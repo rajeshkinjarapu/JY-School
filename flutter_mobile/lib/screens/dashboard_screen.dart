@@ -377,7 +377,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 if (userRole == 'SUPER_ADMIN' || userRole == 'ADMIN') ...[
-                                  _buildAdminCombinedGrid(),
+                                  _buildAdminCombinedGrid(context),
                                   const SizedBox(height: 24),
                                   _buildRecentPayments(),
                                   const SizedBox(height: 24),
@@ -558,19 +558,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                      decoration: BoxDecoration(color: Colors.red, borderRadius: BorderRadius.circular(4)),
-                      child: Text('NEW', style: GoogleFonts.poppins(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold)),
-                    ),
-                    const SizedBox(width: 8),
-                    Text('Latest Announcement', style: GoogleFonts.poppins(color: const Color(0xFF1E293B), fontSize: 13, fontWeight: FontWeight.bold)),
-                  ],
+                Text(
+                  'Latest Announcement', 
+                  style: GoogleFonts.poppins(color: const Color(0xFF1E293B), fontSize: 13, fontWeight: FontWeight.bold),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 4),
-                Text('Sports Day will be held on 25th May 2025.', style: GoogleFonts.poppins(color: const Color(0xFF64748B), fontSize: 11)),
               ],
             ),
           ),
@@ -1294,31 +1287,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFF59E0B),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                                child: Text('\u{1F4E2} NEW', style: GoogleFonts.poppins(color: Colors.white, fontSize: 9, fontWeight: FontWeight.w800)),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              title,
-                              style: GoogleFonts.outfit(color: const Color(0xFF92400E), fontSize: 14, fontWeight: FontWeight.w800),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 5),
                       Text(
-                        content,
-                        style: GoogleFonts.poppins(color: const Color(0xFF92400E).withOpacity(0.85), fontSize: 11, height: 1.4),
+                        title,
+                        style: GoogleFonts.outfit(color: const Color(0xFF92400E), fontSize: 14, fontWeight: FontWeight.w800),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -1350,96 +1321,324 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
 
-  Widget _buildAdminCombinedGrid() {
-    return GridView.count(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      crossAxisCount: 2,
-      crossAxisSpacing: 14,
-      mainAxisSpacing: 14,
-      childAspectRatio: 1.15, // Fixed comfortable aspect ratio to avoid overflow
+  Widget _buildAdminCombinedGrid(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _buildMenuPremiumCard(
-          subtitle: 'TOTAL STUDENTS',
-          title: '$_adminTotalStudents',
-          bottomText: 'Admission & Records',
-          icon: Icons.groups_rounded,
-          gradientColors: [const Color(0xFF4C3AE3), const Color(0xFF28189D)],
-          accentColor: const Color(0xFF6366F1),
-          imagePath: 'assets/images/admin_icons/student.jpg',
-          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const StudentsScreen())),
+        // ====== ROW 1: 3 Stat Boxes ======
+        Row(
+          children: [
+            Expanded(
+              child: _buildStatBox(
+                icon: Icons.groups_rounded,
+                value: '$_adminTotalStudents',
+                label: 'Students',
+                gradientColors: [const Color(0xFF6366F1), const Color(0xFF4338CA)],
+                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const StudentsScreen())),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _buildStatBox(
+                icon: Icons.school_rounded,
+                value: '$_adminTotalTeachers',
+                label: 'Teachers',
+                gradientColors: [const Color(0xFF0D9488), const Color(0xFF0F766E)],
+                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TeachersScreen())),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _buildStatBox(
+                icon: Icons.account_balance_rounded,
+                value: '$_adminTotalClasses',
+                label: 'Classes',
+                gradientColors: [const Color(0xFF0284C7), const Color(0xFF0369A1)],
+                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ClassesScreen())),
+              ),
+            ),
+          ],
         ),
-        _buildMenuPremiumCard(
-          subtitle: 'TOTAL TEACHERS',
-          title: '$_adminTotalTeachers',
-          bottomText: 'Staff & Activities',
-          icon: Icons.school_rounded,
-          gradientColors: [const Color(0xFF00BFA5), const Color(0xFF00796B)],
-          accentColor: const Color(0xFF1DE9B6),
-          imagePath: 'assets/images/admin_icons/teacher.jpg',
-          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TeachersScreen())),
-        ),
-        _buildMenuPremiumCard(
-          subtitle: 'TOTAL CLASSES',
-          title: '$_adminTotalClasses',
-          bottomText: 'Syllabus & Timetable',
-          icon: Icons.account_balance_rounded,
-          gradientColors: [const Color(0xFF0277BD), const Color(0xFF014670)],
-          accentColor: const Color(0xFF039BE5),
-          imagePath: 'assets/images/admin_icons/classes.jpg',
-          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ClassesScreen())),
-        ),
-        _buildMenuPremiumCard(
-          subtitle: 'TOTAL REVENUE',
-          title: '₹${_formatIndianCurrency(_adminFeeCollected)}',
-          bottomText: 'Total Income',
-          icon: Icons.account_balance_wallet_rounded,
-          gradientColors: [const Color(0xFFE91E63), const Color(0xFF880E4F)],
-          accentColor: const Color(0xFFF06292),
-          imagePath: 'assets/images/admin_icons/revenue.jpg',
-          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TransactionsScreen())),
-        ),
-        _buildMenuPremiumCard(
-          subtitle: 'FEE COLLECTION',
-          title: 'Collect Fees',
-          bottomText: 'Payment Tracking',
-          icon: Icons.credit_card_rounded,
-          gradientColors: [const Color(0xFF7B1FA2), const Color(0xFF4A148C)],
-          accentColor: const Color(0xFF9C27B0),
-          imagePath: 'assets/images/admin_icons/collect_fees.jpg',
-          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const StudentFeeSearchScreen())),
-        ),
-        _buildMenuPremiumCard(
-          subtitle: 'EXAM RESULTS',
-          title: 'Results',
-          bottomText: 'Marks & Results',
-          icon: Icons.fact_check_rounded,
-          gradientColors: [const Color(0xFF1565C0), const Color(0xFF0D47A1)],
-          accentColor: const Color(0xFF1E88E5),
-          imagePath: 'assets/images/admin_icons/exams.jpg',
-          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ResultsScreen())),
-        ),
-        _buildMenuPremiumCard(
-          subtitle: 'FEE DETAILS',
-          title: 'Installment Log',
-          bottomText: 'Invoices & Dues',
-          icon: Icons.receipt_long_rounded,
-          gradientColors: [const Color(0xFFFF8F00), const Color(0xFFFF6F00)],
-          accentColor: const Color(0xFFFFA000),
-          imagePath: 'assets/images/admin_icons/student_fees.jpg',
-          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const FeeInstallmentReportScreen())),
-        ),
-        _buildMenuPremiumCard(
-          subtitle: 'REPORTS & ANALYTICS',
-          title: 'Progress Card',
-          bottomText: 'Performance Analysis',
-          icon: Icons.emoji_events_rounded,
-          gradientColors: [const Color(0xFF00C853), const Color(0xFF009624)],
-          accentColor: const Color(0xFF00E676),
-          imagePath: 'assets/images/admin_icons/reports.jpg',
-          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ProgressCardScreen())),
+        const SizedBox(height: 14),
+        // ====== ROW 2: Full-Width Revenue Card ======
+        _buildRevenueWideCard(context),
+        const SizedBox(height: 14),
+        // ====== ROWS 3-4: 2×2 Action Grid ======
+        GridView.count(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          crossAxisCount: 2,
+          crossAxisSpacing: 14,
+          mainAxisSpacing: 14,
+          childAspectRatio: 1.6,
+          children: [
+            _buildMenuPremiumCard(
+              subtitle: 'FEE COLLECTION',
+              title: 'Collect Fees',
+              bottomText: '',
+              icon: Icons.credit_card_rounded,
+              gradientColors: [const Color(0xFF7C3AED), const Color(0xFF5B21B6)],
+              accentColor: const Color(0xFF9C27B0),
+              imagePath: '',
+              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const StudentFeeSearchScreen())),
+            ),
+            _buildMenuPremiumCard(
+              subtitle: 'EXAM RESULTS',
+              title: 'Results',
+              bottomText: '',
+              icon: Icons.fact_check_rounded,
+              gradientColors: [const Color(0xFF1D4ED8), const Color(0xFF1E40AF)],
+              accentColor: const Color(0xFF1E88E5),
+              imagePath: '',
+              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ResultsScreen())),
+            ),
+            _buildMenuPremiumCard(
+              subtitle: 'FEE DETAILS',
+              title: 'Installment Log',
+              bottomText: '',
+              icon: Icons.receipt_long_rounded,
+              gradientColors: [const Color(0xFFD97706), const Color(0xFFB45309)],
+              accentColor: const Color(0xFFFFA000),
+              imagePath: '',
+              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const FeeInstallmentReportScreen())),
+            ),
+            _buildMenuPremiumCard(
+              subtitle: 'REPORTS & ANALYTICS',
+              title: 'Progress Card',
+              bottomText: '',
+              icon: Icons.emoji_events_rounded,
+              gradientColors: [const Color(0xFF16A34A), const Color(0xFF15803D)],
+              accentColor: const Color(0xFF00E676),
+              imagePath: '',
+              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ProgressCardScreen())),
+            ),
+          ],
         ),
       ],
+    );
+  }
+
+  // ── Compact stat box for 3-column top row ──
+  Widget _buildStatBox({
+    required IconData icon,
+    required String value,
+    required String label,
+    required List<Color> gradientColors,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        height: 100,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: gradientColors,
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(18),
+          boxShadow: [
+            BoxShadow(
+              color: gradientColors[0].withOpacity(0.42),
+              blurRadius: 16,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: Stack(
+          clipBehavior: Clip.hardEdge,
+          children: [
+            // Decorative circle top-right
+            Positioned(
+              top: -18,
+              right: -18,
+              child: Container(
+                width: 70,
+                height: 70,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withOpacity(0.10),
+                ),
+              ),
+            ),
+            Positioned(
+              top: 16,
+              right: 10,
+              child: Container(
+                width: 30,
+                height: 30,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withOpacity(0.07),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  // Icon badge
+                  Container(
+                    padding: const EdgeInsets.all(7),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.20),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: Colors.white.withOpacity(0.30), width: 1),
+                    ),
+                    child: Icon(icon, color: Colors.white, size: 16),
+                  ),
+                  // Value + Label
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          value,
+                          style: GoogleFonts.outfit(
+                            color: Colors.white,
+                            fontSize: 26,
+                            fontWeight: FontWeight.w800,
+                            height: 1.0,
+                            letterSpacing: -0.5,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        label,
+                        style: GoogleFonts.poppins(
+                          color: Colors.white.withOpacity(0.68),
+                          fontSize: 9.5,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ── Full-width Revenue card ──
+  Widget _buildRevenueWideCard(BuildContext context) {
+    return GestureDetector(
+      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TransactionsScreen())),
+      child: Container(
+        height: 92,
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFFBE185D), Color(0xFF881337)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFFBE185D).withOpacity(0.42),
+              blurRadius: 18,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: Stack(
+          clipBehavior: Clip.hardEdge,
+          children: [
+            // Decorative circle
+            Positioned(
+              top: -25,
+              right: -25,
+              child: Container(
+                width: 110,
+                height: 110,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withOpacity(0.08),
+                ),
+              ),
+            ),
+            Positioned(
+              top: 18,
+              right: 30,
+              child: Container(
+                width: 45,
+                height: 45,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withOpacity(0.06),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+              child: Row(
+                children: [
+                  // Icon
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.20),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: Colors.white.withOpacity(0.30), width: 1.5),
+                    ),
+                    child: const Icon(Icons.account_balance_wallet_rounded, color: Colors.white, size: 22),
+                  ),
+                  const SizedBox(width: 16),
+                  // Label + value
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'TOTAL REVENUE',
+                          style: GoogleFonts.poppins(
+                            color: Colors.white.withOpacity(0.68),
+                            fontSize: 9.5,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 1.0,
+                          ),
+                        ),
+                        const SizedBox(height: 3),
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            '₹${_formatIndianCurrency(_adminFeeCollected)}',
+                            style: GoogleFonts.outfit(
+                              color: Colors.white,
+                              fontSize: 24,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: -0.5,
+                              height: 1.0,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  // Arrow
+                  Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.15),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.arrow_forward_ios_rounded, color: Colors.white, size: 11),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -1462,56 +1661,115 @@ class _DashboardScreenState extends State<DashboardScreen> {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(22),
           boxShadow: [
             BoxShadow(
-              color: gradientColors[0].withOpacity(0.4),
-              blurRadius: 15,
-              offset: const Offset(0, 8),
+              color: gradientColors[0].withOpacity(0.45),
+              blurRadius: 20,
+              offset: const Offset(0, 10),
             ),
           ],
         ),
         child: Stack(
           clipBehavior: Clip.hardEdge,
           children: [
+            // Large decorative circle — top right
+            Positioned(
+              top: -28,
+              right: -28,
+              child: Container(
+                width: 110,
+                height: 110,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withOpacity(0.09),
+                ),
+              ),
+            ),
+            // Medium decorative circle — overlapping
+            Positioned(
+              top: 18,
+              right: 18,
+              child: Container(
+                width: 56,
+                height: 56,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withOpacity(0.07),
+                ),
+              ),
+            ),
+            // Tiny accent dot — bottom left
+            Positioned(
+              bottom: -16,
+              left: -16,
+              child: Container(
+                width: 60,
+                height: 60,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withOpacity(0.06),
+                ),
+              ),
+            ),
+            // Subtle bottom shine line
+            Positioned(
+              bottom: 0,
+              left: 0,
+              right: 0,
+              child: Container(
+                height: 1.5,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      Colors.white.withOpacity(0.0),
+                      Colors.white.withOpacity(0.25),
+                      Colors.white.withOpacity(0.0),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            // Main content
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+              padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.max,
                 children: [
+                  // Top row: Icon badge + arrow
                   Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Icon Badge
                       Container(
-                        padding: const EdgeInsets.all(8),
+                        padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.white.withOpacity(0.4), width: 1),
-                        ),
-                        child: Icon(icon, color: Colors.white, size: 18),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: FittedBox(
-                          fit: BoxFit.scaleDown,
-                          alignment: Alignment.centerLeft,
-                          child: Text(
-                            subtitle,
-                            style: GoogleFonts.poppins(
-                              color: Colors.white.withOpacity(0.95),
-                              fontSize: 10,
-                              fontWeight: FontWeight.w700,
-                              letterSpacing: 0.5,
-                            ),
+                          color: Colors.white.withOpacity(0.18),
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(
+                            color: Colors.white.withOpacity(0.35),
+                            width: 1.5,
                           ),
+                        ),
+                        child: Icon(icon, color: Colors.white, size: 20),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.15),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.arrow_forward_ios_rounded,
+                          color: Colors.white,
+                          size: 10,
                         ),
                       ),
                     ],
                   ),
                   const Spacer(),
+                  // Main value/title — big bold left-aligned
                   FittedBox(
                     fit: BoxFit.scaleDown,
                     alignment: Alignment.centerLeft,
@@ -1519,27 +1777,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       title,
                       style: GoogleFonts.outfit(
                         color: Colors.white,
-                        fontSize: 24,
-                        fontWeight: FontWeight.w900,
-                        height: 1.1,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        height: 1.0,
+                        letterSpacing: -0.3,
                       ),
                     ),
                   ),
-                  const SizedBox(height: 4),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: accentColor.withOpacity(0.8),
-                      borderRadius: BorderRadius.circular(10),
+                  const SizedBox(height: 5),
+                  // Subtitle — muted, small, letter-spaced
+                  Text(
+                    subtitle,
+                    style: GoogleFonts.poppins(
+                      color: Colors.white.withOpacity(0.70),
+                      fontSize: 9,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 0.8,
                     ),
-                    child: FittedBox(
-                      fit: BoxFit.scaleDown,
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        bottomText,
-                        style: GoogleFonts.poppins(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w600),
-                      ),
-                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ),

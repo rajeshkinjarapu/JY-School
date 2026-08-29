@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
 import '../services/api_service.dart';
+import 'upload_question_paper_screen.dart';
 
 class QuestionPapersScreen extends StatefulWidget {
   const QuestionPapersScreen({super.key});
@@ -14,11 +17,23 @@ class _QuestionPapersScreenState extends State<QuestionPapersScreen> {
   List<dynamic> _papers = [];
   bool _isLoading = true;
   String? _errorMessage;
+  String _userRole = '';
 
   @override
   void initState() {
     super.initState();
+    _initRole();
     _fetchPapers();
+  }
+
+  Future<void> _initRole() async {
+    final prefs = await SharedPreferences.getInstance();
+    final userStr = prefs.getString('user');
+    if (userStr != null) {
+      setState(() {
+        _userRole = jsonDecode(userStr)['role'] ?? '';
+      });
+    }
   }
 
   Future<void> _fetchPapers() async {
@@ -206,11 +221,46 @@ class _QuestionPapersScreenState extends State<QuestionPapersScreen> {
                             physics: const AlwaysScrollableScrollPhysics(),
                             children: [
                               SizedBox(
-                                height: MediaQuery.of(context).size.height * 0.6,
+                                height: MediaQuery.of(context).size.height * 0.7,
                                 child: Center(
-                                  child: Text(
-                                    'No question papers uploaded yet.',
-                                    style: GoogleFonts.poppins(color: const Color(0xFF475569), fontSize: 16),
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.all(28),
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFF6366F1).withOpacity(0.08),
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: const Icon(
+                                          Icons.file_copy_rounded, 
+                                          size: 72, 
+                                          color: Color(0xFF6366F1)
+                                        ),
+                                      ),
+                                      const SizedBox(height: 24),
+                                      Text(
+                                        'No Question Papers',
+                                        style: GoogleFonts.outfit(
+                                          fontSize: 22, 
+                                          fontWeight: FontWeight.bold, 
+                                          color: const Color(0xFF1E293B)
+                                        ),
+                                      ),
+                                      const SizedBox(height: 12),
+                                      Padding(
+                                        padding: const EdgeInsets.symmetric(horizontal: 40),
+                                        child: Text(
+                                          'There are currently no question papers uploaded for your classes.',
+                                          textAlign: TextAlign.center,
+                                          style: GoogleFonts.poppins(
+                                            fontSize: 14, 
+                                            color: const Color(0xFF64748B),
+                                            height: 1.5,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
                               ),
@@ -356,6 +406,22 @@ class _QuestionPapersScreenState extends State<QuestionPapersScreen> {
                           ),
                   ),
       ),
+      floatingActionButton: (_userRole == 'ADMIN' || _userRole == 'SUPER_ADMIN' || _userRole == 'TEACHER')
+          ? FloatingActionButton.extended(
+              onPressed: () async {
+                final result = await Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const UploadQuestionPaperScreen()),
+                );
+                if (result == true) {
+                  _fetchPapers(); // refresh on successful upload
+                }
+              },
+              backgroundColor: const Color(0xFF6366F1),
+              icon: const Icon(Icons.upload_file_rounded, color: Colors.white),
+              label: Text('Upload Paper', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white)),
+            )
+          : null,
     );
   }
 }

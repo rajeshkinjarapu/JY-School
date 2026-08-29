@@ -983,7 +983,7 @@ export const ExamListPage: React.FC = () => {
               {isAdminOrTeacher && (
                 <>
                   <ExamCard label="Admit Card" sub="Hall tickets" icon={FileText} gradient="linear-gradient(135deg, #f59e0b, #ea580c)" glow="rgba(245,158,11,0.4)" onClick={() => setActiveTab('admit-card')} />
-                  <ExamCard label="Question Papers" sub="Manage papers" icon={Layers} gradient="linear-gradient(135deg, #475569, #334155)" glow="rgba(71,85,105,0.4)" onClick={() => setActiveTab('question-bank')} />
+                  <ExamCard label="Question Papers" sub="Manage papers" icon={Layers} gradient="linear-gradient(135deg, #475569, #334155)" glow="rgba(71,85,105,0.4)" onClick={() => setActiveTab('question-papers')} />
                   <ExamCard label="Marks Upload" sub="Upload marks" icon={Edit3} gradient="linear-gradient(135deg, #10b981, #059669)" glow="rgba(16,185,129,0.4)" onClick={() => setActiveTab('written-exam')} />
                   <ExamCard label="Results" sub="Grade sheets" icon={Award} gradient="linear-gradient(135deg, #0ea5e9, #0284c7)" glow="rgba(14,165,233,0.4)" onClick={() => setActiveTab('results')} />
                   <ExamCard label="Progress Card" sub="Detailed progress" icon={FileSpreadsheet} gradient="linear-gradient(135deg, #f43f5e, #e11d48)" glow="rgba(244,63,94,0.4)" onClick={() => setActiveTab('jee-progress-card')} />

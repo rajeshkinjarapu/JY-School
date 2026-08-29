@@ -283,8 +283,18 @@ class _ExamStatusScreenState extends State<ExamStatusScreen> {
                               ),
                             ],
                           ),
-                          ...List.generate(totalSubjects.length, (i) {
-                            final sub = totalSubjects[i];
+                          ...() {
+                            // Deduplicate subjects by ID (fallback to name)
+                            final seen = <String>{};
+                            final uniqueSubjects = <dynamic>[];
+                            for (final sub in totalSubjects) {
+                              final key = sub['id']?.toString() ?? sub['name']?.toString() ?? '';
+                              if (key.isNotEmpty && seen.add(key)) {
+                                uniqueSubjects.add(sub);
+                              }
+                            }
+                            return List.generate(uniqueSubjects.length, (i) {
+                            final sub = uniqueSubjects[i];
                             final subId = sub['id']?.toString();
                             final subName = sub['name']?.toString() ?? 'Subject';
                             // Check if it's entered
@@ -327,7 +337,8 @@ class _ExamStatusScreenState extends State<ExamStatusScreen> {
                                 ),
                               ],
                             );
-                          }),
+                            });
+                          }(),
                         ],
                       ),
                     ),

@@ -129,6 +129,10 @@ export const ExamStatusTab: React.FC<{ exams: any[] }> = ({ exams }) => {
                     const enteredSet = new Set<string>((stats.enteredSubjects || []).map((s: any) => s.name?.trim().toUpperCase()));
                     const classSubjectNames = new Set<string>((stats.totalSubjects || []).map((s: any) => s.name?.trim().toUpperCase()));
 
+                    const totalUnique = classSubjectNames.size;
+                    const enteredUnique = enteredSet.size;
+                    const calculatedProgress = totalUnique === 0 ? 0 : Math.round((enteredUnique / totalUnique) * 100);
+
                     const rowBg = rowIdx % 2 === 0
                       ? 'bg-white dark:bg-slate-900'
                       : 'bg-slate-50/60 dark:bg-slate-800/30';
@@ -183,13 +187,13 @@ export const ExamStatusTab: React.FC<{ exams: any[] }> = ({ exams }) => {
                               <div
                                 className="h-full rounded-full transition-all duration-500"
                                 style={{
-                                  width: `${progress}%`,
-                                  backgroundColor: progress === 100 ? '#10b981' : progress > 0 ? '#6366f1' : '#e2e8f0'
+                                  width: `${calculatedProgress}%`,
+                                  backgroundColor: calculatedProgress === 100 ? '#10b981' : calculatedProgress > 0 ? '#6366f1' : '#e2e8f0'
                                 }}
                               />
                             </div>
                             <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400">
-                              {stats.enteredSubjects.length}/{stats.totalSubjects.length}
+                              {enteredUnique}/{totalUnique}
                             </span>
                           </div>
                         </td>

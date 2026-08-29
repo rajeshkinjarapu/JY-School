@@ -1,4 +1,4 @@
-﻿import 'dart:convert';
+import 'dart:convert';
 import '../widgets/custom_network_image.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter/material.dart';
@@ -6,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/api_service.dart';
 import '../widgets/app_drawer.dart';
+import 'change_password_screen.dart';
 import 'login_screen.dart';
 import 'settings_screen.dart';
 
@@ -293,7 +294,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         _settingTile(
                           icon: Icons.lock_rounded, iconBg: const Color(0xFFFFF7ED), iconColor: const Color(0xFFF97316),
                           label: 'Change Password', trailing: 'Update',
-                          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsScreen())),
+                          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ChangePasswordScreen())),
                         ),
                       ],
                     ),

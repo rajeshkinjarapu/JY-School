@@ -158,14 +158,15 @@ class _ProgressCardScreenState extends State<ProgressCardScreen> {
       ),
       body: _isLoadingDropdowns 
           ? const Center(child: CircularProgressIndicator(color: Color(0xFF2E2A66))) 
-          : Column(
-              children: [
-                _buildFiltersPanel(),
-                
-                if (_selectedExamId != null && _selectedClassId != null && _selectedStudentId != null)
-                  Expanded(
-                    child: Center(
-                      child: Padding(
+          : SingleChildScrollView(
+              child: SafeArea(
+                bottom: true,
+                child: Column(
+                  children: [
+                    _buildFiltersPanel(),
+                    
+                    if (_selectedExamId != null && _selectedClassId != null && _selectedStudentId != null)
+                      Padding(
                         padding: const EdgeInsets.all(24.0),
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -208,12 +209,13 @@ class _ProgressCardScreenState extends State<ProgressCardScreen> {
                                 ),
                               ),
                             ),
+                            SizedBox(height: MediaQuery.of(context).padding.bottom + 16),
                           ],
                         ),
                       ),
-                    ),
-                  ),
-              ],
+                  ],
+                ),
+              ),
             ),
     );
   }

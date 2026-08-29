@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import '../widgets/custom_network_image.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/api_service.dart';
@@ -68,15 +68,31 @@ class _AllStudentsProgressCardsScreenState extends State<AllStudentsProgressCard
                 final photoUrl = user['photoUrl'];
                 final initials = name != 'Unknown Student' ? name.substring(0, 1).toUpperCase() : '?';
 
-                return Container(
-                  margin: const EdgeInsets.only(bottom: 12),
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [BoxShadow(color: const Color(0xFF2E2A66).withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4))],
-                    border: Border.all(color: const Color(0xFFE2E8F0)),
-                  ),
+                return GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => SingleProgressCardScreen(
+                          examId: widget.examId,
+                          classId: widget.classId,
+                          studentId: student['id'].toString(),
+                          studentData: student,
+                          examName: widget.examName,
+                          className: widget.className,
+                        ),
+                      ),
+                    );
+                  },
+                  child: Container(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [BoxShadow(color: const Color(0xFF2E2A66).withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4))],
+                      border: Border.all(color: const Color(0xFFE2E8F0)),
+                    ),
                   child: Row(
                     children: [
                       // Avatar
@@ -165,8 +181,9 @@ class _AllStudentsProgressCardsScreenState extends State<AllStudentsProgressCard
                       ),
                     ],
                   ),
-                );
-              },
+                ),
+              );
+            },
             ),
     );
   }

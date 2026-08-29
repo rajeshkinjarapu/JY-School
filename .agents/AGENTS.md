@@ -25,3 +25,5 @@
   1. **Backend (Node.js API):** Runs entirely on the VPS at `http://66.116.252.191:19998`.
   2. **Databases:** The primary DB is Supabase (Postgres). The secondary DB (for heavy items like Question Papers/Answer Keys) is local Postgres on the VPS (`jy_school_local`).
   4. **Deployments:** Because the Backend runs on the VPS, any backend code changes MUST be manually pulled and rebuilt on the VPS. Always provide the exact SSH login command (`ssh root@66.116.252.191`) for the user to copy so they only have to type the password, followed by the deployment commands (`cd /root/JY-School/backend`, `git pull origin main`, `npx prisma generate`, `npx prisma generate --schema prisma/schema_local.prisma`, `npm run build`, `pm2 restart backend`).
+
+- **Telugu Language Preference (Strict Order):** Always communicate and chat with the user ONLY in Telugu language. Do not use English for conversational responses unless specifically requested.

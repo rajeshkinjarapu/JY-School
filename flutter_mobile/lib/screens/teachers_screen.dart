@@ -1,4 +1,4 @@
-﻿import 'dart:convert';
+import 'dart:convert';
 import '../widgets/custom_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -309,7 +309,6 @@ class _TeachersScreenState extends State<TeachersScreen> {
     final name = user['name'] ?? 'Unknown';
     final photoUrl = user['photoUrl'];
     final id = teacher['employeeId'] ?? 'N/A';
-    final subject = teacher['specialization'] ?? 'N/A';
     final phone = user['phone']?.toString() ?? '';
 
     return Container(
@@ -322,66 +321,83 @@ class _TeachersScreenState extends State<TeachersScreen> {
         ],
       ),
       child: InkWell(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(20),
         onTap: () {
           Navigator.push(context, MaterialPageRoute(builder: (context) => TeacherProfileScreen(teacher: teacher)));
         },
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // Clearer Serial Number Badge
-              Container(
-                width: 32,
-                height: 32,
-                margin: const EdgeInsets.only(right: 12),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF1F5F9), // Light grayish blue
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: const Color(0xFFE2E8F0)),
-                ),
-                alignment: Alignment.center,
-                child: Text(
-                  '${index + 1}',
-                  style: GoogleFonts.outfit(
-                    color: const Color(0xFF64748B), // Clearer darker gray
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
+              // Avatar with S.No overlay badge
+              Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  _buildAvatar(name, photoUrl),
+                  // S.No badge — bottom-left corner of avatar
+                  Positioned(
+                    bottom: -4,
+                    left: -4,
+                    child: Container(
+                      width: 22,
+                      height: 22,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF6366F1),
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white, width: 1.5),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF6366F1).withOpacity(0.35),
+                            blurRadius: 6,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        '${index + 1}',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 9,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ),
                   ),
-                ),
+                ],
               ),
-              _buildAvatar(name, photoUrl),
               const SizedBox(width: 14),
+              // Name + ID
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       name,
-                      style: GoogleFonts.poppins(color: const Color(0xFF1E293B), fontSize: 15, fontWeight: FontWeight.w700),
-                      maxLines: 1,
+                      style: GoogleFonts.poppins(
+                        color: const Color(0xFF1E293B),
+                        fontSize: 14.5,
+                        fontWeight: FontWeight.w700,
+                        height: 1.3,
+                      ),
+                      maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 3),
                     Text(
                       'ID: $id',
-                      style: GoogleFonts.poppins(color: const Color(0xFF64748B), fontSize: 12),
+                      style: GoogleFonts.poppins(
+                        color: const Color(0xFF94A3B8),
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                   ],
                 ),
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF3B82F6).withOpacity(0.15),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  subject,
-                  style: GoogleFonts.poppins(color: const Color(0xFF2563EB), fontSize: 11, fontWeight: FontWeight.bold),
-                ),
-              ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 10),
+              // WhatsApp button
               if (phone.isNotEmpty)
                 InkWell(
                   onTap: () => _launchWhatsApp(phone),
@@ -407,6 +423,7 @@ class _TeachersScreenState extends State<TeachersScreen> {
       ),
     );
   }
+
 
   Widget _buildEmptyState() {
     return Center(

@@ -60,6 +60,8 @@
 - **Flutter Question Papers Integration:**
   - Fixed an API route mismatch (404 error) where the mobile app hit `/api/questionPapers` instead of `/api/question-papers`.
   - Linked the highly premium `QuestionPapersScreen` to the Teacher Dashboard by replacing the redundant "Answer Keys" tile (Answer Keys are now viewed directly from within the Question Papers screen).
+  - Redesigned the "Question Papers" empty state screen from a blank white page to a premium, modern design with an empty folder icon, bold typography, and a clear subtitle matching the rest of the application's premium UI.
+  - **New Feature: Upload Question Paper:** Created `upload_question_paper_screen.dart` allowing Teachers and Admins to upload question papers (PDF links) and answer keys directly from the mobile app. Added a conditionally rendered Floating Action Button in `question_papers_screen.dart` that is only visible to authorized roles, leaving the student view untouched as a simple list.
 ## Infrastructure & Hosting Migration (Completed)
 - **VPS Setup Complete:** Successfully provisioned and configured the BigRock VPS (Ubuntu 22.04).
 - **Dual Database Architecture:** 
@@ -76,3 +78,5 @@
 - **Databases:**
   - Main DB: Supabase (PostgreSQL) handling all primary ERP data.
   - Local DB: Hosted on the VPS at `66.116.252.191` (`jy_school_local`) specifically for Question Bank/Question Papers and heavy PDF handling.
+ 
+ 

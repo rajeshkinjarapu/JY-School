@@ -295,109 +295,123 @@ class _SingleProgressCardScreenState extends State<SingleProgressCardScreen> {
       ratingBorder = const Color(0xFFFED7AA);
     }
 
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isMobile = screenWidth < 600;
-    final hPadding = isMobile ? 12.0 : 24.0;
-    final titleFontSize = isMobile ? 16.0 : 22.0;
-
     return SingleChildScrollView(
-      padding: EdgeInsets.symmetric(horizontal: isMobile ? 8 : 16, vertical: 16),
-      child: RepaintBoundary(
-        key: _repaintKey,
-        child: Center(
-          child: Container(
-          constraints: const BoxConstraints(maxWidth: 800),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: [
-              BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 20, offset: const Offset(0, 10)),
-            ],
-            border: Border.all(color: const Color(0xFFF0E6D2), width: 1.5),
-            gradient: const LinearGradient(
-              colors: [Color(0xFFFFFFFF), Color(0xFFFDFCF9)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Top Bar Gradient
-              Container(
-                height: 8,
-                decoration: const BoxDecoration(
-                  borderRadius: BorderRadius.only(topLeft: Radius.circular(10), topRight: Radius.circular(10)),
-                  gradient: LinearGradient(
-                    colors: [Color(0xFF0B1A33), Color(0xFF1A4A7A), Color(0xFFF39C12), Color(0xFFD4A017)],
-                    stops: [0.0, 0.3, 0.6, 1.0],
-                  ),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+      child: Center(
+        child: FittedBox(
+          fit: BoxFit.contain,
+          child: RepaintBoundary(
+            key: _repaintKey,
+            child: Container(
+              width: 794,
+              constraints: const BoxConstraints(minHeight: 1123),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                border: Border.all(color: const Color(0xFFF0E6D2), width: 1.5),
+                gradient: const LinearGradient(
+                  colors: [Color(0xFFFFFFFF), Color(0xFFFDFCF9)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
                 ),
               ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Top Bar Gradient
+                  Container(
+                    height: 10,
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [Color(0xFF0B1A33), Color(0xFF1A4A7A), Color(0xFFF39C12), Color(0xFFD4A017)],
+                        stops: [0.0, 0.3, 0.6, 1.0],
+                      ),
+                    ),
+                  ),
 
-              // Header Section
-              Container(
-                padding: EdgeInsets.fromLTRB(hPadding, 16, hPadding, 12),
-                decoration: const BoxDecoration(
-                  border: Border(bottom: BorderSide(color: Color(0xFFF39C12), width: 3)),
-                ),
-                child: Row(
-                  children: [
-                    // Logo
-                    Container(
-                      width: isMobile ? 50 : 60, height: isMobile ? 50 : 60,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF8FAFC),
-                        shape: BoxShape.circle,
-                        border: Border.all(color: const Color(0xFF1A4A7A), width: 2),
-                      ),
-                      child: (_settingsData != null && _settingsData!['logoUrl'] != null && _settingsData!['logoUrl'].toString().isNotEmpty)
-                          ? ClipOval(child: CustomNetworkImage(ApiService.getImageUrl(_settingsData!['logoUrl']), fit: BoxFit.cover, headers: const {'ngrok-skip-browser-warning': '69420'}, errorBuilder: (_,__,___) => Icon(Icons.workspace_premium, size: isMobile ? 26 : 30, color: const Color(0xFF1A4A7A))))
-                          : Icon(Icons.workspace_premium, size: isMobile ? 26 : 30, color: const Color(0xFF1A4A7A)),
+                  // Header Section
+                  Container(
+                    padding: const EdgeInsets.fromLTRB(32, 12, 32, 10),
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
+                      border: Border(bottom: BorderSide(color: Color(0xFFF39C12), width: 3)),
                     ),
-                    const SizedBox(width: 8),
-                    // Title
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Text(
-                            'SRI VENKATESWARA JY SCHOOL',
-                            textAlign: TextAlign.center,
-                            style: GoogleFonts.lora(fontSize: isMobile ? 15 : 22, fontWeight: FontWeight.w900, color: const Color(0xFF0B1A33), letterSpacing: 1.0),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        // Logo - check admitCardSettings first (exam-specific), then global school settings
+                        Builder(builder: (ctx) {
+                          final admitCardSettings = _examData?['admitCardSettings'];
+                          final logoFromExam = admitCardSettings != null && admitCardSettings['logoUrl'] != null && admitCardSettings['logoUrl'].toString().isNotEmpty
+                              ? admitCardSettings['logoUrl'].toString()
+                              : null;
+                          final logoFromSettings = _settingsData != null && _settingsData!['logoUrl'] != null && _settingsData!['logoUrl'].toString().isNotEmpty
+                              ? _settingsData!['logoUrl'].toString()
+                              : null;
+                          final logoUrl = logoFromExam ?? logoFromSettings;
+                          return Container(
+                            width: 100,
+                            height: 90,
+                            alignment: Alignment.center,
+                            child: logoUrl != null
+                                ? CustomNetworkImage(
+                                    ApiService.getImageUrl(logoUrl),
+                                    fit: BoxFit.contain,
+                                    headers: const {'ngrok-skip-browser-warning': '69420'},
+                                    errorBuilder: (_, __, ___) => const Icon(Icons.workspace_premium, size: 48, color: Color(0xFF1A4A7A)),
+                                  )
+                                : const Icon(Icons.workspace_premium, size: 48, color: Color(0xFF1A4A7A)),
+                          );
+                        }),
+                        // Title
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Text(
+                                'SRI VENKATESWARA JY SCHOOL',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontFamily: 'Times New Roman',
+                                  fontSize: 28,
+                                  fontWeight: FontWeight.w900,
+                                  color: const Color(0xFF0B1A33),
+                                  letterSpacing: 1.5,
+                                  height: 1.2,
+                                  shadows: [Shadow(color: Colors.black.withOpacity(0.05), offset: const Offset(1, 1))],
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                '(IIT-JEE / NEET Foundation · Olympiads)',
+                                textAlign: TextAlign.center,
+                                style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w400, color: const Color(0xFF1A4A7A), letterSpacing: 0.8),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                (_settingsData != null && _settingsData!['address'] != null && _settingsData!['address'].toString().isNotEmpty)
+                                    ? _settingsData!['address'].toString()
+                                    : 'Opp. Hero Showroom, SVL Paradise Campus, Narasannapeta',
+                                textAlign: TextAlign.center,
+                                style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w400, color: const Color(0xFF5A7A8A), letterSpacing: 0.3),
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                widget.examName.toUpperCase(),
+                                textAlign: TextAlign.center,
+                                style: GoogleFonts.outfit(fontSize: 22, fontWeight: FontWeight.w400, color: const Color(0xFF0B1A33), letterSpacing: 2),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                '✦ RESULT CARD ✦',
+                                textAlign: TextAlign.center,
+                                style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.w400, color: const Color(0xFFD4A017), letterSpacing: 4),
+                              ),
+                            ],
                           ),
-                          const SizedBox(height: 2),
-                          Text(
-                            '(IIT-JEE / NEET Foundation · Olympiads)',
-                            textAlign: TextAlign.center,
-                            style: GoogleFonts.poppins(fontSize: isMobile ? 10 : 11, fontWeight: FontWeight.w500, color: const Color(0xFF1A4A7A), letterSpacing: 0.5),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            (_settingsData != null && _settingsData!['address'] != null && _settingsData!['address'].toString().isNotEmpty)
-                                ? _settingsData!['address'].toString()
-                                : 'SVL Paradise Campus, Narasannapeta',
-                            textAlign: TextAlign.center,
-                            style: GoogleFonts.poppins(fontSize: isMobile ? 9 : 10, color: const Color(0xFF5A7A8A)),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            widget.examName.toUpperCase(),
-                            textAlign: TextAlign.center,
-                            style: GoogleFonts.outfit(fontSize: isMobile ? 12 : 14, fontWeight: FontWeight.bold, color: const Color(0xFF0B1A33), letterSpacing: 1.2),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            '✦ RESULT CARD ✦',
-                            textAlign: TextAlign.center,
-                            style: GoogleFonts.outfit(fontSize: isMobile ? 10 : 12, fontWeight: FontWeight.bold, color: const Color(0xFFD4A017), letterSpacing: 2),
-                          ),
-                        ],
-                      ),
+                        ),
+                        const SizedBox(width: 100), // Spacer to balance logo
+                      ],
                     ),
-                    SizedBox(width: (isMobile ? 50 : 60) + 8), // Spacer to balance logo
-                  ],
-                ),
               ),
 
               // Decorative Line
@@ -421,50 +435,52 @@ class _SingleProgressCardScreenState extends State<SingleProgressCardScreen> {
 
               // Student Info
               Container(
-                margin: EdgeInsets.symmetric(horizontal: hPadding, vertical: 8),
+                margin: const EdgeInsets.symmetric(horizontal: 28, vertical: 10),
                 decoration: BoxDecoration(
                   color: const Color(0xFFFEF8F0),
                   border: Border.all(color: const Color(0xFFF39C12), width: 2),
-                  borderRadius: BorderRadius.circular(10),
-                  boxShadow: [BoxShadow(color: const Color(0xFFF39C12).withOpacity(0.1), blurRadius: 10, offset: const Offset(0, 4))],
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [BoxShadow(color: const Color(0xFFF39C12).withOpacity(0.12), blurRadius: 20, offset: const Offset(0, 6))],
                 ),
                 child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Expanded(
                       child: Column(
                         children: [
-                          _buildPremiumInfoRow('ðŸ‘¤ Name', name.toUpperCase(), isEven: false, isMobile: isMobile),
-                          _buildPremiumInfoRow('ðŸ†” ID', rollNo.toString(), isEven: true, isMobile: isMobile),
-                          _buildPremiumInfoRow('ðŸ“š Class', className, isEven: false, isMobile: isMobile),
-                          _buildPremiumInfoRow('ðŸ“– Section', section, isEven: true, isMobile: isMobile),
-                          _buildPremiumInfoRow('ðŸ“ž Mobile', widget.studentData?['mobile']?.toString() ?? 'N/A', isEven: false, isMobile: isMobile),
-                          _buildPremiumInfoRow('ðŸ“… Year', '2026-2027', isEven: true, isMobile: isMobile),
-                          _buildPremiumInfoRow('ðŸ“ Location', widget.studentData?['address']?.toString() ?? 'N/A', isEven: false, isLast: rank == null, isMobile: isMobile),
+                          _buildPremiumInfoRow('👤 Student Name', name.toUpperCase(), isEven: false),
+                          _buildPremiumInfoRow('🆔 Student ID', rollNo.toString(), isEven: true),
+                          _buildPremiumInfoRow('📚 Class', className, isEven: false),
+                          _buildPremiumInfoRow('📖 Section', section, isEven: true),
+                          _buildPremiumInfoRow('📞 Mobile', widget.studentData?['mobile']?.toString() ?? 'N/A', isEven: false),
+                          _buildPremiumInfoRow('📅 Academic Year', '2026-2027', isEven: true),
+                          _buildPremiumInfoRow('📍 Location', widget.studentData?['address']?.toString() ?? 'N/A', isEven: false, isLast: rank == null),
                           if (rank != null)
-                            _buildPremiumInfoRow('ðŸ… Rank', '#' + rank, isEven: true, isLast: true, isMobile: isMobile),
+                            _buildPremiumInfoRow('🏅 Class Rank', '#' + rank, isEven: true, isLast: true),
                         ],
                       ),
                     ),
                     Container(
-                      width: isMobile ? 80 : 110,
-                      padding: EdgeInsets.all(isMobile ? 8 : 12),
+                      width: 120,
+                      padding: const EdgeInsets.fromLTRB(10, 10, 16, 10),
                       decoration: const BoxDecoration(
                         border: Border(left: BorderSide(color: Color(0xFFF5EDE4), width: 2)),
+                        gradient: LinearGradient(colors: [Color(0xFFFEFCF9), Color(0xFFFCF7EF)], begin: Alignment.topCenter, end: Alignment.bottomCenter),
                       ),
-                      child: Center(
+                      child: Align(
+                        alignment: Alignment.topCenter,
                         child: Container(
-                          width: isMobile ? 65 : 85, 
-                          height: isMobile ? 80 : 105,
+                          width: 90, 
+                          height: 110,
                           decoration: BoxDecoration(
                             color: Colors.white,
                             border: Border.all(color: const Color(0xFFF39C12), width: 3),
-                            borderRadius: BorderRadius.circular(6),
-                            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 8)],
+                            borderRadius: BorderRadius.circular(8),
+                            boxShadow: [BoxShadow(color: const Color(0xFFF39C12).withOpacity(0.2), blurRadius: 12, offset: const Offset(0, 6))],
                           ),
                           child: (photoUrl != null && photoUrl.toString().isNotEmpty)
-                            ? ClipRRect(borderRadius: BorderRadius.circular(2), child: CustomNetworkImage(ApiService.getImageUrl(photoUrl.toString()), fit: BoxFit.cover, errorBuilder: (c, e, s) => _buildPhotoPlaceholder(initials, isMobile)))
-                            : _buildPhotoPlaceholder('ðŸ“·', isMobile),
+                            ? ClipRRect(borderRadius: BorderRadius.circular(5), child: CustomNetworkImage(ApiService.getImageUrl(photoUrl.toString()), fit: BoxFit.cover, errorBuilder: (c, e, s) => _buildPhotoPlaceholder('📷', false)))
+                            : _buildPhotoPlaceholder('📷', false),
                         ),
                       ),
                     ),
@@ -474,48 +490,46 @@ class _SingleProgressCardScreenState extends State<SingleProgressCardScreen> {
 
               // Performance Table
               Padding(
-                padding: EdgeInsets.fromLTRB(hPadding, 12, hPadding, 8),
+                padding: const EdgeInsets.fromLTRB(28, 2, 28, 8),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Expanded(
-                          child: Row(
-                            children: [
-                              const Text('ðŸ“Š', style: TextStyle(fontSize: 16)),
-                              const SizedBox(width: 8),
-                              Expanded(child: Text('Performance Summary', style: GoogleFonts.poppins(fontSize: isMobile ? 13 : 15, fontWeight: FontWeight.bold, color: const Color(0xFF0B1A33)), overflow: TextOverflow.ellipsis)),
-                            ],
-                          ),
+                        Row(
+                          children: [
+                            const Text('📊', style: TextStyle(fontSize: 22)),
+                            const SizedBox(width: 12),
+                            Text('Performance Summary', style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w700, color: const Color(0xFF0B1A33))),
+                          ],
                         ),
-                        Text('Max: ' + totalMaxMarks.toString(), style: GoogleFonts.poppins(fontSize: 11, color: const Color(0xFF6A8AAA))),
+                        Text('Max Marks: ' + totalMaxMarks.toString(), style: GoogleFonts.poppins(fontSize: 13, color: const Color(0xFF6A8AAA))),
                       ],
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 6),
                     Container(
                       decoration: BoxDecoration(
                         border: Border.all(color: const Color(0xFFE8E0D8), width: 2),
-                        borderRadius: BorderRadius.circular(10),
-                        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 8)],
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 12, offset: const Offset(0, 4))],
                       ),
                       child: ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(10),
                         child: Column(
                           children: [
                             // Table Header
                             Container(
                               decoration: const BoxDecoration(
-                                gradient: LinearGradient(colors: [Color(0xFF0B1A33), Color(0xFF1A4A7A)]),
+                                gradient: LinearGradient(colors: [Color(0xFF0B1A33), Color(0xFF1A4A7A), Color(0xFF0B1A33)]),
                               ),
-                              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
                               child: Row(
                                 children: [
-                                  Expanded(flex: 3, child: Text('SUBJECT', style: GoogleFonts.poppins(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white, letterSpacing: 0.5))),
-                                  Expanded(flex: 1, child: Text('MRK', textAlign: TextAlign.center, style: GoogleFonts.poppins(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white, letterSpacing: 0.5))),
-                                  Expanded(flex: 1, child: Text('MAX', textAlign: TextAlign.center, style: GoogleFonts.poppins(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white, letterSpacing: 0.5))),
-                                  Expanded(flex: 1, child: Text('%', textAlign: TextAlign.center, style: GoogleFonts.poppins(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white, letterSpacing: 0.5))),
+                                  Expanded(flex: 3, child: Text('SUBJECT', style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w700, color: Colors.white, letterSpacing: 0.5))),
+                                  Expanded(flex: 1, child: Text('MARKS', textAlign: TextAlign.center, style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w700, color: Colors.white, letterSpacing: 0.5))),
+                                  Expanded(flex: 1, child: Text('MAX MARKS', textAlign: TextAlign.center, style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w700, color: Colors.white, letterSpacing: 0.5))),
+                                  Expanded(flex: 1, child: Text('%', textAlign: TextAlign.center, style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w700, color: Colors.white, letterSpacing: 0.5))),
                                 ],
                               ),
                             ),
@@ -534,19 +548,19 @@ class _SingleProgressCardScreenState extends State<SingleProgressCardScreen> {
                                   color: isEven ? const Color(0xFFFDFCF9) : Colors.white,
                                   border: const Border(bottom: BorderSide(color: Color(0xFFE8E0D8))),
                                 ),
-                                padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+                                padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 16),
                                 child: Row(
                                   children: [
                                     Expanded(flex: 3, child: Row(
                                       children: [
-                                        const Text('ðŸ“˜', style: TextStyle(fontSize: 10)),
-                                        const SizedBox(width: 6),
-                                        Expanded(child: Text(subName, style: GoogleFonts.poppins(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFF1A3A5A)), overflow: TextOverflow.ellipsis)),
+                                        const Text('📘', style: TextStyle(fontSize: 14)),
+                                        const SizedBox(width: 8),
+                                        Expanded(child: Text(subName, style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w600, color: const Color(0xFF1A3A5A)), overflow: TextOverflow.ellipsis)),
                                       ],
                                     )),
-                                    Expanded(flex: 1, child: Text(obt.toStringAsFixed(obt.truncateToDouble() == obt ? 0 : 1), textAlign: TextAlign.center, style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.bold, color: const Color(0xFF0B1A33)))),
-                                    Expanded(flex: 1, child: Text(max.toStringAsFixed(0), textAlign: TextAlign.center, style: GoogleFonts.poppins(fontSize: 11, color: const Color(0xFF6A8AAA)))),
-                                    Expanded(flex: 1, child: Text(subPct + '%', textAlign: TextAlign.center, style: GoogleFonts.outfit(fontSize: 11, fontWeight: FontWeight.bold, color: const Color(0xFF1A4A7A)))),
+                                    Expanded(flex: 1, child: Text(obt.toStringAsFixed(obt.truncateToDouble() == obt ? 0 : 1), textAlign: TextAlign.center, style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w700, color: const Color(0xFF0B1A33)))),
+                                    Expanded(flex: 1, child: Text(max.toStringAsFixed(0), textAlign: TextAlign.center, style: GoogleFonts.poppins(fontSize: 14, color: const Color(0xFF6A8AAA)))),
+                                    Expanded(flex: 1, child: Text(subPct + '%', textAlign: TextAlign.center, style: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.w700, color: const Color(0xFF1A4A7A)))),
                                   ],
                                 ),
                               );
@@ -555,15 +569,15 @@ class _SingleProgressCardScreenState extends State<SingleProgressCardScreen> {
                             Container(
                               decoration: const BoxDecoration(
                                 gradient: LinearGradient(colors: [Color(0xFFFDF9F4), Color(0xFFFFF3E0)]),
-                                border: Border(top: BorderSide(color: Color(0xFFF39C12), width: 2)),
+                                border: Border(top: BorderSide(color: Color(0xFFF39C12), width: 2.5), bottom: BorderSide(color: Color(0xFFF39C12), width: 2.5)),
                               ),
-                              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                              padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 16),
                               child: Row(
                                 children: [
-                                  Expanded(flex: 3, child: Text('ðŸ“Œ TOTAL', style: GoogleFonts.poppins(fontSize: 11, fontWeight: FontWeight.w900, color: const Color(0xFF0B1A33), letterSpacing: 0.5))),
-                                  Expanded(flex: 1, child: Text(totalMarksObtained.toString(), textAlign: TextAlign.center, style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.w900, color: const Color(0xFFC0392B)))),
-                                  Expanded(flex: 1, child: Text(totalMaxMarks.toString(), textAlign: TextAlign.center, style: GoogleFonts.poppins(fontSize: 11, color: const Color(0xFF6A8AAA)))),
-                                  Expanded(flex: 1, child: Text(percentage.toStringAsFixed(1) + '%', textAlign: TextAlign.center, style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.bold, color: const Color(0xFF1A4A7A)))),
+                                  Expanded(flex: 3, child: Text('📌 TOTAL', style: GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.w900, color: const Color(0xFF0B1A33), letterSpacing: 1.0))),
+                                  Expanded(flex: 1, child: Text(totalMarksObtained.toString(), textAlign: TextAlign.center, style: GoogleFonts.outfit(fontSize: 19, fontWeight: FontWeight.w900, color: const Color(0xFFC0392B)))),
+                                  Expanded(flex: 1, child: Text(totalMaxMarks.toString(), textAlign: TextAlign.center, style: GoogleFonts.poppins(fontSize: 15, color: const Color(0xFF6A8AAA)))),
+                                  Expanded(flex: 1, child: Text(percentage.toStringAsFixed(1) + '%', textAlign: TextAlign.center, style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold, color: const Color(0xFF1A4A7A)))),
                                 ],
                               ),
                             ),
@@ -575,50 +589,47 @@ class _SingleProgressCardScreenState extends State<SingleProgressCardScreen> {
                 ),
               ),
 
-              // Rating Box (Matching React Row layout)
+              // Score Bar (like Web App)
               Container(
-                margin: EdgeInsets.symmetric(horizontal: hPadding, vertical: 10),
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                margin: const EdgeInsets.fromLTRB(28, 4, 28, 12),
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF8FAFC), // slate-50
+                  gradient: const LinearGradient(colors: [Color(0xFFFFFFFF), Color(0xFFF9FBFD)]),
+                  border: Border.all(color: const Color(0xFFDCE4ED)),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0xFFE2E8F0)), // slate-200
+                  boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 12, offset: const Offset(0, 4))],
                 ),
-                child: Row(
+                child: Column(
                   children: [
-                    Expanded(
-                      flex: 1,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                    Container(
+                      height: 16,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFEEF2F7),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: const Color(0xFFDCE4ED)),
+                      ),
+                      child: Stack(
                         children: [
-                          Text(
-                            'ACADEMIC PERFORMANCE RATING',
-                            style: GoogleFonts.outfit(fontSize: 10, fontWeight: FontWeight.bold, color: const Color(0xFF94A3B8), letterSpacing: 0.5), // slate-400
-                          ),
-                          const SizedBox(height: 4),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: ratingBg,
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(color: ratingBorder),
-                            ),
-                            child: Text(
-                              ratingLabel,
-                              style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.w900, color: ratingColor),
+                          FractionallySizedBox(
+                            widthFactor: (percentage / 100).clamp(0.0, 1.0),
+                            child: Container(
+                              decoration: BoxDecoration(
+                                gradient: const LinearGradient(colors: [Color(0xFF1A4A7A), Color(0xFF3498DB)]),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
                             ),
                           ),
                         ],
                       ),
                     ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      flex: 1,
-                      child: Text(
-                        '"' + ratingComment + '"',
-                        textAlign: TextAlign.right,
-                        style: GoogleFonts.lora(fontSize: 12, fontStyle: FontStyle.italic, fontWeight: FontWeight.bold, color: const Color(0xFF475569)), // slate-600
-                      ),
+                    const SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text('0%', style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.w600, color: const Color(0xFF6A8AAA))),
+                        Text('50%', style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.w600, color: const Color(0xFF6A8AAA))),
+                        Text('100%', style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.w600, color: const Color(0xFF6A8AAA))),
+                      ],
                     ),
                   ],
                 ),
@@ -626,100 +637,113 @@ class _SingleProgressCardScreenState extends State<SingleProgressCardScreen> {
 
               // Footer
               Container(
-                margin: EdgeInsets.fromLTRB(hPadding, 8, hPadding, 16),
+                margin: const EdgeInsets.fromLTRB(28, 0, 28, 12),
                 padding: const EdgeInsets.only(top: 12),
                 decoration: const BoxDecoration(
-                  border: Border(top: BorderSide(color: Color(0xFFDCE4ED), width: 2, style: BorderStyle.solid)),
+                  border: Border(top: BorderSide(color: Color(0xFFDCE4ED), width: 2, style: BorderStyle.solid)), // dotted replacement
                 ),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    // Total Info
-                    Expanded(
-                      child: Column(
+                      // Total Info
+                      Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.end,
                         children: [
-                          Text('ðŸ“‹ TOTAL MARKS: ' + totalMarksObtained.toString() + ' / ' + totalMaxMarks.toString(), style: GoogleFonts.poppins(fontSize: isMobile ? 12 : 14, fontWeight: FontWeight.w800, color: const Color(0xFF1A4A7A))),
-                          Text(percentage.toStringAsFixed(1) + '%', style: GoogleFonts.outfit(fontSize: isMobile ? 32 : 40, fontWeight: FontWeight.w900, color: const Color(0xFFC0392B), height: 1.1)),
+                          Text('TOTAL PERCENTAGE', style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w800, color: const Color(0xFF1A4A7A), letterSpacing: 0.5)),
+                          Text(percentage.toStringAsFixed(1) + '%', style: GoogleFonts.outfit(fontSize: 46, fontWeight: FontWeight.w900, color: const Color(0xFFC0392B), height: 1.0, shadows: [Shadow(color: const Color(0xFFC0392B).withOpacity(0.1), offset: const Offset(1,1))])),
                         ],
                       ),
-                    ),
-                    // Signatures
-                    Row(
-                      children: [
-                        Column(
-                          children: [
-                            Builder(builder: (ctx) {
-                              final admitCardSettings = _examData?['admitCardSettings'];
-                              final url = (admitCardSettings != null && admitCardSettings['teacherSignatureUrl'] != null && admitCardSettings['teacherSignatureUrl'].toString().isNotEmpty)
-                                  ? admitCardSettings['teacherSignatureUrl']
-                                  : (_settingsData?['teacherSignatureUrl']);
-                              if (url != null && url.toString().isNotEmpty) {
-                                return Container(
-                                  width: isMobile ? 80 : 100,
-                                  height: isMobile ? 35 : 45,
-                                  margin: const EdgeInsets.only(bottom: 2, top: 2),
-                                  child: CustomNetworkImage(ApiService.getImageUrl(url), fit: BoxFit.contain),
-                                );
-                              } else {
-                                return Container(width: isMobile ? 70 : 90, height: 1.5, color: const Color(0xFFC8D6E4), margin: const EdgeInsets.only(bottom: 6, top: 40));
-                              }
-                            }),
-                            Text('✍ Teacher Signature', style: GoogleFonts.poppins(fontSize: isMobile ? 9 : 10, fontWeight: FontWeight.w600, color: const Color(0xFF1A3A5A))),
-                          ],
-                        ),
-                        SizedBox(width: isMobile ? 12 : 24),
-                        Column(
-                          children: [
-                            Builder(builder: (ctx) {
-                              final admitCardSettings = _examData?['admitCardSettings'];
-                              final url = (admitCardSettings != null && admitCardSettings['signatureUrl'] != null && admitCardSettings['signatureUrl'].toString().isNotEmpty)
-                                  ? admitCardSettings['signatureUrl']
-                                  : (_settingsData?['signatureUrl']);
-                              if (url != null && url.toString().isNotEmpty) {
-                                return Container(
-                                  width: isMobile ? 80 : 100,
-                                  height: isMobile ? 35 : 45,
-                                  margin: const EdgeInsets.only(bottom: 2, top: 2),
-                                  child: CustomNetworkImage(ApiService.getImageUrl(url), fit: BoxFit.contain),
-                                );
-                              } else {
-                                return Container(width: isMobile ? 70 : 90, height: 1.5, color: const Color(0xFFC8D6E4), margin: const EdgeInsets.only(bottom: 6, top: 40));
-                              }
-                            }),
-                            Text('✍ Principal Signature', style: GoogleFonts.poppins(fontSize: isMobile ? 9 : 10, fontWeight: FontWeight.w600, color: const Color(0xFF1A3A5A))),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ],
+                      // Signatures
+                      Row(
+                        children: [
+                          Column(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              Builder(builder: (ctx) {
+                                final admitCardSettings = _examData?['admitCardSettings'];
+                                final urlRaw = (admitCardSettings != null && admitCardSettings['teacherSignatureUrl'] != null && admitCardSettings['teacherSignatureUrl'].toString().isNotEmpty)
+                                    ? admitCardSettings['teacherSignatureUrl'].toString()
+                                    : (_settingsData?['teacherSignatureUrl']?.toString() ?? '');
+                                if (urlRaw.isNotEmpty) {
+                                  return Container(
+                                    width: 140,
+                                    height: 45,
+                                    margin: const EdgeInsets.only(bottom: 4),
+                                    child: CustomNetworkImage(
+                                      ApiService.getImageUrl(urlRaw),
+                                      fit: BoxFit.contain,
+                                      headers: const {'ngrok-skip-browser-warning': '69420'},
+                                      errorBuilder: (_, __, ___) => Container(width: 140, height: 1.5, color: const Color(0xFFC8D6E4), margin: const EdgeInsets.only(bottom: 4, top: 40)),
+                                    ),
+                                  );
+                                } else {
+                                  return Container(width: 140, height: 1.5, color: const Color(0xFFC8D6E4), margin: const EdgeInsets.only(bottom: 4, top: 40));
+                                }
+                              }),
+                              Text('Teacher Signature', style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF1A3A5A))),
+                            ],
+                          ),
+                          const SizedBox(width: 40),
+                          Column(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              Builder(builder: (ctx) {
+                                final admitCardSettings = _examData?['admitCardSettings'];
+                                final urlRaw = (admitCardSettings != null && admitCardSettings['signatureUrl'] != null && admitCardSettings['signatureUrl'].toString().isNotEmpty)
+                                    ? admitCardSettings['signatureUrl'].toString()
+                                    : (_settingsData?['signatureUrl']?.toString() ?? '');
+                                if (urlRaw.isNotEmpty) {
+                                  return Container(
+                                    width: 140,
+                                    height: 45,
+                                    margin: const EdgeInsets.only(bottom: 4),
+                                    child: CustomNetworkImage(
+                                      ApiService.getImageUrl(urlRaw),
+                                      fit: BoxFit.contain,
+                                      headers: const {'ngrok-skip-browser-warning': '69420'},
+                                      errorBuilder: (_, __, ___) => Container(width: 140, height: 1.5, color: const Color(0xFFC8D6E4), margin: const EdgeInsets.only(bottom: 4, top: 40)),
+                                    ),
+                                  );
+                                } else {
+                                  return Container(width: 140, height: 1.5, color: const Color(0xFFC8D6E4), margin: const EdgeInsets.only(bottom: 4, top: 40));
+                                }
+                              }),
+                              Text('Principal Signature', style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF1A3A5A))),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
-              ),
 
-              // Bottom Note
+               // Bottom Note
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
                 decoration: const BoxDecoration(
                   color: Color(0xFF0B1A33),
                   borderRadius: BorderRadius.only(bottomLeft: Radius.circular(10), bottomRight: Radius.circular(10)),
                 ),
                 child: Text(
-                  '★ System generated result card for ' + widget.examName + ' ★',
+                  'System generated result card for ' + widget.examName,
                   textAlign: TextAlign.center,
-                  style: GoogleFonts.poppins(fontSize: 9, fontWeight: FontWeight.w500, color: const Color(0xFFAABACA), letterSpacing: 0.5),
+                  style: GoogleFonts.poppins(fontSize: 11, fontWeight: FontWeight.w500, color: const Color(0xFFAABACA), letterSpacing: 0.5),
                 ),
               ),
             ],
           ),
         ),
       ),
+        ),
       ),
     );
   }
 
-  Widget _buildPremiumInfoRow(String label, String value, {required bool isEven, bool isLast = false, required bool isMobile}) {
+  Widget _buildPremiumInfoRow(String label, String value, {required bool isEven, bool isLast = false, bool isMobile = false}) {
+    // isMobile is ignored since we scale a fixed A4 layout
     return Container(
       decoration: BoxDecoration(
         color: isEven ? const Color(0xFFFEFCF9) : Colors.transparent,
@@ -728,18 +752,18 @@ class _SingleProgressCardScreenState extends State<SingleProgressCardScreen> {
       child: Row(
         children: [
           Container(
-            width: isMobile ? 80 : 120,
-            padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+            width: 190,
+            padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 16),
             decoration: const BoxDecoration(
               color: Color(0xFFFDF9F4),
               border: Border(right: BorderSide(color: Color(0xFFF5EDE4))),
             ),
-            child: Text(label, style: GoogleFonts.poppins(fontSize: isMobile ? 9 : 11, fontWeight: FontWeight.w700, color: const Color(0xFF6A3A1A))),
+            child: Text(label, style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w700, color: const Color(0xFF6A3A1A))),
           ),
           Expanded(
             child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
-              child: Text(value, style: GoogleFonts.outfit(fontSize: isMobile ? 11 : 13, fontWeight: FontWeight.w800, color: const Color(0xFF0B1A33)), maxLines: 1, overflow: TextOverflow.ellipsis),
+              padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 16),
+              child: Text(value, style: GoogleFonts.outfit(fontSize: 15, fontWeight: FontWeight.w800, color: const Color(0xFF0B1A33)), maxLines: 1, overflow: TextOverflow.ellipsis),
             ),
           ),
         ],
@@ -749,7 +773,7 @@ class _SingleProgressCardScreenState extends State<SingleProgressCardScreen> {
 
   Widget _buildPhotoPlaceholder(String text, bool isMobile) {
     return Center(
-      child: Text(text, style: GoogleFonts.outfit(fontSize: isMobile ? 24 : 32, fontWeight: FontWeight.bold, color: const Color(0xFF8A7A6A))),
+      child: Text(text, style: GoogleFonts.outfit(fontSize: 44, fontWeight: FontWeight.bold, color: const Color(0xFF8A7A6A))),
     );
   }
 }
