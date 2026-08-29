@@ -33,8 +33,14 @@ export const MarksEntryPage: React.FC = () => {
         return;
       }
 
-      // 1. Get Exam
-      const examRes: any = await api.get(`/api/exams/${id}`);
+      // Run all 4 API calls IN PARALLEL for maximum speed
+      const [examRes, classRes, studentsRes, marksRes]: any = await Promise.all([
+        api.get(`/api/exams/${id}`),
+        api.get(`/api/classes/${classId}`),
+        api.get(`/api/classes/${classId}/students`),
+        api.get(`/api/marks/exam/${id}`),
+      ]);
+
       const examObj = examRes.data;
       setExam(examObj);
 
@@ -46,33 +52,23 @@ export const MarksEntryPage: React.FC = () => {
       }
       setIsClassFrozen(frozenArr.includes(classId));
 
-      // 2. Get specific class
-      const classRes: any = await api.get(`/api/classes/${classId}`);
       setCurrentClass(classRes.data);
-
-      // 3. Get students in class
-      const studentsRes: any = await api.get(`/api/classes/${classId}/students`);
       setStudents(studentsRes.data || []);
 
-      // 4. Get subjects from exam JSON (fallback to empty array)
+      // Get subjects from exam JSON
       const rawExamSubjects = Array.isArray(examObj.subjects) ? examObj.subjects : [];
-      // Do not filter out subjects. If a subject is added to the exam, it must be available for marks entry.
       const examSubjects = rawExamSubjects;
       setSubjects(examSubjects);
 
-      // 5. Get existing flat marks from marks API
-      const marksRes: any = await api.get(`/api/marks/exam/${id}`);
+      // Map existing marks
       const flatMarks = marksRes.data || [];
-      
       const initialMarks: { [key: string]: number | string } = {};
       const initialRemarks: { [key: string]: string } = {};
 
       flatMarks.forEach((m: any) => {
-        if (m.student?.classId === classId || (currentClass && m.student?.rollNo)) { 
-          // Match the real subject from DB to the fake subject in exam.subjects by name
+        if (m.student?.classId === classId || (classRes.data && m.student?.rollNo)) { 
           const fakeSub = examSubjects.find((s: any) => s.name?.toLowerCase() === m.subject?.name?.toLowerCase());
           const fakeSubId = fakeSub ? fakeSub.id : m.subjectId;
-
           initialMarks[`${m.studentId}_${fakeSubId}`] = m.remarks === 'AB' ? 'AB' : m.marksObtained;
           initialRemarks[`${m.studentId}_${fakeSubId}`] = m.remarks || '';
         }
@@ -86,6 +82,7 @@ export const MarksEntryPage: React.FC = () => {
       setLoading(false);
     }
   };
+
 
   useEffect(() => {
     fetchData();

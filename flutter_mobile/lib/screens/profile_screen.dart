@@ -1,4 +1,5 @@
-import 'dart:convert';
+﻿import 'dart:convert';
+import '../widgets/custom_network_image.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -185,7 +186,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   child: (() {
                                     final avatar = _user?['avatar'] ?? _user?['photo'] ?? _user?['photoUrl'];
                                     if (avatar != null && avatar.toString().isNotEmpty && avatar.toString() != 'null' && avatar.toString() != 'undefined') {
-                                      return Image.network(
+                                      return CustomNetworkImage(
                                         ApiService.getImageUrl(avatar.toString()),
                                         fit: BoxFit.cover,
                                         headers: const {'ngrok-skip-browser-warning': '69420'},
@@ -398,3 +399,4 @@ class _StatItem {
   final Color color;
   const _StatItem(this.icon, this.label, this.value, this.color);
 }
+

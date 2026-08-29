@@ -8,7 +8,8 @@ export const getAllQuestionPapers = async (req: Request, res: Response) => {
     const papers = await prisma.questionPaper.findMany({
       include: {
         class: true,
-        subject: true
+        subject: true,
+        exam: true
       },
       orderBy: { uploadedAt: 'desc' }
     });
@@ -21,19 +22,30 @@ export const getAllQuestionPapers = async (req: Request, res: Response) => {
 
 export const createQuestionPaper = async (req: Request, res: Response) => {
   try {
-    const { title, classId, subjectId, fileUrl } = req.body;
+    const { title, classId, subjectId, fileUrl, examId, section } = req.body;
+
+    const data: any = {
+      title,
+      fileUrl,
+      uploadedBy: req.body.uploadedBy || 'system',
+      class: { connect: { id: classId } }
+    };
+    if (subjectId) {
+      data.subject = { connect: { id: subjectId } };
+    }
+    if (examId) {
+      data.exam = { connect: { id: examId } };
+    }
+    if (section) {
+      data.section = section;
+    }
 
     const paper = await prisma.questionPaper.create({
-      data: {
-        title,
-        fileUrl,
-        uploadedBy: req.body.uploadedBy || 'system',
-        class: { connect: { id: classId } },
-        subject: { connect: { id: subjectId } },
-      },
+      data,
       include: {
         class: true,
-        subject: true
+        subject: true,
+        exam: true
       }
     });
 
@@ -53,6 +65,27 @@ export const deleteQuestionPaper = async (req: Request, res: Response) => {
     res.json({ message: 'Question paper deleted successfully' });
   } catch (error) {
     console.error('Error deleting question paper:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+export const updateAnswerKey = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { answerKey, answerKeyUrl } = req.body;
+
+    const updatedPaper = await prisma.questionPaper.update({
+      where: { id },
+      data: { answerKey, answerKeyUrl },
+      include: {
+        class: true,
+        subject: true,
+        exam: true
+      }
+    });
+    res.json(updatedPaper);
+  } catch (error) {
+    console.error('Error updating answer key:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 };

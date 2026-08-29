@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
+import '../widgets/custom_network_image.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/api_service.dart';
 import 'fee_reminder_details_screen.dart';
@@ -253,7 +254,7 @@ class _FeeReminderSearchScreenState extends State<FeeReminderSearchScreen> {
                                         child: (photoUrl != null && photoUrl.isNotEmpty)
                                             ? ClipRRect(
                                                 borderRadius: BorderRadius.circular(12),
-                                                child: Image.network(
+                                                child: CustomNetworkImage(
                                                   ApiService.getImageUrl(photoUrl),
                                                   width: 50,
                                                   height: 50,
@@ -328,3 +329,4 @@ class _FeeReminderSearchScreenState extends State<FeeReminderSearchScreen> {
     );
   }
 }
+

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../widgets/custom_network_image.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -181,7 +182,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(20),
                       child: (photoUrl != null && (photoUrl as String).isNotEmpty)
-                          ? Image.network(
+                          ? CustomNetworkImage(
                               ApiService.getImageUrl(photoUrl as String),
                               fit: BoxFit.cover,
                               headers: const {'ngrok-skip-browser-warning': '69420'},
@@ -244,15 +245,41 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
         onPressed: () async {
           final s2 = _studentDetails ?? widget.student;
           if (s2['id'] == null) return;
-          final result = await Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => RecordFeePaymentScreen(
-              student: s2, 
-              structures: _feeStructures,
-              pendingAmount: 0.0,
-            )),
-          );
-          if (result == true) { setState(() => _isLoading = true); _fetchProfile(); }
+          
+          showDialog(context: context, barrierDismissible: false, builder: (_) => const Center(child: CircularProgressIndicator(color: Color(0xFF6366F1))));
+          final res = await ApiService.getFeeStatus(s2['id']);
+          if (!mounted) return;
+          Navigator.pop(context);
+
+          if (res['success']) {
+            final List<dynamic> data = res['data'] ?? [];
+            final List<Map<String, dynamic>> structures = [];
+            for (final d in data) {
+               final amountDue = (d['amountDue'] ?? 0.0).toDouble();
+               if (amountDue > 0) {
+                  final stRaw = d['feeStructure'] ?? {};
+                  final st = Map<String, dynamic>.from(stRaw);
+                  st['amount'] = amountDue; // Overriding with actual pending amount
+                  final feeHead = st['feeHead'] ?? {};
+                  st['name'] = feeHead['name'] ?? st['name'] ?? 'Fee Component';
+                  structures.add(st);
+               }
+            }
+            
+            final pendingAmount = data.fold<double>(0.0, (sum, d) => sum + (d['amountDue'] ?? 0.0));
+
+            final result = await Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => RecordFeePaymentScreen(
+                student: s2, 
+                structures: structures,
+                pendingAmount: pendingAmount,
+              )),
+            );
+            if (result == true) { setState(() => _isLoading = true); _fetchProfile(); }
+          } else {
+             ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(res['message'] ?? 'Failed to load fee details')));
+          }
         },
         backgroundColor: const Color(0xFF4F46E5),
         icon: const Icon(Icons.credit_card_rounded, color: Colors.white),
@@ -946,3 +973,4 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
     );
   }
 }
+

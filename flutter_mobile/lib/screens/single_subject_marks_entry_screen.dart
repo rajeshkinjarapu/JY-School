@@ -38,7 +38,27 @@ class _SingleSubjectMarksEntryScreenState extends State<SingleSubjectMarksEntryS
   @override
   void initState() {
     super.initState();
-    _localSubjects = List.from(widget.subjects);
+    
+    // Sort subjects based on standard predefined order
+    var sortedSubjects = List<dynamic>.from(widget.subjects);
+    sortedSubjects.sort((a, b) {
+      final nameA = (a['name']?.toString() ?? '').toLowerCase();
+      final nameB = (b['name']?.toString() ?? '').toLowerCase();
+      
+      int getOrder(String name) {
+        if (name.contains('tel')) return 1;
+        if (name.contains('hin')) return 2;
+        if (name.contains('eng')) return 3;
+        if (name.contains('mat')) return 4;
+        if (name.contains('sci') || name.contains('evs')) return 5;
+        if (name.contains('soc')) return 6;
+        return 99;
+      }
+      
+      return getOrder(nameA).compareTo(getOrder(nameB));
+    });
+
+    _localSubjects = sortedSubjects;
     if (_localSubjects.isNotEmpty && !_localSubjects.any((s) => s['id'] == 'ALL')) {
       _localSubjects.insert(0, {'id': 'ALL', 'name': 'All Subjects', 'maxMarks': 100});
     }
@@ -437,30 +457,34 @@ class _SingleSubjectMarksEntryScreenState extends State<SingleSubjectMarksEntryS
             const SizedBox(height: 16),
             const Divider(height: 1, color: Color(0xFFF1F5F9)),
             const SizedBox(height: 16),
-            Wrap(
-              spacing: 12,
-              runSpacing: 16,
-              children: _localSubjects.where((s) => s['id'] != 'ALL').map((sub) {
-                final subId = sub['id'].toString();
-                final subName = sub['name']?.toString() ?? 'Unknown';
-                // Calculate width for 2 items per line (accounting for padding and spacing)
-                return SizedBox(
-                  width: (MediaQuery.of(context).size.width - 32 - 32 - 12) / 2, // screen width - list padding - card padding - spacing
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        subName,
-                        style: GoogleFonts.poppins(color: const Color(0xFF64748B), fontSize: 12, fontWeight: FontWeight.w500),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final itemWidth = (constraints.maxWidth - 16) / 2;
+                return Wrap(
+                  spacing: 16,
+                  runSpacing: 16,
+                  children: _localSubjects.where((s) => s['id'] != 'ALL').map((sub) {
+                    final subId = sub['id'].toString();
+                    final subName = sub['name']?.toString() ?? 'Unknown';
+                    return SizedBox(
+                      width: itemWidth,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            subName,
+                            style: GoogleFonts.poppins(color: const Color(0xFF64748B), fontSize: 12, fontWeight: FontWeight.w500),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 6),
+                          _buildMarksInput(sid, subId),
+                        ],
                       ),
-                      const SizedBox(height: 6),
-                      _buildMarksInput(sid, subId),
-                    ],
-                  ),
+                    );
+                  }).toList(),
                 );
-              }).toList(),
+              }
             ),
           ]
         ],

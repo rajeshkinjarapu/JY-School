@@ -201,6 +201,7 @@ model Exam {
   marks              Mark[]
   examPlans          ExamPlan[]
   classes            Class[]
+  questionPapers     QuestionPaper[]
 }
 
 
@@ -538,11 +539,16 @@ model OnlineExamSubmission {
 model QuestionPaper {
   id          String   @id @default(uuid())
   title       String
+  examId      String?
+  exam        Exam?    @relation(fields: [examId], references: [id], onDelete: Cascade)
   classId     String
   class       Class    @relation(fields: [classId], references: [id], onDelete: Cascade)
-  subjectId   String
-  subject     Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  section     String?
+  subjectId   String?
+  subject     Subject? @relation(fields: [subjectId], references: [id], onDelete: Cascade)
   fileUrl     String
+  answerKey   String?  @db.Text
+  answerKeyUrl String?
   uploadedAt  DateTime @default(now())
   uploadedBy  String
 }

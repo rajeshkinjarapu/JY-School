@@ -445,16 +445,34 @@ class _LeaveListTabState extends State<_LeaveListTab> with SingleTickerProviderS
                   ),
                 ],
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: sColor.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  status,
-                  style: GoogleFonts.poppins(color: sColor, fontSize: 11, fontWeight: FontWeight.bold),
-                ),
+              Row(
+                children: [
+                  if (widget.isAdmin) ...[
+                    IconButton(
+                      icon: const Icon(Icons.edit_outlined, color: Color(0xFF6366F1), size: 20),
+                      onPressed: () => _showEditLeaveDialog(leave),
+                      constraints: const BoxConstraints(),
+                      padding: const EdgeInsets.only(right: 8),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.delete_outline, color: Color(0xFFEF4444), size: 20),
+                      onPressed: () => _deleteLeave(id),
+                      constraints: const BoxConstraints(),
+                      padding: const EdgeInsets.only(right: 8),
+                    ),
+                  ],
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: sColor.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      status,
+                      style: GoogleFonts.poppins(color: sColor, fontSize: 11, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -535,6 +553,109 @@ class _LeaveListTabState extends State<_LeaveListTab> with SingleTickerProviderS
         );
       }
     }
+  }
+  Future<void> _deleteLeave(String id) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text('Delete Leave', style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
+        content: Text('Are you sure you want to delete this leave request?', style: GoogleFonts.poppins()),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text('Cancel', style: GoogleFonts.poppins(color: const Color(0xFF64748B))),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFEF4444)),
+            child: Text('Delete', style: GoogleFonts.poppins(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    final res = await ApiService.deleteLeave(id);
+    if (mounted) {
+      if (res['success']) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Leave deleted successfully'), backgroundColor: Color(0xFF10B981)),
+        );
+        widget.onRefresh();
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(res['message'] ?? 'Failed to delete leave')),
+        );
+      }
+    }
+  }
+
+  Future<void> _showEditLeaveDialog(dynamic leave) async {
+    final typeController = TextEditingController(text: leave['type'] ?? 'CASUAL');
+    final reasonController = TextEditingController(text: leave['reason'] ?? '');
+    String status = leave['status'] ?? 'PENDING';
+    
+    await showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: Text('Edit Leave', style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                DropdownButtonFormField<String>(
+                  value: ['SICK', 'CASUAL', 'EARNED', 'General Leave'].contains(typeController.text) ? typeController.text : 'General Leave',
+                  decoration: const InputDecoration(labelText: 'Leave Type'),
+                  items: ['SICK', 'CASUAL', 'EARNED', 'General Leave'].map((t) => DropdownMenuItem(value: t, child: Text(t))).toList(),
+                  onChanged: (val) { if (val != null) setState(() => typeController.text = val); },
+                ),
+                const SizedBox(height: 16),
+                DropdownButtonFormField<String>(
+                  value: status,
+                  decoration: const InputDecoration(labelText: 'Status'),
+                  items: ['PENDING', 'APPROVED', 'REJECTED'].map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(),
+                  onChanged: (val) { if (val != null) setState(() => status = val); },
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: reasonController,
+                  decoration: const InputDecoration(labelText: 'Reason'),
+                  maxLines: 3,
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                final res = await ApiService.performPut('/api/leave/${leave['id']}', {
+                  'type': typeController.text,
+                  'reason': reasonController.text,
+                  'status': status,
+                }, 'Failed to update leave');
+                
+                if (mounted) {
+                  Navigator.pop(ctx);
+                  if (res['success']) {
+                    ScaffoldMessenger.of(this.context).showSnackBar(const SnackBar(content: Text('Leave updated successfully')));
+                    widget.onRefresh();
+                  } else {
+                    ScaffoldMessenger.of(this.context).showSnackBar(SnackBar(content: Text(res['message'] ?? 'Failed to update')));
+                  }
+                }
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 

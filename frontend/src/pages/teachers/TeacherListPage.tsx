@@ -8,6 +8,7 @@ import toast from "react-hot-toast";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { getPhotoUrl } from "../../utils/photo";
+import { DataCache } from "../../services/dataCache";
 
 export const TeacherListPage: React.FC = () => {
   const { user } = useAuth();
@@ -20,7 +21,19 @@ export const TeacherListPage: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const fetchTeachers = async () => {
-    setLoading(true);
+    // Instant cache load if no search
+    if (!search) {
+      try {
+        const cached = await DataCache.get('teachers');
+        if (cached && cached.length > 0) {
+          setTeachers(cached);
+          setLoading(false);
+        }
+      } catch (_) {}
+    }
+
+    if (teachers.length === 0) setLoading(true);
+    
     try {
       const response: any = await api.get("/api/teachers", {
         params: { search, limit: 5000 },

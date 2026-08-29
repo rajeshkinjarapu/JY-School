@@ -6,6 +6,7 @@ import { School, User, Users, Plus, Trash2, Edit3 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
+import { DataCache } from '../../services/dataCache';
 
 const MobileClassAccordion: React.FC<{ cls: any, idx: number, isSuperAdmin: boolean, openEditModal: (cls: any) => void, handleDelete: (id: string) => void }> = ({ cls, idx, isSuperAdmin, openEditModal, handleDelete }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -95,29 +96,23 @@ export const ClassManagementPage: React.FC = () => {
   const [classTeacherId, setClassTeacherId] = useState('');
   const [capacity, setCapacity] = useState(40);
 
-  const fetchClasses = async () => {
+  const fetchInitialData = async (forceRefresh = false) => {
     try {
-      const res: any = await api.get('/api/classes');
-      setClasses(res.data || res || []);
+      const [cachedClasses, cachedTeachers] = await Promise.all([
+        DataCache.get('classes', forceRefresh),
+        DataCache.get('teachers')
+      ]);
+      if (cachedClasses) setClasses(cachedClasses);
+      if (cachedTeachers) setTeachers(cachedTeachers);
     } catch (e) {
-      toast.error('Failed to load classes');
+      toast.error('Failed to load class data');
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchTeachers = async () => {
-    try {
-      const res: any = await api.get('/api/teachers?limit=75');
-      setTeachers(res.data?.data || res.data || []);
-    } catch (e) {
-      console.error(e);
-    }
-  };
-
   useEffect(() => {
-    fetchClasses();
-    fetchTeachers();
+    fetchInitialData();
   }, []);
 
   const openCreateModal = () => {
@@ -165,9 +160,9 @@ export const ClassManagementPage: React.FC = () => {
       setShowModal(false);
       setName('');
       setSection('');
-      setClassTeacherId('');
       setEditingClassId(null);
-      fetchClasses();
+      DataCache.invalidate('classes');
+      fetchInitialData(true);
     } catch (error: any) {
       toast.error(error.message || 'Error saving class');
     }
@@ -178,7 +173,8 @@ export const ClassManagementPage: React.FC = () => {
     try {
       await api.delete(`/api/classes/${id}`);
       toast.success('Class deleted successfully');
-      fetchClasses();
+      DataCache.invalidate('classes');
+      fetchInitialData(true);
     } catch (error: any) {
       toast.error(error.message || 'Failed to delete class');
     }

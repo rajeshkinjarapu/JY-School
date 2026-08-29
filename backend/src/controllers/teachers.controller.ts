@@ -30,7 +30,7 @@ export const getAll = async (req: AuthRequest, res: Response): Promise<void> => 
       take: limit,
       orderBy: { employeeId: 'asc' },
       include: {
-        user: { select: { id: true, name: true, email: true, phone: true, photoUrl: true, isActive: true } },
+        user: { select: { id: true, name: true, email: true, phone: true, photoUrl: limit <= 50, isActive: true } },
         _count: { select: { classSubjectTeachers: true } },
         homeRoomClass: { select: { id: true, name: true, section: true } },
       },

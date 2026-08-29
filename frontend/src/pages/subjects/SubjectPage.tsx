@@ -6,6 +6,7 @@ import { Plus, Edit, Trash2, School, BookOpen, Users, ChevronDown, ChevronUp } f
 import toast from 'react-hot-toast';
 import { useAuth } from '../../hooks/useAuth';
 import { PageHeader } from '../../components/UI/PageHeader';
+import { DataCache } from '../../services/dataCache';
 
 const SUBJECT_COLORS = [
   { bg: 'from-violet-500 to-purple-600', light: 'bg-violet-50', text: 'text-violet-700', border: 'border-violet-200', badge: 'bg-violet-100 text-violet-700' },
@@ -36,16 +37,16 @@ export const SubjectPage: React.FC = () => {
   const [classId, setClassId] = useState('');
   const [teacherId, setTeacherId] = useState('');
 
-  const fetchData = async () => {
+  const fetchData = async (forceRefresh = false) => {
     try {
       const [subRes, classRes, teachRes]: any = await Promise.all([
-        api.get('/api/subjects?limit=5000'),
-        api.get('/api/classes?limit=5000'),
-        api.get('/api/teachers?limit=5000'),
+        DataCache.get('subjects', forceRefresh),
+        DataCache.get('classes'),
+        DataCache.get('teachers'),
       ]);
-      setSubjects(subRes.data || subRes || []);
-      setClasses(classRes.data || classRes || []);
-      setTeachers(teachRes.data.data || teachRes.data || []);
+      setSubjects(subRes || []);
+      setClasses(classRes || []);
+      setTeachers(teachRes || []);
     } catch (e) {
       toast.error('Failed to load curriculum data');
     } finally {
@@ -79,7 +80,8 @@ export const SubjectPage: React.FC = () => {
     try {
       await api.delete(`/api/subjects/${id}`);
       toast.success('Subject deleted successfully!');
-      fetchData();
+      DataCache.invalidate('subjects');
+      fetchData(true);
     } catch (error: any) {
       toast.error(error.message || 'Failed to delete subject');
     }
@@ -108,7 +110,8 @@ export const SubjectPage: React.FC = () => {
       setClassId('');
       setTeacherId('');
       setEditingSubject(null);
-      fetchData();
+      DataCache.invalidate('subjects');
+      fetchData(true);
     } catch (error: any) {
       toast.error(error.message || 'Error saving subject details');
     }

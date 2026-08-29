@@ -4,7 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'offline_sync_service.dart';
 
 class ApiService {
-  static const String baseUrl = 'https://jy-school-production-f159.up.railway.app';
+  static const String baseUrl = 'http://66.116.252.191:19998';
 
   static String getImageUrl(String? photoUrl) {
     if (photoUrl == null || photoUrl.isEmpty) return '';
@@ -1193,5 +1193,26 @@ class ApiService {
 
   static Future<Map<String, dynamic>> performPut(String url, Map<String, dynamic> body, String errorMessage) async {
     return _performPut(url, body, errorMessage);
+  }
+
+  static Future<Map<String, dynamic>> deleteLeave(String id) async {
+    try {
+      final token = await getToken();
+      if (token == null) return {'success': false, 'message': 'No session token'};
+
+      final response = await http.delete(
+        Uri.parse('$baseUrl/api/leave/$id'),
+        headers: _getHeaders(token: token),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 204) {
+        return {'success': true};
+      } else {
+        final data = jsonDecode(response.body);
+        return {'success': false, 'message': data['message'] ?? 'Failed to delete'};
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: ${e.toString()}'};
+    }
   }
 }

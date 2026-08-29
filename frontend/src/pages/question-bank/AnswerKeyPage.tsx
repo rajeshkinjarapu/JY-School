@@ -1,19 +1,20 @@
-import React from 'react';
+import React, { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Key } from 'lucide-react';
 import { PageHeader } from '../../components/UI/PageHeader';
-import { AnswerKeyManager } from '../../components/QuestionBank/AnswerKeyManager';
 
 export const AnswerKeyPage = () => {
+  const navigate = useNavigate();
+  
+  useEffect(() => {
+    navigate('/exams?tab=question-papers', { replace: true });
+  }, [navigate]);
+
   return (
     <div className="flex flex-col h-full bg-slate-50" style={{ minHeight: 'calc(100vh - 64px)' }}>
-      <PageHeader
-        title="Answer Key"
-        icon={<Key className="w-5 h-5" />}
-      />
-      <div className="flex-1 overflow-auto p-4 md:p-6">
-        <div className="max-w-7xl mx-auto">
-          <AnswerKeyManager prefilledPaperId={null} />
-        </div>
+      <PageHeader title="Answer Key" icon={<Key className="w-5 h-5" />} />
+      <div className="flex-1 flex items-center justify-center p-4">
+        <p className="text-gray-500">Redirecting to Exams Module...</p>
       </div>
     </div>
   );

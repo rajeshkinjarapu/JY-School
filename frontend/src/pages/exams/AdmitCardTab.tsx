@@ -60,9 +60,12 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
   const isFASaExam = selectedExam?.name?.toUpperCase().includes('FA') || selectedExam?.name?.toUpperCase().includes('SA');
 
   useEffect(() => {
-    if (selectedExam) {
-      setPublished(selectedExam.admitCardPublished || false);
-      const settings = selectedExam.admitCardSettings || {};
+    if (!selectedExamId) return;
+    // Fetch admitCardSettings separately — excluded from list API (heavy Base64 images)
+    api.get(`/api/exams/${selectedExamId}`).then((res: any) => {
+      const examObj = res.data;
+      setPublished(examObj.admitCardPublished || false);
+      const settings = examObj.admitCardSettings || {};
       setInstructions(
         settings.instructions ||
           "Candidate must carry this Admit Card to the examination hall.\nElectronic devices including calculators and mobile phones are strictly prohibited.\nCandidate should report to the examination center 30 minutes before commencement.",
@@ -73,8 +76,9 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
       setExamTitleOverride(settings.examTitleOverride || "");
       setExamCenterOverride(settings.examCenterOverride || "");
       setSchedule(settings.schedule || []);
-    }
-  }, [selectedExam]);
+    }).catch(() => {});
+  }, [selectedExamId]);
+
 
   useEffect(() => {
     const fetchExamData = async () => {

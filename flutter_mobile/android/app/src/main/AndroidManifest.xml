@@ -9,7 +9,7 @@
     <application
         android:label="JY School"
         android:name="${applicationName}"
-        android:icon="@mipmap/launcher_icon"
+        android:icon="@mipmap/ic_launcher"
         android:usesCleartextTraffic="true">
         <!-- Set default FCM channel for Heads-up (Hero banner) notifications -->
         <meta-data
@@ -59,3 +59,4 @@
         </intent>
     </queries>
 </manifest>
+

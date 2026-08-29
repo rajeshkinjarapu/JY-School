@@ -41,14 +41,17 @@ export const ProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
   const selectedExam = exams.find(e => e.id === selectedExamId);
 
   useEffect(() => {
-    if (selectedExam) {
-      setLogoUrl(selectedExam.admitCardSettings?.logoUrl || '');
-      setSignatureUrl(selectedExam.admitCardSettings?.signatureUrl || '');
-      setTeacherSignatureUrl(selectedExam.admitCardSettings?.teacherSignatureUrl || '');
-      setExamNameOverride(selectedExam.admitCardSettings?.examNameOverride || '');
-      setPublished(selectedExam.admitCardSettings?.progressCardPublished || false);
-    }
-  }, [selectedExam]);
+    if (!selectedExamId) return;
+    // Fetch admitCardSettings separately — it's excluded from list API (contains heavy Base64 images)
+    api.get(`/api/exams/${selectedExamId}`).then((res: any) => {
+      const examObj = res.data;
+      setLogoUrl(examObj.admitCardSettings?.logoUrl || '');
+      setSignatureUrl(examObj.admitCardSettings?.signatureUrl || '');
+      setTeacherSignatureUrl(examObj.admitCardSettings?.teacherSignatureUrl || '');
+      setExamNameOverride(examObj.admitCardSettings?.examNameOverride || '');
+      setPublished(examObj.admitCardSettings?.progressCardPublished || false);
+    }).catch(() => {});
+  }, [selectedExamId]);
 
   useEffect(() => {
     const fetchExamData = async () => {
@@ -58,7 +61,8 @@ export const ProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
       }
       setLoading(true);
       try {
-        const res: any = await api.get(`/api/exams/${selectedExamId}/results?classId=${selectedClassId}`);
+        // includePhoto=true: Progress cards need student photos
+        const res: any = await api.get(`/api/exams/${selectedExamId}/results?classId=${selectedClassId}&includePhoto=true`);
         // Map the results to the data format expected by ProgressCardTemplate
         // the API returns { studentId, name, rollNo, className, marks, total, percentage, grade, rank }
         // We map it to { studentName, rollNo, className, section, mobile, rank, marks, photo }
@@ -114,7 +118,9 @@ export const ProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
   const handleSaveSettings = async () => {
     if (!selectedExamId) return;
     try {
-      const currentSettings = selectedExam?.admitCardSettings || {};
+      // Fetch current settings first to merge
+      const currentRes: any = await api.get(`/api/exams/${selectedExamId}`);
+      const currentSettings = currentRes.data?.admitCardSettings || {};
       const newSettings = { ...currentSettings, logoUrl, signatureUrl, teacherSignatureUrl, examNameOverride, progressCardPublished: published };
       
       await api.post(`/api/exams/${selectedExamId}/admit-card-settings`, {

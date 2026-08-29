@@ -130,21 +130,35 @@ class _MarksUploadScreenState extends State<MarksUploadScreen> {
 
     try {
       final res = await ApiService.getStudents(classId: _selectedClassId);
+      
+      if (!mounted) return;
+      
       if (res['success']) {
-        setState(() {
-          _students = res['data'] ?? [];
-          // Initialize controllers
-          _marksControllers.clear();
-          for (var s in _students) {
-            _marksControllers[s['id'].toString()] = TextEditingController();
+        List<dynamic> fetchedStudents = [];
+        if (res['data'] is List) {
+          fetchedStudents = List<dynamic>.from(res['data']);
+        }
+        
+        final Map<String, TextEditingController> newControllers = {};
+        for (var s in fetchedStudents) {
+          if (s != null && s['id'] != null) {
+            newControllers[s['id'].toString()] = TextEditingController();
           }
+        }
+        
+        setState(() {
+          _students = fetchedStudents;
+          _marksControllers.clear();
+          _marksControllers.addAll(newControllers);
           _isLoadingStudents = false;
         });
       } else {
         setState(() => _isLoadingStudents = false);
       }
     } catch (e) {
-      setState(() => _isLoadingStudents = false);
+      if (mounted) {
+        setState(() => _isLoadingStudents = false);
+      }
     }
   }
 
@@ -325,7 +339,24 @@ class _MarksUploadScreenState extends State<MarksUploadScreen> {
         try { examSubjects = jsonDecode(examSubjects); } catch(e) { examSubjects = []; }
       }
       if (examSubjects is List) {
-        return List<dynamic>.from(examSubjects);
+        var subjects = List<dynamic>.from(examSubjects);
+        subjects.sort((a, b) {
+          final nameA = (a['name']?.toString() ?? '').toLowerCase();
+          final nameB = (b['name']?.toString() ?? '').toLowerCase();
+          
+          int getOrder(String name) {
+            if (name.contains('tel')) return 1;
+            if (name.contains('hin')) return 2;
+            if (name.contains('eng')) return 3;
+            if (name.contains('mat')) return 4;
+            if (name.contains('sci') || name.contains('evs')) return 5;
+            if (name.contains('soc')) return 6;
+            return 99;
+          }
+          
+          return getOrder(nameA).compareTo(getOrder(nameB));
+        });
+        return subjects;
       }
     }
     return [];
@@ -384,19 +415,6 @@ class _MarksUploadScreenState extends State<MarksUploadScreen> {
                 onChanged: _selectedExamId == null ? null : (val) {
                   setState(() { _selectedClassId = val; });
                   _fetchStudentsForClass();
-                },
-              ),
-              const SizedBox(height: 16),
-              _buildDropdown(
-                hint: _selectedExamId == null ? 'Select Exam First' : 'Subject',
-                value: _selectedSubjectId,
-                items: [
-                  {'id': 'ALL', 'name': 'All Subjects (Grid View)'},
-                  ...filteredSubjects
-                ],
-                icon: Icons.menu_book_rounded,
-                onChanged: _selectedExamId == null ? null : (val) {
-                  setState(() { _selectedSubjectId = val ?? 'ALL'; });
                 },
               ),
             ],

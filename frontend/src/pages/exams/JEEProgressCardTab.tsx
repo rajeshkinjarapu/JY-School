@@ -53,14 +53,18 @@ export const JEEProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
   const selectedExam = exams.find(e => e.id === selectedExamId);
 
   useEffect(() => {
-    if (selectedExam) {
-      setLogoUrl(selectedExam.admitCardSettings?.logoUrl || '');
-      setSignatureUrl(selectedExam.admitCardSettings?.signatureUrl || '');
-      setTeacherSignatureUrl(selectedExam.admitCardSettings?.teacherSignatureUrl || '');
-      setExamNameOverride(selectedExam.admitCardSettings?.examNameOverride || '');
-      setPublished(selectedExam.admitCardSettings?.progressCardPublished || false);
-    }
-  }, [selectedExam]);
+    if (!selectedExamId) return;
+    // Fetch admitCardSettings separately — it's excluded from list API (contains heavy Base64 images)
+    api.get(`/api/exams/${selectedExamId}`).then((res: any) => {
+      const examObj = res.data;
+      setLogoUrl(examObj.admitCardSettings?.logoUrl || '');
+      setSignatureUrl(examObj.admitCardSettings?.signatureUrl || '');
+      setTeacherSignatureUrl(examObj.admitCardSettings?.teacherSignatureUrl || '');
+      setExamNameOverride(examObj.admitCardSettings?.examNameOverride || '');
+      setPublished(examObj.admitCardSettings?.progressCardPublished || false);
+    }).catch(() => {});
+  }, [selectedExamId]);
+
 
   useEffect(() => {
     const fetchExamData = async () => {
@@ -70,7 +74,9 @@ export const JEEProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
       }
       setLoading(true);
       try {
-        const res: any = await api.get(`/api/exams/${selectedExamId}/results?classId=${selectedClassId}`);
+        // includePhoto=true: JEE Progress cards need student photos
+        const res: any = await api.get(`/api/exams/${selectedExamId}/results?classId=${selectedClassId}&includePhoto=true`);
+
         const formattedData = (res.data?.data || res.data || []).map((s: any) => {
            let cName = s.className || '';
            let sec = '';

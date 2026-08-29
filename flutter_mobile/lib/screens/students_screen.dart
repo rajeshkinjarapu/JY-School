@@ -1,4 +1,5 @@
-import 'dart:convert';
+﻿import 'dart:convert';
+import '../widgets/custom_network_image.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -142,7 +143,7 @@ class _StudentsScreenState extends State<StudentsScreen> {
         }
       } else {
         final url = ApiService.getImageUrl(photoUrl);
-        imageWidget = Image.network(
+        imageWidget = CustomNetworkImage(
           url,
           fit: BoxFit.cover,
           headers: const {'ngrok-skip-browser-warning': '69420'},
@@ -509,3 +510,4 @@ class _StudentsScreenState extends State<StudentsScreen> {
     );
   }
 }
+

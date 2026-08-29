@@ -19,9 +19,21 @@ export const getAll = async (req: AuthRequest, res: Response): Promise<void> => 
 
   const exams = await prisma.exam.findMany({
     where,
-    include: {
+    select: {
+      id: true,
+      name: true,
+      term: true,
+      examDate: true,
+      maxMarks: true,
+      passingMarks: true,
+      admitCardPublished: true,
+      frozenClasses: true,
+      subjects: true,
+      createdAt: true,
       classes: { select: { id: true, name: true, section: true } },
       _count: { select: { marks: true } },
+      // admitCardSettings is EXCLUDED from list - it contains heavy Base64 images
+      // It is included only in getById for individual exam editing
     },
     orderBy: { examDate: 'desc' },
   });
@@ -125,6 +137,12 @@ export const deleteExam = async (req: AuthRequest, res: Response, next: NextFunc
 export const getResults = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   const id = req.params.id as string;
   const classId = req.query.classId as string;
+  // includePhoto=true is ONLY for ProgressCard. Results list doesn't need photos (saves 16MB per request)
+  const includePhoto = req.query.includePhoto === 'true';
+
+  const photoSelect = includePhoto
+    ? { name: true, photoUrl: true, phone: true }
+    : { name: true, phone: true };
 
   const exam = await prisma.exam.findUnique({
     where: { id },
@@ -132,7 +150,7 @@ export const getResults = async (req: AuthRequest, res: Response, next: NextFunc
       marks: {
         where: classId ? { student: { classId } } : undefined,
         include: {
-          student: { include: { user: { select: { name: true, photoUrl: true, phone: true } }, class: { select: { name: true, section: true } } } },
+          student: { include: { user: { select: photoSelect }, class: { select: { name: true, section: true } } } },
           subject: { select: { name: true, code: true } },
         },
       },
@@ -146,14 +164,14 @@ export const getResults = async (req: AuthRequest, res: Response, next: NextFunc
   if (classId) {
     const classStudents = await prisma.student.findMany({
       where: { classId },
-      include: { user: { select: { name: true, photoUrl: true, phone: true } }, class: { select: { name: true, section: true } } },
+      include: { user: { select: photoSelect }, class: { select: { name: true, section: true } } },
       orderBy: { rollNo: 'asc' }
     });
     for (const s of classStudents) {
       studentMap.set(s.id, {
         studentId: s.id,
         name: s.user.name,
-        photo: s.user.photoUrl,
+        photo: includePhoto ? (s.user as any).photoUrl : null,
         mobile: (s as any).fatherMobile || (s as any).motherMobile || s.user.phone || '-',
         rollNo: s.rollNo || '-',
         className: s.class ? `${s.class.name} - ${s.class.section}` : '',
@@ -171,7 +189,7 @@ export const getResults = async (req: AuthRequest, res: Response, next: NextFunc
       studentMap.set(key, {
         studentId: key,
         name: mark.student.user.name,
-        photo: mark.student.user.photoUrl,
+        photo: includePhoto ? mark.student.user.photoUrl : null,
         mobile: mark.student.fatherMobile || mark.student.motherMobile || mark.student.user.phone || '-',
         rollNo: mark.student.rollNo,
         className: mark.student.class ? `${mark.student.class.name} - ${mark.student.class.section}` : '',
@@ -404,25 +422,32 @@ export const sendMarksSMS = async (req: AuthRequest, res: Response, next: NextFu
 
 export const getAllStatus = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const exams = await prisma.exam.findMany({
-      include: {
-        classes: { select: { id: true, name: true, section: true } },
-      },
-      orderBy: { examDate: 'desc' },
-    });
+    // Run all 4 heavy DB queries IN PARALLEL for maximum speed
+    const [exams, allSubjects, marksGrouped, students] = await Promise.all([
+      prisma.exam.findMany({
+        select: {
+          id: true,
+          name: true,
+          term: true,
+          examDate: true,
+          subjects: true,
+          frozenClasses: true,
+          // admitCardSettings intentionally excluded — heavy Base64 images not needed for status
+          classes: { select: { id: true, name: true, section: true } },
+        },
+        orderBy: { examDate: 'desc' },
+      }),
+      prisma.subject.findMany({ select: { id: true, name: true, classId: true } }),
+      prisma.mark.groupBy({ by: ['examId', 'studentId', 'subjectId'] }),
+      prisma.student.findMany({ select: { id: true, classId: true } }),
+    ]);
 
-    const allSubjects = await prisma.subject.findMany({ select: { id: true, name: true, classId: true } });
     const classSubjectsMap: Record<string, { id: string, name: string }[]> = {};
     for (const sub of allSubjects) {
       if (!classSubjectsMap[sub.classId]) classSubjectsMap[sub.classId] = [];
       classSubjectsMap[sub.classId].push({ id: sub.id, name: sub.name });
     }
 
-    const marksGrouped = await prisma.mark.groupBy({
-      by: ['examId', 'studentId', 'subjectId'],
-    });
-
-    const students = await prisma.student.findMany({ select: { id: true, classId: true } });
     const studentClassMap = new Map(students.map(s => [s.id, s.classId]));
 
     const examClassEnteredSubjects: Record<string, Record<string, Set<string>>> = {};
@@ -459,7 +484,6 @@ export const getAllStatus = async (req: AuthRequest, res: Response, next: NextFu
          const totalSubjects = classSubjects.length;
          const enteredCount = enteredSubjects.length;
          const progress = totalSubjects > 0 ? (enteredCount / totalSubjects) * 100 : (enteredCount > 0 ? 100 : 0);
-         const hasMarks = enteredCount > 0;
 
          return {
            ...cls,

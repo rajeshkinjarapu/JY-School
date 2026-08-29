@@ -1,4 +1,5 @@
-import 'dart:convert';
+﻿import 'dart:convert';
+import '../widgets/custom_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -120,7 +121,7 @@ class _TeachersScreenState extends State<TeachersScreen> {
         } catch (e) {}
       } else {
         final url = ApiService.getImageUrl(photoUrl);
-        imageWidget = Image.network(
+        imageWidget = CustomNetworkImage(
           url,
           fit: BoxFit.cover,
           headers: const {'ngrok-skip-browser-warning': '69420'},
@@ -385,7 +386,7 @@ class _TeachersScreenState extends State<TeachersScreen> {
                 InkWell(
                   onTap: () => _launchWhatsApp(phone),
                   borderRadius: BorderRadius.circular(24),
-                  child: Image.network(
+                  child: CustomNetworkImage(
                     'https://upload.wikimedia.org/wikipedia/commons/thumb/6/6b/WhatsApp.svg/150px-WhatsApp.svg.png',
                     width: 38,
                     height: 38,
@@ -423,3 +424,4 @@ class _TeachersScreenState extends State<TeachersScreen> {
     );
   }
 }
+

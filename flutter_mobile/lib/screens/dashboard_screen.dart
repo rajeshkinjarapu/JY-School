@@ -1,4 +1,5 @@
-import 'dart:convert';
+﻿import 'dart:convert';
+import '../widgets/custom_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fl_chart/fl_chart.dart';
@@ -470,7 +471,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    '${_getGreeting()} 👋',
+                    '${_getGreeting()} Ã°Å¸â€˜â€¹',
                     style: GoogleFonts.poppins(color: const Color(0xFFD8B4FE), fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 1),
                   ),
                 ],
@@ -482,7 +483,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
               const SizedBox(height: 4),
               Text(
-                'STUDENT • JY School',
+                'STUDENT Ã¢â‚¬Â¢ JY School',
                 style: GoogleFonts.poppins(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.w500),
               ),
               const SizedBox(height: 24),
@@ -514,7 +515,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 child: (() {
                   final avatar = _user?['avatar'] ?? _user?['photo'] ?? _user?['photoUrl'];
                   if (avatar != null && avatar.toString().isNotEmpty && avatar.toString() != 'null' && avatar.toString() != 'undefined') {
-                    return Image.network(
+                    return CustomNetworkImage(
                       ApiService.getImageUrl(avatar.toString()),
                       fit: BoxFit.cover,
                       errorBuilder: (c, e, s) => const Icon(Icons.person, color: Colors.white, size: 40),
@@ -614,7 +615,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           _buildPremiumCard(
             title: 'Fees',
             subtitle: 'Due Amount',
-            mainValue: '₹${_feeDues.toInt()}',
+            mainValue: 'â‚¹${_feeDues.toInt()}',
             mainValueLabel: 'Due',
             icon: Icons.account_balance_wallet_rounded,
             color: const Color(0xFF10B981),
@@ -622,7 +623,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             bottomWidget: Container(
               padding: const EdgeInsets.symmetric(vertical: 8),
               decoration: BoxDecoration(color: const Color(0xFF10B981).withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
-              child: Center(child: Text('View Details →', style: GoogleFonts.poppins(color: const Color(0xFF059669), fontSize: 12, fontWeight: FontWeight.bold))),
+              child: Center(child: Text('View Details Ã¢â€ â€™', style: GoogleFonts.poppins(color: const Color(0xFF059669), fontSize: 12, fontWeight: FontWeight.bold))),
             ),
             onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const FeesScreen())),
           ),
@@ -637,7 +638,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             bottomWidget: Container(
               padding: const EdgeInsets.symmetric(vertical: 8),
               decoration: BoxDecoration(color: const Color(0xFF8B5CF6).withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
-              child: Center(child: Text('View Homework →', style: GoogleFonts.poppins(color: const Color(0xFF6D28D9), fontSize: 12, fontWeight: FontWeight.bold))),
+              child: Center(child: Text('View Homework Ã¢â€ â€™', style: GoogleFonts.poppins(color: const Color(0xFF6D28D9), fontSize: 12, fontWeight: FontWeight.bold))),
             ),
             onTap: () {},
           ),
@@ -652,7 +653,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             bottomWidget: Container(
               padding: const EdgeInsets.symmetric(vertical: 8),
               decoration: BoxDecoration(color: const Color(0xFFF59E0B).withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
-              child: Center(child: Text('View Timetable →', style: GoogleFonts.poppins(color: const Color(0xFFD97706), fontSize: 12, fontWeight: FontWeight.bold))),
+              child: Center(child: Text('View Timetable Ã¢â€ â€™', style: GoogleFonts.poppins(color: const Color(0xFFD97706), fontSize: 12, fontWeight: FontWeight.bold))),
             ),
             onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const ExamsScreen())),
           ),
@@ -667,7 +668,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             bottomWidget: Container(
               padding: const EdgeInsets.symmetric(vertical: 8),
               decoration: BoxDecoration(color: const Color(0xFF06B6D4).withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
-              child: Center(child: Text('View Today\'s Schedule →', style: GoogleFonts.poppins(color: const Color(0xFF0891B2), fontSize: 12, fontWeight: FontWeight.bold))),
+              child: Center(child: Text('View Today\'s Schedule Ã¢â€ â€™', style: GoogleFonts.poppins(color: const Color(0xFF0891B2), fontSize: 12, fontWeight: FontWeight.bold))),
             ),
             onTap: () {},
           ),
@@ -682,7 +683,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             bottomWidget: Container(
               padding: const EdgeInsets.symmetric(vertical: 8),
               decoration: BoxDecoration(color: const Color(0xFFF43F5E).withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
-              child: Center(child: Text('View Results →', style: GoogleFonts.poppins(color: const Color(0xFFE11D48), fontSize: 12, fontWeight: FontWeight.bold))),
+              child: Center(child: Text('View Results Ã¢â€ â€™', style: GoogleFonts.poppins(color: const Color(0xFFE11D48), fontSize: 12, fontWeight: FontWeight.bold))),
             ),
             onTap: () {},
           ),
@@ -912,7 +913,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
                 const SizedBox(height: 3),
                 Text(
-                  '${role.replaceAll('_', ' ')} • JY School',
+                  '${role.replaceAll('_', ' ')} â€¢ JY School',
                   style: GoogleFonts.poppins(
                     color: Colors.white70,
                     fontSize: 12,
@@ -940,7 +941,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 child: (() {
                   final avatar = _user?['avatar'] ?? _user?['photo'] ?? _user?['photoUrl'];
                   if (avatar != null && avatar.toString().isNotEmpty && avatar.toString() != 'null' && avatar.toString() != 'undefined') {
-                    return Image.network(
+                    return CustomNetworkImage(
                       ApiService.getImageUrl(avatar.toString()),
                       fit: BoxFit.cover,
                       headers: const {'ngrok-skip-browser-warning': '69420'},
@@ -1020,7 +1021,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     children: [
                       const Icon(Icons.account_balance_wallet_rounded, color: Color(0xFFF87171), size: 24),
                       Text(
-                        '₹${_feeDues.toStringAsFixed(0)}',
+                        'â‚¹${_feeDues.toStringAsFixed(0)}',
                         style: GoogleFonts.outfit(
                           color: const Color(0xFFF87171),
                           fontSize: 18,
@@ -1155,7 +1156,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return res;
   }
 
-  // Teacher Dashboard metrics row — shown below the grid
+  // Teacher Dashboard metrics row Ã¢â‚¬â€ shown below the grid
   Widget _buildTeacherMetricsRow() {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 12),
@@ -1238,7 +1239,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         _loadDashboardData();
       },
       child: Container(
-        margin: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+        margin: const EdgeInsets.fromLTRB(11, 8, 11, 0),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           colors: [Color(0xFFFFFBEB), Color(0xFFFEF3C7)], // Soft Light Amber/Gold
@@ -1300,7 +1301,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               color: const Color(0xFFF59E0B),
                               borderRadius: BorderRadius.circular(6),
                             ),
-                            child: Text('📣 NEW', style: GoogleFonts.poppins(color: Colors.white, fontSize: 9, fontWeight: FontWeight.w800)),
+                                child: Text('\u{1F4E2} NEW', style: GoogleFonts.poppins(color: Colors.white, fontSize: 9, fontWeight: FontWeight.w800)),
                           ),
                           const SizedBox(width: 8),
                           Text(
@@ -1399,7 +1400,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ),
         _buildMenuPremiumCard(
           subtitle: 'TOTAL REVENUE',
-          title: '₹${_formatIndianCurrency(_adminFeeCollected)}',
+          title: 'â‚¹${_formatIndianCurrency(_adminFeeCollected)}',
           bottomText: 'Total Income',
           icon: Icons.account_balance_wallet_rounded,
           gradientColors: [const Color(0xFFE91E63), const Color(0xFF880E4F)],
@@ -1419,7 +1420,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ),
         _buildMenuPremiumCard(
           subtitle: 'EXAM RESULTS',
-          title: 'Exams',
+          title: 'Results',
           bottomText: 'Marks & Results',
           icon: Icons.fact_check_rounded,
           gradientColors: [const Color(0xFF1565C0), const Color(0xFF0D47A1)],
@@ -1446,16 +1447,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
           accentColor: const Color(0xFF00E676),
           imagePath: 'assets/images/admin_icons/reports.jpg',
           onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ProgressCardScreen())),
-        ),
-        _buildMenuPremiumCard(
-          subtitle: 'ID CARDS',
-          title: 'Generator',
-          bottomText: 'Generate & Print ID Cards',
-          icon: Icons.badge_rounded,
-          gradientColors: [const Color(0xFF6366F1), const Color(0xFF4F46E5)],
-          accentColor: const Color(0xFF818CF8),
-          imagePath: 'assets/images/admin_icons/student.jpg',
-          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const IdCardTemplatesScreen())),
         ),
       ],
     );
@@ -1625,7 +1616,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ],
       );
     } else if (role == 'TEACHER') {
-      // Professional Teacher Grid — fits 12 tiles (4 rows × 3 cols) on single screen
+      // Professional Teacher Grid Ã¢â‚¬â€ fits 12 tiles (4 rows Ãƒâ€” 3 cols) on single screen
       final double screenH = MediaQuery.of(context).size.height;
       final double screenW = MediaQuery.of(context).size.width;
       // Fixed heights consumed:
@@ -1636,16 +1627,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
       final double availH = screenH - consumed;
 
       // 3 cols, spacing=5, 4 rows, spacing=5
-      final double tileW = (screenW - 24 - 5 * 2) / 3; // 24 = horizontal padding
-      final double tileH = (availH - 5 * 3) / 4;
+        final double tileW = (screenW - 24 - 4 * 2) / 3; // 24 = horizontal padding
+        final double tileH = (availH - 4 * 3) / 4;
       final double ar = tileW / (tileH < 70 ? 70 : tileH);
 
       return GridView.count(
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         crossAxisCount: 3,
-        crossAxisSpacing: 5,
-        mainAxisSpacing: 5,
+          crossAxisSpacing: 4,
+          mainAxisSpacing: 4,
         childAspectRatio: ar.clamp(0.75, 1.3),
         children: [
           _buildImageCard(imagePath: 'assets/images/admin_icons/attendance_mark.jpg',title: 'Mark Attendance',borderColor: const Color(0xFF10B981), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TeacherAttendanceScreen()))),
@@ -1726,17 +1717,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
             gradientEnd: const Color(0xFFFFC074),
             onTap: () {
               Navigator.push(context, MaterialPageRoute(builder: (context) => const LeaveScreen()));
-            },
-          ),
-          _buildAdminActionCard(
-            title: 'ID Cards',
-            subtitle: 'GENERATOR',
-            bottomText: 'Generate & Print ID Cards',
-            icon: Icons.badge_outlined,
-            gradientStart: const Color(0xFF6366F1),
-            gradientEnd: const Color(0xFF8B5CF6),
-            onTap: () {
-              Navigator.push(context, MaterialPageRoute(builder: (context) => const IdCardTemplatesScreen()));
             },
           ),
         ],
@@ -2236,7 +2216,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ),
                     ),
                     Text(
-                      '₹${amount.toInt()}',
+                      'â‚¹${amount.toInt()}',
                       style: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.bold, color: const Color(0xFF10B981)),
                     ),
                   ],
@@ -2616,6 +2596,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 }
+
+
 
 
 

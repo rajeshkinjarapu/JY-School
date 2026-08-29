@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
+import '../widgets/custom_network_image.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../services/api_service.dart';
@@ -273,7 +274,7 @@ class _ClassDetailsScreenState extends State<ClassDetailsScreen> with SingleTick
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(12),
                         child: photoUrl.isNotEmpty
-                            ? Image.network(
+                            ? CustomNetworkImage(
                                 photoUrl.startsWith('http') ? photoUrl : '${ApiService.baseUrl}$photoUrl',
                                 fit: BoxFit.cover,
                                 errorBuilder: (c, e, s) => Center(child: Text(name[0].toUpperCase(), style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: const Color(0xFF64748B)))),
@@ -431,3 +432,4 @@ class _ClassDetailsScreenState extends State<ClassDetailsScreen> with SingleTick
     );
   }
 }
+

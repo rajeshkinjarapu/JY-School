@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../services/api_service.dart';
-import '../widgets/app_drawer.dart';
 
 class QuestionPapersScreen extends StatefulWidget {
   const QuestionPapersScreen({super.key});
@@ -22,39 +22,143 @@ class _QuestionPapersScreenState extends State<QuestionPapersScreen> {
   }
 
   Future<void> _fetchPapers() async {
-    setState(() => _isLoading = true);
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
     try {
       final res = await ApiService.getQuestionPapers();
-      if (mounted) {
-        if (res['success']) {
-          setState(() {
-            _papers = res['data'] ?? [];
-            _isLoading = false;
-          });
-        } else {
-          setState(() {
-            _errorMessage = res['message'];
-            _isLoading = false;
-          });
-        }
-      }
-    } catch (e) {
-      if (mounted) {
+      if (res['success']) {
         setState(() {
-          _errorMessage = 'An error occurred: $e';
-          _isLoading = false;
+          _papers = res['data'] ?? [];
+        });
+      } else {
+        setState(() {
+          _errorMessage = res['message'] ?? 'Failed to load question papers';
         });
       }
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'Error: $e';
+      });
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
     }
+  }
+
+  Future<void> _launchUrl(String url) async {
+    final uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not open the file link.')),
+        );
+      }
+    }
+  }
+
+  void _showAnswerKeyDialog(String title, String answerKeyText) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      builder: (ctx) {
+        return DraggableScrollableSheet(
+          expand: false,
+          initialChildSize: 0.6,
+          minChildSize: 0.4,
+          maxChildSize: 0.9,
+          builder: (context, scrollController) {
+            return Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      margin: const EdgeInsets.only(bottom: 20),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[300],
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                  ),
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF10B981).withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(Icons.key, color: Color(0xFF10B981)),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Answer Key',
+                              style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.bold, color: const Color(0xFF1E293B)),
+                            ),
+                            Text(
+                              title,
+                              style: GoogleFonts.poppins(fontSize: 12, color: const Color(0xFF64748B)),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close, color: Colors.grey),
+                        onPressed: () => Navigator.pop(ctx),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  const Divider(),
+                  const SizedBox(height: 10),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      controller: scrollController,
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF8FAFC),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: const Color(0xFFE2E8F0)),
+                        ),
+                        child: SelectableText(
+                          answerKeyText,
+                          style: GoogleFonts.poppins(fontSize: 14, color: const Color(0xFF334155), height: 1.6),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F7FE),
-      drawer: const AppDrawer(currentRoute: 'exams'),
+      backgroundColor: const Color(0xFFF1F5F9),
       appBar: AppBar(
-        leading: const BackButton(),
         title: Text(
           'Question Papers',
           style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white),
@@ -69,151 +173,189 @@ class _QuestionPapersScreenState extends State<QuestionPapersScreen> {
             ),
           ),
         ),
-        
         elevation: 0,
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: Color(0xFF6366F1)))
-          : _errorMessage != null
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.error_outline, size: 60, color: Colors.redAccent),
-                      const SizedBox(height: 16),
-                      Text(
-                        _errorMessage!,
-                        style: GoogleFonts.poppins(color: Colors.blueGrey),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 16),
-                      ElevatedButton(
-                        onPressed: _fetchPapers,
-                        child: const Text('Retry'),
-                      )
-                    ],
-                  ),
-                )
-              : RefreshIndicator(
-                  onRefresh: _fetchPapers,
-                  child: _papers.isEmpty
-                      ? ListView(
-                          physics: const AlwaysScrollableScrollPhysics(),
-                          children: [
-                            SizedBox(
-                              height: MediaQuery.of(context).size.height * 0.6,
-                              child: Center(
-                                child: Text(
-                                  'No question papers uploaded yet.',
-                                  style: GoogleFonts.poppins(color: const Color(0xFF475569), fontSize: 16),
+      body: SafeArea(
+        bottom: true,
+        child: _isLoading
+            ? const Center(child: CircularProgressIndicator(color: Color(0xFF6366F1)))
+            : _errorMessage != null
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.error_outline, size: 60, color: Colors.redAccent),
+                        const SizedBox(height: 16),
+                        Text(
+                          _errorMessage!,
+                          style: GoogleFonts.poppins(color: Colors.blueGrey),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 16),
+                        ElevatedButton(
+                          onPressed: _fetchPapers,
+                          child: const Text('Retry'),
+                        )
+                      ],
+                    ),
+                  )
+                : RefreshIndicator(
+                    onRefresh: _fetchPapers,
+                    child: _papers.isEmpty
+                        ? ListView(
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            children: [
+                              SizedBox(
+                                height: MediaQuery.of(context).size.height * 0.6,
+                                child: Center(
+                                  child: Text(
+                                    'No question papers uploaded yet.',
+                                    style: GoogleFonts.poppins(color: const Color(0xFF475569), fontSize: 16),
+                                  ),
                                 ),
                               ),
-                            ),
-                          ],
-                        )
-                      : ListView.builder(
-                          padding: const EdgeInsets.all(20),
-                          itemCount: _papers.length,
-                          itemBuilder: (context, index) {
-                            final paper = _papers[index];
-                            final title = paper['title'] ?? 'Untitled Paper';
-                            final subject = paper['subject']?['name'] ?? 'Subject';
-                            final className = paper['class'] != null 
-                                ? '${paper['class']['name']}-${paper['class']['section']}' 
-                                : 'All Classes';
-                            final uploadedAt = paper['uploadedAt'] != null 
-                                ? paper['uploadedAt'].toString().split('T')[0] 
-                                : 'Unknown Date';
+                            ],
+                          )
+                        : ListView.builder(
+                            padding: const EdgeInsets.all(16),
+                            itemCount: _papers.length,
+                            itemBuilder: (context, index) {
+                              final paper = _papers[index];
+                              final title = paper['title'] ?? 'Untitled Paper';
+                              final examName = paper['exam']?['name'];
+                              final subject = paper['subject']?['name'] ?? 'All Subjects';
+                              final className = paper['class'] != null 
+                                  ? '${paper['class']['name']}-${paper['class']['section']}' 
+                                  : 'All Classes';
+                              final fileUrl = paper['fileUrl'];
+                              final answerKeyUrl = paper['answerKeyUrl'];
+                              final answerKey = paper['answerKey'];
 
-                            return Container(
-                              margin: const EdgeInsets.only(bottom: 16),
-                              padding: const EdgeInsets.all(20),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(20),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.04),
-                                    blurRadius: 10,
-                                    offset: const Offset(0, 4),
-                                  ),
-                                ],
-                                border: Border.all(color: const Color(0xFFE2E8F0)),
-                              ),
-                              child: Row(
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.all(16),
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFFEEF2FF),
-                                      borderRadius: BorderRadius.circular(16),
-                                    ),
-                                    child: const Icon(
-                                      Icons.picture_as_pdf,
-                                      color: Color(0xFF6366F1),
-                                      size: 32,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 16),
-                                  Expanded(
-                                    child: Column(
+                              return Container(
+                                margin: const EdgeInsets.only(bottom: 16),
+                                padding: const EdgeInsets.all(16),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(20),
+                                  boxShadow: [
+                                    BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4)),
+                                  ],
+                                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
-                                        Text(
-                                          title,
-                                          style: GoogleFonts.outfit(
-                                            color: const Color(0xFF1E293B),
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.bold,
+                                        Container(
+                                          padding: const EdgeInsets.all(14),
+                                          decoration: BoxDecoration(
+                                            color: const Color(0xFFEEF2FF),
+                                            borderRadius: BorderRadius.circular(16),
                                           ),
-                                          maxLines: 2,
-                                          overflow: TextOverflow.ellipsis,
+                                          child: const Icon(Icons.picture_as_pdf, color: Color(0xFF6366F1), size: 28),
                                         ),
-                                        const SizedBox(height: 6),
-                                        Row(
-                                          children: [
-                                            const Icon(Icons.class_outlined, size: 12, color: Color(0xFF64748B)),
-                                            const SizedBox(width: 4),
-                                            Text(
-                                              '$className • $subject',
-                                              style: GoogleFonts.poppins(
-                                                color: const Color(0xFF64748B),
-                                                fontSize: 12,
-                                                fontWeight: FontWeight.w500,
+                                        const SizedBox(width: 16),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                title,
+                                                style: GoogleFonts.outfit(color: const Color(0xFF1E293B), fontSize: 16, fontWeight: FontWeight.bold),
+                                                maxLines: 2,
+                                                overflow: TextOverflow.ellipsis,
                                               ),
-                                            ),
-                                          ],
-                                        ),
-                                        const SizedBox(height: 4),
-                                        Text(
-                                          'Uploaded: $uploadedAt',
-                                          style: GoogleFonts.poppins(
-                                            color: const Color(0xFF475569),
-                                            fontSize: 11,
+                                              const SizedBox(height: 4),
+                                              if (examName != null)
+                                                Text(
+                                                  examName,
+                                                  style: GoogleFonts.poppins(color: const Color(0xFF6366F1), fontSize: 12, fontWeight: FontWeight.w600),
+                                                ),
+                                              const SizedBox(height: 4),
+                                              Row(
+                                                children: [
+                                                  const Icon(Icons.class_outlined, size: 12, color: Color(0xFF64748B)),
+                                                  const SizedBox(width: 4),
+                                                  Expanded(
+                                                    child: Text(
+                                                      '$className â€¢ $subject',
+                                                      style: GoogleFonts.poppins(color: const Color(0xFF64748B), fontSize: 11, fontWeight: FontWeight.w500),
+                                                      maxLines: 1,
+                                                      overflow: TextOverflow.ellipsis,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ],
                                           ),
                                         ),
                                       ],
                                     ),
-                                  ),
-                                  IconButton(
-                                    onPressed: () {
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        const SnackBar(content: Text('Downloading paper...')),
-                                      );
-                                    },
-                                    icon: const Icon(Icons.download_rounded, color: Color(0xFF6366F1)),
-                                    style: IconButton.styleFrom(
-                                      backgroundColor: const Color(0xFFF8FAFC),
+                                    const SizedBox(height: 16),
+                                    Row(
+                                      children: [
+                                        Expanded(
+                                          child: ElevatedButton.icon(
+                                            onPressed: () {
+                                              if (fileUrl != null && fileUrl.isNotEmpty) {
+                                                _launchUrl(fileUrl);
+                                              } else {
+                                                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Paper link is missing.')));
+                                              }
+                                            },
+                                            icon: const Icon(Icons.download_rounded, size: 16, color: Colors.white),
+                                            label: const Text('View Paper', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor: const Color(0xFF6366F1),
+                                              foregroundColor: Colors.white,
+                                              elevation: 0,
+                                              padding: const EdgeInsets.symmetric(vertical: 12),
+                                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                            ),
+                                          ),
+                                        ),
+                                        if (answerKeyUrl != null && answerKeyUrl.isNotEmpty) ...[
+                                          const SizedBox(width: 12),
+                                          Expanded(
+                                            child: ElevatedButton.icon(
+                                              onPressed: () => _launchUrl(answerKeyUrl),
+                                              icon: const Icon(Icons.key, size: 16, color: Color(0xFF10B981)),
+                                              label: const Text('Key PDF', style: TextStyle(color: Color(0xFF10B981), fontWeight: FontWeight.bold, fontSize: 13)),
+                                              style: ElevatedButton.styleFrom(
+                                                backgroundColor: const Color(0xFF10B981).withOpacity(0.1),
+                                                elevation: 0,
+                                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                              ),
+                                            ),
+                                          ),
+                                        ] else if (answerKey != null && answerKey.isNotEmpty) ...[
+                                          const SizedBox(width: 12),
+                                          Expanded(
+                                            child: ElevatedButton.icon(
+                                              onPressed: () => _showAnswerKeyDialog(title, answerKey),
+                                              icon: const Icon(Icons.key, size: 16, color: Color(0xFF10B981)),
+                                              label: const Text('View Key', style: TextStyle(color: Color(0xFF10B981), fontWeight: FontWeight.bold, fontSize: 13)),
+                                              style: ElevatedButton.styleFrom(
+                                                backgroundColor: const Color(0xFF10B981).withOpacity(0.1),
+                                                elevation: 0,
+                                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ],
                                     ),
-                                  )
-                                ],
-                              ),
-                            );
-                          },
-                        ),
-                ),
+                                  ],
+                                ),
+                              );
+                            },
+                          ),
+                  ),
+      ),
     );
   }
 }
-
-

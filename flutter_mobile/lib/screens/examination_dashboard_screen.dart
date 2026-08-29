@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
+import '../widgets/custom_network_image.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'exams_screen.dart';
 import 'marks_upload_screen.dart';
@@ -218,7 +219,7 @@ class _ExaminationDashboardScreenState extends State<ExaminationDashboardScreen>
                   borderRadius: BorderRadius.circular(12),
                 ),
                 alignment: Alignment.center,
-                child: Image.network(
+                child: CustomNetworkImage(
                   imageUrl,
                   width: 28,
                   height: 28,
@@ -390,6 +391,7 @@ class _SendSmsBottomSheetState extends State<_SendSmsBottomSheet> {
     );
   }
 }
+
 
 
 
