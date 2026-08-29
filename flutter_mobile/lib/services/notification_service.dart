@@ -145,7 +145,10 @@ class NotificationService {
     try {
       final res = await ApiService.getNotifications();
       if (res['success'] == true) {
-        final List<dynamic> data = res['data'] ?? [];
+        final dynamic payload = res['data'];
+        final List<dynamic> data = (payload is Map && payload.containsKey('notifications'))
+            ? (payload['notifications'] ?? [])
+            : (payload is List ? payload : []);
 
         // Take the 5 most recent unread notifications
         final unread = data
@@ -181,21 +184,13 @@ class NotificationService {
   Future<void> _replayCachedNotifications() async {
     final cached = await _loadFromCache();
     if (cached.isEmpty) {
-      // No cache → show a single offline reminder banner
-      await _showHeroBanner(
-        '📵 Offline Mode — JY School',
-        'You are offline. Showing your last saved notifications.',
-        null,
-      );
+      // No cache available, just return silently instead of showing an annoying fake notification
       return;
     }
 
-    debugPrint('Replaying ${cached.length} cached notifications (offline)');
-    for (int i = 0; i < cached.length && i < 5; i++) {
-      final n = cached[i];
-      await Future.delayed(Duration(milliseconds: i * 1000));
-      await _showHeroBanner(n['title'], n['body'], n['route']);
-    }
+    // Replaying cached notifications as system push notifications is annoying UX.
+    // The cache will just be read by the Notifications Screen UI.
+    debugPrint('Offline/Error: Cached notifications are ready for UI.');
   }
 
   // ─────────────────────────────────────────────────────────────

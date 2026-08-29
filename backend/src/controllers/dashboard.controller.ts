@@ -189,8 +189,11 @@ export const getTeacherDashboard = async (req: AuthRequest, res: Response, next:
 
     const classIds = Array.from(new Set(assignedClasses.map(ac => ac.classId)));
 
-    const totalStudents = await prisma.student.count();
-
+    const totalStudents = await prisma.student.count({
+      where: {
+        classId: { in: classIds }
+      }
+    });
     // Today's Attendance summary for assigned classes
     const today = new Date();
     today.setHours(0, 0, 0, 0);

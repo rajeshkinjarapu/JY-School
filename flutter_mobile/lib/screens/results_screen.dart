@@ -158,15 +158,15 @@ class _ResultsScreenState extends State<ResultsScreen> {
       ),
       body: _isLoadingDropdowns 
           ? const Center(child: CircularProgressIndicator(color: Color(0xFF6366F1))) 
-          : Column(
-              children: [
-                _buildFiltersPanel(),
-                
-                if (_selectedExamId != null && _selectedClassId != null && _selectedStudentId != null)
-                  Expanded(
-                    child: Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(24.0),
+          : SingleChildScrollView(
+              child: Column(
+                children: [
+                  _buildFiltersPanel(),
+                  
+                  if (_selectedExamId != null && _selectedClassId != null && _selectedStudentId != null)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
+                      child: Center(
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
@@ -212,8 +212,8 @@ class _ResultsScreenState extends State<ResultsScreen> {
                         ),
                       ),
                     ),
-                  ),
-              ],
+                ],
+              ),
             ),
     );
   }

@@ -1,4 +1,4 @@
-﻿import 'dart:convert';
+import 'dart:convert';
 import '../widgets/custom_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -471,7 +471,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    '${_getGreeting()} Ã°Å¸â€˜â€¹',
+                    '${_getGreeting()} 👋',
                     style: GoogleFonts.poppins(color: const Color(0xFFD8B4FE), fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 1),
                   ),
                 ],
@@ -483,7 +483,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
               const SizedBox(height: 4),
               Text(
-                'STUDENT Ã¢â‚¬Â¢ JY School',
+                'STUDENT • JY School',
                 style: GoogleFonts.poppins(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.w500),
               ),
               const SizedBox(height: 24),
@@ -615,7 +615,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           _buildPremiumCard(
             title: 'Fees',
             subtitle: 'Due Amount',
-            mainValue: 'â‚¹${_feeDues.toInt()}',
+            mainValue: '₹${_feeDues.toInt()}',
             mainValueLabel: 'Due',
             icon: Icons.account_balance_wallet_rounded,
             color: const Color(0xFF10B981),
@@ -623,7 +623,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             bottomWidget: Container(
               padding: const EdgeInsets.symmetric(vertical: 8),
               decoration: BoxDecoration(color: const Color(0xFF10B981).withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
-              child: Center(child: Text('View Details Ã¢â€ â€™', style: GoogleFonts.poppins(color: const Color(0xFF059669), fontSize: 12, fontWeight: FontWeight.bold))),
+              child: Center(child: Text('View Details →', style: GoogleFonts.poppins(color: const Color(0xFF059669), fontSize: 12, fontWeight: FontWeight.bold))),
             ),
             onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const FeesScreen())),
           ),
@@ -638,7 +638,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             bottomWidget: Container(
               padding: const EdgeInsets.symmetric(vertical: 8),
               decoration: BoxDecoration(color: const Color(0xFF8B5CF6).withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
-              child: Center(child: Text('View Homework Ã¢â€ â€™', style: GoogleFonts.poppins(color: const Color(0xFF6D28D9), fontSize: 12, fontWeight: FontWeight.bold))),
+              child: Center(child: Text('View Homework →', style: GoogleFonts.poppins(color: const Color(0xFF6D28D9), fontSize: 12, fontWeight: FontWeight.bold))),
             ),
             onTap: () {},
           ),
@@ -653,7 +653,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             bottomWidget: Container(
               padding: const EdgeInsets.symmetric(vertical: 8),
               decoration: BoxDecoration(color: const Color(0xFFF59E0B).withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
-              child: Center(child: Text('View Timetable Ã¢â€ â€™', style: GoogleFonts.poppins(color: const Color(0xFFD97706), fontSize: 12, fontWeight: FontWeight.bold))),
+              child: Center(child: Text('View Timetable →', style: GoogleFonts.poppins(color: const Color(0xFFD97706), fontSize: 12, fontWeight: FontWeight.bold))),
             ),
             onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const ExamsScreen())),
           ),
@@ -668,7 +668,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             bottomWidget: Container(
               padding: const EdgeInsets.symmetric(vertical: 8),
               decoration: BoxDecoration(color: const Color(0xFF06B6D4).withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
-              child: Center(child: Text('View Today\'s Schedule Ã¢â€ â€™', style: GoogleFonts.poppins(color: const Color(0xFF0891B2), fontSize: 12, fontWeight: FontWeight.bold))),
+              child: Center(child: Text('View Today\'s Schedule →', style: GoogleFonts.poppins(color: const Color(0xFF0891B2), fontSize: 12, fontWeight: FontWeight.bold))),
             ),
             onTap: () {},
           ),
@@ -683,7 +683,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             bottomWidget: Container(
               padding: const EdgeInsets.symmetric(vertical: 8),
               decoration: BoxDecoration(color: const Color(0xFFF43F5E).withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
-              child: Center(child: Text('View Results Ã¢â€ â€™', style: GoogleFonts.poppins(color: const Color(0xFFE11D48), fontSize: 12, fontWeight: FontWeight.bold))),
+              child: Center(child: Text('View Results →', style: GoogleFonts.poppins(color: const Color(0xFFE11D48), fontSize: 12, fontWeight: FontWeight.bold))),
             ),
             onTap: () {},
           ),
@@ -913,7 +913,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
                 const SizedBox(height: 3),
                 Text(
-                  '${role.replaceAll('_', ' ')} â€¢ JY School',
+                  '${role.replaceAll('_', ' ')} • JY School',
                   style: GoogleFonts.poppins(
                     color: Colors.white70,
                     fontSize: 12,
@@ -1021,7 +1021,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     children: [
                       const Icon(Icons.account_balance_wallet_rounded, color: Color(0xFFF87171), size: 24),
                       Text(
-                        'â‚¹${_feeDues.toStringAsFixed(0)}',
+                        '₹${_feeDues.toStringAsFixed(0)}',
                         style: GoogleFonts.outfit(
                           color: const Color(0xFFF87171),
                           fontSize: 18,
@@ -1080,7 +1080,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    'Enrolled Students',
+                    'My Students',
                     style: GoogleFonts.poppins(color: const Color(0xFF64748B), fontSize: 12),
                   ),
                   Text(
@@ -1175,7 +1175,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _buildTeacherStatChip(Icons.groups_rounded,      '$_teacherTotalStudents', 'Students',    const Color(0xFF34D399)),
+          _buildTeacherStatChip(Icons.groups_rounded,      '$_teacherTotalStudents', 'My Students',    const Color(0xFF34D399)),
           _buildTeacherStatDivider(),
           _buildTeacherStatChip(Icons.check_circle_rounded, '$_teacherTodayPresent',  'Present Today', const Color(0xFF60A5FA)),
           _buildTeacherStatDivider(),
@@ -1304,11 +1304,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 child: Text('\u{1F4E2} NEW', style: GoogleFonts.poppins(color: Colors.white, fontSize: 9, fontWeight: FontWeight.w800)),
                           ),
                           const SizedBox(width: 8),
-                          Text(
-                            title,
-                            style: GoogleFonts.outfit(color: const Color(0xFF92400E), fontSize: 14, fontWeight: FontWeight.w800),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
+                          Expanded(
+                            child: Text(
+                              title,
+                              style: GoogleFonts.outfit(color: const Color(0xFF92400E), fontSize: 14, fontWeight: FontWeight.w800),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
                         ],
                       ),
@@ -1348,25 +1350,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
 
   Widget _buildAdminCombinedGrid() {
-    double screenHeight = MediaQuery.of(context).size.height;
-    double screenWidth = MediaQuery.of(context).size.width;
-    // Calculate aspect ratio so the 8 boxes (4 rows) fit perfectly on the screen
-    // Estimated fixed height: AppBar(70) + HeaderCard(160) + BottomNav(60) + Titles/Padding(100) = 390
-    double availableHeight = screenHeight - 320; 
-    if (availableHeight < 400) availableHeight = 400; // increased minimum fallback
-    
-    double itemWidth = (screenWidth - 46) / 2; // 2 columns, padding 16*2, gap 14
-    double itemHeight = (availableHeight - (14 * 3)) / 4; // 4 rows, 3 gaps of 14
-    // Increased aspect ratio to reduce box height so all 8 fit seamlessly
-    double dynamicAspectRatio = (itemWidth / itemHeight) + 0.15; 
-
     return GridView.count(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       crossAxisCount: 2,
-                      crossAxisSpacing: 14,
+      crossAxisSpacing: 14,
       mainAxisSpacing: 14,
-      childAspectRatio: dynamicAspectRatio, // Dynamically fitted
+      childAspectRatio: 1.15, // Fixed comfortable aspect ratio to avoid overflow
       children: [
         _buildMenuPremiumCard(
           subtitle: 'TOTAL STUDENTS',
@@ -1400,7 +1390,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ),
         _buildMenuPremiumCard(
           subtitle: 'TOTAL REVENUE',
-          title: 'â‚¹${_formatIndianCurrency(_adminFeeCollected)}',
+          title: '₹${_formatIndianCurrency(_adminFeeCollected)}',
           bottomText: 'Total Income',
           icon: Icons.account_balance_wallet_rounded,
           gradientColors: [const Color(0xFFE91E63), const Color(0xFF880E4F)],
@@ -1504,16 +1494,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ),
                       const SizedBox(width: 10),
                       Expanded(
-                        child: Text(
-                          subtitle,
-                          style: GoogleFonts.poppins(
-                            color: Colors.white.withOpacity(0.95),
-                            fontSize: 10,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 0.5,
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            subtitle,
+                            style: GoogleFonts.poppins(
+                              color: Colors.white.withOpacity(0.95),
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 0.5,
+                            ),
                           ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                     ],
@@ -1539,11 +1531,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       color: accentColor.withOpacity(0.8),
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: Text(
-                      bottomText,
-                      style: GoogleFonts.poppins(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w600),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        bottomText,
+                        style: GoogleFonts.poppins(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w600),
+                      ),
                     ),
                   ),
                 ],
@@ -1640,7 +1634,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         childAspectRatio: ar.clamp(0.75, 1.3),
         children: [
           _buildImageCard(imagePath: 'assets/images/admin_icons/attendance_mark.jpg',title: 'Mark Attendance',borderColor: const Color(0xFF10B981), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TeacherAttendanceScreen()))),
-          _buildImageCard(imagePath: 'assets/images/admin_icons/classes.jpg',    title: 'Total Students', borderColor: const Color(0xFF8B5CF6), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const StudentsScreen()))),
+          _buildImageCard(imagePath: 'assets/images/admin_icons/classes.jpg',    title: 'My Students', borderColor: const Color(0xFF8B5CF6), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const StudentsScreen()))),
           _buildImageCard(imagePath: 'assets/images/admin_icons/exams.jpg',      title: 'Answer Key',    borderColor: const Color(0xFFF59E0B), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AnswerKeysScreen()))),
           _buildImageCard(imagePath: 'assets/images/admin_icons/teacher.jpg',    title: 'Timetable',     borderColor: const Color(0xFF6366F1), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TimetableScreen()))),
           _buildImageCard(imagePath: 'assets/images/admin_icons/reports.jpg',    title: 'Marks Entry',   borderColor: const Color(0xFFF97316), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MarksUploadScreen()))),
@@ -2216,7 +2210,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ),
                     ),
                     Text(
-                      'â‚¹${amount.toInt()}',
+                      '₹${amount.toInt()}',
                       style: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.bold, color: const Color(0xFF10B981)),
                     ),
                   ],

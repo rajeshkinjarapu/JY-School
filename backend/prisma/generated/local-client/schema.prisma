@@ -1,0 +1,21 @@
+// schema_local.prisma
+generator client {
+  provider = "prisma-client-js"
+  output   = "./generated/local-client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("LOCAL_DATABASE_URL")
+}
+
+model QuestionPaper {
+  id           String   @id @default(uuid())
+  classId      String
+  subject      String
+  title        String
+  examType     String
+  fileUrl      String // URL to access the file from Nginx
+  dateUploaded DateTime @default(now())
+  uploadedBy   String
+}

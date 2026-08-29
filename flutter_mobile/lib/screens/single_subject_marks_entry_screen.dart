@@ -463,26 +463,56 @@ class _SingleSubjectMarksEntryScreenState extends State<SingleSubjectMarksEntryS
                 return Wrap(
                   spacing: 16,
                   runSpacing: 16,
-                  children: _localSubjects.where((s) => s['id'] != 'ALL').map((sub) {
-                    final subId = sub['id'].toString();
-                    final subName = sub['name']?.toString() ?? 'Unknown';
-                    return SizedBox(
+                  children: [
+                    ..._localSubjects.where((s) => s['id'] != 'ALL').map((sub) {
+                      final subId = sub['id'].toString();
+                      final subName = sub['name']?.toString() ?? 'Unknown';
+                      return SizedBox(
+                        width: itemWidth,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              subName,
+                              style: GoogleFonts.poppins(color: const Color(0xFF64748B), fontSize: 12, fontWeight: FontWeight.w500),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 6),
+                            _buildMarksInput(sid, subId),
+                          ],
+                        ),
+                      );
+                    }).toList(),
+                    // Total Widget
+                    SizedBox(
                       width: itemWidth,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            subName,
-                            style: GoogleFonts.poppins(color: const Color(0xFF64748B), fontSize: 12, fontWeight: FontWeight.w500),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
+                            'Total',
+                            style: GoogleFonts.poppins(color: const Color(0xFF64748B), fontSize: 12, fontWeight: FontWeight.bold),
                           ),
                           const SizedBox(height: 6),
-                          _buildMarksInput(sid, subId),
+                          Container(
+                            width: 130,
+                            height: 48,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF1F5F9),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: const Color(0xFFE2E8F0)),
+                            ),
+                            alignment: Alignment.center,
+                            child: Text(
+                              _calculateTotal(sid).toStringAsFixed(1).replaceAll(RegExp(r'\.0$'), ''),
+                              style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 18, color: const Color(0xFF6366F1)),
+                            ),
+                          ),
                         ],
                       ),
-                    );
-                  }).toList(),
+                    ),
+                  ],
                 );
               }
             ),
@@ -490,6 +520,18 @@ class _SingleSubjectMarksEntryScreenState extends State<SingleSubjectMarksEntryS
         ],
       ),
     );
+  }
+  
+  double _calculateTotal(String sid) {
+    double total = 0;
+    for (var sub in _localSubjects.where((s) => s['id'] != 'ALL')) {
+      final key = "${sid}_${sub['id']}";
+      final text = _marksControllers[key]?.text ?? '';
+      if (text.isNotEmpty && text.toUpperCase() != 'AB') {
+        total += double.tryParse(text) ?? 0;
+      }
+    }
+    return total;
   }
   
   Widget _buildMarksInput(String sid, String subId) {

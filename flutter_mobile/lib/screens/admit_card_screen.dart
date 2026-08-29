@@ -1,4 +1,4 @@
-﻿import 'dart:convert';
+import 'dart:convert';
 import '../widgets/custom_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -502,7 +502,7 @@ class _AdmitCardScreenState extends State<AdmitCardScreen> {
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
-                                  '(IIT-JEE/NEET FOUNDATION â€“ OLYMPIADS)',
+                                  '(IIT-JEE/NEET FOUNDATION – OLYMPIADS)',
                                   textAlign: TextAlign.center,
                                   style: TextStyle(
                                     fontSize: 12,
@@ -733,7 +733,7 @@ class _AdmitCardScreenState extends State<AdmitCardScreen> {
                                           child: Row(
                                             crossAxisAlignment: CrossAxisAlignment.start,
                                             children: [
-                                              const Text('â€¢ ', style: TextStyle(fontSize: 12, color: Color(0xFF475569))),
+                                              const Text('• ', style: TextStyle(fontSize: 12, color: Color(0xFF475569))),
                                               Expanded(child: Text(line, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: const Color(0xFF334155), height: 1.5))),
                                             ],
                                           ),

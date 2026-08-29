@@ -308,15 +308,15 @@ class ApiService {
     return _performDelete('/api/fees/payments/$paymentId', 'Failed to delete payment');
   }
 
-  static Future<Map<String, dynamic>> recordPayments(List<dynamic> payments) async {
+  static Future<Map<String, dynamic>> recordPayments(Map<String, dynamic> payload) async {
     try {
       final token = await getToken();
       if (token == null) return {'success': false, 'message': 'No session token'};
 
       final response = await http.post(
-        Uri.parse('$baseUrl/api/fees/payments/bulk'),
+        Uri.parse('$baseUrl/api/fees/payments'),
         headers: _getHeaders(token: token),
-        body: jsonEncode({'payments': payments}),
+        body: jsonEncode(payload),
       );
 
       final dynamic decoded = jsonDecode(response.body);

@@ -368,7 +368,7 @@ class _SingleProgressCardScreenState extends State<SingleProgressCardScreen> {
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            '(IIT-JEE / NEET Foundation Â· Olympiads)',
+                            '(IIT-JEE / NEET Foundation · Olympiads)',
                             textAlign: TextAlign.center,
                             style: GoogleFonts.poppins(fontSize: isMobile ? 10 : 11, fontWeight: FontWeight.w500, color: const Color(0xFF1A4A7A), letterSpacing: 0.5),
                           ),
@@ -388,7 +388,7 @@ class _SingleProgressCardScreenState extends State<SingleProgressCardScreen> {
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            'âœ¦ RESULT CARD âœ¦',
+                            '✦ RESULT CARD ✦',
                             textAlign: TextAlign.center,
                             style: GoogleFonts.outfit(fontSize: isMobile ? 10 : 12, fontWeight: FontWeight.bold, color: const Color(0xFFD4A017), letterSpacing: 2),
                           ),
@@ -406,15 +406,15 @@ class _SingleProgressCardScreenState extends State<SingleProgressCardScreen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Text('âœ¦', style: TextStyle(color: Color(0xFFD4A017), fontSize: 12)),
+                    const Text('✦', style: TextStyle(color: Color(0xFFD4A017), fontSize: 12)),
                     const SizedBox(width: 8),
                     Container(width: 40, height: 1.5, color: const Color(0xFFF39C12)),
                     const SizedBox(width: 8),
-                    const Text('â˜…', style: TextStyle(color: Color(0xFFD4A017), fontSize: 14)),
+                    const Text('★', style: TextStyle(color: Color(0xFFD4A017), fontSize: 14)),
                     const SizedBox(width: 8),
                     Container(width: 40, height: 1.5, color: const Color(0xFFF39C12)),
                     const SizedBox(width: 8),
-                    const Text('âœ¦', style: TextStyle(color: Color(0xFFD4A017), fontSize: 12)),
+                    const Text('✦', style: TextStyle(color: Color(0xFFD4A017), fontSize: 12)),
                   ],
                 ),
               ),
@@ -666,7 +666,7 @@ class _SingleProgressCardScreenState extends State<SingleProgressCardScreen> {
                                 return Container(width: isMobile ? 70 : 90, height: 1.5, color: const Color(0xFFC8D6E4), margin: const EdgeInsets.only(bottom: 6, top: 40));
                               }
                             }),
-                            Text('âœ Teacher Signature', style: GoogleFonts.poppins(fontSize: isMobile ? 9 : 10, fontWeight: FontWeight.w600, color: const Color(0xFF1A3A5A))),
+                            Text('✍ Teacher Signature', style: GoogleFonts.poppins(fontSize: isMobile ? 9 : 10, fontWeight: FontWeight.w600, color: const Color(0xFF1A3A5A))),
                           ],
                         ),
                         SizedBox(width: isMobile ? 12 : 24),
@@ -688,7 +688,7 @@ class _SingleProgressCardScreenState extends State<SingleProgressCardScreen> {
                                 return Container(width: isMobile ? 70 : 90, height: 1.5, color: const Color(0xFFC8D6E4), margin: const EdgeInsets.only(bottom: 6, top: 40));
                               }
                             }),
-                            Text('âœ Principal Signature', style: GoogleFonts.poppins(fontSize: isMobile ? 9 : 10, fontWeight: FontWeight.w600, color: const Color(0xFF1A3A5A))),
+                            Text('✍ Principal Signature', style: GoogleFonts.poppins(fontSize: isMobile ? 9 : 10, fontWeight: FontWeight.w600, color: const Color(0xFF1A3A5A))),
                           ],
                         ),
                       ],
@@ -706,7 +706,7 @@ class _SingleProgressCardScreenState extends State<SingleProgressCardScreen> {
                   borderRadius: BorderRadius.only(bottomLeft: Radius.circular(10), bottomRight: Radius.circular(10)),
                 ),
                 child: Text(
-                  'â˜… System generated result card for ' + widget.examName + ' â˜…',
+                  '★ System generated result card for ' + widget.examName + ' ★',
                   textAlign: TextAlign.center,
                   style: GoogleFonts.poppins(fontSize: 9, fontWeight: FontWeight.w500, color: const Color(0xFFAABACA), letterSpacing: 0.5),
                 ),

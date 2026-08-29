@@ -91,19 +91,23 @@ class _RecordFeePaymentScreenState extends State<RecordFeePaymentScreen> {
     setState(() => _isSubmitting = true);
 
     final studentId = widget.student['id'];
-    final payments = selected.map((st) {
-      final amt = double.tryParse(_amountControllers[st['id']]?.text ?? '0') ?? 0;
-      return {
-        'studentId': studentId,
-        'feeStructureId': st['id'],
-        'amountPaid': amt,
-        'method': _method,
-        'paymentDate': _paymentDate.toIso8601String().split('T')[0],
-        'remarks': _remarksCtrl.text,
-      };
-    }).toList();
+    
+    // Construct the payload for the backend
+    final Map<String, dynamic> payload = {
+      'studentId': studentId,
+      'method': _method,
+      'paymentDate': _paymentDate.toIso8601String().split('T')[0],
+      'remarks': _remarksCtrl.text,
+      'payments': selected.map((st) {
+        final amt = double.tryParse(_amountControllers[st['id']]?.text ?? '0') ?? 0;
+        return {
+          'feeStructureId': st['id'],
+          'amountPaid': amt,
+        };
+      }).toList(),
+    };
 
-    final result = await ApiService.recordPayments(payments);
+    final result = await ApiService.recordPayments(payload);
     if (mounted) {
       setState(() => _isSubmitting = false);
       if (result['success']) {
