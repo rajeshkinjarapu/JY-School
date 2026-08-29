@@ -8,6 +8,20 @@
 
 - **Exact Terminal Commands with Path (Strict Order):** Whenever providing a terminal command for the user to run, always include the exact cd command to navigate to the required folder path first, so the user can copy and paste the entire block seamlessly.
 
+# Custom Rules
+
+- **Flutter App Design Protocol (Deep Check Required):** When designing any page or module (like Students, Teachers, etc.) in the Flutter app, ALWAYS first check the web app's (`frontend/src/pages/`) design deeply, page by page. Confirm exactly which UI options exist, what sub-pages they navigate to, what missing pages need to be created in Flutter, and what real API data is being loaded. After verifying the web app's full flow, design the Flutter screens to match the exact functionality (fetching real data, no dummy data) but with a significantly better, more modern, and premium mobile design. This deep check is an explicit order.
+
+- **No Direct Terminal Execution (Strict Order):** Never execute terminal commands automatically (e.g., using `run_command`). If a terminal command needs to be executed, always provide the exact command text along with the required folder path/working directory to the user, so they can copy and run it themselves.
+
+- **Premium UI/UX Design Quality (Strict Order):** Act as a Professional Full-Stack School ERP Software Developer, UI/UX Designer, and Product Architect. Every webpage or mobile screen designed must have a modern, unique, premium, and professional School ERP software look & feel. Ensure clean, elegant, highly polished, and visually impressive design (not just generic templates). UI must feature professional visual hierarchy, balanced spacing, modern typography, attractive cards, intuitive navigation, consistent components, responsive layout, and a smooth user experience with subtle animations/hover effects. The goal is to always leave the impression: "This is a professional, modern, premium School ERP product". Enhance UI/UX quality to the maximum level without breaking existing functionality.
+
+- **Exact Terminal Commands with Path (Strict Order):** Whenever providing a terminal command for the user to run, always include the exact cd command to navigate to the required folder path first, so the user can copy and paste the entire block seamlessly.
+
 - **Automatic Project State Sync (Strict Order):** At the end of every task or conversation, you MUST automatically update `PROJECT_STATE.md` with a summary of the latest conversation, decisions made, bugs fixed, and work accomplished. Do this autonomously without waiting for the user to ask. This ensures the chat history and project context is saved for the next agent session.
 
 - **Flutter Safe Area Padding (Strict Order):** Whenever designing a new screen in the Flutter app that has a bottom button, bottom sheet, or bottom navigation bar, ALWAYS wrap the bottom-most widget (like a sticky button at the bottom) in a `SafeArea(bottom: true, child: ...)` or add sufficient bottom padding using `MediaQuery.of(context).padding.bottom`. This is to prevent the UI elements from overlapping with the Android System Navigation Bar.
+- **Project Architecture & Hosting Context (Strict Memory):** NEVER ask the user where the backend, frontend, or databases are hosted. ALWAYS remember and refer to this configuration:
+  1. **Backend (Node.js API):** Runs entirely on the VPS at `http://66.116.252.191:19998`.
+  2. **Databases:** The primary DB is Supabase (Postgres). The secondary DB (for heavy items like Question Papers/Answer Keys) is local Postgres on the VPS (`jy_school_local`).
+  4. **Deployments:** Because the Backend runs on the VPS, any backend code changes MUST be manually pulled and rebuilt on the VPS. Always provide the exact SSH login command (`ssh root@66.116.252.191`) for the user to copy so they only have to type the password, followed by the deployment commands (`cd /root/JY-School/backend`, `git pull origin main`, `npx prisma generate`, `npx prisma generate --schema prisma/schema_local.prisma`, `npm run build`, `pm2 restart backend`).

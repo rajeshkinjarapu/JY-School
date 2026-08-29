@@ -66,3 +66,10 @@
   - Created a secondary Prisma schema (`schema_local.prisma`) and updated `prisma.ts` to instantiate a `prismaLocal` client for routing specific queries to the VPS database.
   - Refactored `questionPapers.controller.ts` to read/write from `prismaLocal` while dynamically fetching relational data (Class, Subject, Exam) from the main Supabase `prisma` client.
 - **Nginx & File Storage:** Configured Nginx to serve static uploaded files from `/var/www/uploads/` on port `8081`.
+## Environment & Hosting Details
+- **Frontend (Web App):** Built with React/Vite, located in the `frontend/` directory.
+- **Frontend (Mobile App):** Built with Flutter, located in the `flutter_mobile/` directory.
+- **Backend (API):** Built with Node.js/Express, located in the `backend/` directory. **Currently hosted on the VPS at `http://66.116.252.191:19998`.**
+- **Databases:**
+  - Main DB: Supabase (PostgreSQL) handling all primary ERP data.
+  - Local DB: Hosted on the VPS at `66.116.252.191` (`jy_school_local`) specifically for Question Bank/Question Papers and heavy PDF handling.
