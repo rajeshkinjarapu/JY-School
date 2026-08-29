@@ -12,10 +12,13 @@ datasource db {
 model QuestionPaper {
   id           String   @id @default(uuid())
   classId      String
-  subject      String
+  subjectId    String?
+  examId       String?
+  section      String?
   title        String
-  examType     String
-  fileUrl      String   // URL to access the file from Nginx
-  dateUploaded DateTime @default(now())
+  fileUrl      String
+  answerKey    String?
+  answerKeyUrl String?
+  uploadedAt   DateTime @default(now())
   uploadedBy   String
 }
