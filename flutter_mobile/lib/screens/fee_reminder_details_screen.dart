@@ -1,4 +1,4 @@
-﻿import 'dart:io';
+import 'dart:io';
 import '../widgets/custom_network_image.dart';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
@@ -173,9 +173,9 @@ class _FeeReminderDetailsScreenState extends State<FeeReminderDetailsScreen> {
     final className = '${classInfo['name'] ?? ''} ${classInfo['section'] ?? ''}'.trim();
     final photoUrl = user['photoUrl'];
     
-    final formattedTotal = NumberFormat.currency(symbol: 'â‚¹', decimalDigits: 0).format(_totalAmount);
-    final formattedPaid = NumberFormat.currency(symbol: 'â‚¹', decimalDigits: 0).format(_totalPaid);
-    final formattedPending = NumberFormat.currency(symbol: 'â‚¹', decimalDigits: 0).format(_totalPending);
+    final formattedTotal = NumberFormat.currency(symbol: '₹', decimalDigits: 0).format(_totalAmount);
+    final formattedPaid = NumberFormat.currency(symbol: '₹', decimalDigits: 0).format(_totalPaid);
+    final formattedPending = NumberFormat.currency(symbol: '₹', decimalDigits: 0).format(_totalPending);
 
     return Container(
       decoration: BoxDecoration(

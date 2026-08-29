@@ -1,4 +1,4 @@
-name: jy_school_flutter
+﻿name: jy_school_flutter
 description: A new Flutter mobile application for JY School ERP.
 publish_to: 'none'
 
@@ -45,7 +45,7 @@ dev_dependencies:
   flutter_launcher_icons: ^0.13.1
 
 flutter_launcher_icons:
-  android: "launcher_icon"
+  android: true
   ios: true
   image_path: "assets/images/logo.png"
 
@@ -64,3 +64,4 @@ flutter:
     - assets/illustrations/exams.jpg
     - assets/illustrations/fees.jpg
     - assets/illustrations/reports.jpg
+

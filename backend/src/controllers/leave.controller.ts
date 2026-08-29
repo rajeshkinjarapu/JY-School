@@ -166,3 +166,46 @@ export const approveRejectLeave = async (req: AuthRequest, res: Response) => {
     res.status(500).json({ success: false, message: 'Failed to update leave status' });
   }
 };
+export const updateLeave = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { type, startDate, endDate, reason, status } = req.body;
+    const adminId = req.user?.id;
+    if (!adminId || (req.user?.role !== 'SUPER_ADMIN' && req.user?.role !== 'ADMIN')) {
+      return res.status(403).json({ success: false, message: 'Forbidden' });
+    }
+    const leave = await prisma.leaveRequest.findUnique({ where: { id } });
+    if (!leave) return res.status(404).json({ success: false, message: 'Leave not found' });
+    const updatedLeave = await prisma.leaveRequest.update({
+      where: { id },
+      data: {
+        type: type || leave.type,
+        startDate: startDate ? new Date(startDate) : leave.startDate,
+        endDate: endDate ? new Date(endDate) : leave.endDate,
+        reason: reason || leave.reason,
+        status: status || leave.status,
+      },
+    });
+    res.status(200).json({ success: true, data: updatedLeave, message: 'Leave updated successfully' });
+  } catch (error) {
+    console.error('Error updating leave:', error);
+    res.status(500).json({ success: false, message: 'Failed to update leave' });
+  }
+};
+
+export const deleteLeave = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const adminId = req.user?.id;
+    if (!adminId || (req.user?.role !== 'SUPER_ADMIN' && req.user?.role !== 'ADMIN')) {
+      return res.status(403).json({ success: false, message: 'Forbidden' });
+    }
+    const leave = await prisma.leaveRequest.findUnique({ where: { id } });
+    if (!leave) return res.status(404).json({ success: false, message: 'Leave not found' });
+    await prisma.leaveRequest.delete({ where: { id } });
+    res.status(200).json({ success: true, message: 'Leave deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting leave:', error);
+    res.status(500).json({ success: false, message: 'Failed to delete leave' });
+  }
+};
