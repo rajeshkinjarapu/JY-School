@@ -202,6 +202,7 @@ export const getResults = async (req: AuthRequest, res: Response, next: NextFunc
         name: mark.student.user.name,
         photo: includePhoto ? mark.student.user.photoUrl : null,
         mobile: mark.student.fatherMobile || mark.student.motherMobile || mark.student.user.phone || '-',
+        fatherName: mark.student.fatherName || '-',
         rollNo: mark.student.rollNo,
         className: mark.student.class ? `${mark.student.class.name} - ${mark.student.class.section}` : '',
         marks: [],

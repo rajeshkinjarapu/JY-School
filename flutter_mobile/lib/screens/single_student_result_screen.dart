@@ -1,4 +1,4 @@
-﻿import 'dart:ui' as ui;
+import 'dart:ui' as ui;
 import '../widgets/custom_network_image.dart';
 import 'dart:io';
 import 'dart:typed_data';
@@ -47,7 +47,7 @@ class _SingleStudentResultScreenState extends State<SingleStudentResultScreen> {
 
   Future<void> _fetchResult() async {
     try {
-      final res = await ApiService.getExamResults(widget.examId, classId: widget.classId);
+      final res = await ApiService.getExamResults(widget.examId, classId: widget.classId, includePhoto: true);
       if (res['success']) {
         final List<dynamic> allResults = res['data'] ?? [];
         final studentResult = allResults.firstWhere((r) => r['studentId']?.toString() == widget.studentId, orElse: () => null);
@@ -131,11 +131,11 @@ class _SingleStudentResultScreenState extends State<SingleStudentResultScreen> {
       children: [
         Expanded(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
             child: RepaintBoundary(
               key: _repaintKey,
               child: Container(
-                color: const Color(0xFFF8FAFC),
+                color: const Color(0xFFF1F5F9), // Match screen background
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
@@ -237,8 +237,8 @@ class _SingleStudentResultScreenState extends State<SingleStudentResultScreen> {
   Widget _buildStudentInfoCard() {
     final rollNo = _resultData!['rollNo']?.toString() ?? 'N/A';
     final name = _resultData!['name']?.toString() ?? 'Unknown';
-    final fatherName = widget.studentData?['fatherName']?.toString() ?? widget.studentData?['father_name']?.toString() ?? '-';
-    final className = widget.studentData?['className']?.toString() ?? widget.studentData?['class_name']?.toString() ?? widget.studentData?['class']?.toString() ?? '-';
+    final fatherName = _resultData!['fatherName']?.toString() ?? widget.studentData?['fatherName']?.toString() ?? widget.studentData?['father_name']?.toString() ?? '-';
+    final className = _resultData!['className']?.toString() ?? widget.studentData?['className']?.toString() ?? widget.studentData?['class_name']?.toString() ?? widget.studentData?['class']?.toString() ?? '-';
     
     final totalMarksObtained = _resultData!['total'] ?? 0;
     
@@ -249,6 +249,9 @@ class _SingleStudentResultScreenState extends State<SingleStudentResultScreen> {
     final percentage = _resultData!['percentage'] != null ? (_resultData!['percentage'] as num).toStringAsFixed(1) : '0.0';
     final grade = _resultData!['grade'] ?? '-';
     final photoUrl = _resultData!['photo'] ?? widget.studentData?['photo'];
+
+    // In case the photoUrl from result is an empty string
+    final finalPhoto = (photoUrl == null || photoUrl.toString().isEmpty) ? null : photoUrl;
 
     return Container(
       padding: const EdgeInsets.all(12),
@@ -291,7 +294,7 @@ class _SingleStudentResultScreenState extends State<SingleStudentResultScreen> {
                 ),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(6),
-                  child: _buildStudentImage(photoUrl?.toString()),
+                  child: _buildStudentImage(finalPhoto?.toString()),
                 ),
               ),
             ],
