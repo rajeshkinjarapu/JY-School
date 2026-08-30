@@ -61,8 +61,6 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
 
   useEffect(() => {
     if (!selectedExamId) return;
-    // Fetch admitCardSettings separately — excluded from list API (heavy Base64 images)
-    api.get(`/api/exams/${selectedExamId}`).then((res: any) => {
     Promise.all([
       api.get(`/api/exams/${selectedExamId}`),
       api.get('/api/settings').catch(() => ({ data: {} }))
