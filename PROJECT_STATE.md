@@ -1,119 +1,12 @@
-# Project State: JY-School ERP
+# JY School ERP - Project State
 
-## Recent Changes & Fixes
-- **Record Fee Payment Flow (Mobile App & Backend):**
-  - **Backend Fix**: Fixed a data fetch bug in `fees.controller.ts` where `getStudentFeeStatus` erroneously returned global fee structures *alongside* other individual students' fee structures due to improper `classId` OR logic.
-  - **UI Overhaul**: Redesigned `record_fee_payment_screen.dart` to be highly premium and professional. Replaced the `bottomSheet` with a `SafeArea`-wrapped `bottomNavigationBar` to fix Android system navigation bar overlap.
-  - **Date Picker**: Added a new Payment Date field in the "Record Payment" screen for retroactive entries.
-- **Flutter UI Enhancements & Fixes:**
-  - **Staff Attendance Screen**: Fixed a UI issue in `mark_staff_attendance_screen.dart` where the "Save Attendance" button overlapped with the Android System Navigation Bar by properly implementing `MediaQuery` bottom padding.
-  - Scaled down the Dashboard Grid items to fit exactly 8 boxes on a single screen without scrolling, and removed background images for a cleaner look.
-  - Migrated the "Edit Transaction" Bottom Sheet to a separate standalone screen (`edit_transaction_screen.dart`) to solve Navigation Bar overlap issues and improve UX.
-  - Added a `Date Picker` to the Edit Transaction flow, enabling users to modify the transaction's `paymentDate`.
-  - Applied `SafeArea` to the "Apply Discount" bottom sheet to prevent the "Apply" button from overlapping with the Android System Navigation Bar.
-- **Gate Pass Mobile App Module Overhaul:**
-  - **Issue Gate Pass:** Added a Floating Action Button in `gate_pass_screen.dart` to allow Admins and Teachers to issue gate passes easily.
-  - **Premium View Screen:** Replaced the cramped bottom sheet in the History tab with a dedicated, beautifully designed full-page `GatePassViewScreen` displaying the photo, details, and large QR code.
-  - **QR Scanner Redesign:** Completely rewrote the `_QRScannerTab` using `mobile_scanner` to feature a premium, Paytm-like full-screen layout with a central cutout overlay and scanning animation. The scanner now automatically processes codes, interacts with the backend to update status (IN/OUT), and shows professional dialogs.
-- **Finance Mobile App Module Overhaul:**
-  - **Wallet Dashboard:** Redesigned `finance_screen.dart` from a dull grid to a premium, glassmorphism-inspired "Wallet/Bank" style dashboard featuring beautiful KPI cards and quick-access circular icons. Added new quick-action cards: "Fee Category", "Transactions", and "Fee Details".
-  - **Payment Receipts (New):** Created `fee_receipts_screen.dart`, a dedicated hub that lists all successful payments and generates professional PDF receipts for parents.
-  - **Finance Reports Upgrade:** Upgraded `finance_reports_screen.dart` with a new "Cash-in-Hand Settlement" metric and better chart integrations, bringing the mobile analytics on par with the Web App.
-  - **Transactions Management:** Upgraded the transactions screen (`transactions_screen.dart`) to support Editing and Deleting payments directly from the mobile app via a popup menu.
-  - **Student Fee Details (New):** Developed `student_fee_details_screen.dart` to perfectly mirror the Web App's `StudentFeeDetailsTab`. Features advanced Class & Status filtering, live balances, PDF/CSV export (via `share_plus`), and 1-tap WhatsApp fee reminders.
-- **Leave Apply / My History Tabs:** Fixed the UI contrast issue in the Teacher Mobile App (`leave_dashboard_screen.dart`) by setting `labelColor: Colors.white` for the TabBar.
-- **Gate Pass Class/Section Filtering:** Added `Class` and `Section` Dropdown filters in the Gate Pass issuance screen (`create_gate_pass_screen.dart`).
-- **Fee Reminder Navigation Fix:** Corrected a bug in the Teacher Mobile App (`dashboard_screen.dart`) where the 'Fee Reminder' button mistakenly routed to the 'Collect Fee' screen (`StudentFeeSearchScreen`) instead of the correct `FeeReminderSearchScreen`.
-- **Max Marks Data Integrity (Backend):** 
-  - Discovered a data inconsistency where marks entered via the Mobile App ignored subject-specific max marks (e.g., 20) and defaulted to the global exam max marks (100).
-  - Modified `marks.controller.ts` in the backend to explicitly pre-fetch `ExamPlans` and strictly enforce the database truth for `maxMarks`, preventing the client (Web or Mobile) from manipulating it.
-  - Wrote a batched database cleanup script (`fixMarks.ts`) to repair existing corrupted records (like the Hindi 100 maxMarks issue) without causing memory exhaustion.
-# Project State: JY-School ERP
+## Recent Conversation Summary (Flutter Progress Card UI fixes)
+- **Bug Fixed**: Backend was calculating total percentage incorrectly because `mark.maxMarks` was being wrongly saved as the total exam max marks (e.g. 300) when teachers entered marks. Fixed in `exams.controller.ts` to read the correct `maxMarks` from `exam.subjects` config.
+- **Backend Deployed**: User successfully deployed the percentage calculation fix to the VPS production server.
+- **Flutter UI Fix**: The Progress Card UI was compressing/stretching and not matching the exact A4 size. Modified `single_progress_card_screen.dart` to strictly use a container of `width: 794, height: 1123` with `Spacer` to push the signatures footer precisely to the bottom of the A4 layout. This fixes PDF export and UI view to be perfectly uncompressed.
+- **Location Hardcode**: As requested, changed the location string on the Flutter card to just `'Narasannapeta'`.
+- **Signature Images**: Fixed cross-platform backslash formatting bug in `api_service.dart` where `getImageUrl` was generating incorrect URLs, causing the teacher and principal signatures to show up as blank placeholder lines.
 
-## Recent Changes & Fixes
-- **Record Fee Payment Flow (Mobile App & Backend):**
-  - **Backend Fix**: Fixed a data fetch bug in `fees.controller.ts` where `getStudentFeeStatus` erroneously returned global fee structures *alongside* other individual students' fee structures due to improper `classId` OR logic.
-  - **UI Overhaul**: Redesigned `record_fee_payment_screen.dart` to be highly premium and professional. Replaced the `bottomSheet` with a `SafeArea`-wrapped `bottomNavigationBar` to fix Android system navigation bar overlap.
-  - **Date Picker**: Added a new Payment Date field in the "Record Payment" screen for retroactive entries.
-- **Flutter UI Enhancements & Fixes:**
-  - **Staff Attendance Screen**: Fixed a UI issue in `mark_staff_attendance_screen.dart` where the "Save Attendance" button overlapped with the Android System Navigation Bar by properly implementing `MediaQuery` bottom padding.
-  - Scaled down the Dashboard Grid items to fit exactly 8 boxes on a single screen without scrolling, and removed background images for a cleaner look.
-  - Migrated the "Edit Transaction" Bottom Sheet to a separate standalone screen (`edit_transaction_screen.dart`) to solve Navigation Bar overlap issues and improve UX.
-  - Added a `Date Picker` to the Edit Transaction flow, enabling users to modify the transaction's `paymentDate`.
-  - Applied `SafeArea` to the "Apply Discount" bottom sheet to prevent the "Apply" button from overlapping with the Android System Navigation Bar.
-- **Gate Pass Mobile App Module Overhaul:**
-  - **Issue Gate Pass:** Added a Floating Action Button in `gate_pass_screen.dart` to allow Admins and Teachers to issue gate passes easily.
-  - **Premium View Screen:** Replaced the cramped bottom sheet in the History tab with a dedicated, beautifully designed full-page `GatePassViewScreen` displaying the photo, details, and large QR code.
-  - **QR Scanner Redesign:** Completely rewrote the `_QRScannerTab` using `mobile_scanner` to feature a premium, Paytm-like full-screen layout with a central cutout overlay and scanning animation. The scanner now automatically processes codes, interacts with the backend to update status (IN/OUT), and shows professional dialogs.
-- **Finance Mobile App Module Overhaul:**
-  - **Wallet Dashboard:** Redesigned `finance_screen.dart` from a dull grid to a premium, glassmorphism-inspired "Wallet/Bank" style dashboard featuring beautiful KPI cards and quick-access circular icons. Added new quick-action cards: "Fee Category", "Transactions", and "Fee Details".
-  - **Payment Receipts (New):** Created `fee_receipts_screen.dart`, a dedicated hub that lists all successful payments and generates professional PDF receipts for parents.
-  - **Finance Reports Upgrade:** Upgraded `finance_reports_screen.dart` with a new "Cash-in-Hand Settlement" metric and better chart integrations, bringing the mobile analytics on par with the Web App.
-  - **Transactions Management:** Upgraded the transactions screen (`transactions_screen.dart`) to support Editing and Deleting payments directly from the mobile app via a popup menu.
-  - **Student Fee Details (New):** Developed `student_fee_details_screen.dart` to perfectly mirror the Web App's `StudentFeeDetailsTab`. Features advanced Class & Status filtering, live balances, PDF/CSV export (via `share_plus`), and 1-tap WhatsApp fee reminders.
-- **Leave Apply / My History Tabs:** Fixed the UI contrast issue in the Teacher Mobile App (`leave_dashboard_screen.dart`) by setting `labelColor: Colors.white` for the TabBar.
-- **Gate Pass Class/Section Filtering:** Added `Class` and `Section` Dropdown filters in the Gate Pass issuance screen (`create_gate_pass_screen.dart`).
-- **Fee Reminder Navigation Fix:** Corrected a bug in the Teacher Mobile App (`dashboard_screen.dart`) where the 'Fee Reminder' button mistakenly routed to the 'Collect Fee' screen (`StudentFeeSearchScreen`) instead of the correct `FeeReminderSearchScreen`.
-- **Max Marks Data Integrity (Backend):** 
-  - Discovered a data inconsistency where marks entered via the Mobile App ignored subject-specific max marks (e.g., 20) and defaulted to the global exam max marks (100).
-  - Modified `marks.controller.ts` in the backend to explicitly pre-fetch `ExamPlans` and strictly enforce the database truth for `maxMarks`, preventing the client (Web or Mobile) from manipulating it.
-  - Wrote a batched database cleanup script (`fixMarks.ts`) to repair existing corrupted records (like the Hindi 100 maxMarks issue) without causing memory exhaustion.
-- **Flutter Progress Card UI Overhaul:**
-- **Flutter Question Bank Migration:**
-  - Successfully migrated the Question Bank module to the Flutter app.
-- **Answer Key Module & Printable Booklet (Web & Mobile):**
-  - [x] Web App - UI Overhaul of `AnswerKeyPage.tsx`
-  - [x] Redesign filter selection board.
-  - [x] Implement beautiful subject grids with inline editing.
-  - [x] Beautify PDF print templates with a professional school letterhead styling.
-  - Replaced the manual text URL inputs with dual-input containers (Upload File + Manual Link paste input) in both React (`ExamListPage.tsx`) and Flutter (`upload_question_paper_screen.dart`).
-  - Added a Multipart file upload helper `ApiService.uploadDocument()` in Flutter using `file_picker`.
-- **Exam-Specific Class & Subject Dynamic Filtering:**
-  - Updated class selector options to filter dynamically based on the chosen Exam.
-  - Resolved duplicate subject entries by filtering the Subject list to only show subjects configured under the selected Exam.
-- **Multi-Class Question Paper Upload:**
-  - Added multi-checkbox list inside both React and Flutter modals to allow users to select multiple classes (e.g. 10th-A, 10th-B) to upload the same paper simultaneously, creating separate paper records on submit loop.
-  - Resolved a 53px layout overflow issue in the Flutter upload screen by shifting the Exam and Classes selection layout from a horizontal Row to a vertical layout (Column/Stack style).
-  - Added `import 'dart:convert';` to `upload_question_paper_screen.dart` to resolve `jsonDecode` compiler error.
-- **Multi-Class & Multi-Subject Uploads:**
-  - Added checkbox lists for both Classes and Subjects in React and Flutter modals to allow users to select multiple options.
-  - Submitting now loops through both selected classes and selected subjects in a nested loop to create individual question paper entries in the database.
-  - Made the `Paper Title` field optional in both Web and Mobile apps. If left blank, the app now automatically generates a title based on the selected Exam name and Subject name (or falls back to the uploaded filename). This resolved the submit block where empty titles prevented the submit handler from executing.
-  - Fixed relative PDF launch URLs in Flutter by auto-prepending `ApiService.baseUrl` to file paths that do not start with `http`, resolving the `Could not open the file link` error.
-- **Web App React Syntax & Layout Fix:**
-  - Fixed a syntax bug in `ExamListPage.tsx` where closing tags for the `add-online-exam` form were accidentally removed during the `question-papers` tab modification. This was preventing the entire page layout from compiling and rendering properly.
-  - Fixed a `TypeError: e.replace is not a function` crash in the Exam Selection dropdown by passing `e.name` instead of the entire `e` object to `formatExamOptionLabel` helper.
-  - Fixed a `ReferenceError: Key is not defined` crash on page load by importing the `Key` icon from `lucide-react` in `ExamListPage.tsx`.
-  - Added console error logging in `fetchBaseFilters` inside `ExamListPage.tsx` to print the exact network error causing bootstrap filter failures.
-  - Corrected `fetchQpStats` to store `res.data` (or `res`) instead of the raw axios response object, ensuring dashboard KPI cards render correctly once data exists.
-- **Flutter Question Papers Screen Bugs Fix:**
-  - Fixed compilation errors in `question_papers_screen.dart` related to invalid `Colors.emerald` reference and incorrect named parameter `py` in `EdgeInsets.symmetric`.
-  - Refactored `ApiService` methods for question papers to delegate to standard API helpers (`_performPut` / `_performDelete`) instead of undefined `_processResponse`.
-- **Progress Card Student Image Load Fix:**
-  - Updated `ApiService.getExamResults` in Flutter app to pass `includePhoto: true` query parameter.
-  - Enabled photo fetching in `single_progress_card_screen.dart`'s `_fetchResult` call, allowing real student photos to load on the PDF and progress card layout instead of a camera icon placeholder.
-- **Flutter & Web App Question Papers Advanced Workflow:**
-  - **Local Database Migration:** Added `status`, `scheduledFor`, `isKeyPublished`, and `approvedBy` to local `QuestionPaper` model schema to support draft/approval statuses.
-  - **Backend API Role Filtering:** Adjusted GET `/api/question-papers` to filter based on user role (Students only see `PUBLISHED` papers, Teachers see published/approved/their drafts, Admin/Super Admin see all).
-  - **Admin Workflow Endpoints:** Added API endpoints for `/approve`, `/reject`, `/publish` of drafts, as well as `/dashboard-stats` for KPIs and `/toggle-permission` to manage teacher upload permissions.
-  - **Web Dashboard & KPI Cards:** Added a 5-card KPI analytics section (Total, Keys, Published, Scheduled, Total Questions) in React Web App `ExamListPage.tsx`, alongside a Teacher Permissions Modal and approval controls.
-  - **Flutter Question Paper Screen Upgrade:** Redesigned `question_papers_screen.dart` with Admin statistics, Status badges, and quick actions for Admins (Approve/Reject/Publish/Delete). Restricted FAB upload permissions.
-  - **Teacher Answer Key Integration:** Created a bottom sheet in Flutter allowing Teachers to type/attach PDF links for Answer Keys directly on existing question papers.
-## Infrastructure & Hosting Migration (Completed)
-- **VPS Setup Complete:** Successfully provisioned and configured the BigRock VPS (Ubuntu 22.04).
-- **Dual Database Architecture:** 
-  - Deployed a local PostgreSQL database (`jy_school_local`) on the VPS to operate independently of the main Supabase database.
-  - Specifically designed this local database to store heavy entities like `QuestionPapers` and `AnswerKeys` to save Supabase storage costs.
-- **Backend Prisma Setup:** 
-  - Created a secondary Prisma schema (`schema_local.prisma`) and updated `prisma.ts` to instantiate a `prismaLocal` client for routing specific queries to the VPS database.
-  - Refactored `questionPapers.controller.ts` to read/write from `prismaLocal` while dynamically fetching relational data (Class, Subject, Exam) from the main Supabase `prisma` client.
-- **Nginx & File Storage:** Configured Nginx to serve static uploaded files from `/var/www/uploads/` on port `8081`.
-## Environment & Hosting Details
-- **Frontend (Web App):** Built with React/Vite, located in the `frontend/` directory.
-- **Frontend (Mobile App):** Built with Flutter, located in the `flutter_mobile/` directory.
-- **Backend (API):** Built with Node.js/Express, located in the `backend/` directory. **Currently hosted on the VPS at `http://66.116.252.191:19998`.**
-- **Databases:**
-  - Main DB: Supabase (PostgreSQL) handling all primary ERP data.
-  - Local DB: Hosted on the VPS at `66.116.252.191` (`jy_school_local`) specifically for Question Bank/Question Papers and heavy PDF handling.
- 
- 
+## Pending Action Items
+- Monitor if the WebApp signatures appear correctly in the Flutter app now that `getImageUrl` is fixed and constraints are proper A4.
+- Make sure any further Flutter UI changes follow the strict rule of mirroring the web app layout with premium mobile aesthetics.

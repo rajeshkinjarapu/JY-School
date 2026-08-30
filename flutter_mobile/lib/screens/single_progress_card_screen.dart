@@ -378,7 +378,7 @@ class _SingleProgressCardScreenState extends State<SingleProgressCardScreen> {
             key: _repaintKey,
             child: Container(
               width: 794,
-              constraints: const BoxConstraints(minHeight: 1123),
+              height: 1123,
               decoration: BoxDecoration(
                 color: Colors.white,
                 border: Border.all(color: const Color(0xFFF0E6D2), width: 1.5),
@@ -459,15 +459,12 @@ class _SingleProgressCardScreenState extends State<SingleProgressCardScreen> {
                                 textAlign: TextAlign.center,
                                 style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w400, color: const Color(0xFF1A4A7A), letterSpacing: 0.8),
                               ),
-                              const SizedBox(height: 2),
-                              Text(
-                                (_settingsData != null && _settingsData!['address'] != null && _settingsData!['address'].toString().isNotEmpty)
-                                    ? _settingsData!['address'].toString()
-                                    : 'Opp. Hero Showroom, SVL Paradise Campus, Narasannapeta',
-                                textAlign: TextAlign.center,
-                                style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w400, color: const Color(0xFF5A7A8A), letterSpacing: 0.3),
-                              ),
-                              const SizedBox(height: 6),
+                                Text(
+                                  'Narasannapeta',
+                                  textAlign: TextAlign.center,
+                                  style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w400, color: const Color(0xFF5A7A8A), letterSpacing: 0.3),
+                                ),
+                                const SizedBox(height: 6),
                               Text(
                                 widget.examName.toUpperCase(),
                                 textAlign: TextAlign.center,
@@ -527,7 +524,7 @@ class _SingleProgressCardScreenState extends State<SingleProgressCardScreen> {
                           _buildPremiumInfoRow('📖 Section', section, isEven: true),
                           _buildPremiumInfoRow('📞 Mobile', _resultData!['mobile']?.toString() ?? widget.studentData?['mobile']?.toString() ?? 'N/A', isEven: false),
                           _buildPremiumInfoRow('📅 Academic Year', '2026-2027', isEven: true),
-                          _buildPremiumInfoRow('📍 Location', widget.studentData?['address']?.toString() ?? 'N/A', isEven: false, isLast: rank == null),
+                          _buildPremiumInfoRow('📍 Location', 'Narasannapeta', isEven: false, isLast: rank == null),
                           if (rank != null)
                             _buildPremiumInfoRow('🏅 Class Rank', '#' + rank, isEven: true, isLast: true),
                         ],
@@ -777,9 +774,12 @@ class _SingleProgressCardScreenState extends State<SingleProgressCardScreen> {
                           ),
                         ],
                       ),
+                      ),
                     ],
                   ),
                 ),
+
+               const Spacer(),
 
                // Bottom Note
               Container(
