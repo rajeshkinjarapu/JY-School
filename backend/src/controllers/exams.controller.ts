@@ -183,6 +183,17 @@ export const getResults = async (req: AuthRequest, res: Response, next: NextFunc
     }
   }
 
+  const rawSubjects = Array.isArray(exam.subjects) ? exam.subjects : [];
+  const subjectOrderMap = new Map<string, number>();
+  const subjectMaxMap = new Map<string, number>();
+  rawSubjects.forEach((sub: any, index: number) => {
+    if (sub && sub.name) {
+      const key = sub.name.toUpperCase().trim();
+      subjectOrderMap.set(key, index);
+      subjectMaxMap.set(key, Number(sub.maxMarks) || 100);
+    }
+  });
+
   for (const mark of exam.marks) {
     const key = mark.studentId;
     if (!studentMap.has(key)) {
@@ -201,22 +212,20 @@ export const getResults = async (req: AuthRequest, res: Response, next: NextFunc
     }
     const entry = studentMap.get(key)!;
     const existingMarkIndex = entry.marks.findIndex(m => m.subject === mark.subject.name);
+    
+    const subKey = mark.subject.name.toUpperCase().trim();
+    // Prioritize the max marks defined in exam.subjects config. If missing, fallback to mark.maxMarks
+    // This fixes the bug where mark.maxMarks was mistakenly saved as the TOTAL exam max marks.
+    const actualMax = subjectMaxMap.has(subKey) ? subjectMaxMap.get(subKey)! : mark.maxMarks;
+    
     if (existingMarkIndex !== -1) {
       entry.total = entry.total - entry.marks[existingMarkIndex].obtained + mark.marksObtained;
-      entry.marks[existingMarkIndex] = { subject: mark.subject.name, obtained: mark.marksObtained, max: mark.maxMarks, grade: mark.grade };
+      entry.marks[existingMarkIndex] = { subject: mark.subject.name, obtained: mark.marksObtained, max: actualMax, grade: mark.grade };
     } else {
-      entry.marks.push({ subject: mark.subject.name, obtained: mark.marksObtained, max: mark.maxMarks, grade: mark.grade });
+      entry.marks.push({ subject: mark.subject.name, obtained: mark.marksObtained, max: actualMax, grade: mark.grade });
       entry.total += mark.marksObtained;
     }
   }
-
-  const rawSubjects = Array.isArray(exam.subjects) ? exam.subjects : [];
-  const subjectOrderMap = new Map<string, number>();
-  rawSubjects.forEach((sub: any, index: number) => {
-    if (sub && sub.name) {
-      subjectOrderMap.set(sub.name.toUpperCase().trim(), index);
-    }
-  });
 
   const results = Array.from(studentMap.values()).map((s) => {
     s.marks.sort((a, b) => {
@@ -470,6 +479,15 @@ export const getAllStatus = async (req: AuthRequest, res: Response, next: NextFu
 
        const enhancedClasses = (exam.classes || []).map((cls) => {
          let classSubjects = classSubjectsMap[cls.id] || [];
+
+         // Deduplicate by subject name (keep first occurrence) to avoid duplicate rows
+         const seenNames = new Set<string>();
+         classSubjects = classSubjects.filter(s => {
+           const key = s.name?.trim().toUpperCase() ?? '';
+           if (!key || seenNames.has(key)) return false;
+           seenNames.add(key);
+           return true;
+         });
          
          if (Array.isArray(examAllowedSubjects) && examAllowedSubjects.length > 0) {
            const allowedNames = examAllowedSubjects.map((s: any) => s.name?.trim().toUpperCase());

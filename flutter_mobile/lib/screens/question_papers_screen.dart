@@ -349,7 +349,7 @@ class _QuestionPapersScreenState extends State<QuestionPapersScreen> {
               children: [
                 Text(label.toUpperCase(), style: GoogleFonts.poppins(fontSize: 8, color: Colors.grey.shade500, fontWeight: FontWeight.bold, letterSpacing: 0.5)),
                 const SizedBox(height: 4),
-                Text(value, style: GoogleFonts.outfit(fontSize: 22, color: const Color(0xFF1E293B), fontWeight: FontWeight.black)),
+                Text(value, style: GoogleFonts.outfit(fontSize: 22, color: const Color(0xFF1E293B), fontWeight: FontWeight.w900)),
               ],
             ),
           ),

@@ -183,6 +183,15 @@ export const bulkImport = async (req: AuthRequest, res: Response, next: NextFunc
           continue;
         }
 
+        // Also check by name (case-insensitive) to prevent name duplicates
+        const existingByName = await prisma.subject.findFirst({
+          where: { name: { equals: String(name).trim().toUpperCase(), mode: 'insensitive' }, classId: cls.id }
+        });
+        if (existingByName) {
+          failed.push({ row, reason: 'Subject with this name already exists in this class' });
+          continue;
+        }
+
         await prisma.subject.create({
           data: { name: String(name), code: String(code), classId: cls.id },
         });

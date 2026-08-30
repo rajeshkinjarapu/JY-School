@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:file_picker/file_picker.dart';
-import 'dart:typed_data';
 import 'dart:convert';
 import '../services/api_service.dart';
 
@@ -31,8 +29,6 @@ class _UploadQuestionPaperScreenState extends State<UploadQuestionPaperScreen> {
   
   bool _isLoadingData = true;
   bool _isUploading = false;
-  bool _isUploadingFile = false;
-  String? _fileName;
 
   final _fileUrlController = TextEditingController();
 
@@ -42,37 +38,7 @@ class _UploadQuestionPaperScreenState extends State<UploadQuestionPaperScreen> {
     super.dispose();
   }
 
-  Future<void> _pickAndUploadFile() async {
-    try {
-      FilePickerResult? result = await FilePicker.platform.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: ['pdf', 'doc', 'docx'],
-        withData: true,
-      );
 
-      if (result != null && result.files.single.bytes != null) {
-        setState(() => _isUploadingFile = true);
-        final bytes = result.files.single.bytes!;
-        final name = result.files.single.name;
-        
-        final res = await ApiService.uploadDocument(bytes, name);
-        setState(() {
-          _isUploadingFile = false;
-          if (res['success']) {
-            _fileUrl = res['url'] ?? '';
-            _fileUrlController.text = _fileUrl;
-            _fileName = name;
-            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('File uploaded successfully!')));
-          } else {
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(res['message'] ?? 'Upload failed')));
-          }
-        });
-      }
-    } catch (e) {
-      setState(() => _isUploadingFile = false);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error picking/uploading file: $e')));
-    }
-  }
 
   @override
   void initState() {
@@ -157,7 +123,7 @@ class _UploadQuestionPaperScreenState extends State<UploadQuestionPaperScreen> {
             } else if (subjectPart.isNotEmpty) {
               finalTitle = subjectPart;
             } else {
-              finalTitle = _fileName ?? 'Question Paper';
+              finalTitle = 'Question Paper';
             }
           }
 
@@ -350,10 +316,50 @@ class _UploadQuestionPaperScreenState extends State<UploadQuestionPaperScreen> {
     );
   }
 
+  Widget _buildUploadArea() {
+    final hasFile = _fileUrlController.text.isNotEmpty;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: hasFile ? const Color(0xFF10B981).withOpacity(0.06) : const Color(0xFF6366F1).withOpacity(0.04),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: hasFile ? const Color(0xFF10B981).withOpacity(0.5) : const Color(0xFF6366F1).withOpacity(0.2),
+          width: 1.5,
+        ),
+      ),
+      child: Column(
+        children: [
+          Icon(
+            hasFile ? Icons.check_circle_rounded : Icons.link_rounded,
+            color: hasFile ? const Color(0xFF10B981) : const Color(0xFF6366F1),
+            size: 36,
+          ),
+          const SizedBox(height: 10),
+          Text(
+            hasFile ? 'Document Link Added ✓' : 'Paste Document Link Below',
+            style: GoogleFonts.outfit(
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              color: hasFile ? const Color(0xFF10B981) : const Color(0xFF1E293B),
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            hasFile ? 'Link is ready to submit' : 'Google Drive, PDF URL, or any document link',
+            style: GoogleFonts.poppins(fontSize: 11, color: Colors.grey.shade500),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: const Color(0xFFF1F5F9),
       appBar: AppBar(
         title: Text(
           'Upload Question Paper',
@@ -374,190 +380,204 @@ class _UploadQuestionPaperScreenState extends State<UploadQuestionPaperScreen> {
       body: _isLoadingData 
         ? const Center(child: CircularProgressIndicator(color: Color(0xFF6366F1)))
         : SingleChildScrollView(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(16),
             child: Form(
               key: _formKey,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildSectionTitle('Paper Details'),
-                  const SizedBox(height: 16),
-                  _buildTextField(
-                    label: 'Paper Title (Optional)',
-                    hint: 'e.g. Mid Term Physics Paper',
-                    icon: Icons.title,
-                    onSaved: (v) => _title = v ?? '',
-                  ),
-                  const SizedBox(height: 16),
-                  _buildDropdown(
-                    label: 'Exam (Optional)',
-                    value: _examId,
-                    items: _exams,
-                    onChanged: (v) {
-                      setState(() {
-                        _examId = v as String?;
-                        if (_examId != null && _examId!.isNotEmpty) {
-                          final selectedExam = _exams.firstWhere((e) => e['id'] == _examId, orElse: () => null);
-                          if (selectedExam != null && selectedExam['classes'] != null) {
-                            _classes = List<dynamic>.from(selectedExam['classes']);
-                          } else {
-                            _classes = [];
-                          }
-                          // Filter subjects based on selected exam
-                          if (selectedExam != null && selectedExam['subjects'] != null) {
-                            final examSubs = selectedExam['subjects'] is String 
-                                ? jsonDecode(selectedExam['subjects']) 
-                                : selectedExam['subjects'] as List<dynamic>;
-                            _subjects = examSubs.map((es) {
-                              final subId = es['id'] ?? es['subjectId'] ?? es['subject']?['id'];
-                              final foundSub = _allSubjects.firstWhere((s) => s['id'] == subId, orElse: () => null);
-                              return foundSub ?? { 'id': subId, 'name': es['name'] ?? es['subject']?['name'] };
-                            }).toList();
-                          } else {
-                            _subjects = [];
-                          }
-                        } else {
-                          _classes = List<dynamic>.from(_allClasses);
-                          _subjects = List<dynamic>.from(_allSubjects);
-                        }
-                        // Reset selections if they are no longer in the filtered list
-                        _selectedClassIds.clear();
-                        _selectedSubjectIds.clear();
-                      });
-                    },
-                    getLabel: (e) => e['name'],
-                    getValue: (e) => e['id'],
-                  ),
-                  const SizedBox(height: 16),
-                  InkWell(
-                    onTap: _showMultiClassSelector,
-                    child: InputDecorator(
-                      decoration: InputDecoration(
-                        labelText: 'Classes *',
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                        prefixIcon: const Icon(Icons.class_outlined, color: Color(0xFF6366F1)),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                      ),
-                      child: Text(
-                        _selectedClassIds.isEmpty
-                            ? 'Select Classes'
-                            : _selectedClassIds.map((id) {
-                                final cls = _classes.firstWhere((c) => c['id'] == id, orElse: () => null);
-                                return cls != null ? '${cls['name']}-${cls['section']}' : '';
-                              }).join(', '),
-                        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  InkWell(
-                    onTap: _showMultiSubjectSelector,
-                    child: InputDecorator(
-                      decoration: InputDecoration(
-                        labelText: 'Subjects (Optional)',
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                        prefixIcon: const Icon(Icons.book_outlined, color: Color(0xFF6366F1)),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                      ),
-                      child: Text(
-                        _selectedSubjectIds.isEmpty
-                            ? 'All Subjects / Combined'
-                            : _selectedSubjectIds.map((id) {
-                                final sub = _subjects.firstWhere((s) => s['id'] == id, orElse: () => null);
-                                return sub != null ? sub['name'] : '';
-                              }).join(', '),
-                        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ),
-                  
-                  const SizedBox(height: 32),
-                  _buildSectionTitle('Document Upload'),
-                  const SizedBox(height: 16),
-                  
+                  // CARD 1: Paper Details
                   Container(
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
                       color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: const Color(0xFFE2E8F0)),
-                      boxShadow: [
-                        BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 8, offset: const Offset(0, 2))
-                      ]
+                      borderRadius: BorderRadius.circular(24),
+                      boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4))],
+                      border: Border.all(color: const Color(0xFFF1F5F9)),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Document File (PDF/Word/Link) *', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 14)),
-                        const SizedBox(height: 12),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: TextFormField(
-                                controller: _fileUrlController,
-                                decoration: InputDecoration(
-                                  hintText: 'https://link-to-file.pdf or Upload',
-                                  hintStyle: GoogleFonts.poppins(color: Colors.grey.shade400, fontSize: 13),
-                                  prefixIcon: const Icon(Icons.link, color: Color(0xFF6366F1)),
-                                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey.shade300)),
-                                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey.shade300)),
-                                  focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFF6366F1))),
-                                  filled: true,
-                                  fillColor: const Color(0xFFF8FAFC),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            if (_isUploadingFile)
-                              const CircularProgressIndicator(color: Color(0xFF6366F1))
-                            else
-                              IconButton.filled(
-                                onPressed: _pickAndUploadFile,
-                                icon: const Icon(Icons.upload_file),
-                                style: IconButton.styleFrom(
-                                  backgroundColor: const Color(0xFF6366F1),
-                                  foregroundColor: Colors.white,
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                  padding: const EdgeInsets.all(14),
-                                ),
-                              ),
-                          ],
+                        _buildSectionTitle('Paper Details', Icons.description_outlined),
+                        const SizedBox(height: 20),
+                        _buildTextField(
+                          label: 'Paper Title (Optional)',
+                          hint: 'e.g. Mid Term Physics Paper',
+                          icon: Icons.title,
+                          onSaved: (v) => _title = v ?? '',
                         ),
-                        if (_fileName != null) ...[
-                          const SizedBox(height: 8),
-                          Text(
-                            '✓ Selected: $_fileName',
-                            style: GoogleFonts.poppins(color: Colors.green, fontSize: 11, fontWeight: FontWeight.bold),
+                        const SizedBox(height: 16),
+                        _buildDropdown(
+                          label: 'Exam (Optional)',
+                          value: _examId,
+                          items: _exams,
+                          onChanged: (v) {
+                            setState(() {
+                              _examId = v as String?;
+                              if (_examId != null && _examId!.isNotEmpty) {
+                                final selectedExam = _exams.firstWhere((e) => e['id'] == _examId, orElse: () => null);
+                                if (selectedExam != null && selectedExam['classes'] != null) {
+                                  _classes = List<dynamic>.from(selectedExam['classes']);
+                                } else {
+                                  _classes = [];
+                                }
+                                if (selectedExam != null && selectedExam['subjects'] != null) {
+                                  final examSubs = selectedExam['subjects'] is String 
+                                      ? jsonDecode(selectedExam['subjects']) 
+                                      : selectedExam['subjects'] as List<dynamic>;
+                                  _subjects = examSubs.map((es) {
+                                    final subId = es['id'] ?? es['subjectId'] ?? es['subject']?['id'];
+                                    final foundSub = _allSubjects.firstWhere((s) => s['id'] == subId, orElse: () => null);
+                                    return foundSub ?? { 'id': subId, 'name': es['name'] ?? es['subject']?['name'] };
+                                  }).toList();
+                                } else {
+                                  _subjects = [];
+                                }
+                              } else {
+                                _classes = List<dynamic>.from(_allClasses);
+                                _subjects = List<dynamic>.from(_allSubjects);
+                              }
+                              _selectedClassIds.clear();
+                              _selectedSubjectIds.clear();
+                            });
+                          },
+                          getLabel: (e) => e['name'],
+                          getValue: (e) => e['id'],
+                        ),
+                        const SizedBox(height: 16),
+                        InkWell(
+                          onTap: _showMultiClassSelector,
+                          borderRadius: BorderRadius.circular(12),
+                          child: InputDecorator(
+                            decoration: InputDecoration(
+                              labelText: 'Classes *',
+                              labelStyle: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 14),
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                              prefixIcon: const Icon(Icons.class_outlined, color: Color(0xFF6366F1)),
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                            ),
+                            child: Text(
+                              _selectedClassIds.isEmpty
+                                  ? 'Select Classes'
+                                  : _selectedClassIds.map((id) {
+                                      final cls = _classes.firstWhere((c) => c['id'] == id, orElse: () => null);
+                                      return cls != null ? '${cls['name']}-${cls['section']}' : '';
+                                    }).join(', '),
+                              style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.bold, color: const Color(0xFF334155)),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
-                        ],
+                        ),
+                        const SizedBox(height: 16),
+                        InkWell(
+                          onTap: _showMultiSubjectSelector,
+                          borderRadius: BorderRadius.circular(12),
+                          child: InputDecorator(
+                            decoration: InputDecoration(
+                              labelText: 'Subjects (Optional)',
+                              labelStyle: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 14),
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                              prefixIcon: const Icon(Icons.book_outlined, color: Color(0xFF6366F1)),
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                            ),
+                            child: Text(
+                              _selectedSubjectIds.isEmpty
+                                  ? 'All Subjects / Combined'
+                                  : _selectedSubjectIds.map((id) {
+                                      final sub = _subjects.firstWhere((s) => s['id'] == id, orElse: () => null);
+                                      return sub != null ? sub['name'] : '';
+                                    }).join(', '),
+                              style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.bold, color: const Color(0xFF334155)),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ),
                       ],
                     ),
                   ),
+                  const SizedBox(height: 20),
 
+                  // CARD 2: Document Upload
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(24),
+                      boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4))],
+                      border: Border.all(color: const Color(0xFFF1F5F9)),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildSectionTitle('Document Upload', Icons.cloud_upload_outlined),
+                        const SizedBox(height: 20),
+                        _buildUploadArea(),
+                        const SizedBox(height: 20),
+                        const Row(
+                          children: [
+                            Expanded(child: Divider()),
+                            Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 12),
+                              child: Text('OR PASTE LINK MANUALLY', style: TextStyle(fontSize: 9, color: Colors.grey, fontWeight: FontWeight.bold, letterSpacing: 0.5)),
+                            ),
+                            Expanded(child: Divider()),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        TextFormField(
+                          controller: _fileUrlController,
+                          decoration: InputDecoration(
+                            labelText: 'File Link (PDF/Word)',
+                            labelStyle: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13),
+                            hintText: 'https://link-to-file.pdf',
+                            hintStyle: GoogleFonts.poppins(color: Colors.grey.shade400, fontSize: 12),
+                            prefixIcon: const Icon(Icons.link, color: Color(0xFF6366F1)),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey.shade300)),
+                            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey.shade300)),
+                            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFF6366F1))),
+                            filled: true,
+                            fillColor: const Color(0xFFF8FAFC),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+
+                  // CARD 3: Answer Key
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(24),
+                      boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4))],
+                      border: Border.all(color: const Color(0xFFF1F5F9)),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildSectionTitle('Answer Key (Optional)', Icons.key_outlined),
+                        const SizedBox(height: 20),
+                        _buildTextField(
+                          label: 'Answer Key Document Link',
+                          hint: 'https://link-to-answer-key.pdf',
+                          icon: Icons.key_outlined,
+                          onSaved: (v) => _answerKeyUrl = v ?? '',
+                        ),
+                        const SizedBox(height: 16),
+                        _buildTextField(
+                          label: 'Typed Answer Key',
+                          hint: '1-A, 2-B, 3-C...',
+                          icon: Icons.notes,
+                          maxLines: 4,
+                          onSaved: (v) => _answerKeyText = v ?? '',
+                        ),
+                      ],
+                    ),
+                  ),
                   const SizedBox(height: 32),
-                  _buildSectionTitle('Answer Key (Optional)'),
-                  const SizedBox(height: 16),
-                  
-                  _buildTextField(
-                    label: 'Answer Key Document Link',
-                    hint: 'https://link-to-answer-key.pdf',
-                    icon: Icons.key_outlined,
-                    onSaved: (v) => _answerKeyUrl = v ?? '',
-                  ),
-                  const SizedBox(height: 16),
-                  _buildTextField(
-                    label: 'Typed Answer Key',
-                    hint: '1-A, 2-B, 3-C...',
-                    icon: Icons.notes,
-                    maxLines: 4,
-                    onSaved: (v) => _answerKeyText = v ?? '',
-                  ),
-                  
-                  const SizedBox(height: 40),
                   SizedBox(
                     width: double.infinity,
                     height: 56,
@@ -566,13 +586,12 @@ class _UploadQuestionPaperScreenState extends State<UploadQuestionPaperScreen> {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF6366F1),
                         foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                        elevation: 4,
-                        shadowColor: const Color(0xFF6366F1).withOpacity(0.5),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                        elevation: 0,
                       ),
                       child: _isUploading
                         ? const SizedBox(height: 24, width: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5))
-                        : Text('Upload Question Paper', style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold, letterSpacing: 0.5)),
+                        : Text('Upload Question Paper', style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold)),
                     ),
                   ),
                   const SizedBox(height: 40),
@@ -583,12 +602,19 @@ class _UploadQuestionPaperScreenState extends State<UploadQuestionPaperScreen> {
     );
   }
 
-  Widget _buildSectionTitle(String title) {
+  Widget _buildSectionTitle(String title, IconData icon) {
     return Row(
       children: [
-        Container(width: 4, height: 20, decoration: BoxDecoration(color: const Color(0xFF6366F1), borderRadius: BorderRadius.circular(2))),
-        const SizedBox(width: 8),
-        Text(title, style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: const Color(0xFF1E293B))),
+        Container(
+          padding: const EdgeInsets.all(6),
+          decoration: BoxDecoration(
+            color: const Color(0xFF6366F1).withOpacity(0.08),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(icon, color: const Color(0xFF6366F1), size: 18),
+        ),
+        const SizedBox(width: 10),
+        Text(title, style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold, color: const Color(0xFF1E293B))),
       ],
     );
   }

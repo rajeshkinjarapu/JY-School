@@ -1,4 +1,5 @@
 import 'dart:ui' as ui;
+import 'dart:convert';
 import '../widgets/custom_network_image.dart';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
@@ -242,13 +243,86 @@ class _SingleProgressCardScreenState extends State<SingleProgressCardScreen> {
     final photoUrl = _resultData!['photo'];
     final initials = name.isNotEmpty ? name.substring(0, 1).toUpperCase() : '?';
 
-    final totalMarksObtained = _resultData!['total'] ?? 0;
-    int totalMaxMarks = 0;
-    // The backend API now returns the subjects exactly in the order they were defined in Exam Configuration
-    final marksList = List<dynamic>.from(_resultData!['marks'] as List? ?? []);
-    for(var m in marksList) { totalMaxMarks += (m['max'] as num?)?.toInt() ?? 100; }
+    // Parse admit card settings safely
+    Map<String, dynamic> admitCardSettings = {};
+    if (_examData != null && _examData!['admitCardSettings'] != null) {
+       final acs = _examData!['admitCardSettings'];
+       if (acs is String) {
+          try { admitCardSettings = jsonDecode(acs); } catch (_) {}
+       } else if (acs is Map) {
+          admitCardSettings = Map<String, dynamic>.from(acs);
+       }
+    }
+
+    // Extract subjects from the exam or settings
+    List<dynamic> examSubjects = [];
+    if (_examData != null && _examData!['subjects'] != null) {
+      final sub = _examData!['subjects'];
+      if (sub is String) {
+        try { examSubjects = jsonDecode(sub); } catch (_) {}
+      } else if (sub is List) {
+        examSubjects = sub;
+      }
+    } else if (_settingsData != null && _settingsData!['subjects'] != null) {
+      final sub = _settingsData!['subjects'];
+      if (sub is String) {
+        try { examSubjects = jsonDecode(sub); } catch (_) {}
+      } else if (sub is List) {
+        examSubjects = sub;
+      }
+    }
+
+    final rawMarksList = List<dynamic>.from(_resultData!['marks'] as List? ?? []);
+    List<Map<String, dynamic>> finalMarks = [];
+
+    if (examSubjects.isNotEmpty) {
+      for (var sub in examSubjects) {
+        final subName = sub['name']?.toString() ?? '';
+        final maxM = (sub['maxMarks'] as num?)?.toDouble() ?? 100.0;
+        
+        var studentMark;
+        for (var m in rawMarksList) {
+          final mName = m['subject']?.toString() ?? '';
+          if (mName.isEmpty) continue;
+          if (mName.toLowerCase() == subName.toLowerCase() ||
+              subName.toLowerCase().contains(mName.toLowerCase()) ||
+              mName.toLowerCase().contains(subName.toLowerCase())) {
+            studentMark = m;
+            break;
+          }
+        }
+        
+        final obtained = studentMark != null ? studentMark['obtained'] : '-';
+        finalMarks.add({
+          'subject': subName,
+          'maxMarks': maxM,
+          'obtained': obtained,
+        });
+      }
+    } else {
+      for (var m in rawMarksList) {
+        finalMarks.add({
+          'subject': m['subject'],
+          'maxMarks': (m['max'] as num?)?.toDouble() ?? (m['maxMarks'] as num?)?.toDouble() ?? 100.0,
+          'obtained': m['obtained'],
+        });
+      }
+    }
+
+    double totalMaxMarks = 0;
+    double calculatedTotalObtained = 0;
+    for (var m in finalMarks) {
+      totalMaxMarks += (m['maxMarks'] as num?)?.toDouble() ?? 100.0;
+      final obtStr = m['obtained'].toString();
+      final obtNum = double.tryParse(obtStr);
+      if (obtNum != null) {
+        calculatedTotalObtained += obtNum;
+      }
+    }
     
-    final percentage = _resultData!['percentage'] != null ? (_resultData!['percentage'] as num).toDouble() : 0.0;
+    final percentage = totalMaxMarks > 0 ? (calculatedTotalObtained / totalMaxMarks * 100) : 0.0;
+    final totalMarksObtainedStr = calculatedTotalObtained.toStringAsFixed(calculatedTotalObtained.truncateToDouble() == calculatedTotalObtained ? 0 : 1);
+
     
     // Evaluate performance rating
     String ratingLabel = 'NEEDS IMPROVEMENT';
@@ -340,8 +414,7 @@ class _SingleProgressCardScreenState extends State<SingleProgressCardScreen> {
                       children: [
                         // Logo - check admitCardSettings first (exam-specific), then global school settings
                         Builder(builder: (ctx) {
-                          final admitCardSettings = _examData?['admitCardSettings'];
-                          final logoFromExam = admitCardSettings != null && admitCardSettings['logoUrl'] != null && admitCardSettings['logoUrl'].toString().isNotEmpty
+                          final logoFromExam = admitCardSettings['logoUrl'] != null && admitCardSettings['logoUrl'].toString().isNotEmpty
                               ? admitCardSettings['logoUrl'].toString()
                               : null;
                           final logoFromSettings = _settingsData != null && _settingsData!['logoUrl'] != null && _settingsData!['logoUrl'].toString().isNotEmpty
@@ -452,7 +525,7 @@ class _SingleProgressCardScreenState extends State<SingleProgressCardScreen> {
                           _buildPremiumInfoRow('🆔 Student ID', rollNo.toString(), isEven: true),
                           _buildPremiumInfoRow('📚 Class', className, isEven: false),
                           _buildPremiumInfoRow('📖 Section', section, isEven: true),
-                          _buildPremiumInfoRow('📞 Mobile', widget.studentData?['mobile']?.toString() ?? 'N/A', isEven: false),
+                          _buildPremiumInfoRow('📞 Mobile', _resultData!['mobile']?.toString() ?? widget.studentData?['mobile']?.toString() ?? 'N/A', isEven: false),
                           _buildPremiumInfoRow('📅 Academic Year', '2026-2027', isEven: true),
                           _buildPremiumInfoRow('📍 Location', widget.studentData?['address']?.toString() ?? 'N/A', isEven: false, isLast: rank == null),
                           if (rank != null)
@@ -534,13 +607,15 @@ class _SingleProgressCardScreenState extends State<SingleProgressCardScreen> {
                               ),
                             ),
                             // Table Rows
-                            ...marksList.asMap().entries.map((entry) {
+                            ...finalMarks.asMap().entries.map((entry) {
                               final int idx = entry.key;
                               final sm = entry.value;
                               final subName = sm['subject']?.toString() ?? 'UNKNOWN';
-                              final obt = (sm['obtained'] as num?)?.toDouble() ?? 0.0;
-                              final max = (sm['max'] as num?)?.toDouble() ?? 100.0;
-                              final subPct = max > 0 ? (obt / max * 100).toStringAsFixed(1) : '0.0';
+                              
+                              final obtStr = sm['obtained']?.toString() ?? '-';
+                              final obtNum = double.tryParse(obtStr);
+                              final max = (sm['maxMarks'] as num?)?.toDouble() ?? 100.0;
+                              final subPct = (obtNum != null && max > 0) ? (obtNum / max * 100).toStringAsFixed(1) : '0.0';
                               final isEven = idx % 2 != 0;
 
                               return Container(
@@ -558,7 +633,7 @@ class _SingleProgressCardScreenState extends State<SingleProgressCardScreen> {
                                         Expanded(child: Text(subName, style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w600, color: const Color(0xFF1A3A5A)), overflow: TextOverflow.ellipsis)),
                                       ],
                                     )),
-                                    Expanded(flex: 1, child: Text(obt.toStringAsFixed(obt.truncateToDouble() == obt ? 0 : 1), textAlign: TextAlign.center, style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w700, color: const Color(0xFF0B1A33)))),
+                                    Expanded(flex: 1, child: Text(obtNum != null ? obtNum.toStringAsFixed(obtNum.truncateToDouble() == obtNum ? 0 : 1) : obtStr, textAlign: TextAlign.center, style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w700, color: const Color(0xFF0B1A33)))),
                                     Expanded(flex: 1, child: Text(max.toStringAsFixed(0), textAlign: TextAlign.center, style: GoogleFonts.poppins(fontSize: 14, color: const Color(0xFF6A8AAA)))),
                                     Expanded(flex: 1, child: Text(subPct + '%', textAlign: TextAlign.center, style: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.w700, color: const Color(0xFF1A4A7A)))),
                                   ],
@@ -575,8 +650,8 @@ class _SingleProgressCardScreenState extends State<SingleProgressCardScreen> {
                               child: Row(
                                 children: [
                                   Expanded(flex: 3, child: Text('📌 TOTAL', style: GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.w900, color: const Color(0xFF0B1A33), letterSpacing: 1.0))),
-                                  Expanded(flex: 1, child: Text(totalMarksObtained.toString(), textAlign: TextAlign.center, style: GoogleFonts.outfit(fontSize: 19, fontWeight: FontWeight.w900, color: const Color(0xFFC0392B)))),
-                                  Expanded(flex: 1, child: Text(totalMaxMarks.toString(), textAlign: TextAlign.center, style: GoogleFonts.poppins(fontSize: 15, color: const Color(0xFF6A8AAA)))),
+                                  Expanded(flex: 1, child: Text(totalMarksObtainedStr, textAlign: TextAlign.center, style: GoogleFonts.outfit(fontSize: 19, fontWeight: FontWeight.w900, color: const Color(0xFFC0392B)))),
+                                  Expanded(flex: 1, child: Text(totalMaxMarks.toStringAsFixed(0), textAlign: TextAlign.center, style: GoogleFonts.poppins(fontSize: 15, color: const Color(0xFF6A8AAA)))),
                                   Expanded(flex: 1, child: Text(percentage.toStringAsFixed(1) + '%', textAlign: TextAlign.center, style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold, color: const Color(0xFF1A4A7A)))),
                                 ],
                               ),
@@ -589,47 +664,36 @@ class _SingleProgressCardScreenState extends State<SingleProgressCardScreen> {
                 ),
               ),
 
-              // Score Bar (like Web App)
+              // Academic Performance Rating
               Container(
-                margin: const EdgeInsets.fromLTRB(28, 4, 28, 12),
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                margin: const EdgeInsets.symmetric(horizontal: 28, vertical: 10),
+                padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(colors: [Color(0xFFFFFFFF), Color(0xFFF9FBFD)]),
-                  border: Border.all(color: const Color(0xFFDCE4ED)),
+                  color: const Color(0xFFF8FAFC), // slate-50
+                  border: Border.all(color: const Color(0xFFE2E8F0)), // slate-200
                   borderRadius: BorderRadius.circular(12),
-                  boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 12, offset: const Offset(0, 4))],
                 ),
-                child: Column(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Container(
-                      height: 16,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFEEF2F7),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: const Color(0xFFDCE4ED)),
-                      ),
-                      child: Stack(
-                        children: [
-                          FractionallySizedBox(
-                            widthFactor: (percentage / 100).clamp(0.0, 1.0),
-                            child: Container(
-                              decoration: BoxDecoration(
-                                gradient: const LinearGradient(colors: [Color(0xFF1A4A7A), Color(0xFF3498DB)]),
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('0%', style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.w600, color: const Color(0xFF6A8AAA))),
-                        Text('50%', style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.w600, color: const Color(0xFF6A8AAA))),
-                        Text('100%', style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.w600, color: const Color(0xFF6A8AAA))),
+                        Text('ACADEMIC PERFORMANCE RATING', style: GoogleFonts.poppins(fontSize: 10, fontWeight: FontWeight.bold, color: const Color(0xFF94A3B8), letterSpacing: 0.5)),
+                        const SizedBox(height: 4),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: ratingBg,
+                            border: Border.all(color: ratingBorder),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(ratingLabel, style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.w900, color: ratingColor)),
+                        ),
                       ],
+                    ),
+                    Expanded(
+                      child: Text('"$ratingComment"', textAlign: TextAlign.right, style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.bold, fontStyle: FontStyle.italic, color: const Color(0xFF475569))),
                     ),
                   ],
                 ),
@@ -640,7 +704,7 @@ class _SingleProgressCardScreenState extends State<SingleProgressCardScreen> {
                 margin: const EdgeInsets.fromLTRB(28, 0, 28, 12),
                 padding: const EdgeInsets.only(top: 12),
                 decoration: const BoxDecoration(
-                  border: Border(top: BorderSide(color: Color(0xFFDCE4ED), width: 2, style: BorderStyle.solid)), // dotted replacement
+                  border: Border(top: BorderSide(color: Color(0xFFDCE4ED), width: 2, style: BorderStyle.solid)),
                 ),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.end,
@@ -651,7 +715,7 @@ class _SingleProgressCardScreenState extends State<SingleProgressCardScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
-                          Text('TOTAL PERCENTAGE', style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w800, color: const Color(0xFF1A4A7A), letterSpacing: 0.5)),
+                          Text('📋 Total Marks: $totalMarksObtainedStr / ${totalMaxMarks.toStringAsFixed(0)}', style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w800, color: const Color(0xFF1A4A7A), letterSpacing: 0.5)),
                           Text(percentage.toStringAsFixed(1) + '%', style: GoogleFonts.outfit(fontSize: 46, fontWeight: FontWeight.w900, color: const Color(0xFFC0392B), height: 1.0, shadows: [Shadow(color: const Color(0xFFC0392B).withOpacity(0.1), offset: const Offset(1,1))])),
                         ],
                       ),
@@ -662,8 +726,7 @@ class _SingleProgressCardScreenState extends State<SingleProgressCardScreen> {
                             mainAxisAlignment: MainAxisAlignment.end,
                             children: [
                               Builder(builder: (ctx) {
-                                final admitCardSettings = _examData?['admitCardSettings'];
-                                final urlRaw = (admitCardSettings != null && admitCardSettings['teacherSignatureUrl'] != null && admitCardSettings['teacherSignatureUrl'].toString().isNotEmpty)
+                                final urlRaw = (admitCardSettings['teacherSignatureUrl'] != null && admitCardSettings['teacherSignatureUrl'].toString().isNotEmpty)
                                     ? admitCardSettings['teacherSignatureUrl'].toString()
                                     : (_settingsData?['teacherSignatureUrl']?.toString() ?? '');
                                 if (urlRaw.isNotEmpty) {
@@ -682,7 +745,7 @@ class _SingleProgressCardScreenState extends State<SingleProgressCardScreen> {
                                   return Container(width: 140, height: 1.5, color: const Color(0xFFC8D6E4), margin: const EdgeInsets.only(bottom: 4, top: 40));
                                 }
                               }),
-                              Text('Teacher Signature', style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF1A3A5A))),
+                              Text('✍ Teacher Signature', style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF1A3A5A))),
                             ],
                           ),
                           const SizedBox(width: 40),
@@ -690,8 +753,7 @@ class _SingleProgressCardScreenState extends State<SingleProgressCardScreen> {
                             mainAxisAlignment: MainAxisAlignment.end,
                             children: [
                               Builder(builder: (ctx) {
-                                final admitCardSettings = _examData?['admitCardSettings'];
-                                final urlRaw = (admitCardSettings != null && admitCardSettings['signatureUrl'] != null && admitCardSettings['signatureUrl'].toString().isNotEmpty)
+                                final urlRaw = (admitCardSettings['signatureUrl'] != null && admitCardSettings['signatureUrl'].toString().isNotEmpty)
                                     ? admitCardSettings['signatureUrl'].toString()
                                     : (_settingsData?['signatureUrl']?.toString() ?? '');
                                 if (urlRaw.isNotEmpty) {
@@ -710,7 +772,7 @@ class _SingleProgressCardScreenState extends State<SingleProgressCardScreen> {
                                   return Container(width: 140, height: 1.5, color: const Color(0xFFC8D6E4), margin: const EdgeInsets.only(bottom: 4, top: 40));
                                 }
                               }),
-                              Text('Principal Signature', style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF1A3A5A))),
+                              Text('✍ Principal Signature', style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF1A3A5A))),
                             ],
                           ),
                         ],
@@ -728,7 +790,7 @@ class _SingleProgressCardScreenState extends State<SingleProgressCardScreen> {
                   borderRadius: BorderRadius.only(bottomLeft: Radius.circular(10), bottomRight: Radius.circular(10)),
                 ),
                 child: Text(
-                  'System generated result card for ' + widget.examName,
+                  '★ This is a system-generated result card for ${widget.examName} ★',
                   textAlign: TextAlign.center,
                   style: GoogleFonts.poppins(fontSize: 11, fontWeight: FontWeight.w500, color: const Color(0xFFAABACA), letterSpacing: 0.5),
                 ),

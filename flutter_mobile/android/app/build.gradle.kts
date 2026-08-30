@@ -7,7 +7,7 @@ plugins {
 
 android {
     namespace = "com.example.jy_school_flutter"
-    compileSdk = flutter.compileSdkVersion
+    compileSdk = 36
     ndkVersion = "30.0.15729638"
 
     compileOptions {

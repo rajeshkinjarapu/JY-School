@@ -7,7 +7,7 @@ import { useAuth } from '../../hooks/useAuth';
 import {
   Plus, Edit3, Trash2, ClipboardList, BookOpen, Layers, CheckSquare,
   Clock, Award, FileText, Settings, Play, ShieldAlert, HelpCircle, Save, X, Calendar, ExternalLink,
-  MapPin, FileSpreadsheet, Download, Printer, CheckCircle, MessageSquare, ChevronDown, Key
+  MapPin, FileSpreadsheet, Download, Printer, CheckCircle, MessageSquare, ChevronDown, Key, Upload, Link as LinkIcon
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { Link, useSearchParams, useOutletContext, useNavigate } from 'react-router-dom';
@@ -1842,34 +1842,39 @@ export const ExamListPage: React.FC = () => {
           </div>
 
           {showQpModal && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/50 backdrop-blur-sm p-4">
-              <div className="card w-full max-w-md p-6 space-y-5">
-                <div className="flex justify-between items-center">
-                  <h3 className="text-lg font-bold">Upload Question Paper</h3>
-                  <button onClick={() => setShowQpModal(false)} className="text-gray-400 hover:text-black dark:hover:text-white"><X className="w-5 h-5" /></button>
+            <div className="fixed inset-0 z-50 bg-white dark:bg-gray-900 overflow-y-auto animate-fade-in flex flex-col">
+              <div className="sticky top-0 z-10 flex justify-between items-center p-6 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-100 dark:border-gray-800 shadow-sm">
+                <div>
+                  <h3 className="text-xl font-black bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent uppercase tracking-wider">Upload Question Paper</h3>
+                  <p className="text-xs text-gray-500 font-semibold mt-1">Upload a new question paper document</p>
                 </div>
-                <form onSubmit={handleCreateQp} className="space-y-4">
-                  <div>
-                    <label className="label">Title (Optional)</label>
-                    <input type="text" placeholder="e.g. Mid Term Physics Paper" value={qpTitle} onChange={e => setQpTitle(e.target.value)} className="input" />
+                <button onClick={() => setShowQpModal(false)} className="p-3 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-2xl transition-all cursor-pointer">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              
+              <div className="flex-1 p-6 md:p-8 max-w-4xl mx-auto w-full">
+                <form onSubmit={handleCreateQp} className="space-y-6">
+                  <div className="card p-6 shadow-sm border border-gray-100 dark:border-gray-800">
+                    <label className="label text-sm">Title (Optional)</label>
+                    <input type="text" placeholder="e.g. Mid Term Physics Paper" value={qpTitle} onChange={e => setQpTitle(e.target.value)} className="input text-sm py-3" />
                   </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="label">Exam (Optional)</label>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="card p-6 shadow-sm border border-gray-100 dark:border-gray-800 flex flex-col h-full">
+                      <label className="label text-sm">Exam (Optional)</label>
                       <select value={qpExamId} onChange={e => {
                         const newExamId = e.target.value;
                         setQpExamId(newExamId);
                         setQpClassIds([]);
                         setQpSubjectId('');
-                      }} className="input">
+                      }} className="input text-sm py-3 mb-4">
                         <option value="">Select Exam...</option>
                         {exams.map(e => <option key={e.id} value={e.id}>{formatExamOptionLabel(e.name)}</option>)}
                       </select>
-                    </div>
-                    
-                    <div>
-                      <label className="label">Classes * (Select multiple if same paper)</label>
-                      <div className="grid grid-cols-2 gap-2 mt-1 max-h-24 overflow-y-auto p-2 bg-slate-50 rounded-xl border border-slate-200">
+                      
+                      <label className="label text-sm mt-4">Classes * (Select multiple if same paper)</label>
+                      <div className="flex-1 overflow-y-auto mt-2 p-3 bg-slate-50 dark:bg-gray-800/50 rounded-xl border border-slate-200 dark:border-gray-700 max-h-48 grid grid-cols-2 gap-3">
                         {(() => {
                           if (!qpExamId) return classes;
                           const selectedExam = exams.find(ex => ex.id === qpExamId);
@@ -1877,7 +1882,7 @@ export const ExamListPage: React.FC = () => {
                         })().map(c => {
                           const checked = qpClassIds.includes(c.id);
                           return (
-                            <label key={c.id} className="flex items-center gap-1.5 cursor-pointer text-xs font-bold text-slate-700">
+                            <label key={c.id} className="flex items-center gap-2 cursor-pointer text-sm font-bold text-slate-700 dark:text-slate-200 bg-white dark:bg-gray-800 p-2 rounded-lg border border-gray-100 dark:border-gray-700 hover:border-indigo-300 transition-all shadow-sm">
                               <input 
                                 type="checkbox" 
                                 checked={checked} 
@@ -1888,7 +1893,7 @@ export const ExamListPage: React.FC = () => {
                                     setQpClassIds(prev => prev.filter(id => id !== c.id));
                                   }
                                 }} 
-                                className="w-3.5 h-3.5 text-indigo-600 rounded focus:ring-indigo-500" 
+                                className="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500 border-gray-300" 
                               />
                               {c.name}-{c.section}
                             </label>
@@ -1896,51 +1901,51 @@ export const ExamListPage: React.FC = () => {
                         })}
                       </div>
                     </div>
-                  </div>
-                  
-                  <div>
-                    <label className="label">Subjects (Optional - Select multiple if same paper or combined)</label>
-                    <div className="grid grid-cols-2 gap-2 mt-1 max-h-24 overflow-y-auto p-2 bg-slate-50 rounded-xl border border-slate-200">
-                      {(() => {
-                        if (!qpExamId) return subjects;
-                        const selectedExam = exams.find(e => e.id === qpExamId);
-                        if (!selectedExam || !selectedExam.subjects) return [];
-                        const examSubs = Array.isArray(selectedExam.subjects) 
-                          ? selectedExam.subjects 
-                          : (typeof selectedExam.subjects === 'string' ? JSON.parse(selectedExam.subjects) : []);
-                        
-                        return examSubs.map((es: any) => {
-                          const subId = es.id || es.subjectId || es.subject?.id;
-                          const foundSub = subjects.find(s => s.id === subId);
-                          return foundSub || { id: subId, name: es.name || es.subject?.name };
-                        }).filter(Boolean);
-                      })().map(s => {
-                        const checked = qpSubjectIds.includes(s.id);
-                        return (
-                          <label key={s.id} className="flex items-center gap-1.5 cursor-pointer text-xs font-bold text-slate-700">
-                            <input 
-                              type="checkbox" 
-                              checked={checked} 
-                              onChange={(e) => {
-                                if (e.target.checked) {
-                                  setQpSubjectIds(prev => [...prev, s.id]);
-                                } else {
-                                  setQpSubjectIds(prev => prev.filter(id => id !== s.id));
-                                }
-                              }} 
-                              className="w-3.5 h-3.5 text-indigo-600 rounded focus:ring-indigo-500" 
-                            />
-                            {s.name}
-                          </label>
-                        );
-                      })}
+                    
+                    <div className="card p-6 shadow-sm border border-gray-100 dark:border-gray-800 flex flex-col h-full">
+                      <label className="label text-sm">Subjects (Optional)</label>
+                      <div className="flex-1 overflow-y-auto mt-2 p-3 bg-slate-50 dark:bg-gray-800/50 rounded-xl border border-slate-200 dark:border-gray-700 max-h-64 grid grid-cols-1 gap-3">
+                        {(() => {
+                          if (!qpExamId) return subjects;
+                          const selectedExam = exams.find(e => e.id === qpExamId);
+                          if (!selectedExam || !selectedExam.subjects) return [];
+                          const examSubs = Array.isArray(selectedExam.subjects) 
+                            ? selectedExam.subjects 
+                            : (typeof selectedExam.subjects === 'string' ? JSON.parse(selectedExam.subjects) : []);
+                          
+                          return examSubs.map((es: any) => {
+                            const subId = es.id || es.subjectId || es.subject?.id;
+                            const foundSub = subjects.find(s => s.id === subId);
+                            return foundSub || { id: subId, name: es.name || es.subject?.name };
+                          }).filter(Boolean);
+                        })().map(s => {
+                          const checked = qpSubjectIds.includes(s.id);
+                          return (
+                            <label key={s.id} className="flex items-center gap-2 cursor-pointer text-sm font-bold text-slate-700 dark:text-slate-200 bg-white dark:bg-gray-800 p-2.5 rounded-lg border border-gray-100 dark:border-gray-700 hover:border-indigo-300 transition-all shadow-sm">
+                              <input 
+                                type="checkbox" 
+                                checked={checked} 
+                                onChange={(e) => {
+                                  if (e.target.checked) {
+                                    setQpSubjectIds(prev => [...prev, s.id]);
+                                  } else {
+                                    setQpSubjectIds(prev => prev.filter(id => id !== s.id));
+                                  }
+                                }} 
+                                className="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500 border-gray-300" 
+                              />
+                              {s.name}
+                            </label>
+                          );
+                        })}
+                      </div>
                     </div>
                   </div>
 
-                  <div className="space-y-4 border border-slate-100 dark:border-gray-800 rounded-3xl p-5 bg-slate-50/50 dark:bg-gray-800/10">
+                  <div className="card p-6 md:p-8 shadow-sm border border-slate-100 dark:border-gray-800 bg-slate-50/50 dark:bg-gray-800/10 space-y-6">
                     <div>
-                      <label className="text-xs font-black uppercase tracking-wider text-slate-400 mb-2 block">Upload Document (PDF/Word)</label>
-                      <div className="relative border-2 border-dashed border-slate-200 dark:border-gray-700 hover:border-indigo-500 dark:hover:border-indigo-500 transition-all rounded-2xl p-6 flex flex-col items-center justify-center bg-white dark:bg-gray-900 cursor-pointer group">
+                      <label className="text-sm font-black uppercase tracking-wider text-slate-500 mb-3 block flex items-center gap-2"><Upload className="w-5 h-5 text-indigo-500" /> Upload Document (PDF/Word)</label>
+                      <div className="relative border-2 border-dashed border-slate-300 dark:border-gray-600 hover:border-indigo-500 dark:hover:border-indigo-500 transition-all rounded-3xl p-10 flex flex-col items-center justify-center bg-white dark:bg-gray-900 cursor-pointer group shadow-inner">
                         <input 
                           type="file" 
                           accept=".pdf,.doc,.docx" 
@@ -1969,32 +1974,37 @@ export const ExamListPage: React.FC = () => {
                           }} 
                           className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                         />
-                        <Download className="w-8 h-8 text-slate-400 group-hover:text-indigo-600 group-hover:scale-110 transition-all mb-2" />
-                        <span className="text-xs text-slate-600 dark:text-slate-400 font-extrabold group-hover:text-indigo-600 transition-all">Click or drag file to upload</span>
-                        <span className="text-[10px] text-slate-400 mt-1">PDF, DOC, DOCX up to 10MB</span>
+                        <div className="bg-indigo-50 dark:bg-indigo-900/20 p-4 rounded-full mb-4 group-hover:scale-110 transition-transform duration-300">
+                          <Download className="w-10 h-10 text-indigo-500" />
+                        </div>
+                        <span className="text-sm md:text-base text-slate-700 dark:text-slate-300 font-extrabold group-hover:text-indigo-600 transition-colors">Click or drag file here to upload</span>
+                        <span className="text-xs text-slate-400 mt-2 font-semibold">Supported formats: PDF, DOC, DOCX (Max 10MB)</span>
                       </div>
                     </div>
                     
-                    <div className="relative flex py-1 items-center">
-                      <div className="flex-grow border-t border-slate-200 dark:border-gray-800"></div>
-                      <span className="flex-shrink mx-4 text-slate-400 text-[10px] font-black uppercase tracking-wider">OR PASTE LINK MANUALLY</span>
-                      <div className="flex-grow border-t border-slate-200 dark:border-gray-800"></div>
+                    <div className="relative flex py-4 items-center">
+                      <div className="flex-grow border-t border-slate-200 dark:border-gray-700"></div>
+                      <span className="flex-shrink mx-4 text-slate-400 text-xs font-black uppercase tracking-widest bg-white dark:bg-gray-900 px-3 py-1 rounded-full border border-slate-100 dark:border-gray-800">OR PASTE LINK MANUALLY</span>
+                      <div className="flex-grow border-t border-slate-200 dark:border-gray-700"></div>
                     </div>
 
                     <div>
-                      <label className="text-xs font-black uppercase tracking-wider text-slate-400 mb-2 block">File Link (PDF/Word/Drive)</label>
+                      <label className="text-sm font-black uppercase tracking-wider text-slate-500 mb-3 block flex items-center gap-2"><LinkIcon className="w-5 h-5 text-indigo-500" /> File Link (PDF/Word/Drive)</label>
                       <input 
                         type="text" 
-                        placeholder="https://link-to-file.pdf or drive link" 
+                        placeholder="https://link-to-file.pdf or Google Drive link" 
                         value={qpFileUrl} 
                         onChange={e => setQpFileUrl(e.target.value)} 
-                        className="w-full bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-700 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 text-slate-700 dark:text-slate-200 font-bold" 
+                        className="w-full bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-700 rounded-2xl px-5 py-4 text-base focus:outline-none focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 text-slate-700 dark:text-slate-200 font-bold shadow-sm transition-all" 
                       />
                     </div>
                   </div>
-                  <div className="flex gap-3 justify-end pt-2">
-                    <button type="button" onClick={() => setShowQpModal(false)} className="btn-secondary text-sm">Cancel</button>
-                    <button type="submit" className="btn-primary text-sm">Upload Paper</button>
+
+                  <div className="flex gap-4 justify-end pt-6 mb-12">
+                    <button type="button" onClick={() => setShowQpModal(false)} className="px-6 py-3 rounded-2xl font-bold bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 transition-colors">Cancel</button>
+                    <button type="submit" className="px-8 py-3 rounded-2xl font-black bg-indigo-600 text-white hover:bg-indigo-700 shadow-xl shadow-indigo-600/30 transition-all flex items-center gap-2 text-lg">
+                      <Save className="w-5 h-5" /> Save Question Paper
+                    </button>
                   </div>
                 </form>
               </div>
@@ -2369,45 +2379,64 @@ export const ExamListPage: React.FC = () => {
         </div>
       )}
 
-      {/* Teacher Permissions Modal */}
+      {/* Teacher Permissions Full Page Overlay */}
       {showPermissionsModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white dark:bg-gray-900 rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl border border-gray-100 dark:border-gray-800 animate-scale-up">
-            <div className="p-6 bg-gradient-to-r from-indigo-500 to-purple-500 text-white flex justify-between items-center">
-              <div>
-                <h3 className="text-lg font-black uppercase tracking-wider">Teacher Permissions</h3>
-                <p className="text-xs text-indigo-100 mt-1">Allow teachers to upload draft question papers</p>
+        <div className="fixed inset-0 z-50 bg-white dark:bg-gray-900 overflow-y-auto animate-fade-in flex flex-col">
+          <div className="sticky top-0 z-10 flex justify-between items-center p-6 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-100 dark:border-gray-800 shadow-sm">
+            <div>
+              <h3 className="text-xl font-black bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent uppercase tracking-wider">Teacher Permissions</h3>
+              <p className="text-xs text-gray-500 font-semibold mt-1">Allow teachers to upload draft question papers</p>
+            </div>
+            <button onClick={() => setShowPermissionsModal(false)} className="p-3 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-2xl transition-all cursor-pointer">
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+          
+          <div className="flex-1 p-6 md:p-8 max-w-4xl mx-auto w-full">
+            <div className="card shadow-sm border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 overflow-hidden">
+              <div className="p-4 bg-slate-50 dark:bg-gray-800/50 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
+                <span className="text-sm font-black text-slate-500 uppercase tracking-wider">Staff Members</span>
+                <span className="text-xs font-bold text-slate-400 bg-white dark:bg-gray-800 px-3 py-1 rounded-full border border-gray-100 dark:border-gray-700">Total: {teachers.length}</span>
               </div>
-              <button onClick={() => setShowPermissionsModal(false)} className="p-2 hover:bg-white/10 rounded-full transition-colors">
-                <X className="w-5 h-5 text-white" />
-              </button>
+              <div className="divide-y divide-gray-100 dark:divide-gray-800">
+                {teachers.map((teacher: any) => (
+                  <div key={teacher.id} className="p-5 flex justify-between items-center hover:bg-slate-50/50 dark:hover:bg-gray-800/30 transition-colors">
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-100 to-purple-100 dark:from-indigo-900/40 dark:to-purple-900/40 flex items-center justify-center text-indigo-600 dark:text-indigo-400 font-black text-sm border border-indigo-200 dark:border-indigo-800/50">
+                        {(teacher.user?.name || 'U').charAt(0).toUpperCase()}
+                      </div>
+                      <div>
+                        <p className="text-sm font-bold text-gray-800 dark:text-gray-200">{teacher.user?.name || 'Unknown'}</p>
+                        <p className="text-xs font-semibold text-gray-400 mt-0.5">{teacher.employeeId || 'No ID'} · {teacher.specialization || 'General'}</p>
+                      </div>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input 
+                        type="checkbox" 
+                        checked={teacher.canUploadQuestionPapers || false} 
+                        onChange={(e) => handleToggleTeacherPermission(teacher.id, e.target.checked)}
+                        className="sr-only peer" 
+                      />
+                      <div className="w-12 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-indigo-600"></div>
+                    </label>
+                  </div>
+                ))}
+                {teachers.length === 0 && (
+                  <div className="p-10 text-center flex flex-col items-center">
+                    <div className="w-16 h-16 bg-slate-50 dark:bg-gray-800 rounded-full flex items-center justify-center mb-4">
+                      <ShieldAlert className="w-8 h-8 text-slate-300 dark:text-gray-600" />
+                    </div>
+                    <h4 className="text-base font-bold text-slate-700 dark:text-slate-300">No Teachers Found</h4>
+                    <p className="text-sm text-slate-500 mt-1">There are no teachers registered in the system yet.</p>
+                  </div>
+                )}
+              </div>
             </div>
             
-            <div className="p-6 max-h-96 overflow-y-auto divide-y divide-gray-100 dark:divide-gray-800">
-              {teachers.map((teacher: any) => (
-                <div key={teacher.id} className="py-3.5 flex justify-between items-center">
-                  <div>
-                    <p className="text-sm font-bold text-gray-800 dark:text-gray-200">{teacher.user?.name || 'Unknown'}</p>
-                    <p className="text-[10px] font-semibold text-gray-400 mt-0.5">{teacher.employeeId || 'No ID'} · {teacher.specialization || 'General'}</p>
-                  </div>
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input 
-                      type="checkbox" 
-                      checked={teacher.canUploadQuestionPapers || false} 
-                      onChange={(e) => handleToggleTeacherPermission(teacher.id, e.target.checked)}
-                      className="sr-only peer" 
-                    />
-                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-indigo-600"></div>
-                  </label>
-                </div>
-              ))}
-              {teachers.length === 0 && (
-                <p className="text-center py-6 text-sm text-gray-400">No teachers found.</p>
-              )}
-            </div>
-
-            <div className="p-5 border-t border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50 flex justify-end">
-              <button onClick={() => setShowPermissionsModal(false)} className="px-5 py-2.5 bg-gray-200 text-gray-700 hover:bg-gray-300 rounded-xl text-sm font-bold transition-colors">Close</button>
+            <div className="mt-6 flex justify-end">
+              <button onClick={() => setShowPermissionsModal(false)} className="px-8 py-3 rounded-2xl font-bold bg-indigo-600 text-white hover:bg-indigo-700 shadow-lg shadow-indigo-600/20 transition-all">
+                Done
+              </button>
             </div>
           </div>
         </div>
