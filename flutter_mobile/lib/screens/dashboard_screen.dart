@@ -1371,7 +1371,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             crossAxisCount: 3,
             crossAxisSpacing: 12,
             mainAxisSpacing: 12,
-            childAspectRatio: 0.9,
+            childAspectRatio: 1.0,
             children: [
               _buildGridItem(context, 'Students', Icons.groups_rounded, const Color(0xFF4285F4), () => Navigator.push(context, MaterialPageRoute(builder: (_) => const StudentsScreen()))),
               _buildGridItem(context, 'Teachers', Icons.person_pin_rounded, const Color(0xFFEA4335), () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TeachersScreen()))),
