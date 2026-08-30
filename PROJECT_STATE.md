@@ -11,6 +11,7 @@
 - **Flutter UI Alignment**: Fixed empty space issue in `single_progress_card_screen.dart` by increasing table row padding from 6px to 12px for better readability, and anchoring the signatures directly above the bottom note.
 - **Result Detail Screen**: Added `fatherName` to the backend `getExamResults` API and enabled `includePhoto: true` in the Flutter API call so that the Student Image and Father Name load correctly with live data instead of dummy placeholders.
 - **Share Result Layout**: Fixed the layout for the "Share Full Result" feature by adding padding inside the `RepaintBoundary` so the exported image has a beautiful, clean margin instead of being tightly cropped.
+- **Admin Dashboard UI**: Wrapped the top statistics row (Students, Teachers, Revenue) in a premium, beautifully styled container card with shadows, and applied Indian currency formatting to the Revenue number to match a professional UI design.
 
 ## Pending Action Items
 - Run `fix_duplicate_subjects.sql` in the production DB to remove duplicated subjects.
