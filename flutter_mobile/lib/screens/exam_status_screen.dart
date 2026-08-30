@@ -165,7 +165,7 @@ class _ExamStatusScreenState extends State<ExamStatusScreen> {
           statusBadge = _buildStatusBadge('PENDING', Icons.error_outline_rounded, const Color(0xFFEF4444), const Color(0xFFEF4444).withOpacity(0.1));
         }
 
-        final stats = cls['subjectStats'] ?? {};
+        final Map stats = cls['subjectStats'] ?? {};
         final rawTotalSubjects = (stats['totalSubjects'] as List?) ?? [];
         final rawEnteredSubjects = (stats['enteredSubjects'] as List?) ?? [];
         

@@ -774,7 +774,6 @@ class _SingleProgressCardScreenState extends State<SingleProgressCardScreen> {
                           ),
                         ],
                       ),
-                      ),
                     ],
                   ),
                 ),
