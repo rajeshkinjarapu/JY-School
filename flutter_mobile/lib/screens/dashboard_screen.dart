@@ -1326,16 +1326,29 @@ class _DashboardScreenState extends State<DashboardScreen> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         // ====== OVERVIEW STATS ROW ======
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+        Container(
+          margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+          padding: const EdgeInsets.symmetric(vertical: 18.0),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.04),
+                blurRadius: 12,
+                offset: const Offset(0, 6),
+              ),
+            ],
+            border: Border.all(color: Colors.grey.withOpacity(0.15)),
+          ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
               _buildMiniStatBox('Students', '$_adminTotalStudents', const Color(0xFF3B82F6)),
-              Container(width: 1, height: 40, color: Colors.grey.withOpacity(0.3)),
+              Container(width: 1, height: 40, color: Colors.grey.withOpacity(0.2)),
               _buildMiniStatBox('Teachers', '$_adminTotalTeachers', const Color(0xFF10B981)),
-              Container(width: 1, height: 40, color: Colors.grey.withOpacity(0.3)),
-              _buildMiniStatBox('Revenue', '₹${_adminFeeCollected.toInt()}', const Color(0xFFF59E0B)),
+              Container(width: 1, height: 40, color: Colors.grey.withOpacity(0.2)),
+              _buildMiniStatBox('Revenue', '₹${_formatIndianCurrency(_adminFeeCollected)}', const Color(0xFFF59E0B)),
             ],
           ),
         ),

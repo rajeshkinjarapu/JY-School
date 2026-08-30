@@ -9,6 +9,8 @@
 - **Logo Fixes**: Added logic to `JEEProgressCardTab.tsx`, `ProgressCardTab.tsx`, and `AdmitCardTab.tsx` in the WebApp to automatically use the global `SchoolSettings` logo and signatures if they are not explicitly set for a specific exam.
 - **Flutter Syntax Fixes**: Resolved hot-reload compiler errors (missing bracket and type mismatch for `stats`) in `single_progress_card_screen.dart` and `exam_status_screen.dart`.
 - **Flutter UI Alignment**: Fixed empty space issue in `single_progress_card_screen.dart` by increasing table row padding from 6px to 12px for better readability, and anchoring the signatures directly above the bottom note.
+- **Result Detail Screen**: Added `fatherName` to the backend `getExamResults` API and enabled `includePhoto: true` in the Flutter API call so that the Student Image and Father Name load correctly with live data instead of dummy placeholders.
+- **Share Result Layout**: Fixed the layout for the "Share Full Result" feature by adding padding inside the `RepaintBoundary` so the exported image has a beautiful, clean margin instead of being tightly cropped.
 
 ## Pending Action Items
 - Run `fix_duplicate_subjects.sql` in the production DB to remove duplicated subjects.
