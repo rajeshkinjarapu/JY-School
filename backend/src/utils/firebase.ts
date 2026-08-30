@@ -31,11 +31,19 @@ export const sendPushNotification = async (token: string, title: string, body: s
       android: {
         priority: 'high',
         notification: {
-          sound: 'default',
+          sound: 'jyschool_chime',
           channelId: 'high_importance_channel', // Match the Flutter app channel ID
-          defaultSound: true,
+          defaultSound: false,
           defaultVibrateTimings: true,
           priority: 'max'
+        }
+      },
+      apns: {
+        payload: {
+          aps: {
+            sound: 'jyschool_chime.wav',
+            badge: 1
+          }
         }
       },
       data: data || {},

@@ -54,6 +54,7 @@ class NotificationService {
       description: 'Critical school notifications — attendance, fees, exams.',
       importance: Importance.max,
       playSound: true,
+      sound: RawResourceAndroidNotificationSound('jyschool_chime'),
       enableVibration: true,
       showBadge: true,
     );
@@ -207,12 +208,15 @@ class NotificationService {
       styleInformation: BigTextStyleInformation(body ?? ''),
       ticker: title,
       icon: '@mipmap/ic_launcher',
+      sound: const RawResourceAndroidNotificationSound('jyschool_chime'),
+      playSound: true,
     );
 
     const DarwinNotificationDetails iosDetails = DarwinNotificationDetails(
       presentAlert: true,
       presentBadge: true,
       presentSound: true,
+      sound: 'jyschool_chime.wav',
     );
 
     final NotificationDetails details = NotificationDetails(
