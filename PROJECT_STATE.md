@@ -12,6 +12,7 @@
 - **Result Detail Screen**: Added `fatherName` to the backend `getExamResults` API and enabled `includePhoto: true` in the Flutter API call so that the Student Image and Father Name load correctly with live data instead of dummy placeholders.
 - **Share Result Layout**: Fixed the layout for the "Share Full Result" feature by adding padding inside the `RepaintBoundary` so the exported image has a beautiful, clean margin instead of being tightly cropped.
 - **Admin Dashboard UI**: Wrapped the top statistics row (Students, Teachers, Revenue) in a premium, beautifully styled container card with shadows, and applied Indian currency formatting to the Revenue number to match a professional UI design.
+- **Custom Notification Sound (Flutter)**: Successfully implemented a custom background push notification sound (`jyschool_chime.wav`) that exactly matches the WebApp's Web Audio API synthesized chime. Generated the wave file programmatically, bundled it in the Android `res/raw` directory, updated the `flutter_local_notifications` channel, and configured the backend FCM payload to play it.
 
 ## Pending Action Items
 - Run `fix_duplicate_subjects.sql` in the production DB to remove duplicated subjects.
