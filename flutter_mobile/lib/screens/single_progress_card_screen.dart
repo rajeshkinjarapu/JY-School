@@ -593,7 +593,7 @@ class _SingleProgressCardScreenState extends State<SingleProgressCardScreen> {
                               decoration: const BoxDecoration(
                                 gradient: LinearGradient(colors: [Color(0xFF0B1A33), Color(0xFF1A4A7A), Color(0xFF0B1A33)]),
                               ),
-                              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
                               child: Row(
                                 children: [
                                   Expanded(flex: 3, child: Text('SUBJECT', style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w700, color: Colors.white, letterSpacing: 0.5))),
@@ -620,7 +620,7 @@ class _SingleProgressCardScreenState extends State<SingleProgressCardScreen> {
                                   color: isEven ? const Color(0xFFFDFCF9) : Colors.white,
                                   border: const Border(bottom: BorderSide(color: Color(0xFFE8E0D8))),
                                 ),
-                                padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 16),
+                                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
                                 child: Row(
                                   children: [
                                     Expanded(flex: 3, child: Row(
@@ -643,7 +643,7 @@ class _SingleProgressCardScreenState extends State<SingleProgressCardScreen> {
                                 gradient: LinearGradient(colors: [Color(0xFFFDF9F4), Color(0xFFFFF3E0)]),
                                 border: Border(top: BorderSide(color: Color(0xFFF39C12), width: 2.5), bottom: BorderSide(color: Color(0xFFF39C12), width: 2.5)),
                               ),
-                              padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 16),
+                              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
                               child: Row(
                                 children: [
                                   Expanded(flex: 3, child: Text('📌 TOTAL', style: GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.w900, color: const Color(0xFF0B1A33), letterSpacing: 1.0))),
@@ -695,6 +695,8 @@ class _SingleProgressCardScreenState extends State<SingleProgressCardScreen> {
                   ],
                 ),
               ),
+
+              const Spacer(),
 
               // Footer
               Container(
@@ -777,8 +779,6 @@ class _SingleProgressCardScreenState extends State<SingleProgressCardScreen> {
                     ],
                   ),
                 ),
-
-               const Spacer(),
 
                // Bottom Note
               Container(
