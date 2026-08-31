@@ -1,6 +1,9 @@
 import { Router } from 'express';
+import multer from 'multer';
 import { authenticate, authorize } from '../middlewares/auth';
-import { getAll, getById, create, update, deleteExam, getResults, updateAdmitCardSettings, publishResults, toggleFreezeClass, getAllStatus, sendMarksSMS } from '../controllers/exams.controller';
+import { getAll, getById, create, update, deleteExam, getResults, updateAdmitCardSettings, publishResults, toggleFreezeClass, getAllStatus, sendMarksSMS, scanOmr } from '../controllers/exams.controller';
+
+const upload = multer({ dest: 'uploads/temp/' });
 
 const router = Router();
 
@@ -8,6 +11,7 @@ router.use(authenticate);
 
 router.get('/status/all', authorize('SUPER_ADMIN', 'ADMIN'), getAllStatus);
 router.get('/', getAll);
+router.post('/scan-omr', authorize('SUPER_ADMIN', 'ADMIN', 'TEACHER'), upload.single('image'), scanOmr);
 router.get('/:id', getById);
 router.get('/:id/results', getResults);
 router.post('/', authorize('SUPER_ADMIN', 'ADMIN'), create);

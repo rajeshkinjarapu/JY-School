@@ -1,8 +1,8 @@
 import { Router } from 'express';
 import { 
-  getVehicles, createVehicle, 
-  getRoutes, createRoute, 
-  getStudentTransports, assignStudentTransport,
+  getVehicles, createVehicle, updateVehicle, deleteVehicle,
+  getRoutes, createRoute, deleteRoute,
+  getStudentTransports, assignStudentTransport, deleteStudentTransport,
   getTransportDashboardStats,
   getFuelLogs, createFuelLog,
   getMaintenanceLogs, createMaintenanceLog
@@ -19,14 +19,18 @@ router.get('/dashboard', authorize('SUPER_ADMIN', 'ADMIN'), getTransportDashboar
 // Vehicles
 router.get('/vehicles', getVehicles);
 router.post('/vehicles', authorize('SUPER_ADMIN', 'ADMIN'), createVehicle);
+router.put('/vehicles/:id', authorize('SUPER_ADMIN', 'ADMIN'), updateVehicle);
+router.delete('/vehicles/:id', authorize('SUPER_ADMIN', 'ADMIN'), deleteVehicle);
 
 // Routes & Stops
 router.get('/routes', getRoutes);
 router.post('/routes', authorize('SUPER_ADMIN', 'ADMIN'), createRoute);
+router.delete('/routes/:id', authorize('SUPER_ADMIN', 'ADMIN'), deleteRoute);
 
 // Student Allocations
 router.get('/students', authorize('SUPER_ADMIN', 'ADMIN'), getStudentTransports);
 router.post('/students', authorize('SUPER_ADMIN', 'ADMIN'), assignStudentTransport);
+router.delete('/students/:id', authorize('SUPER_ADMIN', 'ADMIN'), deleteStudentTransport);
 
 // Fuel Logs
 router.get('/fuel-logs', authorize('SUPER_ADMIN', 'ADMIN'), getFuelLogs);

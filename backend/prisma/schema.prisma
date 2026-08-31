@@ -39,6 +39,7 @@ model User {
   // JEE Paper Generator Relations
   latexQuestions   Question[]
   latexPapers      Paper[]
+  changedTimetables TimetableHistory[] @relation("ChangedBy")
 
   gatePassRequests GatePass[] @relation("GatePassRequests")
   approvedGatePasses GatePass[] @relation("ApprovedGatePasses")
@@ -100,6 +101,9 @@ model Teacher {
 
   classSubjectTeachers  ClassSubjectTeacher[]
   timetableSlots        Timetable[]
+  originalTimetableSlots Timetable[] @relation("OriginalTeacher")
+  absentSubstitutions    Substitute[] @relation("AbsentTeacher")
+  assignedSubstitutions  Substitute[] @relation("SubstituteTeacher")
   homeRoomClass         Class[]   @relation("ClassTeacher")
   attendanceMarked      Attendance[] @relation("TeacherMarked")
   homeworks             Homework[]
@@ -130,6 +134,8 @@ model Class {
   questionPapers   QuestionPaper[]
   slipTests        SlipTest[]
   homeworks        Homework[]
+  substitutions    Substitute[]
+  timetableHistory TimetableHistory[]
 
   @@unique([name, section, academicYear])
 }
@@ -149,6 +155,7 @@ model Subject {
   questionPapers       QuestionPaper[]
   slipTests            SlipTest[]
   homeworks            Homework[]
+  substitutions        Substitute[]
 
   @@unique([code, classId])
   @@index([classId])
@@ -226,19 +233,24 @@ model Mark {
 }
 
 model Timetable {
-  id           String   @id @default(uuid())
-  classId      String
-  class        Class    @relation(fields: [classId], references: [id])
-  subjectId    String
-  subject      Subject  @relation(fields: [subjectId], references: [id])
-  teacherId    String
-  teacher      Teacher  @relation(fields: [teacherId], references: [id])
-  day          String   // Monday, Tuesday, etc.
-  periodNumber Int      // 1, 2, 3...
-  startTime    String   // "09:00"
-  endTime      String   // "09:45"
-  room         String?
-  createdAt    DateTime @default(now())
+  id               String   @id @default(uuid())
+  classId          String
+  class            Class    @relation(fields: [classId], references: [id])
+  subjectId        String
+  subject          Subject  @relation(fields: [subjectId], references: [id])
+  teacherId        String
+  teacher          Teacher  @relation(fields: [teacherId], references: [id])
+  day              String   // Monday, Tuesday, etc.
+  periodNumber     Int      // 1, 2, 3...
+  startTime        String   // "09:00"
+  endTime          String   // "09:45"
+  room             String?
+  type             String   @default("REGULAR") // REGULAR, EXAM, SPECIAL
+  isSubstitute     Boolean  @default(false)
+  originalTeacherId String? 
+  originalTeacher  Teacher? @relation("OriginalTeacher", fields: [originalTeacherId], references: [id])
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @default(now()) @updatedAt
 
   @@unique([classId, day, periodNumber])
   @@index([classId])
@@ -257,6 +269,37 @@ model TimetableConfig {
 
   @@unique([category, periodNumber])
 }
+
+model Substitute {
+  id                String   @id @default(uuid())
+  date              DateTime
+  absentTeacherId   String
+  absentTeacher     Teacher  @relation("AbsentTeacher", fields: [absentTeacherId], references: [id])
+  substituteTeacherId String
+  substituteTeacher Teacher  @relation("SubstituteTeacher", fields: [substituteTeacherId], references: [id])
+  periodNumber      Int
+  classId           String
+  class             Class    @relation(fields: [classId], references: [id])
+  subjectId         String
+  subject           Subject  @relation(fields: [subjectId], references: [id])
+  createdAt         DateTime @default(now())
+
+  @@unique([date, absentTeacherId, periodNumber])
+}
+
+model TimetableHistory {
+  id          String   @id @default(uuid())
+  classId     String
+  class       Class    @relation(fields: [classId], references: [id])
+  periodNumber Int
+  day         String
+  action      String   // "CREATED", "UPDATED", "SUBSTITUTED", "DELETED"
+  details     Json
+  changedById String
+  changedBy   User     @relation("ChangedBy", fields: [changedById], references: [id])
+  createdAt   DateTime @default(now())
+}
+
 
 model FeeGroup {
   id          String    @id @default(uuid())

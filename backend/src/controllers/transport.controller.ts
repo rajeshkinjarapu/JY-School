@@ -181,3 +181,46 @@ export const createMaintenanceLog = async (req: Request, res: Response) => {
     res.status(400).json({ message: error.message });
   }
 };
+export const updateVehicle = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { registrationNo, make, model, capacity, status } = req.body;
+    const vehicle = await prisma.vehicle.update({
+      where: { id },
+      data: { registrationNo, make, model, capacity: Number(capacity), status }
+    });
+    res.json(vehicle);
+  } catch (error: any) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+export const deleteVehicle = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    await prisma.vehicle.delete({ where: { id } });
+    res.json({ message: 'Deleted successfully' });
+  } catch (error: any) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+export const deleteRoute = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    await prisma.transportRoute.delete({ where: { id } });
+    res.json({ message: 'Deleted successfully' });
+  } catch (error: any) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+export const deleteStudentTransport = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    await prisma.studentTransport.delete({ where: { id } });
+    res.json({ message: 'Deleted successfully' });
+  } catch (error: any) {
+    res.status(400).json({ message: error.message });
+  }
+};

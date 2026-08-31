@@ -12,52 +12,6 @@ export const ProgressCardTemplate: React.FC<ProgressCardTemplateProps> = ({
   exam = {}, 
   settings = {} 
 }) => {
-  // Extract subjects from the exam
-  let examSubjects: any[] = [];
-  if (exam && Array.isArray(exam.subjects)) {
-    examSubjects = exam.subjects;
-  } else if (settings && Array.isArray(settings.subjects)) {
-    examSubjects = settings.subjects;
-  }
-
-  // Compile final marks list based on all configured subjects
-  let finalMarks: any[] = [];
-  if (examSubjects.length > 0) {
-    finalMarks = examSubjects.map((sub: any) => {
-      const studentMark = data.marks?.find((m: any) => 
-        m.subject.toLowerCase() === sub.name.toLowerCase() ||
-        sub.name.toLowerCase().includes(m.subject.toLowerCase()) ||
-        m.subject.toLowerCase().includes(sub.name.toLowerCase())
-      );
-      
-      const obtained = studentMark !== undefined ? studentMark.obtained : '-';
-      return {
-        subject: sub.name,
-        maxMarks: Number(sub.maxMarks) || 100,
-        obtained: obtained,
-      };
-    });
-  } else {
-    finalMarks = data.marks && data.marks.length > 0 ? data.marks.map((m: any) => ({
-      subject: m.subject,
-      maxMarks: Number(m.maxMarks) || 100,
-      obtained: m.obtained,
-    })) : [
-      { subject: "Mathematics", maxMarks: 100, obtained: 98 },
-      { subject: "Physics", maxMarks: 100, obtained: 95 },
-      { subject: "Chemistry", maxMarks: 100, obtained: 92 },
-    ];
-  }
-
-  const TOTAL_MAX_MARKS = finalMarks.reduce((sum: number, m: any) => sum + (Number(m.maxMarks) || 100), 0);
-  
-  const TOTAL_OBTAINED = finalMarks.reduce((sum: number, m: any) => {
-    const num = Number(m.obtained);
-    return sum + (isNaN(num) ? 0 : num);
-  }, 0);
-
-  const totalPct = TOTAL_MAX_MARKS > 0 ? ((TOTAL_OBTAINED / TOTAL_MAX_MARKS) * 100).toFixed(1) : '0.0';
-
   // Fallback data for preview
   const safeData = {
     studentName: data.studentName || "VENKATA SAI KUMAR",
@@ -67,23 +21,20 @@ export const ProgressCardTemplate: React.FC<ProgressCardTemplateProps> = ({
     mobile: data.mobile || "+91 9876543210",
     rank: data.rank || "1",
     photo: data.photo || "",
-    total: TOTAL_OBTAINED,
-    academicYear: data.academicYear || "2026-2027",
+    total: data.total || 0,
+    academicYear: data.academicYear || "2023-2024",
     location: data.location || "Narasannapeta",
-    marks: finalMarks
+    marks: data.marks && data.marks.length > 0 ? data.marks : [
+      { subject: "Mathematics", maxMarks: 100, obtained: 98 },
+      { subject: "Physics", maxMarks: 100, obtained: 95 },
+      { subject: "Chemistry", maxMarks: 100, obtained: 92 },
+    ]
   };
 
-  const getPerformanceRemark = (pct: number) => {
-    if (pct >= 90) return { label: 'OUTSTANDING', comment: 'Excellent performance! Keep up the brilliant work.', color: 'text-emerald-600 bg-emerald-50 border-emerald-200' };
-    if (pct >= 80) return { label: 'EXCELLENT', comment: 'Excellent effort. Very good academic results.', color: 'text-teal-600 bg-teal-50 border-teal-200' };
-    if (pct >= 70) return { label: 'VERY GOOD', comment: 'Very good progress. With a bit more effort, you can reach outstanding.', color: 'text-indigo-600 bg-indigo-50 border-indigo-200' };
-    if (pct >= 60) return { label: 'GOOD', comment: 'Good work. Steady preparation will help secure higher grades.', color: 'text-blue-600 bg-blue-50 border-blue-200' };
-    if (pct >= 50) return { label: 'SATISFACTORY', comment: 'Satisfactory performance. Focus on regular practice.', color: 'text-amber-600 bg-amber-50 border-amber-200' };
-    if (pct >= 35) return { label: 'AVERAGE', comment: 'Average performance. Needs to study harder to improve grades.', color: 'text-orange-600 bg-orange-50 border-orange-200' };
-    return { label: 'NEEDS IMPROVEMENT', comment: 'Needs immediate improvement and extra guidance.', color: 'text-rose-600 bg-rose-50 border-rose-200' };
-  };
-
-  const remark = getPerformanceRemark(Number(totalPct));
+  const TOTAL_MAX_MARKS = safeData.marks.reduce((sum: number, m: any) => sum + (Number(m.maxMarks) || 100), 0);
+  const totalPct = TOTAL_MAX_MARKS > 0 ? ((safeData.total / TOTAL_MAX_MARKS) * 100).toFixed(1) : '0.0';
+  const barWidth = Math.min(Number(totalPct), 100);
+  const PASS_THRESHOLD = 35;
 
   const examTitle = settings?.examNameOverride || exam?.name || 'EXAMINATION RESULT CARD';
   const logoUrl = settings?.logoUrl;
@@ -98,15 +49,15 @@ export const ProgressCardTemplate: React.FC<ProgressCardTemplateProps> = ({
   };
 
   return (
-    <div className="w-[794px] min-h-[1123px] print:w-[210mm] print:h-[296mm] bg-white rounded-xl print:rounded-none shadow-2xl flex flex-col relative font-sans print:shadow-none mx-auto shrink-0" style={{ fontFamily: "'Segoe UI', 'Roboto', system-ui, -apple-system, sans-serif" }}>
+    <div className="w-[794px] h-[1123px] bg-white rounded-xl shadow-2xl flex flex-col relative overflow-hidden font-sans print:shadow-none mx-auto shrink-0" style={{ fontFamily: "'Segoe UI', 'Roboto', system-ui, -apple-system, sans-serif" }}>
       <style>{`
-        .jee-card { background: linear-gradient(145deg, #ffffff 0%, #fdfcf9 100%); flex: 1; display: flex; flex-direction: column; position: relative; border: 1px solid #f0e6d2; }
+        .jee-card { background: linear-gradient(145deg, #ffffff 0%, #fdfcf9 100%); height: 100%; display: flex; flex-direction: column; position: relative; border: 1px solid #f0e6d2; }
         .jee-card .top-bar { height: 10px; background: linear-gradient(90deg, #0b1a33 0%, #1a4a7a 30%, #f39c12 60%, #d4a017 100%); flex-shrink: 0; }
-        .jee-card .card-header { display: flex; align-items: center; padding: 12px 32px 10px 32px; gap: 16px; flex-shrink: 0; border-bottom: 3px solid #f39c12; background: linear-gradient(to bottom, rgba(255,255,255,0.9), rgba(255,255,255,1)); }
-        .jee-card .photo-col { width: 110px; height: 125px; border: 2px solid #e0d4c3; background: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 4px 10px rgba(0,0,0,0.05); overflow: hidden; border-radius: 6px; }
+        .jee-card .card-header { display: flex; align-items: center; padding: 18px 32px 12px 32px; gap: 16px; flex-shrink: 0; border-bottom: 3px solid #f39c12; background: linear-gradient(to bottom, rgba(255,255,255,0.9), rgba(255,255,255,1)); }
+        .jee-card .photo-col { width: 110px; height: 135px; border: 2px solid #e0d4c3; background: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 4px 10px rgba(0,0,0,0.05); overflow: hidden; border-radius: 6px; }
         .jee-card .photo-col img { width: 100%; height: 100%; object-fit: cover; object-position: top; }
-        .jee-card .card-header .logo-wrap { width: 100px; height: 90px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-        .jee-card .card-header .logo-wrap img { max-width: 100%; max-height: 90px; object-fit: contain; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1)); }
+        .jee-card .card-header .logo-wrap { width: 100px; height: 100px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .jee-card .card-header .logo-wrap img { max-width: 100%; max-height: 100px; object-fit: contain; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1)); }
         .jee-card .card-header .title-wrap { text-align: center; flex: 1; padding: 0 8px; }
         .jee-card .card-header .title-wrap .school-name { font-size: 28px; font-weight: 900; color: #0b1a33; letter-spacing: 1.5px; font-family: 'Times New Roman', 'Georgia', serif; line-height: 1.2; white-space: nowrap; text-shadow: 1px 1px 0px rgba(0,0,0,0.05); }
         .jee-card .card-header .title-wrap .school-sub { font-size: 16px; font-weight: 400; color: #1a4a7a; letter-spacing: 0.8px; margin: 2px 0; white-space: nowrap; }
@@ -114,27 +65,27 @@ export const ProgressCardTemplate: React.FC<ProgressCardTemplateProps> = ({
         .jee-card .card-header .title-wrap .exam-title { font-size: 22px; font-weight: 400; color: #0b1a33; letter-spacing: 2px; margin: 6px 0 0; text-transform: uppercase; white-space: nowrap; }
         .jee-card .card-header .title-wrap .result-card-label { font-size: 18px; font-weight: 400; color: #d4a017; letter-spacing: 4px; margin-top: 2px; text-transform: uppercase; white-space: nowrap; }
         .jee-card .card-header .spacer { width: 100px; flex-shrink: 0; }
-        .jee-card .deco-line { display: flex; align-items: center; justify-content: center; gap: 14px; padding: 4px 32px 8px 32px; flex-shrink: 0; }
+        .jee-card .deco-line { display: flex; align-items: center; justify-content: center; gap: 14px; padding: 6px 32px 10px 32px; flex-shrink: 0; }
         .jee-card .deco-line .ornament { font-size: 18px; color: #d4a017; flex-shrink: 0; }
         .jee-card .deco-line .line { flex: 1; max-width: 140px; height: 2px; background: linear-gradient(90deg, transparent, #f39c12, transparent); }
-        .jee-card .student-info { margin: 4px 28px 10px 28px; border: 2px solid #f39c12; border-radius: 12px; overflow: hidden; background: linear-gradient(135deg, #ffffff 0%, #fef8f0 100%); box-shadow: 0 6px 20px rgba(243, 156, 18, 0.12); display: grid; grid-template-columns: 1fr auto; flex-shrink: 0; }
+        .jee-card .student-info { margin: 6px 28px 14px 28px; border: 2px solid #f39c12; border-radius: 12px; overflow: hidden; background: linear-gradient(135deg, #ffffff 0%, #fef8f0 100%); box-shadow: 0 6px 20px rgba(243, 156, 18, 0.12); display: grid; grid-template-columns: 1fr auto; flex-shrink: 0; }
         .jee-card .student-info .info-details { display: flex; flex-direction: column; }
-        .jee-card .student-info .info-row { display: grid; grid-template-columns: 190px 1fr; border-bottom: 1px solid #f5ede4; }
+        .jee-card .student-info .info-row { display: grid; grid-template-columns: 150px 1fr; border-bottom: 1px solid #f5ede4; }
         .jee-card .student-info .info-row:last-child { border-bottom: none; }
-        .jee-card .student-info .info-row .label { background: #fdf9f4; padding: 5px 16px; font-weight: 700; font-size: 13px; color: #6a3a1a; border-right: 1px solid #f5ede4; display: flex; align-items: center; gap: 6px; white-space: nowrap; }
-        .jee-card .student-info .info-row .value { padding: 5px 16px; font-weight: 800; font-size: 15px; color: #0b1a33; background: transparent; display: flex; align-items: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .jee-card .student-info .info-row .label { background: #fdf9f4; padding: 7px 18px; font-weight: 600; font-size: 13px; color: #6a3a1a; border-right: 1px solid #f5ede4; display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+        .jee-card .student-info .info-row .value { padding: 7px 18px; font-weight: 600; font-size: 14px; color: #0b1a33; background: transparent; display: flex; align-items: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .jee-card .student-info .info-row:nth-child(even) { background: #fefcf9; }
-        .jee-card .student-info .photo-col { padding: 10px 16px 10px 10px; display: flex; align-items: flex-start; justify-content: center; border-left: 2px solid #f5ede4; background: linear-gradient(180deg, #fefcf9 0%, #fcf7ef 100%); min-width: 120px; }
-        .jee-card .student-info .photo-col img { width: 90px; height: 110px; object-fit: cover; border: 3px solid #f39c12; box-shadow: 0 6px 12px rgba(243, 156, 18, 0.2); border-radius: 8px; background: #fff; flex-shrink: 0; }
-        .jee-card .student-info .photo-col .placeholder-photo { width: 90px; height: 110px; background: #ede8e0; display: flex; align-items: center; justify-content: center; color: #8a7a6a; font-size: 44px; border: 3px dashed #c8b8a8; border-radius: 6px; flex-shrink: 0; }
-        .jee-card .perf-table-wrap { margin: 2px 28px 8px 28px; padding: 0; flex-shrink: 0; }
-        .jee-card .perf-table-wrap .perf-title { font-size: 16px; font-weight: 700; color: #0b1a33; margin-bottom: 6px; display: flex; align-items: center; gap: 12px; white-space: nowrap; }
+        .jee-card .student-info .photo-col { padding: 14px 20px 14px 12px; display: flex; align-items: flex-start; justify-content: center; border-left: 2px solid #f5ede4; background: linear-gradient(180deg, #fefcf9 0%, #fcf7ef 100%); min-width: 130px; }
+        .jee-card .student-info .photo-col img { width: 95px; height: 114px; object-fit: cover; border: 3px solid #f39c12; box-shadow: 0 6px 12px rgba(243, 156, 18, 0.2); border-radius: 8px; background: #fff; flex-shrink: 0; }
+        .jee-card .student-info .photo-col .placeholder-photo { width: 95px; height: 114px; background: #ede8e0; display: flex; align-items: center; justify-content: center; color: #8a7a6a; font-size: 44px; border: 3px dashed #c8b8a8; border-radius: 6px; flex-shrink: 0; }
+        .jee-card .perf-table-wrap { margin: 4px 28px 12px 28px; padding: 0; flex-shrink: 0; }
+        .jee-card .perf-table-wrap .perf-title { font-size: 16px; font-weight: 700; color: #0b1a33; margin-bottom: 10px; display: flex; align-items: center; gap: 12px; white-space: nowrap; }
         .jee-card .perf-table-wrap .perf-title .icon { font-size: 22px; }
         .jee-card .perf-table-wrap .perf-title .max-hint { margin-left: auto; font-size: 13px; font-weight: 400; color: #6a8aaa; white-space: nowrap; }
         .perf-table { width: 100%; border-collapse: collapse; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06); font-size: 14px; border: 2px solid #e8e0d8; }
         .perf-table thead tr { background: linear-gradient(135deg, #0b1a33, #1a4a7a, #0b1a33); }
-        .perf-table thead th { color: #ffffff; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; padding: 8px 16px; text-align: center; white-space: nowrap; font-size: 13px; border: 1px solid rgba(255,255,255,0.1); }
-        .perf-table tbody td { padding: 6px 16px; text-align: center; white-space: nowrap; border: 1px solid #e8e0d8; background: #fff; font-weight: 500; color: #0b1a33; }
+        .perf-table thead th { color: #ffffff; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; padding: 12px 16px; text-align: center; white-space: nowrap; font-size: 13px; border: 1px solid rgba(255,255,255,0.1); }
+        .perf-table tbody td { padding: 9px 16px; text-align: center; white-space: nowrap; border: 1px solid #e8e0d8; background: #fff; font-weight: 500; color: #0b1a33; }
         .perf-table tbody tr:nth-child(even) td { background: #fdfcf9; }
         .perf-table tbody .subject-label { font-weight: 600; text-align: left; padding-left: 20px; color: #1a3a5a; }
         .perf-table tbody .marks-cell { font-weight: 700; font-size: 16px; }
@@ -143,22 +94,22 @@ export const ProgressCardTemplate: React.FC<ProgressCardTemplateProps> = ({
         .perf-table tbody .total-row td { background: linear-gradient(90deg, #fdf9f4, #fff3e0) !important; font-weight: 700; font-size: 15px; border-top: 2.5px solid #f39c12; border-bottom: 2.5px solid #f39c12; }
         .perf-table tbody .total-row .total-label { text-align: left; padding-left: 20px; color: #0b1a33; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; }
         .perf-table tbody .total-row .marks-cell { font-size: 19px; color: #c0392b; font-weight: 900; }
-        .jee-card .score-bar-wrap { margin: 4px 28px 12px 28px; background: linear-gradient(to right, #ffffff, #f9fbfd); border: 1px solid #dce4ed; border-radius: 12px; padding: 12px 20px; flex-shrink: 0; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
+        .jee-card .score-bar-wrap { margin: 8px 28px 18px 28px; background: linear-gradient(to right, #ffffff, #f9fbfd); border: 1px solid #dce4ed; border-radius: 12px; padding: 16px 20px; flex-shrink: 0; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
         .jee-card .score-bar { height: 16px; background: #eef2f7; border-radius: 20px; overflow: hidden; position: relative; border: 1px solid #dce4ed; }
         .jee-card .score-bar .fill { height: 100%; background: linear-gradient(90deg, #1a4a7a, #3498db); border-radius: 20px; transition: width 0.5s ease; position: relative; }
         .jee-card .score-bar .fill::after { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0) 100%); background-size: 200% 100%; animation: shimmer 2s infinite linear; }
         @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
         .jee-card .score-labels { display: flex; justify-content: space-between; margin-top: 8px; font-size: 12px; font-weight: 600; color: #6a8aaa; }
-        .jee-card .result-footer { margin: auto 28px 12px 28px; padding-top: 12px; border-top: 2px dashed #dce4ed; display: flex; justify-content: space-between; align-items: flex-end; }
+        .jee-card .result-footer { margin: auto 28px 20px 28px; padding-top: 18px; border-top: 2px dashed #dce4ed; display: flex; justify-content: space-between; align-items: flex-end; }
         .jee-card .result-footer .left { display: flex; flex-direction: column; gap: 4px; }
         .jee-card .result-footer .total-label { font-size: 16px; font-weight: 800; color: #1a4a7a; text-transform: uppercase; letter-spacing: 0.5px; }
         .jee-card .result-footer .percentage { font-size: 46px; font-weight: 900; color: #c0392b; line-height: 1; letter-spacing: -1px; text-shadow: 1px 1px 0px rgba(192,57,43,0.1); }
         .jee-card .result-footer .signatures { display: flex; gap: 40px; }
         .jee-card .result-footer .sig-block { display: flex; flex-direction: column; align-items: center; width: 140px; }
-        .jee-card .result-footer .sig-block img { max-width: 140px; max-height: 45px; object-fit: contain; margin-bottom: 4px; }
-        .jee-card .result-footer .sig-block .sig-placeholder { width: 100%; height: 45px; border-bottom: 1.5px dashed #c8d6e4; margin-bottom: 4px; }
+        .jee-card .result-footer .sig-block img { max-width: 140px; max-height: 50px; object-fit: contain; margin-bottom: 6px; }
+        .jee-card .result-footer .sig-block .sig-placeholder { width: 100%; height: 50px; border-bottom: 1.5px dashed #c8d6e4; margin-bottom: 6px; }
         .jee-card .result-footer .sig-label { font-size: 13px; font-weight: 600; color: #1a3a5a; text-align: center; }
-        .jee-card .card-footer-note { background: #0b1a33; color: #aabaca; font-size: 11px; text-align: center; padding: 6px; font-weight: 500; letter-spacing: 0.5px; flex-shrink: 0; }
+        .jee-card .card-footer-note { background: #0b1a33; color: #aabaca; font-size: 11px; text-align: center; padding: 8px; font-weight: 500; letter-spacing: 0.5px; flex-shrink: 0; }
       `}</style>
 
       <div className="jee-card">
@@ -276,18 +227,15 @@ export const ProgressCardTemplate: React.FC<ProgressCardTemplateProps> = ({
             </table>
         </div>
 
-        <div className="mx-[28px] my-[10px] p-4 bg-slate-50 border border-slate-150 rounded-xl flex items-center justify-between gap-4">
-          <div>
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Academic Performance Rating</span>
-            <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-black border ${remark.color}`}>
-              {remark.label}
-            </span>
-          </div>
-          <div className="flex-1 text-right">
-            <span className="text-xs font-bold text-slate-600 italic block">
-              "{remark.comment}"
-            </span>
-          </div>
+        <div className="score-bar-wrap">
+            <div className="score-bar">
+                <div className="fill" style={{ width: `${barWidth}%` }}></div>
+            </div>
+            <div className="score-labels">
+                <span>0</span>
+                <span>Threshold: {PASS_THRESHOLD}%</span>
+                <span>{TOTAL_MAX_MARKS}</span>
+            </div>
         </div>
 
         <div className="result-footer">

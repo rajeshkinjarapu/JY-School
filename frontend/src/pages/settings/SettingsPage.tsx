@@ -389,7 +389,9 @@ export const SettingsPage: React.FC = () => {
                   <table className="w-full text-sm text-left">
                     <thead>
                       <tr className="bg-gray-50/50 dark:bg-gray-800/30 text-gray-500 dark:text-gray-400 font-extrabold text-[11px] uppercase tracking-wider border-b border-gray-100 dark:border-gray-800">
-                        <th className="px-6 py-4">User</th>
+                        <th className="px-6 py-4">Name</th>
+                        <th className="px-6 py-4">Login Details</th>
+                        <th className="px-6 py-4">Password</th>
                         <th className="px-6 py-4">Role</th>
                         <th className="px-6 py-4">Status</th>
                         <th className="px-6 py-4 text-right">Actions</th>
@@ -400,7 +402,15 @@ export const SettingsPage: React.FC = () => {
                         <tr key={user.id} className="hover:bg-blue-50/30 dark:hover:bg-blue-900/10 transition-colors group">
                           <td className="px-6 py-4">
                             <div className="font-bold text-gray-900 dark:text-white text-base">{user.name}</div>
-                            <div className="text-xs text-gray-500 dark:text-gray-400 font-medium mt-0.5">{user.email}</div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="text-sm text-gray-600 dark:text-gray-300 font-medium">{user.email}</div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="flex items-center gap-2">
+                              <span className="text-gray-400 tracking-[0.2em]">••••••••</span>
+                              <span className="text-[10px] bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full border border-gray-200">Encrypted</span>
+                            </div>
                           </td>
                           <td className="px-6 py-4">
                             <span className={`px-3 py-1 rounded-full text-xs font-bold border ${

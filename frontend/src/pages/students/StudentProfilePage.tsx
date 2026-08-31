@@ -273,17 +273,19 @@ export const StudentProfilePage: React.FC = () => {
 
   return (
     <div className="flex flex-col h-full bg-gray-50/50 w-full" style={{ minHeight: 'calc(100vh - 64px)' }}>
-      <PageHeader 
-        title={`${student.user.name}'s Profile`}
-        icon={
-          <Link to="/students">
-            <ArrowLeft className="w-6 h-6 text-gray-400 hover:text-indigo-600 cursor-pointer" />
-          </Link>
-        }
-      />
+      <div className="print:hidden">
+        <PageHeader 
+          title={`${student.user.name}'s Profile`}
+          icon={
+            <Link to="/students">
+              <ArrowLeft className="w-6 h-6 text-gray-400 hover:text-indigo-600 cursor-pointer" />
+            </Link>
+          }
+        />
+      </div>
       
       <div className="flex-1 overflow-y-auto p-2.5 sm:p-6 lg:p-8 pt-2">
-        <div className="w-full space-y-4">
+        <div className="w-full space-y-4 print:hidden">
           
           {/* Simple Profile Header */}
           <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 relative overflow-hidden p-4 md:p-6">
@@ -416,17 +418,11 @@ export const StudentProfilePage: React.FC = () => {
             </div>
 
           {/* Details Masonry/Grid */}
-          <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
-            
-            {/* Left Column: Demographics & Guardian */}
-            <div className={`${user?.role === 'TEACHER' ? 'xl:col-span-3' : 'xl:col-span-2'} space-y-4`}>
-              
-              {/* Demographics & Family Compact Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className={`grid grid-cols-1 md:grid-cols-2 ${user?.role === 'TEACHER' ? 'lg:grid-cols-2' : 'lg:grid-cols-3'} gap-4 items-start`}>
                 
-                {/* Demographics Table */}
-                <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm overflow-hidden">
-                  <div className="p-3 border-b border-gray-50 dark:border-gray-800 flex items-center gap-2 bg-blue-50/30 dark:bg-blue-900/10">
+            {/* Demographics Table */}
+            <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm overflow-hidden h-full">
+              <div className="p-3 border-b border-gray-50 dark:border-gray-800 flex items-center gap-2 bg-blue-50/30 dark:bg-blue-900/10">
                     <div className="p-1.5 bg-blue-100 dark:bg-blue-900/40 rounded-lg text-blue-600 dark:text-blue-400"><User2 className="w-4 h-4" /></div>
                     <h3 className="text-[13px] font-bold text-gray-900 dark:text-white">Demographics</h3>
                   </div>
@@ -457,9 +453,9 @@ export const StudentProfilePage: React.FC = () => {
                   </table>
                 </div>
 
-                {/* Family Table */}
-                <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm overflow-hidden">
-                  <div className="p-3 border-b border-gray-50 dark:border-gray-800 flex items-center gap-2 bg-amber-50/30 dark:bg-amber-900/10">
+            {/* Family Table */}
+            <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm overflow-hidden h-full">
+              <div className="p-3 border-b border-gray-50 dark:border-gray-800 flex items-center gap-2 bg-amber-50/30 dark:bg-amber-900/10">
                     <div className="p-1.5 bg-amber-100 dark:bg-amber-900/40 rounded-lg text-amber-600 dark:text-amber-400"><Users className="w-4 h-4" /></div>
                     <h3 className="text-[13px] font-bold text-gray-900 dark:text-white">Family</h3>
                   </div>
@@ -495,15 +491,11 @@ export const StudentProfilePage: React.FC = () => {
                       </tr>
                     </tbody>
                   </table>
-                </div>
-                </div>
-              </div>
-            </div> {/* Closing left column */}
+            </div>
 
             {/* Right Column: Fee Ledger Snapshot */}
             {user?.role !== 'TEACHER' && (
-            <div className="space-y-4">
-              <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm overflow-hidden flex flex-col h-[280px]">
+              <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm overflow-hidden flex flex-col h-full max-h-[280px]">
                 <div className="p-3 border-b border-gray-50 dark:border-gray-800 flex justify-between items-center bg-gradient-to-r from-emerald-50/50 to-transparent dark:from-emerald-900/10">
                   <div className="flex items-center gap-2">
                     <div className="p-1.5 bg-emerald-500 rounded-lg text-white shadow-md shadow-emerald-500/20"><CreditCard className="w-4 h-4" /></div>
@@ -571,7 +563,6 @@ export const StudentProfilePage: React.FC = () => {
                     })}
                 </div>
               </div>
-            </div>
             )}
 
           </div>
@@ -732,6 +723,7 @@ export const StudentProfilePage: React.FC = () => {
         {`
           @page { size: A4 portrait; margin: 0; }
           body { margin: 0; padding: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; background: white; }
+          .print\\:hidden { display: none !important; }
         `}
       </style>
       <div className={`hidden ${printPayment ? '' : 'print:flex'} print:w-[210mm] print:h-screen print:max-h-[297mm] bg-white text-black font-sans relative flex-col mx-auto box-border overflow-hidden`}>
@@ -882,6 +874,7 @@ export const StudentProfilePage: React.FC = () => {
           </div>
 
         </div>
+      </div>
       </div>
 
 

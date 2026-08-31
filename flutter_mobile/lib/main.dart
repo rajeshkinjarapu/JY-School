@@ -11,6 +11,7 @@ import 'services/api_service.dart';
 import 'services/notification_service.dart';
 import 'services/offline_sync_service.dart';
 import 'widgets/offline_banner.dart';
+import 'services/update_service.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
@@ -103,6 +104,7 @@ class _AuthCheckState extends State<AuthCheck> {
   Future<void> _checkStatus() async {
     final token = await ApiService.getToken();
     if (mounted) {
+      UpdateService.checkForUpdate(context);
       setState(() {
         _isAuthenticated = token != null;
         _checkingAuth = false;

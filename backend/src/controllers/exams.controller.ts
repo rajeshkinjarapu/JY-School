@@ -4,6 +4,9 @@ import { createError } from '../middlewares/errorHandler';
 import { prisma } from '../utils/prisma';
 import { successResponse } from '../utils/response';
 import { calculateGrade } from '../utils/helpers';
+import { exec } from 'child_process';
+import path from 'path';
+import fs from 'fs';
 
 export const getAll = async (req: AuthRequest, res: Response): Promise<void> => {
   const classId = (req.query.classId as string) || '';
@@ -159,7 +162,7 @@ export const getResults = async (req: AuthRequest, res: Response, next: NextFunc
   if (!exam) return next(createError('Exam not found', 404));
 
   // Group marks by student
-  const studentMap = new Map<string, { studentId: string; name: string; photo?: string | null; rollNo: string; className: string; mobile: string; marks: any[]; total: number; percentage: number; grade: string }>();
+  const studentMap = new Map<string, { studentId: string; name: string; photo?: string | null; rollNo: string; className: string; mobile: string; fatherName?: string; marks: any[]; total: number; percentage: number; grade: string }>();
   
   if (classId) {
     const classStudents = await prisma.student.findMany({
@@ -523,6 +526,56 @@ export const getAllStatus = async (req: AuthRequest, res: Response, next: NextFu
     });
 
     successResponse(res, result, 'Exam status fetched');
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const scanOmr = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    if (!req.file) {
+      return next(createError('No image uploaded', 400));
+    }
+
+    const { examId } = req.body;
+    if (!examId) {
+      return next(createError('Exam ID is required', 400));
+    }
+
+    // Fetch the answer key for this exam if applicable
+    // For now, we will pass an empty answer key and let Python return mock results.
+    // Real implementation would parse QuestionPaper or Exam mapping.
+    const answerKey = JSON.stringify({ "1": "A", "2": "B" });
+
+    const imagePath = req.file.path;
+    const scriptPath = path.resolve(__dirname, '../../scripts/omr_scanner.py');
+
+    // Make sure we have a Python runner, fallback to python3
+    const pythonCmd = process.platform === 'win32' ? 'python' : 'python3';
+
+    exec(`${pythonCmd} "${scriptPath}" "${imagePath}" '${answerKey}'`, (error, stdout, stderr) => {
+      // Clean up the uploaded image immediately
+      fs.unlink(imagePath, (err) => { if (err) console.error("Error deleting temp OMR image:", err); });
+
+      if (error) {
+        console.error("OMR Python Error:", stderr || error.message);
+        return next(createError('Failed to process OMR sheet', 500));
+      }
+
+      try {
+        const result = JSON.parse(stdout.trim());
+        if (result.error) {
+           return next(createError(result.error, 400));
+        }
+
+        // Ideally, we'd lookup the student by ID here.
+        successResponse(res, result, 'OMR Scan completed');
+      } catch (e) {
+        console.error("OMR Parse Error:", stdout);
+        next(createError('Invalid output from OMR scanner', 500));
+      }
+    });
+
   } catch (error) {
     next(error);
   }
