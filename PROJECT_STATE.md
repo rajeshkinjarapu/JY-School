@@ -60,6 +60,12 @@ pm2 restart backend --update-env
   - Developed a custom Force Update system mimicking professional apps (like Zomato/PhonePe) using `package_info_plus`, `dio`, `path_provider`, and `open_file`.
   - Added `update_service.dart` that fetches `http://66.116.252.191:19998/app-version.json` on app startup.
   - If a newer version is found and `forceUpdate: true` is set, a non-dismissible dialog forces the user to download and install the new APK directly inside the app (shows progress bar, then launches Android Installer automatically).
+- **OMR Answer Sheet Scanner (Computer Vision):**
+  - Created Python backend script (`backend/scripts/omr_scanner.py`) to process 75-question templates using OpenCV.
+  - Configured scoring logic (25 Maths, 25 Physics, 25 Chemistry) with 4 marks each (Total 300 marks).
+  - Added new backend endpoint `POST /api/exams/scan-omr`.
+  - Created Flutter Camera UI (`omr_scanner_screen.dart`) with `image_picker`.
+  - Added "Scan OMR Sheet" emerald green button to `exams_screen.dart` under each exam's expandable section.
 - **Frontend Syntax Fix:**
   - Resolved `[builtin:vite-transform] Unexpected token` error in `RoutesPage.tsx` that was causing `npm run build` to fail on the VPS. Added missing states (`editingId`), missing functions (`addStop`, `removeStop`, `handleStopChange`), and fixed the broken DOM structure (missing closing `</div>` tags).
   

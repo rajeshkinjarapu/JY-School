@@ -6,6 +6,7 @@ import '../services/api_service.dart';
 import '../widgets/app_drawer.dart';
 import 'create_exam_screen.dart';
 import 'marks_upload_screen.dart';
+import 'omr_scanner_screen.dart';
 
 class ExamsScreen extends StatefulWidget {
   const ExamsScreen({super.key});
@@ -467,6 +468,27 @@ class _ExamsScreenState extends State<ExamsScreen> {
                                         ),
                                         icon: const Icon(Icons.edit_note_rounded, size: 16),
                                         label: Text('Enter Grades', style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 12)),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 8),
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: ElevatedButton.icon(
+                                        onPressed: () {
+                                          Navigator.push(context, MaterialPageRoute(builder: (context) => OMRScannerScreen(examId: id)));
+                                        },
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: const Color(0xFF10B981), // Emerald green
+                                          foregroundColor: Colors.white,
+                                          padding: const EdgeInsets.symmetric(vertical: 10),
+                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                          elevation: 0,
+                                        ),
+                                        icon: const Icon(Icons.document_scanner_rounded, size: 16),
+                                        label: Text('Scan OMR Sheet', style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 12)),
                                       ),
                                     ),
                                   ],
