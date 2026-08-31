@@ -4,7 +4,7 @@ import { LoadingSpinner } from '../../components/UI/LoadingSpinner';
 import { Bus, Plus, Edit, Trash2, X, Settings2, ShieldCheck, AlertTriangle, BadgeAlert } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { PageHeader } from '../../components/UI/PageHeader';
-import { createPortal } from 'react-dom';
+
 
 export const VehiclesPage = () => {
   const [items, setItems] = useState<any[]>([]);
@@ -200,10 +200,10 @@ export const VehiclesPage = () => {
           </div>
         )}
 
-        {showModal && createPortal(
-          <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-gray-950/40 backdrop-blur-sm animate-in fade-in duration-200">
+        {showModal && (
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-gray-950/40 backdrop-blur-sm">
             <div className="fixed inset-0" onClick={() => !isSubmitting && setShowModal(false)} />
-            <div className="relative bg-white rounded-[24px] p-6 w-full max-w-md shadow-2xl animate-in zoom-in-95 duration-200">
+            <div className="relative bg-white rounded-[24px] p-6 w-full max-w-md shadow-2xl">
               <div className="flex justify-between items-center mb-6 border-b border-gray-100 pb-4">
                 <h2 className="text-lg font-black text-gray-900 flex items-center gap-2.5">
                   <div className="p-1.5 bg-indigo-100 text-indigo-600 rounded-lg">
@@ -256,8 +256,7 @@ export const VehiclesPage = () => {
                 </div>
               </form>
             </div>
-          </div>,
-          document.body
+          </div>
         )}
       </div>
     </div>

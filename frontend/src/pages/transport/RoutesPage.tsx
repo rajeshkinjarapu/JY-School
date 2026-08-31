@@ -4,7 +4,7 @@ import { LoadingSpinner } from '../../components/UI/LoadingSpinner';
 import { Map, Plus, Trash2, X, MapPin, Bus, Clock, DollarSign, ArrowRight } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { PageHeader } from '../../components/UI/PageHeader';
-import { createPortal } from 'react-dom';
+
 
 export const RoutesPage = () => {
   const [routes, setRoutes] = useState<any[]>([]);
@@ -202,10 +202,10 @@ export const RoutesPage = () => {
           </div>
         )}
 
-        {showModal && createPortal(
-          <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-gray-950/40 backdrop-blur-sm animate-in fade-in duration-200">
+        {showModal && (
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-gray-950/40 backdrop-blur-sm">
             <div className="fixed inset-0" onClick={() => !isSubmitting && setShowModal(false)} />
-            <div className="relative bg-white rounded-[24px] p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl animate-in zoom-in-95 duration-200">
+            <div className="relative bg-white rounded-[24px] p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl">
               <div className="sticky top-0 bg-white z-10 flex justify-between items-center mb-6 border-b border-gray-100 pb-4">
                 <h2 className="text-lg font-black text-gray-900 flex items-center gap-2.5">
                   <div className="p-1.5 bg-blue-100 text-blue-600 rounded-lg">
@@ -219,7 +219,6 @@ export const RoutesPage = () => {
               </div>
               
               <form onSubmit={handleSubmit} className="space-y-6">
-                {/* Basic Details */}
                 <div className="space-y-4">
                   <h3 className="text-sm font-bold text-gray-800">Basic Details</h3>
                   <div className="grid grid-cols-2 gap-4">
@@ -247,7 +246,6 @@ export const RoutesPage = () => {
                   </div>
                 </div>
 
-                {/* Route Stops */}
                 <div className="space-y-4 pt-4 border-t border-gray-100">
                   <div className="flex justify-between items-center">
                     <h3 className="text-sm font-bold text-gray-800">Route Stops</h3>
@@ -308,9 +306,9 @@ export const RoutesPage = () => {
                 </div>
               </form>
             </div>
-          </div>,
-          document.body
+          </div>
         )}
+
       </div>
     </div>
   );
