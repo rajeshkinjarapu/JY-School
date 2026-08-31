@@ -200,66 +200,67 @@ export const VehiclesPage = () => {
           </div>
         )}
 
-        {showModal && createPortal(
-          <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-gray-950/40 backdrop-blur-sm">
-            <div className="fixed inset-0" onClick={() => !isSubmitting && setShowModal(false)} />
-            <div className="relative bg-white rounded-[24px] p-6 w-full max-w-md shadow-2xl animate-in zoom-in-95 duration-200">
-              <div className="flex justify-between items-center mb-6 border-b border-gray-100 pb-4">
-                <h2 className="text-lg font-black text-gray-900 flex items-center gap-2.5">
-                  <div className="p-1.5 bg-indigo-100 text-indigo-600 rounded-lg">
-                    {editingId ? <Settings2 className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
-                  </div>
-                  {editingId ? 'Edit Vehicle' : 'Add New Vehicle'}
-                </h2>
-                <button onClick={() => setShowModal(false)} className="p-1.5 text-gray-400 hover:bg-gray-100 rounded-full transition-colors">
-                  <X className="w-4 h-4" />
-                </button>
+        
+      </div>
+      {showModal && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-gray-950/40 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="fixed inset-0" onClick={() => !isSubmitting && setShowModal(false)} />
+          <div className="relative bg-white rounded-[24px] p-6 w-full max-w-md shadow-2xl animate-in zoom-in-95 duration-200">
+            <div className="flex justify-between items-center mb-6 border-b border-gray-100 pb-4">
+              <h2 className="text-lg font-black text-gray-900 flex items-center gap-2.5">
+                <div className="p-1.5 bg-indigo-100 text-indigo-600 rounded-lg">
+                  {editingId ? <Settings2 className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+                </div>
+                {editingId ? 'Edit Vehicle' : 'Add New Vehicle'}
+              </h2>
+              <button onClick={() => setShowModal(false)} className="p-1.5 text-gray-400 hover:bg-gray-100 rounded-full transition-colors">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label className="block text-[11px] font-black text-gray-500 uppercase tracking-widest mb-1.5">Registration Number <span className="text-rose-500">*</span></label>
+                <input required type="text" className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold text-gray-800 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all placeholder-gray-400" value={formData.registrationNo} onChange={e => setFormData({...formData, registrationNo: e.target.value.toUpperCase()})} placeholder="e.g. MH-12-AB-1234" />
               </div>
               
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[11px] font-black text-gray-500 uppercase tracking-widest mb-1.5">Registration Number <span className="text-rose-500">*</span></label>
-                  <input required type="text" className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold text-gray-800 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all placeholder-gray-400" value={formData.registrationNo} onChange={e => setFormData({...formData, registrationNo: e.target.value.toUpperCase()})} placeholder="e.g. MH-12-AB-1234" />
+                  <label className="block text-[11px] font-black text-gray-500 uppercase tracking-widest mb-1.5">Make</label>
+                  <input type="text" className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold text-gray-800 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all placeholder-gray-400" value={formData.make} onChange={e => setFormData({...formData, make: e.target.value})} placeholder="e.g. Tata" />
                 </div>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-[11px] font-black text-gray-500 uppercase tracking-widest mb-1.5">Make</label>
-                    <input type="text" className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold text-gray-800 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all placeholder-gray-400" value={formData.make} onChange={e => setFormData({...formData, make: e.target.value})} placeholder="e.g. Tata" />
-                  </div>
-                  <div>
-                    <label className="block text-[11px] font-black text-gray-500 uppercase tracking-widest mb-1.5">Model</label>
-                    <input type="text" className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold text-gray-800 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all placeholder-gray-400" value={formData.model} onChange={e => setFormData({...formData, model: e.target.value})} placeholder="e.g. Starbus" />
-                  </div>
+                <div>
+                  <label className="block text-[11px] font-black text-gray-500 uppercase tracking-widest mb-1.5">Model</label>
+                  <input type="text" className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold text-gray-800 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all placeholder-gray-400" value={formData.model} onChange={e => setFormData({...formData, model: e.target.value})} placeholder="e.g. Starbus" />
                 </div>
+              </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-[11px] font-black text-gray-500 uppercase tracking-widest mb-1.5">Capacity (Seats) <span className="text-rose-500">*</span></label>
-                    <input required type="number" min="1" className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold text-gray-800 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all placeholder-gray-400" value={formData.capacity} onChange={e => setFormData({...formData, capacity: e.target.value})} placeholder="e.g. 40" />
-                  </div>
-                  <div>
-                    <label className="block text-[11px] font-black text-gray-500 uppercase tracking-widest mb-1.5">Status <span className="text-rose-500">*</span></label>
-                    <select required className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold text-gray-800 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all" value={formData.status} onChange={e => setFormData({...formData, status: e.target.value})}>
-                      <option value="ACTIVE">ACTIVE</option>
-                      <option value="MAINTENANCE">MAINTENANCE</option>
-                      <option value="INACTIVE">INACTIVE</option>
-                    </select>
-                  </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[11px] font-black text-gray-500 uppercase tracking-widest mb-1.5">Capacity (Seats) <span className="text-rose-500">*</span></label>
+                  <input required type="number" min="1" className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold text-gray-800 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all placeholder-gray-400" value={formData.capacity} onChange={e => setFormData({...formData, capacity: e.target.value})} placeholder="e.g. 40" />
                 </div>
-                
-                <div className="flex gap-3 pt-4 border-t border-gray-100 mt-6">
-                  <button type="button" onClick={() => setShowModal(false)} className="flex-1 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-sm rounded-xl transition-colors">Cancel</button>
-                  <button type="submit" disabled={isSubmitting} className="flex-1 px-4 py-2.5 bg-gray-900 hover:bg-gray-800 text-white font-bold text-sm rounded-xl shadow-lg shadow-gray-900/20 transition-all hover:-translate-y-0.5 disabled:opacity-50">
-                    {isSubmitting ? 'Saving...' : (editingId ? 'Update Vehicle' : 'Save Vehicle')}
-                  </button>
+                <div>
+                  <label className="block text-[11px] font-black text-gray-500 uppercase tracking-widest mb-1.5">Status <span className="text-rose-500">*</span></label>
+                  <select required className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold text-gray-800 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all" value={formData.status} onChange={e => setFormData({...formData, status: e.target.value})}>
+                    <option value="ACTIVE">ACTIVE</option>
+                    <option value="MAINTENANCE">MAINTENANCE</option>
+                    <option value="INACTIVE">INACTIVE</option>
+                  </select>
                 </div>
-              </form>
-            </div>
-          </div>,
-          document.body
-        )}
-      </div>
+              </div>
+              
+              <div className="flex gap-3 pt-4 border-t border-gray-100 mt-6">
+                <button type="button" onClick={() => setShowModal(false)} className="flex-1 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-sm rounded-xl transition-colors">Cancel</button>
+                <button type="submit" disabled={isSubmitting} className="flex-1 px-4 py-2.5 bg-gray-900 hover:bg-gray-800 text-white font-bold text-sm rounded-xl shadow-lg shadow-gray-900/20 transition-all hover:-translate-y-0.5 disabled:opacity-50">
+                  {isSubmitting ? 'Saving...' : (editingId ? 'Update Vehicle' : 'Save Vehicle')}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   );
 };
