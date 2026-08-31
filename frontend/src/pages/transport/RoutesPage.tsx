@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import api from '../../api/axios';
 import { LoadingSpinner } from '../../components/UI/LoadingSpinner';
-import { Map, Plus, Trash2, X, MapPin, Bus, Clock, DollarSign, ArrowRight } from 'lucide-react';
+import { Map, Plus, Trash2, X, MapPin, Bus, Clock, ArrowRight, Settings2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { PageHeader } from '../../components/UI/PageHeader';
 import { Portal } from '../../components/UI/Portal';
@@ -12,16 +12,16 @@ export const RoutesPage = () => {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   
   const [formData, setFormData] = useState({ 
     name: '', 
     startPoint: '', 
     endPoint: '', 
-    vehicleId: '' 
+    vehicleId: '',
+    stops: [{ stopName: '', pickupTime: '', dropTime: '', monthlyFee: 0 }]
   });
   
-  const [stops, setStops] = useState([{ stopName: '', pickupTime: '', dropTime: '', monthlyFee: 0 }]);
-
   const fetchData = async () => {
     try {
       const [rRes, vRes] = await Promise.all([
@@ -42,25 +42,34 @@ export const RoutesPage = () => {
   }, []);
 
   const openAddModal = () => {
-    setFormData({ name: '', startPoint: '', endPoint: '', vehicleId: '' });
-    setStops([{ stopName: '', pickupTime: '', dropTime: '', monthlyFee: 0 }]);
+    setEditingId(null);
+    setFormData({ 
+      name: '', 
+      startPoint: '', 
+      endPoint: '', 
+      vehicleId: '',
+      stops: [{ stopName: '', pickupTime: '', dropTime: '', monthlyFee: 0 }]
+    });
     setShowModal(true);
   };
 
-  const handleAddStop = () => {
-    setStops([...stops, { stopName: '', pickupTime: '', dropTime: '', monthlyFee: 0 }]);
+  const addStop = () => {
+    setFormData({
+      ...formData,
+      stops: [...formData.stops, { stopName: '', pickupTime: '', dropTime: '', monthlyFee: 0 }]
+    });
   };
 
-  const handleRemoveStop = (index: number) => {
-    const newStops = [...stops];
+  const removeStop = (index: number) => {
+    const newStops = [...formData.stops];
     newStops.splice(index, 1);
-    setStops(newStops);
+    setFormData({ ...formData, stops: newStops });
   };
 
   const handleStopChange = (index: number, field: string, value: any) => {
-    const newStops = [...stops] as any;
+    const newStops = [...formData.stops] as any;
     newStops[index][field] = value;
-    setStops(newStops);
+    setFormData({ ...formData, stops: newStops });
   };
 
   const handleDelete = async (id: string) => {
@@ -79,8 +88,7 @@ export const RoutesPage = () => {
     e.preventDefault();
     if (isSubmitting) return;
     
-    // validate stops
-    if (stops.some(s => !s.stopName)) {
+    if (formData.stops.some(s => !s.stopName)) {
       toast.error('All stops must have a name');
       return;
     }
@@ -90,7 +98,7 @@ export const RoutesPage = () => {
     try {
       await api.post('/api/transport/routes', {
         ...formData,
-        stops: stops.map(s => ({ ...s, monthlyFee: Number(s.monthlyFee) }))
+        stops: formData.stops.map(s => ({ ...s, monthlyFee: Number(s.monthlyFee) }))
       });
       toast.success('Route added successfully', { id: t });
       setShowModal(false);
@@ -285,6 +293,7 @@ export const RoutesPage = () => {
             </div>
           </Portal>
         )}
+        </div>
       </div>
     </div>
   );
