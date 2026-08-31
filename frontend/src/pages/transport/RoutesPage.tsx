@@ -4,7 +4,7 @@ import { LoadingSpinner } from '../../components/UI/LoadingSpinner';
 import { Map, Plus, Trash2, X, MapPin, Bus, Clock, DollarSign, ArrowRight } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { PageHeader } from '../../components/UI/PageHeader';
-
+import { createPortal } from 'react-dom';
 
 export const RoutesPage = () => {
   const [routes, setRoutes] = useState<any[]>([]);
@@ -202,10 +202,10 @@ export const RoutesPage = () => {
           </div>
         )}
 
-        {showModal && (
+        {showModal && createPortal(
           <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-gray-950/40 backdrop-blur-sm">
             <div className="fixed inset-0" onClick={() => !isSubmitting && setShowModal(false)} />
-            <div className="relative bg-white rounded-[24px] p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl">
+            <div className="relative bg-white rounded-[24px] p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl animate-in zoom-in-95 duration-200">
               <div className="sticky top-0 bg-white z-10 flex justify-between items-center mb-6 border-b border-gray-100 pb-4">
                 <h2 className="text-lg font-black text-gray-900 flex items-center gap-2.5">
                   <div className="p-1.5 bg-blue-100 text-blue-600 rounded-lg">
@@ -306,7 +306,8 @@ export const RoutesPage = () => {
                 </div>
               </form>
             </div>
-          </div>
+          </div>,
+          document.body
         )}
 
       </div>
