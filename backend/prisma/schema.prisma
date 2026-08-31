@@ -96,6 +96,7 @@ model Teacher {
   joiningDate           DateTime  @default(now())
   employeeId            String    @unique
   canEditStudents       Boolean   @default(false)
+  canUploadQuestionPapers Boolean @default(false)
 
   classSubjectTeachers  ClassSubjectTeacher[]
   timetableSlots        Timetable[]

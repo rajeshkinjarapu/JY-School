@@ -8,7 +8,7 @@ class ApiService {
 
   static String getImageUrl(String? photoUrl) {
     if (photoUrl == null || photoUrl.isEmpty) return '';
-    final trimmed = photoUrl.trim();
+    final trimmed = photoUrl.trim().replaceAll('\\', '/');
     if (trimmed.isEmpty || trimmed == 'null' || trimmed == 'undefined') return '';
     
     // Fix for localhost URLs from backend in mobile app
@@ -329,10 +329,17 @@ class ApiService {
     }
   }
 
-  static Future<Map<String, dynamic>> getExamResults(String examId, {String classId = ''}) async {
+  static Future<Map<String, dynamic>> getExamResults(String examId, {String classId = '', bool includePhoto = false}) async {
     String url = '/api/exams/$examId/results';
+    List<String> params = [];
     if (classId.isNotEmpty) {
-      url += '?classId=$classId';
+      params.add('classId=$classId');
+    }
+    if (includePhoto) {
+      params.add('includePhoto=true');
+    }
+    if (params.isNotEmpty) {
+      url += '?${params.join('&')}';
     }
     return _performGet(url, 'Failed to get exam results');
   }
@@ -802,6 +809,33 @@ class ApiService {
     return _performPost('/api/question-papers', data, 'Failed to create question paper');
   }
 
+  static Future<Map<String, dynamic>> getQuestionPaperDashboardStats() async {
+    return _performGet('/api/question-papers/dashboard-stats', 'Failed to get question paper statistics');
+  }
+
+  static Future<Map<String, dynamic>> approveQuestionPaper(String id) async {
+    return _performPut('/api/question-papers/$id/approve', {}, 'Failed to approve question paper');
+  }
+
+  static Future<Map<String, dynamic>> rejectQuestionPaper(String id) async {
+    return _performPut('/api/question-papers/$id/reject', {}, 'Failed to reject question paper');
+  }
+
+  static Future<Map<String, dynamic>> publishQuestionPaper(String id) async {
+    return _performPut('/api/question-papers/$id/publish', {}, 'Failed to publish question paper');
+  }
+
+  static Future<Map<String, dynamic>> deleteQuestionPaper(String id) async {
+    return _performDelete('/api/question-papers/$id', 'Failed to delete question paper');
+  }
+
+  static Future<Map<String, dynamic>> updateAnswerKey(String id, String answerKey, String answerKeyUrl) async {
+    return _performPut('/api/question-papers/$id/answer-key', {
+      'answerKey': answerKey,
+      'answerKeyUrl': answerKeyUrl,
+    }, 'Failed to update answer key');
+  }
+
   static Future<Map<String, dynamic>> getGeneratedPapers() async {
     return _performGet('/api/generatedPapers', 'Failed to get generated papers');
   }
@@ -1217,6 +1251,35 @@ class ApiService {
       }
     } catch (e) {
       return {'success': false, 'message': 'Network error: ${e.toString()}'};
+    }
+  }
+
+  static Future<Map<String, dynamic>> uploadDocument(List<int> bytes, String filename) async {
+    try {
+      final token = await getToken();
+      final request = http.MultipartRequest('POST', Uri.parse('$baseUrl/api/uploads/document'));
+      if (token != null) {
+        request.headers['Authorization'] = 'Bearer $token';
+      }
+      request.headers['ngrok-skip-browser-warning'] = '69420';
+      
+      final multipartFile = http.MultipartFile.fromBytes(
+        'file',
+        bytes,
+        filename: filename,
+      );
+      request.files.add(multipartFile);
+      
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+      final data = jsonDecode(response.body);
+      
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return {'success': true, 'url': data['url'] ?? data['data']?['url']};
+      }
+      return {'success': false, 'message': data['message'] ?? 'Failed to upload document'};
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: $e'};
     }
   }
 }

@@ -1,6 +1,6 @@
 # Project State: JY-School ERP
 
-## Last Updated: 2026-08-29
+## Last Updated: 2026-08-31
 
 ---
 
@@ -36,30 +36,33 @@ pm2 restart backend --update-env
 
 ## Session History
 
-### Session: 2026-08-31 - Web Student Profile UI Fixes
-**Files Changed:** `StudentProfilePage.tsx`
-**Backend Changes:** None
+### Session: 2026-08-31 — Transport Module & UI Improvements
+**Files Changed:** `transport.controller.ts`, `transport.routes.ts`, `VehiclesPage.tsx`, `RoutesPage.tsx`, `StudentTransportPage.tsx`, Flutter Transport screens, `StudentProfilePage.tsx`
+**Backend Changes:** Yes — VPS deploy required
 
-#### Bugs Fixed
-1. **Student Profile - Fee Ledger Layout:**
-   - Moved Fee Ledger to be side-by-side with Demographics and Family Details (3-column grid) for a more compact and balanced look on large screens.
-2. **Student Profile - Print Dossier Not Working:**
-   - Main page layout (`flex-1`) was wrapping the Print-Only Dossier view and causing it to be hidden during `window.print()`. 
-   - Restructured the DOM and added `print:hidden` selectively so the UI hides correctly while allowing the A4 Dossier template to render perfectly for print.
+#### Completed
+- **Transport Module** UI and backend logic fully fixed:
+  - **VehiclesPage**: Added Status dropdown, Vehicle Capacity progress bars, and Edit/Delete APIs.
+  - **RoutesPage**: Added Vehicle assignment dropdown, dynamic Stops creation form (pickup/drop time, monthly fee), and updated table UI.
+  - **StudentTransportPage**: Limited API query size for students, implemented dynamic Stop fetching based on selected Route, and added a premium UI grid.
+  - **Backend**: Implemented missing endpoints `PUT /vehicles/:id`, `DELETE /vehicles/:id`, `DELETE /routes/:id`, and `DELETE /students/:id` in `transport.controller.ts` and `transport.routes.ts`.
+- **Flutter Transport Screens**: Built premium Flutter screens for transport module.
+- **Student Profile - Fee Ledger Layout**: Moved Fee Ledger to be side-by-side with Demographics and Family Details (3-column grid).
+- **Student Profile - Print Dossier Fixed**: Restructured DOM and added `print:hidden` selectively so the UI hides correctly for print.
 
 ---
 
 ### Session: 2026-08-29 — Flutter Fixes & New Features
-**Git Commit:** `f200ae0` — `feat: Upload Question Paper screen, Fix Progress Card logo & signatures`  
-**Files Changed:** 15 files, 1553 insertions, 563 deletions  
-**New Files:** `change_password_screen.dart`, `upload_question_paper_screen.dart`  
+**Git Commit:** `f200ae0` — `feat: Upload Question Paper screen, Fix Progress Card logo & signatures`
+**Files Changed:** 15 files, 1553 insertions, 563 deletions
+**New Files:** `change_password_screen.dart`, `upload_question_paper_screen.dart`
 **Backend Changes:** None (Flutter-only session, no VPS deploy needed)
 
 #### Bugs Fixed
 1. **Progress Card – Logo Not Showing**
    - Root cause: Web app stores logo in `admitCardSettings.logoUrl` (exam-specific), but Flutter was reading from `_settingsData['logoUrl']` (global school settings only).
    - Fix: Updated `single_progress_card_screen.dart` to check `admitCardSettings.logoUrl` first, then fall back to global `_settingsData['logoUrl']`.
-   
+
 2. **Progress Card – Teacher & Principal Signatures Not Showing**
    - Root cause: `CustomNetworkImage` was missing the `ngrok-skip-browser-warning` header needed for VPS image URLs. Also, string type conversion was unreliable causing null checks to fail.
    - Fix: Added `headers: {'ngrok-skip-browser-warning': '69420'}` and `errorBuilder` to all signature `CustomNetworkImage` widgets in `single_progress_card_screen.dart`.
@@ -79,10 +82,10 @@ pm2 restart backend --update-env
 1. **Upload Question Paper Screen (`upload_question_paper_screen.dart`)**
    - Full premium form with fields: Paper Title, Exam (optional), Class (required), Subject (optional), File URL (PDF/Word), Answer Key URL (optional), Typed Answer Key (optional).
    - Calls `POST /api/question-papers` via new `ApiService.createQuestionPaper()` method.
-   - Added `FloatingActionButton.extended` ("Upload Paper") to `question_papers_screen.dart`, visible only to TEACHER, ADMIN, SUPER_ADMIN roles. Refreshes paper list on successful upload.
+   - Added `FloatingActionButton.extended` ("Upload Paper") to `question_papers_screen.dart`, visible only to TEACHER, ADMIN, SUPER_ADMIN roles.
 
 2. **Question Papers – Premium Empty State**
-   - Replaced the plain "No question papers uploaded yet." text with a premium design: large indigo circle icon + bold heading + descriptive subtitle.
+   - Replaced plain text with premium design: large indigo circle icon + bold heading + descriptive subtitle.
 
 ---
 
@@ -141,6 +144,8 @@ pm2 restart backend --update-env
 #### Flutter Progress Card Overhaul
 - `single_progress_card_screen.dart`: Premium redesign matching web app.
 - Added Mobile, Location fields; fixed Row-based Academic Rating layout.
+- Fixed percentage calculation bug in `exams.controller.ts`.
+- Fixed cross-platform backslash formatting bug in `api_service.dart` for image URLs.
 
 #### Flutter Fee Module
 - `record_fee_payment_screen.dart`: Premium redesign + retroactive date picker.
@@ -152,6 +157,8 @@ pm2 restart backend --update-env
 - `leave_dashboard_screen.dart`: TabBar `labelColor: Colors.white` fix.
 - `create_gate_pass_screen.dart`: Class & Section dropdown filters.
 - Dashboard: Fee Reminder button routes to correct `FeeReminderSearchScreen`.
+- Admin Dashboard UI: Premium statistics row with Indian currency formatting.
+- Custom Notification Sound (Flutter): `jyschool_chime.wav` implemented for Android push notifications.
 
 ---
 
@@ -160,8 +167,4 @@ pm2 restart backend --update-env
 - `jy_school_local` PostgreSQL on VPS for heavy data (Question Papers, Answer Keys).
 - `schema_local.prisma` + `prismaLocal` Prisma client created.
 - `questionPapers.controller.ts` uses `prismaLocal` for read/write, `prisma` for relational data.
-- Nginx serving `/var/www/uploads/` on port `8081`.- Fixed **Transport Module** UI and backend logic:
-  - **VehiclesPage**: Added Status dropdown, Vehicle Capacity progress bars, and Edit/Delete APIs.
-  - **RoutesPage**: Added Vehicle assignment dropdown, dynamic Stops creation form (pickup/drop time, monthly fee), and updated table UI.
-  - **StudentTransportPage**: Limited API query size for students, implemented dynamic Stop fetching based on selected Route, and added a premium UI grid.
-  - **Backend**: Implemented missing endpoints PUT /vehicles/:id, DELETE /vehicles/:id, DELETE /routes/:id, and DELETE /students/:id in 	ransport.controller.ts and 	ransport.routes.ts.
+- Nginx serving `/var/www/uploads/` on port `8081`.

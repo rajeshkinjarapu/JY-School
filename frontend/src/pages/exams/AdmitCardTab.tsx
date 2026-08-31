@@ -61,18 +61,22 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
 
   useEffect(() => {
     if (!selectedExamId) return;
-    // Fetch admitCardSettings separately — excluded from list API (heavy Base64 images)
-    api.get(`/api/exams/${selectedExamId}`).then((res: any) => {
-      const examObj = res.data;
-      setPublished(examObj.admitCardPublished || false);
+    Promise.all([
+      api.get(`/api/exams/${selectedExamId}`),
+      api.get('/api/settings').catch(() => ({ data: {} }))
+    ]).then(([examRes, settingsRes]: any) => {
+      const examObj = examRes.data;
+      const globalSettings = settingsRes.data?.data || settingsRes.data || {};
+      
       const settings = examObj.admitCardSettings || {};
+      setPublished(examObj.admitCardPublished || false);
+      setLogoUrl(settings.logoUrl || globalSettings.logoUrl || "");
+      setSignatureUrl(settings.signatureUrl || globalSettings.signatureUrl || globalSettings.principalSignatureUrl || "");
+      setTeacherSignatureUrl(settings.teacherSignatureUrl || globalSettings.teacherSignatureUrl || "");
       setInstructions(
         settings.instructions ||
           "Candidate must carry this Admit Card to the examination hall.\nElectronic devices including calculators and mobile phones are strictly prohibited.\nCandidate should report to the examination center 30 minutes before commencement.",
       );
-      setSignatureUrl(settings.signatureUrl || "");
-      setTeacherSignatureUrl(settings.teacherSignatureUrl || "");
-      setLogoUrl(settings.logoUrl || "");
       setExamTitleOverride(settings.examTitleOverride || "");
       setExamCenterOverride(settings.examCenterOverride || "");
       setSchedule(settings.schedule || []);

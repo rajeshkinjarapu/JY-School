@@ -1325,96 +1325,125 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // ====== ROW 1: 3 Stat Boxes ======
-        Row(
-          children: [
-            Expanded(
-              child: _buildStatBox(
-                icon: Icons.groups_rounded,
-                value: '$_adminTotalStudents',
-                label: 'Students',
-                gradientColors: [const Color(0xFF6366F1), const Color(0xFF4338CA)],
-                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const StudentsScreen())),
+        // ====== OVERVIEW STATS ROW ======
+        Container(
+          margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+          padding: const EdgeInsets.symmetric(vertical: 18.0),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.04),
+                blurRadius: 12,
+                offset: const Offset(0, 6),
               ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _buildStatBox(
-                icon: Icons.school_rounded,
-                value: '$_adminTotalTeachers',
-                label: 'Teachers',
-                gradientColors: [const Color(0xFF0D9488), const Color(0xFF0F766E)],
-                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TeachersScreen())),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _buildStatBox(
-                icon: Icons.account_balance_rounded,
-                value: '$_adminTotalClasses',
-                label: 'Classes',
-                gradientColors: [const Color(0xFF0284C7), const Color(0xFF0369A1)],
-                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ClassesScreen())),
-              ),
-            ),
-          ],
+            ],
+            border: Border.all(color: Colors.grey.withOpacity(0.15)),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              _buildMiniStatBox('Students', '$_adminTotalStudents', const Color(0xFF3B82F6)),
+              Container(width: 1, height: 40, color: Colors.grey.withOpacity(0.2)),
+              _buildMiniStatBox('Teachers', '$_adminTotalTeachers', const Color(0xFF10B981)),
+              Container(width: 1, height: 40, color: Colors.grey.withOpacity(0.2)),
+              _buildMiniStatBox('Revenue', '₹${_formatIndianCurrency(_adminFeeCollected)}', const Color(0xFFF59E0B)),
+            ],
+          ),
         ),
-        const SizedBox(height: 14),
-        // ====== ROW 2: Full-Width Revenue Card ======
-        _buildRevenueWideCard(context),
-        const SizedBox(height: 14),
-        // ====== ROWS 3-4: 2×2 Action Grid ======
-        GridView.count(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          crossAxisCount: 2,
-          crossAxisSpacing: 14,
-          mainAxisSpacing: 14,
-          childAspectRatio: 1.6,
-          children: [
-            _buildMenuPremiumCard(
-              subtitle: 'FEE COLLECTION',
-              title: 'Collect Fees',
-              bottomText: '',
-              icon: Icons.credit_card_rounded,
-              gradientColors: [const Color(0xFF7C3AED), const Color(0xFF5B21B6)],
-              accentColor: const Color(0xFF9C27B0),
-              imagePath: '',
-              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const StudentFeeSearchScreen())),
-            ),
-            _buildMenuPremiumCard(
-              subtitle: 'EXAM RESULTS',
-              title: 'Results',
-              bottomText: '',
-              icon: Icons.fact_check_rounded,
-              gradientColors: [const Color(0xFF1D4ED8), const Color(0xFF1E40AF)],
-              accentColor: const Color(0xFF1E88E5),
-              imagePath: '',
-              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ResultsScreen())),
-            ),
-            _buildMenuPremiumCard(
-              subtitle: 'FEE DETAILS',
-              title: 'Installment Log',
-              bottomText: '',
-              icon: Icons.receipt_long_rounded,
-              gradientColors: [const Color(0xFFD97706), const Color(0xFFB45309)],
-              accentColor: const Color(0xFFFFA000),
-              imagePath: '',
-              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const FeeInstallmentReportScreen())),
-            ),
-            _buildMenuPremiumCard(
-              subtitle: 'REPORTS & ANALYTICS',
-              title: 'Progress Card',
-              bottomText: '',
-              icon: Icons.emoji_events_rounded,
-              gradientColors: [const Color(0xFF16A34A), const Color(0xFF15803D)],
-              accentColor: const Color(0xFF00E676),
-              imagePath: '',
-              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ProgressCardScreen())),
-            ),
-          ],
+        const SizedBox(height: 16),
+        
+        // ====== ACADEMIC GRID ======
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          child: Text(
+            'Academic & Management',
+            style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black87),
+          ),
+        ),
+        const SizedBox(height: 12),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12.0),
+          child: GridView.count(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            crossAxisCount: 3,
+            crossAxisSpacing: 12,
+            mainAxisSpacing: 12,
+            childAspectRatio: 1.0,
+            children: [
+              _buildGridItem(context, 'Students', Icons.groups_rounded, const Color(0xFF4285F4), () => Navigator.push(context, MaterialPageRoute(builder: (_) => const StudentsScreen()))),
+              _buildGridItem(context, 'Teachers', Icons.person_pin_rounded, const Color(0xFFEA4335), () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TeachersScreen()))),
+              _buildGridItem(context, 'Classes', Icons.school_rounded, const Color(0xFF34A853), () => Navigator.push(context, MaterialPageRoute(builder: (_) => ClassesScreen()))),
+              _buildGridItem(context, 'Fees', Icons.account_balance_wallet_rounded, const Color(0xFFFBBC05), () => Navigator.push(context, MaterialPageRoute(builder: (_) => const StudentFeeSearchScreen()))),
+              _buildGridItem(context, 'Results', Icons.fact_check_rounded, const Color(0xFF8E24AA), () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ResultsScreen()))),
+              _buildGridItem(context, 'Progress Card', Icons.emoji_events_rounded, const Color(0xFFF06292), () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ProgressCardScreen()))),
+              _buildGridItem(context, 'Installments', Icons.receipt_long_rounded, const Color(0xFF00ACC1), () => Navigator.push(context, MaterialPageRoute(builder: (_) => const FeeInstallmentReportScreen()))),
+              _buildGridItem(context, 'Transactions', Icons.sync_alt_rounded, const Color(0xFFFF7043), () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TransactionsScreen()))),
+              _buildGridItem(context, 'Subjects', Icons.menu_book_rounded, const Color(0xFF7CB342), () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SubjectsScreen()))),
+            ],
+          ),
         ),
       ],
+    );
+  }
+
+  Widget _buildMiniStatBox(String title, String value, Color color) {
+    return Column(
+      children: [
+        Text(value, style: GoogleFonts.outfit(color: color, fontSize: 20, fontWeight: FontWeight.bold)),
+        const SizedBox(height: 2),
+        Text(title, style: GoogleFonts.poppins(color: Colors.black54, fontSize: 11, fontWeight: FontWeight.w500)),
+      ],
+    );
+  }
+
+  Widget _buildGridItem(BuildContext context, String title, IconData icon, Color color, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            ),
+          ],
+          border: Border.all(color: Colors.grey.withOpacity(0.1)),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.12),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, color: color, size: 28),
+            ),
+            const SizedBox(height: 8),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4.0),
+              child: Text(
+                title,
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: GoogleFonts.poppins(
+                  color: Colors.black87,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 

@@ -165,11 +165,25 @@ class _ExamStatusScreenState extends State<ExamStatusScreen> {
           statusBadge = _buildStatusBadge('PENDING', Icons.error_outline_rounded, const Color(0xFFEF4444), const Color(0xFFEF4444).withOpacity(0.1));
         }
 
-        final stats = cls['subjectStats'] ?? {};
-        final totalSubjects = (stats['totalSubjects'] as List?) ?? [];
-        final enteredSubjects = (stats['enteredSubjects'] as List?) ?? [];
-        final pendingSubjects = (stats['pendingSubjects'] as List?) ?? [];
-        final double progress = (stats['progress'] as num?)?.toDouble() ?? 0.0;
+        final Map stats = cls['subjectStats'] ?? {};
+        final rawTotalSubjects = (stats['totalSubjects'] as List?) ?? [];
+        final rawEnteredSubjects = (stats['enteredSubjects'] as List?) ?? [];
+        
+        final seenTotal = <String>{};
+        final totalSubjects = [];
+        for (var s in rawTotalSubjects) {
+          final k = s['name']?.toString().trim().toUpperCase() ?? '';
+          if (k.isNotEmpty && seenTotal.add(k)) totalSubjects.add(s);
+        }
+
+        final seenEntered = <String>{};
+        final enteredSubjects = [];
+        for (var s in rawEnteredSubjects) {
+          final k = s['name']?.toString().trim().toUpperCase() ?? '';
+          if (k.isNotEmpty && seenEntered.add(k)) enteredSubjects.add(s);
+        }
+
+        final double progress = totalSubjects.isEmpty ? 0.0 : (enteredSubjects.length / totalSubjects.length * 100);
 
         return Container(
           margin: const EdgeInsets.only(bottom: 12),
@@ -284,60 +298,54 @@ class _ExamStatusScreenState extends State<ExamStatusScreen> {
                             ],
                           ),
                           ...() {
-                            // Deduplicate subjects by ID (fallback to name)
-                            final seen = <String>{};
-                            final uniqueSubjects = <dynamic>[];
-                            for (final sub in totalSubjects) {
-                              final key = sub['id']?.toString() ?? sub['name']?.toString() ?? '';
-                              if (key.isNotEmpty && seen.add(key)) {
-                                uniqueSubjects.add(sub);
-                              }
-                            }
-                            return List.generate(uniqueSubjects.length, (i) {
-                            final sub = uniqueSubjects[i];
-                            final subId = sub['id']?.toString();
-                            final subName = sub['name']?.toString() ?? 'Subject';
-                            // Check if it's entered
-                            final isEntered = enteredSubjects.any((e) => e['id']?.toString() == subId || e['name']?.toString() == subName);
-                            final color = isEntered ? const Color(0xFF10B981) : const Color(0xFFF59E0B);
-                            final icon = isEntered ? Icons.check_circle_rounded : Icons.pending_rounded;
-                            final statusText = isEntered ? 'Entered' : 'Pending';
-                            final bgColor = isEntered ? const Color(0xFF10B981).withOpacity(0.1) : const Color(0xFFF59E0B).withOpacity(0.1);
+                            int i = 0;
+                            return totalSubjects.map((sub) {
+                              final subName = sub['name']?.toString() ?? 'Unknown';
+                              final isEntered = enteredSubjects.any((e) {
+                                final eName = e['name']?.toString().trim().toUpperCase() ?? '';
+                                return eName == subName.trim().toUpperCase();
+                              });
+                              final color = isEntered ? const Color(0xFF10B981) : const Color(0xFFF59E0B);
+                              final icon = isEntered ? Icons.check_circle_rounded : Icons.pending_rounded;
+                              final statusText = isEntered ? 'Entered' : 'Pending';
+                              final bgColor = isEntered ? const Color(0xFF10B981).withOpacity(0.1) : const Color(0xFFF59E0B).withOpacity(0.1);
 
-                            return TableRow(
-                              children: [
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
-                                  child: Text('${i + 1}', style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF475569))),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
-                                  child: Text(subName, style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF1E293B))),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-                                  child: Align(
-                                    alignment: Alignment.centerLeft,
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                      decoration: BoxDecoration(
-                                        color: bgColor,
-                                        borderRadius: BorderRadius.circular(6),
-                                      ),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Icon(icon, size: 14, color: color),
-                                          const SizedBox(width: 4),
-                                          Text(statusText, style: GoogleFonts.poppins(fontSize: 11, fontWeight: FontWeight.bold, color: color)),
-                                        ],
+                              final row = TableRow(
+                                children: [
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+                                    child: Text('${i + 1}', style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF475569))),
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+                                    child: Text(subName, style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF1E293B))),
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                                    child: Align(
+                                      alignment: Alignment.centerLeft,
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                        decoration: BoxDecoration(
+                                          color: bgColor,
+                                          borderRadius: BorderRadius.circular(6),
+                                        ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Icon(icon, size: 14, color: color),
+                                            const SizedBox(width: 4),
+                                            Text(statusText, style: GoogleFonts.poppins(fontSize: 11, fontWeight: FontWeight.bold, color: color)),
+                                          ],
+                                        ),
                                       ),
                                     ),
                                   ),
-                                ),
-                              ],
-                            );
-                            });
+                                ],
+                              );
+                              i++;
+                              return row;
+                            }).toList();
                           }(),
                         ],
                       ),

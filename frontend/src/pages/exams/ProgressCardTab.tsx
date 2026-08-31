@@ -42,12 +42,16 @@ export const ProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
 
   useEffect(() => {
     if (!selectedExamId) return;
-    // Fetch admitCardSettings separately — it's excluded from list API (contains heavy Base64 images)
-    api.get(`/api/exams/${selectedExamId}`).then((res: any) => {
-      const examObj = res.data;
-      setLogoUrl(examObj.admitCardSettings?.logoUrl || '');
-      setSignatureUrl(examObj.admitCardSettings?.signatureUrl || '');
-      setTeacherSignatureUrl(examObj.admitCardSettings?.teacherSignatureUrl || '');
+    Promise.all([
+      api.get(`/api/exams/${selectedExamId}`),
+      api.get('/api/settings').catch(() => ({ data: {} })) // fallback global settings
+    ]).then(([examRes, settingsRes]: any) => {
+      const examObj = examRes.data;
+      const globalSettings = settingsRes.data?.data || settingsRes.data || {};
+
+      setLogoUrl(examObj.admitCardSettings?.logoUrl || globalSettings.logoUrl || '');
+      setSignatureUrl(examObj.admitCardSettings?.signatureUrl || globalSettings.signatureUrl || globalSettings.principalSignatureUrl || '');
+      setTeacherSignatureUrl(examObj.admitCardSettings?.teacherSignatureUrl || globalSettings.teacherSignatureUrl || '');
       setExamNameOverride(examObj.admitCardSettings?.examNameOverride || '');
       setPublished(examObj.admitCardSettings?.progressCardPublished || false);
     }).catch(() => {});
