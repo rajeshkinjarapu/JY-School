@@ -418,7 +418,7 @@ export const StudentProfilePage: React.FC = () => {
             </div>
 
           {/* Details Masonry/Grid */}
-          <div className={`grid grid-cols-1 md:grid-cols-2 ${user?.role === 'TEACHER' ? 'xl:grid-cols-2' : 'xl:grid-cols-3'} gap-4`}>
+          <div className={`grid grid-cols-1 md:grid-cols-2 ${user?.role === 'TEACHER' ? 'lg:grid-cols-2' : 'lg:grid-cols-3'} gap-4 items-start`}>
                 
             {/* Demographics Table */}
             <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm overflow-hidden h-full">
@@ -495,7 +495,7 @@ export const StudentProfilePage: React.FC = () => {
 
             {/* Right Column: Fee Ledger Snapshot */}
             {user?.role !== 'TEACHER' && (
-              <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm overflow-hidden flex flex-col h-[280px]">
+              <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm overflow-hidden flex flex-col h-full max-h-[280px]">
                 <div className="p-3 border-b border-gray-50 dark:border-gray-800 flex justify-between items-center bg-gradient-to-r from-emerald-50/50 to-transparent dark:from-emerald-900/10">
                   <div className="flex items-center gap-2">
                     <div className="p-1.5 bg-emerald-500 rounded-lg text-white shadow-md shadow-emerald-500/20"><CreditCard className="w-4 h-4" /></div>
