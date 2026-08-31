@@ -1,82 +1,167 @@
 # Project State: JY-School ERP
 
-## Recent Changes & Fixes
-- **Record Fee Payment Flow (Mobile App & Backend):**
-  - **Backend Fix**: Fixed a data fetch bug in `fees.controller.ts` where `getStudentFeeStatus` erroneously returned global fee structures *alongside* other individual students' fee structures due to improper `classId` OR logic.
-  - **UI Overhaul**: Redesigned `record_fee_payment_screen.dart` to be highly premium and professional. Replaced the `bottomSheet` with a `SafeArea`-wrapped `bottomNavigationBar` to fix Android system navigation bar overlap.
-  - **Date Picker**: Added a new Payment Date field in the "Record Payment" screen for retroactive entries.
-- **Flutter UI Enhancements & Fixes:**
-  - **Staff Attendance Screen**: Fixed a UI issue in `mark_staff_attendance_screen.dart` where the "Save Attendance" button overlapped with the Android System Navigation Bar by properly implementing `MediaQuery` bottom padding.
-  - Scaled down the Dashboard Grid items to fit exactly 8 boxes on a single screen without scrolling, and removed background images for a cleaner look.
-  - Migrated the "Edit Transaction" Bottom Sheet to a separate standalone screen (`edit_transaction_screen.dart`) to solve Navigation Bar overlap issues and improve UX.
-  - Added a `Date Picker` to the Edit Transaction flow, enabling users to modify the transaction's `paymentDate`.
-  - Applied `SafeArea` to the "Apply Discount" bottom sheet to prevent the "Apply" button from overlapping with the Android System Navigation Bar.
-- **Gate Pass Mobile App Module Overhaul:**
-  - **Issue Gate Pass:** Added a Floating Action Button in `gate_pass_screen.dart` to allow Admins and Teachers to issue gate passes easily.
-  - **Premium View Screen:** Replaced the cramped bottom sheet in the History tab with a dedicated, beautifully designed full-page `GatePassViewScreen` displaying the photo, details, and large QR code.
-  - **QR Scanner Redesign:** Completely rewrote the `_QRScannerTab` using `mobile_scanner` to feature a premium, Paytm-like full-screen layout with a central cutout overlay and scanning animation. The scanner now automatically processes codes, interacts with the backend to update status (IN/OUT), and shows professional dialogs.
-- **Finance Mobile App Module Overhaul:**
-  - **Wallet Dashboard:** Redesigned `finance_screen.dart` from a dull grid to a premium, glassmorphism-inspired "Wallet/Bank" style dashboard featuring beautiful KPI cards and quick-access circular icons. Added new quick-action cards: "Fee Category", "Transactions", and "Fee Details".
-  - **Payment Receipts (New):** Created `fee_receipts_screen.dart`, a dedicated hub that lists all successful payments and generates professional PDF receipts for parents.
-  - **Finance Reports Upgrade:** Upgraded `finance_reports_screen.dart` with a new "Cash-in-Hand Settlement" metric and better chart integrations, bringing the mobile analytics on par with the Web App.
-  - **Transactions Management:** Upgraded the transactions screen (`transactions_screen.dart`) to support Editing and Deleting payments directly from the mobile app via a popup menu.
-  - **Student Fee Details (New):** Developed `student_fee_details_screen.dart` to perfectly mirror the Web App's `StudentFeeDetailsTab`. Features advanced Class & Status filtering, live balances, PDF/CSV export (via `share_plus`), and 1-tap WhatsApp fee reminders.
-- **Leave Apply / My History Tabs:** Fixed the UI contrast issue in the Teacher Mobile App (`leave_dashboard_screen.dart`) by setting `labelColor: Colors.white` for the TabBar.
-- **Gate Pass Class/Section Filtering:** Added `Class` and `Section` Dropdown filters in the Gate Pass issuance screen (`create_gate_pass_screen.dart`).
-- **Fee Reminder Navigation Fix:** Corrected a bug in the Teacher Mobile App (`dashboard_screen.dart`) where the 'Fee Reminder' button mistakenly routed to the 'Collect Fee' screen (`StudentFeeSearchScreen`) instead of the correct `FeeReminderSearchScreen`.
-- **Max Marks Data Integrity (Backend):** 
-  - Discovered a data inconsistency where marks entered via the Mobile App ignored subject-specific max marks (e.g., 20) and defaulted to the global exam max marks (100).
-  - Modified `marks.controller.ts` in the backend to explicitly pre-fetch `ExamPlans` and strictly enforce the database truth for `maxMarks`, preventing the client (Web or Mobile) from manipulating it.
-  - Wrote a batched database cleanup script (`fixMarks.ts`) to repair existing corrupted records (like the Hindi 100 maxMarks issue) without causing memory exhaustion.
-- **Flutter Progress Card UI Overhaul:**
-  - Redesigned `single_progress_card_screen.dart` in the Flutter mobile app to perfectly match the premium Web App design.
-  - Added missing fields (Mobile, Location) and matched the Row-based layout of the Academic Rating Box.
-- **Subject Ordering Bug Fix:**
-  - Fixed an issue where the custom order of subjects entered during Exam Creation was ignored in Results, Progress Card, and Flutter App.
-  - Removed conflicting hardcoded sorting logic from the backend (`exams.controller.ts` `getResults`), Web App (`ResultsTab.tsx`), and Flutter (`single_progress_card_screen.dart`).
-  - The system now strictly respects the order of subjects as stored in `exam.subjects` JSON.
-- **Max Marks Data Repair Script Fix:**
-  - Fixed a critical bug in `fixMarks.ts` that caused it to crash and incorrectly assign the exam's total max marks to individual subjects. It now accurately extracts subject-specific max marks from the `exam.subjects` JSON array.
+## Last Updated: 2026-08-29
 
-## Outstanding Items
-- **Exam Architecture Refactor:** Migrate the global `subjects` array in the Exam model to a class-wise mapping structure (Dynamic Class-Specific Subject Mapping) to allow different subjects and max marks for different classes under the same Exam Name. (Postponed until current marks entry period is completed).
-- Teacher Live Classes Feature (Jitsi/Agora Integration).
+---
 
-## Latest Updates
-- **Advanced Announcement System:**
-  - **Image Upload:** Enabled Admins and Super Admins to optionally attach images to announcements.
-  - **Read Tracking:** Implemented a new `AnnouncementRead` model in the backend and a new "Read Receipts" modal in the Web App to track exactly which Students and Teachers have viewed the announcement.
-  - **Push Notifications:** Set up dual notifications: target users get a push when a new announcement is posted, and the Admin who created it gets a push notification immediately when a user views it for the first time.
-  - **Flutter Integration:** Replaced hardcoded dummy text in `dashboard_screen.dart` with real latest announcement data, and fully integrated the `AnnouncementDetailScreen` with the backend `markAsRead` API, permanently hiding the "Mark as Read" button once tapped.
-- Successfully pushed the latest Flutter UI enhancements and backend fixes to GitHub.
-- **Flutter APK Fixes:** 
-  - **App Icon Update:** Replaced the generic blue icon with the official original JY School logo (from the login screen) using `flutter_launcher_icons`.
-  - Removed strict `.timeout(...)` limits from `api_service.dart` `_performGet` to prevent false offline fallbacks when the free Railway backend server takes too long to wake up.
-  - Improved `MarksUploadScreen` UI by showing 'No Exams Found' instead of a confusing disabled state when no exams are returned.
-  - Redesigned `ExamStatusScreen` (Status Overview) to display subjects in a highly premium table format instead of chips when a class is expanded, explicitly showing S.No, Subject, and Status (Entered vs Pending).
-  - Implemented dynamic global maxMarks validation for every test/exam by fully integrating the new `MarksUploadScreen` across all dashboards and deleting the legacy `TeacherMarksScreen`.
-- **Flutter Question Bank Migration:**
-  - Successfully migrated the Question Bank module to the Flutter app.
-- **Flutter Question Papers Integration:**
-  - Fixed an API route mismatch (404 error) where the mobile app hit `/api/questionPapers` instead of `/api/question-papers`.
-  - Linked the highly premium `QuestionPapersScreen` to the Teacher Dashboard by replacing the redundant "Answer Keys" tile (Answer Keys are now viewed directly from within the Question Papers screen).
-  - Redesigned the "Question Papers" empty state screen from a blank white page to a premium, modern design with an empty folder icon, bold typography, and a clear subtitle matching the rest of the application's premium UI.
-  - **New Feature: Upload Question Paper:** Created `upload_question_paper_screen.dart` allowing Teachers and Admins to upload question papers (PDF links) and answer keys directly from the mobile app. Added a conditionally rendered Floating Action Button in `question_papers_screen.dart` that is only visible to authorized roles, leaving the student view untouched as a simple list.
-## Infrastructure & Hosting Migration (Completed)
-- **VPS Setup Complete:** Successfully provisioned and configured the BigRock VPS (Ubuntu 22.04).
-- **Dual Database Architecture:** 
-  - Deployed a local PostgreSQL database (`jy_school_local`) on the VPS to operate independently of the main Supabase database.
-  - Specifically designed this local database to store heavy entities like `QuestionPapers` and `AnswerKeys` to save Supabase storage costs.
-- **Backend Prisma Setup:** 
-  - Created a secondary Prisma schema (`schema_local.prisma`) and updated `prisma.ts` to instantiate a `prismaLocal` client for routing specific queries to the VPS database.
-  - Refactored `questionPapers.controller.ts` to read/write from `prismaLocal` while dynamically fetching relational data (Class, Subject, Exam) from the main Supabase `prisma` client.
-- **Nginx & File Storage:** Configured Nginx to serve static uploaded files from `/var/www/uploads/` on port `8081`.
 ## Environment & Hosting Details
-- **Frontend (Web App):** Built with React/Vite, located in the `frontend/` directory.
-- **Frontend (Mobile App):** Built with Flutter, located in the `flutter_mobile/` directory.
-- **Backend (API):** Built with Node.js/Express, located in the `backend/` directory. **Currently hosted on the VPS at `http://66.116.252.191:19998`.**
-- **Databases:**
-  - Main DB: Supabase (PostgreSQL) handling all primary ERP data.
-  - Local DB: Hosted on the VPS at `66.116.252.191` (`jy_school_local`) specifically for Question Bank/Question Papers and heavy PDF handling.
- 
- 
+
+| Component | Details |
+|---|---|
+| Frontend (Web) | React/Vite — `frontend/` directory |
+| Frontend (Mobile) | Flutter — `flutter_mobile/` directory |
+| Backend (API) | Node.js/Express — `backend/` — VPS at `http://66.116.252.191:19998` |
+| Main DB | Supabase (PostgreSQL) |
+| Local DB | VPS PostgreSQL — `jy_school_local` (for Question Papers, Answer Keys) |
+| SSH | `ssh root@66.116.252.191` |
+
+### Backend Deploy Commands (VPS)
+```
+cd /root/JY-School/backend
+git pull origin main
+npx prisma generate
+npx prisma generate --schema prisma/schema_local.prisma
+npm run build
+pm2 restart backend --update-env
+```
+
+---
+
+## Outstanding Items (Pending for Next Session)
+- **OMR Answer Sheet Scanner:** User requested Flutter app implementation. NOT STARTED.
+- **Exam Architecture Refactor:** Migrate the global `subjects` array to a class-wise mapping structure to allow different subjects and max marks per class under the same Exam Name. (Postponed).
+- **Teacher Live Classes Feature:** Jitsi/Agora integration. (Postponed).
+
+---
+
+## Session History
+
+### Session: 2026-08-31 - Web Student Profile UI Fixes
+**Files Changed:** `StudentProfilePage.tsx`
+**Backend Changes:** None
+
+#### Bugs Fixed
+1. **Student Profile - Fee Ledger Layout:**
+   - Moved Fee Ledger to be side-by-side with Demographics and Family Details (3-column grid) for a more compact and balanced look on large screens.
+2. **Student Profile - Print Dossier Not Working:**
+   - Main page layout (`flex-1`) was wrapping the Print-Only Dossier view and causing it to be hidden during `window.print()`. 
+   - Restructured the DOM and added `print:hidden` selectively so the UI hides correctly while allowing the A4 Dossier template to render perfectly for print.
+
+---
+
+### Session: 2026-08-29 — Flutter Fixes & New Features
+**Git Commit:** `f200ae0` — `feat: Upload Question Paper screen, Fix Progress Card logo & signatures`  
+**Files Changed:** 15 files, 1553 insertions, 563 deletions  
+**New Files:** `change_password_screen.dart`, `upload_question_paper_screen.dart`  
+**Backend Changes:** None (Flutter-only session, no VPS deploy needed)
+
+#### Bugs Fixed
+1. **Progress Card – Logo Not Showing**
+   - Root cause: Web app stores logo in `admitCardSettings.logoUrl` (exam-specific), but Flutter was reading from `_settingsData['logoUrl']` (global school settings only).
+   - Fix: Updated `single_progress_card_screen.dart` to check `admitCardSettings.logoUrl` first, then fall back to global `_settingsData['logoUrl']`.
+   
+2. **Progress Card – Teacher & Principal Signatures Not Showing**
+   - Root cause: `CustomNetworkImage` was missing the `ngrok-skip-browser-warning` header needed for VPS image URLs. Also, string type conversion was unreliable causing null checks to fail.
+   - Fix: Added `headers: {'ngrok-skip-browser-warning': '69420'}` and `errorBuilder` to all signature `CustomNetworkImage` widgets in `single_progress_card_screen.dart`.
+
+3. **Change Password – Opening Admin Settings Instead**
+   - Root cause: Profile screen was navigating to Admin Settings screen on "Change Password" tap.
+   - Fix: Created new `change_password_screen.dart` with dedicated UI calling `PUT /api/auth/change-password`, linked from `profile_screen.dart`.
+
+4. **VPS Backend – PrismaClientInitializationError**
+   - Root cause: `LOCAL_DATABASE_URL` was missing from VPS `.env` file after a server restart.
+   - Fix: Added `LOCAL_DATABASE_URL` to `/root/JY-School/backend/.env` on VPS and restarted pm2 with `--update-env`.
+
+5. **Announcement UI – "NEW" badge & content snippet cluttering cards**
+   - Fix: Removed "NEW" badges and content snippets from announcement cards in `dashboard_screen.dart`. Now only the title shows; clicking opens the full announcement.
+
+#### New Features Added
+1. **Upload Question Paper Screen (`upload_question_paper_screen.dart`)**
+   - Full premium form with fields: Paper Title, Exam (optional), Class (required), Subject (optional), File URL (PDF/Word), Answer Key URL (optional), Typed Answer Key (optional).
+   - Calls `POST /api/question-papers` via new `ApiService.createQuestionPaper()` method.
+   - Added `FloatingActionButton.extended` ("Upload Paper") to `question_papers_screen.dart`, visible only to TEACHER, ADMIN, SUPER_ADMIN roles. Refreshes paper list on successful upload.
+
+2. **Question Papers – Premium Empty State**
+   - Replaced the plain "No question papers uploaded yet." text with a premium design: large indigo circle icon + bold heading + descriptive subtitle.
+
+---
+
+### Session: 2026-08-29 (Earlier) — Announcement System & Backend
+#### Completed
+- **Advanced Announcement System:**
+  - Image Upload for announcements (Admin/Super Admin only).
+  - Read Tracking with `AnnouncementRead` model in backend.
+  - Read Receipts modal in Web App (shows which Students/Teachers viewed).
+  - Dual Push Notifications (target users on post, admin on first read).
+  - Flutter: Real announcement data in `dashboard_screen.dart`, `markAsRead` API integrated in `AnnouncementDetailScreen`.
+
+---
+
+### Earlier Sessions — Completed Work
+
+#### Flutter APK Fixes
+- App icon replaced with official JY School logo using `flutter_launcher_icons`.
+- Removed `.timeout()` limits from `api_service.dart` to prevent false offline fallbacks.
+- `MarksUploadScreen` now shows "No Exams Found" instead of disabled state.
+- `ExamStatusScreen` redesigned to show premium subject table (S.No, Subject, Status).
+- Dynamic maxMarks validation integrated; legacy `TeacherMarksScreen` deleted.
+
+#### Flutter Examination Module
+- Question Bank module fully migrated to Flutter app.
+- Question Papers:
+  - Fixed 404 API route mismatch (`/api/questionPapers` → `/api/question-papers`).
+  - Linked `QuestionPapersScreen` to Teacher Dashboard (replaced "Answer Keys" tile).
+  - Answer Keys viewable via bottom sheet inside Question Papers screen.
+
+#### Flutter Finance Module Overhaul
+- `finance_screen.dart`: Glassmorphism wallet-style dashboard with KPI cards.
+- `fee_receipts_screen.dart`: New screen listing payments + PDF receipt generation.
+- `finance_reports_screen.dart`: Added "Cash-in-Hand Settlement" metric.
+- `transactions_screen.dart`: Edit & Delete payments from mobile app.
+- `student_fee_details_screen.dart`: Class/Status filtering, balances, PDF/CSV export, WhatsApp fee reminders.
+
+#### Flutter Gate Pass Module Overhaul
+- FAB added to `gate_pass_screen.dart` for issuing gate passes.
+- `GatePassViewScreen`: Full-page premium view with QR code.
+- QR Scanner completely rewritten using `mobile_scanner` (Paytm-style full-screen layout).
+
+#### Flutter Attendance & Fee Fixes
+- `mark_staff_attendance_screen.dart`: Fixed system nav bar overlap (MediaQuery bottom padding).
+- `record_fee_payment_screen.dart`: Premium redesign, SafeArea bottomNavigationBar, retroactive date picker.
+- `edit_transaction_screen.dart`: Migrated from bottom sheet to standalone screen.
+
+#### Backend – Max Marks Data Integrity
+- `marks.controller.ts`: Pre-fetch ExamPlans, enforce subject-specific `maxMarks` from DB.
+- `fixMarks.ts`: Cleanup script to fix corrupted records (batched, crash-safe).
+
+#### Subject Ordering Fix
+- Removed conflicting sort logic from: `exams.controller.ts`, `ResultsTab.tsx`, `single_progress_card_screen.dart`.
+- System now strictly respects `exam.subjects` JSON order.
+
+#### Flutter Progress Card Overhaul
+- `single_progress_card_screen.dart`: Premium redesign matching web app.
+- Added Mobile, Location fields; fixed Row-based Academic Rating layout.
+
+#### Flutter Fee Module
+- `record_fee_payment_screen.dart`: Premium redesign + retroactive date picker.
+- Fixed `fees.controller.ts` bug (classId OR logic returning wrong fee structures).
+
+#### Flutter UI General
+- Dashboard grid: 8 items, single screen, no background images.
+- `edit_transaction_screen.dart` + Date Picker.
+- `leave_dashboard_screen.dart`: TabBar `labelColor: Colors.white` fix.
+- `create_gate_pass_screen.dart`: Class & Section dropdown filters.
+- Dashboard: Fee Reminder button routes to correct `FeeReminderSearchScreen`.
+
+---
+
+## Infrastructure & Hosting Migration (Completed)
+- VPS: BigRock Ubuntu 22.04 fully provisioned.
+- `jy_school_local` PostgreSQL on VPS for heavy data (Question Papers, Answer Keys).
+- `schema_local.prisma` + `prismaLocal` Prisma client created.
+- `questionPapers.controller.ts` uses `prismaLocal` for read/write, `prisma` for relational data.
+- Nginx serving `/var/www/uploads/` on port `8081`.- Fixed **Transport Module** UI and backend logic:
+  - **VehiclesPage**: Added Status dropdown, Vehicle Capacity progress bars, and Edit/Delete APIs.
+  - **RoutesPage**: Added Vehicle assignment dropdown, dynamic Stops creation form (pickup/drop time, monthly fee), and updated table UI.
+  - **StudentTransportPage**: Limited API query size for students, implemented dynamic Stop fetching based on selected Route, and added a premium UI grid.
+  - **Backend**: Implemented missing endpoints PUT /vehicles/:id, DELETE /vehicles/:id, DELETE /routes/:id, and DELETE /students/:id in 	ransport.controller.ts and 	ransport.routes.ts.

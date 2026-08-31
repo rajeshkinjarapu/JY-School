@@ -1,25 +1,28 @@
 import React, { useEffect, useState } from 'react';
 import api from '../../api/axios';
 import { LoadingSpinner } from '../../components/UI/LoadingSpinner';
-import { Users, Plus, Edit, Trash2 } from 'lucide-react';
+import { Users, Plus, Trash2, X, Map, MapPin, User, ChevronRight } from 'lucide-react';
 import toast from 'react-hot-toast';
-
 import { PageHeader } from '../../components/UI/PageHeader';
+import { createPortal } from 'react-dom';
 
 export const StudentTransportPage = () => {
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
   const [formData, setFormData] = useState({ studentId: '', routeId: '', stopId: '' });
   
   const [students, setStudents] = useState<any[]>([]);
   const [routes, setRoutes] = useState<any[]>([]);
+  const [availableStops, setAvailableStops] = useState<any[]>([]);
 
   const fetchData = async () => {
     try {
       const [transRes, stdRes, rtsRes] = await Promise.all([
         api.get('/api/transport/students'),
-        api.get('/api/students?limit=5000'),
+        api.get('/api/students?limit=2000'), // limit for performance
         api.get('/api/transport/routes')
       ]);
       setItems(transRes.data);
@@ -36,16 +39,51 @@ export const StudentTransportPage = () => {
     fetchData();
   }, []);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // Update available stops when route changes
+  useEffect(() => {
+    if (formData.routeId) {
+      const selectedRoute = routes.find(r => r.id === formData.routeId);
+      setAvailableStops(selectedRoute?.stops || []);
+      // Auto-select first stop if none selected and stops exist
+      if (selectedRoute?.stops?.length > 0 && !formData.stopId) {
+        setFormData(prev => ({ ...prev, stopId: selectedRoute.stops[0].id }));
+      }
+    } else {
+      setAvailableStops([]);
+    }
+  }, [formData.routeId, routes]);
+
+  const openAddModal = () => {
+    setFormData({ studentId: '', routeId: '', stopId: '' });
+    setShowModal(true);
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!window.confirm("Are you sure you want to remove transport for this student?")) return;
+    const t = toast.loading('Removing...');
     try {
-      await api.post('/api/transport/students', formData);
-      toast.success('Assigned student to transport');
-      setShowModal(false);
-      setFormData({ studentId: '', routeId: '', stopId: '' });
+      await api.delete(`/api/transport/students/${id}`);
+      toast.success('Transport removed successfully', { id: t });
       fetchData();
     } catch (e: any) {
-      toast.error(e.response?.data?.message || 'Error');
+      toast.error(e.response?.data?.message || 'Failed to remove transport', { id: t });
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+    const t = toast.loading('Assigning transport...');
+    try {
+      await api.post('/api/transport/students', formData);
+      toast.success('Student assigned to transport successfully', { id: t });
+      setShowModal(false);
+      fetchData();
+    } catch (e: any) {
+      toast.error(e.response?.data?.message || 'Error assigning transport', { id: t });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -53,60 +91,86 @@ export const StudentTransportPage = () => {
     <div className="flex flex-col h-full bg-gray-50/50" style={{ minHeight: 'calc(100vh - 64px)' }}>
       <PageHeader 
         title="Student Transport" 
-        icon={<Users className="w-5 h-5" />} 
+        icon={<Users className="w-6 h-6 text-fuchsia-600" />} 
         action={
           <button 
-            onClick={() => setShowModal(true)}
-            className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-fuchsia-500 to-pink-600 text-white rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all font-bold"
+            onClick={openAddModal}
+            className="flex items-center gap-2 px-5 py-2.5 bg-gray-900 text-white rounded-lg shadow-md hover:bg-gray-800 hover:-translate-y-0.5 transition-all font-bold text-sm"
           >
-            <Plus className="w-5 h-5" /> Assign Transport
+            <Plus className="w-4 h-4" /> Assign Transport
           </button>
         }
       />
       <div className="flex-1 overflow-auto p-4 md:p-6 lg:p-8">
-        <div className="max-w-7xl mx-auto space-y-8 animate-fade-in-up">
+        <div className="max-w-7xl mx-auto space-y-6 animate-fade-in-up">
 
         {loading ? <div className="py-20 flex justify-center"><LoadingSpinner size="lg" /></div> : (
-          <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-3xl shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-200/60 dark:border-slate-800 overflow-hidden relative animate-fade-in-up delay-75">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden relative">
             <div className="overflow-x-auto">
               <table className="w-full text-sm text-left">
-                <thead className="bg-slate-50/80 dark:bg-slate-800/80 text-slate-500 dark:text-slate-400 text-xs uppercase tracking-widest backdrop-blur-md border-b border-slate-200/60 dark:border-slate-800/60">
+                <thead className="bg-gray-50/80 text-gray-500 text-[11px] uppercase tracking-widest border-b border-gray-100">
                   <tr>
-                    <th className="px-6 py-5 font-bold">Student</th>
-                    <th className="px-6 py-5 font-bold">Class & Roll</th>
-                    <th className="px-6 py-5 font-bold">Route</th>
-                    <th className="px-6 py-5 font-bold">Stop</th>
-                    <th className="px-6 py-5 font-bold text-right">Actions</th>
+                    <th className="px-6 py-4 font-bold">Student Name</th>
+                    <th className="px-6 py-4 font-bold">Class / Section</th>
+                    <th className="px-6 py-4 font-bold">Transport Route</th>
+                    <th className="px-6 py-4 font-bold">Pickup/Drop Stop</th>
+                    <th className="px-6 py-4 font-bold text-right">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-slate-800/50">
+                <tbody className="divide-y divide-gray-50">
                   {items.length === 0 ? (
                     <tr>
-                      <td colSpan={5} className="px-6 py-12 text-center text-slate-400">
-                        <Users className="w-12 h-12 mx-auto mb-3 opacity-20" />
-                        <p className="font-bold">No students assigned</p>
+                      <td colSpan={5} className="px-6 py-16 text-center">
+                        <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-gray-100">
+                          <Users className="w-8 h-8 text-gray-300" />
+                        </div>
+                        <p className="font-bold text-gray-900 text-base">No students assigned</p>
+                        <p className="text-sm text-gray-500 mt-1">Assign students to transport routes.</p>
                       </td>
                     </tr>
                   ) : items.map(r => (
-                    <tr key={r.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors group">
+                    <tr key={r.id} className="hover:bg-fuchsia-50/30 transition-colors group">
                       <td className="px-6 py-4">
-                        <div className="font-black text-slate-800 dark:text-slate-200 text-base">{r.student?.user?.name}</div>
-                      </td>
-                      <td className="px-6 py-4 font-semibold text-slate-600 dark:text-slate-300">
-                        {r.student?.class?.name} - {r.student?.class?.section} <span className="text-slate-400">({r.student?.rollNo})</span>
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-fuchsia-50 flex items-center justify-center border border-fuchsia-100 flex-shrink-0">
+                            <span className="text-fuchsia-600 font-bold text-sm">
+                              {r.student?.user?.name?.charAt(0) || <User className="w-4 h-4" />}
+                            </span>
+                          </div>
+                          <div>
+                            <div className="font-black text-gray-900 text-sm tracking-wide">{r.student?.user?.name}</div>
+                            <div className="text-[11px] font-bold text-gray-400 tracking-wider">Admission: {r.student?.admissionNumber || 'N/A'}</div>
+                          </div>
+                        </div>
                       </td>
                       <td className="px-6 py-4">
-                        <span className="px-3 py-1 bg-fuchsia-50 dark:bg-fuchsia-900/20 text-fuchsia-600 dark:text-fuchsia-400 font-bold rounded-lg text-xs border border-fuchsia-100 dark:border-fuchsia-800">
-                          {r.route?.name}
-                        </span>
+                        <div className="font-bold text-gray-800">{r.student?.class?.name}</div>
+                        <div className="text-[11px] text-gray-500 font-semibold">Section {r.student?.class?.section} • Roll {r.student?.rollNo}</div>
                       </td>
-                      <td className="px-6 py-4 font-semibold text-slate-600 dark:text-slate-300">{r.stop?.stopName}</td>
+                      <td className="px-6 py-4">
+                        <div className="flex flex-col gap-1">
+                          <span className="inline-flex w-max items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-black uppercase tracking-widest bg-fuchsia-50 text-fuchsia-700 border border-fuchsia-200">
+                            <Map className="w-3.5 h-3.5" /> {r.route?.name}
+                          </span>
+                          <span className="text-[10px] font-semibold text-gray-400 flex items-center gap-1 mt-0.5">
+                            {r.route?.vehicle?.registrationNo || 'No vehicle'}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-start gap-2">
+                          <MapPin className="w-4 h-4 text-gray-400 mt-0.5" />
+                          <div>
+                            <div className="font-bold text-gray-800">{r.stop?.stopName || 'Unknown Stop'}</div>
+                            <div className="text-[11px] text-gray-500 font-semibold flex items-center gap-1 mt-0.5">
+                              {r.stop?.pickupTime || '--'} <ChevronRight className="w-3 h-3" /> {r.stop?.dropTime || '--'}
+                            </div>
+                          </div>
+                        </div>
+                      </td>
                       <td className="px-6 py-4 text-right">
-                        <div className="flex items-center justify-end gap-2 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button className="p-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-400 hover:text-fuchsia-600 hover:bg-fuchsia-50 dark:hover:bg-fuchsia-900/20 rounded-xl transition-colors shadow-sm">
-                            <Edit className="w-4 h-4" />
-                          </button>
-                          <button className="p-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-xl transition-colors shadow-sm">
+                        <div className="flex items-center justify-end gap-1.5 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button onClick={() => handleDelete(r.id)} className="p-2 bg-white border border-gray-200 text-gray-400 hover:text-rose-600 hover:bg-rose-50 hover:border-rose-100 rounded-lg transition-all shadow-sm">
                             <Trash2 className="w-4 h-4" />
                           </button>
                         </div>
@@ -119,49 +183,57 @@ export const StudentTransportPage = () => {
           </div>
         )}
 
-        {showModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(15, 23, 42, 0.6)', backdropFilter: 'blur(8px)' }}>
-            <div className="bg-white dark:bg-slate-900 rounded-[2rem] p-8 w-full max-w-md shadow-2xl border border-white/20 animate-in zoom-in-95 duration-300">
-              <h2 className="text-xl font-black text-slate-800 dark:text-white mb-6 flex items-center gap-3">
-                <div className="p-2 bg-fuchsia-100 dark:bg-fuchsia-900/30 text-fuchsia-600 dark:text-fuchsia-400 rounded-xl">
-                  <Plus className="w-5 h-5" />
-                </div>
-                Assign Transport
-              </h2>
+        {showModal && createPortal(
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-gray-950/40 backdrop-blur-sm animate-in fade-in duration-200">
+            <div className="fixed inset-0" onClick={() => !isSubmitting && setShowModal(false)} />
+            <div className="relative bg-white rounded-[24px] p-6 w-full max-w-md shadow-2xl animate-in zoom-in-95 duration-200">
+              <div className="flex justify-between items-center mb-6 border-b border-gray-100 pb-4">
+                <h2 className="text-lg font-black text-gray-900 flex items-center gap-2.5">
+                  <div className="p-1.5 bg-fuchsia-100 text-fuchsia-600 rounded-lg">
+                    <Users className="w-4 h-4" />
+                  </div>
+                  Assign Student Transport
+                </h2>
+                <button onClick={() => setShowModal(false)} className="p-1.5 text-gray-400 hover:bg-gray-100 rounded-full transition-colors">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
               
-              <form onSubmit={handleSubmit} className="space-y-5">
+              <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <label className="block text-xs font-black text-slate-500 uppercase tracking-widest mb-2">Student</label>
-                  <select required className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-semibold text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-fuchsia-500/20 focus:border-fuchsia-400 outline-none transition-all" value={formData.studentId} onChange={e => setFormData({...formData, studentId: e.target.value})}>
-                    <option value="">Select Student</option>
-                    {students.map(s => <option key={s.id} value={s.id}>{s.user?.name} - {s.rollNo}</option>)}
+                  <label className="block text-[11px] font-black text-gray-500 uppercase tracking-widest mb-1.5">Select Student <span className="text-rose-500">*</span></label>
+                  <select required className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold text-gray-800 focus:ring-2 focus:ring-fuchsia-500/20 focus:border-fuchsia-500 outline-none transition-all" value={formData.studentId} onChange={e => setFormData({...formData, studentId: e.target.value})}>
+                    <option value="">-- Choose Student --</option>
+                    {students.map(s => <option key={s.id} value={s.id}>{s.user?.name} (Class {s.class?.name || '-'})</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-black text-slate-500 uppercase tracking-widest mb-2">Route</label>
-                  <select required className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-semibold text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-fuchsia-500/20 focus:border-fuchsia-400 outline-none transition-all" value={formData.routeId} onChange={e => setFormData({...formData, routeId: e.target.value, stopId: ''})}>
-                    <option value="">Select Route</option>
-                    {routes.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
+                  <label className="block text-[11px] font-black text-gray-500 uppercase tracking-widest mb-1.5">Select Route <span className="text-rose-500">*</span></label>
+                  <select required className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold text-gray-800 focus:ring-2 focus:ring-fuchsia-500/20 focus:border-fuchsia-500 outline-none transition-all" value={formData.routeId} onChange={e => setFormData({...formData, routeId: e.target.value, stopId: ''})}>
+                    <option value="">-- Choose Route --</option>
+                    {routes.map(r => <option key={r.id} value={r.id}>{r.name} ({r.startPoint} to {r.endPoint})</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-black text-slate-500 uppercase tracking-widest mb-2">Stop</label>
-                  <select required className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-semibold text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-fuchsia-500/20 focus:border-fuchsia-400 outline-none transition-all" value={formData.stopId} onChange={e => setFormData({...formData, stopId: e.target.value})}>
-                    <option value="">Select Stop</option>
-                    {routes.find(r => r.id === formData.routeId)?.stops?.map((s:any) => <option key={s.id} value={s.id}>{s.stopName}</option>)}
+                  <label className="block text-[11px] font-black text-gray-500 uppercase tracking-widest mb-1.5">Select Stop <span className="text-rose-500">*</span></label>
+                  <select required disabled={!formData.routeId || availableStops.length === 0} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold text-gray-800 focus:ring-2 focus:ring-fuchsia-500/20 focus:border-fuchsia-500 outline-none transition-all disabled:opacity-50" value={formData.stopId} onChange={e => setFormData({...formData, stopId: e.target.value})}>
+                    <option value="">{availableStops.length === 0 && formData.routeId ? '-- No Stops Found --' : '-- Choose Stop --'}</option>
+                    {availableStops.map((s:any) => <option key={s.id} value={s.id}>{s.stopName} (₹{s.monthlyFee})</option>)}
                   </select>
                 </div>
                 
-                <div className="flex gap-4 pt-4 mt-6">
-                  <button type="button" onClick={() => setShowModal(false)} className="flex-1 px-4 py-3 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-sm rounded-xl transition-colors">Cancel</button>
-                  <button type="submit" className="flex-1 px-4 py-3 bg-gradient-to-r from-fuchsia-500 to-pink-600 hover:from-fuchsia-600 hover:to-pink-700 text-white font-bold text-sm rounded-xl shadow-lg shadow-fuchsia-500/30 transition-all hover:-translate-y-0.5">Save</button>
+                <div className="flex gap-3 pt-4 border-t border-gray-100 mt-6">
+                  <button type="button" onClick={() => setShowModal(false)} className="flex-1 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-sm rounded-xl transition-colors">Cancel</button>
+                  <button type="submit" disabled={isSubmitting || !formData.stopId} className="flex-1 px-4 py-2.5 bg-gray-900 hover:bg-gray-800 text-white font-bold text-sm rounded-xl shadow-lg shadow-gray-900/20 transition-all hover:-translate-y-0.5 disabled:opacity-50">
+                    {isSubmitting ? 'Saving...' : 'Assign Transport'}
+                  </button>
                 </div>
               </form>
             </div>
-          </div>
+          </div>,
+          document.body
         )}
       </div>
-    </div>
     </div>
   );
 };

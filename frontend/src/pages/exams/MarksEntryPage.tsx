@@ -171,7 +171,13 @@ export const MarksEntryPage: React.FC = () => {
         navigate('/exams?tab=written-exam');
       }
     } catch (e: any) {
-      toast.error(e.message || 'Failed to save marks');
+      // Show exact error message from backend (e.g. frozen class 403 error)
+      const errMsg = e.response?.data?.message || e.response?.data?.error || e.message || 'Failed to save marks';
+      if (e.response?.status === 403) {
+        toast.error(`⛔ Access Denied: ${errMsg}`, { duration: 5000 });
+      } else {
+        toast.error(errMsg, { duration: 4000 });
+      }
     }
   };
 
