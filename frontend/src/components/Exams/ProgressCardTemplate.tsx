@@ -109,6 +109,7 @@ export const ProgressCardTemplate: React.FC<ProgressCardTemplateProps> = ({
         .jee-card .card-header .logo-wrap img { max-width: 100%; max-height: 90px; object-fit: contain; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1)); }
         .jee-card .card-header .title-wrap { text-align: center; flex: 1; padding: 0 8px; }
         .jee-card .card-header .title-wrap .school-name { font-size: 28px; font-weight: 900; color: #0b1a33; letter-spacing: 1.5px; font-family: 'Times New Roman', 'Georgia', serif; line-height: 1.2; white-space: nowrap; text-shadow: 1px 1px 0px rgba(0,0,0,0.05); }
+        .jee-card .card-header .title-wrap .school-sub { font-size: 16px; font-weight: 400; color: #1a4a7a; letter-spacing: 0.8px; margin: 2px 0; white-space: nowrap; }
         .jee-card .card-header .title-wrap .school-address { font-size: 13px; font-weight: 400; color: #5a7a8a; letter-spacing: 0.3px; margin-top: 2px; white-space: nowrap; }
         .jee-card .card-header .title-wrap .exam-title { font-size: 22px; font-weight: 400; color: #0b1a33; letter-spacing: 2px; margin: 6px 0 0; text-transform: uppercase; white-space: nowrap; }
         .jee-card .card-header .title-wrap .result-card-label { font-size: 18px; font-weight: 400; color: #d4a017; letter-spacing: 4px; margin-top: 2px; text-transform: uppercase; white-space: nowrap; }
