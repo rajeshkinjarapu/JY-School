@@ -4,7 +4,7 @@ import { LoadingSpinner } from '../../components/UI/LoadingSpinner';
 import { Map, Plus, Trash2, X, MapPin, Bus, Clock, DollarSign, ArrowRight } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { PageHeader } from '../../components/UI/PageHeader';
-import { createPortal } from 'react-dom';
+import { Portal } from '../../components/UI/Portal';
 
 export const RoutesPage = () => {
   const [routes, setRoutes] = useState<any[]>([]);
@@ -202,66 +202,84 @@ export const RoutesPage = () => {
           </div>
         )}
 
-        {showModal && createPortal(
-          <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-gray-950/40 backdrop-blur-sm">
-            <div className="fixed inset-0" onClick={() => !isSubmitting && setShowModal(false)} />
-            <div className="relative bg-white rounded-[24px] p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl animate-in zoom-in-95 duration-200">
-              <div className="sticky top-0 bg-white z-10 flex justify-between items-center mb-6 border-b border-gray-100 pb-4">
-                <h2 className="text-lg font-black text-gray-900 flex items-center gap-2.5">
-                  <div className="p-1.5 bg-blue-100 text-blue-600 rounded-lg">
-                    <Map className="w-4 h-4" />
-                  </div>
-                  Create New Route
-                </h2>
-                <button onClick={() => setShowModal(false)} className="p-1.5 text-gray-400 hover:bg-gray-100 rounded-full transition-colors">
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-              
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="space-y-4">
-                  <h3 className="text-sm font-bold text-gray-800">Basic Details</h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="col-span-2 md:col-span-1">
-                      <label className="block text-[11px] font-black text-gray-500 uppercase tracking-widest mb-1.5">Route Name <span className="text-rose-500">*</span></label>
-                      <input required type="text" className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold text-gray-800 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all placeholder-gray-400" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} placeholder="e.g. Route A" />
+        {showModal && (
+          <Portal>
+            <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-gray-950/40 backdrop-blur-sm animate-in fade-in duration-200">
+              <div className="fixed inset-0" onClick={() => !isSubmitting && setShowModal(false)} />
+              <div className="relative bg-white rounded-[24px] p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl animate-in zoom-in-95 duration-200">
+                <div className="flex justify-between items-center mb-6 border-b border-gray-100 pb-4">
+                  <h2 className="text-lg font-black text-gray-900 flex items-center gap-2.5">
+                    <div className="p-1.5 bg-emerald-100 text-emerald-600 rounded-lg">
+                      {editingId ? <Settings2 className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
                     </div>
-                    <div className="col-span-2 md:col-span-1">
-                      <label className="block text-[11px] font-black text-gray-500 uppercase tracking-widest mb-1.5">Assign Vehicle</label>
-                      <select className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold text-gray-800 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all" value={formData.vehicleId} onChange={e => setFormData({...formData, vehicleId: e.target.value})}>
-                        <option value="">-- No Vehicle Assigned --</option>
-                        {vehicles.map(v => (
-                          <option key={v.id} value={v.id}>{v.registrationNo} ({v.capacity} Seats)</option>
-                        ))}
-                      </select>
-                    </div>
-                    <div className="col-span-2 md:col-span-1">
-                      <label className="block text-[11px] font-black text-gray-500 uppercase tracking-widest mb-1.5">Start Point <span className="text-rose-500">*</span></label>
-                      <input required type="text" className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold text-gray-800 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all placeholder-gray-400" value={formData.startPoint} onChange={e => setFormData({...formData, startPoint: e.target.value})} placeholder="e.g. City Center" />
-                    </div>
-                    <div className="col-span-2 md:col-span-1">
-                      <label className="block text-[11px] font-black text-gray-500 uppercase tracking-widest mb-1.5">End Point <span className="text-rose-500">*</span></label>
-                      <input required type="text" className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold text-gray-800 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all placeholder-gray-400" value={formData.endPoint} onChange={e => setFormData({...formData, endPoint: e.target.value})} placeholder="e.g. School Campus" />
-                    </div>
-                  </div>
+                    {editingId ? 'Edit Route' : 'Add New Route'}
+                  </h2>
+                  <button onClick={() => setShowModal(false)} className="p-1.5 text-gray-400 hover:bg-gray-100 rounded-full transition-colors">
+                    <X className="w-4 h-4" />
+                  </button>
                 </div>
-
-                <div className="space-y-4 pt-4 border-t border-gray-100">
-                  <div className="flex justify-between items-center">
-                    <h3 className="text-sm font-bold text-gray-800">Route Stops</h3>
-                    <button type="button" onClick={handleAddStop} className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg text-xs font-bold transition-colors">
-                      <Plus className="w-3.5 h-3.5" /> Add Stop
-                    </button>
+                
+                <form onSubmit={handleSubmit} className="space-y-6">
+                  <div>
+                    <label className="block text-[11px] font-black text-gray-500 uppercase tracking-widest mb-1.5">Route Name <span className="text-rose-500">*</span></label>
+                    <input required type="text" className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold text-gray-800 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all placeholder-gray-400" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} placeholder="e.g. Route A (City Center)" />
                   </div>
                   
-                  <div className="space-y-3">
-                    {stops.map((stop, index) => (
-                      <div key={index} className="flex flex-col md:flex-row gap-3 p-4 bg-gray-50 border border-gray-200 rounded-xl relative group">
-                        <div className="absolute -left-2 -top-2 w-6 h-6 bg-gray-900 text-white rounded-full flex items-center justify-center text-xs font-black shadow-sm">
-                          {index + 1}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-[11px] font-black text-gray-500 uppercase tracking-widest mb-1.5">Start Point <span className="text-rose-500">*</span></label>
+                      <input required type="text" className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold text-gray-800 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all placeholder-gray-400" value={formData.startPoint} onChange={e => setFormData({...formData, startPoint: e.target.value})} placeholder="e.g. Central Station" />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-black text-gray-500 uppercase tracking-widest mb-1.5">End Point <span className="text-rose-500">*</span></label>
+                      <input required type="text" className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold text-gray-800 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all placeholder-gray-400" value={formData.endPoint} onChange={e => setFormData({...formData, endPoint: e.target.value})} placeholder="e.g. School Campus" />
+                    </div>
+                  </div>
+
+                  <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                    <div className="flex justify-between items-center mb-4">
+                      <h3 className="text-xs font-black text-gray-700 uppercase tracking-widest">Route Stops</h3>
+                      <button type="button" onClick={addStop} className="px-3 py-1.5 bg-emerald-100 text-emerald-700 hover:bg-emerald-200 font-bold text-xs rounded-lg transition-colors flex items-center gap-1">
+                        <Plus className="w-3 h-3" /> Add Stop
+                      </button>
+                    </div>
+                    
+                    <div className="space-y-3">
+                      {formData.stops.map((stop, index) => (
+                        <div key={index} className="flex gap-3 items-start p-3 bg-white rounded-lg border border-gray-100 shadow-sm relative group">
+                          <div className="flex-1 space-y-3">
+                            <input required type="text" className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm font-bold text-gray-800 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none" value={stop.stopName} onChange={e => handleStopChange(index, 'stopName', e.target.value)} placeholder="Stop Name" />
+                            <div className="flex gap-3">
+                              <div className="flex-1 flex items-center gap-2">
+                                <Clock className="w-4 h-4 text-gray-400" />
+                                <input type="time" className="flex-1 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm font-bold text-gray-800 focus:ring-2 focus:ring-emerald-500/20 outline-none" value={stop.pickupTime} onChange={e => handleStopChange(index, 'pickupTime', e.target.value)} />
+                              </div>
+                              <div className="flex-1 flex items-center gap-2">
+                                <Clock className="w-4 h-4 text-gray-400" />
+                                <input type="time" className="flex-1 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm font-bold text-gray-800 focus:ring-2 focus:ring-emerald-500/20 outline-none" value={stop.dropTime} onChange={e => handleStopChange(index, 'dropTime', e.target.value)} />
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-gray-500 font-bold text-sm">₹</span>
+                              <input required type="number" min="0" className="flex-1 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm font-bold text-gray-800 focus:ring-2 focus:ring-emerald-500/20 outline-none" value={stop.monthlyFee} onChange={e => handleStopChange(index, 'monthlyFee', e.target.value)} placeholder="Monthly Fee" />
+                            </div>
+                          </div>
+                          {formData.stops.length > 1 && (
+                            <button type="button" onClick={() => removeStop(index)} className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          )}
                         </div>
-                        <div className="flex-1">
-                          <label className="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1">Stop Name</label>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  <div className="flex gap-3 pt-4 border-t border-gray-100">
+                    <button type="button" onClick={() => setShowModal(false)} className="flex-1 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-sm rounded-xl transition-colors">Cancel</button>
+                    <button type="submit" disabled={isSubmitting} className="flex-1 px-4 py-2.5 bg-gray-900 hover:bg-gray-800 text-white font-bold text-sm rounded-xl shadow-lg shadow-gray-900/20 transition-all hover:-translate-y-0.5 disabled:opacity-50">
+                      {isSubmitting ? 'Saving...' : (editingId ? 'Update Route' : 'Save Route')}
+                    </button>
+                  </div>
                           <div className="relative">
                             <MapPin className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
                             <input required type="text" className="w-full pl-9 pr-3 py-2 bg-white border border-gray-200 rounded-lg text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none" value={stop.stopName} onChange={e => handleStopChange(index, 'stopName', e.target.value)} placeholder="Stop name" />

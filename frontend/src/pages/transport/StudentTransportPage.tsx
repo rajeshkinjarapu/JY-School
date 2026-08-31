@@ -4,7 +4,7 @@ import { LoadingSpinner } from '../../components/UI/LoadingSpinner';
 import { Users, Plus, Trash2, X, Map, MapPin, User, ChevronRight } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { PageHeader } from '../../components/UI/PageHeader';
-import { createPortal } from 'react-dom';
+import { Portal } from '../../components/UI/Portal';
 
 export const StudentTransportPage = () => {
   const [items, setItems] = useState<any[]>([]);
@@ -183,55 +183,56 @@ export const StudentTransportPage = () => {
           </div>
         )}
 
-        {showModal && createPortal(
-          <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-gray-950/40 backdrop-blur-sm animate-in fade-in duration-200">
-            <div className="fixed inset-0" onClick={() => !isSubmitting && setShowModal(false)} />
-            <div className="relative bg-white rounded-[24px] p-6 w-full max-w-md shadow-2xl animate-in zoom-in-95 duration-200">
-              <div className="flex justify-between items-center mb-6 border-b border-gray-100 pb-4">
-                <h2 className="text-lg font-black text-gray-900 flex items-center gap-2.5">
-                  <div className="p-1.5 bg-fuchsia-100 text-fuchsia-600 rounded-lg">
-                    <Users className="w-4 h-4" />
-                  </div>
-                  Assign Student Transport
-                </h2>
-                <button onClick={() => setShowModal(false)} className="p-1.5 text-gray-400 hover:bg-gray-100 rounded-full transition-colors">
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-              
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                  <label className="block text-[11px] font-black text-gray-500 uppercase tracking-widest mb-1.5">Select Student <span className="text-rose-500">*</span></label>
-                  <select required className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold text-gray-800 focus:ring-2 focus:ring-fuchsia-500/20 focus:border-fuchsia-500 outline-none transition-all" value={formData.studentId} onChange={e => setFormData({...formData, studentId: e.target.value})}>
-                    <option value="">-- Choose Student --</option>
-                    {students.map(s => <option key={s.id} value={s.id}>{s.user?.name} (Class {s.class?.name || '-'})</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-[11px] font-black text-gray-500 uppercase tracking-widest mb-1.5">Select Route <span className="text-rose-500">*</span></label>
-                  <select required className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold text-gray-800 focus:ring-2 focus:ring-fuchsia-500/20 focus:border-fuchsia-500 outline-none transition-all" value={formData.routeId} onChange={e => setFormData({...formData, routeId: e.target.value, stopId: ''})}>
-                    <option value="">-- Choose Route --</option>
-                    {routes.map(r => <option key={r.id} value={r.id}>{r.name} ({r.startPoint} to {r.endPoint})</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-[11px] font-black text-gray-500 uppercase tracking-widest mb-1.5">Select Stop <span className="text-rose-500">*</span></label>
-                  <select required disabled={!formData.routeId || availableStops.length === 0} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold text-gray-800 focus:ring-2 focus:ring-fuchsia-500/20 focus:border-fuchsia-500 outline-none transition-all disabled:opacity-50" value={formData.stopId} onChange={e => setFormData({...formData, stopId: e.target.value})}>
-                    <option value="">{availableStops.length === 0 && formData.routeId ? '-- No Stops Found --' : '-- Choose Stop --'}</option>
-                    {availableStops.map((s:any) => <option key={s.id} value={s.id}>{s.stopName} (₹{s.monthlyFee})</option>)}
-                  </select>
-                </div>
-                
-                <div className="flex gap-3 pt-4 border-t border-gray-100 mt-6">
-                  <button type="button" onClick={() => setShowModal(false)} className="flex-1 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-sm rounded-xl transition-colors">Cancel</button>
-                  <button type="submit" disabled={isSubmitting || !formData.stopId} className="flex-1 px-4 py-2.5 bg-gray-900 hover:bg-gray-800 text-white font-bold text-sm rounded-xl shadow-lg shadow-gray-900/20 transition-all hover:-translate-y-0.5 disabled:opacity-50">
-                    {isSubmitting ? 'Saving...' : 'Assign Transport'}
+        {showModal && (
+          <Portal>
+            <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-gray-950/40 backdrop-blur-sm animate-in fade-in duration-200">
+              <div className="fixed inset-0" onClick={() => !isSubmitting && setShowModal(false)} />
+              <div className="relative bg-white rounded-[24px] p-6 w-full max-w-md shadow-2xl animate-in zoom-in-95 duration-200">
+                <div className="flex justify-between items-center mb-6 border-b border-gray-100 pb-4">
+                  <h2 className="text-lg font-black text-gray-900 flex items-center gap-2.5">
+                    <div className="p-1.5 bg-fuchsia-100 text-fuchsia-600 rounded-lg">
+                      <Users className="w-4 h-4" />
+                    </div>
+                    Assign Student Transport
+                  </h2>
+                  <button onClick={() => setShowModal(false)} className="p-1.5 text-gray-400 hover:bg-gray-100 rounded-full transition-colors">
+                    <X className="w-4 h-4" />
                   </button>
                 </div>
-              </form>
+                
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div>
+                    <label className="block text-[11px] font-black text-gray-500 uppercase tracking-widest mb-1.5">Select Student <span className="text-rose-500">*</span></label>
+                    <select required className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold text-gray-800 focus:ring-2 focus:ring-fuchsia-500/20 focus:border-fuchsia-500 outline-none transition-all" value={formData.studentId} onChange={e => setFormData({...formData, studentId: e.target.value})}>
+                      <option value="">-- Choose Student --</option>
+                      {students.map(s => <option key={s.id} value={s.id}>{s.user?.name} (Class {s.class?.name || '-'})</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-black text-gray-500 uppercase tracking-widest mb-1.5">Select Route <span className="text-rose-500">*</span></label>
+                    <select required className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold text-gray-800 focus:ring-2 focus:ring-fuchsia-500/20 focus:border-fuchsia-500 outline-none transition-all" value={formData.routeId} onChange={e => setFormData({...formData, routeId: e.target.value, stopId: ''})}>
+                      <option value="">-- Choose Route --</option>
+                      {routes.map(r => <option key={r.id} value={r.id}>{r.name} ({r.startPoint} to {r.endPoint})</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-black text-gray-500 uppercase tracking-widest mb-1.5">Select Stop <span className="text-rose-500">*</span></label>
+                    <select required disabled={!formData.routeId || availableStops.length === 0} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold text-gray-800 focus:ring-2 focus:ring-fuchsia-500/20 focus:border-fuchsia-500 outline-none transition-all disabled:opacity-50" value={formData.stopId} onChange={e => setFormData({...formData, stopId: e.target.value})}>
+                      <option value="">{availableStops.length === 0 && formData.routeId ? '-- No Stops Found --' : '-- Choose Stop --'}</option>
+                      {availableStops.map((s:any) => <option key={s.id} value={s.id}>{s.stopName} (₹{s.monthlyFee})</option>)}
+                    </select>
+                  </div>
+                  
+                  <div className="flex gap-3 pt-4 border-t border-gray-100 mt-6">
+                    <button type="button" onClick={() => setShowModal(false)} className="flex-1 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-sm rounded-xl transition-colors">Cancel</button>
+                    <button type="submit" disabled={isSubmitting || !formData.stopId} className="flex-1 px-4 py-2.5 bg-gray-900 hover:bg-gray-800 text-white font-bold text-sm rounded-xl shadow-lg shadow-gray-900/20 transition-all hover:-translate-y-0.5 disabled:opacity-50">
+                      {isSubmitting ? 'Saving...' : 'Assign Transport'}
+                    </button>
+                  </div>
+                </form>
+              </div>
             </div>
-          </div>,
-          document.body
+          </Portal>
         )}
       </div>
     </div>
