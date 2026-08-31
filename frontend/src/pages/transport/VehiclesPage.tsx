@@ -262,6 +262,7 @@ export const VehiclesPage = () => {
           </div>
         </Portal>
       )}
+      </div>
     </div>
   );
 };

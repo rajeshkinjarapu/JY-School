@@ -280,54 +280,11 @@ export const RoutesPage = () => {
                       {isSubmitting ? 'Saving...' : (editingId ? 'Update Route' : 'Save Route')}
                     </button>
                   </div>
-                          <div className="relative">
-                            <MapPin className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
-                            <input required type="text" className="w-full pl-9 pr-3 py-2 bg-white border border-gray-200 rounded-lg text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none" value={stop.stopName} onChange={e => handleStopChange(index, 'stopName', e.target.value)} placeholder="Stop name" />
-                          </div>
-                        </div>
-                        <div className="w-full md:w-32">
-                          <label className="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1">Pickup</label>
-                          <div className="relative">
-                            <Clock className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
-                            <input type="time" className="w-full pl-9 pr-2 py-2 bg-white border border-gray-200 rounded-lg text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none" value={stop.pickupTime} onChange={e => handleStopChange(index, 'pickupTime', e.target.value)} />
-                          </div>
-                        </div>
-                        <div className="w-full md:w-32">
-                          <label className="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1">Drop</label>
-                          <div className="relative">
-                            <Clock className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
-                            <input type="time" className="w-full pl-9 pr-2 py-2 bg-white border border-gray-200 rounded-lg text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none" value={stop.dropTime} onChange={e => handleStopChange(index, 'dropTime', e.target.value)} />
-                          </div>
-                        </div>
-                        <div className="w-full md:w-32">
-                          <label className="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1">Monthly Fee (₹)</label>
-                          <div className="relative">
-                            <DollarSign className="absolute left-2.5 top-2.5 w-4 h-4 text-gray-400" />
-                            <input type="number" min="0" className="w-full pl-8 pr-3 py-2 bg-white border border-gray-200 rounded-lg text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none" value={stop.monthlyFee} onChange={e => handleStopChange(index, 'monthlyFee', e.target.value)} placeholder="0" />
-                          </div>
-                        </div>
-                        {stops.length > 1 && (
-                          <button type="button" onClick={() => handleRemoveStop(index)} className="mt-5 p-2 h-[38px] text-gray-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors md:self-end">
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                
-                <div className="sticky bottom-0 bg-white pt-4 border-t border-gray-100 mt-6 flex gap-3">
-                  <button type="button" onClick={() => setShowModal(false)} className="flex-1 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-sm rounded-xl transition-colors">Cancel</button>
-                  <button type="submit" disabled={isSubmitting} className="flex-1 px-4 py-2.5 bg-gray-900 hover:bg-gray-800 text-white font-bold text-sm rounded-xl shadow-lg shadow-gray-900/20 transition-all hover:-translate-y-0.5 disabled:opacity-50">
-                    {isSubmitting ? 'Saving...' : 'Save Route & Stops'}
-                  </button>
-                </div>
-              </form>
+                </form>
+              </div>
             </div>
-          </div>,
-          document.body
+          </Portal>
         )}
-
       </div>
     </div>
   );
