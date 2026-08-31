@@ -40,6 +40,7 @@ dependencies:
   package_info_plus: ^8.0.0
   dio: ^5.4.3
   open_file: ^3.3.2
+  webview_flutter: ^4.10.0
 
 dev_dependencies:
   flutter_test:

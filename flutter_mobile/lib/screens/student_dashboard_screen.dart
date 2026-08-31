@@ -189,7 +189,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'My Favourites',
+            'Tools',
             style: GoogleFonts.poppins(
               fontSize: 20,
               fontWeight: FontWeight.bold,
@@ -197,7 +197,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
             ),
           ),
           Text(
-            'Dashboards',
+            'Quick Access',
             style: GoogleFonts.poppins(
               fontSize: 14,
               color: Colors.grey,
@@ -205,19 +205,23 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
           ),
           const SizedBox(height: 20),
           GridView.count(
-            crossAxisCount: 3,
+            crossAxisCount: 4,
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             mainAxisSpacing: 16,
-            crossAxisSpacing: 16,
-            childAspectRatio: 0.85,
+            crossAxisSpacing: 12,
+            childAspectRatio: 0.75,
             children: [
-              _buildGridItem('My Classes', Icons.class_outlined, const Color(0xFFD1FAE5), const Color(0xFF059669)),
-              _buildGridItem('Attendance', Icons.check_circle_outline, const Color(0xFFE0F2FE), const Color(0xFF0284C7)),
-              _buildGridItem('Home Work', Icons.menu_book_rounded, const Color(0xFFFEF3C7), const Color(0xFFD97706)),
-              _buildGridItem('Assignment', Icons.assignment_outlined, const Color(0xFFFCE7F3), const Color(0xFFDB2777)),
-              _buildGridItem('Pay Fee', Icons.receipt_long_rounded, const Color(0xFFE0E7FF), const Color(0xFF4F46E5)),
-              _buildGridItem('My Result', Icons.bar_chart_rounded, const Color(0xFFF3E8FF), const Color(0xFF9333EA)),
+              _buildGridItem('Notice\nBoard', Icons.campaign_rounded, const Color(0xFFEDE9FE), const Color(0xFF6D28D9)),
+              _buildGridItem('Events', Icons.event_note_rounded, const Color(0xFFFCE7F3), const Color(0xFFDB2777)),
+              _buildGridItem('Gallery', Icons.collections_rounded, const Color(0xFFFEF3C7), const Color(0xFFD97706)),
+              _buildGridItem('Library', Icons.local_library_rounded, const Color(0xFFE0F2FE), const Color(0xFF0284C7)),
+              _buildGridItem('Transport', Icons.directions_bus_rounded, const Color(0xFFFEF9C3), const Color(0xFFCA8A04)),
+              _buildGridItem('ID Card', Icons.badge_rounded, const Color(0xFFCFFAFE), const Color(0xFF0891B2)),
+              _buildGridItem('Classes', Icons.laptop_chromebook_rounded, const Color(0xFFF3E8FF), const Color(0xFF9333EA)),
+              _buildGridItem('Syllabus', Icons.menu_book_rounded, const Color(0xFFD1FAE5), const Color(0xFF059669)),
+              _buildGridItem('Leave', Icons.fact_check_rounded, const Color(0xFFFFE4E6), const Color(0xFFE11D48)),
+              _buildGridItem('Help Desk', Icons.headset_mic_rounded, const Color(0xFFF1F5F9), const Color(0xFF475569)),
             ],
           ),
         ],
@@ -226,42 +230,35 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
   }
 
   Widget _buildGridItem(String title, IconData icon, Color bgColor, Color iconColor) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            blurRadius: 10,
-            spreadRadius: 2,
-            offset: const Offset(0, 4),
-          )
-        ],
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: bgColor,
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Icon(icon, color: iconColor, size: 28),
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.start,
+      children: [
+        Container(
+          width: 60,
+          height: 60,
+          decoration: BoxDecoration(
+            color: bgColor,
+            borderRadius: BorderRadius.circular(18),
           ),
-          const SizedBox(height: 12),
-          Text(
-            title,
-            textAlign: TextAlign.center,
-            style: GoogleFonts.poppins(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: const Color(0xFF334155),
-            ),
+          child: Icon(
+            icon,
+            color: iconColor,
+            size: 28,
           ),
-        ],
-      ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          title,
+          textAlign: TextAlign.center,
+          maxLines: 2,
+          style: GoogleFonts.poppins(
+            fontSize: 10,
+            height: 1.2,
+            fontWeight: FontWeight.w600,
+            color: const Color(0xFF334155),
+          ),
+        ),
+      ],
     );
   }
 

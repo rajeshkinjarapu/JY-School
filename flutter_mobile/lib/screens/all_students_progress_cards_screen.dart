@@ -119,41 +119,10 @@ class _AllStudentsProgressCardsScreenState extends State<AllStudentsProgressCard
                         ),
                       ),
                       const SizedBox(width: 8),
-                      // Card View Button
+                      // Share Card Button
                       SizedBox(
-                        height: 36,
+                        height: 32,
                         child: ElevatedButton.icon(
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => SingleProgressCardScreen(
-                                  examId: widget.examId,
-                                  classId: widget.classId,
-                                  studentId: student['id'].toString(),
-                                  studentData: student,
-                                  examName: widget.examName,
-                                  className: widget.className,
-                                ),
-                              ),
-                            );
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF6366F1),
-                            elevation: 0,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                            padding: const EdgeInsets.symmetric(horizontal: 12),
-                          ),
-                          icon: const Icon(Icons.credit_card_rounded, size: 14, color: Colors.white),
-                          label: Text('Card View', style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white)),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      // WhatsApp Share Button
-                      SizedBox(
-                        height: 36,
-                        width: 36,
-                        child: ElevatedButton(
                           onPressed: () {
                             Navigator.push(
                               context,
@@ -171,12 +140,13 @@ class _AllStudentsProgressCardsScreenState extends State<AllStudentsProgressCard
                             );
                           },
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF25D366),
+                            backgroundColor: const Color(0xFF6366F1),
                             elevation: 0,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                            padding: EdgeInsets.zero,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                            padding: const EdgeInsets.symmetric(horizontal: 10),
                           ),
-                          child: const Icon(Icons.wechat_rounded, size: 18, color: Colors.white), // Using wechat icon as whatsapp placeholder if fontawesome is not available, or I can use Icons.share
+                          icon: const Icon(Icons.share_rounded, size: 14, color: Colors.white),
+                          label: Text('Share Card', style: GoogleFonts.poppins(fontSize: 11, fontWeight: FontWeight.w600, color: Colors.white)),
                         ),
                       ),
                     ],

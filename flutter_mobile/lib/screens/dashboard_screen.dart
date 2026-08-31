@@ -430,8 +430,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
           _buildStudentMetricsGrid(),
           const SizedBox(height: 24),
           _buildStudentQuickLinks(),
-          const SizedBox(height: 24),
-          _buildStudentBottomBanner(),
           const SizedBox(height: 30),
         ],
       ),

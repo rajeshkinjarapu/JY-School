@@ -265,6 +265,201 @@ export const getClashes = async (req: AuthRequest, res: Response, next: NextFunc
           day: group[0].day,
           periodNumber: group[0].periodNumber,
           conflictingSlots: group
+      subject: { select: { name: true, code: true } },
+    },
+    orderBy: [{ day: 'asc' }, { periodNumber: 'asc' }],
+  });
+
+  const organized: Record<string, any[]> = {};
+  for (const day of DAYS_ORDER) organized[day] = [];
+  for (const slot of slots) {
+    if (!organized[slot.day]) organized[slot.day] = [];
+    organized[slot.day].push(slot);
+  }
+
+  successResponse(res, organized, 'Teacher timetable fetched');
+};
+
+export const createSlot = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  const { classId, subjectId, teacherId, day, periodNumber, startTime, endTime, room } = req.body;
+
+  if (!periodNumber) return next(createError('periodNumber is required', 400));
+
+  const conflict = await checkConflict(teacherId, classId, day, periodNumber);
+  if (conflict) return next(createError(conflict, 409));
+
+  const slot = await prisma.timetable.create({
+    data: { classId, subjectId, teacherId, day, periodNumber: parseInt(periodNumber), startTime: startTime || '', endTime: endTime || '', room },
+    include: {
+      class: { select: { name: true, section: true } },
+      subject: { select: { name: true } },
+      teacher: { include: { user: { select: { name: true } } } },
+    },
+  });
+  successResponse(res, slot, 'Timetable slot created', 201);
+};
+
+export const updateSlot = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  const id = req.params.id as string;
+  const { classId, subjectId, teacherId, day, periodNumber, startTime, endTime, room } = req.body;
+
+  const existing = await prisma.timetable.findUnique({ where: { id } });
+  if (!existing) return next(createError('Slot not found', 404));
+
+  const conflict = await checkConflict(
+    teacherId || existing.teacherId,
+    classId || existing.classId,
+    day || existing.day,
+    periodNumber || existing.periodNumber,
+    id
+  );
+  if (conflict) return next(createError(conflict, 409));
+
+  const slot = await prisma.timetable.update({
+    where: { id },
+    data: {
+      classId, subjectId, teacherId, day,
+      periodNumber: periodNumber ? parseInt(periodNumber) : undefined,
+      startTime, endTime, room,
+    },
+    include: {
+      class: { select: { name: true, section: true } },
+      subject: { select: { name: true } },
+      teacher: { include: { user: { select: { name: true } } } },
+    },
+  });
+  successResponse(res, slot, 'Timetable slot updated');
+};
+
+export const deleteSlot = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  const id = req.params.id as string;
+  const existing = await prisma.timetable.findUnique({ where: { id } });
+  if (!existing) return next(createError('Slot not found', 404));
+  await prisma.timetable.delete({ where: { id } });
+  successResponse(res, null, 'Slot deleted');
+};
+
+export const generateAuto = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  const { clearExisting } = req.body as { clearExisting?: boolean };
+
+  try {
+    const classes = await prisma.class.findMany();
+    const configs = await prisma.timetableConfig.findMany();
+    const mappings = await prisma.classSubjectTeacher.findMany({
+      include: {
+        subject: true,
+        teacher: { include: { user: { select: { name: true } } } }
+      }
+    });
+
+    if (clearExisting) {
+      await prisma.timetable.deleteMany({});
+    }
+
+    const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const createdSlots: any[] = [];
+    const bookedTeachers = new Set<string>();
+    const bookedClasses = new Set<string>();
+
+    if (!clearExisting) {
+      const existing = await prisma.timetable.findMany();
+      for (const slot of existing) {
+        bookedTeachers.add(`${slot.teacherId}_${slot.day}_${slot.periodNumber}`);
+        bookedClasses.add(`${slot.classId}_${slot.day}_${slot.periodNumber}`);
+      }
+    }
+
+    const getClassCategory = (name: string): string => {
+      const n = name.toLowerCase();
+      const num = parseInt(n.replace(/\D/g, ''));
+      if (!isNaN(num) && num <= 5) return 'PRIMARY';
+      return 'HIGHER';
+    };
+
+    for (const day of DAYS) {
+      for (const cls of classes) {
+        const category = getClassCategory(cls.name);
+        const classPeriods = configs.filter(c => c.category === category && !c.isBreak)
+                                    .sort((a, b) => a.periodNumber - b.periodNumber);
+
+        const classMappings = mappings.filter(m => m.classId === cls.id);
+        if (classMappings.length === 0) continue;
+
+        let mappingIdx = 0;
+
+        for (const period of classPeriods) {
+          const classKey = `${cls.id}_${day}_${period.periodNumber}`;
+          if (bookedClasses.has(classKey)) continue;
+
+          let attempts = 0;
+          let assigned = false;
+
+          while (attempts < classMappings.length) {
+            const currentMapping = classMappings[(mappingIdx + attempts) % classMappings.length];
+            const teacherKey = `${currentMapping.teacherId}_${day}_${period.periodNumber}`;
+
+            if (!bookedTeachers.has(teacherKey)) {
+              bookedTeachers.add(teacherKey);
+              bookedClasses.add(classKey);
+
+              createdSlots.push({
+                classId: cls.id,
+                subjectId: currentMapping.subjectId,
+                teacherId: currentMapping.teacherId,
+                day,
+                periodNumber: period.periodNumber,
+                startTime: period.startTime,
+                endTime: period.endTime,
+                room: `Room ${cls.name}`
+              });
+
+              mappingIdx = (mappingIdx + attempts + 1) % classMappings.length;
+              assigned = true;
+              break;
+            }
+            attempts++;
+          }
+        }
+      }
+    }
+
+    if (createdSlots.length > 0) {
+      await prisma.timetable.createMany({
+        data: createdSlots
+      });
+    }
+
+    successResponse(res, { count: createdSlots.length }, 'Timetable generated automatically with success');
+  } catch (err: any) {
+    next(err);
+  }
+};
+
+export const getClashes = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const slots = await prisma.timetable.findMany({
+      include: {
+        teacher: { include: { user: { select: { name: true } } } },
+        class: { select: { name: true, section: true } },
+        subject: { select: { name: true } }
+      }
+    });
+
+    const grouped = new Map<string, any[]>();
+    for (const slot of slots) {
+      const key = `${slot.teacherId}_${slot.day}_${slot.periodNumber}`;
+      if (!grouped.has(key)) grouped.set(key, []);
+      grouped.get(key)!.push(slot);
+    }
+
+    const clashes: any[] = [];
+    for (const [key, group] of grouped.entries()) {
+      if (group.length > 1) {
+        clashes.push({
+          teacher: group[0].teacher.user.name,
+          day: group[0].day,
+          periodNumber: group[0].periodNumber,
+          conflictingSlots: group
         });
       }
     }
@@ -286,6 +481,114 @@ export const getStats = async (req: AuthRequest, res: Response, next: NextFuncti
       classes: totalClasses,
       subjects: totalSubjects
     }, 'Stats fetched successfully');
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getWorkload = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const slots = await prisma.timetable.findMany({
+      include: {
+        teacher: { include: { user: { select: { name: true } } } },
+        subject: { select: { name: true } },
+      }
+    });
+
+    const workloadMap = new Map<string, any>();
+
+    for (const slot of slots) {
+      if (!workloadMap.has(slot.teacherId)) {
+        workloadMap.set(slot.teacherId, {
+          teacherId: slot.teacherId,
+          teacherName: slot.teacher.user.name,
+          totalPeriods: 0,
+          subjects: {} as Record<string, number>,
+          days: {} as Record<string, number>,
+        });
+      }
+      
+      const wl = workloadMap.get(slot.teacherId)!;
+      wl.totalPeriods++;
+      wl.subjects[slot.subject.name] = (wl.subjects[slot.subject.name] || 0) + 1;
+      wl.days[slot.day] = (wl.days[slot.day] || 0) + 1;
+    }
+
+    successResponse(res, Array.from(workloadMap.values()), 'Teacher workload fetched successfully');
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const assignSubstitute = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const { date, absentTeacherId, substituteTeacherId, periodNumber, classId, subjectId, day } = req.body;
+
+    if (!date || !absentTeacherId || !substituteTeacherId || !periodNumber || !classId || !subjectId || !day) {
+      return next(createError('All fields (date, absentTeacherId, substituteTeacherId, periodNumber, classId, subjectId, day) are required', 400));
+    }
+
+    // Check if substitute teacher is already busy
+    const conflict = await prisma.timetable.findFirst({
+      where: {
+        teacherId: substituteTeacherId,
+        day,
+        periodNumber
+      }
+    });
+
+    if (conflict) {
+      return next(createError('Substitute teacher is already assigned to a class during this period', 409));
+    }
+
+    // Log the substitution
+    const substituteLog = await prisma.substitute.create({
+      data: {
+        date: new Date(date),
+        absentTeacherId,
+        substituteTeacherId,
+        periodNumber,
+        classId,
+        subjectId,
+      }
+    });
+
+    // We can either update the regular timetable temporarily or just rely on Substitute table. 
+    // Usually, a temporary timetable slot is created or modified. 
+    // Here we'll update the timetable slot if it exists.
+    const existingSlot = await prisma.timetable.findFirst({
+      where: { classId, day, periodNumber, teacherId: absentTeacherId }
+    });
+
+    if (existingSlot) {
+      await prisma.timetable.update({
+        where: { id: existingSlot.id },
+        data: {
+          teacherId: substituteTeacherId,
+          isSubstitute: true,
+          originalTeacherId: absentTeacherId,
+        }
+      });
+      
+      // Log History
+      await prisma.timetableHistory.create({
+        data: {
+          classId,
+          periodNumber,
+          day,
+          action: 'SUBSTITUTED',
+          details: {
+            date,
+            absentTeacherId,
+            substituteTeacherId,
+            subjectId
+          },
+          changedById: req.user!.id
+        }
+      });
+    }
+
+    successResponse(res, substituteLog, 'Substitute assigned successfully');
   } catch (error) {
     next(error);
   }

@@ -46,3 +46,7 @@
 ### 6. Progress Card Updates
 - **Web App:** Renamed 'JEE Progress Cards' to 'Progress Cards'. Replaced hardcoded MAT, PHY, CHE subjects in the progress card table with dynamic exam subjects (handling primary classes properly without showing '-'). Improved table layout to be responsive and fit the screen without unnecessary gaps.
 - **Flutter App:** Removed the 'IIT-JEE / NEET Foundation' subtitle from the PDF generation in single_progress_card_screen.dart to make it a generic progress card for all classes.
+
+### 7. Progress Card (Flutter WebView Integration)
+- **Web App:** Reverted `ProgressCardTemplate.tsx` to the standard professional design, removing the forced A4 layout which cut off signatures. Removed `crossOrigin="anonymous"` from signatures to fix rendering issues.
+- **Flutter App:** Installed `webview_flutter` and completely refactored `single_progress_card_screen.dart` to directly embed the Web App's report card URL. This ensures 100% UI parity with the web app and eliminates the need for separate Flutter UI maintenance.
