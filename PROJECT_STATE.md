@@ -45,6 +45,7 @@ pm2 restart backend --update-env
   - **VehiclesPage**: Added Status dropdown, Vehicle Capacity progress bars, and Edit/Delete APIs.
   - **RoutesPage**: Added Vehicle assignment dropdown, dynamic Stops creation form (pickup/drop time, monthly fee), and updated table UI.
   - **StudentTransportPage**: Limited API query size for students, implemented dynamic Stop fetching based on selected Route, and added a premium UI grid.
+  - **Frontend Build Fix**: Removed React `createPortal` from `RoutesPage`, `VehiclesPage`, and `StudentTransportPage` because it caused `[plugin vite-plugin-pwa:build]` and `[builtin:vite-transform] Unexpected token` errors during the `npm run build` process on the VPS environment. Replaced with standard conditional rendering inline modals.
   - **Backend**: Implemented missing endpoints `PUT /vehicles/:id`, `DELETE /vehicles/:id`, `DELETE /routes/:id`, and `DELETE /students/:id` in `transport.controller.ts` and `transport.routes.ts`.
 - **Flutter Transport Screens**: Built premium Flutter screens for transport module.
 - **Student Profile - Fee Ledger Layout**: Moved Fee Ledger to be side-by-side with Demographics and Family Details (3-column grid).
