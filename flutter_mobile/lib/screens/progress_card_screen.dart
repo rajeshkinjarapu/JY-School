@@ -171,23 +171,11 @@ class _ProgressCardScreenState extends State<ProgressCardScreen> {
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Container(
-                              width: 120,
-                              height: 120,
-                              decoration: BoxDecoration(
-                                color: const Color(0xFF2E2A66).withOpacity(0.1),
-                                shape: BoxShape.circle,
-                                boxShadow: [
-                                  BoxShadow(color: const Color(0xFF2E2A66).withOpacity(0.1), blurRadius: 20, spreadRadius: 5)
-                                ],
-                              ),
-                              child: const Icon(Icons.picture_as_pdf_outlined, size: 64, color: Color(0xFF2E2A66)),
-                            ),
-                            const SizedBox(height: 24),
+                            const SizedBox(height: 12),
                             Text('Ready to Generate', style: GoogleFonts.outfit(fontSize: 22, fontWeight: FontWeight.bold, color: const Color(0xFF1E293B))),
                             const SizedBox(height: 8),
                             Text('Click below to view the progress cards', textAlign: TextAlign.center, style: GoogleFonts.poppins(fontSize: 14, color: const Color(0xFF64748B))),
-                            const SizedBox(height: 32),
+                            const SizedBox(height: 24),
                             SizedBox(
                               width: double.infinity,
                               height: 56,

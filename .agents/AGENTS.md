@@ -27,3 +27,5 @@
   4. **Deployments:** Because the Backend runs on the VPS, any backend code changes MUST be manually pulled and rebuilt on the VPS. Always provide the exact SSH login command (`ssh root@66.116.252.191`) for the user to copy so they only have to type the password, followed by the deployment commands (`cd /root/JY-School/backend`, `git pull origin main`, `npx prisma generate`, `npx prisma generate --schema prisma/schema_local.prisma`, `npm run build`, `pm2 restart backend`).
 
 - **Telugu Language Preference (Strict Order):** Always communicate and chat with the user ONLY in Telugu language. Do not use English for conversational responses unless specifically requested.
+
+- **Strict Code Verification (Mandatory Pre-Flight Check):** Always double-check the Flutter code (or any code) for missing brackets, commas, syntax errors, and missing package imports BEFORE outputting. Act as an Expert Flutter and Full-Stack Developer and write strict, error-free code. NEVER skip this step.

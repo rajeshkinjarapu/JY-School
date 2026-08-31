@@ -51,6 +51,7 @@ class ApiService {
         body: jsonEncode({
           'email': email,
           'password': password,
+          'client': 'mobile',
         }),
       );
 
@@ -136,8 +137,24 @@ class ApiService {
     return _performGet('/api/announcements', 'Failed to get announcements');
   }
 
+  static Future<Map<String, dynamic>> getAnnouncementReadStats(String id) async {
+    return _performGet('/api/announcements/$id/read-stats', 'Failed to get read stats');
+  }
+
   static Future<Map<String, dynamic>> markAnnouncementRead(String id) async {
     return _performPost('/api/announcements/$id/read', {}, 'Failed to mark announcement as read');
+  }
+
+  static Future<Map<String, dynamic>> createAnnouncement(Map<String, dynamic> data) async {
+    return _performPost('/api/announcements', data, 'Failed to create announcement');
+  }
+
+  static Future<Map<String, dynamic>> updateAnnouncement(String id, Map<String, dynamic> data) async {
+    return _performPut('/api/announcements/$id', data, 'Failed to update announcement');
+  }
+
+  static Future<Map<String, dynamic>> deleteAnnouncement(String id) async {
+    return _performDelete('/api/announcements/$id', 'Failed to delete announcement');
   }
 
   static Future<Map<String, dynamic>> getHomework() async {
@@ -444,6 +461,14 @@ class ApiService {
     } catch (e) {
       return {'success': false, 'message': 'Network error: $e'};
     }
+  }
+
+  static Future<Map<String, dynamic>> updateHomework(String id, Map<String, dynamic> payload) async {
+    return _performPut('/api/homework/$id', payload, 'Failed to update homework');
+  }
+
+  static Future<Map<String, dynamic>> deleteHomework(String id) async {
+    return _performDelete('/api/homework/$id', 'Failed to delete homework');
   }
 
   static Future<Map<String, dynamic>> submitBulkMarks(List<Map<String, dynamic>> marks) async {

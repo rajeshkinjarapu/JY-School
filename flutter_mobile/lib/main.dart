@@ -11,6 +11,7 @@ import 'services/api_service.dart';
 import 'services/notification_service.dart';
 import 'services/offline_sync_service.dart';
 import 'widgets/offline_banner.dart';
+import 'config/app_config.dart';
 import 'services/update_service.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
@@ -30,6 +31,7 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  AppConfig.initialize(AppFlavor.universal);
   
   // Initialize Firebase only on non-web platforms (since web options aren't configured yet)
   if (!kIsWeb) {
@@ -60,14 +62,14 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       navigatorKey: navigatorKey,
-      title: 'JY School ERP',
+      title: AppConfig.current.appName,
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF6366F1),
-          primary: const Color(0xFF6366F1),
-          secondary: const Color(0xFFD946EF),
+          seedColor: AppConfig.current.primaryColor,
+          primary: AppConfig.current.primaryColor,
+          secondary: AppConfig.current.secondaryColor,
         ),
         appBarTheme: const AppBarTheme(
           systemOverlayStyle: SystemUiOverlayStyle.light,

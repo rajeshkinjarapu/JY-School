@@ -1,6 +1,9 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../services/api_service.dart';
+import 'create_announcement_screen.dart';
 
 class AnnouncementsScreen extends StatefulWidget {
   const AnnouncementsScreen({super.key});
@@ -15,6 +18,7 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen>
   List<dynamic> _filtered = [];
   bool _isLoading = true;
   String? _errorMessage;
+  String? _userRole;
 
   String _activeFilter = 'ALL'; // ALL, TODAY, HIGH
   String _searchQuery = '';
@@ -28,7 +32,23 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen>
       vsync: this,
       duration: const Duration(milliseconds: 400),
     );
+    _loadUserRole();
     _fetchAnnouncements();
+  }
+
+  Future<void> _loadUserRole() async {
+    final prefs = await SharedPreferences.getInstance();
+    final userStr = prefs.getString('user');
+    if (userStr != null && mounted) {
+      try {
+        final userObj = jsonDecode(userStr);
+        setState(() {
+          _userRole = userObj['role'];
+        });
+      } catch (e) {
+        // ignore
+      }
+    }
   }
 
   @override
@@ -85,15 +105,57 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen>
     } else if (_activeFilter == 'HIGH') {
       base = base.where((a) => (a['priority'] ?? 'NORMAL') == 'HIGH').toList();
     }
-
+    
     if (_searchQuery.isNotEmpty) {
-      base = base.where((a) =>
-        (a['title'] ?? '').toLowerCase().contains(_searchQuery.toLowerCase()) ||
-        (a['content'] ?? '').toLowerCase().contains(_searchQuery.toLowerCase())
-      ).toList();
+      final q = _searchQuery.toLowerCase();
+      base = base.where((a) {
+        return (a['title'] ?? '').toString().toLowerCase().contains(q) ||
+               (a['content'] ?? '').toString().toLowerCase().contains(q);
+      }).toList();
     }
 
-    _filtered = base;
+    setState(() {
+      _filtered = base;
+    });
+  }
+
+  void _editAnnouncement(dynamic ann) async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => CreateAnnouncementScreen(announcementData: ann)),
+    );
+    if (result == true) {
+      _fetchAnnouncements();
+    }
+  }
+
+  void _deleteAnnouncement(String id) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text('Delete Announcement', style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
+        content: Text('Are you sure you want to delete this announcement?', style: GoogleFonts.poppins()),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      setState(() => _isLoading = true);
+      final res = await ApiService.deleteAnnouncement(id);
+      if (res['success']) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Announcement deleted'), backgroundColor: Colors.green));
+        _fetchAnnouncements();
+      } else {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(res['message'] ?? 'Failed to delete'), backgroundColor: Colors.red));
+      }
+    }
   }
 
   Future<void> _markAsRead(String id) async {
@@ -148,9 +210,34 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF1F5F9),
+      appBar: AppBar(
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Announcements', style: GoogleFonts.outfit(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+            Text('School Broadcast System', style: GoogleFonts.poppins(color: Colors.white70, fontSize: 12)),
+          ],
+        ),
+        iconTheme: const IconThemeData(color: Colors.white),
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF2E2A66), Color(0xFF222854)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh_rounded, color: Colors.white),
+            onPressed: _fetchAnnouncements,
+          ),
+        ],
+      ),
       body: CustomScrollView(
         slivers: [
-          _buildSliverAppBar(),
+          SliverToBoxAdapter(child: _buildHeaderStats()),
           SliverToBoxAdapter(child: _buildSearchAndFilters()),
           if (_isLoading)
             const SliverFillRemaining(
@@ -170,105 +257,74 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen>
                 childCount: _filtered.length,
               ),
             ),
-          const SliverToBoxAdapter(child: SizedBox(height: 32)),
+            const SliverToBoxAdapter(child: SizedBox(height: 32)),
+          ],
+        ),
+      floatingActionButton: (_userRole == 'ADMIN' || _userRole == 'SUPER_ADMIN')
+          ? Padding(
+              padding: const EdgeInsets.only(bottom: 80.0),
+              child: FloatingActionButton.extended(
+                onPressed: () async {
+                  final result = await Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const CreateAnnouncementScreen()),
+                  );
+                  if (result == true) {
+                    _fetchAnnouncements();
+                  }
+                },
+                backgroundColor: const Color(0xFF4F46E5),
+                icon: const Icon(Icons.add_rounded, color: Colors.white),
+                label: Text('New', style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold)),
+              ),
+            )
+          : null,
+    );
+  }
+
+  Widget _buildHeaderStats() {
+    final total = _all.length;
+    final urgent = _all.where((a) => a['priority'] == 'HIGH').length;
+    final unread = _all.where((a) => a['hasRead'] != true).length;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+      child: Row(
+        children: [
+          _buildStatChip(Icons.campaign_outlined, total.toString(), 'Total', const Color(0xFF6366F1)),
+          const SizedBox(width: 10),
+          _buildStatChip(Icons.bolt_rounded, urgent.toString(), 'Urgent', const Color(0xFFF59E0B)),
+          const SizedBox(width: 10),
+          _buildStatChip(Icons.mark_email_unread_rounded, unread.toString(), 'Unread', const Color(0xFF10B981)),
         ],
       ),
     );
   }
 
-  Widget _buildSliverAppBar() {
-    final total = _all.length;
-    final urgent = _all.where((a) => a['priority'] == 'HIGH').length;
-    final unread = _all.where((a) => a['hasRead'] != true).length;
-
-    return SliverAppBar(
-      expandedHeight: 240.0,
-      floating: false,
-      pinned: true,
-      elevation: 0,
-      backgroundColor: const Color(0xFF4F46E5),
-      iconTheme: const IconThemeData(color: Colors.white),
-      actions: [
-        IconButton(
-          icon: const Icon(Icons.refresh_rounded, color: Colors.white),
-          onPressed: _fetchAnnouncements,
-        ),
-      ],
-      flexibleSpace: FlexibleSpaceBar(
-        background: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Color(0xFF4F46E5), Color(0xFF7C3AED), Color(0xFFEC4899)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-          ),
-          child: SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 60, 20, 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: const Icon(Icons.campaign_rounded, color: Colors.white, size: 20),
-                      ),
-                      const SizedBox(width: 12),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('Announcements', style: GoogleFonts.outfit(
-                            color: Colors.white, fontSize: 22, fontWeight: FontWeight.w900,
-                          )),
-                          Text('School Broadcast System', style: GoogleFonts.poppins(
-                            color: Colors.white.withOpacity(0.7), fontSize: 12,
-                          )),
-                        ],
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      _buildStatChip(Icons.campaign_outlined, total.toString(), 'Total'),
-                      const SizedBox(width: 10),
-                      _buildStatChip(Icons.bolt_rounded, urgent.toString(), 'Urgent'),
-                      const SizedBox(width: 10),
-                      _buildStatChip(Icons.mark_email_unread_rounded, unread.toString(), 'Unread'),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStatChip(IconData icon, String count, String label) {
+  Widget _buildStatChip(IconData icon, String count, String label, Color iconColor) {
     return Expanded(
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.15),
-          borderRadius: BorderRadius.circular(14),
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.03),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            )
+          ],
         ),
         child: Column(
           children: [
-            Icon(icon, color: Colors.white, size: 18),
-            const SizedBox(height: 4),
+            Icon(icon, color: iconColor, size: 24),
+            const SizedBox(height: 6),
             Text(count, style: GoogleFonts.outfit(
-              color: Colors.white, fontSize: 18, fontWeight: FontWeight.w900,
+              color: const Color(0xFF1E293B), fontSize: 20, fontWeight: FontWeight.w900,
             )),
             Text(label, style: GoogleFonts.poppins(
-              color: Colors.white.withOpacity(0.7), fontSize: 9, fontWeight: FontWeight.w600,
+              color: const Color(0xFF64748B), fontSize: 11, fontWeight: FontWeight.w600,
             )),
           ],
         ),
@@ -501,15 +557,40 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen>
                         ],
                       ),
                     ),
-                    // Unread dot
-                    if (!hasRead)
-                      Container(
-                        width: 8, height: 8, margin: const EdgeInsets.only(top: 4, left: 6),
-                        decoration: BoxDecoration(
-                          color: gradient.first,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
+                    // Unread dot / Admin Menu
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        if (!hasRead)
+                          Container(
+                            width: 8, height: 8, margin: const EdgeInsets.only(top: 4, left: 6, bottom: 8),
+                            decoration: BoxDecoration(
+                              color: gradient.first,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                        if (_userRole == 'ADMIN' || _userRole == 'SUPER_ADMIN')
+                          SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: PopupMenuButton<String>(
+                              padding: EdgeInsets.zero,
+                              icon: const Icon(Icons.more_vert_rounded, size: 20, color: Color(0xFF94A3B8)),
+                              onSelected: (val) {
+                                if (val == 'edit') {
+                                  _editAnnouncement(ann);
+                                } else if (val == 'delete') {
+                                  _deleteAnnouncement(ann['id'].toString());
+                                }
+                              },
+                              itemBuilder: (ctx) => [
+                                PopupMenuItem(value: 'edit', child: Row(children: [Icon(Icons.edit_rounded, size: 18, color: Color(0xFF1E293B)), SizedBox(width: 8), Text('Edit', style: GoogleFonts.outfit())])),
+                                PopupMenuItem(value: 'delete', child: Row(children: [Icon(Icons.delete_rounded, size: 18, color: Colors.red), SizedBox(width: 8), Text('Delete', style: GoogleFonts.outfit(color: Colors.red))])),
+                              ],
+                            ),
+                          ),
+                      ],
+                    ),
                   ],
                 ),
               ),

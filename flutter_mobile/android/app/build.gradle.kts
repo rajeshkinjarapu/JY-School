@@ -36,6 +36,29 @@ android {
         versionName = flutter.versionName
     }
 
+    flavorDimensions += "default"
+    productFlavors {
+        create("universal") {
+            dimension = "default"
+            resValue("string", "app_name", "JY School ERP")
+        }
+        create("student") {
+            dimension = "default"
+            applicationIdSuffix = ".student"
+            resValue("string", "app_name", "JY School - Student")
+        }
+        create("teacher") {
+            dimension = "default"
+            applicationIdSuffix = ".teacher"
+            resValue("string", "app_name", "JY School - Teacher")
+        }
+        create("admin") {
+            dimension = "default"
+            applicationIdSuffix = ".admin"
+            resValue("string", "app_name", "JY School - Admin")
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false

@@ -23,6 +23,8 @@ import 'students_screen.dart';
 import 'teachers_screen.dart';
 import 'classes_screen.dart';
 import 'subjects_screen.dart';
+import 'my_classes_timetable_screen.dart';
+import 'homework_screen.dart';
 import 'record_fee_payment_screen.dart';
 import 'student_fee_search_screen.dart';
 import 'progress_card_screen.dart';
@@ -31,6 +33,8 @@ import 'answer_keys_screen.dart';
 import 'question_papers_screen.dart';
 import 'settings_screen.dart';
 import 'fee_installment_report_screen.dart';
+import 'announcements_screen.dart';
+import 'announcement_details_screen.dart';
 import 'announcement_detail_screen.dart';
 import 'leave_dashboard_screen.dart';
 import 'question_bank/question_bank_dashboard_screen.dart';
@@ -40,7 +44,7 @@ import 'gate_pass_screen.dart';
 import 'create_gate_pass_screen.dart';
 import 'leave_screen.dart';
 import 'fee_reminder_search_screen.dart';
-
+import 'student_exams_dashboard_screen.dart';
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
 
@@ -164,6 +168,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
              _timetableToday = sData['timetableToday'] ?? [];
              _recentMarks = sData['recentMarks'] ?? [];
              _feeStatusData = sData['feeStatus'] ?? {};
+             _recentAnnouncements = sData['announcements'] ?? [];
           }
       }
 
@@ -363,11 +368,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 color: Color(0xFF6366F1),
               ),
             )
-          : SafeArea(
-              child: userRole == 'STUDENT'
-                  ? _buildStudentDashboard(userName, metaLabel, metaValue)
-                  : SingleChildScrollView(
-                      child: Column(
+          : RefreshIndicator(
+              onRefresh: _loadDashboardData,
+              color: const Color(0xFF6366F1),
+              child: SafeArea(
+                child: userRole == 'STUDENT'
+                    ? _buildStudentDashboard(userName, metaLabel, metaValue)
+                    : SingleChildScrollView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           _buildProfileCard(userName, userRole, metaLabel, metaValue),
@@ -402,6 +411,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         ],
                       ),
                     ),
+              ),
             ),
     );
   }
@@ -419,7 +429,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   
   Widget _buildStudentDashboard(String userName, String metaLabel, String metaValue) {
     return SingleChildScrollView(
-      physics: const BouncingScrollPhysics(),
+      physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -427,9 +437,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           const SizedBox(height: 16),
           _buildStudentAnnouncement(),
           const SizedBox(height: 16),
-          _buildStudentMetricsGrid(),
-          const SizedBox(height: 24),
-          _buildStudentQuickLinks(),
+          _buildStudentFavouritesGrid(),
           const SizedBox(height: 30),
         ],
       ),
@@ -485,17 +493,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 'STUDENT • JY School',
                 style: GoogleFonts.poppins(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.w500),
               ),
-              const SizedBox(height: 24),
-              Row(
-                children: [
-                  const Text('""', style: TextStyle(color: Color(0xFFFFD12A), fontSize: 24, fontWeight: FontWeight.bold, height: 0.8)),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Have a great day ahead!',
-                    style: GoogleFonts.poppins(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w500),
-                  ),
-                ],
-              ),
             ],
           ),
           Positioned(
@@ -531,266 +528,250 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildStudentAnnouncement() {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4)),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: const BoxDecoration(
-              color: Color(0xFFFEF3C7),
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(Icons.campaign_rounded, color: Color(0xFFD97706), size: 28),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Latest Announcement', 
-                  style: GoogleFonts.poppins(color: const Color(0xFF1E293B), fontSize: 13, fontWeight: FontWeight.bold),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            decoration: BoxDecoration(color: const Color(0xFFFFB800), borderRadius: BorderRadius.circular(12)),
-            child: Text('View All', style: GoogleFonts.poppins(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
-          ),
-        ],
-      ),
-    );
-  }
+    final bool hasAnnouncements = _recentAnnouncements.isNotEmpty;
+    final latest = hasAnnouncements ? _recentAnnouncements[0] : null;
+    
+    final title = latest?['title'] ?? 'No New Announcements';
+    final content = latest?['content'] ?? 'You are all caught up! Check back later for updates.';
 
-  Widget _buildStudentMetricsGrid() {
+    return GestureDetector(
+      onTap: () {
+        if (latest != null) {
+          Navigator.push(context, MaterialPageRoute(
+            builder: (_) => AnnouncementDetailsScreen(
+              announcement: latest,
+              userRole: _user?['role']?.toString() ?? '',
+            ),
+          ));
+        }
+      },
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 16),
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: [
+            BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 20, offset: const Offset(0, 10)),
+          ],
+          border: Border.all(color: const Color(0xFFFDE68A), width: 1),
+        ),
+        child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFFBEB),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: const Color(0xFFFDE68A), width: 1)
+                ),
+                child: const Icon(Icons.campaign_rounded, color: Color(0xFFD97706), size: 18),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Latest Announcement',
+                      style: GoogleFonts.poppins(color: const Color(0xFFD97706), fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1),
+                    ),
+                    Text(
+                      title, 
+                      style: GoogleFonts.outfit(color: const Color(0xFF1E3A8A), fontSize: 16, fontWeight: FontWeight.bold),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              GestureDetector(
+                onTap: () {
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => const NotificationsScreen()));
+                },
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF8FAFC),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(Icons.arrow_forward_ios_rounded, color: Color(0xFF94A3B8), size: 14),
+                ),
+              ),
+            ],
+          ),
+          if (content.isNotEmpty) ...[
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 12),
+              child: Divider(color: Color(0xFFF1F5F9), height: 1),
+            ),
+            Text(
+              content,
+              style: GoogleFonts.poppins(color: const Color(0xFF64748B), fontSize: 13, height: 1.5, fontWeight: FontWeight.w500),
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ],
+      ),
+    ),
+  );
+}
+
+  Widget _buildStudentFavouritesGrid() {
+    final List<Map<String, dynamic>> favourites = [
+      {
+        'title': 'My Classes',
+        'color': const Color(0xFFD5F3CD),
+        'icon': Icons.co_present_rounded,
+        'iconColor': const Color(0xFF63B94E),
+        'onTap': () => Navigator.push(context, MaterialPageRoute(builder: (context) => const MyClassesTimetableScreen())),
+      },
+      {
+        'title': 'Attendance',
+        'color': const Color(0xFFD6F6FF),
+        'icon': Icons.how_to_reg_rounded,
+        'iconColor': const Color(0xFF389ED0),
+        'onTap': () => Navigator.push(context, MaterialPageRoute(builder: (context) => const AttendanceScreen())),
+      },
+      {
+        'title': 'Home Work',
+        'color': const Color(0xFFFEF0B2),
+        'icon': Icons.edit_document,
+        'iconColor': const Color(0xFFD79F17),
+        'onTap': () => Navigator.push(context, MaterialPageRoute(builder: (context) => const HomeworkScreen())),
+      },
+      {
+        'title': 'Assignment',
+        'color': const Color(0xFFFFD9E2),
+        'icon': Icons.assignment_rounded,
+        'iconColor': const Color(0xFFE26383),
+        'onTap': () {},
+      },
+      {
+        'title': 'Pay Fee',
+        'color': const Color(0xFFD6E2FB),
+        'icon': Icons.payments_rounded,
+        'iconColor': const Color(0xFF5B85E3),
+        'onTap': () => Navigator.push(context, MaterialPageRoute(builder: (context) => const FeesScreen())),
+      },
+      {
+        'title': 'Exams Hub',
+        'color': const Color(0xFFF7D9FF),
+        'icon': Icons.school_rounded,
+        'iconColor': const Color(0xFFB14BC3),
+        'onTap': () => Navigator.push(context, MaterialPageRoute(builder: (context) => StudentExamsDashboardScreen(user: _user ?? {}))),
+      },
+    ];
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: GridView.count(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        crossAxisCount: 2,
-        crossAxisSpacing: 16,
-        mainAxisSpacing: 16,
-        childAspectRatio: 0.88,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildPremiumCard(
-            title: 'Attendance',
-            subtitle: 'This Month',
-            mainValue: '${_attendanceRate.toStringAsFixed(0)}%',
-            mainValueLabel: 'Present',
-            icon: Icons.calendar_month_rounded,
-            color: const Color(0xFF3B82F6),
-            bgColor: const Color(0xFFEFF6FF),
-            bottomWidget: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _buildMiniStat('22', 'Present', const Color(0xFF10B981)),
-                _buildMiniStat('2', 'Absent', const Color(0xFFEF4444)),
-                _buildMiniStat('1', 'Leave', const Color(0xFFF59E0B)),
-              ],
-            ),
-            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const AttendanceScreen())),
+          Text(
+            'My Favourites',
+            style: GoogleFonts.poppins(color: const Color(0xFF1E293B), fontSize: 18, fontWeight: FontWeight.bold),
           ),
-          _buildPremiumCard(
-            title: 'Fees',
-            subtitle: 'Due Amount',
-            mainValue: '₹${_feeDues.toInt()}',
-            mainValueLabel: 'Due',
-            icon: Icons.account_balance_wallet_rounded,
-            color: const Color(0xFF10B981),
-            bgColor: const Color(0xFFECFDF5),
-            bottomWidget: Container(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              decoration: BoxDecoration(color: const Color(0xFF10B981).withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
-              child: Center(child: Text('View Details →', style: GoogleFonts.poppins(color: const Color(0xFF059669), fontSize: 12, fontWeight: FontWeight.bold))),
-            ),
-            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const FeesScreen())),
+          Text(
+            'Dashboards',
+            style: GoogleFonts.poppins(color: const Color(0xFF94A3B8), fontSize: 13, fontWeight: FontWeight.w500),
           ),
-          _buildPremiumCard(
-            title: 'Homework',
-            subtitle: '2 Pending',
-            mainValue: '2',
-            mainValueLabel: 'Assignments',
-            icon: Icons.assignment_rounded,
-            color: const Color(0xFF8B5CF6),
-            bgColor: const Color(0xFFF5F3FF),
-            bottomWidget: Container(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              decoration: BoxDecoration(color: const Color(0xFF8B5CF6).withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
-              child: Center(child: Text('View Homework →', style: GoogleFonts.poppins(color: const Color(0xFF6D28D9), fontSize: 12, fontWeight: FontWeight.bold))),
+          const SizedBox(height: 16),
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 3,
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 12,
+              childAspectRatio: 0.85,
             ),
-            onTap: () {},
-          ),
-          _buildPremiumCard(
-            title: 'Exams',
-            subtitle: 'Next Exam',
-            mainValue: '5',
-            mainValueLabel: 'Days Maths',
-            icon: Icons.school_rounded,
-            color: const Color(0xFFF59E0B),
-            bgColor: const Color(0xFFFFFBEB),
-            bottomWidget: Container(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              decoration: BoxDecoration(color: const Color(0xFFF59E0B).withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
-              child: Center(child: Text('View Timetable →', style: GoogleFonts.poppins(color: const Color(0xFFD97706), fontSize: 12, fontWeight: FontWeight.bold))),
-            ),
-            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const ExamsScreen())),
-          ),
-          _buildPremiumCard(
-            title: 'Time Table',
-            subtitle: 'Today',
-            mainValue: '4',
-            mainValueLabel: 'Classes Left',
-            icon: Icons.access_time_filled_rounded,
-            color: const Color(0xFF06B6D4),
-            bgColor: const Color(0xFFECFEFF),
-            bottomWidget: Container(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              decoration: BoxDecoration(color: const Color(0xFF06B6D4).withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
-              child: Center(child: Text('View Today\'s Schedule →', style: GoogleFonts.poppins(color: const Color(0xFF0891B2), fontSize: 12, fontWeight: FontWeight.bold))),
-            ),
-            onTap: () {},
-          ),
-          _buildPremiumCard(
-            title: 'Results',
-            subtitle: 'Latest',
-            mainValue: '85%',
-            mainValueLabel: 'Unit Test 1',
-            icon: Icons.emoji_events_rounded,
-            color: const Color(0xFFF43F5E),
-            bgColor: const Color(0xFFFFF1F2),
-            bottomWidget: Container(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              decoration: BoxDecoration(color: const Color(0xFFF43F5E).withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
-              child: Center(child: Text('View Results →', style: GoogleFonts.poppins(color: const Color(0xFFE11D48), fontSize: 12, fontWeight: FontWeight.bold))),
-            ),
-            onTap: () {},
+            itemCount: favourites.length,
+            itemBuilder: (context, index) {
+              final fav = favourites[index];
+              return _buildFavouriteCard(
+                title: fav['title'],
+                color: fav['color'],
+                icon: fav['icon'],
+                iconColor: fav['iconColor'],
+                onTap: fav['onTap'],
+              );
+            },
           ),
         ],
       ),
     );
   }
 
-  Widget _buildMiniStat(String value, String label, Color color) {
-    return Column(
-      children: [
-        Text(value, style: GoogleFonts.outfit(color: color, fontSize: 14, fontWeight: FontWeight.bold)),
-        Text(label, style: GoogleFonts.poppins(color: color, fontSize: 10, fontWeight: FontWeight.w500)),
-      ],
-    );
-  }
-
-  Widget _buildPremiumCard({
-    required String title, required String subtitle, required String mainValue, required String mainValueLabel,
-    required IconData icon, required Color color, required Color bgColor, required Widget bottomWidget, required VoidCallback onTap
+  Widget _buildFavouriteCard({
+    required String title,
+    required Color color,
+    required IconData icon,
+    required Color iconColor,
+    required VoidCallback onTap,
   }) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(24),
-          boxShadow: [BoxShadow(color: color.withOpacity(0.08), blurRadius: 15, offset: const Offset(0, 5))],
-          border: Border.all(color: bgColor, width: 2),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.grey.withOpacity(0.1)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(12)),
-                  child: Icon(icon, color: Colors.white, size: 24),
+            Expanded(
+              flex: 3,
+              child: Container(
+                margin: const EdgeInsets.only(top: 8, left: 8, right: 8, bottom: 4),
+                decoration: BoxDecoration(
+                  color: color,
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(title, style: GoogleFonts.poppins(color: const Color(0xFF1E293B), fontSize: 13, fontWeight: FontWeight.bold)),
-                    Text(subtitle, style: GoogleFonts.poppins(color: color, fontSize: 10, fontWeight: FontWeight.w600)),
-                  ],
+                child: Center(
+                  child: Icon(icon, color: iconColor, size: 38),
                 ),
-              ],
+              ),
             ),
-            const SizedBox(height: 8),
-            Column(
-              children: [
-                Text(mainValue, style: GoogleFonts.outfit(color: color, fontSize: 32, fontWeight: FontWeight.w900, height: 1.1)),
-                Text(mainValueLabel, style: GoogleFonts.poppins(color: const Color(0xFF64748B), fontSize: 11, fontWeight: FontWeight.w500)),
-              ],
+            Expanded(
+              flex: 2,
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 2.0),
+                  child: Text(
+                    title,
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.poppins(
+                      color: const Color(0xFF334155),
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      height: 1.1,
+                    ),
+                  ),
+                ),
+              ),
             ),
-            const SizedBox(height: 8),
-            bottomWidget,
           ],
         ),
       ),
     );
   }
 
-  Widget _buildStudentQuickLinks() {
-    final links = [
-      {'icon': Icons.campaign, 'color': const Color(0xFF6366F1), 'label': 'Notice Board'},
-      {'icon': Icons.event, 'color': const Color(0xFFEC4899), 'label': 'Events'},
-      {'icon': Icons.collections, 'color': const Color(0xFFF59E0B), 'label': 'Gallery'},
-      {'icon': Icons.local_library, 'color': const Color(0xFF3B82F6), 'label': 'Library'},
-      {'icon': Icons.directions_bus, 'color': const Color(0xFFEAB308), 'label': 'Transport'},
-      {'icon': Icons.badge, 'color': const Color(0xFF06B6D4), 'label': 'ID Card'},
-      {'icon': Icons.computer, 'color': const Color(0xFF8B5CF6), 'label': 'Classes'},
-      {'icon': Icons.menu_book, 'color': const Color(0xFF10B981), 'label': 'Syllabus'},
-      {'icon': Icons.assignment_turned_in, 'color': const Color(0xFFF43F5E), 'label': 'Leave Request'},
-      {'icon': Icons.headset_mic, 'color': const Color(0xFF64748B), 'label': 'Help Desk'},
-    ];
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Wrap(
-        spacing: 16,
-        runSpacing: 20,
-        alignment: WrapAlignment.center,
-        children: links.map((link) {
-          final c = link['color'] as Color;
-          return SizedBox(
-            width: 60,
-            child: Column(
-              children: [
-                Container(
-                  width: 50,
-                  height: 50,
-                  decoration: BoxDecoration(
-                    color: c.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Icon(link['icon'] as IconData, color: c, size: 26),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  link['label'] as String,
-                  textAlign: TextAlign.center,
-                  style: GoogleFonts.poppins(color: const Color(0xFF334155), fontSize: 9, fontWeight: FontWeight.w600, height: 1.1),
-                ),
-              ],
-            ),
-          );
-        }).toList(),
-      ),
-    );
-  }
 
   Widget _buildStudentBottomBanner() {
     return Container(
@@ -1380,6 +1361,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               _buildGridItem(context, 'Installments', Icons.receipt_long_rounded, const Color(0xFF00ACC1), () => Navigator.push(context, MaterialPageRoute(builder: (_) => const FeeInstallmentReportScreen()))),
               _buildGridItem(context, 'Transactions', Icons.sync_alt_rounded, const Color(0xFFFF7043), () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TransactionsScreen()))),
               _buildGridItem(context, 'Subjects', Icons.menu_book_rounded, const Color(0xFF7CB342), () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SubjectsScreen()))),
+              _buildGridItem(context, 'Home Work', Icons.edit_document, const Color(0xFFD79F17), () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TeacherHomeworkScreen()))),
             ],
           ),
         ),

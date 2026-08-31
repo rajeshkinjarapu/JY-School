@@ -24,6 +24,8 @@ model User {
   resetOtp     String?
   resetOtpExp  DateTime?
   deviceToken  String?
+  isAppInstalled Boolean @default(false)
+  lastAppLoginAt DateTime?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 

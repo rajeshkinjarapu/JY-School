@@ -51,7 +51,8 @@ export const getAdminDashboard = async (req: AuthRequest, res: Response, next: N
       genderGroups,
       recentPayments,
       recentAnnouncements,
-      weekAttendance
+      weekAttendance,
+      totalAppInstalls
     ] = await Promise.all([
       prisma.student.count(),
       prisma.teacher.count(),
@@ -74,7 +75,8 @@ export const getAdminDashboard = async (req: AuthRequest, res: Response, next: N
         orderBy: { createdAt: 'desc' },
         where: { isActive: true }
       }),
-      prisma.attendance.findMany({ where: { date: { gte: sevenDaysAgo } } })
+      prisma.attendance.findMany({ where: { date: { gte: sevenDaysAgo } } }),
+      prisma.user.count({ where: { role: Role.STUDENT, isAppInstalled: true } })
     ]);
 
     const totalRevenue = revenueResult._sum.amountPaid || 0;
@@ -146,7 +148,8 @@ export const getAdminDashboard = async (req: AuthRequest, res: Response, next: N
       genderDistribution,
       recentPayments,
       recentAnnouncements,
-      attendanceTrend
+      attendanceTrend,
+      totalAppInstalls
     };
 
     // Cache for 3 minutes (180000 ms) to make dashboard lightning fast

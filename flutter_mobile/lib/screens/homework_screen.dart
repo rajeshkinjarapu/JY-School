@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/api_service.dart';
-import '../widgets/app_drawer.dart';
 
 class HomeworkScreen extends StatefulWidget {
   const HomeworkScreen({super.key});
@@ -46,14 +45,14 @@ class _HomeworkScreenState extends State<HomeworkScreen> {
       final diff = dueDate.difference(now).inDays;
 
       if (diff < 0) {
-        return const Color(0xFFEF4444); // Overdue - Red
+        return const Color(0xFFEF4444); // Red
       } else if (diff <= 1) {
-        return const Color(0xFFF59E0B); // Due Soon - Amber
+        return const Color(0xFFF59E0B); // Amber
       } else {
-        return const Color(0xFF10B981); // Emerald Green
+        return const Color(0xFF10B981); // Emerald
       }
     } catch (_) {
-      return Colors.grey;
+      return const Color(0xFF64748B); // Slate
     }
   }
 
@@ -80,15 +79,13 @@ class _HomeworkScreenState extends State<HomeworkScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F7FE), // Dark slate
-      drawer: const AppDrawer(currentRoute: 'homework'),
+      backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
-        leading: const BackButton(),
+        leading: const BackButton(color: Colors.white),
         title: Text(
-          'Daily Homework',
-          style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white),
+          'My Homework',
+          style: GoogleFonts.outfit(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
         ),
-        iconTheme: const IconThemeData(color: Colors.white),
         flexibleSpace: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
@@ -98,175 +95,203 @@ class _HomeworkScreenState extends State<HomeworkScreen> {
             ),
           ),
         ),
-        
         elevation: 0,
+        centerTitle: true,
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: Color(0xFF6366F1)))
+          ? const Center(child: CircularProgressIndicator(color: Color(0xFF4F46E5)))
           : _errorMessage != null
-              ? Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(24.0),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(Icons.error_outline, size: 60, color: Colors.redAccent),
-                        const SizedBox(height: 16),
-                        Text(
-                          _errorMessage!,
-                          textAlign: TextAlign.center,
-                          style: GoogleFonts.poppins(fontSize: 16, color: Colors.blueGrey.shade400),
-                        ),
-                        const SizedBox(height: 20),
-                        ElevatedButton(
-                          onPressed: () {
-                            setState(() {
-                              _isLoading = true;
-                              _errorMessage = null;
-                            });
-                            _fetchHomework();
-                          },
-                          child: const Text('Retry'),
-                        )
-                      ],
-                    ),
-                  ),
-                )
+              ? _buildErrorState()
               : RefreshIndicator(
                   onRefresh: _fetchHomework,
+                  color: const Color(0xFF4F46E5),
                   child: _homeworkList.isEmpty
-                      ? Center(
-                          child: Text(
-                            'No homework assigned today.',
-                            style: GoogleFonts.poppins(color: const Color(0xFF475569), fontSize: 16),
-                          ),
-                        )
+                      ? _buildEmptyState()
                       : ListView.builder(
-                          padding: const EdgeInsets.all(20.0),
+                          padding: const EdgeInsets.all(16.0),
                           itemCount: _homeworkList.length,
+                          physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
                           itemBuilder: (context, index) {
-                            final hw = _homeworkList[index];
-                            final title = hw['title'] ?? 'Homework Assignment';
-                            final desc = hw['description'] ?? '';
-                            final subject = hw['subject']?['name'] ?? 'General';
-                            final teacherName = hw['teacher']?['user']?['name'] ?? 'Teacher';
-                            final dueDateStr = hw['dueDate']?.toString().split('T')[0] ?? '';
-
-                            return Container(
-                              margin: const EdgeInsets.only(bottom: 18),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(24),
-                                border: Border.all(color: const Color(0xFFE2E8F0)),
-                              ),
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(24),
-                                child: Theme(
-                                  data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-                                  child: ExpansionTile(
-                                    tilePadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                                    title: Row(
-                                      children: [
-                                        // Subject Tag
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                          decoration: BoxDecoration(
-                                            color: const Color(0xFF6366F1).withOpacity(0.12),
-                                            borderRadius: BorderRadius.circular(8),
-                                            border: Border.all(color: const Color(0xFF6366F1).withOpacity(0.2)),
-                                          ),
-                                          child: Text(
-                                            subject.toUpperCase(),
-                                            style: GoogleFonts.poppins(
-                                              color: const Color(0xFF818CF8),
-                                              fontSize: 10.5,
-                                              fontWeight: FontWeight.bold,
-                                              letterSpacing: 0.5,
-                                            ),
-                                          ),
-                                        ),
-                                        const SizedBox(width: 12),
-                                        // Due Date Tag
-                                        if (dueDateStr.isNotEmpty)
-                                          Container(
-                                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                            decoration: BoxDecoration(
-                                              color: _getDueDateColor(dueDateStr).withOpacity(0.1),
-                                              borderRadius: BorderRadius.circular(8),
-                                            ),
-                                            child: Text(
-                                              _getDueDateText(dueDateStr),
-                                              style: GoogleFonts.poppins(
-                                                color: _getDueDateColor(dueDateStr).withOpacity(0.85),
-                                                fontSize: 10,
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                            ),
-                                          ),
-                                      ],
-                                    ),
-                                    subtitle: Padding(
-                                      padding: const EdgeInsets.only(top: 8.0),
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            title,
-                                            style: GoogleFonts.outfit(
-                                              color: const Color(0xFF1E293B),
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                          const SizedBox(height: 2),
-                                          Text(
-                                            'Assigned by: $teacherName',
-                                            style: GoogleFonts.poppins(
-                                              color: const Color(0xFF475569),
-                                              fontSize: 11.5,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    children: [
-                                      Padding(
-                                        padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            const Divider(color: const Color(0xFFE2E8F0), height: 20),
-                                            Text(
-                                              'INSTRUCTIONS',
-                                              style: GoogleFonts.poppins(
-                                                color: const Color(0xFF475569),
-                                                fontSize: 10,
-                                                fontWeight: FontWeight.bold,
-                                                letterSpacing: 0.5,
-                                              ),
-                                            ),
-                                            const SizedBox(height: 6),
-                                            Text(
-                                              desc,
-                                              style: GoogleFonts.poppins(
-                                                color: const Color(0xFF64748B),
-                                                fontSize: 14,
-                                                height: 1.5,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            );
+                            return _buildHomeworkCard(_homeworkList[index]);
                           },
                         ),
                 ),
     );
   }
+
+  Widget _buildHomeworkCard(dynamic hw) {
+    final title = hw['title'] ?? 'Homework Assignment';
+    final desc = hw['description'] ?? 'No description provided.';
+    final subject = hw['subject']?['name'] ?? 'General';
+    final teacherName = hw['teacher']?['user']?['name'] ?? 'Teacher';
+    final dueDateStr = hw['dueDate']?.toString().split('T')[0] ?? '';
+
+    final dueColor = dueDateStr.isNotEmpty ? _getDueDateColor(dueDateStr) : const Color(0xFF64748B);
+    final dueText = dueDateStr.isNotEmpty ? _getDueDateText(dueDateStr) : 'No due date';
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 15, offset: const Offset(0, 5)),
+        ],
+        border: Border.all(color: const Color(0xFFF1F5F9), width: 1.5),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: Theme(
+          data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+          child: ExpansionTile(
+            tilePadding: const EdgeInsets.all(16),
+            title: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: dueColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Icon(Icons.menu_book_rounded, color: dueColor, size: 24),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        subject.toUpperCase(),
+                        style: GoogleFonts.poppins(color: const Color(0xFF64748B), fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        title,
+                        style: GoogleFonts.outfit(color: const Color(0xFF1E293B), fontSize: 17, fontWeight: FontWeight.bold),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            subtitle: Padding(
+              padding: const EdgeInsets.only(top: 12.0),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: dueColor.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: dueColor.withOpacity(0.2)),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.schedule_rounded, size: 12, color: dueColor),
+                        const SizedBox(width: 4),
+                        Text(
+                          dueText,
+                          style: GoogleFonts.poppins(color: dueColor, fontSize: 11, fontWeight: FontWeight.bold),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'By $teacherName',
+                      style: GoogleFonts.poppins(color: const Color(0xFF94A3B8), fontSize: 12, fontWeight: FontWeight.w500),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            children: [
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(20),
+                decoration: const BoxDecoration(
+                  color: Color(0xFFF8FAFC),
+                  border: Border(top: BorderSide(color: Color(0xFFF1F5F9), width: 1)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'INSTRUCTIONS',
+                      style: GoogleFonts.poppins(color: const Color(0xFF94A3B8), fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      desc,
+                      style: GoogleFonts.poppins(color: const Color(0xFF475569), fontSize: 14, height: 1.6, fontWeight: FontWeight.w500),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 20)],
+            ),
+            child: const Icon(Icons.assignment_turned_in_rounded, size: 60, color: Color(0xFFCBD5E1)),
+          ),
+          const SizedBox(height: 24),
+          Text('No Homework Assigned', style: GoogleFonts.outfit(fontSize: 22, color: const Color(0xFF64748B), fontWeight: FontWeight.bold)),
+          const SizedBox(height: 8),
+          Text('You are all caught up! Enjoy your free time.', style: GoogleFonts.poppins(fontSize: 14, color: const Color(0xFF94A3B8))),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildErrorState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.error_outline_rounded, size: 60, color: Color(0xFFEF4444)),
+          const SizedBox(height: 16),
+          Text(
+            _errorMessage ?? 'Something went wrong',
+            textAlign: TextAlign.center,
+            style: GoogleFonts.poppins(fontSize: 16, color: const Color(0xFF64748B)),
+          ),
+          const SizedBox(height: 20),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF4F46E5),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            ),
+            onPressed: () {
+              setState(() {
+                _isLoading = true;
+                _errorMessage = null;
+              });
+              _fetchHomework();
+            },
+            child: Text('Try Again', style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold)),
+          )
+        ],
+      ),
+    );
+  }
 }
-
-

@@ -258,6 +258,7 @@ const AdminView: React.FC<{ data: any }> = ({ data }) => {
     { label: 'Results', value: 'Exams', icon: FileText, gradient: 'linear-gradient(90deg,#0ea5e9,#38bdf8)', glow: 'rgba(14,165,233,0.08)', link: '/exams?tab=results', sub: 'View exam scores' },
     { label: 'Fee Details', value: 'Student Fees', icon: BookMarked, gradient: 'linear-gradient(90deg,#db2777,#f472b6)', glow: 'rgba(219,39,119,0.08)', link: '/finance?tab=student-fee-details', sub: 'Student balances & dues' },
     { label: 'Progress Cards', value: 'Reports', icon: Award, gradient: 'linear-gradient(90deg,#059669,#34d399)', glow: 'rgba(5,150,105,0.08)', link: '/exams?tab=progress-card', sub: 'Generate & View' },
+    { label: 'App Installs', value: `${data.totalAppInstalls || 0} / ${data.totalStudents || 0}`, icon: Zap, gradient: 'linear-gradient(90deg,#14b8a6,#2dd4bf)', glow: 'rgba(20,184,166,0.08)', sub: 'Mobile app usage' },
   ];
 
   const pieData = [

@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/api_service.dart';
 import '../widgets/app_drawer.dart';
@@ -11,11 +12,13 @@ class AttendanceScreen extends StatefulWidget {
   State<AttendanceScreen> createState() => _AttendanceScreenState();
 }
 
-class _AttendanceScreenState extends State<AttendanceScreen> {
+class _AttendanceScreenState extends State<AttendanceScreen> with SingleTickerProviderStateMixin {
   List<dynamic> _attendanceRecords = [];
   bool _isLoading = true;
   String? _errorMessage;
   
+  late TabController _tabController;
+
   int _totalDays = 0;
   int _presentDays = 0;
   int _absentDays = 0;
@@ -26,7 +29,14 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
   @override
   void initState() {
     super.initState();
+    _tabController = TabController(length: 2, vsync: this);
     _fetchAttendance();
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
   }
 
   Future<void> _fetchAttendance() async {
@@ -98,8 +108,6 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
       }
     }
 
-    // Present + Late + Excused usually counts as non-absent
-    // Here we count Present and Late (maybe part-present) for calculation
     final effectivePresent = _presentDays + _lateDays;
     _percentage = _totalDays > 0 ? (effectivePresent / _totalDays) * 100 : 0.0;
   }
@@ -122,151 +130,183 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: const Color(0xFFF8F9FA),
       drawer: const AppDrawer(currentRoute: 'attendance'),
       appBar: AppBar(
-        leading: const BackButton(),
-        title: const Text(
+        leading: GestureDetector(
+          onTap: () => Navigator.pop(context),
+          child: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
+        ),
+        title: Text(
           'My Attendance',
-          style: TextStyle(fontWeight: FontWeight.bold),
+          style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 22),
         ),
         backgroundColor: Colors.white,
-        foregroundColor: Colors.blueGrey.shade800,
+        foregroundColor: const Color(0xFF1E293B),
         elevation: 0,
+        centerTitle: true,
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: CircularProgressIndicator(color: Color(0xFF343063)))
           : _errorMessage != null
-              ? Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(24.0),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(Icons.error_outline, size: 60, color: Colors.redAccent),
-                        const SizedBox(height: 16),
-                        Text(
-                          _errorMessage!,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(fontSize: 16, color: Colors.blueGrey),
-                        ),
-                        const SizedBox(height: 20),
-                        ElevatedButton(
-                          onPressed: () {
-                            setState(() {
-                              _isLoading = true;
-                              _errorMessage = null;
-                            });
-                            _fetchAttendance();
-                          },
-                          child: const Text('Retry'),
-                        )
-                      ],
+              ? _buildErrorState()
+              : Column(
+                  children: [
+                    Container(
+                      color: Colors.white,
+                      padding: const EdgeInsets.only(top: 10, bottom: 16),
+                      child: _buildTabBar(),
                     ),
+                    Expanded(
+                      child: TabBarView(
+                        controller: _tabController,
+                        children: [
+                          _buildSummaryTab(),
+                          _buildHistoryTab(),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+    );
+  }
+
+  Widget _buildTabBar() {
+    return Container(
+      height: 50,
+      margin: const EdgeInsets.symmetric(horizontal: 20),
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF1F5F9),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: TabBar(
+        controller: _tabController,
+        indicatorSize: TabBarIndicatorSize.tab,
+        indicator: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(10),
+          boxShadow: [
+            BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 4, offset: const Offset(0, 2)),
+          ],
+        ),
+        labelColor: const Color(0xFF343063),
+        unselectedLabelColor: const Color(0xFF94A3B8),
+        labelStyle: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 14),
+        unselectedLabelStyle: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 14),
+        dividerColor: Colors.transparent,
+        tabs: const [
+          Tab(text: 'Summary'),
+          Tab(text: 'History'),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSummaryTab() {
+    return RefreshIndicator(
+      onRefresh: _fetchAttendance,
+      color: const Color(0xFF343063),
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildPercentageCard(),
+            const SizedBox(height: 24),
+            Text(
+              'Overall Stats',
+              style: GoogleFonts.outfit(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: const Color(0xFF1E293B),
+              ),
+            ),
+            const SizedBox(height: 16),
+            _buildSummaryStatsGrid(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHistoryTab() {
+    if (_attendanceRecords.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.history_rounded, size: 60, color: Colors.grey[300]),
+            const SizedBox(height: 16),
+            Text('No history available.', style: GoogleFonts.poppins(color: Colors.grey[500], fontWeight: FontWeight.bold)),
+          ],
+        ),
+      );
+    }
+
+    return RefreshIndicator(
+      onRefresh: _fetchAttendance,
+      color: const Color(0xFF343063),
+      child: ListView.builder(
+        padding: const EdgeInsets.all(20),
+        itemCount: _attendanceRecords.length,
+        itemBuilder: (context, index) {
+          final record = _attendanceRecords[index];
+          final dateStr = record['date']?.toString().split('T')[0] ?? 'N/A';
+          final status = record['status']?.toString() ?? 'N/A';
+          final note = record['note']?.toString();
+
+          return Container(
+            margin: const EdgeInsets.only(bottom: 16),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: const Color(0xFFF1F5F9), width: 1.5),
+              boxShadow: [
+                BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4)),
+              ],
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      dateStr,
+                      style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16, color: const Color(0xFF1E293B)),
+                    ),
+                    if (note != null && note.isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        note,
+                        style: GoogleFonts.poppins(color: const Color(0xFF94A3B8), fontSize: 12),
+                      )
+                    ]
+                  ],
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: _getStatusColor(status).withOpacity(0.12),
+                    borderRadius: BorderRadius.circular(10),
                   ),
-                )
-              : RefreshIndicator(
-                  onRefresh: _fetchAttendance,
-                  child: SingleChildScrollView(
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    padding: const EdgeInsets.all(20.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Radial Progress & Percent Card
-                        _buildPercentageCard(),
-                        const SizedBox(height: 24),
-                        
-                        // Summary Stats Grid
-                        const Text(
-                          'Summary',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF1E293B),
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        _buildSummaryStatsGrid(),
-                        const SizedBox(height: 28),
-
-                        // History Header
-                        const Text(
-                          'Attendance History',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF1E293B),
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-
-                        // List of Records
-                        _attendanceRecords.isEmpty
-                            ? const Center(
-                                child: Padding(
-                                  padding: EdgeInsets.symmetric(vertical: 40.0),
-                                  child: Text(
-                                    'No attendance records found.',
-                                    style: TextStyle(color: Colors.grey),
-                                  ),
-                                ),
-                              )
-                            : ListView.builder(
-                                shrinkWrap: true,
-                                physics: const NeverScrollableScrollPhysics(),
-                                itemCount: _attendanceRecords.length,
-                                itemBuilder: (context, index) {
-                                  final record = _attendanceRecords[index];
-                                  final dateStr = record['date']?.toString().split('T')[0] ?? 'N/A';
-                                  final status = record['status']?.toString() ?? 'N/A';
-                                  final note = record['note']?.toString();
-
-                                  return Card(
-                                    elevation: 0,
-                                    margin: const EdgeInsets.only(bottom: 12),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(16),
-                                      side: BorderSide(color: Colors.blueGrey.shade100),
-                                    ),
-                                    child: ListTile(
-                                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                                      title: Text(
-                                        dateStr,
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          color: Color(0xFF1E293B),
-                                        ),
-                                      ),
-                                      subtitle: note != null && note.isNotEmpty
-                                          ? Text(
-                                              note,
-                                              style: TextStyle(color: Colors.blueGrey.shade500, fontSize: 13),
-                                            )
-                                          : null,
-                                      trailing: Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                                        decoration: BoxDecoration(
-                                          color: _getStatusColor(status).withOpacity(0.12),
-                                          borderRadius: BorderRadius.circular(30),
-                                        ),
-                                        child: Text(
-                                          status.toUpperCase(),
-                                          style: TextStyle(
-                                            color: _getStatusColor(status),
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  );
-                                },
-                              ),
-                      ],
+                  child: Text(
+                    status.toUpperCase(),
+                    style: GoogleFonts.poppins(
+                      color: _getStatusColor(status),
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),
+              ],
+            ),
+          );
+        },
+      ),
     );
   }
 
@@ -276,7 +316,10 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.blueGrey.shade100),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 12, offset: const Offset(0, 6)),
+        ],
+        border: Border.all(color: const Color(0xFFF1F5F9), width: 1.5),
       ),
       child: Row(
         children: [
@@ -285,22 +328,22 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
             alignment: Alignment.center,
             children: [
               SizedBox(
-                width: 85,
-                height: 85,
+                width: 90,
+                height: 90,
                 child: CircularProgressIndicator(
                   value: _percentage / 100,
-                  backgroundColor: Colors.blueGrey.shade100,
+                  backgroundColor: const Color(0xFFF1F5F9),
                   color: _percentage >= 75 ? const Color(0xFF10B981) : const Color(0xFFF59E0B),
-                  strokeWidth: 9,
+                  strokeWidth: 10,
                   strokeCap: StrokeCap.round,
                 ),
               ),
               Text(
                 '${_percentage.toStringAsFixed(0)}%',
-                style: const TextStyle(
+                style: GoogleFonts.outfit(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: Colors.white,
+                  color: const Color(0xFF1E293B),
                 ),
               ),
             ],
@@ -311,22 +354,23 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Attendance Rate',
-                  style: TextStyle(
-                    fontSize: 18,
+                Text(
+                  'Great job!',
+                  style: GoogleFonts.outfit(
+                    fontSize: 20,
                     fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                    color: const Color(0xFF1E293B),
                   ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 6),
                 Text(
                   _percentage >= 75
                       ? 'Your attendance is good! Keep it up.'
                       : 'Maintain at least 75% attendance to avoid penalties.',
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: _percentage >= 75 ? const Color(0xFF047857) : const Color(0xFFB45309),
+                  style: GoogleFonts.poppins(
+                    fontSize: 12,
+                    color: _percentage >= 75 ? const Color(0xFF10B981) : const Color(0xFFF59E0B),
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
               ],
@@ -342,37 +386,40 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       crossAxisCount: 2,
-      crossAxisSpacing: 14,
-      mainAxisSpacing: 14,
-      childAspectRatio: 2.2,
+      crossAxisSpacing: 16,
+      mainAxisSpacing: 16,
+      childAspectRatio: 1.8,
       children: [
-        _buildStatTile('Total Classes', '$_totalDays', Colors.indigo, Icons.calendar_month_rounded),
-        _buildStatTile('Present', '$_presentDays', const Color(0xFF10B981), Icons.check_circle_outline_rounded),
-        _buildStatTile('Absent', '$_absentDays', const Color(0xFFEF4444), Icons.cancel_outlined),
-        _buildStatTile('Late', '$_lateDays', const Color(0xFFF59E0B), Icons.watch_later_outlined),
+        _buildStatTile('Total Classes', '$_totalDays', const Color(0xFF6366F1), Icons.calendar_month_rounded, const Color(0xFFEEF2FF)),
+        _buildStatTile('Present', '$_presentDays', const Color(0xFF10B981), Icons.check_circle_rounded, const Color(0xFFECFDF5)),
+        _buildStatTile('Absent', '$_absentDays', const Color(0xFFEF4444), Icons.cancel_rounded, const Color(0xFFFEF2F2)),
+        _buildStatTile('Late', '$_lateDays', const Color(0xFFF59E0B), Icons.watch_later_rounded, const Color(0xFFFFFBEB)),
       ],
     );
   }
 
-  Widget _buildStatTile(String title, String val, Color color, IconData icon) {
+  Widget _buildStatTile(String title, String val, Color color, IconData icon, Color bgColor) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.blueGrey.shade100),
+        border: Border.all(color: const Color(0xFFF1F5F9), width: 1.5),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4)),
+        ],
       ),
       child: Row(
         children: [
           Container(
-            padding: const EdgeInsets.all(8),
+            padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
-              shape: BoxShape.circle,
+              color: bgColor,
+              borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(icon, color: color, size: 20),
+            child: Icon(icon, color: color, size: 24),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -380,17 +427,18 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
               children: [
                 Text(
                   val,
-                  style: const TextStyle(
-                    fontSize: 18,
+                  style: GoogleFonts.outfit(
+                    fontSize: 22,
                     fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                    color: const Color(0xFF1E293B),
                   ),
                 ),
                 Text(
                   title,
-                  style: const TextStyle(
+                  style: GoogleFonts.poppins(
                     fontSize: 11,
-                    color: Color(0xFF94A3B8),
+                    fontWeight: FontWeight.w500,
+                    color: const Color(0xFF64748B),
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -402,6 +450,45 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
       ),
     );
   }
+
+  Widget _buildErrorState() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(color: const Color(0xFFFEF2F2), borderRadius: BorderRadius.circular(20)),
+              child: const Icon(Icons.error_outline_rounded, size: 48, color: Color(0xFFEF4444)),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              _errorMessage!,
+              textAlign: TextAlign.center,
+              style: GoogleFonts.poppins(fontSize: 14, color: const Color(0xFF64748B)),
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton.icon(
+              onPressed: () {
+                setState(() {
+                  _isLoading = true;
+                  _errorMessage = null;
+                });
+                _fetchAttendance();
+              },
+              icon: const Icon(Icons.refresh_rounded),
+              label: const Text('Retry'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF343063),
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+            )
+          ],
+        ),
+      ),
+    );
+  }
 }
-
-

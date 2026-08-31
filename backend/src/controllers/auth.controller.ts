@@ -120,7 +120,17 @@ export const login = async (req: AuthRequest, res: Response, next: NextFunction)
   const accessToken = generateAccessToken(tokenPayload);
   const refreshToken = generateRefreshToken(tokenPayload);
 
-  await prisma.user.update({ where: { id: user.id }, data: { refreshToken } });
+  // Check if login is from mobile app
+  const client = req.body.client;
+  const isMobile = client === 'mobile';
+
+  await prisma.user.update({
+    where: { id: user.id },
+    data: {
+      refreshToken,
+      ...(isMobile ? { isAppInstalled: true, lastAppLoginAt: new Date() } : {})
+    },
+  });
 
   const { password: _p, refreshToken: _rt, resetOtp: _o, resetOtpExp: _e, ...safeUser } = user as any;
   successResponse(res, { accessToken, refreshToken, user: safeUser }, 'Login successful');
