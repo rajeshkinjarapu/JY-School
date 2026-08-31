@@ -265,19 +265,14 @@ export const getClashes = async (req: AuthRequest, res: Response, next: NextFunc
           day: group[0].day,
           periodNumber: group[0].periodNumber,
           conflictingSlots: group
-      subject: { select: { name: true, code: true } },
-    },
-    orderBy: [{ day: 'asc' }, { periodNumber: 'asc' }],
-  });
+        });
+      }
+    }
 
-  const organized: Record<string, any[]> = {};
-  for (const day of DAYS_ORDER) organized[day] = [];
-  for (const slot of slots) {
-    if (!organized[slot.day]) organized[slot.day] = [];
-    organized[slot.day].push(slot);
+    successResponse(res, clashes, 'Timetable clashes fetched');
+  } catch (error) {
+    next(error);
   }
-
-  successResponse(res, organized, 'Teacher timetable fetched');
 };
 
 export const createSlot = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
