@@ -7,7 +7,8 @@ import 'transport_vehicles_screen.dart';
 import 'transport_fuel_screen.dart';
 import 'transport_maintenance_screen.dart';
 import 'transport_students_screen.dart';
-
+import 'active_trip_screen.dart';
+import 'live_tracking_screen.dart';
 class TransportScreen extends StatefulWidget {
   const TransportScreen({super.key});
 
@@ -192,6 +193,8 @@ class _TransportScreenState extends State<TransportScreen> {
         _buildGridItem('Bus Routes', 'Manage routes & stops', Icons.map_rounded, const [Color(0xFF3B82F6), Color(0xFF2563EB)], const TransportRoutesScreen()),
         _buildGridItem('Vehicles', 'Track fleet details', Icons.directions_bus_rounded, const [Color(0xFF8B5CF6), Color(0xFF7C3AED)], const TransportVehiclesScreen()),
         _buildGridItem('Students', 'Allocation & Fees', Icons.people_rounded, const [Color(0xFFEC4899), Color(0xFFDB2777)], const TransportStudentsScreen()),
+        _buildGridItem('Active Trip', 'Driver tools', Icons.play_circle_fill_rounded, const [Color(0xFFF59E0B), Color(0xFFD97706)], const ActiveTripScreen(routeData: {'name': 'Route A', 'stops': [{'stopName': 'Stop 1'}, {'stopName': 'Stop 2'}]})),
+        _buildGridItem('Live Tracking', 'Track bus on map', Icons.location_on_rounded, const [Color(0xFF14B8A6), Color(0xFF0F766E)], const LiveTrackingScreen(routeData: {'name': 'School Bus 1'})),
         _buildGridItem('Fuel Logs', 'Track diesel expenses', Icons.local_gas_station_rounded, const [Color(0xFFF43F5E), Color(0xFFE11D48)], const TransportFuelScreen()),
         _buildGridItem('Maintenance', 'Repairs & Service', Icons.build_rounded, const [Color(0xFF10B981), Color(0xFF059669)], const TransportMaintenanceScreen()),
       ],

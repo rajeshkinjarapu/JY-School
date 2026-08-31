@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
-import '../utils/constants.dart';
+import '../services/api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class OMRScannerScreen extends StatefulWidget {
@@ -45,7 +45,7 @@ class _OMRScannerScreenState extends State<OMRScannerScreen> {
       SharedPreferences prefs = await SharedPreferences.getInstance();
       String? token = prefs.getString('token');
 
-      var request = http.MultipartRequest('POST', Uri.parse('${Constants.baseUrl}/exams/scan-omr'));
+      var request = http.MultipartRequest('POST', Uri.parse('${ApiService.baseUrl}/api/exams/scan-omr'));
       request.headers['Authorization'] = 'Bearer $token';
       request.fields['examId'] = widget.examId;
       request.files.add(await http.MultipartFile.fromPath('image', _image!.path));
@@ -83,7 +83,7 @@ class _OMRScannerScreenState extends State<OMRScannerScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('OMR Scanner', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
-        backgroundColor: Constants.primaryColor,
+        backgroundColor: const Color(0xFF2563EB),
         iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: SingleChildScrollView(
@@ -152,7 +152,7 @@ class _OMRScannerScreenState extends State<OMRScannerScreen> {
                   icon: const Icon(Icons.camera_alt, color: Colors.white),
                   label: Text(_image == null ? 'Open Camera' : 'Retake Photo', style: const TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold)),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Constants.primaryColor,
+                    backgroundColor: const Color(0xFF2563EB),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     elevation: 4,
                   ),
@@ -207,7 +207,7 @@ class _OMRScannerScreenState extends State<OMRScannerScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const Text('Total Score', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-              Text('${data['marks']?['total'] ?? 0} / 300', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Constants.primaryColor)),
+              Text('${data['marks']?['total'] ?? 0} / 300', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Color(0xFF2563EB))),
             ],
           ),
           const SizedBox(height: 25),
