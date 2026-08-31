@@ -42,3 +42,7 @@
 - Verify OMR backend Python script dependencies (`opencv-python`, `imutils`) on the VPS.
 - Further integration of Flutter `Live Tracking` with actual WebSocket Server.
 - Add fee integration for students assigned to transport stops.
+
+### 6. Progress Card Updates
+- **Web App:** Renamed 'JEE Progress Cards' to 'Progress Cards'. Replaced hardcoded MAT, PHY, CHE subjects in the progress card table with dynamic exam subjects (handling primary classes properly without showing '-'). Improved table layout to be responsive and fit the screen without unnecessary gaps.
+- **Flutter App:** Removed the 'IIT-JEE / NEET Foundation' subtitle from the PDF generation in single_progress_card_screen.dart to make it a generic progress card for all classes.

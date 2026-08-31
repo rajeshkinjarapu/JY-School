@@ -102,7 +102,7 @@ export const ExamListPage: React.FC = () => {
           'admit-card': 'Admit Cards',
           'results': 'Results Entry',
           'progress-card': 'Progress Cards',
-          'jee-progress-card': 'JEE Progress Cards',
+          'jee-progress-card': 'Progress Cards',
           'settings': 'Exam Settings',
           'slip-tests': 'Slip Tests',
           'status-overview': 'Status Overview'
@@ -1059,7 +1059,7 @@ export const ExamListPage: React.FC = () => {
           activeTab === 'status' || activeTab === 'status-overview' ? 'Status Overview' :
           activeTab === 'written-exam' ? 'Marks Entry' :
           activeTab === 'progress-card' ? 'Progress Cards' :
-          activeTab === 'jee-progress-card' ? 'JEE Progress Cards' :
+          activeTab === 'jee-progress-card' ? 'Progress Cards' :
           activeTab === 'results' ? 'Exam Results' :
           activeTab === 'admit-card' ? 'Admit Cards' :
           activeTab === 'examination' ? 'Examinations List' :

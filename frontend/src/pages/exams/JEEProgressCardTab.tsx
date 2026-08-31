@@ -78,7 +78,7 @@ export const JEEProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
       }
       setLoading(true);
       try {
-        // includePhoto=true: JEE Progress cards need student photos
+        // includePhoto=true: Progress cards need student photos
         const res: any = await api.get(`/api/exams/${selectedExamId}/results?classId=${selectedClassId}&includePhoto=true`);
 
         const formattedData = (res.data?.data || res.data || []).map((s: any) => {
@@ -213,7 +213,7 @@ export const JEEProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
       const pdf = await generatePDFForElement(el, studentName);
       pdf.save(`${studentName}_JEE_ProgressCard.pdf`);
       toast.success("Downloaded successfully!", { id: toastId });
-      triggerDownloadNotification("⬇️ Download Complete", `JEE Progress Card for ${studentName} has been saved.`);
+      triggerDownloadNotification("⬇️ Download Complete", `Progress Card for ${studentName} has been saved.`);
     } catch (e: any) {
       console.error(e);
       toast.error('Failed to generate PDF.', { id: toastId });
@@ -252,7 +252,7 @@ export const JEEProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
     toast.dismiss(toastId);
     
     // 1. Try fully native sharing (Image file attached directly!)
-    const shareText = `JEE Progress Card for *${studentName}*`;
+    const shareText = `Progress Card for *${studentName}*`;
     const didShareNatively = await shareFileNatively(blob, fileName, shareText);
     
     if (didShareNatively) {
@@ -352,7 +352,7 @@ export const JEEProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
       const content = await zip.generateAsync({ type: "blob" });
       saveAs(content, `JEE_ProgressCards_${studentsData.length}.zip`);
       toast.success("Downloaded all progress cards successfully!", { id: loadingToastId });
-      triggerDownloadNotification("⬇️ Download Complete", `All ${studentsData.length} JEE progress cards have been downloaded.`);
+      triggerDownloadNotification("⬇️ Download Complete", `All ${studentsData.length} progress cards have been downloaded.`);
     } catch (e: any) {
       console.error('Zip generation error:', e);
       toast.error(`Failed to generate zip: ${e.message}`, { id: loadingToastId });
@@ -527,6 +527,12 @@ export const JEEProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
       `ClassWiseReport_${selectedClassId}.pdf`
     );
   };
+
+  const uniqueSubjects = Array.from(
+    new Set(
+      studentsData.flatMap((s) => s.marks?.map((m: any) => m.subject) || [])
+    )
+  );
 
   const handleOverallRankList = async (format: 'pdf' | 'excel') => {
     setIsGeneratingReport(true);
@@ -812,50 +818,48 @@ export const JEEProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
             </div>
             
             {/* Table layout */}
-            <div className="w-full overflow-hidden">
-              <table className="w-full text-sm text-left table-fixed">
-                <thead className="bg-slate-50/80 dark:bg-slate-800/80 text-slate-500 dark:text-slate-400 text-xs uppercase tracking-widest">
+            <div className="w-full overflow-hidden overflow-x-auto">
+              <table className="w-full text-sm text-left whitespace-nowrap">
+                <thead className="bg-slate-50/80 dark:bg-slate-800/80 text-slate-500 dark:text-slate-400 text-xs uppercase tracking-widest border-b border-slate-200 dark:border-slate-700">
                   <tr>
-                    <th className="py-2.5 px-2 hidden md:table-cell w-14 text-center">Rank</th>
-                    <th className="py-2.5 px-2 w-auto">Student Name</th>
-                    {!isTeacher && <th className="py-2.5 px-2 hidden md:table-cell w-24">Student ID</th>}
-                    <th className="py-2.5 px-2 text-center hidden md:table-cell w-16">Mat</th>
-                    <th className="py-2.5 px-2 text-center hidden md:table-cell w-16">Phy</th>
-                    <th className="py-2.5 px-2 text-center hidden md:table-cell w-16">Che</th>
-                    <th className="py-2.5 px-2 text-center w-14">Total</th>
-                    <th className="py-2.5 px-2 text-right w-24 sm:w-28">Action</th>
+                    <th className="py-3 px-4 font-bold text-center">S.No</th>
+                    <th className="py-3 px-4 font-bold">Student Name</th>
+                    {!isTeacher && <th className="py-3 px-4 font-bold">Student ID</th>}
+                    {uniqueSubjects.map((subject, i) => (
+                      <th key={i} className="py-3 px-4 font-bold text-center" title={subject}>{subject.substring(0, 3)}</th>
+                    ))}
+                    <th className="py-3 px-4 font-bold text-center">Total</th>
+                    <th className="py-3 px-4 font-bold text-right">Action</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100">
+                <tbody className="divide-y divide-gray-100 dark:divide-slate-800">
                   {studentsData.map((data, idx) => (
                     <React.Fragment key={data.studentId}>
                     <tr onClick={() => setExpandedRow(expandedRow === data.studentId ? null : data.studentId)} 
-                      className="hover:bg-gray-50 transition-colors bg-white cursor-pointer md:cursor-auto"
+                      className="hover:bg-gray-50 dark:hover:bg-slate-800/50 transition-colors bg-white dark:bg-slate-900 cursor-pointer md:cursor-auto"
                     >
-                      <td className="py-2.5 px-2 text-center hidden md:table-cell">
-                        <span className="font-black text-indigo-600 bg-indigo-50 px-1.5 py-1 rounded-md text-xs">#{data.rank}</span>
+                      <td className="py-3 px-4 text-center">
+                        <span className="font-black text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 px-2 py-1 rounded-md text-xs">#{data.rank}</span>
                       </td>
-                      <td className="py-2.5 px-2 font-bold text-gray-900 truncate text-xs sm:text-sm">
+                      <td className="py-3 px-4 font-bold text-gray-900 dark:text-slate-200">
                         {formatName(data.studentName)}
                       </td>
-                      {!isTeacher && <td className="py-2.5 px-2 text-gray-600 font-medium hidden md:table-cell text-sm">{data.rollNo || '-'}</td>}
-                      <td className="py-2.5 px-2 text-center hidden md:table-cell font-medium text-gray-700 text-sm">
-                        {data.marks?.find((m: any) => m.subject?.toLowerCase().startsWith('mat') || m.subject?.toLowerCase() === 'mathematics' || m.subject?.toLowerCase() === 'maths')?.obtained ?? '-'}
-                      </td>
-                      <td className="py-2.5 px-2 text-center hidden md:table-cell font-medium text-gray-700 text-sm">
-                        {data.marks?.find((m: any) => m.subject?.toLowerCase().startsWith('phy') || m.subject?.toLowerCase() === 'physics')?.obtained ?? '-'}
-                      </td>
-                      <td className="py-2.5 px-2 text-center hidden md:table-cell font-medium text-gray-700 text-sm">
-                        {data.marks?.find((m: any) => m.subject?.toLowerCase().startsWith('che') || m.subject?.toLowerCase() === 'chemistry')?.obtained ?? '-'}
-                      </td>
-                      <td className="py-2.5 px-2 text-center">
-                        <span className="font-extrabold text-emerald-600 text-xs sm:text-sm">{data.total}</span>
+                      {!isTeacher && <td className="py-3 px-4 text-gray-600 dark:text-slate-400 font-medium">{data.rollNo || '-'}</td>}
+                      
+                      {uniqueSubjects.map((subject, i) => (
+                         <td key={i} className="py-3 px-4 text-center font-medium text-gray-700 dark:text-slate-300">
+                           {data.marks?.find((m: any) => m.subject === subject)?.obtained ?? '-'}
+                         </td>
+                      ))}
+
+                      <td className="py-3 px-4 text-center">
+                        <span className="font-extrabold text-emerald-600 dark:text-emerald-400 text-sm">{data.total}</span>
                       </td>
                       
-                      <td className="py-2.5 px-2 flex justify-end gap-1 items-center">
+                      <td className="py-3 px-4 flex justify-end gap-1.5 items-center">
                         <button 
                           onClick={(e) => { e.stopPropagation(); handleWhatsAppShare(data.studentId, data.studentName, idx, data.mobile); }} 
-                          className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] px-2 py-1.5 rounded-lg flex items-center gap-1 shadow-md shadow-emerald-600/30 transition-all shrink-0 cursor-pointer active:scale-95" 
+                          className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] px-2.5 py-1.5 rounded-lg flex items-center gap-1 shadow-md shadow-emerald-600/30 transition-all shrink-0 cursor-pointer active:scale-95" 
                           title="Share Progress Card on WhatsApp"
                         >
                             <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
@@ -865,33 +869,27 @@ export const JEEProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
                         </button>
                         {isSuperAdmin && (
                           <button onClick={(e) => { e.stopPropagation(); handlePrintSingle(idx); }} className="bg-blue-50 hover:bg-blue-100 text-blue-600 p-1.5 rounded-lg text-xs font-semibold flex items-center justify-center transition-colors shrink-0" title="Print Card">
-                              <Printer className="w-3.5 h-3.5" />
+                              <Printer className="w-4 h-4" />
                           </button>
                         )}
                         {isSuperAdmin && (
                           <button onClick={(e) => { e.stopPropagation(); handleDownloadSingle(data.studentId, data.studentName, idx); }} className="bg-indigo-50 hover:bg-indigo-100 text-indigo-600 p-1.5 rounded-lg text-xs font-semibold flex items-center justify-center transition-colors shrink-0" title="Download PDF">
-                              <Download className="w-3.5 h-3.5" /> 
+                              <Download className="w-4 h-4" /> 
                           </button>
                         )}
                       </td>
                     </tr>
                     {expandedRow === data.studentId && (
-                    <tr className="md:hidden bg-indigo-50/20 border-b border-gray-100">
-                       <td colSpan={5} className="px-4 py-3">
+                    <tr className="md:hidden bg-indigo-50/20 dark:bg-indigo-900/10 border-b border-gray-100 dark:border-slate-800">
+                       <td colSpan={10} className="px-4 py-3">
                           <div className="flex flex-col gap-3 w-full">
                             <div className="grid grid-cols-3 gap-2 w-full text-center">
-                               <div className="bg-white border border-indigo-100 rounded-lg p-2 shadow-sm">
-                                  <div className="text-[10px] font-bold text-gray-500 uppercase">MAT</div>
-                                  <div className="font-black text-indigo-700">{data.marks?.find((m: any) => m.subject?.toLowerCase().startsWith('mat') || m.subject?.toLowerCase() === 'mathematics' || m.subject?.toLowerCase() === 'maths')?.obtained ?? '-'}</div>
-                               </div>
-                               <div className="bg-white border border-indigo-100 rounded-lg p-2 shadow-sm">
-                                  <div className="text-[10px] font-bold text-gray-500 uppercase">PHY</div>
-                                  <div className="font-black text-indigo-700">{data.marks?.find((m: any) => m.subject?.toLowerCase().startsWith('phy') || m.subject?.toLowerCase() === 'physics')?.obtained ?? '-'}</div>
-                               </div>
-                               <div className="bg-white border border-indigo-100 rounded-lg p-2 shadow-sm">
-                                  <div className="text-[10px] font-bold text-gray-500 uppercase">CHE</div>
-                                  <div className="font-black text-indigo-700">{data.marks?.find((m: any) => m.subject?.toLowerCase().startsWith('che') || m.subject?.toLowerCase() === 'chemistry')?.obtained ?? '-'}</div>
-                               </div>
+                               {uniqueSubjects.map((subject, i) => (
+                                 <div key={i} className="bg-white dark:bg-slate-800 border border-indigo-100 dark:border-indigo-900/30 rounded-lg p-2 shadow-sm">
+                                    <div className="text-[10px] font-bold text-gray-500 uppercase">{subject.substring(0, 3)}</div>
+                                    <div className="font-black text-indigo-700 dark:text-indigo-400">{data.marks?.find((m: any) => m.subject === subject)?.obtained ?? '-'}</div>
+                                 </div>
+                               ))}
                             </div>
                             
                             <button 
