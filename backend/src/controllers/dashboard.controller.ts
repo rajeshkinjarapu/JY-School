@@ -245,7 +245,10 @@ export const getTeacherDashboard = async (req: AuthRequest, res: Response, next:
         take: 5,
         where: {
           isActive: true,
-          targetRoles: { contains: Role.TEACHER }
+          OR: [
+            { targetRoles: '' },
+            { targetRoles: { contains: Role.TEACHER } }
+          ]
         },
         orderBy: { createdAt: 'desc' }
       })
@@ -400,7 +403,10 @@ export const getStudentDashboard = async (req: AuthRequest, res: Response, next:
       take: 5,
       where: {
         isActive: true,
-        targetRoles: { contains: Role.STUDENT }
+        OR: [
+          { targetRoles: '' },
+          { targetRoles: { contains: Role.STUDENT } }
+        ]
       },
       orderBy: { createdAt: 'desc' }
     });

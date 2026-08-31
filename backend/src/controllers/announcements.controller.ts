@@ -4,6 +4,7 @@ import { createError } from '../middlewares/errorHandler';
 import { prisma } from '../utils/prisma';
 import { successResponse, paginatedResponse } from '../utils/response';
 import { Role } from '../types/enums';
+import { clearDashboardCache } from './dashboard.controller';
 
 export const getAll = async (req: AuthRequest, res: Response): Promise<void> => {
   const page = parseInt(req.query.page as string) || 1;
@@ -120,6 +121,7 @@ export const create = async (req: AuthRequest, res: Response): Promise<void> => 
     }
   }
 
+  clearDashboardCache();
   successResponse(res, announcement, 'Announcement created', 201);
 };
 
@@ -145,6 +147,8 @@ export const update = async (req: AuthRequest, res: Response, next: NextFunction
       image: image !== undefined ? image : undefined,
     },
   });
+  
+  clearDashboardCache();
   successResponse(res, announcement, 'Announcement updated');
 };
 
@@ -153,6 +157,8 @@ export const deleteAnnouncement = async (req: AuthRequest, res: Response, next: 
   const existing = await prisma.announcement.findUnique({ where: { id } });
   if (!existing) return next(createError('Announcement not found', 404));
   await prisma.announcement.delete({ where: { id } });
+  
+  clearDashboardCache();
   successResponse(res, null, 'Announcement deleted');
 };
 
@@ -164,6 +170,8 @@ export const toggleActive = async (req: AuthRequest, res: Response, next: NextFu
     where: { id },
     data: { isActive: !existing.isActive },
   });
+  
+  clearDashboardCache();
   successResponse(res, announcement, `Announcement ${announcement.isActive ? 'activated' : 'deactivated'}`);
 };
 
@@ -175,6 +183,8 @@ export const togglePin = async (req: AuthRequest, res: Response, next: NextFunct
     where: { id },
     data: { isPinned: !existing.isPinned },
   });
+  
+  clearDashboardCache();
   successResponse(res, announcement, `Announcement ${announcement.isPinned ? 'pinned' : 'unpinned'}`);
 };
 
