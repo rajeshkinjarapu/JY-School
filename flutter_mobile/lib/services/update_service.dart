@@ -1,11 +1,13 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:package_info_plus/package_info_plus.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:dio/dio.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:open_file/open_file.dart';
 
 class UpdateService {
-  // Add your VPS server or domain where app-version.json is hosted
   static const String updateUrl = 'http://66.116.252.191:19998/app-version.json';
 
   static Future<void> checkForUpdate(BuildContext context) async {
@@ -54,39 +56,119 @@ class UpdateService {
       builder: (BuildContext context) {
         return WillPopScope(
           onWillPop: () async => !forceUpdate,
-          child: AlertDialog(
-            title: Text('Update Available ($version)'),
-            content: SingleChildScrollView(
-              child: ListBody(
-                children: <Widget>[
-                  Text('A new version of the app is available.'),
-                  const SizedBox(height: 8),
-                  Text(releaseNotes, style: const TextStyle(color: Colors.grey)),
-                  const SizedBox(height: 16),
-                  const Text('Clicking "Update" will download the new APK. Please install it after downloading.'),
-                ],
-              ),
-            ),
-            actions: <Widget>[
-              if (!forceUpdate)
-                TextButton(
-                  child: const Text('Later'),
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                  },
-                ),
-              ElevatedButton(
-                child: const Text('Update Now'),
-                onPressed: () async {
-                  if (await canLaunchUrl(Uri.parse(downloadUrl))) {
-                    await launchUrl(Uri.parse(downloadUrl), mode: LaunchMode.externalApplication);
-                  }
-                },
-              ),
-            ],
+          child: _UpdateDialogWidget(
+            version: version,
+            releaseNotes: releaseNotes,
+            downloadUrl: downloadUrl,
+            forceUpdate: forceUpdate,
           ),
         );
       },
+    );
+  }
+}
+
+class _UpdateDialogWidget extends StatefulWidget {
+  final String version;
+  final String releaseNotes;
+  final String downloadUrl;
+  final bool forceUpdate;
+
+  const _UpdateDialogWidget({
+    Key? key,
+    required this.version,
+    required this.releaseNotes,
+    required this.downloadUrl,
+    required this.forceUpdate,
+  }) : super(key: key);
+
+  @override
+  State<_UpdateDialogWidget> createState() => _UpdateDialogWidgetState();
+}
+
+class _UpdateDialogWidgetState extends State<_UpdateDialogWidget> {
+  bool isDownloading = false;
+  double progress = 0.0;
+  String status = 'Ready';
+
+  Future<void> _downloadAndInstall() async {
+    setState(() {
+      isDownloading = true;
+      status = 'Downloading...';
+      progress = 0.0;
+    });
+
+    try {
+      Directory? tempDir = await getExternalStorageDirectory();
+      String savePath = "${tempDir?.path}/jyschool_update_${widget.version}.apk";
+
+      Dio dio = Dio();
+      await dio.download(
+        widget.downloadUrl,
+        savePath,
+        onReceiveProgress: (received, total) {
+          if (total != -1) {
+            setState(() {
+              progress = received / total;
+              status = 'Downloading... ${(progress * 100).toStringAsFixed(0)}%';
+            });
+          }
+        },
+      );
+
+      setState(() {
+        status = 'Opening installer...';
+      });
+
+      final result = await OpenFile.open(savePath);
+      if (result.type != ResultType.done) {
+        setState(() {
+          status = 'Failed to open installer: ${result.message}';
+          isDownloading = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        status = 'Error downloading: $e';
+        isDownloading = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text('Update Available (${widget.version})'),
+      content: SingleChildScrollView(
+        child: ListBody(
+          children: <Widget>[
+            const Text('A new version of the app is available.'),
+            const SizedBox(height: 8),
+            Text(widget.releaseNotes, style: const TextStyle(color: Colors.grey)),
+            const SizedBox(height: 16),
+            if (isDownloading) ...[
+              LinearProgressIndicator(value: progress),
+              const SizedBox(height: 8),
+              Text(status, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+            ] else ...[
+              const Text('Clicking "Update Now" will download and install the new version.'),
+            ]
+          ],
+        ),
+      ),
+      actions: <Widget>[
+        if (!widget.forceUpdate && !isDownloading)
+          TextButton(
+            child: const Text('Later'),
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+          ),
+        ElevatedButton(
+          onPressed: isDownloading ? null : _downloadAndInstall,
+          child: Text(isDownloading ? 'Downloading...' : 'Update Now'),
+        ),
+      ],
     );
   }
 }

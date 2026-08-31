@@ -51,6 +51,18 @@ pm2 restart backend --update-env
 - **Student Profile - Fee Ledger Layout**: Moved Fee Ledger to be side-by-side with Demographics and Family Details (3-column grid).
 - **Student Profile - Print Dossier Fixed**: Restructured DOM and added `print:hidden` selectively so the UI hides correctly for print.
 
+### Session: 2026-08-31 (Part 2) — Flutter OTA Updates & Syntax Fixes
+**Files Changed:** `main.dart`, `pubspec.yaml`, `update_service.dart`, `app-version.json`, `RoutesPage.tsx`
+**Backend Changes:** Yes — Added `app-version.json` to frontend public folder
+
+#### Completed
+- **Flutter In-App Hard Updates (OTA):**
+  - Developed a custom Force Update system mimicking professional apps (like Zomato/PhonePe) using `package_info_plus`, `dio`, `path_provider`, and `open_file`.
+  - Added `update_service.dart` that fetches `http://66.116.252.191:19998/app-version.json` on app startup.
+  - If a newer version is found and `forceUpdate: true` is set, a non-dismissible dialog forces the user to download and install the new APK directly inside the app (shows progress bar, then launches Android Installer automatically).
+- **Frontend Syntax Fix:**
+  - Resolved `[builtin:vite-transform] Unexpected token` error in `RoutesPage.tsx` that was causing `npm run build` to fail on the VPS. Added missing states (`editingId`), missing functions (`addStop`, `removeStop`, `handleStopChange`), and fixed the broken DOM structure (missing closing `</div>` tags).
+  
 ---
 
 ### Session: 2026-08-29 — Flutter Fixes & New Features
