@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Smartphone, MonitorSmartphone, Calendar, RefreshCw, UserCircle, Wifi } from 'lucide-react';
-import { api } from '../../api';
+import { api } from '../../api/axios';
 
 interface AppInstallUser {
   id: string;

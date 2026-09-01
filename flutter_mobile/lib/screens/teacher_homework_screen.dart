@@ -443,10 +443,12 @@ class _TeacherHomeworkScreenState extends State<TeacherHomeworkScreen> with Sing
                       style: GoogleFonts.poppins(fontSize: 13, color: const Color(0xFF1E293B), fontWeight: FontWeight.w600),
                       items: [
                         DropdownMenuItem<String>(value: null, child: const Text('All Subjects')),
-                        ..._subjects.map((s) => DropdownMenuItem<String>(
-                              value: s['id'],
-                              child: Text(s['name']),
-                            ))
+                        ..._subjects
+                            .where((s) => _filterClassId == null || s['classId'] == _filterClassId)
+                            .map((s) => DropdownMenuItem<String>(
+                                  value: s['id'],
+                                  child: Text(_filterClassId == null ? '${s['name']} (${s['class']?['name']}-${s['class']?['section']})' : s['name']),
+                                ))
                       ],
                       onChanged: (val) => setState(() => _filterSubjectId = val),
                     ),
@@ -712,9 +714,14 @@ class _TeacherHomeworkScreenState extends State<TeacherHomeworkScreen> with Sing
                             _buildLabel('Subject'),
                             _buildDropdown(
                               value: _selectedSubjectId,
-                              items: _subjects.map((s) => DropdownMenuItem<String>(value: s['id'], child: Text(s['name']))).toList(),
+                              items: _selectedClassId == null 
+                                ? [] 
+                                : _subjects
+                                  .where((s) => s['classId'] == _selectedClassId)
+                                  .map((s) => DropdownMenuItem<String>(value: s['id'], child: Text(s['name'])))
+                                  .toList(),
                               onChanged: (val) => setState(() => _selectedSubjectId = val),
-                              hint: 'Select Subject',
+                              hint: _selectedClassId == null ? 'Select Class First' : 'Select Subject',
                             ),
                           ],
                         ),

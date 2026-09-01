@@ -18,3 +18,6 @@
 - **Backend**: Updated User model in `prisma/schema.prisma` with `deviceModel`, `appVersion`, `lastIpAddress`, and `lastAppLoginAt`. Added `/api/users/app-info` to save device details and `/api/users/app-installs` for admin reporting.
 - **Frontend Webapp**: Created a premium `AppInstallsPage.tsx` with a beautifully designed table, added a route `/app-installs`, and linked the App Installs stats card on the admin dashboard to the new page.
 - **Flutter App**: Integrated `device_info_plus` and `package_info_plus` plugins in `pubspec.yaml`. Created `device_info_service.dart` to securely send device model and app version to the backend. Configured `main.dart` and `login_screen.dart` to automatically update device info after successful authentication.
+
+### Bug Fixes
+- **Teacher Homework Screen**: Fixed a bug where the subject dropdown showed all subjects duplicated across classes. Subjects are now dynamically filtered to only show those belonging to the currently selected class in both the "Assign New" and "My Homeworks" tabs (`teacher_homework_screen.dart`).
