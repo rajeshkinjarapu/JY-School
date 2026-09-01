@@ -87,6 +87,10 @@ class ApiService {
     return _performGet('/api/auth/me', 'Failed to get profile');
   }
 
+  static Future<Map<String, dynamic>> getAppInstalls() async {
+    return _performGet('/api/users/app-installs', 'Failed to fetch app installs');
+  }
+
   static Future<Map<String, dynamic>?> getUserDetails() async {
     final prefs = await SharedPreferences.getInstance();
     final userStr = prefs.getString('user');

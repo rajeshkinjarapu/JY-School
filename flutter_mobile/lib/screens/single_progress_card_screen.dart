@@ -527,8 +527,8 @@ class _SingleProgressCardScreenState extends State<SingleProgressCardScreen> {
                           _buildPremiumInfoRow('📚 Class', className, isEven: false),
                           _buildPremiumInfoRow('📖 Section', section, isEven: true),
                           _buildPremiumInfoRow('📞 Mobile', _resultData!['mobile']?.toString() ?? widget.studentData?['mobile']?.toString() ?? 'N/A', isEven: false),
-                          _buildPremiumInfoRow('📅 Academic Year', '2026-2027', isEven: true),
-                          _buildPremiumInfoRow('📍 Location', 'Opp. Hero Showroom, SVL Paradise Campus, Narasannapeta', isEven: false, isLast: rank == null),
+                          _buildPremiumInfoRow('📅 Academic Year', _settingsData?['currentYear'] ?? '2024-2025', isEven: true),
+                          _buildPremiumInfoRow('📍 Location', 'Narasannapeta', isEven: false, isLast: rank == null),
                           if (rank != null)
                             _buildPremiumInfoRow('🏅 Class Rank', '#' + rank, isEven: true, isLast: true),
                         ],

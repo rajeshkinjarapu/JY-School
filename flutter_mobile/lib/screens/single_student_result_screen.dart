@@ -237,7 +237,11 @@ class _SingleStudentResultScreenState extends State<SingleStudentResultScreen> {
   Widget _buildStudentInfoCard() {
     final rollNo = _resultData!['rollNo']?.toString() ?? 'N/A';
     final name = _resultData!['name']?.toString() ?? 'Unknown';
-    final fatherName = _resultData!['fatherName']?.toString() ?? widget.studentData?['fatherName']?.toString() ?? widget.studentData?['father_name']?.toString() ?? '-';
+    final fatherName = _resultData!['fatherName']?.toString() ?? 
+                       _resultData!['user']?['fatherName']?.toString() ?? 
+                       widget.studentData?['fatherName']?.toString() ?? 
+                       widget.studentData?['user']?['fatherName']?.toString() ?? 
+                       '-';
     final className = _resultData!['className']?.toString() ?? widget.studentData?['className']?.toString() ?? widget.studentData?['class_name']?.toString() ?? widget.studentData?['class']?.toString() ?? '-';
     
     final totalMarksObtained = _resultData!['total'] ?? 0;
@@ -247,7 +251,7 @@ class _SingleStudentResultScreenState extends State<SingleStudentResultScreen> {
     for(var m in marksList) { totalMaxMarks += (m['max'] as num?)?.toInt() ?? 100; }
     
     final percentage = _resultData!['percentage'] != null ? (_resultData!['percentage'] as num).toStringAsFixed(1) : '0.0';
-    final grade = _resultData!['grade'] ?? '-';
+    final grade = _resultData!['grade'] ?? _calculateGrade(totalMarksObtained, totalMaxMarks);
     final photoUrl = _resultData!['photo'] ?? widget.studentData?['photo'];
 
     // In case the photoUrl from result is an empty string
@@ -361,6 +365,19 @@ class _SingleStudentResultScreenState extends State<SingleStudentResultScreen> {
     );
   }
 
+  String _calculateGrade(num obtained, num max) {
+    if (max == 0) return '-';
+    double p = (obtained / max) * 100;
+    if (p >= 95) return 'A+';
+    if (p >= 90) return 'A';
+    if (p >= 80) return 'B+';
+    if (p >= 70) return 'B';
+    if (p >= 60) return 'C+';
+    if (p >= 50) return 'C';
+    if (p >= 40) return 'D';
+    return 'F';
+  }
+
   Widget _buildMarksTable() {
     final marksList = List<Map<String, dynamic>>.from(_resultData!['marks'] ?? []);
 
@@ -400,7 +417,7 @@ class _SingleStudentResultScreenState extends State<SingleStudentResultScreen> {
               final subName = sm['subject']?.toString().toUpperCase() ?? 'UNKNOWN';
               final marksObtained = sm['obtained'] ?? 0;
               final maxMarks = sm['max'] ?? 100;
-              final g = sm['grade']?.toString() ?? '-';
+              final g = _calculateGrade(marksObtained, maxMarks);
               final isPass = (marksObtained / maxMarks) >= 0.35;
               
               final rowColor = index % 2 == 0 ? Colors.white : const Color(0xFFF8FAFC);

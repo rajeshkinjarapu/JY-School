@@ -253,6 +253,9 @@ export const getTeacherDashboard = async (req: AuthRequest, res: Response, next:
             { targetRoles: { contains: Role.TEACHER } }
           ]
         },
+        include: {
+          reads: { where: { userId: req.user!.id } }
+        },
         orderBy: { createdAt: 'desc' }
       })
     ]);
@@ -293,7 +296,10 @@ export const getTeacherDashboard = async (req: AuthRequest, res: Response, next:
       totalStudents,
       todayAttendanceSummary,
       timetableToday,
-      announcements,
+      announcements: announcements.map(a => ({
+        ...a,
+        hasRead: a.reads.length > 0
+      })),
       recentHomework,
       myAttendance: {
         present: myPresent,
@@ -411,6 +417,9 @@ export const getStudentDashboard = async (req: AuthRequest, res: Response, next:
           { targetRoles: { contains: Role.STUDENT } }
         ]
       },
+      include: {
+        reads: { where: { userId: req.user!.id } }
+      },
       orderBy: { createdAt: 'desc' }
     });
 
@@ -441,7 +450,11 @@ export const getStudentDashboard = async (req: AuthRequest, res: Response, next:
       upcomingExams,
       feeStatus,
       timetableToday,
-      announcements,
+      announcements: announcements.map(a => ({
+        ...a,
+        hasRead: a.reads.length > 0
+      })),
+      recentHomework,
       admitCards
     }, 'Student dashboard data fetched successfully');
   } catch (error) {

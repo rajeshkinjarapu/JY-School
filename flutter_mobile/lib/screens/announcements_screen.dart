@@ -211,13 +211,7 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen>
     return Scaffold(
       backgroundColor: const Color(0xFFF1F5F9),
       appBar: AppBar(
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Announcements', style: GoogleFonts.outfit(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
-            Text('School Broadcast System', style: GoogleFonts.poppins(color: Colors.white70, fontSize: 12)),
-          ],
-        ),
+        title: Text('Announcements', style: GoogleFonts.outfit(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
         iconTheme: const IconThemeData(color: Colors.white),
         flexibleSpace: Container(
           decoration: const BoxDecoration(

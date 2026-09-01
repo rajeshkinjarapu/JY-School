@@ -165,16 +165,13 @@ class NotificationService {
 
         await _saveToCache(unread);
 
-        // Show hero banners for latest 3 unread (staggered)
-        for (int i = 0; i < unread.length && i < 3; i++) {
-          final n = unread[i];
-          await Future.delayed(Duration(milliseconds: i * 800));
-          await _showHeroBanner(n['title'], n['body'], n['route']);
-        }
+        // NOTE: We used to call _showHeroBanner here for unread notifications,
+        // but this caused notifications to trigger repeatedly on app launch or network change.
+        // Banners should only be triggered directly by FCM, not by fetching history.
       }
     } catch (e) {
       debugPrint('Error fetching notifications: $e');
-      // If fetch fails (maybe partial internet), replay cache
+      // If fetch fails (maybe partial internet), just log it. UI will use cache.
       await _replayCachedNotifications();
     }
   }

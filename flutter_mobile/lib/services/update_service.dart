@@ -19,7 +19,8 @@ class UpdateService {
       if (response.statusCode == 200) {
         final Map<String, dynamic> data = jsonDecode(response.body);
         final String latestVersion = data['latestVersion'] ?? '1.0.0';
-        final String downloadUrl = data['downloadUrl'] ?? '';
+        final String flavorName = AppConfig.current.flavor.name;
+        final String downloadUrl = data['downloadUrls']?[flavorName] ?? data['downloadUrl'] ?? '';
         final bool forceUpdate = data['forceUpdate'] ?? false;
         final String releaseNotes = data['releaseNotes'] ?? 'Exciting new features, UI enhancements, and bug fixes are available.';
 
@@ -38,8 +39,12 @@ class UpdateService {
   }
 
   static bool _isUpdateAvailable(String currentVersion, String latestVersion) {
-    List<String> currentParts = currentVersion.split('.');
-    List<String> latestParts = latestVersion.split('.');
+    // Remove build number (e.g., "1.0.2+3" -> "1.0.2")
+    String currentClean = currentVersion.split('+')[0];
+    String latestClean = latestVersion.split('+')[0];
+
+    List<String> currentParts = currentClean.split('.');
+    List<String> latestParts = latestClean.split('.');
 
     for (int i = 0; i < 3; i++) {
       int current = int.tryParse(currentParts.length > i ? currentParts[i] : '0') ?? 0;
@@ -298,35 +303,7 @@ class _ModernUpdateDialogState extends State<_ModernUpdateDialog> with SingleTic
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'What\'s New:',
-                    style: GoogleFonts.poppins(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      color: const Color(0xFF1E293B),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF8FAFC),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: const Color(0xFFE2E8F0)),
-                    ),
-                    constraints: const BoxConstraints(maxHeight: 120),
-                    child: SingleChildScrollView(
-                      child: Text(
-                        widget.releaseNotes,
-                        style: GoogleFonts.poppins(
-                          fontSize: 12.5,
-                          color: const Color(0xFF475569),
-                          height: 1.5,
-                        ),
-                      ),
-                    ),
-                  ),
+
 
                   // Error Message
                   if (errorMessage != null) ...[

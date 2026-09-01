@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 
+import 'profile_screen.dart';
 import 'students_screen.dart';
 import 'teachers_screen.dart';
 import 'classes_screen.dart';
@@ -23,6 +24,7 @@ import 'leave_screen.dart';
 import 'leave_dashboard_screen.dart';
 import 'timetable_screen.dart';
 import 'gate_pass_screen.dart';
+import 'teacher_gate_pass_screen.dart';
 import 'events_screen.dart';
 import 'live_tracking_screen.dart';
 import 'salary_screen.dart';
@@ -68,20 +70,16 @@ class _ModulesScreenState extends State<ModulesScreen> {
 
     // A comprehensive list of modules for the More page
     final List<Map<String, dynamic>> adminModules = [
-      {'title': 'Students', 'icon': Icons.groups_rounded, 'color': const Color(0xFF6366F1), 'page': const StudentsScreen()},
-      {'title': 'Teachers', 'icon': Icons.school_rounded, 'color': const Color(0xFF10B981), 'page': const TeachersScreen()},
-      {'title': 'Classes', 'icon': Icons.account_balance_rounded, 'color': const Color(0xFF0EA5E9), 'page': ClassesScreen()},
       if (!isTeacher) {'title': 'Finance', 'icon': Icons.account_balance_wallet_rounded, 'color': const Color(0xFFF43F5E), 'page': const FinanceScreen()},
       if (!isTeacher) {'title': 'Fee Collection', 'icon': Icons.credit_card_rounded, 'color': const Color(0xFF8B5CF6), 'page': const StudentFeeSearchScreen()},
       {'title': 'Fee Reminder', 'icon': Icons.notifications_active_rounded, 'color': const Color(0xFFEAB308), 'page': const FeeReminderSearchScreen()},
-      {'title': 'Exams', 'icon': Icons.fact_check_rounded, 'color': const Color(0xFF0284C7), 'page': const ExamsScreen()},
-      {'title': 'Reports', 'icon': Icons.emoji_events_rounded, 'color': const Color(0xFF059669), 'page': const ProgressCardScreen()},
+      {'title': 'Gate Pass', 'icon': Icons.exit_to_app_rounded, 'color': const Color(0xFF8B5CF6), 'page': isTeacher ? const TeacherGatePassScreen() : const GatePassScreen()},
+      {'title': 'OMR Scanner', 'icon': Icons.document_scanner_rounded, 'color': const Color(0xFF0284C7), 'page': const ExamsScreen()},
       {'title': 'Attendance', 'icon': Icons.how_to_reg_rounded, 'color': const Color(0xFFD97706), 'page': const AttendanceScreen()},
       {'title': 'Leave', 'icon': Icons.time_to_leave_rounded, 'color': const Color(0xFFEF4444), 'page': isTeacher ? const LeaveDashboardScreen() : const LeaveScreen()},
       {'title': 'Timetable', 'icon': Icons.schedule_rounded, 'color': const Color(0xFFEA580C), 'page': const TimetableScreen()},
-      {'title': 'Transport', 'icon': Icons.directions_bus_rounded, 'color': const Color(0xFFDB2777), 'page': const TransportScreen()},
       {'title': 'My Salary', 'icon': Icons.monetization_on_rounded, 'color': const Color(0xFF10B981), 'page': const SalaryScreen()},
-      {'title': 'Settings', 'icon': Icons.settings_rounded, 'color': const Color(0xFF475569), 'page': null},
+      {'title': 'Settings', 'icon': Icons.settings_rounded, 'color': const Color(0xFF475569), 'page': const ProfileScreen()},
     ];
 
     final List<Map<String, dynamic>> studentModules = [

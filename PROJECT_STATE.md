@@ -23,6 +23,13 @@
   - `StudentFeeOverviewScreen`: Fetches live Total/Paid/Due stats with a dynamic Circular Chart.
   - `StudentPayFeeScreen`: Fully redesigned to include fee structure Dropdown, Amount selection, QR code display, and Image Picker on a single screen. Sends `feeStructureId` to backend.
   - **Fees & Receipts**: Updated `fees_screen.dart` with a clean white card for dues, and a Receipts tab that pulls real individual `FeePayment` records via new `/fees/payments` route. Shows `PROCESSING` for pending verifications and `SUCCESS` for approved payments.
+- **Progress Card PDF Export Name:**
+  - Modified `_downloadPdf` and `_sharePdf` methods in `single_progress_card_screen.dart` to use the dynamic student name instead of student ID for the exported PDF filename (e.g., `Arangi_Lalitaksha_progress_card.pdf`).
+- **Admin App Installs Screen (Flutter):**
+  - Built a premium dashboard screen in Flutter to track app installations (`admin_app_installs_screen.dart`).
+  - Syncs perfectly with WebApp logic, integrating `GET /users/app-installs` API in `api_service.dart`.
+  - Features a tabbed UI for Students and Teachers, displaying device models, app versions, and online/offline status indicators.
+  - Added to the Academic & Management grid in `dashboard_screen.dart`.
 - **Admin Flow Screens:**
   - `FinanceScreen` (Admin Dashboard): Added modules for "Pending Approvals" and "Payment Setup".
   - `AdminPendingFeesScreen`: Displays a list of all fee payments waiting for manual approval. Features an interactive image viewer (zoom in on the screenshot) and Approve/Reject controls.
@@ -54,3 +61,7 @@
   pm2 restart backend
   ```
 - Test end-to-end fee payment using the mobile app and verify the receipt on the admin dashboard.
+- **App Update Fix:** Fixed an issue where the app continuously prompted for an update after installation due to improper version parsing when build numbers (+3) were present.
+- **Push Notifications Fix:** Fixed an issue in 
+otification_service.dart where the app locally triggered push notifications repeatedly on startup due to fetching unread notifications from the backend API.
+- **Student Dashboard UI:** Improved the Exams Dashboard UI by reducing box heights, adding Exam Schedule, Academic Calendar, Quiz, and Online Exams.

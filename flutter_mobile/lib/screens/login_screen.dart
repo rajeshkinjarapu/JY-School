@@ -267,7 +267,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
               child: SingleChildScrollView(
                 physics: const ClampingScrollPhysics(),
                 child: ConstrainedBox(
-                  constraints: BoxConstraints(minHeight: size.height - MediaQuery.of(context).padding.top),
+                  constraints: BoxConstraints(minHeight: size.height - MediaQuery.of(context).padding.vertical),
                   child: IntrinsicHeight(
                     child: Column(children: [
                       const Spacer(),

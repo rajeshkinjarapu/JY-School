@@ -39,41 +39,47 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
   Widget build(BuildContext context) {
     final bool hasImage = widget.imagePath != null && widget.imagePath!.isNotEmpty;
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC), // Light professional background
-      body: CustomScrollView(
-        slivers: [
-          if (hasImage)
-            _buildImageAppBar(context)
-          else
-            _buildSimpleAppBar(context),
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (!hasImage) ...[
-                    _buildTitleSectionNoImage(),
+    return WillPopScope(
+      onWillPop: () async {
+        Navigator.pop(context, _isRead);
+        return false;
+      },
+      child: Scaffold(
+        backgroundColor: const Color(0xFFF8FAFC), // Light professional background
+        body: CustomScrollView(
+          slivers: [
+            if (hasImage)
+              _buildImageAppBar(context)
+            else
+              _buildSimpleAppBar(context),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (!hasImage) ...[
+                      _buildTitleSectionNoImage(),
+                      const SizedBox(height: 24),
+                    ],
+                    _buildHeaderInfo(),
                     const SizedBox(height: 24),
+                    _buildMessageContent(),
+                    const SizedBox(height: 40),
                   ],
-                  _buildHeaderInfo(),
-                  const SizedBox(height: 24),
-                  _buildMessageContent(),
-                  const SizedBox(height: 40),
-                ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
+        bottomNavigationBar: _buildBottomActionArea(),
       ),
-      bottomNavigationBar: _buildBottomActionArea(),
     );
   }
 
   Widget _buildBottomActionArea() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+      padding: EdgeInsets.fromLTRB(24, 20, 24, 20 + MediaQuery.of(context).padding.bottom),
       decoration: BoxDecoration(
         color: Colors.white,
         boxShadow: [
@@ -85,71 +91,75 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
         ],
       ),
       child: SafeArea(
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeInOut,
-          child: InkWell(
-            onTap: () async {
-              if (!_isRead) {
-                if (widget.id != null) {
-                  try {
-                    await ApiService.markAnnouncementAsRead(widget.id!);
-                  } catch (e) {
-                    debugPrint('Error marking as read: $e');
+        bottom: true,
+        child: Padding(
+          padding: const EdgeInsets.only(bottom: 8.0), // Extra space to lift it up
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+            child: InkWell(
+              onTap: () async {
+                if (!_isRead) {
+                  if (widget.id != null) {
+                    try {
+                      await ApiService.markAnnouncementAsRead(widget.id!);
+                    } catch (e) {
+                      debugPrint('Error marking as read: $e');
+                    }
                   }
-                }
-                setState(() {
-                  _isRead = true;
-                });
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Marked as read! Admin has been notified.', style: GoogleFonts.outfit()),
-                    backgroundColor: const Color(0xFF10B981),
-                    behavior: SnackBarBehavior.floating,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                  ),
-                );
-              }
-            },
-            borderRadius: BorderRadius.circular(16),
-            child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: _isRead 
-                      ? [const Color(0xFF10B981), const Color(0xFF059669)] // Green if read
-                      : [const Color(0xFFF59E0B), const Color(0xFFD97706)], // Amber if not read
-                  begin: Alignment.centerLeft,
-                  end: Alignment.centerRight,
-                ),
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: (_isRead ? const Color(0xFF10B981) : const Color(0xFFF59E0B)).withOpacity(0.4),
-                    blurRadius: 12,
-                    offset: const Offset(0, 6),
-                  ),
-                ],
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    _isRead ? Icons.done_all_rounded : Icons.check_circle_outline_rounded,
-                    color: Colors.white,
-                    size: 24,
-                  ),
-                  const SizedBox(width: 12),
-                  Text(
-                    _isRead ? 'I have read this message' : 'Mark as Read',
-                    style: GoogleFonts.outfit(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 0.5,
+                  setState(() {
+                    _isRead = true;
+                  });
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Marked as read! Admin has been notified.', style: GoogleFonts.outfit()),
+                      backgroundColor: const Color(0xFF10B981),
+                      behavior: SnackBarBehavior.floating,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                     ),
+                  );
+                }
+              },
+              borderRadius: BorderRadius.circular(16),
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: _isRead 
+                        ? [const Color(0xFF10B981), const Color(0xFF059669)] // Green if read
+                        : [const Color(0xFFF59E0B), const Color(0xFFD97706)], // Amber if not read
+                    begin: Alignment.centerLeft,
+                    end: Alignment.centerRight,
                   ),
-                ],
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: (_isRead ? const Color(0xFF10B981) : const Color(0xFFF59E0B)).withOpacity(0.4),
+                      blurRadius: 12,
+                      offset: const Offset(0, 6),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      _isRead ? Icons.done_all_rounded : Icons.check_circle_outline_rounded,
+                      color: Colors.white,
+                      size: 24,
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      _isRead ? 'I have read this message' : 'Mark as Read',
+                      style: GoogleFonts.outfit(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -163,26 +173,31 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
       expandedHeight: 0,
       pinned: true,
       floating: true,
-      backgroundColor: const Color(0xFFF8FAFC),
       elevation: 0,
+      flexibleSpace: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFF00114F), Color(0xFF000A30)],
+            begin: Alignment.centerLeft,
+            end: Alignment.centerRight,
+          ),
+        ),
+      ),
       leading: IconButton(
         icon: Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: Colors.white.withOpacity(0.15), // Semi-transparent white
             shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 8, offset: const Offset(0, 2))
-            ],
           ),
-          child: const Icon(Icons.arrow_back_ios_new_rounded, color: Color(0xFF1E293B), size: 20),
+          child: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 20),
         ),
-        onPressed: () => Navigator.pop(context),
+        onPressed: () => Navigator.pop(context, _isRead),
       ),
       centerTitle: true,
       title: Text(
         'Announcement',
-        style: GoogleFonts.outfit(color: const Color(0xFF1E293B), fontSize: 18, fontWeight: FontWeight.bold),
+        style: GoogleFonts.outfit(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
       ),
     );
   }
@@ -202,7 +217,7 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
           ),
           child: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 20),
         ),
-        onPressed: () => Navigator.pop(context),
+        onPressed: () => Navigator.pop(context, _isRead),
       ),
       flexibleSpace: FlexibleSpaceBar(
         background: Stack(
@@ -280,45 +295,57 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
   }
 
   Widget _buildTitleSectionNoImage() {
-    return Row(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(colors: [Color(0xFFFFFBEB), Color(0xFFFEF3C7)]), // Light Amber
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: const Color(0xFFFDE68A), width: 1.5),
-            boxShadow: [
-              BoxShadow(color: const Color(0xFFF59E0B).withOpacity(0.15), blurRadius: 10, offset: const Offset(0, 4)),
-            ],
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 20, offset: const Offset(0, 10)),
+        ],
+        border: Border.all(color: const Color(0xFFFDE68A), width: 1.5),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(colors: [Color(0xFFFFFBEB), Color(0xFFFEF3C7)]), // Light Amber
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: const Color(0xFFFDE68A), width: 1.5),
+              boxShadow: [
+                BoxShadow(color: const Color(0xFFF59E0B).withOpacity(0.15), blurRadius: 10, offset: const Offset(0, 4)),
+              ],
+            ),
+            child: const Icon(Icons.campaign_rounded, color: Color(0xFFD97706), size: 28),
           ),
-          child: const Icon(Icons.campaign_rounded, color: Color(0xFFD97706), size: 28),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(color: const Color(0xFFFBBF24).withOpacity(0.2), borderRadius: BorderRadius.circular(6)),
-                child: Text('OFFICIAL ANNOUNCEMENT', style: GoogleFonts.poppins(color: const Color(0xFFD97706), fontSize: 9, fontWeight: FontWeight.w800, letterSpacing: 0.5)),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                widget.title,
-                style: GoogleFonts.outfit(
-                  color: const Color(0xFF1E293B),
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  height: 1.2,
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(color: const Color(0xFFFBBF24).withOpacity(0.2), borderRadius: BorderRadius.circular(6)),
+                  child: Text('OFFICIAL ANNOUNCEMENT', style: GoogleFonts.poppins(color: const Color(0xFFD97706), fontSize: 9, fontWeight: FontWeight.w800, letterSpacing: 0.5)),
                 ),
-              ),
-            ],
+                const SizedBox(height: 8),
+                Text(
+                  widget.title,
+                  style: GoogleFonts.outfit(
+                    color: const Color(0xFF1E293B),
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    height: 1.3,
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -373,9 +400,9 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 15, offset: const Offset(0, 8)),
+          BoxShadow(color: const Color(0xFF3B82F6).withOpacity(0.06), blurRadius: 24, offset: const Offset(0, 12)),
         ],
-        border: Border.all(color: Colors.white, width: 2),
+        border: Border.all(color: const Color(0xFFE2E8F0), width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

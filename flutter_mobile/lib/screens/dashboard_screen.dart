@@ -34,6 +34,8 @@ import 'question_papers_screen.dart';
 import 'settings_screen.dart';
 import 'fee_installment_report_screen.dart';
 import 'announcements_screen.dart';
+import 'admin_payment_settings_screen.dart';
+import 'admin_app_installs_screen.dart';
 import 'announcement_details_screen.dart';
 import 'announcement_detail_screen.dart';
 import 'leave_dashboard_screen.dart';
@@ -1166,7 +1168,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     return GestureDetector(
       onTap: () async {
-        await Navigator.push(
+        final result = await Navigator.push(
           context,
           MaterialPageRoute(
             builder: (context) => AnnouncementDetailScreen(
@@ -1180,8 +1182,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
           ),
         );
-        // Refresh dashboard on return to update read status
-        _loadDashboardData();
+        if (result == true) {
+          setState(() {
+            final idx = _recentAnnouncements.indexWhere((a) => a['id'] == annId);
+            if (idx != -1) {
+              _recentAnnouncements[idx]['hasRead'] = true;
+            }
+          });
+        }
       },
       child: Container(
         margin: const EdgeInsets.fromLTRB(11, 8, 11, 0),
@@ -1327,13 +1335,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
               _buildGridItem(context, 'Students', Icons.groups_rounded, const Color(0xFF4285F4), () => Navigator.push(context, MaterialPageRoute(builder: (_) => const StudentsScreen()))),
               _buildGridItem(context, 'Teachers', Icons.person_pin_rounded, const Color(0xFFEA4335), () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TeachersScreen()))),
               _buildGridItem(context, 'Classes', Icons.school_rounded, const Color(0xFF34A853), () => Navigator.push(context, MaterialPageRoute(builder: (_) => ClassesScreen()))),
-              _buildGridItem(context, 'Fees', Icons.account_balance_wallet_rounded, const Color(0xFFFBBC05), () => Navigator.push(context, MaterialPageRoute(builder: (_) => const StudentFeeSearchScreen()))),
+              _buildGridItem(context, 'Collect Fee', Icons.account_balance_wallet_rounded, const Color(0xFFFBBC05), () => Navigator.push(context, MaterialPageRoute(builder: (_) => const StudentFeeSearchScreen()))),
               _buildGridItem(context, 'Results', Icons.fact_check_rounded, const Color(0xFF8E24AA), () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ResultsScreen()))),
               _buildGridItem(context, 'Progress Card', Icons.emoji_events_rounded, const Color(0xFFF06292), () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ProgressCardScreen()))),
               _buildGridItem(context, 'Installments', Icons.receipt_long_rounded, const Color(0xFF00ACC1), () => Navigator.push(context, MaterialPageRoute(builder: (_) => const FeeInstallmentReportScreen()))),
               _buildGridItem(context, 'Transactions', Icons.sync_alt_rounded, const Color(0xFFFF7043), () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TransactionsScreen()))),
               _buildGridItem(context, 'Subjects', Icons.menu_book_rounded, const Color(0xFF7CB342), () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SubjectsScreen()))),
               _buildGridItem(context, 'Home Work', Icons.edit_document, const Color(0xFFD79F17), () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TeacherHomeworkScreen()))),
+              _buildGridItem(context, 'App Installs', Icons.install_mobile_rounded, const Color(0xFF673AB7), () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminAppInstallsScreen()))),
             ],
           ),
         ),
@@ -2648,7 +2657,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 children: [
                   Text(hw['title'] ?? '', style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.bold, color: const Color(0xFF1E293B))),
                   const SizedBox(height: 4),
-                  Text('${hw['subject']?['name'] ?? ''} | Due: ${hw['dueDate']?.toString().substring(0,10) ?? ''}', style: GoogleFonts.poppins(fontSize: 11, color: const Color(0xFF64748B))),
+                  Text('${hw['subject']?['name'] ?? ''} | Submit by: ${hw['dueDate']?.toString().substring(0,10) ?? ''}', style: GoogleFonts.poppins(fontSize: 11, color: const Color(0xFF64748B))),
                 ],
               ),
             ),
@@ -2726,12 +2735,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
         mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // Circular image tile with colourful border
+          // Square image tile with colourful border
           Container(
             width: 68,
             height: 68,
             decoration: BoxDecoration(
-              shape: BoxShape.circle,
+              borderRadius: BorderRadius.circular(16),
               border: Border.all(color: borderColor, width: 3),
               boxShadow: [
                 BoxShadow(
@@ -2741,7 +2750,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
               ],
             ),
-            child: ClipOval(
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(13),
               child: Image.asset(
                 imagePath,
                 fit: BoxFit.cover,
@@ -2783,13 +2793,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
         mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // Circular icon tile with colourful border
+          // Square icon tile with colourful border
           Container(
             width: 68,
             height: 68,
             decoration: BoxDecoration(
               color: Colors.white,
-              shape: BoxShape.circle,
+              borderRadius: BorderRadius.circular(16),
               border: Border.all(color: borderColor, width: 3),
               boxShadow: [
                 BoxShadow(
@@ -2799,7 +2809,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
               ],
             ),
-            child: ClipOval(
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(13),
               child: Center(
                 child: Icon(
                   icon,

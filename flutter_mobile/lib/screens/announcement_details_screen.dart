@@ -215,44 +215,41 @@ class _AnnouncementDetailsScreenState extends State<AnnouncementDetailsScreen> {
           ],
         ),
       ),
-      bottomSheet: Container(
+      bottomNavigationBar: Container(
         color: Colors.white,
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-        child: SafeArea(
-          bottom: true,
-          child: Row(
-            children: [
-              if (_isAdmin())
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: _showReadersList,
-                    icon: const Icon(Icons.analytics_rounded, color: Colors.white),
-                    label: Text('Read Stats', style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF10B981),
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                    ),
+        padding: EdgeInsets.fromLTRB(20, 16, 20, MediaQuery.of(context).padding.bottom > 0 ? MediaQuery.of(context).padding.bottom + 16 : 24),
+        child: Row(
+          children: [
+            if (_isAdmin())
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: _showReadersList,
+                  icon: const Icon(Icons.analytics_rounded, color: Colors.white),
+                  label: Text('Read Stats', style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF10B981),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                   ),
                 ),
-              if (_isAdmin() && !_hasRead) const SizedBox(width: 12),
-              if (!_hasRead)
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: _isLoading ? null : _markAsRead,
-                    icon: _isLoading ? const SizedBox.shrink() : const Icon(Icons.check_circle_outline, color: Colors.white),
-                    label: _isLoading 
-                        ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                        : Text('READ', style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16, letterSpacing: 1)),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF6366F1),
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                    ),
+              ),
+            if (_isAdmin() && !_hasRead) const SizedBox(width: 12),
+            if (!_hasRead)
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: _isLoading ? null : _markAsRead,
+                  icon: _isLoading ? const SizedBox.shrink() : const Icon(Icons.check_circle_outline, color: Colors.white),
+                  label: _isLoading 
+                      ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                      : Text('READ', style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16, letterSpacing: 1)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF6366F1),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                   ),
                 ),
-            ],
-          ),
+              ),
+          ],
         ),
       ),
     );

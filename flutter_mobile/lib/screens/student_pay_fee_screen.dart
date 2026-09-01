@@ -150,8 +150,9 @@ class _StudentPayFeeScreenState extends State<StudentPayFeeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    String? qrCodeUrl = _settings['qrCodeUrl'];
-    String? upiId = _settings['upiId'];
+    final Map<String, dynamic> settingsData = _settings['data'] ?? _settings;
+    String? qrCodeUrl = settingsData['qrCodeUrl'];
+    String? upiId = settingsData['upiId'];
 
     return Scaffold(
       backgroundColor: Colors.white,

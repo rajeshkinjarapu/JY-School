@@ -16,13 +16,7 @@ class StudentExamsDashboardScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: const Color(0xFFF1F5F9),
       appBar: AppBar(
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Exams & Results', style: GoogleFonts.outfit(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
-            Text('Academic Performance', style: GoogleFonts.poppins(color: Colors.white70, fontSize: 12)),
-          ],
-        ),
+        title: Text('Exams & Results', style: GoogleFonts.outfit(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
         iconTheme: const IconThemeData(color: Colors.white),
         flexibleSpace: Container(
           decoration: const BoxDecoration(
@@ -47,7 +41,7 @@ class StudentExamsDashboardScreen extends StatelessWidget {
               physics: const NeverScrollableScrollPhysics(),
               crossAxisSpacing: 16,
               mainAxisSpacing: 16,
-              childAspectRatio: 0.95,
+              childAspectRatio: 1.15,
               children: [
                 _buildModuleCard(
                   context: context,
@@ -80,6 +74,38 @@ class StudentExamsDashboardScreen extends StatelessWidget {
                   icon: Icons.insert_chart_rounded,
                   colors: [const Color(0xFFDB2777), const Color(0xFFEC4899)],
                   onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => StudentProgressCardScreen(user: user))),
+                ),
+                _buildModuleCard(
+                  context: context,
+                  title: 'Exam Schedule',
+                  subtitle: 'Timetable',
+                  icon: Icons.event_note_rounded,
+                  colors: [const Color(0xFF0284C7), const Color(0xFF38BDF8)],
+                  onTap: () {},
+                ),
+                _buildModuleCard(
+                  context: context,
+                  title: 'Academic Calendar',
+                  subtitle: 'Yearly Plan',
+                  icon: Icons.calendar_month_rounded,
+                  colors: [const Color(0xFF06B6D4), const Color(0xFF22D3EE)],
+                  onTap: () {},
+                ),
+                _buildModuleCard(
+                  context: context,
+                  title: 'Quiz',
+                  subtitle: 'Daily Tests',
+                  icon: Icons.quiz_rounded,
+                  colors: [const Color(0xFF0EA5E9), const Color(0xFF38BDF8)],
+                  onTap: () {},
+                ),
+                _buildModuleCard(
+                  context: context,
+                  title: 'Online Exams',
+                  subtitle: 'Mock Tests',
+                  icon: Icons.laptop_chromebook_rounded,
+                  colors: [const Color(0xFF8B5CF6), const Color(0xFFA78BFA)],
+                  onTap: () {},
                 ),
               ],
             ),
@@ -118,16 +144,16 @@ class StudentExamsDashboardScreen extends StatelessWidget {
             Positioned(
               right: -15,
               bottom: -15,
-              child: Icon(icon, size: 90, color: colors.first.withOpacity(0.04)),
+              child: Icon(icon, size: 80, color: colors.first.withOpacity(0.04)),
             ),
             Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(12),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Container(
-                    padding: const EdgeInsets.all(12),
+                    padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(14),
@@ -140,19 +166,19 @@ class StudentExamsDashboardScreen extends StatelessWidget {
                         ),
                       ],
                     ),
-                    child: Icon(icon, color: colors.first, size: 28),
+                    child: Icon(icon, color: colors.first, size: 24),
                   ),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         title, 
-                        style: GoogleFonts.outfit(color: const Color(0xFF1E293B), fontSize: 16, fontWeight: FontWeight.bold, height: 1.2),
+                        style: GoogleFonts.outfit(color: const Color(0xFF1E293B), fontSize: 15, fontWeight: FontWeight.bold, height: 1.2),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         subtitle, 
-                        style: GoogleFonts.poppins(color: const Color(0xFF64748B), fontSize: 11, fontWeight: FontWeight.w500),
+                        style: GoogleFonts.poppins(color: const Color(0xFF64748B), fontSize: 10, fontWeight: FontWeight.w500),
                       ),
                     ],
                   ),
