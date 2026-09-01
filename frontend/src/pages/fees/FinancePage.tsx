@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import api from '../../api/axios';
 import { useAuth } from '../../hooks/useAuth';
 import { PageHeader } from '../../components/UI/PageHeader';
@@ -25,6 +25,7 @@ export const FinancePage: React.FC = () => {
 
   const [searchParams, setSearchParams] = useSearchParams();
   const activeTab = searchParams.get('tab') || 'home';
+  const navigate = useNavigate();
 
   const [baseLoading, setBaseLoading] = useState(false);
   const [heavyLoading, setHeavyLoading] = useState(false);
@@ -536,6 +537,7 @@ export const FinancePage: React.FC = () => {
   };
 
   const FINANCE_MENU = [
+    { key: 'collect-payment', label: 'Collect Fee', icon: Wallet, gradient: 'from-green-500 to-emerald-600', desc: 'Search & Pay', isRoute: true },
     { key: 'payment-method', label: 'Payment Method', icon: CreditCard, gradient: 'from-indigo-500 to-blue-600', desc: 'Cash, UPI, Bank transfers' },
     { key: 'fee-group', label: 'Fee Group', icon: Layers, gradient: 'from-emerald-500 to-teal-600', desc: 'Academic, Transport, Hostel' },
     { key: 'fee-head', label: 'Fee Head', icon: DollarSign, gradient: 'from-amber-500 to-orange-500', desc: 'Tuition, Admission, Books' },
@@ -605,7 +607,13 @@ export const FinancePage: React.FC = () => {
               return (
                 <button
                   key={item.key}
-                  onClick={() => setTab(item.key)}
+                  onClick={() => {
+                    if ((item as any).isRoute) {
+                      navigate(`/${item.key}`);
+                    } else {
+                      setTab(item.key);
+                    }
+                  }}
                   className="group relative overflow-hidden rounded-2xl p-5 text-left bg-white border border-gray-100 shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5 cursor-pointer"
                   style={{ animationDelay: `${idx * 50}ms` }}
                 >
@@ -645,7 +653,13 @@ export const FinancePage: React.FC = () => {
           return (
             <button
               key={tab.key}
-              onClick={() => setTab(tab.key)}
+              onClick={() => {
+                if ((tab as any).isRoute) {
+                  navigate(`/${tab.key}`);
+                } else {
+                  setTab(tab.key);
+                }
+              }}
               className={`flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold transition-all text-left cursor-pointer ${
                 isActive
                   ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/25 scale-[1.01]'
