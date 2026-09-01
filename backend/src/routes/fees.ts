@@ -7,7 +7,8 @@ import {
   bulkImportFees, bulkImportPayments, getPendingBalances,
   getFeeGroups, createFeeGroup, deleteFeeGroup,
   getFeeHeads, createFeeHead, deleteFeeHead,
-  getFeeConcessions, createFeeConcession, deleteFeeConcession
+  getFeeConcessions, createFeeConcession, deleteFeeConcession,
+  studentPayFee, getPendingApprovals, approveFeePayment
 } from '../controllers/fees.controller';
 import { upload } from '../utils/upload';
 
@@ -71,8 +72,14 @@ router.get('/fix-1970-dates', async (req, res) => {
 
 router.post('/discounts', authorize('SUPER_ADMIN', 'ADMIN', 'ACCOUNTANT', 'TEACHER'), applyFeeDiscount);
 
-// Student fee status
+// Student fee status & payments
 router.get('/student/:studentId', getStudentFeeStatus);
+router.post('/student/pay', authorize('STUDENT', 'SUPER_ADMIN', 'ADMIN'), upload.single('screenshot'), studentPayFee);
+
+// Admin fee approvals
+router.get('/admin/pending', authorize('SUPER_ADMIN', 'ADMIN', 'ACCOUNTANT'), getPendingApprovals);
+router.put('/admin/approve/:paymentId', authorize('SUPER_ADMIN', 'ADMIN', 'ACCOUNTANT'), approveFeePayment);
+
 router.get('/overdue', authorize('SUPER_ADMIN', 'ADMIN', 'ACCOUNTANT', 'TEACHER'), getOverdue);
 router.get('/pending-balances', authorize('SUPER_ADMIN', 'ADMIN', 'ACCOUNTANT'), getPendingBalances);
 

@@ -356,11 +356,13 @@ model FeePayment {
   amountPaid       Float
   paymentDate      DateTime      @default(now())
   method           String        @default("CASH") // CASH, ONLINE, BANK_TRANSFER, CHEQUE, UPI
-  status           String        @default("PAID") // PAID, PENDING, OVERDUE, PARTIAL
+  status           String        @default("PAID") // PAID, PENDING, OVERDUE, PARTIAL, REJECTED
   receiptNo        String        @unique @default(uuid())
   utrNumber        String?
   receiptUrl       String?
+  screenshotUrl    String?
   remarks          String?
+  verifiedBy       String?
   createdAt        DateTime      @default(now())
 
   @@index([studentId])

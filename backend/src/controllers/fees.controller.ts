@@ -949,3 +949,100 @@ export const getPendingBalances = async (req: AuthRequest, res: Response): Promi
 
   paginatedResponse(res, paginatedData, total, page, limit, 'Pending balances fetched');
 };
+
+// ============================================================================
+// STUDENT FEE PAYMENT & ADMIN VERIFICATION
+// ============================================================================
+
+export const studentPayFee = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const { studentId, feeStructureId, amountPaid, method, utrNumber } = req.body;
+    
+    if (!studentId || !feeStructureId || !amountPaid) {
+      return next(createError('Missing required fields', 400));
+    }
+
+    let screenshotUrl = null;
+    if (req.file) {
+      // Assuming upload middleware places file in req.file
+      screenshotUrl = `/uploads/${req.file.filename}`;
+    }
+
+    const payment = await prisma.feePayment.create({
+      data: {
+        studentId,
+        feeStructureId,
+        amountPaid: parseFloat(amountPaid),
+        method: method || 'ONLINE',
+        utrNumber,
+        screenshotUrl,
+        status: 'PENDING',
+      },
+    });
+
+    successResponse(res, payment, 'Payment submitted for admin approval');
+  } catch (error) {
+    next(createError('Error submitting fee payment', 500));
+  }
+};
+
+export const getPendingApprovals = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+    const skip = (page - 1) * limit;
+
+    const [total, pending] = await Promise.all([
+      prisma.feePayment.count({ where: { status: 'PENDING' } }),
+      prisma.feePayment.findMany({
+        where: { status: 'PENDING' },
+        include: {
+          student: { select: { rollNo: true, user: { select: { name: true } }, class: { select: { name: true, section: true } } } },
+          feeStructure: { select: { name: true, amount: true } }
+        },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+      })
+    ]);
+
+    paginatedResponse(res, pending, total, page, limit, 'Pending approvals fetched');
+  } catch (error) {
+    next(createError('Error fetching pending approvals', 500));
+  }
+};
+
+export const approveFeePayment = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const { paymentId } = req.params;
+    const { status, remarks } = req.body; // status can be PAID or REJECTED
+
+    if (!['PAID', 'REJECTED'].includes(status)) {
+      return next(createError('Invalid status. Must be PAID or REJECTED', 400));
+    }
+
+    const payment = await prisma.feePayment.update({
+      where: { id: paymentId },
+      data: {
+        status,
+        remarks,
+        verifiedBy: req.user?.id,
+      },
+      include: {
+        student: { select: { user: { select: { name: true, phone: true } } } }
+      }
+    });
+
+    if (status === 'PAID') {
+      await clearDashboardCache();
+      // Optional: send SMS to student
+      // if (payment.student?.user?.phone) {
+      //   await sendSMS(payment.student.user.phone, `Your fee payment of Rs.${payment.amountPaid} has been approved.`);
+      // }
+    }
+
+    successResponse(res, payment, `Payment ${status.toLowerCase()} successfully`);
+  } catch (error) {
+    next(createError('Error updating payment status', 500));
+  }
+};
