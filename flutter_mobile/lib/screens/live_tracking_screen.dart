@@ -3,8 +3,9 @@ import 'package:google_fonts/google_fonts.dart';
 
 class LiveTrackingScreen extends StatefulWidget {
   final Map<String, dynamic> routeData;
+  final bool isEmbedded;
 
-  const LiveTrackingScreen({super.key, required this.routeData});
+  const LiveTrackingScreen({super.key, required this.routeData, this.isEmbedded = false});
 
   @override
   State<LiveTrackingScreen> createState() => _LiveTrackingScreenState();
@@ -34,7 +35,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> with SingleTick
 
     return Scaffold(
       backgroundColor: const Color(0xFFF1F5F9),
-      appBar: AppBar(
+      appBar: widget.isEmbedded ? null : AppBar(
         title: Text('Live Tracking', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 18)),
         backgroundColor: const Color(0xFF2563EB),
         elevation: 0,
@@ -93,75 +94,6 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> with SingleTick
               ),
             ),
           ),
-
-          // Bottom Info Sheet
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: Container(
-              padding: const EdgeInsets.all(24),
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.only(topLeft: Radius.circular(30), topRight: Radius.circular(30)),
-                boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 20, offset: Offset(0, -5))],
-              ),
-              child: SafeArea(
-                bottom: true,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(width: 40, height: 4, decoration: BoxDecoration(color: const Color(0xFFE2E8F0), borderRadius: BorderRadius.circular(2))),
-                    const SizedBox(height: 20),
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(color: const Color(0xFFEFF6FF), borderRadius: BorderRadius.circular(16)),
-                          child: const Icon(Icons.route_rounded, color: Color(0xFF3B82F6), size: 30),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(routeName, style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.bold, color: const Color(0xFF1E293B))),
-                              Text('ETA: 15 Mins to Stop', style: GoogleFonts.poppins(fontSize: 14, color: const Color(0xFF10B981), fontWeight: FontWeight.w600)),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 24),
-                    Row(
-                      children: [
-                        const CircleAvatar(
-                          radius: 24,
-                          backgroundImage: AssetImage('assets/images/driver_placeholder.png'),
-                          backgroundColor: Color(0xFFCBD5E1),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('Driver: Ramesh K', style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: const Color(0xFF334155))),
-                              Text('+91 9876543210', style: GoogleFonts.poppins(color: const Color(0xFF64748B), fontSize: 12)),
-                            ],
-                          ),
-                        ),
-                        IconButton(
-                          style: IconButton.styleFrom(backgroundColor: const Color(0xFF10B981).withOpacity(0.1)),
-                          icon: const Icon(Icons.call, color: Color(0xFF10B981)),
-                          onPressed: () {
-                            // Call driver logic
-                          },
-                        )
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          )
         ],
       ),
     );

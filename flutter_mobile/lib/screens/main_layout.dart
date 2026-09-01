@@ -5,7 +5,9 @@ import 'dart:convert';
 
 import 'dashboard_screen.dart';
 import 'examination_dashboard_screen.dart';
+import 'student_exams_dashboard_screen.dart';
 import 'finance_screen.dart';
+import 'student_finance_dashboard_screen.dart';
 import 'transport_screen.dart';
 import 'modules_screen.dart';
 
@@ -20,6 +22,7 @@ class MainLayout extends StatefulWidget {
 class _MainLayoutState extends State<MainLayout> {
   late int _currentIndex;
   String _userRole = '';
+  Map<String, dynamic> _userData = {};
   bool _isLoading = true;
 
   @override
@@ -34,7 +37,8 @@ class _MainLayoutState extends State<MainLayout> {
     setState(() {
       final userStr = prefs.getString('user');
       if (userStr != null) {
-        _userRole = jsonDecode(userStr)['role'] ?? '';
+        _userData = jsonDecode(userStr);
+        _userRole = _userData['role'] ?? '';
       }
       _isLoading = false;
     });
@@ -42,10 +46,12 @@ class _MainLayoutState extends State<MainLayout> {
 
   List<Widget> get _screens {
     final isTeacher = _userRole == 'TEACHER';
+    final isStudent = _userRole == 'STUDENT';
     return [
       const DashboardScreen(),
-      const ExaminationDashboardScreen(),
-      if (!isTeacher) const FinanceScreen(),
+      isStudent ? StudentExamsDashboardScreen(user: _userData) : const ExaminationDashboardScreen(),
+      if (!isTeacher) 
+        isStudent ? StudentFinanceDashboardScreen(user: _userData) : const FinanceScreen(),
       const TransportScreen(),
       const ModulesScreen(),
     ];

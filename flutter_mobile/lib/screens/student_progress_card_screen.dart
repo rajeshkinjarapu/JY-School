@@ -106,8 +106,10 @@ class _StudentProgressCardScreenState extends State<StudentProgressCardScreen> {
                             ],
                             border: Border.all(color: Colors.grey[100]!),
                           ),
-                          child: ListTile(
-                            contentPadding: const EdgeInsets.all(16),
+                          child: Material(
+                            color: Colors.transparent,
+                            child: ListTile(
+                              contentPadding: const EdgeInsets.all(16),
                             leading: Container(
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(color: const Color(0xFFF1F5F9), borderRadius: BorderRadius.circular(12)),
@@ -120,6 +122,7 @@ class _StudentProgressCardScreenState extends State<StudentProgressCardScreen> {
                             ),
                             trailing: const Icon(Icons.arrow_forward_ios_rounded, color: Colors.grey, size: 16),
                             onTap: () => _openProgressCard(exam),
+                          ),
                           ),
                         );
                       },

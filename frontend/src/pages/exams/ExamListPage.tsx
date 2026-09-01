@@ -336,6 +336,7 @@ export const ExamListPage: React.FC = () => {
     }
   };
 
+  const [planClassId, setPlanClassId] = useState('');
   const [planSubjectId, setPlanSubjectId] = useState('');
   const [planDate, setPlanDate] = useState('');
   const [planStartTime, setPlanStartTime] = useState('');
@@ -868,20 +869,36 @@ export const ExamListPage: React.FC = () => {
     fetchQuestions();
   }, [selectedGroupId]);
 
+  // Initialize planClassId when modal opens or exam changes
+  useEffect(() => {
+    if (showPlanModal) {
+      const activeExam = exams.find(e => e.id === selectedExamId);
+      if (activeExam?.classes?.length > 0) {
+        setPlanClassId(activeExam.classes[0].id);
+      } else {
+        setPlanClassId('');
+      }
+    }
+  }, [selectedExamId, showPlanModal, exams]);
+
   // Load subjects for exam plan form
   useEffect(() => {
-    const activeExam = exams.find(e => e.id === selectedExamId);
-    if (activeExam?.classId) {
-      api.get(`/api/classes/${activeExam.classId}/subjects`)
+    if (planClassId) {
+      api.get(`/api/classes/${planClassId}/subjects`)
         .then((res: any) => {
           setSubjects(res.data || []);
           if (res.data?.length > 0) {
             setPlanSubjectId(res.data[0].id);
+          } else {
+            setPlanSubjectId('');
           }
         })
         .catch(() => {});
+    } else {
+      setSubjects([]);
+      setPlanSubjectId('');
     }
-  }, [selectedExamId, exams]);
+  }, [planClassId]);
 
   // Load subjects for online exam form
   useEffect(() => {
@@ -1090,6 +1107,14 @@ export const ExamListPage: React.FC = () => {
                   <ExamCard label="Settings" sub="Configurations" icon={Settings} gradient="linear-gradient(135deg, #3f3f46, #27272a)" glow="rgba(63,63,70,0.4)" onClick={() => setActiveTab('settings')} />
                 </>
               )}
+              {isStudent && (
+                <>
+                  <ExamCard label="Admit Card" sub="Hall tickets" icon={FileText} gradient="linear-gradient(135deg, #f59e0b, #ea580c)" glow="rgba(245,158,11,0.4)" onClick={() => setActiveTab('admit-card')} />
+                  <ExamCard label="Question Papers" sub="Study Material" icon={Layers} gradient="linear-gradient(135deg, #475569, #334155)" glow="rgba(71,85,105,0.4)" onClick={() => setActiveTab('question-papers')} />
+                  <ExamCard label="Results" sub="Notice Board" icon={Award} gradient="linear-gradient(135deg, #0ea5e9, #0284c7)" glow="rgba(14,165,233,0.4)" onClick={() => setActiveTab('results')} />
+                  <ExamCard label="Progress Card" sub="Report Cards" icon={FileSpreadsheet} gradient="linear-gradient(135deg, #f43f5e, #e11d48)" glow="rgba(244,63,94,0.4)" onClick={() => setActiveTab('jee-progress-card')} />
+                </>
+              )}
             </div>
 
           </div>
@@ -1166,6 +1191,14 @@ export const ExamListPage: React.FC = () => {
                   <button onClick={() => setShowPlanModal(false)} className="text-gray-400 hover:text-black dark:hover:text-white"><X className="w-5 h-5" /></button>
                 </div>
                 <form onSubmit={handleCreatePlan} className="space-y-4">
+                  <div>
+                    <label className="label">Select Class</label>
+                    <select required value={planClassId} onChange={e => setPlanClassId(e.target.value)} className="input">
+                      {exams.find(e => e.id === selectedExamId)?.classes?.map((c: any) => (
+                        <option key={c.id} value={c.id}>{c.name} {c.section ? `- ${c.section}` : ''}</option>
+                      ))}
+                    </select>
+                  </div>
                   <div>
                     <label className="label">Select Subject</label>
                     <select required value={planSubjectId} onChange={e => setPlanSubjectId(e.target.value)} className="input">

@@ -2,6 +2,8 @@
 
 ## Current Focus (As of 2026-09-01)
 - **Phase 3:** Mobile App Payment Integration (Completed)
+- **Finance Module (Web):** Added "Collect Fee" shortcut card in Finance Dashboard.
+- **Student Dashboards (Flutter & Web):** Designed and isolated the Examination and Finance dashboards for Student logins, ensuring clean UI and restricted access to relevant features.
 
 ## Accomplished Features
 ### 1. Phase 1 & 2 (Web & Backend)
@@ -9,16 +11,18 @@
 - Implemented backend settings route for dynamically storing `bankName`, `bankAccountNumber`, `bankIfsc`, `upiId`, and `qrCodeUrl` (`SettingsController`).
 - Configured file upload (multer) in the backend to store QR Code images.
 - Implemented Admin Web App Payment Settings Panel.
+- **Finance Dashboard:** Added a dynamic "Collect Fee" card that routes directly to `/collect-payment` using `react-router-dom`'s `useNavigate`.
 
 ### 2. Phase 3 (Flutter Mobile App)
 - **API Services:** Connected the Flutter mobile app to the real backend (`http://66.116.252.191:19998`).
   - Added methods for Fee Payment, Fetching Settings (QR Code), Pending Approvals, and Processing Approvals in `api_service.dart`. No dummy data is used.
 - **Student Flow Screens:**
   - `StudentDashboardScreen`: Added "Fees" quick access button.
+  - `StudentExamsDashboardScreen`: Created a dedicated, restricted exams dashboard with a premium white-card UI showing only Admit Card, Question Papers, Results, and Progress Card.
+  - `StudentFinanceDashboardScreen`: Created a dedicated finance dashboard with premium UI featuring Pay Fees, Fee Receipts, Fee Structure, and Transactions, along with a support section.
   - `StudentFeeOverviewScreen`: Fetches live Total/Paid/Due stats with a dynamic Circular Chart.
-  - `StudentPayFeeScreen`: Retrieves the Admin's configured Bank Details and UPI QR Code from the database and displays it to the student.
-  - `StudentPaymentSubmissionScreen`: Collects the Paid Amount, UTR (Reference ID), and Payment Screenshot (using `image_picker`) to submit to the backend.
-  - `StudentPaymentSuccessScreen`: Interactive animation post-submission.
+  - `StudentPayFeeScreen`: Fully redesigned to include fee structure Dropdown, Amount selection, QR code display, and Image Picker on a single screen. Sends `feeStructureId` to backend.
+  - **Fees & Receipts**: Updated `fees_screen.dart` with a clean white card for dues, and a Receipts tab that pulls real individual `FeePayment` records via new `/fees/payments` route. Shows `PROCESSING` for pending verifications and `SUCCESS` for approved payments.
 - **Admin Flow Screens:**
   - `FinanceScreen` (Admin Dashboard): Added modules for "Pending Approvals" and "Payment Setup".
   - `AdminPendingFeesScreen`: Displays a list of all fee payments waiting for manual approval. Features an interactive image viewer (zoom in on the screenshot) and Approve/Reject controls.
@@ -32,15 +36,15 @@
 - **UI UX Rule:** Safe Area explicitly handled on all Flutter bottom bars. High-quality UI guidelines enforced.
 
 ## Next Action Items for User
-- Stop and restart the Flutter app to apply the new screen routes.
-- Commit the Flutter code:
+- Check the updated "Collect Fee" option on the Web App Finance dashboard.
+- Commit the Flutter and React code:
   ```bash
   cd "c:\Users\SRI\Desktop\JY School\JY-School-main"
   git add .
-  git commit -m "Phase 3: Real Mobile App Fee Setup"
+  git commit -m "Phase 3: Student Finance Flow Redesign"
   git push origin main
   ```
-- Deploy the updated Backend changes (made in Phase 2) to the VPS.
+- Deploy the updated Backend changes (made in Phase 2 & Phase 3) to the VPS.
   ```bash
   ssh root@66.116.252.191
   cd /root/JY-School/backend

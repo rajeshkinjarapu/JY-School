@@ -15,6 +15,7 @@ class FeesScreen extends StatefulWidget {
 class _FeesScreenState extends State<FeesScreen> with SingleTickerProviderStateMixin {
   late TabController _tabController;
   List<dynamic> _feeStatusList = [];
+  List<dynamic> _paymentsList = [];
   bool _isLoading = true;
   String? _errorMessage;
   double _totalDues = 0.0;
@@ -40,10 +41,31 @@ class _FeesScreenState extends State<FeesScreen> with SingleTickerProviderStateM
     });
 
     try {
-      final res = await ApiService.getFeeStatus('');
+      final prefs = await SharedPreferences.getInstance();
+      final userStr = prefs.getString('user');
+      String studentId = '';
+      if (userStr != null) {
+        final user = jsonDecode(userStr);
+        studentId = user['student'] != null ? user['student']['id'] : user['id'];
+      }
+      
+      if (studentId.isEmpty) {
+        setState(() {
+          _errorMessage = 'Student ID not found. Please login again.';
+          _isLoading = false;
+        });
+        return;
+      }
+
+      final res = await ApiService.getFeeStatus(studentId);
+      final payRes = await ApiService.getStudentPayments();
+      
       if (res['success']) {
         setState(() {
           _feeStatusList = res['data'] ?? [];
+          if (payRes['success']) {
+            _paymentsList = payRes['data'] ?? [];
+          }
           _calculateTotals();
           _isLoading = false;
         });
@@ -136,6 +158,30 @@ class _FeesScreenState extends State<FeesScreen> with SingleTickerProviderStateM
                     _buildReceiptsTab(),
                   ],
                 ),
+      bottomNavigationBar: _isLoading || _totalDues <= 0
+          ? null
+          : SafeArea(
+              bottom: true,
+              child: Padding(
+                padding: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 40),
+                child: ElevatedButton(
+                  onPressed: () {
+                    final dueFees = _feeStatusList.where((item) => (double.tryParse(item['amountDue']?.toString() ?? '0') ?? 0.0) > 0).toList();
+                    Navigator.pushNamed(context, '/student/fees/pay', arguments: dueFees);
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF6366F1), // Premium Indigo
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    elevation: 4,
+                  ),
+                  child: Text(
+                    'Pay Now',
+                    style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                  ),
+                ),
+              ),
+            ),
     );
   }
 
@@ -249,8 +295,6 @@ class _FeesScreenState extends State<FeesScreen> with SingleTickerProviderStateM
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(name, style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold, color: const Color(0xFF1E293B))),
-                                  const SizedBox(height: 2),
-                                  Text('$term • Due: $dueDateStr', style: GoogleFonts.poppins(fontSize: 12, color: const Color(0xFF64748B))),
                                 ],
                               ),
                             ),
@@ -352,16 +396,17 @@ class _FeesScreenState extends State<FeesScreen> with SingleTickerProviderStateM
     double progress = _totalPaid / total;
 
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF1E293B), Color(0xFF0F172A)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(24),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.grey.withOpacity(0.15)),
         boxShadow: [
-          BoxShadow(color: const Color(0xFF1E293B).withOpacity(0.3), blurRadius: 20, offset: const Offset(0, 10))
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04), 
+            blurRadius: 15, 
+            offset: const Offset(0, 5)
+          )
         ],
       ),
       child: Row(
@@ -371,32 +416,32 @@ class _FeesScreenState extends State<FeesScreen> with SingleTickerProviderStateM
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Total Paid', style: GoogleFonts.poppins(color: const Color(0xFF94A3B8), fontSize: 13, fontWeight: FontWeight.w500)),
-                const SizedBox(height: 4),
-                Text('₹${_totalPaid.toStringAsFixed(0)}', style: GoogleFonts.outfit(color: const Color(0xFF10B981), fontSize: 26, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 20),
-                Text('Pending Balance', style: GoogleFonts.poppins(color: const Color(0xFF94A3B8), fontSize: 13, fontWeight: FontWeight.w500)),
-                const SizedBox(height: 4),
-                Text('₹${_totalDues.toStringAsFixed(0)}', style: GoogleFonts.outfit(color: const Color(0xFFEF4444), fontSize: 26, fontWeight: FontWeight.bold)),
+                Text('Total Paid', style: GoogleFonts.poppins(color: const Color(0xFF64748B), fontSize: 12, fontWeight: FontWeight.w500)),
+                const SizedBox(height: 2),
+                Text('₹${_totalPaid.toStringAsFixed(0)}', style: GoogleFonts.outfit(color: const Color(0xFF1E293B), fontSize: 22, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 16),
+                Text('Pending Balance', style: GoogleFonts.poppins(color: const Color(0xFF64748B), fontSize: 12, fontWeight: FontWeight.w500)),
+                const SizedBox(height: 2),
+                Text('₹${_totalDues.toStringAsFixed(0)}', style: GoogleFonts.outfit(color: const Color(0xFFEF4444), fontSize: 22, fontWeight: FontWeight.bold)),
               ],
             ),
           ),
           SizedBox(
-            width: 100,
-            height: 100,
+            width: 80,
+            height: 80,
             child: Stack(
               fit: StackFit.expand,
               children: [
                 CircularProgressIndicator(
                   value: progress,
-                  strokeWidth: 10,
-                  backgroundColor: Colors.white.withOpacity(0.1),
+                  strokeWidth: 8,
+                  backgroundColor: const Color(0xFFF1F5F9),
                   valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF10B981)),
                 ),
                 Center(
                   child: Text(
                     '${(progress * 100).toStringAsFixed(0)}%',
-                    style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+                    style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold, color: const Color(0xFF1E293B)),
                   ),
                 )
               ],
@@ -408,9 +453,7 @@ class _FeesScreenState extends State<FeesScreen> with SingleTickerProviderStateM
   }
 
   Widget _buildReceiptsTab() {
-    final paidItems = _feeStatusList.where((item) => (double.tryParse(item['amountPaid']?.toString() ?? '0') ?? 0.0) > 0).toList();
-    
-    if (paidItems.isEmpty && !_isLoading) {
+    if (_paymentsList.isEmpty && !_isLoading) {
       return _buildEmptyState('No payment history found', Icons.history_rounded);
     }
 
@@ -419,12 +462,30 @@ class _FeesScreenState extends State<FeesScreen> with SingleTickerProviderStateM
       color: const Color(0xFF6366F1),
       child: ListView.builder(
         padding: const EdgeInsets.all(16),
-        itemCount: paidItems.length,
+        itemCount: _paymentsList.length,
         itemBuilder: (context, index) {
-          final item = paidItems[index];
-          final structure = item['feeStructure'] ?? {};
-          final amountPaid = double.tryParse(item['amountPaid']?.toString() ?? '0') ?? 0.0;
-          final paymentDateStr = item['paymentDate']?.toString().split('T')[0] ?? '';
+          final payment = _paymentsList[index];
+          final structure = payment['feeStructure'] ?? {};
+          final amountPaid = double.tryParse(payment['amountPaid']?.toString() ?? '0') ?? 0.0;
+          
+          String paymentDateStr = payment['paymentDate']?.toString().split('T')[0] ?? '';
+          if (paymentDateStr.startsWith('1970') || paymentDateStr.isEmpty) {
+            paymentDateStr = payment['createdAt']?.toString().split('T')[0] ?? '';
+          }
+          if (paymentDateStr.startsWith('1970') || paymentDateStr.isEmpty) {
+            paymentDateStr = 'N/A';
+          }
+
+          final status = payment['status']?.toString().toUpperCase() ?? 'PENDING';
+
+          Color statusColor;
+          if (status == 'COMPLETED' || status == 'PAID' || status == 'SUCCESS') {
+            statusColor = const Color(0xFF10B981);
+          } else if (status == 'PENDING' || status == 'PROCESSING') {
+            statusColor = const Color(0xFFF59E0B);
+          } else {
+            statusColor = const Color(0xFFEF4444); // REJECTED / FAILED
+          }
 
           return Container(
             margin: const EdgeInsets.only(bottom: 12),
@@ -441,10 +502,10 @@ class _FeesScreenState extends State<FeesScreen> with SingleTickerProviderStateM
               leading: Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF10B981).withOpacity(0.1),
+                  color: statusColor.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(Icons.receipt_long_rounded, color: Color(0xFF10B981), size: 24),
+                child: Icon(Icons.receipt_long_rounded, color: statusColor, size: 24),
               ),
               title: Text(
                 structure['name'] ?? 'Fee Payment',
@@ -464,19 +525,24 @@ class _FeesScreenState extends State<FeesScreen> with SingleTickerProviderStateM
                   Text(
                     '+ ₹${amountPaid.toStringAsFixed(0)}',
                     style: GoogleFonts.outfit(
-                      color: const Color(0xFF10B981),
+                      color: statusColor,
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
                     ),
                   ),
-                  const SizedBox(height: 2),
+                  const SizedBox(height: 4),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                    decoration: BoxDecoration(color: const Color(0xFF10B981).withOpacity(0.1), borderRadius: BorderRadius.circular(4)),
-                    child: Text('SUCCESS', style: GoogleFonts.poppins(fontSize: 9, fontWeight: FontWeight.bold, color: const Color(0xFF10B981))),
+                    decoration: BoxDecoration(color: statusColor.withOpacity(0.1), borderRadius: BorderRadius.circular(4)),
+                    child: Text(status == 'PENDING' ? 'PROCESSING' : status, style: GoogleFonts.poppins(fontSize: 9, fontWeight: FontWeight.bold, color: statusColor)),
                   )
                 ],
               ),
+              onTap: status == 'COMPLETED' || status == 'PAID' || status == 'SUCCESS' 
+                  ? () {
+                      // Optionally show receipt or share here
+                  } 
+                  : null,
             ),
           );
         },

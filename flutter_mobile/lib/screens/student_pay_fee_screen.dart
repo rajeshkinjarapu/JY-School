@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 import '../services/api_service.dart';
 
 class StudentPayFeeScreen extends StatefulWidget {
@@ -11,41 +13,151 @@ class StudentPayFeeScreen extends StatefulWidget {
 
 class _StudentPayFeeScreenState extends State<StudentPayFeeScreen> {
   bool _isLoading = true;
-  double _dueAmount = 0;
+  List<dynamic> _dueFees = [];
+  dynamic _selectedFee;
   Map<String, dynamic> _settings = {};
+
+  final _formKey = GlobalKey<FormState>();
+  final _amountController = TextEditingController();
+  final _utrController = TextEditingController();
+  File? _imageFile;
+  bool _isSubmitting = false;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     final args = ModalRoute.of(context)?.settings.arguments;
-    if (args != null && args is double) {
-      _dueAmount = args;
+    if (args != null && args is List<dynamic>) {
+      _dueFees = args;
+      if (_dueFees.isNotEmpty) {
+        _selectedFee = _dueFees.first;
+        _updateAmountField();
+      }
     }
     _fetchSettings();
+  }
+
+  void _updateAmountField() {
+    if (_selectedFee != null) {
+      double due = double.tryParse(_selectedFee['amountDue']?.toString() ?? '0') ?? 0;
+      _amountController.text = due.toStringAsFixed(0);
+    }
   }
 
   Future<void> _fetchSettings() async {
     try {
       final response = await ApiService.getSettings();
-      if (response != null) {
+      if (response != null && mounted) {
         setState(() {
           _settings = response;
           _isLoading = false;
         });
       }
     } catch (e) {
-      setState(() => _isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Failed to load bank details')));
+      if (mounted) setState(() => _isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Failed to load payment settings')));
     }
+  }
+
+  Future<void> _pickImage() async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery, imageQuality: 70);
+    if (pickedFile != null) {
+      setState(() {
+        _imageFile = File(pickedFile.path);
+      });
+    }
+  }
+
+  Future<void> _submitPayment() async {
+    if (!_formKey.currentState!.validate()) return;
+    if (_selectedFee == null) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please select a fee type')));
+      return;
+    }
+    if (_imageFile == null) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please upload the payment screenshot')));
+      return;
+    }
+
+    setState(() => _isSubmitting = true);
+
+    try {
+      final bytes = await _imageFile!.readAsBytes();
+      final filename = _imageFile!.path.split('/').last;
+
+      String feeStructureId = _selectedFee['feeStructureId']?.toString() ?? '';
+
+      final res = await ApiService.studentPayFeeWithScreenshot(
+        amount: double.parse(_amountController.text),
+        paymentMethod: 'UPI/BANK',
+        referenceNumber: _utrController.text,
+        feeStructureId: feeStructureId,
+        imageBytes: bytes,
+        imageFilename: filename,
+      );
+
+      if (res['success']) {
+        if (mounted) {
+          // Success dialog
+          showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (context) => AlertDialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              title: const Icon(Icons.check_circle_rounded, color: Colors.green, size: 60),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text('Payment Submitted!', style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
+                  const SizedBox(height: 12),
+                  Text('మీ పేమెంట్‌ను అడ్మిన్ వెరిఫై చేస్తారు. ప్రాసెస్ కంప్లీట్ అవ్వగానే రసీదు జనరేట్ అవుతుంది.', 
+                    style: GoogleFonts.poppins(fontSize: 14, color: Colors.grey[700]), textAlign: TextAlign.center),
+                ],
+              ),
+              actions: [
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF6366F1),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                    onPressed: () {
+                      Navigator.pop(context); // close dialog
+                      Navigator.pop(context); // close screen
+                    },
+                    child: const Text('OK', style: TextStyle(color: Colors.white, fontSize: 16)),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+      } else {
+        _showError(res['message'] ?? 'Submission failed');
+      }
+    } catch (e) {
+      _showError('Error: $e');
+    }
+  }
+
+  void _showError(String message) {
+    setState(() => _isSubmitting = false);
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message), backgroundColor: Colors.red));
   }
 
   @override
   Widget build(BuildContext context) {
+    String? qrCodeUrl = _settings['qrCodeUrl'];
+    String? upiId = _settings['upiId'];
+
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: Colors.white,
       appBar: AppBar(
         title: Text('Pay Fee', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white)),
-        backgroundColor: const Color(0xFF4B497B),
+        backgroundColor: const Color(0xFF6366F1),
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.white),
       ),
@@ -53,159 +165,147 @@ class _StudentPayFeeScreenState extends State<StudentPayFeeScreen> {
           ? const Center(child: CircularProgressIndicator())
           : SafeArea(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildAmountHeader(),
-                    const SizedBox(height: 24),
-                    Text('Choose Payment Method', style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 16),
-                    _buildUpiCard(),
-                    const SizedBox(height: 16),
-                    _buildBankTransferCard(),
-                  ],
+                padding: const EdgeInsets.all(24),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Select Fee Type', style: GoogleFonts.poppins(fontSize: 14, color: Colors.grey[600], fontWeight: FontWeight.w600)),
+                      const SizedBox(height: 8),
+                      DropdownButtonFormField<dynamic>(
+                        value: _selectedFee,
+                        isExpanded: true,
+                        decoration: InputDecoration(
+                          filled: true,
+                          fillColor: Colors.grey[50],
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey[300]!)),
+                          enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey[300]!)),
+                        ),
+                        items: _dueFees.map((fee) {
+                          final name = fee['feeStructure']?['name'] ?? 'Unknown Fee';
+                          final amountDue = double.tryParse(fee['amountDue']?.toString() ?? '0') ?? 0;
+                          return DropdownMenuItem(
+                            value: fee,
+                            child: Text('$name (Due: ₹${amountDue.toStringAsFixed(0)})', style: GoogleFonts.poppins(fontSize: 14)),
+                          );
+                        }).toList(),
+                        onChanged: (val) {
+                          setState(() {
+                            _selectedFee = val;
+                            _updateAmountField();
+                          });
+                        },
+                      ),
+                      
+                      const SizedBox(height: 24),
+                      Text('Enter Amount to Pay (₹)', style: GoogleFonts.poppins(fontSize: 14, color: Colors.grey[600], fontWeight: FontWeight.w600)),
+                      const SizedBox(height: 8),
+                      TextFormField(
+                        controller: _amountController,
+                        keyboardType: TextInputType.number,
+                        style: GoogleFonts.outfit(fontSize: 24, fontWeight: FontWeight.bold, color: const Color(0xFF1E293B)),
+                        decoration: InputDecoration(
+                          prefixIcon: const Icon(Icons.currency_rupee_rounded),
+                          filled: true,
+                          fillColor: Colors.grey[50],
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey[300]!)),
+                          enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey[300]!)),
+                        ),
+                        validator: (val) => val == null || val.isEmpty ? 'Required' : null,
+                      ),
+                      
+                      const SizedBox(height: 32),
+                      Center(
+                        child: Text('Scan QR to Pay', style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold)),
+                      ),
+                      const SizedBox(height: 16),
+                      Center(
+                        child: Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: Colors.grey[300]!),
+                            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)],
+                          ),
+                          child: qrCodeUrl != null && qrCodeUrl.isNotEmpty
+                              ? Image.network(ApiService.getImageUrl(qrCodeUrl), height: 180, width: 180, fit: BoxFit.contain)
+                              : const SizedBox(height: 180, width: 180, child: Center(child: Text('No QR Configured'))),
+                        ),
+                      ),
+                      if (upiId != null && upiId.isNotEmpty) ...[
+                        const SizedBox(height: 12),
+                        Center(child: Text('UPI: $upiId', style: GoogleFonts.poppins(fontSize: 14, color: Colors.grey[700], fontWeight: FontWeight.w500))),
+                      ],
+
+                      const SizedBox(height: 32),
+                      Text('Reference Number / UTR', style: GoogleFonts.poppins(fontSize: 14, color: Colors.grey[600], fontWeight: FontWeight.w600)),
+                      const SizedBox(height: 8),
+                      TextFormField(
+                        controller: _utrController,
+                        decoration: InputDecoration(
+                          hintText: 'Enter 12-digit UTR',
+                          filled: true,
+                          fillColor: Colors.grey[50],
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey[300]!)),
+                          enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey[300]!)),
+                        ),
+                        validator: (val) => val == null || val.isEmpty ? 'Required' : null,
+                      ),
+
+                      const SizedBox(height: 24),
+                      Text('Upload Screenshot', style: GoogleFonts.poppins(fontSize: 14, color: Colors.grey[600], fontWeight: FontWeight.w600)),
+                      const SizedBox(height: 8),
+                      GestureDetector(
+                        onTap: _pickImage,
+                        child: Container(
+                          width: double.infinity,
+                          height: 120,
+                          decoration: BoxDecoration(
+                            color: Colors.grey[50],
+                            border: Border.all(color: Colors.grey[300]!, style: BorderStyle.solid),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: _imageFile != null
+                              ? ClipRRect(borderRadius: BorderRadius.circular(12), child: Image.file(_imageFile!, fit: BoxFit.cover))
+                              : Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    const Icon(Icons.cloud_upload_outlined, color: Colors.grey, size: 32),
+                                    const SizedBox(height: 8),
+                                    Text('Tap to upload', style: GoogleFonts.poppins(color: Colors.grey)),
+                                  ],
+                                ),
+                        ),
+                      ),
+                      const SizedBox(height: 40),
+                    ],
+                  ),
                 ),
               ),
             ),
-      bottomNavigationBar: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: ElevatedButton(
-            onPressed: () {
-              Navigator.pushNamed(context, '/student/fees/submit', arguments: _dueAmount);
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF4B497B),
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              elevation: 4,
-            ),
-            child: Text(
-              'I have paid the amount',
-              style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildAmountHeader() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: const Color(0xFF4B497B),
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(color: const Color(0xFF4B497B).withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 5))
-        ],
-      ),
-      child: Column(
-        children: [
-          Text('Total Due Amount', style: GoogleFonts.poppins(color: Colors.white70, fontSize: 14)),
-          const SizedBox(height: 8),
-          Text('₹${_dueAmount.toStringAsFixed(0)}', style: GoogleFonts.poppins(color: Colors.white, fontSize: 36, fontWeight: FontWeight.bold)),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildUpiCard() {
-    String? upiId = _settings['upiId'];
-    String? qrCodeUrl = _settings['qrCodeUrl'];
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.grey[200]!),
-      ),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(color: Colors.blue[50], borderRadius: BorderRadius.circular(10)),
-                child: const Icon(Icons.qr_code_scanner, color: Colors.blue),
+      bottomNavigationBar: _isLoading 
+          ? null 
+          : SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: ElevatedButton(
+                  onPressed: _isSubmitting ? null : _submitPayment,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF6366F1),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  ),
+                  child: _isSubmitting
+                      ? const CircularProgressIndicator(color: Colors.white)
+                      : Text(
+                          'I have paid the amount',
+                          style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                        ),
+                ),
               ),
-              const SizedBox(width: 16),
-              Text('Pay via PhonePe / GPay', style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.bold)),
-            ],
-          ),
-          const SizedBox(height: 20),
-          if (qrCodeUrl != null && qrCodeUrl.isNotEmpty)
-            Image.network(
-              ApiService.getImageUrl(qrCodeUrl),
-              height: 200,
-              errorBuilder: (context, error, stackTrace) => const Icon(Icons.broken_image, size: 100, color: Colors.grey),
-            )
-          else
-            Container(
-              height: 150,
-              alignment: Alignment.center,
-              child: Text('QR Code not configured by admin.', style: GoogleFonts.poppins(color: Colors.grey)),
             ),
-          if (upiId != null && upiId.isNotEmpty) ...[
-            const SizedBox(height: 16),
-            Text('UPI ID: $upiId', style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.grey[800])),
-          ]
-        ],
-      ),
-    );
-  }
-
-  Widget _buildBankTransferCard() {
-    String? bankName = _settings['bankName'];
-    String? accountNo = _settings['bankAccountNumber'];
-    String? ifsc = _settings['bankIfsc'];
-
-    if (bankName == null || bankName.isEmpty) return const SizedBox();
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.grey[200]!),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(color: Colors.orange[50], borderRadius: BorderRadius.circular(10)),
-                child: const Icon(Icons.account_balance, color: Colors.orange),
-              ),
-              const SizedBox(width: 16),
-              Text('Direct Bank Transfer', style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.bold)),
-            ],
-          ),
-          const SizedBox(height: 20),
-          _buildBankDetailRow('Bank Name', bankName),
-          const SizedBox(height: 12),
-          _buildBankDetailRow('Account Number', accountNo ?? 'N/A'),
-          const SizedBox(height: 12),
-          _buildBankDetailRow('IFSC Code', ifsc ?? 'N/A'),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildBankDetailRow(String label, String value) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(label, style: GoogleFonts.poppins(color: Colors.grey[600], fontSize: 14)),
-        Text(value, style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 14)),
-      ],
     );
   }
 }

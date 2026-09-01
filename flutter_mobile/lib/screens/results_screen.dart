@@ -170,23 +170,11 @@ class _ResultsScreenState extends State<ResultsScreen> {
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Container(
-                              width: 120,
-                              height: 120,
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFE0E7FF),
-                                shape: BoxShape.circle,
-                                boxShadow: [
-                                  BoxShadow(color: const Color(0xFF6366F1).withOpacity(0.2), blurRadius: 20, spreadRadius: 5)
-                                ],
-                              ),
-                              child: const Icon(Icons.analytics_outlined, size: 64, color: Color(0xFF6366F1)),
-                            ),
-                            const SizedBox(height: 24),
+                            const SizedBox(height: 16),
                             Text('Ready to View Results', style: GoogleFonts.outfit(fontSize: 22, fontWeight: FontWeight.bold, color: const Color(0xFF1E293B))),
                             const SizedBox(height: 8),
                             Text('Click below to view the performance', textAlign: TextAlign.center, style: GoogleFonts.poppins(fontSize: 14, color: const Color(0xFF64748B))),
-                            const SizedBox(height: 32),
+                            const SizedBox(height: 24),
                             SizedBox(
                               width: double.infinity,
                               height: 56,

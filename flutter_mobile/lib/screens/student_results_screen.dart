@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/api_service.dart';
+import 'single_progress_card_screen.dart';
 
 class StudentResultsScreen extends StatefulWidget {
   final Map<String, dynamic> user;
@@ -64,8 +65,8 @@ class _StudentResultsScreenState extends State<StudentResultsScreen> {
         
         // Sort by total marks descending (Rank calculation)
         allRes.sort((a, b) {
-          final tA = double.tryParse(a['totalMarks']?.toString() ?? '0') ?? 0.0;
-          final tB = double.tryParse(b['totalMarks']?.toString() ?? '0') ?? 0.0;
+          final tA = double.tryParse(a['total']?.toString() ?? a['totalMarks']?.toString() ?? '0') ?? 0.0;
+          final tB = double.tryParse(b['total']?.toString() ?? b['totalMarks']?.toString() ?? '0') ?? 0.0;
           return tB.compareTo(tA); // Descending
         });
 
@@ -140,14 +141,23 @@ class _StudentResultsScreenState extends State<StudentResultsScreen> {
                                       itemCount: _results.length,
                                       itemBuilder: (context, index) {
                                         final r = _results[index];
-                                        final sName = r['student']?['user']?['name'] ?? r['student']?['firstName'] ?? 'Student';
-                                        final sRoll = r['student']?['rollNo'] ?? '-';
-                                        final total = r['totalMarks']?.toString() ?? '0';
-                                        final max = r['maxMarks']?.toString() ?? '0';
+                                        final sName = r['name']?.toString() ?? r['student']?['user']?['name'] ?? r['student']?['firstName'] ?? 'Student';
+                                        final sRoll = r['rollNo']?.toString() ?? r['student']?['rollNo'] ?? '-';
+                                        final total = r['total']?.toString() ?? r['totalMarks']?.toString() ?? '0';
+                                        
+                                        // Calculate total max marks if maxMarks is not provided but subjects exist
+                                        double calculatedMax = 0;
+                                        if (r['marks'] != null && r['marks'] is List) {
+                                          for (var m in r['marks']) {
+                                            calculatedMax += (m['max'] as num?)?.toDouble() ?? (m['maxMarks'] as num?)?.toDouble() ?? 100.0;
+                                          }
+                                        }
+                                        final max = r['maxMarks']?.toString() ?? (calculatedMax > 0 ? calculatedMax.toStringAsFixed(0) : '-');
+                                        
                                         final perc = r['percentage']?.toString() ?? '0';
                                         final grade = r['grade'] ?? '-';
                                         
-                                        final isMe = widget.user['student']?['id']?.toString() == r['student']?['id']?.toString();
+                                        final isMe = widget.user['student']?['id']?.toString() == r['studentId']?.toString() || widget.user['student']?['id']?.toString() == r['student']?['id']?.toString();
 
                                         return Container(
                                           margin: const EdgeInsets.only(bottom: 12),
@@ -161,6 +171,16 @@ class _StudentResultsScreenState extends State<StudentResultsScreen> {
                                           ),
                                           child: ListTile(
                                             contentPadding: const EdgeInsets.all(12),
+                                            onTap: () {
+                                              Navigator.push(context, MaterialPageRoute(builder: (_) => SingleProgressCardScreen(
+                                                examId: _selectedExam!['id'].toString(),
+                                                classId: widget.user['student']?['classId']?.toString() ?? '',
+                                                studentId: r['studentId']?.toString() ?? r['student']?['id']?.toString() ?? '',
+                                                examName: _selectedExam!['name']?.toString() ?? 'Exam',
+                                                className: widget.user['student']?['class']?['name']?.toString() ?? 'Class',
+                                                studentData: r,
+                                              )));
+                                            },
                                             leading: CircleAvatar(
                                               backgroundColor: index == 0 ? Colors.amber.withOpacity(0.2) 
                                                   : index == 1 ? Colors.grey.withOpacity(0.2)
@@ -180,8 +200,8 @@ class _StudentResultsScreenState extends State<StudentResultsScreen> {
                                               mainAxisAlignment: MainAxisAlignment.center,
                                               crossAxisAlignment: CrossAxisAlignment.end,
                                               children: [
-                                                Text('$total / $max', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16, color: const Color(0xFF059669))),
-                                                Text('Grade $grade', style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.w600, color: const Color(0xFF6366F1))),
+                                                Text('Rank #${index + 1}', style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.w600, color: const Color(0xFF64748B))),
+                                                Text('$total / $max', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 18, color: const Color(0xFF059669))),
                                               ],
                                             ),
                                           ),

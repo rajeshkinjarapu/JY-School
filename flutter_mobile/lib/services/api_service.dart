@@ -25,11 +25,13 @@ class ApiService {
   }
 
   // Base headers for API requests
-  static Map<String, String> _getHeaders({String? token}) {
-    final headers = {
-      'Content-Type': 'application/json',
+  static Map<String, String> _getHeaders({String? token, bool isMultipart = false}) {
+    final headers = <String, String>{
       'ngrok-skip-browser-warning': '69420',
     };
+    if (!isMultipart) {
+      headers['Content-Type'] = 'application/json';
+    }
     if (token != null) {
       headers['Authorization'] = 'Bearer $token';
     }
@@ -1310,23 +1312,44 @@ class ApiService {
 
   // ── Phase 3 Fee Payment Methods ──────────────────────────────────────────
 
+  static Future<Map<String, dynamic>> getStudentPayments() async {
+    try {
+      final token = await getToken();
+      if (token == null) return {'success': false, 'message': 'No token'};
+
+      final res = await http.get(
+        Uri.parse('$baseUrl/api/fees/payments?limit=50'),
+        headers: _getHeaders(token: token),
+      );
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body);
+        return {'success': true, 'data': data['data'] ?? []};
+      }
+      return {'success': false, 'message': 'Failed to load payments'};
+    } catch (e) {
+      return {'success': false, 'message': e.toString()};
+    }
+  }
+
   static Future<Map<String, dynamic>> studentPayFeeWithScreenshot({
     required double amount,
     required String paymentMethod,
     required String referenceNumber,
-    required String notes,
+    String? notes,
+    String? feeStructureId,
     required List<int> imageBytes,
     required String imageFilename,
   }) async {
     try {
-      final token = await _getToken();
+      final token = await getToken();
       final request = http.MultipartRequest('POST', Uri.parse('$baseUrl/api/fees/student/pay'));
       request.headers.addAll(_getHeaders(token: token, isMultipart: true));
 
       request.fields['amount'] = amount.toString();
       request.fields['paymentMethod'] = paymentMethod;
       request.fields['referenceNumber'] = referenceNumber;
-      request.fields['notes'] = notes;
+      if (notes != null) request.fields['notes'] = notes;
+      if (feeStructureId != null) request.fields['feeStructureId'] = feeStructureId;
 
       final multipartFile = http.MultipartFile.fromBytes(
         'screenshot',
@@ -1354,7 +1377,7 @@ class ApiService {
     String? filename,
   }) async {
     try {
-      final token = await _getToken();
+      final token = await getToken();
       final request = http.MultipartRequest('PUT', Uri.parse('$baseUrl/api/settings'));
       request.headers.addAll(_getHeaders(token: token, isMultipart: true));
 
