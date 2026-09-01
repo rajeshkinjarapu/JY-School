@@ -124,9 +124,11 @@ class _SingleProgressCardScreenState extends State<SingleProgressCardScreen> {
     try {
       final bytes = await _generatePdfBytes();
       if (bytes != null) {
+        String studentName = _resultData?['studentName']?.toString() ?? widget.studentData?['name']?.toString() ?? widget.studentId;
+        String safeName = studentName.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_');
         // Use share_plus to trigger the native share sheet where user can select WhatsApp
         // ignore: undefined_identifier, avoid_dynamic_calls
-        await Share.shareXFiles([XFile.fromData(bytes, mimeType: 'application/pdf', name: '${widget.studentId}_progress_card.pdf')], text: 'Student Progress Card');
+        await Share.shareXFiles([XFile.fromData(bytes, mimeType: 'application/pdf', name: '${safeName}_progress_card.pdf')], text: 'Student Progress Card');
       }
     } catch (e) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to share: $e')));
@@ -141,9 +143,11 @@ class _SingleProgressCardScreenState extends State<SingleProgressCardScreen> {
     try {
       final bytes = await _generatePdfBytes();
       if (bytes != null) {
+        String studentName = _resultData?['studentName']?.toString() ?? widget.studentData?['name']?.toString() ?? widget.studentId;
+        String safeName = studentName.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_');
         // Printing.sharePdf on Flutter Web triggers a direct file download.
         // On mobile, it acts as a layout/share, so we can also use Printing.layoutPdf.
-        await Printing.sharePdf(bytes: bytes, filename: '${widget.studentId}_progress_card.pdf');
+        await Printing.sharePdf(bytes: bytes, filename: '${safeName}_progress_card.pdf');
       }
     } catch (e) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to download: $e')));
@@ -460,7 +464,7 @@ class _SingleProgressCardScreenState extends State<SingleProgressCardScreen> {
                                 style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w400, color: const Color(0xFF1A4A7A), letterSpacing: 0.8),
                               ),
                                 Text(
-                                  'Narasannapeta',
+                                  'Opp. Hero Showroom, SVL Paradise Campus, Narasannapeta',
                                   textAlign: TextAlign.center,
                                   style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w400, color: const Color(0xFF5A7A8A), letterSpacing: 0.3),
                                 ),
@@ -524,7 +528,7 @@ class _SingleProgressCardScreenState extends State<SingleProgressCardScreen> {
                           _buildPremiumInfoRow('📖 Section', section, isEven: true),
                           _buildPremiumInfoRow('📞 Mobile', _resultData!['mobile']?.toString() ?? widget.studentData?['mobile']?.toString() ?? 'N/A', isEven: false),
                           _buildPremiumInfoRow('📅 Academic Year', '2026-2027', isEven: true),
-                          _buildPremiumInfoRow('📍 Location', 'Narasannapeta', isEven: false, isLast: rank == null),
+                          _buildPremiumInfoRow('📍 Location', 'Opp. Hero Showroom, SVL Paradise Campus, Narasannapeta', isEven: false, isLast: rank == null),
                           if (rank != null)
                             _buildPremiumInfoRow('🏅 Class Rank', '#' + rank, isEven: true, isLast: true),
                         ],

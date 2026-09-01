@@ -66,7 +66,7 @@ class AppConfig {
   // 🎓 Student & Parent App Configuration
   static const AppConfig _studentConfig = AppConfig(
     flavor: AppFlavor.student,
-    appName: 'JY School - Student',
+    appName: 'JY - Student',
     appId: 'com.jyschool.erp.student',
     primaryColor: Color(0xFF4F46E5), // Indigo
     secondaryColor: Color(0xFF06B6D4), // Cyan
@@ -87,7 +87,7 @@ class AppConfig {
   // 👨‍🏫 Teacher & Staff App Configuration
   static const AppConfig _teacherConfig = AppConfig(
     flavor: AppFlavor.teacher,
-    appName: 'JY School - Teacher',
+    appName: 'JY - Teacher',
     appId: 'com.jyschool.erp.teacher',
     primaryColor: Color(0xFF059669), // Emerald
     secondaryColor: Color(0xFF0D9488), // Teal
@@ -108,7 +108,7 @@ class AppConfig {
   // 🏛️ Admin & Management App Configuration
   static const AppConfig _adminConfig = AppConfig(
     flavor: AppFlavor.admin,
-    appName: 'JY School - Admin',
+    appName: 'JY - Admin',
     appId: 'com.jyschool.erp.admin',
     primaryColor: Color(0xFF1E1B4B), // Deep Slate Navy
     secondaryColor: Color(0xFF7C3AED), // Royal Purple
@@ -129,7 +129,7 @@ class AppConfig {
   // 🌐 Universal / Multi-Role Default
   static const AppConfig _universalConfig = AppConfig(
     flavor: AppFlavor.universal,
-    appName: 'JY School ERP',
+    appName: 'JY School',
     appId: 'com.jyschool.erp',
     primaryColor: Color(0xFF6366F1),
     secondaryColor: Color(0xFFD946EF),
@@ -140,7 +140,7 @@ class AppConfig {
     ),
     allowedRoles: ['STUDENT', 'PARENT', 'TEACHER', 'ADMIN', 'SUPER_ADMIN', 'ACCOUNTANT'],
     defaultRole: 'STUDENT',
-    welcomeTitle: 'JY School ERP',
+    welcomeTitle: 'JY School',
     welcomeSubtitle: 'Next-Generation School Management & Communication Platform.',
     idFieldLabel: 'Email / Phone / Roll No',
     idFieldHint: 'Enter your credentials',

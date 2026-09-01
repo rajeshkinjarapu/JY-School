@@ -5,6 +5,13 @@
    - Redesigned `UpdateService` (`lib/services/update_service.dart`) with a world-class, premium in-app update dialog.
    - **Zero External Links:** Download happens 100% inside the app on-screen with real-time download progress and MB counter.
    - **Direct APK Installation:** Uses `OpenFile.open` with Android `FileProvider` (`filepaths.xml`) and `REQUEST_INSTALL_PACKAGES` permission to launch the installer immediately on screen.
+8. **Flutter App Names Update:**
+   - Updated `AppConfig` (`app_config.dart`) to use concise names (`JY - Student`, `JY - Teacher`, `JY - Admin`) for better UI presentation.
+   - Removed "ERP" text from the universal configuration to strictly display "JY School".
+9. **Progress Card Address Update:**
+   - Updated the header and location fields in `single_progress_card_screen.dart` (Flutter) and `ProgressCardTemplate.tsx` (Web) to show the full address: `Opp. Hero Showroom, SVL Paradise Campus, Narasannapeta`.
+10. **Progress Card PDF Export Name:**
+    - Modified `_downloadPdf` and `_sharePdf` methods in `single_progress_card_screen.dart` to use the dynamic student name instead of student ID for the exported PDF filename (e.g., `Arangi_Lalitaksha_progress_card.pdf`).
 2. **Multi-App Architecture (Student, Teacher, Admin Separate Apps):**
    - Created centralized `AppConfig` with distinct flavor configurations (`student`, `teacher`, `admin`, `universal`).
    - Created 3 dedicated entry points: `lib/main_student.dart`, `lib/main_teacher.dart`, and `lib/main_admin.dart`.
