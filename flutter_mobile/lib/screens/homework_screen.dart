@@ -71,16 +71,16 @@ class _HomeworkScreenState extends State<HomeworkScreen> with SingleTickerProvid
       final diff = dueDate.difference(now).inDays;
 
       if (diff < 0) {
-        return 'Overdue';
+        return 'Deadline Passed';
       } else if (diff == 0) {
-        return 'Due Today';
+        return 'Submit Today';
       } else if (diff == 1) {
-        return 'Due Tomorrow';
+        return 'Submit Tomorrow';
       } else {
-        return 'Due in $diff days';
+        return 'Submit by ${dueDate.day}/${dueDate.month}/${dueDate.year}';
       }
     } catch (_) {
-      return 'Due: $dateStr';
+      return 'No deadline';
     }
   }
 
@@ -115,24 +115,24 @@ class _HomeworkScreenState extends State<HomeworkScreen> with SingleTickerProvid
       try { return DateTime.parse(dueStr).difference(now).inDays >= 0; } catch (_) { return true; }
     }).toList();
     
-    final overdueList = _homeworkList.where((hw) {
+    final pastList = _homeworkList.where((hw) {
       final dueStr = hw['dueDate']?.toString().split('T')[0] ?? '';
       if (dueStr.isEmpty) return false;
       try { return DateTime.parse(dueStr).difference(now).inDays < 0; } catch (_) { return false; }
     }).toList();
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F7FE),
+      backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
         leading: const BackButton(color: Colors.white),
         title: Text(
           'My Homework',
-          style: GoogleFonts.outfit(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
+          style: GoogleFonts.outfit(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
         ),
         flexibleSpace: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
-              colors: [Color(0xFF2E2A66), Color(0xFF222854)],
+              colors: [Color(0xFF4F46E5), Color(0xFF7C3AED)],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
@@ -151,44 +151,62 @@ class _HomeworkScreenState extends State<HomeworkScreen> with SingleTickerProvid
                   child: Column(
                     children: [
                       // Top Summary
-                      Padding(
-                        padding: const EdgeInsets.all(16.0),
+                      Container(
+                        padding: const EdgeInsets.only(left: 16, right: 16, bottom: 24, top: 16),
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFF4F46E5), Color(0xFF7C3AED)],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: const BorderRadius.only(
+                            bottomLeft: Radius.circular(32),
+                            bottomRight: Radius.circular(32),
+                          ),
+                          boxShadow: [
+                            BoxShadow(color: const Color(0xFF4F46E5).withOpacity(0.3), blurRadius: 15, offset: const Offset(0, 8))
+                          ],
+                        ),
                         child: Row(
                           children: [
-                            Expanded(child: _buildStatCard('Total', _homeworkList.length.toString(), const Color(0xFF4F46E5), Icons.assignment_rounded)),
+                            Expanded(child: _buildStatCard('Total', _homeworkList.length.toString(), const Color(0xFFFFFFFF), Icons.assignment_rounded, textColor: const Color(0xFF4F46E5))),
                             const SizedBox(width: 12),
-                            Expanded(child: _buildStatCard('Pending', pendingCount.toString(), const Color(0xFFF59E0B), Icons.pending_actions_rounded)),
+                            Expanded(child: _buildStatCard('Active', pendingList.length.toString(), const Color(0xFFFFFFFF), Icons.pending_actions_rounded, textColor: const Color(0xFFF59E0B))),
                             const SizedBox(width: 12),
-                            Expanded(child: _buildStatCard('Overdue', overdueCount.toString(), const Color(0xFFEF4444), Icons.assignment_late_rounded)),
+                            Expanded(child: _buildStatCard('Past', pastList.length.toString(), const Color(0xFFFFFFFF), Icons.history_rounded, textColor: const Color(0xFFEF4444))),
                           ],
                         ),
                       ),
                       
+                      const SizedBox(height: 16),
                       // Tab Bar
                       Container(
-                        height: 52,
+                        height: 54,
                         margin: const EdgeInsets.symmetric(horizontal: 16),
-                        padding: const EdgeInsets.all(5),
+                        padding: const EdgeInsets.all(6),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFE2E8F0),
-                          borderRadius: BorderRadius.circular(16),
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
+                            BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4))
+                          ],
                         ),
                         child: TabBar(
                           controller: _tabController,
                           indicatorSize: TabBarIndicatorSize.tab,
                           indicator: BoxDecoration(
-                            color: const Color(0xFF4F46E5),
-                            borderRadius: BorderRadius.circular(12),
-                            boxShadow: [BoxShadow(color: const Color(0xFF4F46E5).withOpacity(0.3), blurRadius: 8, offset: const Offset(0, 4))],
+                            color: const Color(0xFFEEF2FF),
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(color: const Color(0xFFE0E7FF), width: 1.5),
                           ),
-                          labelColor: Colors.white,
+                          labelColor: const Color(0xFF4F46E5),
                           unselectedLabelColor: const Color(0xFF64748B),
-                          labelStyle: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 13),
-                          unselectedLabelStyle: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 13),
+                          labelStyle: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 14),
+                          unselectedLabelStyle: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 14),
                           dividerColor: Colors.transparent,
                           tabs: const [
-                            Tab(text: 'Pending'),
-                            Tab(text: 'Overdue'),
+                            Tab(text: 'Active Tasks'),
+                            Tab(text: 'Past Tasks'),
                           ],
                         ),
                       ),
@@ -199,8 +217,8 @@ class _HomeworkScreenState extends State<HomeworkScreen> with SingleTickerProvid
                         child: TabBarView(
                           controller: _tabController,
                           children: [
-                            pendingList.isEmpty ? _buildEmptyState('No pending homework. You are all caught up!') : _buildList(pendingList),
-                            overdueList.isEmpty ? _buildEmptyState('No overdue homework. Great job!') : _buildList(overdueList),
+                            pendingList.isEmpty ? _buildEmptyState('No active homework. You are all caught up!') : _buildList(pendingList),
+                            pastList.isEmpty ? _buildEmptyState('No past homework.') : _buildList(pastList),
                           ],
                         ),
                       ),
@@ -210,30 +228,21 @@ class _HomeworkScreenState extends State<HomeworkScreen> with SingleTickerProvid
     );
   }
 
-  Widget _buildStatCard(String title, String val, Color color, IconData icon) {
+  Widget _buildStatCard(String title, String val, Color bgColor, IconData icon, {required Color textColor}) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: bgColor,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withOpacity(0.2), width: 1.5),
-        boxShadow: [BoxShadow(color: color.withOpacity(0.12), blurRadius: 15, offset: const Offset(0, 8))],
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10, offset: const Offset(0, 4))],
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(colors: [color.withOpacity(0.8), color], begin: Alignment.topLeft, end: Alignment.bottomRight),
-              shape: BoxShape.circle,
-              boxShadow: [BoxShadow(color: color.withOpacity(0.3), blurRadius: 8, offset: const Offset(0, 4))],
-            ),
-            child: Icon(icon, color: Colors.white, size: 24),
-          ),
-          const SizedBox(height: 12),
-          Text(val, style: GoogleFonts.outfit(fontSize: 22, fontWeight: FontWeight.bold, color: const Color(0xFF1E293B))),
-          const SizedBox(height: 4),
+          Icon(icon, color: textColor, size: 28),
+          const SizedBox(height: 8),
+          Text(val, style: GoogleFonts.outfit(fontSize: 24, fontWeight: FontWeight.bold, color: textColor)),
+          const SizedBox(height: 2),
           Text(title, style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.w600, color: const Color(0xFF64748B))),
         ],
       ),
@@ -262,17 +271,17 @@ class _HomeworkScreenState extends State<HomeworkScreen> with SingleTickerProvid
     final dueText = dueDateStr.isNotEmpty ? _getDueDateText(dueDateStr) : 'No due date';
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: const EdgeInsets.only(bottom: 20),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(24),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 15, offset: const Offset(0, 5)),
+          BoxShadow(color: dueColor.withOpacity(0.08), blurRadius: 24, offset: const Offset(0, 8)),
         ],
-        border: Border.all(color: const Color(0xFFF1F5F9), width: 1.5),
+        border: Border.all(color: dueColor.withOpacity(0.2), width: 1.5),
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(24),
         child: Theme(
           data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
           child: ExpansionTile(
@@ -281,26 +290,39 @@ class _HomeworkScreenState extends State<HomeworkScreen> with SingleTickerProvid
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Container(
-                  padding: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
-                    color: dueColor.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(14),
+                    gradient: LinearGradient(
+                      colors: [dueColor.withOpacity(0.15), dueColor.withOpacity(0.05)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: dueColor.withOpacity(0.2), width: 1),
                   ),
-                  child: Icon(Icons.menu_book_rounded, color: dueColor, size: 24),
+                  child: Icon(Icons.menu_book_rounded, color: dueColor, size: 28),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        subject.toUpperCase(),
-                        style: GoogleFonts.poppins(color: const Color(0xFF64748B), fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFEEF2FF),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: const Color(0xFFE0E7FF)),
+                        ),
+                        child: Text(
+                          subject.toUpperCase(),
+                          style: GoogleFonts.poppins(color: const Color(0xFF4F46E5), fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1),
+                        ),
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 8),
                       Text(
                         title,
-                        style: GoogleFonts.outfit(color: const Color(0xFF1E293B), fontSize: 17, fontWeight: FontWeight.bold),
+                        style: GoogleFonts.outfit(color: const Color(0xFF0F172A), fontSize: 18, fontWeight: FontWeight.bold),
                       ),
                     ],
                   ),
@@ -309,34 +331,32 @@ class _HomeworkScreenState extends State<HomeworkScreen> with SingleTickerProvid
             ),
             subtitle: Padding(
               padding: const EdgeInsets.only(top: 12.0),
-              child: Row(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: dueColor.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: dueColor.withOpacity(0.2)),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.schedule_rounded, size: 12, color: dueColor),
-                        const SizedBox(width: 4),
-                        Text(
-                          dueText,
-                          style: GoogleFonts.poppins(color: dueColor, fontSize: 11, fontWeight: FontWeight.bold),
+                  Row(
+                    children: [
+                      Icon(Icons.person_outline_rounded, size: 14, color: const Color(0xFF64748B)),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Text(
+                          'Assigned by: $teacherName',
+                          style: GoogleFonts.poppins(color: const Color(0xFF64748B), fontSize: 11, fontWeight: FontWeight.w600),
+                          overflow: TextOverflow.ellipsis,
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      'By $teacherName',
-                      style: GoogleFonts.poppins(color: const Color(0xFF94A3B8), fontSize: 12, fontWeight: FontWeight.w500),
-                      overflow: TextOverflow.ellipsis,
-                    ),
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      Icon(Icons.access_time_rounded, size: 14, color: dueColor),
+                      const SizedBox(width: 4),
+                      Text(
+                        dueText,
+                        style: GoogleFonts.poppins(color: dueColor, fontSize: 12, fontWeight: FontWeight.bold),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -347,19 +367,19 @@ class _HomeworkScreenState extends State<HomeworkScreen> with SingleTickerProvid
                 padding: const EdgeInsets.all(20),
                 decoration: const BoxDecoration(
                   color: Color(0xFFF8FAFC),
-                  border: Border(top: BorderSide(color: Color(0xFFF1F5F9), width: 1)),
+                  border: Border(top: BorderSide(color: Color(0xFFE2E8F0), width: 1)),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       'INSTRUCTIONS',
-                      style: GoogleFonts.poppins(color: const Color(0xFF94A3B8), fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1),
+                      style: GoogleFonts.poppins(color: const Color(0xFF94A3B8), fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 1),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 12),
                     Text(
                       desc,
-                      style: GoogleFonts.poppins(color: const Color(0xFF475569), fontSize: 14, height: 1.6, fontWeight: FontWeight.w500),
+                      style: GoogleFonts.poppins(color: const Color(0xFF334155), fontSize: 14, height: 1.6, fontWeight: FontWeight.w500),
                     ),
                   ],
                 ),

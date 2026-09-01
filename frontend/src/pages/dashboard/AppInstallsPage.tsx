@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Smartphone, MonitorSmartphone, Calendar, RefreshCw, UserCircle, Wifi } from 'lucide-react';
+import { Smartphone, MonitorSmartphone, Calendar, RefreshCw, UserCircle, Wifi, Users, GraduationCap } from 'lucide-react';
 import { api } from '../../api/axios';
 
 interface AppInstallUser {
@@ -22,6 +22,9 @@ interface AppInstallUser {
 export const AppInstallsPage: React.FC = () => {
   const [users, setUsers] = useState<AppInstallUser[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<'STUDENT' | 'TEACHER'>('STUDENT');
+
+  const filteredUsers = users.filter(user => user.role === activeTab);
 
   const fetchInstalls = async () => {
     setLoading(true);
@@ -75,6 +78,32 @@ export const AppInstallsPage: React.FC = () => {
         </button>
       </div>
 
+      {/* Tabs */}
+      <div className="flex space-x-2 bg-gray-100/50 dark:bg-gray-800/50 p-1 rounded-xl w-fit border border-gray-200 dark:border-gray-700">
+        <button
+          onClick={() => setActiveTab('STUDENT')}
+          className={`flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-semibold transition-all ${
+            activeTab === 'STUDENT'
+              ? 'bg-white dark:bg-gray-700 text-indigo-600 dark:text-indigo-400 shadow-sm'
+              : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
+          }`}
+        >
+          <GraduationCap className="w-4 h-4" />
+          Students
+        </button>
+        <button
+          onClick={() => setActiveTab('TEACHER')}
+          className={`flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-semibold transition-all ${
+            activeTab === 'TEACHER'
+              ? 'bg-white dark:bg-gray-700 text-indigo-600 dark:text-indigo-400 shadow-sm'
+              : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
+          }`}
+        >
+          <Users className="w-4 h-4" />
+          Teachers
+        </button>
+      </div>
+
       <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
@@ -95,14 +124,14 @@ export const AppInstallsPage: React.FC = () => {
                     Loading app installs...
                   </td>
                 </tr>
-              ) : users.length === 0 ? (
+              ) : filteredUsers.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
-                    No app installations recorded yet.
+                    No {activeTab.toLowerCase()} app installations recorded yet.
                   </td>
                 </tr>
               ) : (
-                users.map((user) => (
+                filteredUsers.map((user) => (
                   <tr 
                     key={user.id}
                     className="hover:bg-gray-50 dark:hover:bg-gray-750/50 transition-colors"

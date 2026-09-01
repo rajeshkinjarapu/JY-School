@@ -25,6 +25,7 @@ import 'timetable_screen.dart';
 import 'gate_pass_screen.dart';
 import 'events_screen.dart';
 import 'live_tracking_screen.dart';
+import 'salary_screen.dart';
 
 class ModulesScreen extends StatefulWidget {
   const ModulesScreen({super.key});
@@ -79,6 +80,7 @@ class _ModulesScreenState extends State<ModulesScreen> {
       {'title': 'Leave', 'icon': Icons.time_to_leave_rounded, 'color': const Color(0xFFEF4444), 'page': isTeacher ? const LeaveDashboardScreen() : const LeaveScreen()},
       {'title': 'Timetable', 'icon': Icons.schedule_rounded, 'color': const Color(0xFFEA580C), 'page': const TimetableScreen()},
       {'title': 'Transport', 'icon': Icons.directions_bus_rounded, 'color': const Color(0xFFDB2777), 'page': const TransportScreen()},
+      {'title': 'My Salary', 'icon': Icons.monetization_on_rounded, 'color': const Color(0xFF10B981), 'page': const SalaryScreen()},
       {'title': 'Settings', 'icon': Icons.settings_rounded, 'color': const Color(0xFF475569), 'page': null},
     ];
 

@@ -18,6 +18,7 @@ import 'screens/student_fee_overview_screen.dart';
 import 'screens/student_pay_fee_screen.dart';
 import 'screens/student_payment_submission_screen.dart';
 import 'screens/student_payment_success_screen.dart';
+import 'screens/homework_screen.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
@@ -91,6 +92,7 @@ class MyApp extends StatelessWidget {
         '/student/fees/pay': (context) => const StudentPayFeeScreen(),
         '/student/fees/submit': (context) => const StudentPaymentSubmissionScreen(),
         '/student/fees/success': (context) => const StudentPaymentSuccessScreen(),
+        '/student/homework': (context) => const HomeworkScreen(),
       },
       home: const AuthCheck(),
     );

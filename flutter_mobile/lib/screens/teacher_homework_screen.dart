@@ -253,15 +253,14 @@ class _TeacherHomeworkScreenState extends State<TeacherHomeworkScreen> with Sing
     }
   }
 
-  // Helpers for Status & Date Colors
   Color _getDueColor(String dateStr, String status) {
     if (status == 'CLOSED') return const Color(0xFF64748B);
     try {
       final dueDate = DateTime.parse(dateStr);
       final diff = dueDate.difference(DateTime.now()).inDays;
-      if (diff < 0) return const Color(0xFFEF4444);
-      if (diff <= 1) return const Color(0xFFF59E0B);
-      return const Color(0xFF10B981);
+      if (diff < 0) return const Color(0xFFEF4444); // Red for past deadline
+      if (diff <= 1) return const Color(0xFFF59E0B); // Amber for approaching deadline
+      return const Color(0xFF10B981); // Green for active/future
     } catch (_) { return const Color(0xFF64748B); }
   }
 
@@ -270,11 +269,11 @@ class _TeacherHomeworkScreenState extends State<TeacherHomeworkScreen> with Sing
     try {
       final dueDate = DateTime.parse(dateStr);
       final diff = dueDate.difference(DateTime.now()).inDays;
-      if (diff < 0) return 'Overdue';
-      if (diff == 0) return 'Due Today';
-      if (diff == 1) return 'Due Tomorrow';
-      return 'Due in $diff days';
-    } catch (_) { return 'No Date'; }
+      if (diff < 0) return 'Deadline Passed';
+      if (diff == 0) return 'Submit Today';
+      if (diff == 1) return 'Submit Tomorrow';
+      return 'Submit by ${dueDate.day}/${dueDate.month}/${dueDate.year}';
+    } catch (_) { return 'No Deadline'; }
   }
 
   @override
@@ -491,28 +490,47 @@ class _TeacherHomeworkScreenState extends State<TeacherHomeworkScreen> with Sing
                       final dueText = _getDueText(dueDateStr, status);
 
                       return Container(
-                        margin: const EdgeInsets.only(bottom: 16),
+                        margin: const EdgeInsets.only(bottom: 20),
                         decoration: BoxDecoration(
                           color: Colors.white,
-                          borderRadius: BorderRadius.circular(20),
-                          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 15, offset: const Offset(0, 5))],
-                          border: Border.all(color: const Color(0xFFF1F5F9), width: 1.5),
+                          borderRadius: BorderRadius.circular(24),
+                          boxShadow: [
+                            BoxShadow(
+                              color: dueColor.withOpacity(0.08), 
+                              blurRadius: 24, 
+                              offset: const Offset(0, 8),
+                            )
+                          ],
+                          border: Border.all(color: dueColor.withOpacity(0.2), width: 1.5),
                         ),
                         child: Column(
                           children: [
-                            Padding(
+                            Container(
                               padding: const EdgeInsets.all(16.0),
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [Colors.white, dueColor.withOpacity(0.03)],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ),
+                                borderRadius: BorderRadius.circular(24),
+                              ),
                               child: Row(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   // Left Icon
                                   Container(
-                                    padding: const EdgeInsets.all(12),
+                                    padding: const EdgeInsets.all(14),
                                     decoration: BoxDecoration(
-                                      color: dueColor.withOpacity(0.1),
-                                      borderRadius: BorderRadius.circular(14),
+                                      gradient: LinearGradient(
+                                        colors: [dueColor.withOpacity(0.15), dueColor.withOpacity(0.05)],
+                                        begin: Alignment.topLeft,
+                                        end: Alignment.bottomRight,
+                                      ),
+                                      borderRadius: BorderRadius.circular(16),
+                                      border: Border.all(color: dueColor.withOpacity(0.2), width: 1),
                                     ),
-                                    child: Icon(Icons.book_rounded, color: dueColor, size: 24),
+                                    child: Icon(Icons.menu_book_rounded, color: dueColor, size: 28),
                                   ),
                                   const SizedBox(width: 16),
                                   
@@ -524,39 +542,56 @@ class _TeacherHomeworkScreenState extends State<TeacherHomeworkScreen> with Sing
                                         Row(
                                           children: [
                                             Container(
-                                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                                               decoration: BoxDecoration(
-                                                color: const Color(0xFFF1F5F9),
-                                                borderRadius: BorderRadius.circular(6),
+                                                color: const Color(0xFF1E293B),
+                                                borderRadius: BorderRadius.circular(8),
                                               ),
                                               child: Text(
                                                 className,
-                                                style: GoogleFonts.poppins(fontSize: 10, fontWeight: FontWeight.bold, color: const Color(0xFF64748B)),
+                                                style: GoogleFonts.poppins(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white),
                                               ),
                                             ),
                                             const SizedBox(width: 8),
                                             Container(
-                                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                                               decoration: BoxDecoration(
                                                 color: const Color(0xFFEEF2FF),
-                                                borderRadius: BorderRadius.circular(6),
+                                                borderRadius: BorderRadius.circular(8),
+                                                border: Border.all(color: const Color(0xFFE0E7FF)),
                                               ),
                                               child: Text(
                                                 subjectName,
-                                                style: GoogleFonts.poppins(fontSize: 10, fontWeight: FontWeight.bold, color: const Color(0xFF6366F1)),
+                                                style: GoogleFonts.poppins(fontSize: 10, fontWeight: FontWeight.bold, color: const Color(0xFF4F46E5)),
                                               ),
                                             ),
                                           ],
                                         ),
-                                        const SizedBox(height: 8),
+                                        const SizedBox(height: 10),
                                         Text(
                                           title,
-                                          style: GoogleFonts.outfit(fontSize: 17, fontWeight: FontWeight.bold, color: const Color(0xFF1E293B)),
+                                          style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: const Color(0xFF0F172A)),
                                         ),
-                                        const SizedBox(height: 6),
+                                        const SizedBox(height: 8),
+                                        
+                                        // Teacher Name & Submission Info Row
                                         Row(
                                           children: [
-                                            Icon(Icons.schedule_rounded, size: 14, color: dueColor),
+                                            Icon(Icons.person_outline_rounded, size: 14, color: const Color(0xFF64748B)),
+                                            const SizedBox(width: 4),
+                                            Expanded(
+                                              child: Text(
+                                                'Assigned by: $teacherName',
+                                                style: GoogleFonts.poppins(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFF64748B)),
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Row(
+                                          children: [
+                                            Icon(Icons.access_time_rounded, size: 14, color: dueColor),
                                             const SizedBox(width: 4),
                                             Text(
                                               dueText,
@@ -564,17 +599,13 @@ class _TeacherHomeworkScreenState extends State<TeacherHomeworkScreen> with Sing
                                             ),
                                           ],
                                         ),
-                                        if (_isAdmin) ...[
-                                          const SizedBox(height: 6),
-                                          Text('By $teacherName', style: GoogleFonts.poppins(fontSize: 11, color: const Color(0xFF94A3B8))),
-                                        ]
                                       ],
                                     ),
                                   ),
                                   
                                   // Menu Actions
                                   PopupMenuButton<String>(
-                                    icon: const Icon(Icons.more_vert_rounded, color: Color(0xFF94A3B8)),
+                                    icon: const Icon(Icons.more_horiz_rounded, color: Color(0xFF94A3B8), size: 28),
                                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                                     onSelected: (val) {
                                       if (val == 'edit') {
@@ -588,9 +619,9 @@ class _TeacherHomeworkScreenState extends State<TeacherHomeworkScreen> with Sing
                                         value: 'edit',
                                         child: Row(
                                           children: [
-                                            const Icon(Icons.edit_rounded, size: 18, color: Color(0xFF10B981)),
+                                            const Icon(Icons.edit_rounded, size: 18, color: Color(0xFF4F46E5)),
                                             const SizedBox(width: 12),
-                                            Text('Edit', style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
+                                            Text('Edit', style: GoogleFonts.poppins(fontWeight: FontWeight.w600, color: const Color(0xFF4F46E5))),
                                           ],
                                         ),
                                       ),
@@ -736,7 +767,7 @@ class _TeacherHomeworkScreenState extends State<TeacherHomeworkScreen> with Sing
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            _buildLabel('Due Date'),
+                            _buildLabel('Submission Deadline'),
                             InkWell(
                               onTap: _selectDueDate,
                               child: Container(
@@ -795,10 +826,10 @@ class _TeacherHomeworkScreenState extends State<TeacherHomeworkScreen> with Sing
               child: ElevatedButton(
                 onPressed: _isSubmitting ? null : _handleSubmit,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF10B981),
+                  backgroundColor: const Color(0xFF4F46E5), // Indigo color for button
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                  elevation: 4,
-                  shadowColor: const Color(0xFF10B981).withOpacity(0.4),
+                  elevation: 6,
+                  shadowColor: const Color(0xFF4F46E5).withOpacity(0.5),
                 ),
                 child: _isSubmitting
                     ? const SizedBox(height: 24, width: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5))

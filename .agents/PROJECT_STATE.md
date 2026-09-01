@@ -1,4 +1,3 @@
-
 ### Recent Updates (Transport Module)
 - **Student Transport Dashboard**: Redesigned transport_screen.dart to check isStudent. Created a dedicated Student View featuring 'Live Bus Tracking' card, 'My Route Details' card (with placeholders for bus no, route, pickup/drop times), and 'Driver & Support' card. 1970 date issue in payments history also fixed.
 
@@ -16,8 +15,11 @@
 
 ### App Installs Tracking
 - **Backend**: Updated User model in `prisma/schema.prisma` with `deviceModel`, `appVersion`, `lastIpAddress`, and `lastAppLoginAt`. Added `/api/users/app-info` to save device details and `/api/users/app-installs` for admin reporting.
-- **Frontend Webapp**: Created a premium `AppInstallsPage.tsx` with a beautifully designed table, added a route `/app-installs`, and linked the App Installs stats card on the admin dashboard to the new page.
+- **Frontend Webapp**: Created a premium `AppInstallsPage.tsx` with a beautifully designed table, added a route `/app-installs`, and linked the App Installs stats card on the admin dashboard to the new page. Fixed `framer-motion` import bug that broke production builds. Refined the page UI by separating Students and Teachers app installation data into two elegant toggle tabs.
 - **Flutter App**: Integrated `device_info_plus` and `package_info_plus` plugins in `pubspec.yaml`. Created `device_info_service.dart` to securely send device model and app version to the backend. Configured `main.dart` and `login_screen.dart` to automatically update device info after successful authentication.
 
-### Bug Fixes
-- **Teacher Homework Screen**: Fixed a bug where the subject dropdown showed all subjects duplicated across classes. Subjects are now dynamically filtered to only show those belonging to the currently selected class in both the "Assign New" and "My Homeworks" tabs (`teacher_homework_screen.dart`).
+### Bug Fixes & UI Improvements (Homework)
+- **Teacher Homework Screen**: Fixed a bug where the subject dropdown showed all subjects duplicated across classes. Subjects are now dynamically filtered. 
+- **Homework Screens UI Redesign**: Overhauled `teacher_homework_screen.dart` and `homework_screen.dart` with a very premium and colorful design. Replaced the "Due Date" label with "Submission Deadline" and removed the inappropriate "Overdue" label, replacing it with "Deadline Passed" and showing the assigning teacher's name on the card.
+- **Student Dashboard Integration**: Added the missing "Homework" module link to the Student Dashboard grid (`student_dashboard_screen.dart`) and configured the `/student/homework` route in `main.dart` so students can view published homework.
+- **Teacher/Admin Dashboard Update**: Replaced "My Salary" with "Home Work" in the main dashboard grid for teachers/admins, and moved "My Salary" to the "More Options" (`modules_screen.dart`) screen.

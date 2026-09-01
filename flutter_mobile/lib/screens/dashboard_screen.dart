@@ -1880,7 +1880,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           _buildIconWidgetCard(icon: Icons.analytics_rounded,    title: 'Progress Cards',borderColor: const Color(0xFFD946EF), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ProgressCardScreen()))),
           _buildImageCard(imagePath: 'assets/images/admin_icons/student_fees.jpg', title: 'Fee Reminder', borderColor: const Color(0xFF14B8A6), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const FeeReminderSearchScreen()))),
           _buildIconWidgetCard(icon: Icons.chat_rounded,    title: 'Messaging',     borderColor: const Color(0xFF25D366), onTap: () => ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Messaging coming soon!')))),
-          _buildImageCard(imagePath: 'assets/images/admin_icons/collect_fees.jpg', title: 'My Salary',   borderColor: const Color(0xFFEAB308), onTap: () => ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('My Salary coming soon!')))),
+          _buildIconWidgetCard(icon: Icons.edit_document,    title: 'Home Work',     borderColor: const Color(0xFFEAB308), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TeacherHomeworkScreen()))),
           _buildImageCard(imagePath: 'assets/images/admin_icons/leave.png',title: 'Leave Apply',  borderColor: const Color(0xFF3B82F6), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const LeaveDashboardScreen()))),
           _buildIconWidgetCard(icon: Icons.assignment_ind_rounded,    title: 'Gate Pass',          borderColor: const Color(0xFF64748B), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => CreateGatePassScreen(userRole: role)))),
         ],
