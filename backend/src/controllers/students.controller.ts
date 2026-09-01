@@ -91,7 +91,25 @@ export const create = async (req: Request, res: Response, next: NextFunction): P
   let rollNo = studentId?.trim();
 
   if (!rollNo) {
-    let count = await prisma.student.count();
+    let count = 0;
+    
+    if (classId) {
+      const maxStudentInClass = await prisma.student.findFirst({
+        where: { classId },
+        orderBy: { rollNo: 'desc' },
+      });
+      if (maxStudentInClass && maxStudentInClass.rollNo) {
+        const match = maxStudentInClass.rollNo.match(/\d+$/);
+        if (match) {
+          count = parseInt(match[0], 10);
+        }
+      }
+    }
+    
+    if (count === 0) {
+      count = await prisma.student.count();
+    }
+
     let isUnique = false;
     while (!isUnique) {
       rollNo = generateRollNo(count + 1);
