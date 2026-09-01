@@ -88,11 +88,28 @@ export const getById = async (req: AuthRequest, res: Response, next: NextFunctio
 export const create = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   const { name, password, phone, photoUrl, classId, dob, gender, address, bloodGroup, studentId, fatherName, motherName, aadharNo, penNumber } = req.body;
 
-  const count = await prisma.student.count();
-  const rollNo = studentId?.trim() || generateRollNo(count + 1);
+  let rollNo = studentId?.trim();
 
-  const existing = await prisma.student.findUnique({ where: { rollNo } });
-  if (existing) return next(createError('Student ID already exists', 409));
+  if (!rollNo) {
+    let count = await prisma.student.count();
+    let isUnique = false;
+    while (!isUnique) {
+      rollNo = generateRollNo(count + 1);
+      const existingUser = await prisma.user.findUnique({ where: { email: rollNo } });
+      const existingStudent = await prisma.student.findUnique({ where: { rollNo } });
+      if (!existingUser && !existingStudent) {
+        isUnique = true;
+      } else {
+        count++;
+      }
+    }
+  } else {
+    const existingUser = await prisma.user.findUnique({ where: { email: rollNo } });
+    const existingStudent = await prisma.student.findUnique({ where: { rollNo } });
+    if (existingUser || existingStudent) {
+      return next(createError('Student ID already exists', 409));
+    }
+  }
 
   // The login ID is exactly the Student ID
   const email = rollNo;
