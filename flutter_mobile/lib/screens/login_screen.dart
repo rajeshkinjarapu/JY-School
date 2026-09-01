@@ -7,6 +7,7 @@ import 'package:local_auth/local_auth.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../config/app_config.dart';
 import '../services/api_service.dart';
+import '../services/device_info_service.dart';
 import 'main_layout.dart';
 
 // ═══════════════════════════════════════════════════════
@@ -195,6 +196,9 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
       // Save credentials for biometric login next time
       await _secureStorage.write(key: 'email', value: _emailCtrl.text.trim());
       await _secureStorage.write(key: 'password', value: _passCtrl.text);
+
+      // Update app device information
+      DeviceInfoService.updateAppInfo();
 
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('Welcome back, ${user['name'] ?? ''}!', style: GoogleFonts.poppins(color: const Color(0xFF1E293B), fontWeight: FontWeight.w600)),

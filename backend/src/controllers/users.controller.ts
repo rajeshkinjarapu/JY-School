@@ -20,6 +20,55 @@ export const saveDeviceToken = async (req: AuthRequest, res: Response): Promise<
   successResponse(res, null, 'Device token saved successfully');
 };
 
+export const updateAppInfo = async (req: AuthRequest, res: Response): Promise<void> => {
+  const { deviceModel, appVersion } = req.body;
+  const ipAddress = req.ip || req.headers['x-forwarded-for']?.toString() || req.connection.remoteAddress || 'Unknown';
+
+  await prisma.user.update({
+    where: { id: req.user?.id },
+    data: {
+      isAppInstalled: true,
+      lastAppLoginAt: new Date(),
+      deviceModel: deviceModel || null,
+      appVersion: appVersion || null,
+      lastIpAddress: ipAddress,
+    },
+  });
+
+  successResponse(res, null, 'App info updated successfully');
+};
+
+export const getAppInstalls = async (req: AuthRequest, res: Response): Promise<void> => {
+  const page = parseInt(req.query.page as string) || 1;
+  const limit = parseInt(req.query.limit as string) || 50;
+  const skip = (page - 1) * limit;
+
+  const where = { isAppInstalled: true };
+
+  const [users, total] = await Promise.all([
+    prisma.user.findMany({
+      where,
+      skip,
+      take: limit,
+      orderBy: { lastAppLoginAt: 'desc' },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        phone: true,
+        deviceModel: true,
+        appVersion: true,
+        lastAppLoginAt: true,
+        student: { select: { class: { select: { name: true, section: true } } } },
+      },
+    }),
+    prisma.user.count({ where }),
+  ]);
+
+  paginatedResponse(res, users, total, page, limit, 'App installs fetched');
+};
+
 export const getAll = async (req: AuthRequest, res: Response): Promise<void> => {
   const page = parseInt(req.query.page as string) || 1;
   const limit = parseInt(req.query.limit as string) || 10;

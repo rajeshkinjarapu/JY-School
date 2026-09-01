@@ -40,12 +40,14 @@ export const routeImports: Record<string, () => Promise<any>> = {
   '/question-bank': () => import('../pages/question-bank/QuestionBankDashboard'),
   '/transport': () => import('../pages/transport/TransportDashboard'),
   '/settings': () => import('../pages/settings/SettingsPage'),
+  '/app-installs': () => import('../pages/dashboard/AppInstallsPage').then(m => ({ default: m.AppInstallsPage })),
 };
 
 const LoginPage = lazy(() => import('../pages/auth/LoginPage'));
 const ForgotPasswordPage = lazy(() => import('../pages/auth/ForgotPasswordPage'));
 const ResetPasswordPage = lazy(() => import('../pages/auth/ResetPasswordPage'));
 const DashboardPage = lazy(routeImports['/dashboard']);
+const AppInstallsPage = lazy(routeImports['/app-installs']);
 const StudentListPage = lazy(routeImports['/students']);
 const StudentFormPage = lazy(() => import('../pages/students/StudentFormPage'));
 const StudentProfilePage = lazy(() => import('../pages/students/StudentProfilePage'));
@@ -144,6 +146,14 @@ export const router = createBrowserRouter([
       {
         path: 'dashboard',
         element: withSuspense(<DashboardPage />),
+      },
+      {
+        path: 'app-installs',
+        element: withSuspense(
+          <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN']}>
+            <AppInstallsPage />
+          </ProtectedRoute>
+        ),
       },
       {
         path: 'students',

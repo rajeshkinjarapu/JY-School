@@ -26,6 +26,9 @@ model User {
   deviceToken  String?
   isAppInstalled Boolean @default(false)
   lastAppLoginAt DateTime?
+  deviceModel  String?
+  appVersion   String?
+  lastIpAddress String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 

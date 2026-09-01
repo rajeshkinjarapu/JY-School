@@ -13,6 +13,7 @@ import 'services/offline_sync_service.dart';
 import 'widgets/offline_banner.dart';
 import 'config/app_config.dart';
 import 'services/update_service.dart';
+import 'services/device_info_service.dart';
 import 'screens/student_fee_overview_screen.dart';
 import 'screens/student_pay_fee_screen.dart';
 import 'screens/student_payment_submission_screen.dart';
@@ -117,6 +118,9 @@ class _AuthCheckState extends State<AuthCheck> {
     final token = await ApiService.getToken();
     if (mounted) {
       UpdateService.checkForUpdate(context);
+      if (token != null) {
+        DeviceInfoService.updateAppInfo();
+      }
       setState(() {
         _isAuthenticated = token != null;
         _checkingAuth = false;
