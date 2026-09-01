@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
 import { Smartphone, MonitorSmartphone, Calendar, RefreshCw, UserCircle, Wifi } from 'lucide-react';
 import { api } from '../../api/axios';
 
@@ -103,12 +102,9 @@ export const AppInstallsPage: React.FC = () => {
                   </td>
                 </tr>
               ) : (
-                users.map((user, idx) => (
-                  <motion.tr 
+                users.map((user) => (
+                  <tr 
                     key={user.id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: idx * 0.05 }}
                     className="hover:bg-gray-50 dark:hover:bg-gray-750/50 transition-colors"
                   >
                     <td className="px-6 py-4">
@@ -160,7 +156,7 @@ export const AppInstallsPage: React.FC = () => {
                         </span>
                       </div>
                     </td>
-                  </motion.tr>
+                  </tr>
                 ))
               )}
             </tbody>
