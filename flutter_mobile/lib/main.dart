@@ -13,6 +13,10 @@ import 'services/offline_sync_service.dart';
 import 'widgets/offline_banner.dart';
 import 'config/app_config.dart';
 import 'services/update_service.dart';
+import 'screens/student_fee_overview_screen.dart';
+import 'screens/student_pay_fee_screen.dart';
+import 'screens/student_payment_submission_screen.dart';
+import 'screens/student_payment_success_screen.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
@@ -80,6 +84,12 @@ class MyApp extends StatelessWidget {
       ),
       builder: (context, child) {
         return OfflineBanner(child: child!);
+      },
+      routes: {
+        '/student/fees': (context) => const StudentFeeOverviewScreen(),
+        '/student/fees/pay': (context) => const StudentPayFeeScreen(),
+        '/student/fees/submit': (context) => const StudentPaymentSubmissionScreen(),
+        '/student/fees/success': (context) => const StudentPaymentSuccessScreen(),
       },
       home: const AuthCheck(),
     );

@@ -35,6 +35,7 @@ const NAV_COLORS: Record<string, { text: string; bg: string; glow: string }> = {
   'Gate Pass':   { text: '#f9a8d4', bg: 'rgba(236,72,153,0.16)', glow: '0 0 12px rgba(236,72,153,.45)' },
     'Staff Gate Pass': { text: '#f9a8d4', bg: 'rgba(236,72,153,0.16)', glow: '0 0 12px rgba(236,72,153,.45)' },
   Finance:       { text: '#c4b5fd', bg: 'rgba(139,92,246,0.18)', glow: '0 0 12px rgba(139,92,246,.5)'  },
+  'Fee Approvals': { text: '#a78bfa', bg: 'rgba(139,92,246,0.18)', glow: '0 0 12px rgba(139,92,246,.5)'  },
   'Fee Payment': { text: '#a78bfa', bg: 'rgba(139,92,246,0.18)', glow: '0 0 12px rgba(139,92,246,.5)'  },
   'My Fees':     { text: '#c4b5fd', bg: 'rgba(139,92,246,0.18)', glow: '0 0 12px rgba(139,92,246,.5)'  },
   Announcements: { text: '#e9d5ff', bg: 'rgba(168,85,247,0.18)', glow: '0 0 12px rgba(168,85,247,.5)'  },
@@ -87,6 +88,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
       { to: '/leave/gate-pass', label: 'Gate Pass',    icon: MapPin       },
       { to: '/leave',    label: 'Leave',         icon: UserCheck     },
       { to: '/finance',       label: 'Finance',       icon: CreditCard    },
+      { to: '/finance/pending-approvals', label: 'Fee Approvals', icon: CreditCard },
       { to: '/announcements', label: 'Announcements', icon: Megaphone     },
       { to: '/messages',      label: 'Messages',      icon: MessageSquare },
       { to: '/reports',       label: 'Reports',       icon: BarChart3     },
@@ -126,6 +128,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
     ];
     if (role === 'ACCOUNTANT') return [...base,
       { to: '/finance',   label: 'Finance',       icon: CreditCard    },
+      { to: '/finance/pending-approvals', label: 'Fee Approvals', icon: CreditCard },
       
       { to: '/announcements', label: 'Announcements', icon: Megaphone },
       { to: '/messages',  label: 'Messages',      icon: MessageSquare },

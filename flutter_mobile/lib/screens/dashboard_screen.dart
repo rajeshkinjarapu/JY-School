@@ -466,34 +466,42 @@ class _DashboardScreenState extends State<DashboardScreen> {
       child: Stack(
         clipBehavior: Clip.none,
         children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    width: 8,
-                    height: 8,
-                    decoration: const BoxDecoration(color: Color(0xFFD8B4FE), shape: BoxShape.circle),
+          Padding(
+            padding: const EdgeInsets.only(right: 90),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      width: 8,
+                      height: 8,
+                      decoration: const BoxDecoration(color: Color(0xFFD8B4FE), shape: BoxShape.circle),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      '${_getGreeting()} 👋',
+                      style: GoogleFonts.poppins(color: const Color(0xFFD8B4FE), fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 1),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    userName,
+                    maxLines: 1,
+                    style: GoogleFonts.outfit(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
                   ),
-                  const SizedBox(width: 8),
-                  Text(
-                    '${_getGreeting()} 👋',
-                    style: GoogleFonts.poppins(color: const Color(0xFFD8B4FE), fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 1),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Text(
-                userName,
-                style: GoogleFonts.outfit(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                'STUDENT • JY School',
-                style: GoogleFonts.poppins(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.w500),
-              ),
-            ],
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'STUDENT • JY School',
+                  style: GoogleFonts.poppins(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.w500),
+                ),
+              ],
+            ),
           ),
           Positioned(
             right: 0,
@@ -562,58 +570,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
           Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFFFBEB),
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: const Color(0xFFFDE68A), width: 1)
-                ),
-                child: const Icon(Icons.campaign_rounded, color: Color(0xFFD97706), size: 18),
-              ),
-              const SizedBox(width: 12),
+              const Icon(Icons.campaign_rounded, color: Color(0xFFD97706), size: 14),
+              const SizedBox(width: 6),
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Latest Announcement',
-                      style: GoogleFonts.poppins(color: const Color(0xFFD97706), fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1),
-                    ),
-                    Text(
-                      title, 
-                      style: GoogleFonts.outfit(color: const Color(0xFF1E3A8A), fontSize: 16, fontWeight: FontWeight.bold),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 8),
-              GestureDetector(
-                onTap: () {
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => const NotificationsScreen()));
-                },
-                child: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF8FAFC),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Icon(Icons.arrow_forward_ios_rounded, color: Color(0xFF94A3B8), size: 14),
+                child: Text(
+                  'LATEST ANNOUNCEMENT',
+                  style: GoogleFonts.poppins(color: const Color(0xFFD97706), fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1),
                 ),
               ),
             ],
           ),
           if (content.isNotEmpty) ...[
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 12),
-              child: Divider(color: Color(0xFFF1F5F9), height: 1),
-            ),
+            const SizedBox(height: 8),
             Text(
               content,
-              style: GoogleFonts.poppins(color: const Color(0xFF64748B), fontSize: 13, height: 1.5, fontWeight: FontWeight.w500),
-              maxLines: 3,
+              style: GoogleFonts.poppins(color: const Color(0xFF334155), fontSize: 13, height: 1.6, fontWeight: FontWeight.w500),
+              maxLines: 4,
               overflow: TextOverflow.ellipsis,
             ),
           ],

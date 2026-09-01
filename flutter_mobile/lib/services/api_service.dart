@@ -1307,4 +1307,87 @@ class ApiService {
       return {'success': false, 'message': 'Network error: $e'};
     }
   }
+
+  // ── Phase 3 Fee Payment Methods ──────────────────────────────────────────
+
+  static Future<Map<String, dynamic>> studentPayFeeWithScreenshot({
+    required double amount,
+    required String paymentMethod,
+    required String referenceNumber,
+    required String notes,
+    required List<int> imageBytes,
+    required String imageFilename,
+  }) async {
+    try {
+      final token = await _getToken();
+      final request = http.MultipartRequest('POST', Uri.parse('$baseUrl/api/fees/student/pay'));
+      request.headers.addAll(_getHeaders(token: token, isMultipart: true));
+
+      request.fields['amount'] = amount.toString();
+      request.fields['paymentMethod'] = paymentMethod;
+      request.fields['referenceNumber'] = referenceNumber;
+      request.fields['notes'] = notes;
+
+      final multipartFile = http.MultipartFile.fromBytes(
+        'screenshot',
+        imageBytes,
+        filename: imageFilename,
+      );
+      request.files.add(multipartFile);
+
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return {'success': true, 'data': data['data'] ?? data};
+      }
+      return {'success': false, 'message': data['message'] ?? 'Payment submission failed'};
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: $e'};
+    }
+  }
+
+  static Future<Map<String, dynamic>> updateSettingsWithFile({
+    required Map<String, String> fields,
+    List<int>? fileBytes,
+    String? filename,
+  }) async {
+    try {
+      final token = await _getToken();
+      final request = http.MultipartRequest('PUT', Uri.parse('$baseUrl/api/settings'));
+      request.headers.addAll(_getHeaders(token: token, isMultipart: true));
+
+      request.fields.addAll(fields);
+
+      if (fileBytes != null && filename != null) {
+        final multipartFile = http.MultipartFile.fromBytes(
+          'qrCode',
+          fileBytes,
+          filename: filename,
+        );
+        request.files.add(multipartFile);
+      }
+
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return {'success': true, 'data': data['data'] ?? data};
+      }
+      return {'success': false, 'message': data['message'] ?? 'Failed to update settings'};
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: $e'};
+    }
+  }
+
+  static Future<Map<String, dynamic>> getPendingFeeApprovals() async {
+    return _performGet('/api/fees/admin/pending', 'Failed to load pending fee approvals');
+  }
+
+  static Future<Map<String, dynamic>> approveFeePayment(String paymentId, {required bool approve}) async {
+    return _performPost('/api/fees/admin/approve', {'paymentId': paymentId, 'approve': approve}, 'Failed to process fee approval');
+  }
+
 }

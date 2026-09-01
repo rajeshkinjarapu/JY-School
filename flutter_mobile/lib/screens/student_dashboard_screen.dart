@@ -212,6 +212,9 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
             crossAxisSpacing: 12,
             childAspectRatio: 0.75,
             children: [
+              _buildGridItem('Fees', Icons.account_balance_wallet_rounded, const Color(0xFFDCFCE7), const Color(0xFF16A34A), onTap: () {
+                Navigator.pushNamed(context, '/student/fees');
+              }),
               _buildGridItem('Notice\nBoard', Icons.campaign_rounded, const Color(0xFFEDE9FE), const Color(0xFF6D28D9)),
               _buildGridItem('Events', Icons.event_note_rounded, const Color(0xFFFCE7F3), const Color(0xFFDB2777)),
               _buildGridItem('Gallery', Icons.collections_rounded, const Color(0xFFFEF3C7), const Color(0xFFD97706)),
@@ -229,11 +232,13 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
     );
   }
 
-  Widget _buildGridItem(String title, IconData icon, Color bgColor, Color iconColor) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.start,
-      children: [
-        Container(
+  Widget _buildGridItem(String title, IconData icon, Color bgColor, Color iconColor, {VoidCallback? onTap}) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: [
+          Container(
           width: 60,
           height: 60,
           decoration: BoxDecoration(

@@ -7,9 +7,10 @@ import toast from 'react-hot-toast';
 import { PageHeader } from '../../components/UI/PageHeader';
 import { useOutletContext } from 'react-router-dom';
 import { DeleteRecordsTab } from './DeleteRecordsTab';
+import { PaymentSettingsTab } from './PaymentSettingsTab';
 
 export const SettingsPage: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'system' | 'users' | 'delete'>('system');
+  const [activeTab, setActiveTab] = useState<'system' | 'users' | 'delete' | 'payments'>('system');
   const [loadingSettings, setLoadingSettings] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -235,10 +236,22 @@ export const SettingsPage: React.FC = () => {
         >
           <Trash2 className="w-4 h-4" /> Danger Zone
         </button>
+        <button
+          onClick={() => setActiveTab('payments')}
+          className={`flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold transition-all duration-300 ${
+            activeTab === 'payments'
+              ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-md shadow-emerald-500/30'
+              : 'text-gray-600 hover:bg-emerald-50 dark:text-gray-300 dark:hover:bg-emerald-900/30 hover:text-emerald-600'
+          }`}
+        >
+          <Key className="w-4 h-4" /> Payment Setup
+        </button>
       </div>
 
       <div className="mt-6">
-        {activeTab === 'system' ? (
+        {activeTab === 'payments' ? (
+          <PaymentSettingsTab />
+        ) : activeTab === 'system' ? (
           <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border border-white/40 dark:border-gray-800 rounded-3xl p-8 shadow-xl max-w-3xl mx-auto transform transition-all duration-500">
             <div className="mb-8">
               <h2 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400">Branding & System Info</h2>

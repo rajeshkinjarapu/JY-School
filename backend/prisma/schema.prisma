@@ -487,6 +487,11 @@ model SchoolSettings {
   examSendSms               Boolean  @default(true)
   examShowGradesOnAdmitCard Boolean  @default(false)
   examAdmitCardInstructions String   @default("")
+  bankName                  String?
+  bankAccountNumber         String?
+  bankIfsc                  String?
+  upiId                     String?
+  qrCodeUrl                 String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }

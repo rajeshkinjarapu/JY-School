@@ -104,8 +104,7 @@ const TransportMaintenanceLogsPage = lazy(() => import('../pages/transport/Maint
 const AnswerKeyPage = lazy(() => import('../pages/question-bank/AnswerKeyPage'));
 const IdCardDashboard = lazy(() => import('../pages/idcards/IdCardDashboard'));
 const IdCardGeneratorPage = lazy(() => import('../pages/idcards/IdCardGeneratorPage'));
-
-
+const PendingFeeApprovalsPage = lazy(() => import('../pages/fees/PendingFeeApprovals').then(m => ({ default: m.PendingFeeApprovals })));
 const AttendanceWrapper = () => {
   const { user } = useAuth();
   if (user?.role === 'STUDENT') {
@@ -336,6 +335,14 @@ export const router = createBrowserRouter([
         element: withSuspense(
           <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN', 'ACCOUNTANT']}>
             <FinancePage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'finance/pending-approvals',
+        element: withSuspense(
+          <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN', 'ACCOUNTANT']}>
+            <PendingFeeApprovalsPage />
           </ProtectedRoute>
         ),
       },

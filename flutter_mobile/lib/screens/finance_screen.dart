@@ -15,6 +15,9 @@ import 'fee_receipts_screen.dart';
 import 'add_student_fee_screen.dart';
 import 'transactions_screen.dart';
 import 'student_fee_details_screen.dart';
+import 'admin_pending_fees_screen.dart';
+import 'admin_payment_settings_screen.dart';
+
 class FinanceScreen extends StatefulWidget {
   const FinanceScreen({super.key});
 
@@ -269,12 +272,13 @@ class _FinanceScreenState extends State<FinanceScreen> {
 
   Widget _buildModulesGrid() {
     final modules = [
+      {'title': 'Pending', 'desc': 'Approvals', 'icon': Icons.pending_actions_rounded, 'color': const Color(0xFFEF4444), 'screen': const AdminPendingFeesScreen()},
       {'title': 'Collect Fee', 'desc': 'Search & Pay', 'icon': Icons.account_balance_wallet_rounded, 'color': const Color(0xFF10B981), 'screen': const StudentFeeSearchScreen()},
       {'title': 'Receipts', 'desc': 'Print Invoices', 'icon': Icons.receipt_long_rounded, 'color': const Color(0xFF0EA5E9), 'screen': const FeeReceiptsScreen()},
       {'title': 'Reports', 'desc': 'Class Analytics', 'icon': Icons.analytics_rounded, 'color': const Color(0xFF6366F1), 'screen': const FinanceReportsScreen()},
       {'title': 'Installments', 'desc': 'Timeline View', 'icon': Icons.history_rounded, 'color': const Color(0xFF8B5CF6), 'screen': const FeeInstallmentReportScreen()},
       {'title': 'Fee Structure', 'desc': 'Manage Templates', 'icon': Icons.account_tree_rounded, 'color': const Color(0xFFF59E0B), 'screen': const FeeStructureManagementScreen()},
-      {'title': 'Settings', 'desc': 'Heads & Groups', 'icon': Icons.settings_rounded, 'color': const Color(0xFF64748B), 'screen': const FeeSettingsScreen()},
+      {'title': 'Payment Setup', 'desc': 'Bank & QR Code', 'icon': Icons.qr_code_2_rounded, 'color': const Color(0xFF64748B), 'screen': const AdminPaymentSettingsScreen()},
       {'title': 'Fee Category', 'desc': 'Add Custom Fee', 'icon': Icons.category_rounded, 'color': const Color(0xFFEC4899), 'screen': const AddStudentFeeScreen()},
       {'title': 'Transactions', 'desc': 'Payments List', 'icon': Icons.sync_alt_rounded, 'color': const Color(0xFF14B8A6), 'screen': const TransactionsScreen()},
       {'title': 'Fee Details', 'desc': 'Export & Share', 'icon': Icons.table_chart_rounded, 'color': const Color(0xFF3B82F6), 'screen': const StudentFeeDetailsScreen()},
