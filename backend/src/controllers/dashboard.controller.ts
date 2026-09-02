@@ -434,6 +434,13 @@ export const getStudentDashboard = async (req: AuthRequest, res: Response, next:
       }
     }) : [];
 
+    const recentHomework = student.classId ? await prisma.homework.findMany({
+      where: { classId: student.classId },
+      include: { subject: { select: { name: true } }, teacher: { include: { user: { select: { name: true } } } } },
+      orderBy: { createdAt: 'desc' },
+      take: 5
+    }) : [];
+
     const { medicalInfo, ...studentWithoutMedical } = student;
 
     successResponse(res, {
