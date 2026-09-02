@@ -3,17 +3,24 @@ workflows:
     name: Teacher App Android Build
     max_build_duration: 30
     environment:
+      groups:
+        - shorebird
       flutter: stable
     working_directory: flutter_workspace
     scripts:
+      - name: Install Shorebird
+        script: |
+          curl --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/shorebirdtech/install/main/install.sh | bash
+          export PATH="$HOME/.shorebird/bin:$PATH"
       - name: Install Melos
         script: dart pub global activate melos
       - name: Bootstrap Workspace
         script: dart pub global run melos bootstrap
-      - name: Build Teacher App APK
+      - name: Build Teacher App APK with Shorebird
         script: |
+          export PATH="$HOME/.shorebird/bin:$PATH"
           cd apps/teacher_app
-          flutter build apk --release
+          shorebird release android --no-confirm
     artifacts:
       - apps/teacher_app/build/app/outputs/flutter-apk/app-release.apk
 
@@ -21,17 +28,24 @@ workflows:
     name: Student App Android Build
     max_build_duration: 30
     environment:
+      groups:
+        - shorebird
       flutter: stable
     working_directory: flutter_workspace
     scripts:
+      - name: Install Shorebird
+        script: |
+          curl --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/shorebirdtech/install/main/install.sh | bash
+          export PATH="$HOME/.shorebird/bin:$PATH"
       - name: Install Melos
         script: dart pub global activate melos
       - name: Bootstrap Workspace
         script: dart pub global run melos bootstrap
-      - name: Build Student App APK
+      - name: Build Student App APK with Shorebird
         script: |
+          export PATH="$HOME/.shorebird/bin:$PATH"
           cd apps/student_app
-          flutter build apk --release
+          shorebird release android --no-confirm
     artifacts:
       - apps/student_app/build/app/outputs/flutter-apk/app-release.apk
 
@@ -39,17 +53,24 @@ workflows:
     name: Admin App Android Build
     max_build_duration: 30
     environment:
+      groups:
+        - shorebird
       flutter: stable
     working_directory: flutter_workspace
     scripts:
+      - name: Install Shorebird
+        script: |
+          curl --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/shorebirdtech/install/main/install.sh | bash
+          export PATH="$HOME/.shorebird/bin:$PATH"
       - name: Install Melos
         script: dart pub global activate melos
       - name: Bootstrap Workspace
         script: dart pub global run melos bootstrap
-      - name: Build Admin App APK
+      - name: Build Admin App APK with Shorebird
         script: |
+          export PATH="$HOME/.shorebird/bin:$PATH"
           cd apps/admin_app
-          flutter build apk --release
+          shorebird release android --no-confirm
     artifacts:
       - apps/admin_app/build/app/outputs/flutter-apk/app-release.apk
 
@@ -57,16 +78,23 @@ workflows:
     name: Universal App Android Build
     max_build_duration: 30
     environment:
+      groups:
+        - shorebird
       flutter: stable
     working_directory: flutter_workspace
     scripts:
+      - name: Install Shorebird
+        script: |
+          curl --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/shorebirdtech/install/main/install.sh | bash
+          export PATH="$HOME/.shorebird/bin:$PATH"
       - name: Install Melos
         script: dart pub global activate melos
       - name: Bootstrap Workspace
         script: dart pub global run melos bootstrap
-      - name: Build Universal App APK
+      - name: Build Universal App APK with Shorebird
         script: |
+          export PATH="$HOME/.shorebird/bin:$PATH"
           cd apps/universal_app
-          flutter build apk --release
+          shorebird release android --no-confirm
     artifacts:
       - apps/universal_app/build/app/outputs/flutter-apk/app-release.apk
