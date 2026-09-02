@@ -12,6 +12,7 @@ import 'services/notification_service.dart';
 import 'services/offline_sync_service.dart';
 import 'widgets/offline_banner.dart';
 import 'config/app_config.dart';
+import 'screens/welcome_screen.dart';
 import 'services/update_service.dart';
 import 'services/device_info_service.dart';
 import 'screens/student_fee_overview_screen.dart';
@@ -109,6 +110,7 @@ class AuthCheck extends StatefulWidget {
 class _AuthCheckState extends State<AuthCheck> {
   bool _checkingAuth = true;
   bool _isAuthenticated = false;
+  bool _hasSeenWelcome = false;
 
   @override
   void initState() {
@@ -117,13 +119,17 @@ class _AuthCheckState extends State<AuthCheck> {
   }
 
   Future<void> _checkStatus() async {
+    final prefs = await SharedPreferences.getInstance();
+    final hasSeenWelcome = prefs.getBool('hasSeenWelcome') ?? false;
     final token = await ApiService.getToken();
+    
     if (mounted) {
       UpdateService.checkForUpdate(context);
       if (token != null) {
         DeviceInfoService.updateAppInfo();
       }
       setState(() {
+        _hasSeenWelcome = hasSeenWelcome;
         _isAuthenticated = token != null;
         _checkingAuth = false;
       });
@@ -139,6 +145,11 @@ class _AuthCheckState extends State<AuthCheck> {
         ),
       );
     }
+    
+    if (!_hasSeenWelcome) {
+      return const WelcomeScreen();
+    }
+    
     return _isAuthenticated ? const MainLayout() : const LoginScreen();
   }
 }
