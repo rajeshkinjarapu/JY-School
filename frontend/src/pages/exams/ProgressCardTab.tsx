@@ -66,7 +66,7 @@ export const ProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
       setLoading(true);
       try {
         // includePhoto=true: Progress cards need student photos
-        const res: any = await api.get(`/api/exams/${selectedExamId}/results?classId=${selectedClassId}&includePhoto=true`);
+        const res: any = await api.get(`/api/exams/${selectedExamId}/results?classId=${selectedClassId}&includePhoto=true&t=${new Date().getTime()}`);
         // Map the results to the data format expected by ProgressCardTemplate
         // the API returns { studentId, name, rollNo, className, marks, total, percentage, grade, rank }
         // We map it to { studentName, rollNo, className, section, mobile, rank, marks, photo }

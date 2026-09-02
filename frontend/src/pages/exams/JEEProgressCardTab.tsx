@@ -79,7 +79,7 @@ export const JEEProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
       setLoading(true);
       try {
         // includePhoto=true: Progress cards need student photos
-        const res: any = await api.get(`/api/exams/${selectedExamId}/results?classId=${selectedClassId}&includePhoto=true`);
+        const res: any = await api.get(`/api/exams/${selectedExamId}/results?classId=${selectedClassId}&includePhoto=true&t=${new Date().getTime()}`);
 
         const formattedData = (res.data?.data || res.data || []).map((s: any) => {
            let cName = s.className || '';

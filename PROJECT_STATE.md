@@ -59,3 +59,4 @@
    - Mapped `academicYear` in `JEEProgressCardTab.tsx` and `ProgressCardTab.tsx` so `ProgressCardTemplate.tsx` dynamically prints the exact year saved for that class in the DB.
    - Updated defaults in the codebase to fall back to `2026-2027` instead of `2024-2025`.
    - Ran a one-time script (`update_year.js`) to migrate all existing classes in the database (24 classes) to `2026-2027`.
+   - Executed the update script directly on the VPS (`node fix_db.js`) to ensure the production Supabase database used by the VPS backend was fully synced to `2026-2027`.
