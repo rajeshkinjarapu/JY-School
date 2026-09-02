@@ -66,6 +66,7 @@ const SavedPapersPage = () => {
   // New States for Redesign
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [selectedSubject, setSelectedSubject] = useState<string>('All');
+  const [selectedClass, setSelectedClass] = useState<string>('All');
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest' | 'az'>('newest');
   
   // Modals
@@ -181,11 +182,13 @@ const SavedPapersPage = () => {
 
   // Filter & Sort Logic
   const uniqueSubjects = ['All', ...Array.from(new Set(papers.map(p => p.examSubject).filter(Boolean)))].sort();
+  const uniqueClasses = ['All', ...Array.from(new Set(papers.map(p => p.examClass).filter(Boolean)))].sort();
 
   let filtered = papers.filter(p => {
     const matchesSearch = p.examName.toLowerCase().includes(search.toLowerCase()) || p.examSubject.toLowerCase().includes(search.toLowerCase());
     const matchesSubject = selectedSubject === 'All' || p.examSubject === selectedSubject;
-    return matchesSearch && matchesSubject;
+    const matchesClass = selectedClass === 'All' || p.examClass === selectedClass;
+    return matchesSearch && matchesSubject && matchesClass;
   });
 
   filtered = filtered.sort((a, b) => {
@@ -266,6 +269,26 @@ const SavedPapersPage = () => {
           </div>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
+              <select 
+                value={selectedClass}
+                onChange={(e) => setSelectedClass(e.target.value)}
+                className="px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-xs font-bold text-slate-600 shadow-sm focus:outline-none focus:border-indigo-500 cursor-pointer max-w-[120px] truncate"
+              >
+                {uniqueClasses.map(cls => (
+                  <option key={cls} value={cls}>{cls === 'All' ? 'All Classes' : cls}</option>
+                ))}
+              </select>
+
+              <select 
+                value={selectedSubject}
+                onChange={(e) => setSelectedSubject(e.target.value)}
+                className="px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-xs font-bold text-slate-600 shadow-sm focus:outline-none focus:border-indigo-500 cursor-pointer max-w-[120px] truncate"
+              >
+                {uniqueSubjects.map(sub => (
+                  <option key={sub} value={sub}>{sub === 'All' ? 'All Subjects' : sub}</option>
+                ))}
+              </select>
+
               <select 
                 value={sortOrder}
                 onChange={(e) => setSortOrder(e.target.value as any)}
