@@ -5,42 +5,36 @@ import 'package:google_fonts/google_fonts.dart';
 import 'login_screen.dart';
 import 'main_layout.dart';
 
+// ═══════════════════════════════════════════════════════════════════
+//  JY SCHOOL – WELCOME SCREEN (Bright & Colorful – No Dark)
+// ═══════════════════════════════════════════════════════════════════
+
 class WelcomeScreen extends StatelessWidget {
   final bool isAuthenticated;
   const WelcomeScreen({super.key, required this.isAuthenticated});
 
   void _startJourney(BuildContext context) {
-    if (isAuthenticated) {
-      Navigator.of(context).pushReplacement(
-        PageRouteBuilder(
-          pageBuilder: (_, __, ___) => const MainLayout(),
-          transitionsBuilder: (_, anim, __, child) =>
-              FadeTransition(opacity: anim, child: child),
-          transitionDuration: const Duration(milliseconds: 500),
-        ),
-      );
-    } else {
-      Navigator.of(context).pushReplacement(
-        PageRouteBuilder(
-          pageBuilder: (_, __, ___) => const LoginScreen(),
-          transitionsBuilder: (_, anim, __, child) =>
-              FadeTransition(opacity: anim, child: child),
-          transitionDuration: const Duration(milliseconds: 500),
-        ),
-      );
-    }
+    Navigator.of(context).pushReplacement(
+      PageRouteBuilder(
+        pageBuilder: (_, __, ___) =>
+            isAuthenticated ? const MainLayout() : const LoginScreen(),
+        transitionsBuilder: (_, anim, __, child) =>
+            FadeTransition(opacity: anim, child: child),
+        transitionDuration: const Duration(milliseconds: 500),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0D47A1),
+      backgroundColor: Colors.white,
       body: _WelcomeBody(onStart: () => _startJourney(context)),
     );
   }
 }
 
-// ─────────────────────── Welcome Body ───────────────────────
+// ─────────────────────── Animated Body ───────────────────────────
 class _WelcomeBody extends StatefulWidget {
   final VoidCallback onStart;
   const _WelcomeBody({required this.onStart});
@@ -52,7 +46,7 @@ class _WelcomeBody extends StatefulWidget {
 class _WelcomeBodyState extends State<_WelcomeBody>
     with TickerProviderStateMixin {
   late AnimationController _bgCtrl;
-  late AnimationController _contentCtrl;
+  late AnimationController _entryCtrl;
   late AnimationController _shimmerCtrl;
   late Animation<double> _bgAnim;
   late Animation<double> _fadeAnim;
@@ -62,42 +56,24 @@ class _WelcomeBodyState extends State<_WelcomeBody>
   @override
   void initState() {
     super.initState();
-
     _bgCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 8),
-    )..repeat(reverse: true);
-
-    _contentCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1000),
-    )..forward();
-
+        vsync: this, duration: const Duration(seconds: 6))
+      ..repeat(reverse: true);
+    _entryCtrl = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 1000))
+      ..forward();
     _shimmerCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 3),
-    )..repeat();
+        vsync: this, duration: const Duration(seconds: 3))
+      ..repeat();
 
-    _bgAnim = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _bgCtrl, curve: Curves.easeInOut),
-    );
-
+    _bgAnim = CurvedAnimation(parent: _bgCtrl, curve: Curves.easeInOut);
     _fadeAnim = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _contentCtrl,
-        curve: const Interval(0.0, 0.8, curve: Curves.easeOut),
-      ),
+      CurvedAnimation(parent: _entryCtrl, curve: const Interval(0.0, 0.75, curve: Curves.easeOut)),
     );
-
-    _slideAnim =
-        Tween<Offset>(begin: const Offset(0, 0.08), end: Offset.zero).animate(
-      CurvedAnimation(
-        parent: _contentCtrl,
-        curve: const Interval(0.0, 0.8, curve: Curves.easeOutCubic),
-      ),
+    _slideAnim = Tween<Offset>(begin: const Offset(0, 0.06), end: Offset.zero).animate(
+      CurvedAnimation(parent: _entryCtrl, curve: const Interval(0.0, 0.75, curve: Curves.easeOutCubic)),
     );
-
-    _shimmerAnim = Tween<double>(begin: -1.2, end: 2.2).animate(
+    _shimmerAnim = Tween<double>(begin: -1.5, end: 2.5).animate(
       CurvedAnimation(parent: _shimmerCtrl, curve: Curves.easeInOut),
     );
   }
@@ -105,7 +81,7 @@ class _WelcomeBodyState extends State<_WelcomeBody>
   @override
   void dispose() {
     _bgCtrl.dispose();
-    _contentCtrl.dispose();
+    _entryCtrl.dispose();
     _shimmerCtrl.dispose();
     super.dispose();
   }
@@ -116,34 +92,52 @@ class _WelcomeBodyState extends State<_WelcomeBody>
 
     return AnimatedBuilder(
       animation: _bgAnim,
-      builder: (_, __) => Stack(
-        children: [
-          // ── Vibrant Colorful Gradient Canvas ────────────────────────
-          Positioned.fill(
-            child: Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Color(0xFF0284C7), // Sky blue top
-                    Color(0xFF0369A1), // Deep cyan
-                    Color(0xFF1D4ED8), // Vibrant Royal blue
-                    Color(0xFF1E1B4B), // Deep night blue bottom
-                  ],
-                  stops: [0.0, 0.25, 0.65, 1.0],
+      builder: (_, __) {
+        return Stack(
+          children: [
+            // ══ Background: Soft white with bright blue sky top section ══
+            Positioned.fill(
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Color.lerp(const Color(0xFF1565C0), const Color(0xFF1E88E5), _bgAnim.value)!,
+                      Color.lerp(const Color(0xFF1E88E5), const Color(0xFF1565C0), _bgAnim.value)!,
+                      const Color(0xFFF0F7FF),
+                      Colors.white,
+                    ],
+                    stops: const [0.0, 0.38, 0.62, 1.0],
+                  ),
                 ),
               ),
             ),
-          ),
 
-          // ── Colorful Organic Wave Blobs (Top & Bottom accents) ───────
-          // Top Yellow/Gold accent blob
-          Positioned(
-            top: -size.height * 0.08,
-            right: -size.width * 0.18,
-            child: Transform.rotate(
-              angle: 0.4 + _bgAnim.value * 0.1,
+            // ══ Bright Wavy SVG-style shape – top right yellow curve ══
+            Positioned(
+              top: -size.height * 0.06,
+              right: -size.width * 0.22,
+              child: Container(
+                width: size.width * 0.72,
+                height: size.width * 0.72,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: RadialGradient(
+                    colors: [
+                      const Color(0xFFFDD835).withOpacity(0.55 + 0.15 * _bgAnim.value),
+                      const Color(0xFFFBC02D).withOpacity(0.25),
+                      Colors.transparent,
+                    ],
+                  ),
+                ),
+              ),
+            ),
+
+            // ══ Top left cyan/teal accent ══
+            Positioned(
+              top: -size.height * 0.04,
+              left: -size.width * 0.22,
               child: Container(
                 width: size.width * 0.65,
                 height: size.width * 0.65,
@@ -151,169 +145,198 @@ class _WelcomeBodyState extends State<_WelcomeBody>
                   shape: BoxShape.circle,
                   gradient: RadialGradient(
                     colors: [
-                      const Color(0xFFFBBF24).withOpacity(0.45),
-                      const Color(0xFFF59E0B).withOpacity(0.25),
+                      const Color(0xFF26C6DA).withOpacity(0.50 + 0.10 * _bgAnim.value),
                       Colors.transparent,
                     ],
                   ),
                 ),
               ),
             ),
-          ),
 
-          // Top Left Cyan accent blob
-          Positioned(
-            top: -size.height * 0.05,
-            left: -size.width * 0.2,
-            child: Container(
-              width: size.width * 0.6,
-              height: size.width * 0.6,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(
-                  colors: [
-                    const Color(0xFF38BDF8).withOpacity(0.4),
-                    Colors.transparent,
-                  ],
-                ),
-              ),
-            ),
-          ),
-
-          // Bottom Magenta & Purple Vibrant Wave Blobs
-          Positioned(
-            bottom: -size.height * 0.08,
-            left: -size.width * 0.2,
-            child: Container(
-              width: size.width * 0.75,
-              height: size.width * 0.75,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(
-                  colors: [
-                    const Color(0xFFEC4899).withOpacity(0.35),
-                    const Color(0xFF8B5CF6).withOpacity(0.2),
-                    Colors.transparent,
-                  ],
-                ),
-              ),
-            ),
-          ),
-
-          Positioned(
-            bottom: -size.height * 0.06,
-            right: -size.width * 0.15,
-            child: Container(
-              width: size.width * 0.7,
-              height: size.width * 0.7,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(
-                  colors: [
-                    const Color(0xFFF59E0B).withOpacity(0.3),
-                    const Color(0xFFEF4444).withOpacity(0.2),
-                    Colors.transparent,
-                  ],
-                ),
-              ),
-            ),
-          ),
-
-          // ── Playful Education Doodles Background ─────────────────────
-          ...List.generate(
-            _doodles.length,
-            (index) => _FloatingDoodle(
-              doodle: _doodles[index],
-              screenSize: size,
-              animationValue: _bgAnim.value,
-            ),
-          ),
-
-          // ── Foreground Content ──────────────────────────────────────
-          SafeArea(
-            child: SlideTransition(
-              position: _slideAnim,
-              child: FadeTransition(
-                opacity: _fadeAnim,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: Column(
-                    children: [
-                      const SizedBox(height: 16),
-
-                      // Top Small Pill Badge
-                      _TopWelcomePill(),
-
-                      const Spacer(flex: 2),
-
-                      // Animated Logo with Vibrant Glowing Solar Ring
-                      const _VibrantLogoSection(),
-
-                      const SizedBox(height: 28),
-
-                      // Bold School Name with Golden Accent Wings
-                      _VibrantSchoolTitle(shimmerAnim: _shimmerAnim),
-
-                      const SizedBox(height: 18),
-
-                      // Empowering Minds Tagline Banner
-                      const _TaglineBanner(),
-
-                      const Spacer(flex: 3),
-
-                      // Inspiring Quote Card (Modern Glass)
-                      const _InspirationCard(),
-
-                      const Spacer(flex: 2),
-
-                      // Bottom "Start" CTA Button with Safe Area
-                      SafeArea(
-                        top: false,
-                        bottom: true,
-                        child: Padding(
-                          padding: EdgeInsets.only(
-                            bottom: MediaQuery.of(context).padding.bottom > 0 ? 4 : 14,
-                          ),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              _VibrantStartButton(onPressed: widget.onStart),
-                              const SizedBox(height: 12),
-                              // Footer Subtitle with accents
-                              _BottomFooterLine(),
-                            ],
-                          ),
-                        ),
-                      ),
+            // ══ Bottom purple wave blob ══
+            Positioned(
+              bottom: -size.height * 0.04,
+              left: -size.width * 0.1,
+              child: Container(
+                width: size.width * 0.55,
+                height: size.width * 0.55,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: RadialGradient(
+                    colors: [
+                      const Color(0xFFAB47BC).withOpacity(0.38),
+                      Colors.transparent,
                     ],
                   ),
                 ),
               ),
             ),
-          ),
-        ],
-      ),
+
+            // ══ Bottom right orange accent ══
+            Positioned(
+              bottom: -size.height * 0.03,
+              right: -size.width * 0.12,
+              child: Container(
+                width: size.width * 0.55,
+                height: size.width * 0.55,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: RadialGradient(
+                    colors: [
+                      const Color(0xFFFF7043).withOpacity(0.40),
+                      Colors.transparent,
+                    ],
+                  ),
+                ),
+              ),
+            ),
+
+            // ══ Floating education doodles ══
+            ..._buildDoodles(size),
+
+            // ══ White wave divider at transition point ══
+            Positioned(
+              top: size.height * 0.47,
+              left: 0,
+              right: 0,
+              child: CustomPaint(
+                size: Size(size.width, 60),
+                painter: _WavePainter(),
+              ),
+            ),
+
+            // ══ Main Content ══
+            SafeArea(
+              child: SlideTransition(
+                position: _slideAnim,
+                child: FadeTransition(
+                  opacity: _fadeAnim,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        const SizedBox(height: 16),
+
+                        // Yellow dot pill badge
+                        _TopBadge(),
+
+                        const Spacer(flex: 2),
+
+                        // Animated Logo
+                        _AnimatedLogo(),
+
+                        const SizedBox(height: 22),
+
+                        // SRI VENKATESWARA + JY SCHOOL
+                        _SchoolTitleSection(shimmerAnim: _shimmerAnim),
+
+                        const SizedBox(height: 14),
+
+                        // Tagline Banner
+                        const _TaglineBanner(),
+
+                        const Spacer(flex: 3),
+
+                        // Stats Strip (3 colourful pills)
+                        const _StatsStrip(),
+
+                        const SizedBox(height: 20),
+
+                        // Start Button
+                        SafeArea(
+                          top: false,
+                          bottom: true,
+                          child: Padding(
+                            padding: EdgeInsets.only(
+                              bottom: MediaQuery.of(context).padding.bottom > 0 ? 4 : 12,
+                            ),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                _StartButton(onPressed: widget.onStart),
+                                const SizedBox(height: 10),
+                                _FooterLine(),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
     );
+  }
+
+  List<Widget> _buildDoodles(Size size) {
+    const doodles = [
+      _DoodleSpec(Icons.send_rounded, 0.10, 0.08, 28, Color(0xFFFFFFFF), 0.55),
+      _DoodleSpec(Icons.lightbulb_outline_rounded, 0.84, 0.09, 30, Color(0xFFFDD835), 0.70),
+      _DoodleSpec(Icons.menu_book_rounded, 0.88, 0.18, 26, Color(0xFFFFFFFF), 0.50),
+      _DoodleSpec(Icons.science_outlined, 0.08, 0.20, 24, Color(0xFFFFFFFF), 0.55),
+      _DoodleSpec(Icons.calculate_outlined, 0.86, 0.30, 22, Color(0xFFFFFFFF), 0.45),
+      _DoodleSpec(Icons.emoji_events_outlined, 0.08, 0.32, 24, Color(0xFFFDD835), 0.65),
+    ];
+
+    return doodles.asMap().entries.map((entry) {
+      final d = entry.value;
+      final floatY = math.sin(_bgAnim.value * math.pi * 2 + entry.key * 1.3) * 7;
+      final floatX = math.cos(_bgAnim.value * math.pi * 2 + entry.key * 1.1) * 4;
+      return Positioned(
+        left: d.xPct * size.width + floatX,
+        top: d.yPct * size.height + floatY,
+        child: Icon(d.icon, size: d.size, color: d.color.withOpacity(d.opacity)),
+      );
+    }).toList();
   }
 }
 
-// ─────────────────────── Top Welcome Pill ────────────────────────
-class _TopWelcomePill extends StatelessWidget {
+class _DoodleSpec {
+  final IconData icon;
+  final double xPct, yPct, size;
+  final Color color;
+  final double opacity;
+  const _DoodleSpec(this.icon, this.xPct, this.yPct, this.size, this.color, this.opacity);
+}
+
+// ─────────────────────── Wave Divider Painter ─────────────────────
+class _WavePainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.fill;
+
+    final path = Path()
+      ..moveTo(0, 40)
+      ..quadraticBezierTo(size.width * 0.25, 0, size.width * 0.5, 30)
+      ..quadraticBezierTo(size.width * 0.75, 60, size.width, 20)
+      ..lineTo(size.width, 60)
+      ..lineTo(0, 60)
+      ..close();
+
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter old) => false;
+}
+
+// ─────────────────────── Top Badge ───────────────────────────────
+class _TopBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.16),
+        color: Colors.white.withOpacity(0.22),
         borderRadius: BorderRadius.circular(30),
-        border: Border.all(color: Colors.white.withOpacity(0.3), width: 1),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
-          ),
-        ],
+        border: Border.all(color: Colors.white.withOpacity(0.50)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -322,7 +345,7 @@ class _TopWelcomePill extends StatelessWidget {
             width: 8,
             height: 8,
             decoration: const BoxDecoration(
-              color: Color(0xFFFDE047), // Gold dot
+              color: Color(0xFFFDD835),
               shape: BoxShape.circle,
             ),
           ),
@@ -333,7 +356,7 @@ class _TopWelcomePill extends StatelessWidget {
               fontSize: 11,
               fontWeight: FontWeight.w700,
               color: Colors.white,
-              letterSpacing: 0.8,
+              letterSpacing: 0.5,
             ),
           ),
         ],
@@ -342,33 +365,23 @@ class _TopWelcomePill extends StatelessWidget {
   }
 }
 
-// ─────────────────────── Vibrant Logo Section ────────────────────
-class _VibrantLogoSection extends StatefulWidget {
-  const _VibrantLogoSection();
-
+// ─────────────────────── Animated Logo ───────────────────────────
+class _AnimatedLogo extends StatefulWidget {
   @override
-  State<_VibrantLogoSection> createState() => _VibrantLogoSectionState();
+  State<_AnimatedLogo> createState() => _AnimatedLogoState();
 }
 
-class _VibrantLogoSectionState extends State<_VibrantLogoSection>
+class _AnimatedLogoState extends State<_AnimatedLogo>
     with SingleTickerProviderStateMixin {
   late AnimationController _ctrl;
   late Animation<double> _float;
-  late Animation<double> _pulse;
 
   @override
   void initState() {
     super.initState();
-    _ctrl = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 3),
-    )..repeat(reverse: true);
-
-    _float = Tween<double>(begin: -8.0, end: 8.0).animate(
-      CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut),
-    );
-
-    _pulse = Tween<double>(begin: 0.96, end: 1.05).animate(
+    _ctrl = AnimationController(vsync: this, duration: const Duration(seconds: 3))
+      ..repeat(reverse: true);
+    _float = Tween<double>(begin: -7.0, end: 7.0).animate(
       CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut),
     );
   }
@@ -382,121 +395,98 @@ class _VibrantLogoSectionState extends State<_VibrantLogoSection>
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
-      animation: _ctrl,
+      animation: _float,
       builder: (_, child) => Transform.translate(
         offset: Offset(0, _float.value),
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
-            // Outer Glowing Sunburst Ring
-            Transform.scale(
-              scale: _pulse.value,
-              child: Container(
-                width: 155,
-                height: 155,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: RadialGradient(
-                    colors: [
-                      const Color(0xFFFBBF24).withOpacity(0.55),
-                      const Color(0xFF38BDF8).withOpacity(0.25),
-                      Colors.transparent,
-                    ],
-                  ),
-                ),
-              ),
+        child: child,
+      ),
+      child: Container(
+        width: 125,
+        height: 125,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF1565C0).withOpacity(0.35),
+              blurRadius: 30,
+              spreadRadius: 4,
+              offset: const Offset(0, 8),
             ),
-
-            // Mid Colorful Ring
-            Container(
-              width: 135,
-              height: 135,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: const LinearGradient(
-                  colors: [
-                    Color(0xFFF59E0B),
-                    Color(0xFF38BDF8),
-                    Color(0xFF8B5CF6),
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF0284C7).withOpacity(0.5),
-                    blurRadius: 25,
-                    offset: const Offset(0, 8),
-                  ),
-                ],
-              ),
-              padding: const EdgeInsets.all(3.5),
-              child: Container(
-                decoration: const BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Color(0xFF0F172A),
-                ),
-                child: ClipOval(
-                  child: Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: Image.asset(
-                      'assets/images/logo.png',
-                      fit: BoxFit.contain,
-                      errorBuilder: (_, __, ___) => const Icon(
-                        Icons.school_rounded,
-                        size: 60,
-                        color: Color(0xFFFBBF24),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
+            BoxShadow(
+              color: const Color(0xFFFDD835).withOpacity(0.45),
+              blurRadius: 24,
+              spreadRadius: 2,
+              offset: const Offset(0, -2),
             ),
           ],
+          border: Border.all(
+            color: const Color(0xFFFDD835),
+            width: 3.5,
+          ),
+        ),
+        padding: const EdgeInsets.all(6),
+        child: ClipOval(
+          child: Padding(
+            padding: const EdgeInsets.all(8),
+            child: Image.asset(
+              'assets/images/logo.png',
+              fit: BoxFit.contain,
+              errorBuilder: (_, __, ___) => const Icon(
+                Icons.school_rounded,
+                size: 58,
+                color: Color(0xFF1565C0),
+              ),
+            ),
+          ),
         ),
       ),
     );
   }
 }
 
-// ─────────────────────── Vibrant School Title ────────────────────
-class _VibrantSchoolTitle extends StatelessWidget {
+// ─────────────────────── School Title Section ─────────────────────
+class _SchoolTitleSection extends StatelessWidget {
   final Animation<double> shimmerAnim;
-  const _VibrantSchoolTitle({required this.shimmerAnim});
+  const _SchoolTitleSection({required this.shimmerAnim});
 
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
-        // Bold SRI VENKATESWARA with Stylish Wing Accents
+        // SRI VENKATESWARA – Bold White with Yellow Drop Shadow
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
           children: [
-            // Left Accent Wing
+            // left wing line
             Container(
-              width: 24,
-              height: 3,
+              width: 22, height: 3,
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
-                  colors: [Colors.transparent, Color(0xFFFDE047)],
+                  colors: [Colors.transparent, Color(0xFFFDD835)],
                 ),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
             const SizedBox(width: 8),
-            // Text
             Text(
               'SRI VENKATESWARA',
               style: GoogleFonts.outfit(
                 fontSize: 15,
                 fontWeight: FontWeight.w900,
-                letterSpacing: 4.0,
-                color: const Color(0xFFFDE047), // Bright Gold
+                letterSpacing: 3.5,
+                color: Colors.white,
                 shadows: [
                   Shadow(
-                    color: Colors.black.withOpacity(0.4),
+                    color: const Color(0xFFFBC02D).withOpacity(0.9),
                     offset: const Offset(0, 2),
-                    blurRadius: 4,
+                    blurRadius: 6,
+                  ),
+                  const Shadow(
+                    color: Color(0xFF0D47A1),
+                    offset: Offset(0, 3),
+                    blurRadius: 8,
                   ),
                 ],
               ),
@@ -505,13 +495,12 @@ class _VibrantSchoolTitle extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
             ),
             const SizedBox(width: 8),
-            // Right Accent Wing
+            // right wing line
             Container(
-              width: 24,
-              height: 3,
+              width: 22, height: 3,
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
-                  colors: [Color(0xFFFDE047), Colors.transparent],
+                  colors: [Color(0xFFFDD835), Colors.transparent],
                 ),
                 borderRadius: BorderRadius.circular(2),
               ),
@@ -521,44 +510,42 @@ class _VibrantSchoolTitle extends StatelessWidget {
 
         const SizedBox(height: 8),
 
-        // Responsive Big JY SCHOOL with Dual-tone 3D pop
+        // JY SCHOOL – Responsive, Shimmer
         AnimatedBuilder(
           animation: shimmerAnim,
           builder: (_, __) {
             return ShaderMask(
-              shaderCallback: (bounds) {
-                return LinearGradient(
-                  begin: Alignment(-1.5 + shimmerAnim.value * 0.5, 0),
-                  end: Alignment(-0.3 + shimmerAnim.value * 0.5, 0),
-                  colors: const [
-                    Color(0xFFFBBF24), // Golden Amber
-                    Color(0xFFFFFBEB), // Sparkling Pure White
-                    Color(0xFFF59E0B), // Warm Gold
-                    Color(0xFFFBBF24), // Golden Amber
-                  ],
-                  stops: const [0.0, 0.45, 0.65, 1.0],
-                ).createShader(bounds);
-              },
+              shaderCallback: (bounds) => LinearGradient(
+                begin: Alignment(-1.5 + shimmerAnim.value * 0.5, 0),
+                end: Alignment(-0.3 + shimmerAnim.value * 0.5, 0),
+                colors: const [
+                  Color(0xFFFDD835),
+                  Color(0xFFFFFFFF),
+                  Color(0xFFFBC02D),
+                  Color(0xFFFDD835),
+                ],
+                stops: const [0.0, 0.45, 0.65, 1.0],
+              ).createShader(bounds),
               child: FittedBox(
                 fit: BoxFit.scaleDown,
                 child: Text(
                   'JY SCHOOL',
                   style: GoogleFonts.outfit(
-                    fontSize: 58,
+                    fontSize: 60,
                     fontWeight: FontWeight.w900,
                     color: Colors.white,
                     letterSpacing: 2.5,
                     height: 1.05,
                     shadows: [
                       Shadow(
-                        color: const Color(0xFF0F172A).withOpacity(0.8),
-                        offset: const Offset(0, 4),
-                        blurRadius: 12,
+                        color: const Color(0xFF0D47A1).withOpacity(0.9),
+                        offset: const Offset(0, 5),
+                        blurRadius: 14,
                       ),
                       Shadow(
-                        color: const Color(0xFF1E3A8A).withOpacity(0.9),
-                        offset: const Offset(0, 8),
-                        blurRadius: 20,
+                        color: const Color(0xFF0D47A1).withOpacity(0.5),
+                        offset: const Offset(0, 10),
+                        blurRadius: 24,
                       ),
                     ],
                   ),
@@ -581,26 +568,19 @@ class _TaglineBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [
-            Color(0xFFE11D48), // Rose Crimson
-            Color(0xFFBE123C), // Deep Ruby
-            Color(0xFF9333EA), // Purple Violet
-          ],
+          colors: [Color(0xFFE53935), Color(0xFFAD1457), Color(0xFF6A1B9A)],
           begin: Alignment.centerLeft,
           end: Alignment.centerRight,
         ),
         borderRadius: BorderRadius.circular(30),
-        border: Border.all(
-          color: const Color(0xFFFDE047).withOpacity(0.8),
-          width: 1.2,
-        ),
+        border: Border.all(color: const Color(0xFFFDD835), width: 1.5),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFFE11D48).withOpacity(0.45),
-            blurRadius: 16,
+            color: const Color(0xFFE53935).withOpacity(0.4),
+            blurRadius: 14,
             offset: const Offset(0, 6),
           ),
         ],
@@ -608,129 +588,124 @@ class _TaglineBanner extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.star_rounded, color: Color(0xFFFDE047), size: 16),
-          const SizedBox(width: 8),
-          Text(
-            'EMPOWERING MINDS • SHAPING FUTURE',
-            style: GoogleFonts.outfit(
-              fontSize: 11.5,
-              fontWeight: FontWeight.w800,
-              color: Colors.white,
-              letterSpacing: 1.2,
+          const Icon(Icons.star_rounded, color: Color(0xFFFDD835), size: 15),
+          const SizedBox(width: 6),
+          Flexible(
+            child: Text(
+              'EMPOWERING MINDS • SHAPING FUTURE',
+              style: GoogleFonts.outfit(
+                fontSize: 11,
+                fontWeight: FontWeight.w800,
+                color: Colors.white,
+                letterSpacing: 1.0,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
           ),
-          const SizedBox(width: 8),
-          const Icon(Icons.star_rounded, color: Color(0xFFFDE047), size: 16),
+          const SizedBox(width: 6),
+          const Icon(Icons.star_rounded, color: Color(0xFFFDD835), size: 15),
         ],
       ),
     );
   }
 }
 
-// ─────────────────────── Inspiration Glass Card ───────────────────
-class _InspirationCard extends StatelessWidget {
-  const _InspirationCard();
+// ─────────────────────── Stats Strip ─────────────────────────────
+class _StatsStrip extends StatelessWidget {
+  const _StatsStrip();
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(child: _StatPill(
+          icon: Icons.people_rounded,
+          label: '5000+\nStudents',
+          gradientColors: const [Color(0xFF1E88E5), Color(0xFF0D47A1)],
+          iconColor: Colors.white,
+        )),
+        const SizedBox(width: 10),
+        Expanded(child: _StatPill(
+          icon: Icons.emoji_events_rounded,
+          label: '100+\nFaculty',
+          gradientColors: const [Color(0xFFF57C00), Color(0xFFE65100)],
+          iconColor: const Color(0xFFFDD835),
+        )),
+        const SizedBox(width: 10),
+        Expanded(child: _StatPill(
+          icon: Icons.school_rounded,
+          label: 'Smart\nCampus',
+          gradientColors: const [Color(0xFF43A047), Color(0xFF1B5E20)],
+          iconColor: Colors.white,
+        )),
+      ],
+    );
+  }
+}
+
+class _StatPill extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final List<Color> gradientColors;
+  final Color iconColor;
+
+  const _StatPill({
+    required this.icon,
+    required this.label,
+    required this.gradientColors,
+    required this.iconColor,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.12),
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(
-          color: Colors.white.withOpacity(0.25),
-          width: 1.2,
+        gradient: LinearGradient(
+          colors: gradientColors,
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
+        borderRadius: BorderRadius.circular(18),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.15),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
+            color: gradientColors.last.withOpacity(0.35),
+            blurRadius: 12,
+            offset: const Offset(0, 5),
           ),
         ],
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-          child: Row(
-            children: [
-              // Vibrant Icon Badge
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFFF59E0B), Color(0xFFEA580C)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFFEA580C).withOpacity(0.4),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: const Icon(
-                  Icons.auto_awesome_rounded,
-                  color: Colors.white,
-                  size: 24,
-                ),
-              ),
-              const SizedBox(width: 14),
-              // Motivational Text
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      'Excellence & Values',
-                      style: GoogleFonts.outfit(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w800,
-                        color: const Color(0xFFFDE047),
-                        letterSpacing: 0.4,
-                      ),
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      'Empowering students with knowledge, discipline & limitless potential.',
-                      style: GoogleFonts.poppins(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.white.withOpacity(0.9),
-                        height: 1.35,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ),
-            ],
+      child: Column(
+        children: [
+          Icon(icon, color: iconColor, size: 24),
+          const SizedBox(height: 6),
+          Text(
+            label,
+            style: GoogleFonts.poppins(
+              fontSize: 10.5,
+              fontWeight: FontWeight.w700,
+              color: Colors.white,
+              height: 1.25,
+            ),
+            textAlign: TextAlign.center,
           ),
-        ),
+        ],
       ),
     );
   }
 }
 
-// ─────────────────────── Vibrant Start Button ────────────────────
-class _VibrantStartButton extends StatefulWidget {
+// ─────────────────────── Start Button ────────────────────────────
+class _StartButton extends StatefulWidget {
   final VoidCallback onPressed;
-  const _VibrantStartButton({required this.onPressed});
+  const _StartButton({required this.onPressed});
 
   @override
-  State<_VibrantStartButton> createState() => _VibrantStartButtonState();
+  State<_StartButton> createState() => _StartButtonState();
 }
 
-class _VibrantStartButtonState extends State<_VibrantStartButton>
+class _StartButtonState extends State<_StartButton>
     with SingleTickerProviderStateMixin {
   late AnimationController _ctrl;
   late Animation<double> _scale;
@@ -739,9 +714,7 @@ class _VibrantStartButtonState extends State<_VibrantStartButton>
   void initState() {
     super.initState();
     _ctrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 120),
-    );
+        vsync: this, duration: const Duration(milliseconds: 120));
     _scale = Tween<double>(begin: 1.0, end: 0.96).animate(
       CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut),
     );
@@ -775,45 +748,40 @@ class _VibrantStartButtonState extends State<_VibrantStartButton>
             borderRadius: BorderRadius.circular(30),
             gradient: const LinearGradient(
               colors: [
-                Color(0xFFFF7A00), // Vibrant Orange
-                Color(0xFFE11D48), // Rose Berry
-                Color(0xFF9333EA), // Royal Violet
+                Color(0xFFFF6F00), // Deep Orange
+                Color(0xFFE53935), // Red
+                Color(0xFF8E24AA), // Purple
               ],
               begin: Alignment.centerLeft,
               end: Alignment.centerRight,
             ),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFFFF7A00).withOpacity(0.4),
-                blurRadius: 18,
-                offset: const Offset(0, 6),
+                color: const Color(0xFFFF6F00).withOpacity(0.45),
+                blurRadius: 20,
+                offset: const Offset(0, 7),
               ),
               BoxShadow(
-                color: const Color(0xFFE11D48).withOpacity(0.35),
-                blurRadius: 22,
-                offset: const Offset(0, 10),
+                color: const Color(0xFF8E24AA).withOpacity(0.30),
+                blurRadius: 26,
+                offset: const Offset(0, 12),
               ),
             ],
-            border: Border.all(
-              color: Colors.white.withOpacity(0.35),
-              width: 1.5,
-            ),
+            border: Border.all(color: Colors.white.withOpacity(0.4), width: 1.5),
           ),
           child: Stack(
             children: [
-              // Top Specular Shine
+              // Top shine line
               Positioned(
-                top: 0,
-                left: 20,
-                right: 20,
+                top: 0, left: 30, right: 30,
                 child: Container(
                   height: 1.5,
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [
-                        Colors.white.withOpacity(0.0),
+                        Colors.white.withOpacity(0),
                         Colors.white.withOpacity(0.7),
-                        Colors.white.withOpacity(0.0),
+                        Colors.white.withOpacity(0),
                       ],
                     ),
                   ),
@@ -824,15 +792,15 @@ class _VibrantStartButtonState extends State<_VibrantStartButton>
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      'Start',
+                      'START JOURNEY',
                       style: GoogleFonts.outfit(
-                        fontSize: 20,
+                        fontSize: 18,
                         fontWeight: FontWeight.w900,
                         color: Colors.white,
-                        letterSpacing: 2.0,
+                        letterSpacing: 1.8,
                         shadows: [
                           Shadow(
-                            color: Colors.black.withOpacity(0.35),
+                            color: Colors.black.withOpacity(0.3),
                             offset: const Offset(0, 2),
                             blurRadius: 4,
                           ),
@@ -840,23 +808,15 @@ class _VibrantStartButtonState extends State<_VibrantStartButton>
                       ),
                     ),
                     const SizedBox(width: 12),
-                    // Circular Glowing Arrow Container
                     Container(
-                      padding: const EdgeInsets.all(7),
+                      padding: const EdgeInsets.all(6),
                       decoration: const BoxDecoration(
                         color: Colors.white,
                         shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black26,
-                            blurRadius: 6,
-                            offset: Offset(0, 2),
-                          ),
-                        ],
                       ),
                       child: const Icon(
                         Icons.arrow_forward_rounded,
-                        color: Color(0xFFE11D48),
+                        color: Color(0xFFE53935),
                         size: 20,
                       ),
                     ),
@@ -871,18 +831,17 @@ class _VibrantStartButtonState extends State<_VibrantStartButton>
   }
 }
 
-// ─────────────────────── Bottom Footer Line ──────────────────────
-class _BottomFooterLine extends StatelessWidget {
+// ─────────────────────── Footer Line ─────────────────────────────
+class _FooterLine extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Container(
-          width: 16,
-          height: 2,
+          width: 14, height: 2,
           decoration: BoxDecoration(
-            color: const Color(0xFFFDE047).withOpacity(0.7),
+            color: const Color(0xFF1565C0).withOpacity(0.5),
             borderRadius: BorderRadius.circular(2),
           ),
         ),
@@ -890,136 +849,21 @@ class _BottomFooterLine extends StatelessWidget {
         Text(
           'YOUR JOURNEY TOWARDS SUCCESS BEGINS HERE',
           style: GoogleFonts.outfit(
-            fontSize: 9.5,
+            fontSize: 9,
             fontWeight: FontWeight.w700,
-            letterSpacing: 1.2,
-            color: Colors.white.withOpacity(0.85),
+            letterSpacing: 1.0,
+            color: const Color(0xFF1565C0).withOpacity(0.7),
           ),
         ),
         const SizedBox(width: 6),
         Container(
-          width: 16,
-          height: 2,
+          width: 14, height: 2,
           decoration: BoxDecoration(
-            color: const Color(0xFFFDE047).withOpacity(0.7),
+            color: const Color(0xFF1565C0).withOpacity(0.5),
             borderRadius: BorderRadius.circular(2),
           ),
         ),
       ],
-    );
-  }
-}
-
-// ─────────────────────── Floating Education Doodles ──────────────
-class _DoodleData {
-  final IconData icon;
-  final double xPercent;
-  final double yPercent;
-  final double size;
-  final double baseOpacity;
-  final Color color;
-
-  const _DoodleData({
-    required this.icon,
-    required this.xPercent,
-    required this.yPercent,
-    required this.size,
-    required this.baseOpacity,
-    required this.color,
-  });
-}
-
-final List<_DoodleData> _doodles = [
-  const _DoodleData(
-    icon: Icons.send_rounded, // Paper plane
-    xPercent: 0.12,
-    yPercent: 0.09,
-    size: 32,
-    baseOpacity: 0.22,
-    color: Color(0xFF38BDF8),
-  ),
-  const _DoodleData(
-    icon: Icons.lightbulb_outline_rounded,
-    xPercent: 0.85,
-    yPercent: 0.10,
-    size: 34,
-    baseOpacity: 0.25,
-    color: Color(0xFFFDE047),
-  ),
-  const _DoodleData(
-    icon: Icons.menu_book_rounded,
-    xPercent: 0.88,
-    yPercent: 0.21,
-    size: 30,
-    baseOpacity: 0.20,
-    color: Color(0xFF38BDF8),
-  ),
-  const _DoodleData(
-    icon: Icons.science_outlined,
-    xPercent: 0.08,
-    yPercent: 0.22,
-    size: 28,
-    baseOpacity: 0.20,
-    color: Color(0xFF4ADE80),
-  ),
-  const _DoodleData(
-    icon: Icons.emoji_events_outlined,
-    xPercent: 0.14,
-    yPercent: 0.52,
-    size: 26,
-    baseOpacity: 0.18,
-    color: Color(0xFFFDE047),
-  ),
-  const _DoodleData(
-    icon: Icons.school_outlined,
-    xPercent: 0.86,
-    yPercent: 0.54,
-    size: 28,
-    baseOpacity: 0.18,
-    color: Color(0xFFF472B6),
-  ),
-  const _DoodleData(
-    icon: Icons.calculate_outlined,
-    xPercent: 0.09,
-    yPercent: 0.68,
-    size: 26,
-    baseOpacity: 0.16,
-    color: Color(0xFF38BDF8),
-  ),
-  const _DoodleData(
-    icon: Icons.edit_note_rounded,
-    xPercent: 0.87,
-    yPercent: 0.69,
-    size: 28,
-    baseOpacity: 0.18,
-    color: Color(0xFFFDE047),
-  ),
-];
-
-class _FloatingDoodle extends StatelessWidget {
-  final _DoodleData doodle;
-  final Size screenSize;
-  final double animationValue;
-
-  const _FloatingDoodle({
-    required this.doodle,
-    required this.screenSize,
-    required this.animationValue,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final floatY = math.sin(animationValue * math.pi * 2 + doodle.xPercent * 10) * 8;
-    final floatX = math.cos(animationValue * math.pi * 2 + doodle.yPercent * 10) * 5;
-
-    return Positioned(
-      left: doodle.xPercent * screenSize.width + floatX,
-      top: doodle.yPercent * screenSize.height + floatY,
-      child: Icon(
-        doodle.icon,
-        size: doodle.size,
-        color: doodle.color.withOpacity(doodle.baseOpacity),
-      ),
     );
   }
 }
