@@ -136,7 +136,7 @@ class _SystemSettingsTabState extends State<SystemSettingsTab> {
       _phoneCtrl.text = data['phone'] ?? '';
       _emailCtrl.text = data['email'] ?? '';
       _websiteCtrl.text = data['website'] ?? '';
-      _academicYearCtrl.text = data['currentYear'] ?? '2024-2025';
+      _academicYearCtrl.text = data['currentYear'] ?? '2026-2027';
     } else {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

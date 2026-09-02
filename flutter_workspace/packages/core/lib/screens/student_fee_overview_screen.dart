@@ -124,7 +124,7 @@ class _StudentFeeOverviewScreenState extends State<StudentFeeOverviewScreen> {
       ),
       child: Column(
         children: [
-          Text('Academic Year 2024-25', style: GoogleFonts.poppins(color: Colors.grey[600], fontWeight: FontWeight.w500)),
+          Text('Academic Year 2026-27', style: GoogleFonts.poppins(color: Colors.grey[600], fontWeight: FontWeight.w500)),
           const SizedBox(height: 24),
           Stack(
             alignment: Alignment.center,

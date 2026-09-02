@@ -1,6 +1,6 @@
 # Project State: JY School ERP System
 
-## Current Focus (As of 2026-09-01)
+## Current Focus (As of 2026-09-02)
 - **Phase 3:** Mobile App Payment Integration (Completed)
 - **Finance Module (Web):** Added "Collect Fee" shortcut card in Finance Dashboard.
 - **Student Dashboards (Flutter & Web):** Designed and isolated the Examination and Finance dashboards for Student logins, ensuring clean UI and restricted access to relevant features.
@@ -42,44 +42,6 @@
 - **Terminal Execution:** No direct terminal execution commands by the agent. Always providing exact `cd` path and manual run commands to the user.
 - **UI UX Rule:** Safe Area explicitly handled on all Flutter bottom bars. High-quality UI guidelines enforced.
 
-## Next Action Items for User
-- Check the updated "Collect Fee" option on the Web App Finance dashboard.
-- Commit the Flutter and React code:
-  ```bash
-  cd "c:\Users\SRI\Desktop\JY School\JY-School-main"
-  git add .
-  git commit -m "Phase 3: Student Finance Flow Redesign"
-  git push origin main
-  ```
-- Deploy the updated Backend changes (made in Phase 2 & Phase 3) to the VPS.
-  ```bash
-  ssh root@66.116.252.191
-  cd /root/JY-School/backend
-  git pull origin main
-  npx prisma generate
-  npm run build
-  pm2 restart backend
-  ```
-- Test end-to-end fee payment using the mobile app and verify the receipt on the admin dashboard.
-- **App Update Fix:** Fixed an issue where the app continuously prompted for an update after installation due to improper version parsing when build numbers (+3) were present.
-- **Push Notifications Fix:** Fixed an issue in 
-otification_service.dart where the app locally triggered push notifications repeatedly on startup due to fetching unread notifications from the backend API.
-- **Student Dashboard UI:** Improved the Exams Dashboard UI by reducing box heights, adding Exam Schedule, Academic Calendar, Quiz, and Online Exams.
-
-- User requested to open the Teacher App in Chrome. Provided the flutter run command.
-
-- User requested command to build universal APK for Flutter app. Provided the flutter build apk command.
-
-- Fixed two syntax errors in flutter_mobile/lib/screens/teacher_gate_pass_screen.dart (Removed 'page' parameter and corrected GatePassViewScreen constructor parameters).
-
-- User requested command to run Flutter app in Edge. Provided the flutter run -d edge command.
-
-- User requested to run ONLY the teacher app. Provided the flutter run -t lib/main_teacher.dart command.
-
-- User requested command to build universal APK for teacher app. Provided the flutter build apk -t lib/main_teacher.dart command.
-
-- User requested Git commands. Provided git add, commit, and push commands.
-
 ## Recent Accomplishments
 1. **Flutter App Architecture Overhaul (Monorepo Setup):**
    - Successfully converted the monolithic `flutter_mobile` app (160MB+) into a modular **Melos Monorepo** inside `flutter_workspace`.
@@ -87,3 +49,13 @@ otification_service.dart where the app locally triggered push notifications repe
    - Created individual entry apps: `admin_app`, `teacher_app`, `student_app`, and `universal_app`.
    - **App Size Optimization:** Moved heavy dependencies like `mobile_scanner` (Admin only) and `flutter_tex` (Student only) out of `core`. This ensures individual apps compile at a significantly reduced size without carrying unnecessary heavy native libraries.
    - Bootstrapped successfully using `dart pub global run melos bootstrap`.
+
+2. **GitHub Actions for APK Generation:**
+   - Created a `.github/workflows/flutter_build.yml` script in the monorepo to automatically build and release the `teacher_app`, `admin_app`, and `student_app` APKs via GitHub Actions upon push.
+   
+3. **Progress Card Dynamic Academic Year Bug Fix:**
+   - Fixed a bug where `2023-2024` was hardcoded or incorrectly displayed in the web app Progress Card.
+   - Updated `exams.controller.ts` to fetch `academicYear` straight from the `Student -> Class` table and return it via the results API.
+   - Mapped `academicYear` in `JEEProgressCardTab.tsx` and `ProgressCardTab.tsx` so `ProgressCardTemplate.tsx` dynamically prints the exact year saved for that class in the DB.
+   - Updated defaults in the codebase to fall back to `2026-2027` instead of `2024-2025`.
+   - Ran a one-time script (`update_year.js`) to migrate all existing classes in the database (24 classes) to `2026-2027`.
