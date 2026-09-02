@@ -1,6 +1,6 @@
 {
-  "latestVersion": "1.0.1",
-  "downloadUrl": "http://66.116.252.191:19998/app-release.apk",
+  "latestVersion": "1.0.2",
+  "downloadUrl": "https://github.com/rajeshkinjarapu/JY-School/actions",
   "forceUpdate": false,
-  "releaseNotes": "Bug fixes and improvements including new Exams Hub and App Installation tracking."
+  "releaseNotes": "Added Gatepass to Teacher Dashboard!"
 }

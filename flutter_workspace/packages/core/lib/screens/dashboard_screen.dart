@@ -47,6 +47,7 @@ import 'id_cards/id_card_templates_screen.dart';
 import 'leave_screen.dart';
 import 'fee_reminder_search_screen.dart';
 import 'student_exams_dashboard_screen.dart';
+import 'teacher_gate_pass_screen.dart';
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
 
@@ -1891,6 +1892,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           _buildIconWidgetCard(icon: Icons.chat_rounded,    title: 'Messaging',     borderColor: const Color(0xFF25D366), onTap: () => ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Messaging coming soon!')))),
           _buildIconWidgetCard(icon: Icons.edit_document,    title: 'Home Work',     borderColor: const Color(0xFFEAB308), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TeacherHomeworkScreen()))),
           _buildImageCard(imagePath: 'assets/images/admin_icons/leave.png',title: 'Leave Apply',  borderColor: const Color(0xFF3B82F6), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const LeaveDashboardScreen()))),
+          _buildIconWidgetCard(icon: Icons.exit_to_app_rounded, title: 'Gatepass', borderColor: const Color(0xFF8B5CF6), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TeacherGatePassScreen()))),
         ],
       );
     } else {
