@@ -264,7 +264,7 @@ export const bulkImport = async (req: AuthRequest, res: Response, next: NextFunc
       try {
         const name = row.Name || row.name || String(row.Class || row.class);
         const section = row.Section || row.section || '';
-        const academicYear = row['Academic Year'] || row.academicYear || '2024-2025';
+        const academicYear = row['Academic Year'] || row.academicYear || '2026-2027';
         const capacity = parseInt(row.Capacity || row.capacity) || 40;
 
         if (!name) {

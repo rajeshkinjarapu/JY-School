@@ -10,7 +10,7 @@ export const getSettings = async (req: AuthRequest, res: Response, next: NextFun
       settings = await prisma.schoolSettings.create({
         data: {
           schoolName: 'JY School',
-          currentYear: '2024-2025'
+          currentYear: '2026-2027'
         }
       });
     }
@@ -70,7 +70,7 @@ export const getAcademicYears = async (req: AuthRequest, res: Response, next: Ne
     });
     const years = classes.map(c => c.academicYear);
     if (years.length === 0) {
-      years.push('2024-2025');
+      years.push('2026-2027');
     }
     successResponse(res, years, 'Academic years fetched successfully');
   } catch (error) {
