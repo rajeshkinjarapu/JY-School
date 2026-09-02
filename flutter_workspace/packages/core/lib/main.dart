@@ -12,6 +12,7 @@ import 'services/notification_service.dart';
 import 'services/offline_sync_service.dart';
 import 'widgets/offline_banner.dart';
 import 'config/app_config.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'screens/welcome_screen.dart';
 import 'services/update_service.dart';
 import 'services/device_info_service.dart';

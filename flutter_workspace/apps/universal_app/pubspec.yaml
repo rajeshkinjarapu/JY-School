@@ -68,8 +68,6 @@ flutter:
   assets:
     - assets/images/
     - assets/images/admin_icons/
-    - assets/images/student_icons/
-    - assets/images/teacher_icons/
     - assets/illustrations/
 
 
