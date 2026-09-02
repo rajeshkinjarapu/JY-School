@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/apps/admin_app/melos_admin_app.iml" filepath="$PROJECT_DIR$/apps/admin_app/melos_admin_app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/packages/admin_feature/melos_admin_feature.iml" filepath="$PROJECT_DIR$/packages/admin_feature/melos_admin_feature.iml" />
+      <module fileurl="file://$PROJECT_DIR$/packages/core/melos_core.iml" filepath="$PROJECT_DIR$/packages/core/melos_core.iml" />
+      <module fileurl="file://$PROJECT_DIR$/apps/student_app/melos_student_app.iml" filepath="$PROJECT_DIR$/apps/student_app/melos_student_app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/packages/student_feature/melos_student_feature.iml" filepath="$PROJECT_DIR$/packages/student_feature/melos_student_feature.iml" />
+      <module fileurl="file://$PROJECT_DIR$/apps/teacher_app/melos_teacher_app.iml" filepath="$PROJECT_DIR$/apps/teacher_app/melos_teacher_app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/packages/teacher_feature/melos_teacher_feature.iml" filepath="$PROJECT_DIR$/packages/teacher_feature/melos_teacher_feature.iml" />
+      <module fileurl="file://$PROJECT_DIR$/apps/universal_app/melos_universal_app.iml" filepath="$PROJECT_DIR$/apps/universal_app/melos_universal_app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/melos_jy_school_workspace.iml" filepath="$PROJECT_DIR$/melos_jy_school_workspace.iml" />
+    </modules>
+  </component>
+</project>

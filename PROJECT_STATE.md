@@ -79,3 +79,11 @@ otification_service.dart where the app locally triggered push notifications repe
 - User requested command to build universal APK for teacher app. Provided the flutter build apk -t lib/main_teacher.dart command.
 
 - User requested Git commands. Provided git add, commit, and push commands.
+
+## Recent Accomplishments
+1. **Flutter App Architecture Overhaul (Monorepo Setup):**
+   - Successfully converted the monolithic `flutter_mobile` app (160MB+) into a modular **Melos Monorepo** inside `flutter_workspace`.
+   - Created isolated packages: `core`, `admin_feature`, `teacher_feature`, and `student_feature`.
+   - Created individual entry apps: `admin_app`, `teacher_app`, `student_app`, and `universal_app`.
+   - **App Size Optimization:** Moved heavy dependencies like `mobile_scanner` (Admin only) and `flutter_tex` (Student only) out of `core`. This ensures individual apps compile at a significantly reduced size without carrying unnecessary heavy native libraries.
+   - Bootstrapped successfully using `dart pub global run melos bootstrap`.

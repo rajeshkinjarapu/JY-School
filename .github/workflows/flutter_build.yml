@@ -1,0 +1,73 @@
+name: Build Flutter APKs (Monorepo)
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'flutter_workspace/**'
+  workflow_dispatch: # Enables manual run button in GitHub UI
+
+jobs:
+  build_apks:
+    name: Build APKs
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+
+      - name: Copy Assets
+        run: |
+          cd flutter_workspace
+          python fix_assets.py
+
+      - name: Install Melos & Bootstrap
+        run: |
+          dart pub global activate melos
+          cd flutter_workspace
+          dart pub global run melos bootstrap
+
+      - name: Build Teacher App APK
+        run: |
+          cd flutter_workspace/apps/teacher_app
+          flutter build apk --release
+
+      - name: Upload Teacher App APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: teacher_app-release-apk
+          path: flutter_workspace/apps/teacher_app/build/app/outputs/flutter-apk/app-release.apk
+          
+      - name: Build Admin App APK
+        run: |
+          cd flutter_workspace/apps/admin_app
+          flutter build apk --release
+
+      - name: Upload Admin App APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: admin_app-release-apk
+          path: flutter_workspace/apps/admin_app/build/app/outputs/flutter-apk/app-release.apk
+
+      - name: Build Student App APK
+        run: |
+          cd flutter_workspace/apps/student_app
+          flutter build apk --release
+
+      - name: Upload Student App APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: student_app-release-apk
+          path: flutter_workspace/apps/student_app/build/app/outputs/flutter-apk/app-release.apk
