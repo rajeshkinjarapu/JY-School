@@ -153,7 +153,7 @@ export const getResults = async (req: AuthRequest, res: Response, next: NextFunc
       marks: {
         where: classId ? { student: { classId } } : undefined,
         include: {
-          student: { include: { user: { select: photoSelect }, class: { select: { name: true, section: true } } } },
+          student: { include: { user: { select: photoSelect }, class: { select: { name: true, section: true, academicYear: true } } } },
           subject: { select: { name: true, code: true } },
         },
       },
@@ -162,12 +162,12 @@ export const getResults = async (req: AuthRequest, res: Response, next: NextFunc
   if (!exam) return next(createError('Exam not found', 404));
 
   // Group marks by student
-  const studentMap = new Map<string, { studentId: string; name: string; photo?: string | null; rollNo: string; className: string; mobile: string; fatherName?: string; marks: any[]; total: number; percentage: number; grade: string }>();
+  const studentMap = new Map<string, { studentId: string; name: string; photo?: string | null; rollNo: string; className: string; academicYear: string; mobile: string; fatherName?: string; marks: any[]; total: number; percentage: number; grade: string }>();
   
   if (classId) {
     const classStudents = await prisma.student.findMany({
       where: { classId },
-      include: { user: { select: photoSelect }, class: { select: { name: true, section: true } } },
+      include: { user: { select: photoSelect }, class: { select: { name: true, section: true, academicYear: true } } },
       orderBy: { rollNo: 'asc' }
     });
     for (const s of classStudents) {
@@ -178,6 +178,7 @@ export const getResults = async (req: AuthRequest, res: Response, next: NextFunc
         mobile: (s as any).fatherMobile || (s as any).motherMobile || s.user.phone || '-',
         rollNo: s.rollNo || '-',
         className: s.class ? `${s.class.name} - ${s.class.section}` : '',
+        academicYear: (s.class as any)?.academicYear || '',
         marks: [],
         total: 0,
         percentage: 0,
@@ -208,6 +209,7 @@ export const getResults = async (req: AuthRequest, res: Response, next: NextFunc
         fatherName: mark.student.fatherName || '-',
         rollNo: mark.student.rollNo,
         className: mark.student.class ? `${mark.student.class.name} - ${mark.student.class.section}` : '',
+        academicYear: (mark.student.class as any)?.academicYear || '',
         marks: [],
         total: 0,
         percentage: 0,

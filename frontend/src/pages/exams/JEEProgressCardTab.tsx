@@ -93,6 +93,7 @@ export const JEEProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
               rollNo: s.rollNo,
               className: cName,
               section: sec,
+              academicYear: s.academicYear || '',
               mobile: s.mobile || '-',
               rank: s.rank,
               total: s.total,
