@@ -123,7 +123,7 @@ class _IssueStudentPassTabState extends State<_IssueStudentPassTab> {
 
   Future<void> _fetchStudents() async {
     try {
-      final res = await ApiService.getStudents(page: 1, limit: 1000);
+      final res = await ApiService.getStudents(limit: 1000);
       if (res['success'] && mounted) {
         setState(() {
           _students = List<Map<String, dynamic>>.from(res['data'] ?? []);
@@ -717,7 +717,11 @@ class _HistoryTabState extends State<_HistoryTab> {
                 borderRadius: BorderRadius.circular(16),
                 onTap: () {
                   Navigator.push(context, MaterialPageRoute(
-                    builder: (_) => GatePassViewScreen(gatePass: pass)
+                    builder: (_) => GatePassViewScreen(
+                      pass: pass,
+                      isStudentTab: isStudentPass,
+                      statusColor: statusColor,
+                    )
                   )).then((_) => _fetchHistory());
                 },
                 child: Padding(

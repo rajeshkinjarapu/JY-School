@@ -65,3 +65,17 @@
 - **Push Notifications Fix:** Fixed an issue in 
 otification_service.dart where the app locally triggered push notifications repeatedly on startup due to fetching unread notifications from the backend API.
 - **Student Dashboard UI:** Improved the Exams Dashboard UI by reducing box heights, adding Exam Schedule, Academic Calendar, Quiz, and Online Exams.
+
+- User requested to open the Teacher App in Chrome. Provided the flutter run command.
+
+- User requested command to build universal APK for Flutter app. Provided the flutter build apk command.
+
+- Fixed two syntax errors in flutter_mobile/lib/screens/teacher_gate_pass_screen.dart (Removed 'page' parameter and corrected GatePassViewScreen constructor parameters).
+
+- User requested command to run Flutter app in Edge. Provided the flutter run -d edge command.
+
+- User requested to run ONLY the teacher app. Provided the flutter run -t lib/main_teacher.dart command.
+
+- User requested command to build universal APK for teacher app. Provided the flutter build apk -t lib/main_teacher.dart command.
+
+- User requested Git commands. Provided git add, commit, and push commands.
