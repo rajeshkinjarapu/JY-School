@@ -20,7 +20,7 @@ workflows:
         script: |
           export PATH="$HOME/.shorebird/bin:$PATH"
           cd apps/teacher_app
-          shorebird release android --artifact=apk --no-confirm
+          shorebird patch android --no-confirm
     artifacts:
       - apps/teacher_app/build/app/outputs/flutter-apk/app-release.apk
 
@@ -45,7 +45,7 @@ workflows:
         script: |
           export PATH="$HOME/.shorebird/bin:$PATH"
           cd apps/student_app
-          shorebird release android --artifact=apk --no-confirm
+          shorebird patch android --no-confirm
     artifacts:
       - apps/student_app/build/app/outputs/flutter-apk/app-release.apk
 
@@ -70,7 +70,7 @@ workflows:
         script: |
           export PATH="$HOME/.shorebird/bin:$PATH"
           cd apps/admin_app
-          shorebird release android --artifact=apk --no-confirm
+          shorebird patch android --no-confirm
     artifacts:
       - apps/admin_app/build/app/outputs/flutter-apk/app-release.apk
 
@@ -95,6 +95,6 @@ workflows:
         script: |
           export PATH="$HOME/.shorebird/bin:$PATH"
           cd apps/universal_app
-          shorebird release android --artifact=apk --no-confirm
+          shorebird patch android --no-confirm
     artifacts:
       - apps/universal_app/build/app/outputs/flutter-apk/app-release.apk

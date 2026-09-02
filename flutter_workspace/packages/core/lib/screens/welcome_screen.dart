@@ -474,7 +474,7 @@ class _SchoolTitle extends StatelessWidget {
                 child: Text(
                   'JY SCHOOL',
                   style: GoogleFonts.outfit(
-                    fontSize: 58,
+                    fontSize: 57,
                     fontWeight: FontWeight.w900,
                     color: Colors.white,
                     letterSpacing: 2.0,
