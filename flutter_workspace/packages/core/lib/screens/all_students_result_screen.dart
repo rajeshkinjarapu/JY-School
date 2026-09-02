@@ -143,20 +143,16 @@ class _AllStudentsResultScreenState extends State<AllStudentsResultScreen> {
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Class Results', style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)),
-            Text('${widget.examName} - ${widget.className}', style: GoogleFonts.poppins(color: Colors.white.withOpacity(0.9), fontSize: 12)),
+            Text('Class Results', style: GoogleFonts.outfit(color: const Color(0xFF0F172A), fontWeight: FontWeight.bold, fontSize: 18)),
+            Text('${widget.examName} - ${widget.className}', style: GoogleFonts.poppins(color: const Color(0xFF475569), fontSize: 12)),
           ],
         ),
-        iconTheme: const IconThemeData(color: Colors.white),
-        flexibleSpace: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(colors: [Color(0xFF6366F1), Color(0xFF4F46E5), Color(0xFF4338CA)], begin: Alignment.topLeft, end: Alignment.bottomRight),
-          ),
-        ),
-        elevation: 0,
+        iconTheme: const IconThemeData(color: Color(0xFF0F172A)),
+        backgroundColor: Colors.white,
+        elevation: 0.5,
       ),
       body: _isLoading 
-        ? const Center(child: CircularProgressIndicator(color: Color(0xFF6366F1)))
+        ? const Center(child: CircularProgressIndicator(color: Color(0xFF0F172A)))
         : _errorMessage != null
           ? Center(child: Text(_errorMessage!, style: GoogleFonts.poppins(color: Colors.red)))
           : _resultsData.isEmpty
@@ -183,7 +179,7 @@ class _AllStudentsResultScreenState extends State<AllStudentsResultScreen> {
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFF6366F1).withOpacity(0.1),
+              color: Colors.black.withOpacity(0.05),
               blurRadius: 15,
               offset: const Offset(0, 8),
             )
@@ -203,7 +199,7 @@ class _AllStudentsResultScreenState extends State<AllStudentsResultScreen> {
               TableRow(
                 decoration: const BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [Color(0xFF8B5CF6), Color(0xFF6366F1)],
+                    colors: [Color(0xFF0F172A), Color(0xFF1E293B)], // Dark Slate
                     begin: Alignment.centerLeft,
                     end: Alignment.centerRight,
                   ),
@@ -223,14 +219,14 @@ class _AllStudentsResultScreenState extends State<AllStudentsResultScreen> {
 
                 final rowColor = index % 2 == 0 
                     ? Colors.white 
-                    : const Color(0xFFEEF2FF);
+                    : const Color(0xFFF8FAFC); // Lighter slate for alternate row
 
                 return TableRow(
                   decoration: BoxDecoration(color: rowColor),
                   children: [
                     _buildCell('${index + 1}'),
                     _buildClickableNameCell(name, r),
-                    _buildCell(total, isBold: true, color: const Color(0xFF4F46E5)),
+                    _buildCell(total, isBold: true, color: const Color(0xFF0F172A)),
                   ],
                 );
               }).toList(),
@@ -259,9 +255,8 @@ class _AllStudentsResultScreenState extends State<AllStudentsResultScreen> {
           name,
           style: GoogleFonts.outfit(
             fontSize: 13,
-            fontWeight: FontWeight.w600,
-            color: const Color(0xFF4F46E5),
-            decoration: TextDecoration.underline,
+            fontWeight: FontWeight.w700,
+            color: const Color(0xFF2563EB), // Professional blue for clickable names without underline
           ),
           maxLines: 2,
           overflow: TextOverflow.ellipsis,

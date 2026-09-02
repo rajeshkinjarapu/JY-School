@@ -1226,10 +1226,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             child: Row(
               children: [
-                // Big Megaphone Icon
+                // Smaller Megaphone Icon
                 Container(
-                  width: 56,
-                  height: 56,
+                  width: 42,
+                  height: 42,
                   decoration: BoxDecoration(
                     color: const Color(0xFFF59E0B).withOpacity(0.12),
                     shape: BoxShape.circle,
@@ -1238,10 +1238,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   child: const Icon(
                     Icons.campaign_rounded, // Megaphone icon
                     color: Color(0xFFD97706),
-                    size: 32,
+                    size: 22,
                   ),
                 ),
-                const SizedBox(width: 14),
+                const SizedBox(width: 12),
                 // Text content
                 Expanded(
                   child: Column(
@@ -1254,22 +1254,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         overflow: TextOverflow.ellipsis,
                       ),
                     ],
-                  ),
-                ),
-                const SizedBox(width: 10),
-                // View button
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF59E0B),
-                    borderRadius: BorderRadius.circular(10),
-                    boxShadow: [
-                      BoxShadow(color: const Color(0xFFF59E0B).withOpacity(0.3), blurRadius: 4, offset: const Offset(0, 2))
-                    ],
-                  ),
-                  child: Text(
-                    'View',
-                    style: GoogleFonts.poppins(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w700),
                   ),
                 ),
               ],

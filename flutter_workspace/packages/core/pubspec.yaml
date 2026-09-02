@@ -51,6 +51,7 @@ flutter:
   uses-material-design: true
   assets:
     - assets/images/logo.png
+    - assets/images/welcome_bg.jpg
     - assets/images/admin_icons/
     - assets/images/app_icon.jpg
     - assets/illustrations/students.jpg

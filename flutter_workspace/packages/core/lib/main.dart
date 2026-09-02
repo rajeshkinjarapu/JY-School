@@ -111,7 +111,6 @@ class AuthCheck extends StatefulWidget {
 class _AuthCheckState extends State<AuthCheck> {
   bool _checkingAuth = true;
   bool _isAuthenticated = false;
-  bool _hasSeenWelcome = false;
 
   @override
   void initState() {
@@ -130,7 +129,6 @@ class _AuthCheckState extends State<AuthCheck> {
         DeviceInfoService.updateAppInfo();
       }
       setState(() {
-        _hasSeenWelcome = hasSeenWelcome;
         _isAuthenticated = token != null;
         _checkingAuth = false;
       });
@@ -146,11 +144,6 @@ class _AuthCheckState extends State<AuthCheck> {
         ),
       );
     }
-    
-    if (!_hasSeenWelcome) {
-      return const WelcomeScreen();
-    }
-    
-    return _isAuthenticated ? const MainLayout() : const LoginScreen();
+    return WelcomeScreen(isAuthenticated: _isAuthenticated);
   }
 }

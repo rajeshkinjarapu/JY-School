@@ -107,14 +107,10 @@ class _SingleStudentResultScreenState extends State<SingleStudentResultScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF1F5F9),
       appBar: AppBar(
-        title: Text('Result Detail', style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)),
-        iconTheme: const IconThemeData(color: Colors.white),
-        flexibleSpace: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(colors: [Color(0xFF6366F1), Color(0xFF4F46E5), Color(0xFF4338CA)], begin: Alignment.topLeft, end: Alignment.bottomRight),
-          ),
-        ),
-        elevation: 0,
+        title: Text('Result Detail', style: GoogleFonts.outfit(color: const Color(0xFF0F172A), fontWeight: FontWeight.bold, fontSize: 18)),
+        iconTheme: const IconThemeData(color: Color(0xFF0F172A)),
+        backgroundColor: Colors.white,
+        elevation: 0.5,
       ),
       body: _isLoading 
         ? const Center(child: CircularProgressIndicator(color: Color(0xFF6366F1)))
@@ -145,13 +141,13 @@ class _SingleStudentResultScreenState extends State<SingleStudentResultScreen> {
                       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
                       decoration: BoxDecoration(
                         gradient: const LinearGradient(
-                          colors: [Color(0xFF4F46E5), Color(0xFF7C3AED)],
+                          colors: [Color(0xFF0F172A), Color(0xFF1E293B)], // Dark Slate
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),
                         borderRadius: BorderRadius.circular(16),
                         boxShadow: [
-                          BoxShadow(color: const Color(0xFF4F46E5).withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 4)),
+                          BoxShadow(color: const Color(0xFF0F172A).withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 4)),
                         ],
                       ),
                       child: Row(
@@ -188,7 +184,7 @@ class _SingleStudentResultScreenState extends State<SingleStudentResultScreen> {
                     const SizedBox(height: 12),
                     Row(
                       children: [
-                        const Icon(Icons.analytics_rounded, color: Color(0xFF4F46E5), size: 20),
+                        const Icon(Icons.analytics_rounded, color: Color(0xFF0F172A), size: 20),
                         const SizedBox(width: 8),
                         Text('Marks Breakdown', style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold, color: const Color(0xFF1E293B))),
                       ],
@@ -201,31 +197,34 @@ class _SingleStudentResultScreenState extends State<SingleStudentResultScreen> {
             ),
           ),
         ),
-        Container(
-          width: double.infinity,
-          padding: EdgeInsets.fromLTRB(12, 12, 12, MediaQuery.of(context).padding.bottom > 0 ? MediaQuery.of(context).padding.bottom + 12 : 24),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, -2))],
-          ),
+        SafeArea(
+          bottom: true,
           child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
             decoration: BoxDecoration(
-              gradient: const LinearGradient(colors: [Color(0xFF4F46E5), Color(0xFF6366F1)]),
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [BoxShadow(color: const Color(0xFF4F46E5).withOpacity(0.3), blurRadius: 8, offset: const Offset(0, 4))],
+              color: Colors.white,
+              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, -2))],
             ),
-            child: ElevatedButton.icon(
-              onPressed: _isSharing ? null : _shareResult,
-              icon: _isSharing 
-                  ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                  : const Icon(Icons.share_rounded, color: Colors.white, size: 20),
-              label: Text(_isSharing ? 'Preparing...' : 'Share Full Result', style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.transparent,
-                foregroundColor: Colors.white,
-                shadowColor: Colors.transparent,
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(colors: [Color(0xFF0F172A), Color(0xFF1E293B)]),
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [BoxShadow(color: const Color(0xFF0F172A).withOpacity(0.3), blurRadius: 8, offset: const Offset(0, 4))],
+              ),
+              child: ElevatedButton.icon(
+                onPressed: _isSharing ? null : _shareResult,
+                icon: _isSharing 
+                    ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                    : const Icon(Icons.share_rounded, color: Colors.white, size: 20),
+                label: Text(_isSharing ? 'Preparing...' : 'Share Full Result', style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.transparent,
+                  foregroundColor: Colors.white,
+                  shadowColor: Colors.transparent,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
               ),
             ),
           ),
@@ -396,11 +395,7 @@ class _SingleStudentResultScreenState extends State<SingleStudentResultScreen> {
             Container(
               padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
               decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Color(0xFF8B5CF6), Color(0xFF6366F1)],
-                  begin: Alignment.centerLeft,
-                  end: Alignment.centerRight,
-                ),
+                color: Color(0xFF1E293B), // Dark Slate
               ),
               child: Row(
                 children: [
