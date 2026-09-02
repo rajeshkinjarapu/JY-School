@@ -242,8 +242,6 @@ class _WelcomeBodyState extends State<_WelcomeBody>
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               _StartButton(onPressed: widget.onStart),
-                              const SizedBox(height: 10),
-                              const _FooterText(),
                             ],
                           ),
                         ),
