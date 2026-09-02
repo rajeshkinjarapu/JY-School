@@ -1,6 +1,11 @@
 {
-  "latestVersion": "1.0.3",
-  "downloadUrl": "https://github.com/rajeshkinjarapu/JY-School/actions",
+  "latestVersion": "1.0.0",
+  "downloadUrls": {
+    "teacher": "",
+    "student": "",
+    "admin": "",
+    "universal": ""
+  },
   "forceUpdate": false,
-  "releaseNotes": "Added Gatepass to Teacher Dashboard!"
+  "releaseNotes": "Initial setup."
 }

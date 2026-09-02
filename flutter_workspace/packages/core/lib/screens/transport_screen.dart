@@ -25,6 +25,8 @@ class _TransportScreenState extends State<TransportScreen> {
   String _userRole = '';
   Map<String, dynamic> _userMap = {};
 
+  Map<String, dynamic>? _myTransport;
+
   @override
   void initState() {
     super.initState();
@@ -42,7 +44,26 @@ class _TransportScreenState extends State<TransportScreen> {
     if (_userRole != 'STUDENT') {
       _fetchDashboardStats();
     } else {
-      setState(() => _isLoading = false);
+      _fetchMyTransport();
+    }
+  }
+
+  Future<void> _fetchMyTransport() async {
+    setState(() => _isLoading = true);
+    try {
+      final res = await ApiService.getMyStudentProfile();
+      if (mounted) {
+        if (res['success'] && res['data'] != null) {
+          setState(() {
+            _myTransport = res['data']['transport'];
+            _isLoading = false;
+          });
+        } else {
+          setState(() => _isLoading = false);
+        }
+      }
+    } catch (e) {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -121,19 +142,28 @@ class _TransportScreenState extends State<TransportScreen> {
         body: TabBarView(
           children: [
             // Tab 1: Bus Details
-            SingleChildScrollView(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                children: [
-                  _buildRouteDetailsCard(),
-                  const SizedBox(height: 24),
-                  _buildSupportCard(),
-                  const SizedBox(height: 40),
-                ],
+            RefreshIndicator(
+              onRefresh: _fetchMyTransport,
+              color: const Color(0xFF4F46E5),
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  children: [
+                    if (_myTransport == null || _myTransport!['status'] != 'ACTIVE')
+                      _buildNoBusAssignedCard()
+                    else ...[
+                      _buildRouteDetailsCard(),
+                      const SizedBox(height: 24),
+                      _buildSupportCard(),
+                    ],
+                    const SizedBox(height: 40),
+                  ],
+                ),
               ),
             ),
             // Tab 2: Live Tracking Embedded
-            const LiveTrackingScreen(routeData: {}, isEmbedded: true),
+            LiveTrackingScreen(routeData: _myTransport != null ? _myTransport!['route'] ?? {} : {}, isEmbedded: true),
           ],
         ),
       ),
@@ -223,7 +253,43 @@ class _TransportScreenState extends State<TransportScreen> {
     );
   }
 
+  Widget _buildNoBusAssignedCard() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 15, offset: const Offset(0, 5))],
+        border: Border.all(color: Colors.grey.withOpacity(0.1)),
+      ),
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(color: const Color(0xFFF1F5F9), shape: BoxShape.circle),
+            child: const Icon(Icons.directions_bus_filled_outlined, color: Color(0xFF94A3B8), size: 48),
+          ),
+          const SizedBox(height: 24),
+          Text(
+            'No Bus Assigned',
+            style: GoogleFonts.outfit(fontSize: 22, fontWeight: FontWeight.bold, color: const Color(0xFF1E293B)),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'You have not been assigned to any transport route yet. Please contact the administration if you need transport facility.',
+            textAlign: TextAlign.center,
+            style: GoogleFonts.poppins(fontSize: 14, color: const Color(0xFF64748B), height: 1.5),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildRouteDetailsCard() {
+    final route = _myTransport?['route'];
+    final stop = _myTransport?['stop'];
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -247,13 +313,13 @@ class _TransportScreenState extends State<TransportScreen> {
             ],
           ),
           const SizedBox(height: 20),
-          _buildInfoRow(Icons.directions_bus_rounded, 'Assigned Bus', 'AP 09 TA 1234'),
+          _buildInfoRow(Icons.directions_bus_rounded, 'Assigned Bus', 'School Bus'),
           const Divider(height: 30),
-          _buildInfoRow(Icons.map_rounded, 'Route Name', 'KPHB Colony - School'),
+          _buildInfoRow(Icons.map_rounded, 'Route Name', route != null ? route['name'] ?? 'N/A' : 'N/A'),
           const Divider(height: 30),
-          _buildInfoRow(Icons.access_time_rounded, 'Pickup Time', '07:30 AM'),
+          _buildInfoRow(Icons.location_on_rounded, 'Boarding Stop', stop != null ? stop['stopName'] ?? 'N/A' : 'N/A'),
           const Divider(height: 30),
-          _buildInfoRow(Icons.access_time_filled_rounded, 'Drop Time', '04:15 PM'),
+          _buildInfoRow(Icons.access_time_rounded, 'Pickup Time', stop != null ? stop['pickupTime'] ?? 'N/A' : 'N/A'),
         ],
       ),
     );

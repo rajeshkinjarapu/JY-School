@@ -41,7 +41,7 @@ class StudentExamsDashboardScreen extends StatelessWidget {
               physics: const NeverScrollableScrollPhysics(),
               crossAxisSpacing: 16,
               mainAxisSpacing: 16,
-              childAspectRatio: 1.15,
+              childAspectRatio: 1.45,
               children: [
                 _buildModuleCard(
                   context: context,

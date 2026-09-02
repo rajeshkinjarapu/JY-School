@@ -617,6 +617,12 @@ export const getMyProfile = async (req: AuthRequest, res: Response, next: NextFu
     include: {
       user: { select: { id: true, name: true, email: true, phone: true, photoUrl: true } },
       class: true,
+      transport: {
+        include: {
+          route: true,
+          stop: true,
+        }
+      },
     },
   });
   if (!student) return next(createError('Student profile not found', 404));
