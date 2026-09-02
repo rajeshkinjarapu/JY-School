@@ -17,7 +17,7 @@ class StudentProfileScreen extends StatefulWidget {
 }
 
 class _StudentProfileScreenState extends State<StudentProfileScreen> with SingleTickerProviderStateMixin {
-  TabController? _tabController;
+  late TabController _tabController;
   int _currentIndex = 0;
   Map<String, dynamic>? _studentDetails;
   List<dynamic> _feeStructures = [];
@@ -27,49 +27,81 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
   @override
   void initState() {
     super.initState();
+    _tabController = TabController(length: 3, vsync: this);
+    _tabController.addListener(() {
+      if (!_tabController.indexIsChanging && mounted) {
+        setState(() { _currentIndex = _tabController.index; });
+      }
+    });
     _initTabs();
     _fetchProfile();
   }
 
   Future<void> _initTabs() async {
-    final prefs = await SharedPreferences.getInstance();
-    final userStr = prefs.getString('user');
-    String role = '';
-    if (userStr != null) {
-      role = jsonDecode(userStr)['role'] ?? '';
-    }
-    _isTeacher = role == 'TEACHER';
-    _tabController = TabController(length: _isTeacher ? 2 : 3, vsync: this);
-    _tabController!.addListener(() {
-      if (!_tabController!.indexIsChanging && mounted) {
-        setState(() { _currentIndex = _tabController!.index; });
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final userStr = prefs.getString('user');
+      String role = '';
+      if (userStr != null) {
+        role = jsonDecode(userStr)['role'] ?? '';
       }
-    });
-    if (mounted) setState(() {});
+      final isTeacher = role == 'TEACHER';
+      if (isTeacher != _isTeacher && mounted) {
+        setState(() {
+          _isTeacher = isTeacher;
+          _tabController.dispose();
+          _tabController = TabController(length: _isTeacher ? 2 : 3, vsync: this);
+          _tabController.addListener(() {
+            if (!_tabController.indexIsChanging && mounted) {
+              setState(() { _currentIndex = _tabController.index; });
+            }
+          });
+        });
+      }
+    } catch (e) {
+      debugPrint('Error initTabs: $e');
+    }
   }
 
   Future<void> _fetchProfile() async {
-    final id = widget.student['id'];
-    if (id == null) { setState(() => _isLoading = false); return; }
+    final id = widget.student['id'] ?? widget.student['_id'] ?? widget.student['studentId'];
+    if (id == null) {
+      if (mounted) setState(() => _isLoading = false);
+      return;
+    }
     try {
-      final results = await Future.wait([
-        ApiService.getStudentById(id),
-        ApiService.getFeeStructures(),
-      ]);
+      final studentRes = await ApiService.getStudentById(id.toString()).timeout(const Duration(seconds: 10));
+      Map<String, dynamic>? feeRes;
+      try {
+        feeRes = await ApiService.getFeeStructures().timeout(const Duration(seconds: 10));
+      } catch (_) {}
+
       if (mounted) {
         setState(() {
-          _studentDetails = results[0]['success'] ? results[0]['data'] : widget.student;
-          _feeStructures = results[1]['success'] ? (results[1]['data'] as List<dynamic>) : [];
+          if (studentRes['success'] == true && studentRes['data'] != null && studentRes['data'] is Map) {
+            _studentDetails = Map<String, dynamic>.from(studentRes['data'] as Map);
+          } else {
+            _studentDetails = widget.student;
+          }
+          if (feeRes != null && feeRes['success'] == true && feeRes['data'] is List) {
+            _feeStructures = feeRes['data'] as List<dynamic>;
+          }
           _isLoading = false;
         });
       }
     } catch (e) {
-      if (mounted) setState(() { _studentDetails = widget.student; _isLoading = false; });
+      debugPrint('Error fetching student details: $e');
+      if (mounted) {
+        setState(() {
+          _studentDetails = widget.student;
+          _isLoading = false;
+        });
+      }
     }
   }
 
   @override
-  void dispose() { _tabController?.dispose(); super.dispose(); }
+  void dispose() { _tabController.dispose(); super.dispose(); }
 
   Future<void> _launchUrl(String scheme, String value) async {
     if (value.isEmpty || value == 'N/A') return;
@@ -133,9 +165,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
               color: Colors.black.withOpacity(0.15),
               borderRadius: BorderRadius.circular(30),
             ),
-            child: _tabController == null
-                ? const Center(child: CircularProgressIndicator(color: Colors.white))
-                : TabBar(
+            child: TabBar(
                     controller: _tabController,
                     dividerColor: Colors.transparent,
                     indicatorSize: TabBarIndicatorSize.tab,
@@ -227,16 +257,14 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
             ),
           ),
           Expanded(
-            child: _isLoading || _tabController == null
-                ? const Center(child: CircularProgressIndicator(color: Color(0xFF6366F1)))
-                : TabBarView(
-                    controller: _tabController,
-                    children: [
-                      _buildProfileTab(s, user),
-                      _buildExamsTab(s),
-                      if (!_isTeacher) _buildFeesTab(s),
-                    ],
-                  ),
+            child: TabBarView(
+              controller: _tabController,
+              children: [
+                _buildProfileTab(s, user),
+                _buildExamsTab(s),
+                if (!_isTeacher) _buildFeesTab(s),
+              ],
+            ),
           ),
         ],
       ),
@@ -438,6 +466,9 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
 
   // EXAMS TAB
   Widget _buildExamsTab(Map<String, dynamic> s) {
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator(color: Color(0xFF6366F1)));
+    }
     final marks = (s['marks'] as List?) ?? [];
     if (marks.isEmpty) {
       return Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
@@ -483,6 +514,9 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
 
   // FEES TAB
   Widget _buildFeesTab(Map<String, dynamic> s) {
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator(color: Color(0xFF6366F1)));
+    }
     final studentId = s['id'] ?? '';
     final classId = s['classId'] ?? '';
     final applicable = _feeStructures.where((st) => st['studentId'] == studentId || st['classId'] == classId).toList();
