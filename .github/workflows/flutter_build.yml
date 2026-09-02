@@ -6,7 +6,19 @@ on:
       - main
     paths:
       - 'flutter_workspace/**'
-  workflow_dispatch: # Enables manual run button in GitHub UI
+  workflow_dispatch:
+    inputs:
+      app_to_build:
+        description: 'Select which app to build'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - teacher_app
+          - admin_app
+          - student_app
+          - universal_app
 
 jobs:
   build_apks:
@@ -40,34 +52,53 @@ jobs:
           dart pub global run melos bootstrap
 
       - name: Build Teacher App APK
+        if: ${{ github.event.inputs.app_to_build == 'all' || github.event.inputs.app_to_build == 'teacher_app' || github.event_name == 'push' }}
         run: |
           cd flutter_workspace/apps/teacher_app
           flutter build apk --release
 
       - name: Upload Teacher App APK
+        if: ${{ github.event.inputs.app_to_build == 'all' || github.event.inputs.app_to_build == 'teacher_app' || github.event_name == 'push' }}
         uses: actions/upload-artifact@v4
         with:
           name: teacher_app-release-apk
           path: flutter_workspace/apps/teacher_app/build/app/outputs/flutter-apk/app-release.apk
           
       - name: Build Admin App APK
+        if: ${{ github.event.inputs.app_to_build == 'all' || github.event.inputs.app_to_build == 'admin_app' || github.event_name == 'push' }}
         run: |
           cd flutter_workspace/apps/admin_app
           flutter build apk --release
 
       - name: Upload Admin App APK
+        if: ${{ github.event.inputs.app_to_build == 'all' || github.event.inputs.app_to_build == 'admin_app' || github.event_name == 'push' }}
         uses: actions/upload-artifact@v4
         with:
           name: admin_app-release-apk
           path: flutter_workspace/apps/admin_app/build/app/outputs/flutter-apk/app-release.apk
 
       - name: Build Student App APK
+        if: ${{ github.event.inputs.app_to_build == 'all' || github.event.inputs.app_to_build == 'student_app' || github.event_name == 'push' }}
         run: |
           cd flutter_workspace/apps/student_app
           flutter build apk --release
 
       - name: Upload Student App APK
+        if: ${{ github.event.inputs.app_to_build == 'all' || github.event.inputs.app_to_build == 'student_app' || github.event_name == 'push' }}
         uses: actions/upload-artifact@v4
         with:
           name: student_app-release-apk
           path: flutter_workspace/apps/student_app/build/app/outputs/flutter-apk/app-release.apk
+
+      - name: Build Universal App APK
+        if: ${{ github.event.inputs.app_to_build == 'all' || github.event.inputs.app_to_build == 'universal_app' || github.event_name == 'push' }}
+        run: |
+          cd flutter_workspace/apps/universal_app
+          flutter build apk --release
+
+      - name: Upload Universal App APK
+        if: ${{ github.event.inputs.app_to_build == 'all' || github.event.inputs.app_to_build == 'universal_app' || github.event_name == 'push' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: universal_app-release-apk
+          path: flutter_workspace/apps/universal_app/build/app/outputs/flutter-apk/app-release.apk
