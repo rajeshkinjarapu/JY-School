@@ -1,6 +1,0 @@
-# melos_managed_dependency_overrides: core,teacher_feature
-dependency_overrides:
-  core:
-    path: ..\\..\\packages\\core
-  teacher_feature:
-    path: ..\\..\\packages\\teacher_feature
