@@ -65,7 +65,20 @@ const idbPersister = {
 
 // Handle Vite dynamic import errors (e.g. after a new deployment)
 window.addEventListener('vite:preloadError', () => {
-  window.location.reload();
+  // If PWA Service Worker is caching old index.html, unregister it before reloading
+  // to break the infinite chunk load error loop
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistrations().then((registrations) => {
+      for (const registration of registrations) {
+        registration.unregister();
+      }
+      window.location.reload();
+    }).catch(() => {
+      window.location.reload();
+    });
+  } else {
+    window.location.reload();
+  }
 });
 
 
