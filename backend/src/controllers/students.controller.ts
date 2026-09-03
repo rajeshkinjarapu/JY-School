@@ -132,7 +132,7 @@ export const create = async (req: Request, res: Response, next: NextFunction): P
   // The login ID is exactly the Student ID
   const email = rollNo;
 
-  const defaultPassword = phone || rollNo;
+  const defaultPassword = "Student2026";
   const hashedPassword = await bcrypt.hash(password || defaultPassword, 10);
 
   const user = await prisma.user.create({
@@ -437,8 +437,8 @@ export const bulkImport = async (req: AuthRequest, res: Response, next: NextFunc
         const rollNo = row.studentid || row.rollno || generateRollNo(currentStudentCount + 1);
         const email = rollNo; // UserID is always Student ID
         
-        // Password is explicitly provided, or defaults to Phone number, or RollNo if no phone
-        const password = row.password || phone || rollNo;
+        // Password is explicitly provided, or defaults to Student2026
+        const password = row.password || "Student2026";
 
         if (!name) {
           failed.push({ row, reason: 'Name is required' });
