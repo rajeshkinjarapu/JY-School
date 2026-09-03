@@ -1,7 +1,8 @@
 // schema_local.prisma
 generator client {
-  provider = "prisma-client-js"
-  output   = "./generated/local-client"
+  provider      = "prisma-client-js"
+  output        = "./generated/local-client"
+  binaryTargets = ["native", "debian-openssl-3.0.x", "windows"]
 }
 
 datasource db {

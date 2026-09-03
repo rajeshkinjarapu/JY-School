@@ -36,22 +36,22 @@ android {
     productFlavors {
         create("universal") {
             dimension = "default"
-            resValue("string", "app_name", "JY School ERP")
+            resValue("string", "app_name", "JY School")
         }
         create("student") {
             dimension = "default"
             applicationIdSuffix = ".student"
-            resValue("string", "app_name", "JY School - Student")
+            resValue("string", "app_name", "JY Student")
         }
         create("teacher") {
             dimension = "default"
             applicationIdSuffix = ".teacher"
-            resValue("string", "app_name", "JY School - Teacher")
+            resValue("string", "app_name", "JY Teacher")
         }
         create("admin") {
             dimension = "default"
             applicationIdSuffix = ".admin"
-            resValue("string", "app_name", "JY School - Admin")
+            resValue("string", "app_name", "JY Admin")
         }
     }
 

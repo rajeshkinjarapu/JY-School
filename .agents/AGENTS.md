@@ -31,3 +31,10 @@
 - **Strict Code Verification (Mandatory Pre-Flight Check):** Always double-check the Flutter code (or any code) for missing brackets, commas, syntax errors, and missing package imports BEFORE outputting. Act as an Expert Flutter and Full-Stack Developer and write strict, error-free code. NEVER skip this step.
 
 - **Live Telugu Progress Log (Strict Order):** Whenever you are writing or modifying code, you MUST create or update an artifact named `progress_log.md`. In this artifact, you must provide live, step-by-step updates in Telugu language detailing exactly what you are doing (e.g., creating files, designing screens, fixing bugs). This log must be updated incrementally as you progress through the task, so the user can see exactly what is happening in real-time. NEVER skip this rule for any coding task.
+
+- **Shorebird Release vs Patch Rule (Strict Memory):** ALWAYS remember this critical distinction for mobile app deployments:
+  1. **Shorebird RELEASE** (New version): Requires `pubspec.yaml` version bump BEFORE running `shorebird release`. Format: `version: X.Y.Z+buildNumber` (e.g., `1.0.2+3` → `1.0.3+4`). Without bumping, Shorebird will FAIL with "existing release for this version" error.
+  2. **Shorebird PATCH** (OTA update): Does NOT require version bump. Just run the patch workflow directly — it patches the existing release automatically.
+  3. **Codemagic Artifact Paths:** When `working_directory: flutter_mobile` is set in `codemagic.yaml`, artifact paths must be relative to that working directory — use `build/app/outputs/flutter-apk/app-*.apk` (WITHOUT the `flutter_mobile/` prefix). Adding `flutter_mobile/` prefix will cause artifacts to not be found/downloaded.
+  4. **Shorebird build.gradle.kts Rules:** NEVER add `doNotStrip("**/*.so")` or `ndk { debugSymbolLevel = "NONE" }` — these conflict with Shorebird's internal native library stripping and cause "failed to strip debug symbols" build failure.
+
