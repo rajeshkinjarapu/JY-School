@@ -42,14 +42,13 @@ class _GatePassScreenState extends State<GatePassScreen> {
   }
 
   Widget _buildBody() {
-    final isStudent = _userRole == 'STUDENT';
     switch (_currentIndex) {
-      case 0: return _DashboardTab(isStudent: isStudent);
-      case 1: return _LiveListTab(isStudent: isStudent);
-      case 2: return _ApprovalsTab(isStudent: isStudent);
-      case 3: return _HistorySearchTab(isStudent: isStudent);
+      case 0: return const _DashboardTab();
+      case 1: return const _LiveListTab();
+      case 2: return const _ApprovalsTab();
+      case 3: return const _HistorySearchTab();
       case 4: return const _QRScannerTab();
-      default: return _DashboardTab(isStudent: isStudent);
+      default: return const _DashboardTab();
     }
   }
 
@@ -149,8 +148,7 @@ class _GatePassScreenState extends State<GatePassScreen> {
 // Tab 1: Dashboard â€” PREMIUM REDESIGN + REAL API
 // ---------------------------------------------------------
 class _DashboardTab extends StatefulWidget {
-  final bool isStudent;
-  const _DashboardTab({required this.isStudent});
+  const _DashboardTab();
   @override
   State<_DashboardTab> createState() => _DashboardTabState();
 }
@@ -220,7 +218,7 @@ class _DashboardTabState extends State<_DashboardTab> with TickerProviderStateMi
       );
     }
 
-    final isStudentTab = widget.isStudent ? true : _tabController.index == 0;
+    final isStudentTab = _tabController.index == 0;
     final stats = isStudentTab ? _studentStats : _staffStats;
     
     final int _inside = stats['inside'] ?? 0;
@@ -230,21 +228,20 @@ class _DashboardTabState extends State<_DashboardTab> with TickerProviderStateMi
 
     return Column(
       children: [
-        if (!widget.isStudent)
-          Container(
-            color: Colors.white,
-            child: TabBar(
-              controller: _tabController,
-              labelColor: const Color(0xFF10B981),
-              unselectedLabelColor: const Color(0xFF94A3B8),
-              indicatorColor: const Color(0xFF10B981),
-              labelStyle: GoogleFonts.poppins(fontWeight: FontWeight.bold),
-              tabs: const [
-                Tab(text: 'Students'),
-                Tab(text: 'Teachers'),
-              ],
-            ),
+        Container(
+          color: Colors.white,
+          child: TabBar(
+            controller: _tabController,
+            labelColor: const Color(0xFF10B981),
+            unselectedLabelColor: const Color(0xFF94A3B8),
+            indicatorColor: const Color(0xFF10B981),
+            labelStyle: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+            tabs: const [
+              Tab(text: 'Students'),
+              Tab(text: 'Teachers'),
+            ],
           ),
+        ),
         Expanded(
           child: RefreshIndicator(
             onRefresh: _fetchStats,
@@ -672,8 +669,7 @@ class _DashboardTabState extends State<_DashboardTab> with TickerProviderStateMi
 // Tab 2: Live List (Currently Out) â€” REAL API
 // ---------------------------------------------------------
 class _LiveListTab extends StatefulWidget {
-  final bool isStudent;
-  const _LiveListTab({required this.isStudent});
+  const _LiveListTab();
   @override
   State<_LiveListTab> createState() => _LiveListTabState();
 }
@@ -849,24 +845,10 @@ class _LiveListTabState extends State<_LiveListTab> {
   Widget build(BuildContext context) {
     if (_loading) return const Center(child: CircularProgressIndicator(color: Color(0xFF10B981)));
 
-    final studentPasses = _activePasses.where((p) => p['requestType'] == 'STUDENT').toList();
-    final count = widget.isStudent ? studentPasses.length : _activePasses.length;
-
-    Widget listBody;
-    if (widget.isStudent) {
-      listBody = _buildList(studentPasses, true);
-    } else {
-      listBody = TabBarView(
+    return DefaultTabController(
+      length: 2,
+      child: Column(
         children: [
-          _buildList(_activePasses, true),
-          _buildList(_activePasses, false),
-        ],
-      );
-    }
-
-    final content = Column(
-      children: [
-        if (!widget.isStudent)
           Container(
             color: Colors.white,
             child: TabBar(
@@ -880,42 +862,42 @@ class _LiveListTabState extends State<_LiveListTab> {
               ],
             ),
           ),
-        Container(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-          color: const Color(0xFFF59E0B).withOpacity(0.08),
-          child: Row(
-            children: [
-              Container(
-                width: 8, height: 8,
-                decoration: const BoxDecoration(color: Color(0xFFF59E0B), shape: BoxShape.circle),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                '$count people currently OUTSIDE campus',
-                style: GoogleFonts.poppins(
-                  color: const Color(0xFFB45309),
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
+          Container(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+            color: const Color(0xFFF59E0B).withOpacity(0.08),
+            child: Row(
+              children: [
+                Container(
+                  width: 8, height: 8,
+                  decoration: const BoxDecoration(color: Color(0xFFF59E0B), shape: BoxShape.circle),
                 ),
+                const SizedBox(width: 8),
+                Text(
+                  '${_activePasses.length} people currently OUTSIDE campus',
+                  style: GoogleFonts.poppins(
+                    color: const Color(0xFFB45309),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: RefreshIndicator(
+              onRefresh: _fetchLiveList,
+              color: const Color(0xFF10B981),
+              child: TabBarView(
+                children: [
+                  _buildList(_activePasses, true),
+                  _buildList(_activePasses, false),
+                ],
               ),
-            ],
+            ),
           ),
-        ),
-        Expanded(
-          child: RefreshIndicator(
-            onRefresh: _fetchLiveList,
-            color: const Color(0xFF10B981),
-            child: listBody,
-          ),
-        ),
-      ],
+        ],
+      ),
     );
-
-    if (widget.isStudent) {
-      return content;
-    } else {
-      return DefaultTabController(length: 2, child: content);
-    }
   }
 }
 
@@ -923,8 +905,7 @@ class _LiveListTabState extends State<_LiveListTab> {
 // Tab 3: Approvals â€” REAL API
 // ---------------------------------------------------------
 class _ApprovalsTab extends StatefulWidget {
-  final bool isStudent;
-  const _ApprovalsTab({required this.isStudent});
+  const _ApprovalsTab();
   @override
   State<_ApprovalsTab> createState() => _ApprovalsTabState();
 }
@@ -1121,24 +1102,10 @@ class _ApprovalsTabState extends State<_ApprovalsTab> {
   Widget build(BuildContext context) {
     if (_loading) return const Center(child: CircularProgressIndicator(color: Color(0xFF6366F1)));
 
-    final studentPasses = _pendingPasses.where((p) => p['requestType'] == 'STUDENT').toList();
-    final count = widget.isStudent ? studentPasses.length : _pendingPasses.length;
-
-    Widget listBody;
-    if (widget.isStudent) {
-      listBody = _buildList(studentPasses, true);
-    } else {
-      listBody = TabBarView(
+    return DefaultTabController(
+      length: 2,
+      child: Column(
         children: [
-          _buildList(_pendingPasses, true),
-          _buildList(_pendingPasses, false),
-        ],
-      );
-    }
-
-    final content = Column(
-      children: [
-        if (!widget.isStudent)
           Container(
             color: Colors.white,
             child: TabBar(
@@ -1152,34 +1119,34 @@ class _ApprovalsTabState extends State<_ApprovalsTab> {
               ],
             ),
           ),
-        Container(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-          color: const Color(0xFF6366F1).withOpacity(0.08),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                '$count Requests Pending Approval',
-                style: GoogleFonts.poppins(color: const Color(0xFF4338CA), fontSize: 12, fontWeight: FontWeight.w700),
+          Container(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+            color: const Color(0xFF6366F1).withOpacity(0.08),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  '${_pendingPasses.length} Requests Pending Approval',
+                  style: GoogleFonts.poppins(color: const Color(0xFF4338CA), fontSize: 12, fontWeight: FontWeight.w700),
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: RefreshIndicator(
+              onRefresh: _fetchPending,
+              color: const Color(0xFF6366F1),
+              child: TabBarView(
+                children: [
+                  _buildList(_pendingPasses, true),
+                  _buildList(_pendingPasses, false),
+                ],
               ),
-            ],
+            ),
           ),
-        ),
-        Expanded(
-          child: RefreshIndicator(
-            onRefresh: _fetchPending,
-            color: const Color(0xFF6366F1),
-            child: listBody,
-          ),
-        ),
-      ],
+        ],
+      ),
     );
-
-    if (widget.isStudent) {
-      return content;
-    } else {
-      return DefaultTabController(length: 2, child: content);
-    }
   }
 }
 
@@ -1187,8 +1154,7 @@ class _ApprovalsTabState extends State<_ApprovalsTab> {
 // Tab 4: History / Search â€” REAL API
 // ---------------------------------------------------------
 class _HistorySearchTab extends StatefulWidget {
-  final bool isStudent;
-  const _HistorySearchTab({required this.isStudent});
+  const _HistorySearchTab();
   @override
   State<_HistorySearchTab> createState() => _HistorySearchTabState();
 }
@@ -1342,21 +1308,10 @@ class _HistorySearchTabState extends State<_HistorySearchTab> {
 
     if (_loading) return const Center(child: CircularProgressIndicator(color: Color(0xFF6366F1)));
 
-    Widget listBody;
-    if (widget.isStudent) {
-      listBody = _buildList(_filtered, true, statusColor);
-    } else {
-      listBody = TabBarView(
+    return DefaultTabController(
+      length: 2,
+      child: Column(
         children: [
-          _buildList(_filtered, true, statusColor),
-          _buildList(_filtered, false, statusColor),
-        ],
-      );
-    }
-
-    final content = Column(
-      children: [
-        if (!widget.isStudent)
           Container(
             color: Colors.white,
             child: TabBar(
@@ -1370,38 +1325,38 @@ class _HistorySearchTabState extends State<_HistorySearchTab> {
               ],
             ),
           ),
-        Container(
-          color: Colors.white,
-          padding: const EdgeInsets.all(14),
-          child: TextField(
-            controller: _searchCtrl,
-            onChanged: _filterList,
-            decoration: InputDecoration(
-              hintText: 'Search by name...',
-              hintStyle: GoogleFonts.poppins(color: const Color(0xFF94A3B8), fontSize: 13),
-              prefixIcon: const Icon(Icons.search_rounded, color: Color(0xFF94A3B8)),
-              filled: true,
-              fillColor: const Color(0xFFF1F5F9),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
-              contentPadding: const EdgeInsets.symmetric(vertical: 14),
+          Container(
+            color: Colors.white,
+            padding: const EdgeInsets.all(14),
+            child: TextField(
+              controller: _searchCtrl,
+              onChanged: _filterList,
+              decoration: InputDecoration(
+                hintText: 'Search by name...',
+                hintStyle: GoogleFonts.poppins(color: const Color(0xFF94A3B8), fontSize: 13),
+                prefixIcon: const Icon(Icons.search_rounded, color: Color(0xFF94A3B8)),
+                filled: true,
+                fillColor: const Color(0xFFF1F5F9),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
+                contentPadding: const EdgeInsets.symmetric(vertical: 14),
+              ),
             ),
           ),
-        ),
-        Expanded(
-          child: RefreshIndicator(
-            onRefresh: _fetchHistory,
-            color: const Color(0xFF6366F1),
-            child: listBody,
+          Expanded(
+            child: RefreshIndicator(
+              onRefresh: _fetchHistory,
+              color: const Color(0xFF6366F1),
+              child: TabBarView(
+                children: [
+                  _buildList(_filtered, true, statusColor),
+                  _buildList(_filtered, false, statusColor),
+                ],
+              ),
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
-
-    if (widget.isStudent) {
-      return content;
-    } else {
-      return DefaultTabController(length: 2, child: content);
-    }
   }
 }
 
