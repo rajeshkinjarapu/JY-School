@@ -81,6 +81,8 @@ api.interceptors.response.use(
       // If no token at all → go to login (fresh session)
       const refreshToken = localStorage.getItem('refreshToken');
       if (!refreshToken) {
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('user');
         window.location.href = '/login';
         return Promise.reject(error);
       }
