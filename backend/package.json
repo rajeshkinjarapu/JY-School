@@ -5,13 +5,13 @@
   "main": "dist/server.js",
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
-    "build": "prisma generate && tsc && mkdir -p dist/config && cp src/config/firebase-service-account.json dist/config/ || echo Compilation_warnings_ignored",
+    "build": "prisma generate && prisma generate --schema prisma/schema_local.prisma && tsc && mkdir -p dist/config && cp src/config/firebase-service-account.json dist/config/ || echo Compilation_warnings_ignored",
     "start": "node dist/server.js",
-    "prisma:generate": "prisma generate",
+    "prisma:generate": "prisma generate && prisma generate --schema prisma/schema_local.prisma",
     "prisma:migrate": "prisma migrate dev",
     "prisma:seed": "ts-node prisma/seed.ts",
     "test": "jest",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate && prisma generate --schema prisma/schema_local.prisma"
   },
   "dependencies": {
     "@google/genai": "^2.13.0",
