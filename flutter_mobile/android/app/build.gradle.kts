@@ -16,12 +16,6 @@ android {
         isCoreLibraryDesugaringEnabled = true
     }
 
-    packaging {
-        jniLibs {
-            useLegacyPackaging = true
-        }
-        doNotStrip("**/*.so")
-    }
 
     buildFeatures {
         resValues = true
@@ -65,12 +59,7 @@ android {
         release {
             isMinifyEnabled = false
             isShrinkResources = false
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
             signingConfig = signingConfigs.getByName("debug")
-            ndk {
-                debugSymbolLevel = "NONE"
-            }
         }
     }
 }

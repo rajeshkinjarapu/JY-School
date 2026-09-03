@@ -14,7 +14,6 @@ workflows:
           export PATH="$HOME/.shorebird/bin:$PATH"
       - name: Build Teacher Release
         script: |
-          yes | sdkmanager --install "ndk;28.2.13676358"
           export PATH="$HOME/.shorebird/bin:$PATH"
           flutter clean
           shorebird release android --flavor teacher -t lib/main_teacher.dart --artifact apk --no-confirm
@@ -36,7 +35,6 @@ workflows:
           export PATH="$HOME/.shorebird/bin:$PATH"
       - name: Build Teacher Patch
         script: |
-          yes | sdkmanager --install "ndk;28.2.13676358"
           export PATH="$HOME/.shorebird/bin:$PATH"
           flutter clean
           shorebird patch android --flavor teacher -t lib/main_teacher.dart --no-confirm
@@ -56,7 +54,6 @@ workflows:
           export PATH="$HOME/.shorebird/bin:$PATH"
       - name: Build Student Release
         script: |
-          yes | sdkmanager --install "ndk;28.2.13676358"
           export PATH="$HOME/.shorebird/bin:$PATH"
           flutter clean
           shorebird release android --flavor student -t lib/main_student.dart --artifact apk --no-confirm
@@ -78,7 +75,6 @@ workflows:
           export PATH="$HOME/.shorebird/bin:$PATH"
       - name: Build Student Patch
         script: |
-          yes | sdkmanager --install "ndk;28.2.13676358"
           export PATH="$HOME/.shorebird/bin:$PATH"
           flutter clean
           shorebird patch android --flavor student -t lib/main_student.dart --no-confirm
@@ -98,7 +94,6 @@ workflows:
           export PATH="$HOME/.shorebird/bin:$PATH"
       - name: Build Admin Release
         script: |
-          yes | sdkmanager --install "ndk;28.2.13676358"
           export PATH="$HOME/.shorebird/bin:$PATH"
           flutter clean
           shorebird release android --flavor admin -t lib/main_admin.dart --artifact apk --no-confirm
@@ -120,7 +115,6 @@ workflows:
           export PATH="$HOME/.shorebird/bin:$PATH"
       - name: Build Admin Patch
         script: |
-          yes | sdkmanager --install "ndk;28.2.13676358"
           export PATH="$HOME/.shorebird/bin:$PATH"
           flutter clean
           shorebird patch android --flavor admin -t lib/main_admin.dart --no-confirm
@@ -140,7 +134,6 @@ workflows:
           export PATH="$HOME/.shorebird/bin:$PATH"
       - name: Build Universal Release
         script: |
-          yes | sdkmanager --install "ndk;28.2.13676358"
           export PATH="$HOME/.shorebird/bin:$PATH"
           flutter clean
           shorebird release android --flavor universal -t lib/main.dart --artifact apk --no-confirm
@@ -162,7 +155,6 @@ workflows:
           export PATH="$HOME/.shorebird/bin:$PATH"
       - name: Build Universal Patch
         script: |
-          yes | sdkmanager --install "ndk;28.2.13676358"
           export PATH="$HOME/.shorebird/bin:$PATH"
           flutter clean
           shorebird patch android --flavor universal -t lib/main.dart --no-confirm
