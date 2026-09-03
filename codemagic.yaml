@@ -6,7 +6,7 @@ workflows:
       groups:
         - shorebird
       flutter: stable
-    working_directory: flutter_mobile
+    working_directory: flutter_workspace/apps/teacher_app
     scripts:
       - name: Install Shorebird
         script: |
@@ -16,10 +16,10 @@ workflows:
         script: |
           export PATH="$HOME/.shorebird/bin:$PATH"
           flutter clean
-          shorebird release android --flavor teacher -t lib/main_teacher.dart --artifact apk --no-confirm
+          shorebird release android --artifact apk --no-confirm
     artifacts:
-      - build/app/outputs/flutter-apk/app-teacher-release.apk
-      - build/app/outputs/bundle/teacherRelease/app-teacher-release.aab
+      - build/app/outputs/flutter-apk/app-release.apk
+      - build/app/outputs/bundle/release/app-release.aab
 
   teacher-patch-workflow:
     name: Teacher App Patch (Update)
@@ -28,7 +28,7 @@ workflows:
       groups:
         - shorebird
       flutter: stable
-    working_directory: flutter_mobile
+    working_directory: flutter_workspace/apps/teacher_app
     scripts:
       - name: Install Shorebird
         script: |
@@ -38,7 +38,7 @@ workflows:
         script: |
           export PATH="$HOME/.shorebird/bin:$PATH"
           flutter clean
-          shorebird patch android --flavor teacher -t lib/main_teacher.dart --no-confirm
+          shorebird patch android --no-confirm
 
   student-release-workflow:
     name: Student App Release (APK)
@@ -47,7 +47,7 @@ workflows:
       groups:
         - shorebird
       flutter: stable
-    working_directory: flutter_mobile
+    working_directory: flutter_workspace/apps/student_app
     scripts:
       - name: Install Shorebird
         script: |
@@ -57,10 +57,10 @@ workflows:
         script: |
           export PATH="$HOME/.shorebird/bin:$PATH"
           flutter clean
-          shorebird release android --flavor student -t lib/main_student.dart --artifact apk --no-confirm
+          shorebird release android --artifact apk --no-confirm
     artifacts:
-      - build/app/outputs/flutter-apk/app-student-release.apk
-      - build/app/outputs/bundle/studentRelease/app-student-release.aab
+      - build/app/outputs/flutter-apk/app-release.apk
+      - build/app/outputs/bundle/release/app-release.aab
 
   student-patch-workflow:
     name: Student App Patch (Update)
@@ -69,7 +69,7 @@ workflows:
       groups:
         - shorebird
       flutter: stable
-    working_directory: flutter_mobile
+    working_directory: flutter_workspace/apps/student_app
     scripts:
       - name: Install Shorebird
         script: |
@@ -79,7 +79,7 @@ workflows:
         script: |
           export PATH="$HOME/.shorebird/bin:$PATH"
           flutter clean
-          shorebird patch android --flavor student -t lib/main_student.dart --no-confirm
+          shorebird patch android --no-confirm
 
   admin-release-workflow:
     name: Admin App Release (APK)
@@ -88,7 +88,7 @@ workflows:
       groups:
         - shorebird
       flutter: stable
-    working_directory: flutter_mobile
+    working_directory: flutter_workspace/apps/admin_app
     scripts:
       - name: Install Shorebird
         script: |
@@ -98,10 +98,10 @@ workflows:
         script: |
           export PATH="$HOME/.shorebird/bin:$PATH"
           flutter clean
-          shorebird release android --flavor admin -t lib/main_admin.dart --artifact apk --no-confirm
+          shorebird release android --artifact apk --no-confirm
     artifacts:
-      - build/app/outputs/flutter-apk/app-admin-release.apk
-      - build/app/outputs/bundle/adminRelease/app-admin-release.aab
+      - build/app/outputs/flutter-apk/app-release.apk
+      - build/app/outputs/bundle/release/app-release.aab
 
   admin-patch-workflow:
     name: Admin App Patch (Update)
@@ -110,7 +110,7 @@ workflows:
       groups:
         - shorebird
       flutter: stable
-    working_directory: flutter_mobile
+    working_directory: flutter_workspace/apps/admin_app
     scripts:
       - name: Install Shorebird
         script: |
@@ -120,7 +120,7 @@ workflows:
         script: |
           export PATH="$HOME/.shorebird/bin:$PATH"
           flutter clean
-          shorebird patch android --flavor admin -t lib/main_admin.dart --no-confirm
+          shorebird patch android --no-confirm
 
   universal-release-workflow:
     name: Universal App Release (APK)
@@ -129,7 +129,7 @@ workflows:
       groups:
         - shorebird
       flutter: stable
-    working_directory: flutter_mobile
+    working_directory: flutter_workspace/apps/universal_app
     scripts:
       - name: Install Shorebird
         script: |
@@ -139,10 +139,10 @@ workflows:
         script: |
           export PATH="$HOME/.shorebird/bin:$PATH"
           flutter clean
-          shorebird release android --flavor universal -t lib/main.dart --artifact apk --no-confirm
+          shorebird release android --artifact apk --no-confirm
     artifacts:
-      - build/app/outputs/flutter-apk/app-universal-release.apk
-      - build/app/outputs/bundle/universalRelease/app-universal-release.aab
+      - build/app/outputs/flutter-apk/app-release.apk
+      - build/app/outputs/bundle/release/app-release.aab
 
   universal-patch-workflow:
     name: Universal App Patch (Update)
@@ -151,7 +151,7 @@ workflows:
       groups:
         - shorebird
       flutter: stable
-    working_directory: flutter_mobile
+    working_directory: flutter_workspace/apps/universal_app
     scripts:
       - name: Install Shorebird
         script: |
@@ -161,4 +161,4 @@ workflows:
         script: |
           export PATH="$HOME/.shorebird/bin:$PATH"
           flutter clean
-          shorebird patch android --flavor universal -t lib/main.dart --no-confirm
+          shorebird patch android --no-confirm
