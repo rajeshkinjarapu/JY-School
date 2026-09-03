@@ -1,100 +1,152 @@
 workflows:
-  teacher-app-android-workflow:
-    name: Teacher App Android Build
+  teacher-release-workflow:
+    name: Teacher App Release (APK)
     max_build_duration: 30
     environment:
       groups:
         - shorebird
       flutter: stable
-    working_directory: flutter_workspace
+    working_directory: flutter_mobile
     scripts:
       - name: Install Shorebird
         script: |
           curl --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/shorebirdtech/install/main/install.sh | bash
           export PATH="$HOME/.shorebird/bin:$PATH"
-      - name: Install Melos
-        script: dart pub global activate melos
-      - name: Bootstrap Workspace
-        script: dart pub global run melos bootstrap
-      - name: Build Teacher App APK with Shorebird
+      - name: Build Teacher Release
         script: |
           export PATH="$HOME/.shorebird/bin:$PATH"
-          cd apps/teacher_app
-          shorebird patch android --no-confirm
+          shorebird release android --flavor teacher -t lib/main_teacher.dart --artifact apk --force
     artifacts:
-      - apps/teacher_app/build/app/outputs/flutter-apk/app-release.apk
+      - flutter_mobile/build/app/outputs/flutter-apk/app-teacher-release.apk
 
-  student-app-android-workflow:
-    name: Student App Android Build
+  teacher-patch-workflow:
+    name: Teacher App Patch (Update)
     max_build_duration: 30
     environment:
       groups:
         - shorebird
       flutter: stable
-    working_directory: flutter_workspace
+    working_directory: flutter_mobile
     scripts:
       - name: Install Shorebird
         script: |
           curl --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/shorebirdtech/install/main/install.sh | bash
           export PATH="$HOME/.shorebird/bin:$PATH"
-      - name: Install Melos
-        script: dart pub global activate melos
-      - name: Bootstrap Workspace
-        script: dart pub global run melos bootstrap
-      - name: Build Student App APK with Shorebird
+      - name: Build Teacher Patch
         script: |
           export PATH="$HOME/.shorebird/bin:$PATH"
-          cd apps/student_app
-          shorebird patch android --no-confirm
-    artifacts:
-      - apps/student_app/build/app/outputs/flutter-apk/app-release.apk
+          shorebird patch android --flavor teacher -t lib/main_teacher.dart --force
 
-  admin-app-android-workflow:
-    name: Admin App Android Build
+  student-release-workflow:
+    name: Student App Release (APK)
     max_build_duration: 30
     environment:
       groups:
         - shorebird
       flutter: stable
-    working_directory: flutter_workspace
+    working_directory: flutter_mobile
     scripts:
       - name: Install Shorebird
         script: |
           curl --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/shorebirdtech/install/main/install.sh | bash
           export PATH="$HOME/.shorebird/bin:$PATH"
-      - name: Install Melos
-        script: dart pub global activate melos
-      - name: Bootstrap Workspace
-        script: dart pub global run melos bootstrap
-      - name: Build Admin App APK with Shorebird
+      - name: Build Student Release
         script: |
           export PATH="$HOME/.shorebird/bin:$PATH"
-          cd apps/admin_app
-          shorebird patch android --no-confirm
+          shorebird release android --flavor student -t lib/main_student.dart --artifact apk --force
     artifacts:
-      - apps/admin_app/build/app/outputs/flutter-apk/app-release.apk
+      - flutter_mobile/build/app/outputs/flutter-apk/app-student-release.apk
 
-  universal-app-android-workflow:
-    name: Universal App Android Build
+  student-patch-workflow:
+    name: Student App Patch (Update)
     max_build_duration: 30
     environment:
       groups:
         - shorebird
       flutter: stable
-    working_directory: flutter_workspace
+    working_directory: flutter_mobile
     scripts:
       - name: Install Shorebird
         script: |
           curl --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/shorebirdtech/install/main/install.sh | bash
           export PATH="$HOME/.shorebird/bin:$PATH"
-      - name: Install Melos
-        script: dart pub global activate melos
-      - name: Bootstrap Workspace
-        script: dart pub global run melos bootstrap
-      - name: Build Universal App APK with Shorebird
+      - name: Build Student Patch
         script: |
           export PATH="$HOME/.shorebird/bin:$PATH"
-          cd apps/universal_app
-          shorebird patch android --no-confirm
+          shorebird patch android --flavor student -t lib/main_student.dart --force
+
+  admin-release-workflow:
+    name: Admin App Release (APK)
+    max_build_duration: 30
+    environment:
+      groups:
+        - shorebird
+      flutter: stable
+    working_directory: flutter_mobile
+    scripts:
+      - name: Install Shorebird
+        script: |
+          curl --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/shorebirdtech/install/main/install.sh | bash
+          export PATH="$HOME/.shorebird/bin:$PATH"
+      - name: Build Admin Release
+        script: |
+          export PATH="$HOME/.shorebird/bin:$PATH"
+          shorebird release android --flavor admin -t lib/main_admin.dart --artifact apk --force
     artifacts:
-      - apps/universal_app/build/app/outputs/flutter-apk/app-release.apk
+      - flutter_mobile/build/app/outputs/flutter-apk/app-admin-release.apk
+
+  admin-patch-workflow:
+    name: Admin App Patch (Update)
+    max_build_duration: 30
+    environment:
+      groups:
+        - shorebird
+      flutter: stable
+    working_directory: flutter_mobile
+    scripts:
+      - name: Install Shorebird
+        script: |
+          curl --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/shorebirdtech/install/main/install.sh | bash
+          export PATH="$HOME/.shorebird/bin:$PATH"
+      - name: Build Admin Patch
+        script: |
+          export PATH="$HOME/.shorebird/bin:$PATH"
+          shorebird patch android --flavor admin -t lib/main_admin.dart --force
+
+  universal-release-workflow:
+    name: Universal App Release (APK)
+    max_build_duration: 30
+    environment:
+      groups:
+        - shorebird
+      flutter: stable
+    working_directory: flutter_mobile
+    scripts:
+      - name: Install Shorebird
+        script: |
+          curl --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/shorebirdtech/install/main/install.sh | bash
+          export PATH="$HOME/.shorebird/bin:$PATH"
+      - name: Build Universal Release
+        script: |
+          export PATH="$HOME/.shorebird/bin:$PATH"
+          shorebird release android --flavor universal -t lib/main.dart --artifact apk --force
+    artifacts:
+      - flutter_mobile/build/app/outputs/flutter-apk/app-universal-release.apk
+
+  universal-patch-workflow:
+    name: Universal App Patch (Update)
+    max_build_duration: 30
+    environment:
+      groups:
+        - shorebird
+      flutter: stable
+    working_directory: flutter_mobile
+    scripts:
+      - name: Install Shorebird
+        script: |
+          curl --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/shorebirdtech/install/main/install.sh | bash
+          export PATH="$HOME/.shorebird/bin:$PATH"
+      - name: Build Universal Patch
+        script: |
+          export PATH="$HOME/.shorebird/bin:$PATH"
+          shorebird patch android --flavor universal -t lib/main.dart --force

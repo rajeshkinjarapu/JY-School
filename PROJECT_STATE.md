@@ -63,7 +63,9 @@
    - Added cache-busting logic (`&t=${new Date().getTime()}`) to the `axios` GET request in the frontend (`JEEProgressCardTab.tsx`, `ProgressCardTab.tsx`) to prevent the browser from caching stale academic year data.
 # Project State: JY School ERP System
 
-## Current Focus (As of 2026-09-02)
+## Current Focus (As of 2026-09-03)
+- **Shorebird & Flavors Integration:** Configured Shorebird flavors for universal, student, teacher, and admin apps.
+- **CodeMagic CI/CD:** Updated `codemagic.yaml` with release and patch workflows for all flavors.
 - **Phase 3:** Mobile App Payment Integration (Completed)
 - **Finance Module (Web):** Added "Collect Fee" shortcut card in Finance Dashboard.
 - **Student Dashboards (Flutter & Web):** Designed and isolated the Examination and Finance dashboards for Student logins, ensuring clean UI and restricted access to relevant features.
