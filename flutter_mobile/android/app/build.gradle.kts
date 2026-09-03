@@ -8,6 +8,7 @@ plugins {
 android {
     namespace = "com.example.jy_school_flutter"
     compileSdk = 36
+    ndkVersion = "25.1.8937393"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17

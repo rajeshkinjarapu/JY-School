@@ -15,6 +15,7 @@ workflows:
       - name: Build Teacher Release
         script: |
           export PATH="$HOME/.shorebird/bin:$PATH"
+          flutter clean
           shorebird release android --flavor teacher -t lib/main_teacher.dart --artifact apk --no-confirm
     artifacts:
       - flutter_mobile/build/app/outputs/flutter-apk/app-teacher-release.apk
@@ -35,6 +36,7 @@ workflows:
       - name: Build Teacher Patch
         script: |
           export PATH="$HOME/.shorebird/bin:$PATH"
+          flutter clean
           shorebird patch android --flavor teacher -t lib/main_teacher.dart --no-confirm
 
   student-release-workflow:
@@ -53,6 +55,7 @@ workflows:
       - name: Build Student Release
         script: |
           export PATH="$HOME/.shorebird/bin:$PATH"
+          flutter clean
           shorebird release android --flavor student -t lib/main_student.dart --artifact apk --no-confirm
     artifacts:
       - flutter_mobile/build/app/outputs/flutter-apk/app-student-release.apk
@@ -73,6 +76,7 @@ workflows:
       - name: Build Student Patch
         script: |
           export PATH="$HOME/.shorebird/bin:$PATH"
+          flutter clean
           shorebird patch android --flavor student -t lib/main_student.dart --no-confirm
 
   admin-release-workflow:
@@ -91,6 +95,7 @@ workflows:
       - name: Build Admin Release
         script: |
           export PATH="$HOME/.shorebird/bin:$PATH"
+          flutter clean
           shorebird release android --flavor admin -t lib/main_admin.dart --artifact apk --no-confirm
     artifacts:
       - flutter_mobile/build/app/outputs/flutter-apk/app-admin-release.apk
@@ -111,6 +116,7 @@ workflows:
       - name: Build Admin Patch
         script: |
           export PATH="$HOME/.shorebird/bin:$PATH"
+          flutter clean
           shorebird patch android --flavor admin -t lib/main_admin.dart --no-confirm
 
   universal-release-workflow:
@@ -129,6 +135,7 @@ workflows:
       - name: Build Universal Release
         script: |
           export PATH="$HOME/.shorebird/bin:$PATH"
+          flutter clean
           shorebird release android --flavor universal -t lib/main.dart --artifact apk --no-confirm
     artifacts:
       - flutter_mobile/build/app/outputs/flutter-apk/app-universal-release.apk
@@ -149,4 +156,5 @@ workflows:
       - name: Build Universal Patch
         script: |
           export PATH="$HOME/.shorebird/bin:$PATH"
+          flutter clean
           shorebird patch android --flavor universal -t lib/main.dart --no-confirm

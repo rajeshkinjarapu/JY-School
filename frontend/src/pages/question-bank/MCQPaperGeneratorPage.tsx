@@ -518,7 +518,26 @@ export const MCQPaperGeneratorPage = () => {
   };
 
   useEffect(() => {
-    if (!paperId) return;
+    if (!paperId) {
+      // Reset state for a new paper to avoid state bleeding
+      setExamName(localStorage.getItem('mcq_exam_name') || 'GRAND TEST');
+      setExamClass(localStorage.getItem('mcq_exam_class') || '10th Class');
+      try {
+        const stored = localStorage.getItem('mcq_exam_subjects');
+        setSelectedSubjects(stored ? JSON.parse(stored) : []);
+      } catch {
+        setSelectedSubjects([]);
+      }
+      setExamDate(localStorage.getItem('mcq_exam_date') || '');
+      setTime(localStorage.getItem('mcq_exam_marks') || '75');
+      setInstructions(localStorage.getItem('mcq_exam_instructions') || 'Answer all questions.\nEach question carries equal marks.\nRead questions carefully before answering.');
+      setSubjectContents({
+        'Telugu': '1. What is 25% of 200?\n(A) 25\n(B) 50\n(C) 75\n(D) 100\n\n2. Solve for x: $2x + 5 = 15$\n(A) 2\n(B) 4\n(C) 5\n(D) 10\n\n3. The perimeter of a rectangle is 40 cm. If its length is 12 cm, what is its breadth?\n(A) 8 cm\n(B) 10 cm\n(C) 12 cm\n(D) 16 cm'
+      });
+      setActiveSubjectTab('Telugu');
+      setInlineImages({});
+      return;
+    }
     const loadPaper = async () => {
       try {
         toast.loading('Loading paper...', { id: 'load' });
