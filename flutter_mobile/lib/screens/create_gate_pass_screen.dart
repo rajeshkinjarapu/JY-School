@@ -403,6 +403,7 @@ class _CreateGatePassScreenState extends State<CreateGatePassScreen> {
                                         ),
                                       ),
                                     ),
+                            ],
                           ],
                         ),
                       const SizedBox(height: 24),
