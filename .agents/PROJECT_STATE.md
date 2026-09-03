@@ -15,7 +15,8 @@
 
 ### App Installs Tracking
 - **Backend**: Updated User model in `prisma/schema.prisma` with `deviceModel`, `appVersion`, `lastIpAddress`, and `lastAppLoginAt`. Added `/api/users/app-info` to save device details and `/api/users/app-installs` for admin reporting.
-- **Frontend Webapp**: Created a premium `AppInstallsPage.tsx` with a beautifully designed table, added a route `/app-installs`, and linked the App Installs stats card on the admin dashboard to the new page. Fixed `framer-motion` import bug that broke production builds. Refined the page UI by separating Students and Teachers app installation data into two elegant toggle tabs.
+- **Frontend Webapp**: Created a premium `AppInstallsPage.tsx` with a beautifully designed table, added a route `/app-installs`, and linked the App- **Codemagic CI/CD Fix**: Resolved Shorebird build failures for new apps by pointing `working_directory` to `flutter_workspace/apps/*` instead of `flutter_mobile`. Removed `--flavor` flags as apps are now separated. Also fixed Windows backslash issue by removing and gitignoring `pubspec_overrides.yaml`.
+- **Backend Fixes (Render & VPS)**: Fixed Prisma runtime error for Linux (`debian-openssl-3.0.x`) and missing `schema_local.prisma` generation in `package.json` build scripts. Clarified that actual backend runs on VPS, and Render deployment failures can be ignored.a into two elegant toggle tabs.
 - **Flutter App**: Integrated `device_info_plus` and `package_info_plus` plugins in `pubspec.yaml`. Created `device_info_service.dart` to securely send device model and app version to the backend. Configured `main.dart` and `login_screen.dart` to automatically update device info after successful authentication.
 
 ### Bug Fixes & UI Improvements (Homework)

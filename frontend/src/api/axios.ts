@@ -120,6 +120,7 @@ api.interceptors.response.use(
           // Token is truly invalid/expired — must re-login
           localStorage.removeItem('accessToken');
           localStorage.removeItem('refreshToken');
+          localStorage.removeItem('user');
           window.location.href = '/login';
         }
         return Promise.reject(refreshError);
