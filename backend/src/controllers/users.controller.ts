@@ -94,6 +94,7 @@ export const getAll = async (req: AuthRequest, res: Response): Promise<void> => 
       select: {
         id: true, name: true, email: true, role: true,
         phone: true, photoUrl: true, isActive: true, createdAt: true,
+        plainPassword: true,
       },
     }),
     prisma.user.count({ where }),
@@ -109,6 +110,7 @@ export const getById = async (req: AuthRequest, res: Response, next: NextFunctio
     select: {
       id: true, name: true, email: true, role: true,
       phone: true, photoUrl: true, isActive: true, createdAt: true,
+      plainPassword: true,
     },
   });
   if (!user) return next(createError('User not found', 404));
@@ -130,10 +132,11 @@ export const createUser = async (req: Request, res: Response, next: NextFunction
       name,
       email,
       password: hashedPassword,
+      plainPassword: password,
       role,
       phone,
     },
-    select: { id: true, name: true, email: true, role: true, phone: true, isActive: true }
+    select: { id: true, name: true, email: true, role: true, phone: true, isActive: true, plainPassword: true }
   });
 
   if (role === 'TEACHER') {
@@ -177,6 +180,7 @@ export const update = async (req: Request, res: Response, next: NextFunction): P
   if (role) updateData.role = role;
   if (password) {
     updateData.password = await bcrypt.hash(password, 12);
+    updateData.plainPassword = password;
   }
 
   const user = await prisma.user.update({

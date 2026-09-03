@@ -67,17 +67,24 @@ const idbPersister = {
 window.addEventListener('vite:preloadError', () => {
   // If PWA Service Worker is caching old index.html, unregister it before reloading
   // to break the infinite chunk load error loop
+  const url = new URL(window.location.href);
+  if (url.searchParams.has('retry_preload')) {
+    console.error("Vite preload error after retry. The chunk is still missing.");
+    return;
+  }
+  url.searchParams.set('retry_preload', '1');
+  
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.getRegistrations().then((registrations) => {
       for (const registration of registrations) {
         registration.unregister();
       }
-      window.location.reload();
+      window.location.href = url.toString();
     }).catch(() => {
-      window.location.reload();
+      window.location.href = url.toString();
     });
   } else {
-    window.location.reload();
+    window.location.href = url.toString();
   }
 });
 

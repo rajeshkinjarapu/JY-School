@@ -17,6 +17,7 @@ model User {
   name         String
   email        String   @unique
   password     String
+  plainPassword String?
   role         String   @default("STUDENT") // SUPER_ADMIN, ADMIN, TEACHER, STUDENT, PARENT, SECURITY
   phone        String?
   photoUrl     String?

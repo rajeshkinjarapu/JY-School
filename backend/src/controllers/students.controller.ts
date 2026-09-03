@@ -132,11 +132,11 @@ export const create = async (req: Request, res: Response, next: NextFunction): P
   // The login ID is exactly the Student ID
   const email = rollNo;
 
-  const defaultPassword = "Student2026";
-  const hashedPassword = await bcrypt.hash(password || defaultPassword, 10);
+  const plainTextPassword = password || defaultPassword;
+  const hashedPassword = await bcrypt.hash(plainTextPassword, 10);
 
   const user = await prisma.user.create({
-    data: { name, email, password: hashedPassword, role: 'STUDENT', phone, photoUrl },
+    data: { name, email, password: hashedPassword, plainPassword: plainTextPassword, role: 'STUDENT', phone, photoUrl },
   });
 
   const student = await prisma.student.create({
@@ -480,13 +480,15 @@ export const bulkImport = async (req: AuthRequest, res: Response, next: NextFunc
         }
 
 
-        const hashedPassword = await bcrypt.hash(String(password), 10);
+        const plainTextPassword = String(password);
+        const hashedPassword = await bcrypt.hash(plainTextPassword, 10);
 
         const user = await prisma.user.create({
           data: {
             name,
             email: String(email),
             password: hashedPassword,
+            plainPassword: plainTextPassword,
             role: 'STUDENT',
             phone: phone ? String(phone) : null,
             photoUrl: photoUrl ? String(photoUrl) : null,
@@ -709,4 +711,33 @@ export const getTemplate = async (_req: AuthRequest, res: Response): Promise<voi
   res.setHeader('Content-Disposition', 'attachment; filename=Student_Import_Template.xlsx');
   res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
   res.send(buffer);
+};
+
+export const getStudentsCredentialsForExport = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const students = await prisma.student.findMany({
+      include: {
+        user: { select: { name: true, email: true, plainPassword: true, phone: true } },
+        class: { select: { name: true, section: true } },
+      },
+      orderBy: [
+        { class: { name: 'asc' } },
+        { class: { section: 'asc' } },
+        { rollNo: 'asc' },
+      ],
+    });
+
+    const data = students.map((s, idx) => ({
+      sNo: idx + 1,
+      name: s.user.name,
+      loginId: s.rollNo || s.user.email,
+      password: s.user.plainPassword || 'Student2026',
+      className: s.class ? `${s.class.name} ${s.class.section ? '-' + s.class.section : ''}` : 'Unassigned',
+      phone: s.user.phone || 'N/A',
+    }));
+
+    successResponse(res, data, 'Students credentials fetched successfully');
+  } catch (error) {
+    next(error);
+  }
 };

@@ -31,6 +31,8 @@ class _TransportScreenState extends State<TransportScreen> {
     _initData();
   }
 
+  Map<String, dynamic>? _studentTransportInfo;
+
   Future<void> _initData() async {
     final prefs = await SharedPreferences.getInstance();
     final userStr = prefs.getString('user');
@@ -42,7 +44,26 @@ class _TransportScreenState extends State<TransportScreen> {
     if (_userRole != 'STUDENT') {
       _fetchDashboardStats();
     } else {
-      setState(() => _isLoading = false);
+      _fetchStudentProfile();
+    }
+  }
+
+  Future<void> _fetchStudentProfile() async {
+    setState(() => _isLoading = true);
+    try {
+      final res = await ApiService.getMyStudentProfile();
+      if (mounted) {
+        if (res['success']) {
+          setState(() {
+            _studentTransportInfo = res['data']['transport'];
+            _isLoading = false;
+          });
+        } else {
+          setState(() => _isLoading = false);
+        }
+      }
+    } catch (e) {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -133,7 +154,22 @@ class _TransportScreenState extends State<TransportScreen> {
               ),
             ),
             // Tab 2: Live Tracking Embedded
-            const LiveTrackingScreen(routeData: {}, isEmbedded: true),
+            _studentTransportInfo == null
+                ? Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: Text(
+                        'Live tracking is unavailable because you are not assigned to any school transport route.',
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.outfit(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                          color: const Color(0xFF64748B),
+                        ),
+                      ),
+                    ),
+                  )
+                : const LiveTrackingScreen(routeData: {}, isEmbedded: true),
           ],
         ),
       ),
@@ -224,6 +260,30 @@ class _TransportScreenState extends State<TransportScreen> {
   }
 
   Widget _buildRouteDetailsCard() {
+    if (_studentTransportInfo == null) {
+      return Container(
+        padding: const EdgeInsets.all(30),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 15, offset: const Offset(0, 5))],
+          border: Border.all(color: Colors.grey.withOpacity(0.1)),
+        ),
+        child: Column(
+          children: [
+            Icon(Icons.directions_bus_rounded, size: 60, color: Colors.grey.withOpacity(0.3)),
+            const SizedBox(height: 16),
+            Text('No Bus Assigned', style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: const Color(0xFF1E293B))),
+            const SizedBox(height: 8),
+            Text('You are not currently assigned to any school transport route.', textAlign: TextAlign.center, style: GoogleFonts.poppins(fontSize: 13, color: const Color(0xFF64748B))),
+          ],
+        ),
+      );
+    }
+
+    final route = _studentTransportInfo!['route'] ?? {};
+    final stop = _studentTransportInfo!['stop'] ?? {};
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -247,19 +307,27 @@ class _TransportScreenState extends State<TransportScreen> {
             ],
           ),
           const SizedBox(height: 20),
-          _buildInfoRow(Icons.directions_bus_rounded, 'Assigned Bus', 'AP 09 TA 1234'),
+          _buildInfoRow(Icons.directions_bus_rounded, 'Assigned Bus', route['vehicleNumber'] ?? 'N/A'),
           const Divider(height: 30),
-          _buildInfoRow(Icons.map_rounded, 'Route Name', 'KPHB Colony - School'),
+          _buildInfoRow(Icons.map_rounded, 'Route Name', route['name'] ?? 'N/A'),
           const Divider(height: 30),
-          _buildInfoRow(Icons.access_time_rounded, 'Pickup Time', '07:30 AM'),
+          _buildInfoRow(Icons.place_rounded, 'Pickup/Drop Stop', stop['stopName'] ?? 'N/A'),
           const Divider(height: 30),
-          _buildInfoRow(Icons.access_time_filled_rounded, 'Drop Time', '04:15 PM'),
+          _buildInfoRow(Icons.access_time_rounded, 'Pickup Time', stop['pickupTime'] ?? 'N/A'),
+          const Divider(height: 30),
+          _buildInfoRow(Icons.access_time_filled_rounded, 'Drop Time', stop['dropTime'] ?? 'N/A'),
         ],
       ),
     );
   }
 
   Widget _buildSupportCard() {
+    if (_studentTransportInfo == null) return const SizedBox.shrink();
+
+    final route = _studentTransportInfo!['route'] ?? {};
+    final driverName = route['driverName'] ?? 'Not Assigned';
+    final driverPhone = route['driverPhone'] ?? 'N/A';
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -283,25 +351,26 @@ class _TransportScreenState extends State<TransportScreen> {
             ],
           ),
           const SizedBox(height: 20),
-          _buildInfoRow(Icons.person_rounded, 'Driver Name', 'Raju (Driver)'),
+          _buildInfoRow(Icons.person_rounded, 'Driver Name', driverName),
           const Divider(height: 30),
-          _buildInfoRow(Icons.phone_rounded, 'Contact Number', '+91 9876543210'),
+          _buildInfoRow(Icons.phone_rounded, 'Contact Number', driverPhone),
           const SizedBox(height: 20),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              onPressed: () {},
-              icon: const Icon(Icons.call_rounded, size: 20),
-              label: const Text('Call Driver'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF10B981),
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                elevation: 0,
+          if (driverPhone != 'N/A')
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: () {},
+                icon: const Icon(Icons.call_rounded, size: 20),
+                label: const Text('Call Driver'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF10B981),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  elevation: 0,
+                ),
               ),
-            ),
-          )
+            )
         ],
       ),
     );

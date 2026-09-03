@@ -3,7 +3,8 @@ import { authenticate, authorize } from '../middlewares/auth';
 import { upload } from '../utils/upload';
 import {
   getAll, getById, create, update, deleteStudent,
-  bulkImport, exportCsv, getMyProfile, bulkUploadPhotos, getTemplate, changeClass, changeName
+  bulkImport, exportCsv, getMyProfile, bulkUploadPhotos, getTemplate, changeClass, changeName,
+  getStudentsCredentialsForExport
 } from '../controllers/students.controller';
 
 const router = Router();
@@ -13,6 +14,7 @@ router.use(authenticate);
 router.get('/', authorize('SUPER_ADMIN', 'ADMIN', 'TEACHER', 'ACCOUNTANT'), getAll);
 router.get('/my-profile', authorize('STUDENT'), getMyProfile);
 router.get('/export', authorize('SUPER_ADMIN', 'ADMIN'), exportCsv);
+router.get('/export-credentials', authorize('SUPER_ADMIN', 'ADMIN'), getStudentsCredentialsForExport);
 router.get('/template', authorize('SUPER_ADMIN', 'ADMIN'), getTemplate);
 router.get('/:id', authorize('SUPER_ADMIN', 'ADMIN', 'TEACHER'), getById);
 router.post('/', authorize('SUPER_ADMIN', 'ADMIN'), create);

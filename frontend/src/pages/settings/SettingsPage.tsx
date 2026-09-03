@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import api from '../../api/axios';
 import { LoadingSpinner } from '../../components/UI/LoadingSpinner';
 import { Badge } from '../../components/UI/Badge';
-import { Trash2, AlertTriangle, Shield, CheckCircle, Save, Settings as SettingsIcon, Users, UserX, Database, Eye, School, CalendarDays, Search, Plus, Edit, Key } from 'lucide-react';
+import { Trash2, AlertTriangle, Shield, CheckCircle, Save, Settings as SettingsIcon, Users, UserX, Database, Eye, EyeOff, School, CalendarDays, Search, Plus, Edit, Key, FileText } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { PageHeader } from '../../components/UI/PageHeader';
 import { useOutletContext } from 'react-router-dom';
@@ -128,6 +128,9 @@ export const SettingsPage: React.FC = () => {
     }
   };
 
+  const [isExportingPDF, setIsExportingPDF] = useState(false);
+  const [showFormPasswordText, setShowFormPasswordText] = useState(false);
+
   const handleOpenCreateModal = () => {
     setSelectedUser(null);
     setFormName('');
@@ -135,6 +138,7 @@ export const SettingsPage: React.FC = () => {
     setFormPassword('');
     setFormRole('ADMIN');
     setFormPhone('');
+    setShowFormPasswordText(false);
     setShowModal(true);
   };
 
@@ -142,10 +146,91 @@ export const SettingsPage: React.FC = () => {
     setSelectedUser(user);
     setFormName(user.name);
     setFormEmail(user.email);
-    setFormPassword(''); // blank to keep current
+    setFormPassword(user.plainPassword || (user.role === 'STUDENT' ? 'Student2026' : ''));
     setFormRole(user.role);
     setFormPhone(user.phone || '');
+    setShowFormPasswordText(true);
     setShowModal(true);
+  };
+
+  const handleExportPasswordsPDF = async () => {
+    setIsExportingPDF(true);
+    try {
+      const res: any = await api.get('/api/students/export-credentials');
+      const students: any[] = res.data?.data || res.data || [];
+      if (!students.length) {
+        toast.error('No student credentials found to export');
+        return;
+      }
+
+      const { default: jsPDF } = await import('jspdf');
+      const autoTableModule: any = await import('jspdf-autotable');
+      const autoTable = autoTableModule.default || autoTableModule;
+
+      const doc = new jsPDF();
+      const title = schoolName || 'JY School';
+
+      doc.setFontSize(18);
+      doc.setTextColor(30, 27, 75);
+      doc.text(title, 14, 15);
+
+      doc.setFontSize(12);
+      doc.setTextColor(100);
+      doc.text('Student Login Credentials Report (Class-wise)', 14, 23);
+      doc.setFontSize(9);
+      doc.text(`Generated on: ${new Date().toLocaleDateString('en-IN')}`, 14, 28);
+
+      // Group students by className
+      const grouped: { [key: string]: any[] } = {};
+      students.forEach(st => {
+        const cls = st.className || 'Unassigned';
+        if (!grouped[cls]) grouped[cls] = [];
+        grouped[cls].push(st);
+      });
+
+      let startY = 35;
+
+      Object.keys(grouped).forEach((className) => {
+        if (startY > 250) {
+          doc.addPage();
+          startY = 15;
+        }
+
+        doc.setFontSize(12);
+        doc.setTextColor(37, 99, 235);
+        doc.setFont('helvetica', 'bold');
+        doc.text(`Class: ${className}`, 14, startY);
+        startY += 4;
+
+        const tableData = grouped[className].map((st, idx) => [
+          idx + 1,
+          st.name,
+          st.loginId,
+          st.password,
+        ]);
+
+        autoTable(doc, {
+          startY: startY,
+          head: [['S.No', 'Student Name', 'Login Details (ID)', 'Password']],
+          body: tableData,
+          theme: 'grid',
+          headStyles: { fillColor: [30, 27, 75], textColor: [255, 255, 255], fontStyle: 'bold' },
+          styles: { fontSize: 9, cellPadding: 3 },
+          alternateRowStyles: { fillColor: [248, 250, 252] },
+          margin: { left: 14, right: 14 },
+        });
+
+        startY = (doc as any).lastAutoTable.finalY + 10;
+      });
+
+      doc.save(`Student_Passwords_${new Date().toISOString().slice(0, 10)}.pdf`);
+      toast.success('Students credentials PDF downloaded successfully!');
+    } catch (e: any) {
+      console.error(e);
+      toast.error('Failed to export PDF');
+    } finally {
+      setIsExportingPDF(false);
+    }
   };
 
   const handleSaveUserSubmit = async (e: React.FormEvent) => {
@@ -383,6 +468,15 @@ export const SettingsPage: React.FC = () => {
                   <option value="STUDENT">Student</option>
                 </select>
                 <button
+                  onClick={handleExportPasswordsPDF}
+                  disabled={isExportingPDF}
+                  className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold py-2.5 px-5 rounded-xl shadow-md shadow-emerald-500/20 transition-all flex items-center gap-2 hover:-translate-y-0.5 active:translate-y-0 whitespace-nowrap cursor-pointer disabled:opacity-50"
+                  title="Export class-wise student credentials to PDF"
+                >
+                  <FileText className="w-5 h-5" />
+                  {isExportingPDF ? 'Exporting PDF...' : 'Export Passwords PDF'}
+                </button>
+                <button
                   onClick={handleOpenCreateModal}
                   className="bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white font-bold py-2.5 px-5 rounded-xl shadow-md shadow-blue-500/20 transition-all flex items-center gap-2 hover:-translate-y-0.5 active:translate-y-0 whitespace-nowrap"
                 >
@@ -421,8 +515,9 @@ export const SettingsPage: React.FC = () => {
                           </td>
                           <td className="px-6 py-4">
                             <div className="flex items-center gap-2">
-                              <span className="text-gray-400 tracking-[0.2em]">••••••••</span>
-                              <span className="text-[10px] bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full border border-gray-200">Encrypted</span>
+                              <span className="font-mono font-bold text-indigo-900 dark:text-indigo-200 bg-indigo-50 dark:bg-indigo-950/50 px-3 py-1 rounded-lg border border-indigo-100 dark:border-indigo-900/40 text-sm">
+                                {user.plainPassword || (user.role === 'STUDENT' ? 'Student2026' : '••••••••')}
+                              </span>
                             </div>
                           </td>
                           <td className="px-6 py-4">
@@ -550,13 +645,20 @@ export const SettingsPage: React.FC = () => {
                     <Key className="w-4 h-4" />
                   </div>
                   <input
-                    type="password"
+                    type={showFormPasswordText ? "text" : "password"}
                     required={!selectedUser}
                     value={formPassword}
                     onChange={(e) => setFormPassword(e.target.value)}
-                    className="w-full pl-11 pr-4 py-3 bg-gray-50/50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
-                    placeholder="••••••••"
+                    className="w-full pl-11 pr-12 py-3 bg-gray-50/50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all font-mono font-medium"
+                    placeholder="e.g. Student2026"
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowFormPasswordText(!showFormPasswordText)}
+                    className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-indigo-600 transition-colors cursor-pointer"
+                  >
+                    {showFormPasswordText ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
                 </div>
               </div>
 

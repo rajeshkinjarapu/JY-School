@@ -24,3 +24,17 @@
 - **Homework Screens UI Redesign**: Overhauled `teacher_homework_screen.dart` and `homework_screen.dart` with a very premium and colorful design. Replaced the "Due Date" label with "Submission Deadline" and removed the inappropriate "Overdue" label, replacing it with "Deadline Passed" and showing the assigning teacher's name on the card.
 - **Student Dashboard Integration**: Added the missing "Homework" module link to the Student Dashboard grid (`student_dashboard_screen.dart`) and configured the `/student/homework` route in `main.dart` so students can view published homework.
 - **Teacher/Admin Dashboard Update**: Replaced "My Salary" with "Home Work" in the main dashboard grid for teachers/admins, and moved "My Salary" to the "More Options" (`modules_screen.dart`) screen.
+
+### Web App & Student Login Fixes
+- **Vite Preload Loop Fix**: Added `retry_preload` URL parameter check in `main.tsx` `vite:preloadError` event listener to stop the infinite reload loop that occurred when chunk loading failed.
+- **Student Passwords Reset**: Discovered that student passwords were set to their phone numbers instead of the expected `Student2026`. Ran a script to reset all student passwords to `Student2026`.
+- **Student Transport Screen Fix**: Updated the "Live Tracking" tab in `transport_screen.dart` to correctly show "Live tracking is unavailable because you are not assigned to any school transport route" when `_studentTransportInfo` is null, removing the dummy data.
+
+### Password Visibility & PDF Export
+- Added `plainPassword String?` to `User` model in `schema.prisma`.
+- Updated `users.controller.ts` and `students.controller.ts` to save and return `plainPassword`.
+- Added `/api/students/export-credentials` API endpoint to fetch all student credentials ordered by class name and roll number.
+- Updated `frontend/src/pages/settings/SettingsPage.tsx`:
+  - Displayed `plainPassword` directly in the Roles & Users table.
+  - Added an "Export Passwords PDF" button generating a class-wise PDF report with `S.No`, `Student Name`, `Login Details`, and `Password`.
+  - Added show/hide eye toggle for password editing in the User Edit modal.
