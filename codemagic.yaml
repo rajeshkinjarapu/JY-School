@@ -35,7 +35,7 @@ workflows:
       - name: Build Teacher Patch
         script: |
           export PATH="$HOME/.shorebird/bin:$PATH"
-          shorebird patch android --allow-asset-changes --flavor teacher -t lib/main_teacher.dart --no-confirm
+          shorebird patch android --allow-asset-diffs --flavor teacher -t lib/main_teacher.dart --no-confirm
 
   student-release-workflow:
     name: Student App Release (APK)
@@ -73,7 +73,7 @@ workflows:
       - name: Build Student Patch
         script: |
           export PATH="$HOME/.shorebird/bin:$PATH"
-          shorebird patch android --allow-asset-changes --flavor student -t lib/main_student.dart --no-confirm
+          shorebird patch android --allow-asset-diffs --flavor student -t lib/main_student.dart --no-confirm
 
   admin-release-workflow:
     name: Admin App Release (APK)
@@ -111,7 +111,7 @@ workflows:
       - name: Build Admin Patch
         script: |
           export PATH="$HOME/.shorebird/bin:$PATH"
-          shorebird patch android --allow-asset-changes --flavor admin -t lib/main_admin.dart --no-confirm
+          shorebird patch android --allow-asset-diffs --flavor admin -t lib/main_admin.dart --no-confirm
 
   universal-release-workflow:
     name: Universal App Release (APK)
@@ -149,4 +149,4 @@ workflows:
       - name: Build Universal Patch
         script: |
           export PATH="$HOME/.shorebird/bin:$PATH"
-          shorebird patch android --allow-asset-changes --flavor universal -t lib/main.dart --no-confirm
+          shorebird patch android --allow-asset-diffs --flavor universal -t lib/main.dart --no-confirm
