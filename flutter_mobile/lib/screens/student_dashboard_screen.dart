@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'gate_pass_screen.dart';
 
 class StudentDashboardScreen extends StatefulWidget {
   const StudentDashboardScreen({super.key});
@@ -226,7 +227,9 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
               _buildGridItem('ID Card', Icons.badge_rounded, const Color(0xFFCFFAFE), const Color(0xFF0891B2)),
               _buildGridItem('Classes', Icons.laptop_chromebook_rounded, const Color(0xFFF3E8FF), const Color(0xFF9333EA)),
               _buildGridItem('Syllabus', Icons.menu_book_rounded, const Color(0xFFD1FAE5), const Color(0xFF059669)),
-              _buildGridItem('Leave', Icons.fact_check_rounded, const Color(0xFFFFE4E6), const Color(0xFFE11D48)),
+              _buildGridItem('Gate Pass', Icons.assignment_ind_rounded, const Color(0xFFE0E7FF), const Color(0xFF4F46E5), onTap: () {
+                Navigator.push(context, MaterialPageRoute(builder: (_) => const GatePassScreen()));
+              }),
               _buildGridItem('Help Desk', Icons.headset_mic_rounded, const Color(0xFFF1F5F9), const Color(0xFF475569)),
             ],
           ),

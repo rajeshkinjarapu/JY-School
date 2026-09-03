@@ -54,7 +54,9 @@ class _GatePassScreenState extends State<GatePassScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isStudent = _userRole == 'STUDENT';
     final hasFullAccess = _userRole == 'SUPER_ADMIN' || _userRole == 'ADMIN' || _userRole == 'SECURITY' || _userRole == 'TEACHER';
+    final hasAccess = hasFullAccess || isStudent;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF1F5F9),
@@ -77,17 +79,17 @@ class _GatePassScreenState extends State<GatePassScreen> {
         ),
         elevation: 0,
       ),
-      body: hasFullAccess
+      body: hasAccess
           ? _buildBody()
           : const Center(child: Text("You don't have access to the security dashboard.")),
-      floatingActionButton: (_currentIndex == 0 || _currentIndex == 2) && hasFullAccess
+      floatingActionButton: hasAccess
           ? FloatingActionButton.extended(
               onPressed: () {
                 Navigator.push(context, MaterialPageRoute(builder: (_) => CreateGatePassScreen(userRole: _userRole)));
               },
               backgroundColor: const Color(0xFF6366F1),
               icon: const Icon(Icons.add_rounded, color: Colors.white),
-              label: Text('Issue Pass', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white)),
+              label: Text(isStudent ? 'Apply Pass' : 'Issue Pass', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white)),
             )
           : null,
       bottomNavigationBar: hasFullAccess
@@ -115,7 +117,29 @@ class _GatePassScreenState extends State<GatePassScreen> {
                 ],
               ),
             )
-          : null,
+          : (isStudent
+              ? Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 20, offset: const Offset(0, -4))],
+                  ),
+                  child: BottomNavigationBar(
+                    currentIndex: _currentIndex == 3 ? 1 : 0,
+                    onTap: (idx) => setState(() => _currentIndex = idx == 1 ? 3 : 0),
+                    type: BottomNavigationBarType.fixed,
+                    backgroundColor: Colors.transparent,
+                    elevation: 0,
+                    selectedItemColor: const Color(0xFF10B981),
+                    unselectedItemColor: const Color(0xFF94A3B8),
+                    selectedLabelStyle: GoogleFonts.poppins(fontSize: 10, fontWeight: FontWeight.bold),
+                    unselectedLabelStyle: GoogleFonts.poppins(fontSize: 10),
+                    items: const [
+                      BottomNavigationBarItem(icon: Icon(Icons.dashboard_rounded), label: 'Dashboard'),
+                      BottomNavigationBarItem(icon: Icon(Icons.history_rounded), label: 'My Passes'),
+                    ],
+                  ),
+                )
+              : null),
     );
   }
 }

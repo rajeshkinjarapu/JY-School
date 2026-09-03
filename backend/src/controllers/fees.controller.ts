@@ -956,25 +956,36 @@ export const getPendingBalances = async (req: AuthRequest, res: Response): Promi
 
 export const studentPayFee = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const { studentId, feeStructureId, amountPaid, method, utrNumber } = req.body;
+    let { studentId, feeStructureId, amountPaid, amount, method, paymentMethod, utrNumber, referenceNumber } = req.body;
     
-    if (!studentId || !feeStructureId || !amountPaid) {
-      return next(createError('Missing required fields', 400));
+    // Auto-resolve studentId from logged in user if not explicitly sent in body
+    if (!studentId && req.user?.id) {
+      const student = await prisma.student.findFirst({ where: { userId: req.user.id } });
+      if (student) {
+        studentId = student.id;
+      }
+    }
+
+    const finalAmount = amountPaid || amount;
+    const finalMethod = method || paymentMethod || 'ONLINE';
+    const finalUtr = utrNumber || referenceNumber;
+
+    if (!studentId || !finalAmount) {
+      return next(createError('Missing required fields (Student or Amount)', 400));
     }
 
     let screenshotUrl = null;
     if (req.file) {
-      // Assuming upload middleware places file in req.file
       screenshotUrl = `/uploads/${req.file.filename}`;
     }
 
     const payment = await prisma.feePayment.create({
       data: {
         studentId,
-        feeStructureId,
-        amountPaid: parseFloat(amountPaid),
-        method: method || 'ONLINE',
-        utrNumber,
+        feeStructureId: (feeStructureId && feeStructureId !== 'undefined' && feeStructureId !== 'null') ? feeStructureId : null,
+        amountPaid: parseFloat(finalAmount),
+        method: finalMethod,
+        utrNumber: finalUtr || null,
         screenshotUrl,
         status: 'PENDING',
       },
@@ -982,6 +993,7 @@ export const studentPayFee = async (req: AuthRequest, res: Response, next: NextF
 
     successResponse(res, payment, 'Payment submitted for admin approval');
   } catch (error) {
+    console.error('Fee payment error:', error);
     next(createError('Error submitting fee payment', 500));
   }
 };

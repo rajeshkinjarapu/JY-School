@@ -1891,7 +1891,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           _buildIconWidgetCard(icon: Icons.chat_rounded,    title: 'Messaging',     borderColor: const Color(0xFF25D366), onTap: () => ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Messaging coming soon!')))),
           _buildIconWidgetCard(icon: Icons.edit_document,    title: 'Home Work',     borderColor: const Color(0xFFEAB308), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TeacherHomeworkScreen()))),
           _buildImageCard(imagePath: 'assets/images/admin_icons/leave.png',title: 'Leave Apply',  borderColor: const Color(0xFF3B82F6), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const LeaveDashboardScreen()))),
-          _buildIconWidgetCard(icon: Icons.assignment_ind_rounded,    title: 'Gate Pass',          borderColor: const Color(0xFF64748B), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => CreateGatePassScreen(userRole: role)))),
+          _buildIconWidgetCard(icon: Icons.assignment_ind_rounded,    title: 'Gate Pass',          borderColor: const Color(0xFF64748B), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const GatePassScreen()))),
         ],
       );
     } else {

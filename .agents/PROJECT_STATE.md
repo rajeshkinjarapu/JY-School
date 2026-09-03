@@ -38,3 +38,12 @@
   - Displayed `plainPassword` directly in the Roles & Users table.
   - Added an "Export Passwords PDF" button generating a class-wise PDF report with `S.No`, `Student Name`, `Login Details`, and `Password`.
   - Added show/hide eye toggle for password editing in the User Edit modal.
+
+### Student Gate Pass Dashboard Fix
+- Updated `gate_pass_screen.dart` to grant access to `STUDENT` role, rendering dedicated `Dashboard` and `My Passes` tabs with an `Apply Pass` FAB.
+- Added `Gate Pass` grid item to `student_dashboard_screen.dart` linking to `GatePassScreen()`.
+- Updated `dashboard_screen.dart` to navigate directly to `GatePassScreen()` when `Gate Pass` card is tapped.
+
+### Student Fee Payment Submission Fix
+- Fixed `"Missing required fields"` API error in `fees.controller.ts` by auto-resolving `studentId` from `req.user.id` when not provided in the payload and supporting both `amount`/`amountPaid` and `referenceNumber`/`utrNumber` parameters.
+- Updated `studentPayFeeWithScreenshot` in `api_service.dart` to populate all fallback field names for multipart request payload compatibility.

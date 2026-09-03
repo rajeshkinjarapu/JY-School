@@ -1358,10 +1358,13 @@ class ApiService {
       request.headers.addAll(_getHeaders(token: token, isMultipart: true));
 
       request.fields['amount'] = amount.toString();
+      request.fields['amountPaid'] = amount.toString();
       request.fields['paymentMethod'] = paymentMethod;
+      request.fields['method'] = paymentMethod;
       request.fields['referenceNumber'] = referenceNumber;
+      request.fields['utrNumber'] = referenceNumber;
       if (notes != null) request.fields['notes'] = notes;
-      if (feeStructureId != null) request.fields['feeStructureId'] = feeStructureId;
+      if (feeStructureId != null && feeStructureId.isNotEmpty) request.fields['feeStructureId'] = feeStructureId;
 
       final multipartFile = http.MultipartFile.fromBytes(
         'screenshot',
