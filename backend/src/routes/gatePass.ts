@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { authenticate, authorize } from '../middlewares/auth';
-import { createGatePass, getGatePassById, listGatePasses, updateGatePass, printGatePass, printGatePassPdf, getLiveStats, scanGatePass } from '../controllers/gatePass.controller';
+import { createGatePass, getGatePassById, listGatePasses, updateGatePass, printGatePass, printGatePassPdf, getLiveStats, scanGatePass, deleteGatePass } from '../controllers/gatePass.controller';
 
 const router = Router();
 router.use(authenticate);
@@ -17,5 +17,7 @@ router.get('/:id/print', printGatePass);
 router.get('/:id/print/pdf', printGatePassPdf);
 // @ts-ignore
 router.patch('/:id', authorize('SUPER_ADMIN', 'ADMIN', 'SECURITY' as any, 'TEACHER'), updateGatePass);
+// @ts-ignore
+router.delete('/:id', authorize('SUPER_ADMIN', 'ADMIN'), deleteGatePass);
 
 export default router;

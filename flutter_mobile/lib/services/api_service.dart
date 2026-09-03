@@ -610,6 +610,10 @@ class ApiService {
     }
   }
 
+  static Future<Map<String, dynamic>> deleteGatePass(String id) async {
+    return _performDelete('/api/gate-pass/$id', 'Failed to delete gate pass');
+  }
+
   static Future<Map<String, dynamic>> applyGatePass({
     String? studentId,
     String? staffId,

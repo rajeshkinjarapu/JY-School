@@ -455,3 +455,22 @@ export const scanGatePass = async (req: AuthRequest, res: Response, next: NextFu
     next(error);
   }
 };
+
+export const deleteGatePass = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const user = req.user!;
+
+    if (user.role !== 'SUPER_ADMIN' && user.role !== 'ADMIN') {
+      return next(createError('Forbidden. Only admins can delete gate passes.', 403));
+    }
+
+    const gatePass = await prisma.gatePass.findUnique({ where: { id } });
+    if (!gatePass) return next(createError('Gate pass not found', 404));
+
+    await prisma.gatePass.delete({ where: { id } });
+    successResponse(res, null, 'Gate pass deleted successfully');
+  } catch (error) {
+    next(error);
+  }
+};

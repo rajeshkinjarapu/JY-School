@@ -131,7 +131,7 @@ class _CreateGatePassScreenState extends State<CreateGatePassScreen> {
   @override
   Widget build(BuildContext context) {
     final canIssueForOthers = widget.userRole == 'ADMIN' || widget.userRole == 'SUPER_ADMIN' || widget.userRole == 'SECURITY' || widget.userRole == 'TEACHER';
-    final isStrictAdmin = widget.userRole == 'ADMIN' || widget.userRole == 'SUPER_ADMIN' || widget.userRole == 'SECURITY';
+    final isStrictAdmin = widget.userRole == 'ADMIN' || widget.userRole == 'SUPER_ADMIN' || widget.userRole == 'SECURITY' || widget.userRole == 'TEACHER';
     
     final filteredStudents = _students.where((s) {
       final name = (s['user']?['name'] ?? '').toLowerCase();
@@ -214,7 +214,7 @@ class _CreateGatePassScreenState extends State<CreateGatePassScreen> {
                                 : [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 4, offset: const Offset(0, 2))],
                           ),
                           alignment: Alignment.center,
-                          child: Text('STAFF', style: GoogleFonts.poppins(color: _requestType == 'TEACHER' ? Colors.white : const Color(0xFF64748B), fontWeight: FontWeight.bold)),
+                          child: Text(widget.userRole == 'TEACHER' ? 'MY REQUEST' : 'STAFF', style: GoogleFonts.poppins(color: _requestType == 'TEACHER' ? Colors.white : const Color(0xFF64748B), fontWeight: FontWeight.bold)),
                         ),
                       ),
                     ),
@@ -243,9 +243,38 @@ class _CreateGatePassScreenState extends State<CreateGatePassScreen> {
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(_requestType == 'STUDENT' ? 'Select Student' : 'Select Staff', style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w600, color: const Color(0xFF0F172A))),
+                            Text(_requestType == 'STUDENT' ? 'Select Student' : (widget.userRole == 'TEACHER' ? 'Requesting for self' : 'Select Staff'), style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w600, color: const Color(0xFF0F172A))),
                             const SizedBox(height: 12),
-                            TextField(
+                            if (_requestType == 'TEACHER' && widget.userRole == 'TEACHER')
+                              Container(
+                                padding: const EdgeInsets.all(16),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFEFF6FF),
+                                  borderRadius: BorderRadius.circular(16),
+                                  border: Border.all(color: const Color(0xFFBFDBFE)),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.all(8),
+                                      decoration: const BoxDecoration(
+                                        color: Colors.white,
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: const Icon(Icons.person_outline, color: Color(0xFF3B82F6)),
+                                    ),
+                                    const SizedBox(width: 16),
+                                    Expanded(
+                                      child: Text(
+                                        'You are requesting a gate pass for yourself. It will be sent to Admin for approval.',
+                                        style: GoogleFonts.poppins(color: const Color(0xFF1E3A8A), fontSize: 13, fontWeight: FontWeight.w500),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              )
+                            else ...[
+                              TextField(
                               onChanged: (v) => setState(() => _searchQuery = v),
                               decoration: InputDecoration(
                                 hintText: _requestType == 'STUDENT' ? 'Search by name, roll no, class or section...' : 'Search staff by name...',
@@ -378,7 +407,7 @@ class _CreateGatePassScreenState extends State<CreateGatePassScreen> {
                         ),
                       const SizedBox(height: 24),
                     ] else ...[
-                       // For Teachers, show a self-request indicator
+                       // For Students, show a self-request indicator
                        Container(
                          padding: const EdgeInsets.all(16),
                          decoration: BoxDecoration(

@@ -43,11 +43,12 @@ class _GatePassScreenState extends State<GatePassScreen> {
 
   Widget _buildBody() {
     final isStudent = _userRole == 'STUDENT';
+    final isAdmin = _userRole == 'ADMIN' || _userRole == 'SUPER_ADMIN';
     switch (_currentIndex) {
       case 0: return _DashboardTab(isStudent: isStudent);
       case 1: return _LiveListTab(isStudent: isStudent);
-      case 2: return _ApprovalsTab(isStudent: isStudent);
-      case 3: return _HistorySearchTab(isStudent: isStudent);
+      case 2: return _ApprovalsTab(isStudent: isStudent, isAdmin: isAdmin);
+      case 3: return _HistorySearchTab(isStudent: isStudent, isAdmin: isAdmin);
       case 4: return const _QRScannerTab();
       default: return _DashboardTab(isStudent: isStudent);
     }
@@ -924,7 +925,8 @@ class _LiveListTabState extends State<_LiveListTab> {
 // ---------------------------------------------------------
 class _ApprovalsTab extends StatefulWidget {
   final bool isStudent;
-  const _ApprovalsTab({required this.isStudent});
+  final bool isAdmin;
+  const _ApprovalsTab({required this.isStudent, this.isAdmin = false});
   @override
   State<_ApprovalsTab> createState() => _ApprovalsTabState();
 }
@@ -969,6 +971,43 @@ class _ApprovalsTabState extends State<_ApprovalsTab> {
     } catch (e) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
     }
+  }
+
+  Future<void> _deletePass(String id) async {
+    try {
+      await ApiService.deleteGatePass(id);
+      _fetchPending();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: const Text('Gate pass deleted successfully'),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ));
+      }
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+    }
+  }
+
+  void _confirmDelete(String id) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete Gate Pass'),
+        content: const Text('Are you sure you want to delete this gate pass request?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              _deletePass(id);
+            },
+            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildList(List<dynamic> passes, bool isStudentTab) {
@@ -1080,6 +1119,14 @@ class _ApprovalsTabState extends State<_ApprovalsTab> {
                 const SizedBox(height: 14),
                 Row(
                   children: [
+                    if (widget.isAdmin) ...[
+                      IconButton(
+                        onPressed: () => _confirmDelete(pass['id']),
+                        icon: const Icon(Icons.delete_outline_rounded, color: Colors.red),
+                        tooltip: 'Delete',
+                      ),
+                      const SizedBox(width: 4),
+                    ],
                     Expanded(
                       child: OutlinedButton.icon(
                         onPressed: () => _updateStatus(pass['id'], 'REJECTED'),
@@ -1188,7 +1235,8 @@ class _ApprovalsTabState extends State<_ApprovalsTab> {
 // ---------------------------------------------------------
 class _HistorySearchTab extends StatefulWidget {
   final bool isStudent;
-  const _HistorySearchTab({required this.isStudent});
+  final bool isAdmin;
+  const _HistorySearchTab({required this.isStudent, this.isAdmin = false});
   @override
   State<_HistorySearchTab> createState() => _HistorySearchTabState();
 }
@@ -1213,6 +1261,43 @@ class _HistorySearchTabState extends State<_HistorySearchTab> {
     } catch (e) {
       if (mounted) setState(() => _loading = false);
     }
+  }
+
+  Future<void> _deletePass(String id) async {
+    try {
+      await ApiService.deleteGatePass(id);
+      _fetchHistory();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: const Text('Gate pass deleted successfully'),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ));
+      }
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+    }
+  }
+
+  void _confirmDelete(String id) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete Gate Pass'),
+        content: const Text('Are you sure you want to delete this gate pass request?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              _deletePass(id);
+            },
+            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
   }
 
   void _filterList(String query) {
@@ -1304,6 +1389,12 @@ class _HistorySearchTabState extends State<_HistorySearchTab> {
                     icon: Icon(Icons.print_rounded, size: 20, color: color),
                     onPressed: () => printGatePass(context, pass),
                     tooltip: 'Print Pass',
+                  ),
+                if (widget.isAdmin)
+                  IconButton(
+                    icon: const Icon(Icons.delete_outline_rounded, size: 20, color: Colors.red),
+                    onPressed: () => _confirmDelete(pass['id']),
+                    tooltip: 'Delete',
                   ),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
