@@ -12,6 +12,7 @@ import {
 import toast from 'react-hot-toast';
 import { Link, useSearchParams, useOutletContext, useNavigate } from 'react-router-dom';
 import { formatExamOptionLabel } from '../../utils/formatters';
+import { sortClasses } from '../../utils/sortClasses';
 import { SlipTestsTab } from './SlipTestsTab';
 import { AdmitCardTab } from './AdmitCardTab';
 import { ProgressCardTab } from './ProgressCardTab';
@@ -658,10 +659,11 @@ export const ExamListPage: React.FC = () => {
         classList = classRes?.data || classRes || [];
         try { localStorage.setItem(CLS_CACHE_KEY, JSON.stringify({ data: classList, ts: Date.now() })); } catch (_) {}
       }
-      setClasses(classList);
-      if (classList.length > 0) {
-        setOnlineClassId(classList[0].id);
-        setSelectedClassId(classList[0].id);
+      const sortedClasses = sortClasses(classList);
+      setClasses(sortedClasses);
+      if (sortedClasses.length > 0) {
+        setOnlineClassId(sortedClasses[0].id);
+        setSelectedClassId(sortedClasses[0].id);
       }
 
       if (isAdmin && teachRes !== null) {
@@ -1282,7 +1284,7 @@ export const ExamListPage: React.FC = () => {
                   </div>
                   
                   <div className="flex flex-col gap-2.5 flex-1 mt-4 relative z-10">
-                    {(exam.classes || []).map((c: any) => (
+                    {sortClasses(exam.classes || []).map((c: any) => (
                       <div key={c.id} className="flex gap-2 items-center bg-slate-50 dark:bg-slate-800/50 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800 hover:bg-slate-100 transition-colors">
                         <div className="flex-1 text-xs sm:text-sm font-extrabold text-slate-800 dark:text-slate-200 px-1 truncate">
                           {c.name} - {c.section}

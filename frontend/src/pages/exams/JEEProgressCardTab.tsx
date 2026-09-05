@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../api/axios';
 import { formatExamOptionLabel } from '../../utils/formatters';
+import { sortClasses } from '../../utils/sortClasses';
 import { Printer, Download, FileText, CheckCircle, Settings, Upload, Save, FileSpreadsheet } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
@@ -630,7 +631,7 @@ export const JEEProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
                 className="appearance-none bg-white dark:bg-slate-800 border-2 border-fuchsia-100 dark:border-fuchsia-900/30 rounded-xl px-4 py-3 text-sm font-extrabold text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-4 focus:ring-fuchsia-500/20 focus:border-fuchsia-400 transition-all shadow-sm cursor-pointer w-full sm:min-w-[180px]"
               >
                 <option value="">-- Choose Class --</option>
-                {(selectedExam.classes || []).map((c: any) => (
+                {sortClasses(selectedExam.classes || []).map((c: any) => (
                   <option key={c.id} value={c.id}>{c.name}-{c.section}</option>
                 ))}
               </select>

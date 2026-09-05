@@ -4,6 +4,7 @@ import { createError } from '../middlewares/errorHandler';
 import { prisma } from '../utils/prisma';
 import { successResponse } from '../utils/response';
 import { calculateGrade } from '../utils/helpers';
+import { sortClasses } from '../utils/sortClasses';
 import { exec } from 'child_process';
 import path from 'path';
 import fs from 'fs';
@@ -40,7 +41,13 @@ export const getAll = async (req: AuthRequest, res: Response): Promise<void> => 
     },
     orderBy: { examDate: 'desc' },
   });
-  successResponse(res, exams, 'Exams fetched');
+
+  const sortedExams = exams.map(e => ({
+    ...e,
+    classes: sortClasses(e.classes || [])
+  }));
+
+  successResponse(res, sortedExams, 'Exams fetched');
 };
 
 export const getById = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
@@ -58,8 +65,14 @@ export const getById = async (req: AuthRequest, res: Response, next: NextFunctio
     },
   });
   if (!exam) return next(createError('Exam not found', 404));
+
+  if (exam.classes) {
+    exam.classes = sortClasses(exam.classes);
+  }
+
   successResponse(res, exam, 'Exam fetched');
 };
+
 
 export const create = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {

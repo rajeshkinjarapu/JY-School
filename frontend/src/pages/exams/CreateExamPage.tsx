@@ -4,6 +4,7 @@ import { ArrowLeft, Save, Plus, X, Edit3, Calendar, FileText, CheckCircle, Hash,
 import toast from 'react-hot-toast';
 import api from '../../api/axios';
 import { PageHeader } from '../../components/UI/PageHeader';
+import { sortClasses, getClassOrderIndex } from '../../utils/sortClasses';
 
 interface ClassSubjectConfig {
   classId: string;
@@ -79,12 +80,14 @@ export const CreateExamPage: React.FC = () => {
       ]);
       const classList = classRes.data || classRes || [];
       const subList = subRes.data || subRes || [];
-      setClasses(classList);
+      const sortedClasses = sortClasses(classList);
+      setClasses(sortedClasses);
       setAllDbSubjects(subList);
     } catch {
       toast.error('Failed to load initial data');
     }
   };
+
 
   // Initialize class configs when class list or examClassIds change (MANUAL ENTRY ONLY)
   useEffect(() => {
@@ -486,7 +489,14 @@ export const CreateExamPage: React.FC = () => {
 
                     {/* Class Tabs */}
                     <div className="flex items-center gap-2 overflow-x-auto pb-2 custom-scrollbar">
-                      {examClassIds.map((cId) => {
+                      {[...examClassIds].sort((idA, idB) => {
+                        const clsA = classes.find(c => c.id === idA);
+                        const clsB = classes.find(c => c.id === idB);
+                        const orderA = getClassOrderIndex(clsA?.name || '');
+                        const orderB = getClassOrderIndex(clsB?.name || '');
+                        if (orderA !== orderB) return orderA - orderB;
+                        return (clsA?.section || '').localeCompare(clsB?.section || '');
+                      }).map((cId) => {
                         const clsCfg = classConfigs[cId];
                         const isActive = activeClassTab === cId;
                         return (
