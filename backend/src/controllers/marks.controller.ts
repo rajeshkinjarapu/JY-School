@@ -156,13 +156,17 @@ export const bulkCreate = async (req: AuthRequest, res: Response, next: NextFunc
           finalRemarks = 'AB';
       }
 
-      // Enforce actual max marks from DB
-      let actualMaxMarks = exam?.maxMarks || 100;
-      if (exam?.examPlans && exam.examPlans.length > 0) {
+      // Enforce actual max marks for this specific subject
+      let actualMaxMarks = 50;
+      if (fakeSubject && fakeSubject.maxMarks) {
+        actualMaxMarks = Number(fakeSubject.maxMarks);
+      } else if (exam?.examPlans && exam.examPlans.length > 0) {
         const plan = exam.examPlans.find((p: any) => p.subjectId === realSubjectId);
         if (plan && plan.maxMarks) {
           actualMaxMarks = plan.maxMarks;
         }
+      } else if (m.maxMarks > 0 && m.maxMarks <= 200) {
+        actualMaxMarks = m.maxMarks;
       }
 
       // Validate max marks
