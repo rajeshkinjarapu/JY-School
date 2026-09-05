@@ -338,6 +338,21 @@ class _MarksUploadScreenState extends State<MarksUploadScreen> {
       if (examSubjects is String) {
         try { examSubjects = jsonDecode(examSubjects); } catch(e) { examSubjects = []; }
       }
+      
+      if (examSubjects is Map) {
+        if (_selectedClassId != null && examSubjects['classConfigs'] != null && examSubjects['classConfigs'] is List) {
+          final configs = examSubjects['classConfigs'] as List<dynamic>;
+          final matchingCfg = configs.firstWhere((c) => c['classId'] == _selectedClassId, orElse: () => null);
+          if (matchingCfg != null && matchingCfg['subjects'] != null) {
+            examSubjects = matchingCfg['subjects'];
+          } else if (examSubjects['globalSubjects'] != null) {
+            examSubjects = examSubjects['globalSubjects'];
+          }
+        } else if (examSubjects['globalSubjects'] != null) {
+          examSubjects = examSubjects['globalSubjects'];
+        }
+      }
+
       if (examSubjects is List) {
         var subjects = List<dynamic>.from(examSubjects);
         subjects.sort((a, b) {

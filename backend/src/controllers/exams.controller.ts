@@ -187,7 +187,42 @@ export const getResults = async (req: AuthRequest, res: Response, next: NextFunc
     }
   }
 
-  const rawSubjects = Array.isArray(exam.subjects) ? exam.subjects : [];
+export const getSubjectsForClassHelper = (subjectsConfig: any, classId?: string): any[] => {
+  if (!subjectsConfig) return [];
+  let subjectsArray = subjectsConfig;
+  if (typeof subjectsConfig === 'object' && !Array.isArray(subjectsConfig)) {
+    if (subjectsConfig.classConfigs && Array.isArray(subjectsConfig.classConfigs)) {
+      subjectsArray = subjectsConfig.classConfigs;
+    } else if (classId && Array.isArray(subjectsConfig[classId])) {
+      return subjectsConfig[classId];
+    } else {
+      subjectsArray = Object.values(subjectsConfig).flat();
+    }
+  }
+
+  if (Array.isArray(subjectsArray)) {
+    if (subjectsArray.length > 0 && (subjectsArray[0]?.classId || subjectsArray[0]?.className) && Array.isArray(subjectsArray[0]?.subjects)) {
+      if (classId) {
+        const found = subjectsArray.find((c: any) => c.classId === classId);
+        if (found) return found.subjects;
+      }
+      const mergedMap = new Map<string, any>();
+      subjectsArray.forEach((c: any) => {
+        (c.subjects || []).forEach((s: any) => {
+          if (s && s.name && !mergedMap.has(s.name.toUpperCase().trim())) {
+            mergedMap.set(s.name.toUpperCase().trim(), s);
+          }
+        });
+      });
+      return Array.from(mergedMap.values());
+    }
+    return subjectsArray;
+  }
+
+  return [];
+};
+
+  const rawSubjects = getSubjectsForClassHelper(exam.subjects, classId as string);
   const subjectOrderMap = new Map<string, number>();
   const subjectMaxMap = new Map<string, number>();
   rawSubjects.forEach((sub: any, index: number) => {
