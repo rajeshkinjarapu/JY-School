@@ -80,7 +80,7 @@ export const TeacherFormPage: React.FC = () => {
       }
       navigate('/teachers');
     } catch (error: any) {
-      toast.error(error.message || 'Error saving teacher details');
+      toast.error(error.response?.data?.message || error.message || 'Error saving teacher details');
     }
   };
 

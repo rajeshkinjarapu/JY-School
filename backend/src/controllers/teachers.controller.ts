@@ -69,8 +69,20 @@ export const getById = async (req: AuthRequest, res: Response, next: NextFunctio
 export const create = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   const { name, email, password, phone, photoUrl, qualification, specialization, canEditStudents } = req.body;
 
+  if (!email) {
+    return next(createError('Email address is required', 400));
+  }
+
   const existing = await prisma.user.findUnique({ where: { email } });
-  if (existing) return next(createError('Email already registered', 409));
+  if (existing) {
+    const existingTeacher = await prisma.teacher.findUnique({ where: { userId: existing.id } });
+    if (!existingTeacher && existing.role === 'TEACHER') {
+      // Clean up orphan user record from a previously incomplete or deleted teacher
+      await prisma.user.delete({ where: { id: existing.id } });
+    } else {
+      return next(createError(`Email '${email}' is already registered in the system.`, 409));
+    }
+  }
 
   const hashedPassword = await bcrypt.hash(password || 'Teacher@123', 12);
   const count = await prisma.teacher.count();
@@ -141,8 +153,17 @@ export const deleteTeacher = async (req: AuthRequest, res: Response, next: NextF
   const id = req.params.id as string;
   const teacher = await prisma.teacher.findUnique({ where: { id } });
   if (!teacher) return next(createError('Teacher not found', 404));
-  await prisma.teacher.delete({ where: { id } });
-  successResponse(res, null, 'Teacher deleted');
+
+  try {
+    await prisma.$transaction([
+      prisma.classSubjectTeacher.deleteMany({ where: { teacherId: id } }),
+      prisma.teacher.deleteMany({ where: { id } }),
+      prisma.user.deleteMany({ where: { id: teacher.userId } }),
+    ]);
+    successResponse(res, null, 'Teacher deleted');
+  } catch (err) {
+    next(err);
+  }
 };
 
 export const getMyProfile = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {

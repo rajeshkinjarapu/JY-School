@@ -95,7 +95,7 @@ export const StudentFormPage: React.FC = () => {
       }
       navigate('/students');
     } catch (error: any) {
-      toast.error(error.message || 'Error saving student profile');
+      toast.error(error.response?.data?.message || error.message || 'Error saving student profile');
     }
   };
 

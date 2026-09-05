@@ -62,7 +62,7 @@ export const TeacherListPage: React.FC = () => {
       toast.success("Teacher deleted successfully");
       fetchTeachers();
     } catch (error: any) {
-      toast.error(error.message || "Failed to delete teacher");
+      toast.error(error.response?.data?.message || error.message || "Failed to delete teacher");
     }
   };
 
