@@ -77,7 +77,7 @@ export const CreateExamPage: React.FC = () => {
     }
   };
 
-  // Auto-populate class subjects when class list or examClassIds change
+  // Initialize class configs when class list or examClassIds change (MANUAL ENTRY ONLY)
   useEffect(() => {
     if (classes.length === 0) return;
 
@@ -89,30 +89,30 @@ export const CreateExamPage: React.FC = () => {
 
         const clsName = `${cls.name} - ${cls.section}`;
         
-        // If class config doesn't exist yet, auto-fetch from DB subjects
+        // If class config doesn't exist yet, initialize with standard manual subjects
         if (!updated[cId]) {
-          const dbClassSubjects = allDbSubjects.filter((s) => s.classId === cId);
-          let initialSubs: { id: string; name: string; maxMarks: number; date?: string }[] = [];
+          let defaultSubs = [
+            { id: Date.now().toString() + '_1', name: 'ENGLISH', maxMarks: 100, date: examDate },
+            { id: Date.now().toString() + '_2', name: 'MATHEMATICS', maxMarks: 100, date: examDate },
+            { id: Date.now().toString() + '_3', name: 'SCIENCE', maxMarks: 100, date: examDate },
+            { id: Date.now().toString() + '_4', name: 'SOCIAL', maxMarks: 100, date: examDate }
+          ];
 
-          if (dbClassSubjects.length > 0) {
-            initialSubs = dbClassSubjects.map((s) => ({
-              id: s.id,
-              name: s.name,
-              maxMarks: 100,
-              date: examDate
-            }));
-          } else {
-            // Default fallback if no DB subjects for this class
-            initialSubs = [
+          // Nursery / PP1 / PP2 custom defaults if class name starts with NUR or PP
+          const upperName = cls.name.toUpperCase();
+          if (upperName.includes('NUR') || upperName.includes('PP') || upperName.includes('LKG') || upperName.includes('UKG')) {
+            defaultSubs = [
               { id: Date.now().toString() + '_1', name: 'ENGLISH', maxMarks: 100, date: examDate },
-              { id: Date.now().toString() + '_2', name: 'MATHEMATICS', maxMarks: 100, date: examDate }
+              { id: Date.now().toString() + '_2', name: 'MATHS', maxMarks: 100, date: examDate },
+              { id: Date.now().toString() + '_3', name: 'GENERAL AWARENESS', maxMarks: 100, date: examDate },
+              { id: Date.now().toString() + '_4', name: 'RHYMES, ART & CRAFT', maxMarks: 100, date: examDate }
             ];
           }
 
           updated[cId] = {
             classId: cId,
             className: clsName,
-            subjects: initialSubs
+            subjects: defaultSubs
           };
         }
       });
@@ -130,7 +130,7 @@ export const CreateExamPage: React.FC = () => {
     if (examClassIds.length > 0 && !examClassIds.includes(activeClassTab)) {
       setActiveClassTab(examClassIds[0]);
     }
-  }, [examClassIds, classes, allDbSubjects, examDate]);
+  }, [examClassIds, classes, examDate]);
 
   const handleClassToggle = (classId: string) => {
     if (examClassIds.includes(classId)) {
@@ -196,6 +196,44 @@ export const CreateExamPage: React.FC = () => {
       return {
         ...prev,
         [classId]: { ...clsCfg, subjects: newSubs }
+      };
+    });
+  };
+
+  const handleCopyClassConfigToAll = (sourceClassId: string) => {
+    const sourceCfg = classConfigs[sourceClassId];
+    if (!sourceCfg || sourceCfg.subjects.length === 0) {
+      toast.error('Source class has no subjects to copy');
+      return;
+    }
+
+    setClassConfigs((prev) => {
+      const updated = { ...prev };
+      examClassIds.forEach((cId) => {
+        if (cId !== sourceClassId && updated[cId]) {
+          updated[cId] = {
+            ...updated[cId],
+            subjects: sourceCfg.subjects.map((s, idx) => ({
+              id: `${Date.now()}_${cId}_${idx}`,
+              name: s.name,
+              maxMarks: s.maxMarks,
+              date: s.date || examDate
+            }))
+          };
+        }
+      });
+      return updated;
+    });
+    toast.success(`Copied ${sourceCfg.className} subjects to ALL selected classes!`);
+  };
+
+  const handleClearClassSubjects = (classId: string) => {
+    setClassConfigs((prev) => {
+      const clsCfg = prev[classId];
+      if (!clsCfg) return prev;
+      return {
+        ...prev,
+        [classId]: { ...clsCfg, subjects: [] }
       };
     });
   };
@@ -501,7 +539,15 @@ export const CreateExamPage: React.FC = () => {
                                 Total Class Max Marks: <span className="text-indigo-600 font-black">{activeClassTotalMarks} Marks</span>
                               </p>
                             </div>
-                            <div className="flex items-center gap-2">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <button
+                                type="button"
+                                onClick={() => handleCopyClassConfigToAll(activeClassTab)}
+                                className="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 px-2.5 py-1.5 rounded-lg text-[11px] font-black shadow-sm flex items-center gap-1"
+                                title="Copy these exact subjects and marks to all other selected classes"
+                              >
+                                <Copy className="w-3.5 h-3.5" /> Copy to All Classes
+                              </button>
                               <button
                                 type="button"
                                 onClick={() => handleApplyBulkMarksToClass(activeClassTab, 50)}
@@ -519,9 +565,16 @@ export const CreateExamPage: React.FC = () => {
                               <button
                                 type="button"
                                 onClick={() => addSubjectToClass(activeClassTab)}
-                                className="bg-indigo-50 text-indigo-600 hover:bg-indigo-100 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 shadow-sm"
+                                className="bg-indigo-600 text-white hover:bg-indigo-700 px-3 py-1.5 rounded-lg text-xs font-black flex items-center gap-1.5 shadow-sm"
                               >
                                 <Plus className="w-3.5 h-3.5" /> Add Subject
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleClearClassSubjects(activeClassTab)}
+                                className="bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 px-2.5 py-1.5 rounded-lg text-[11px] font-bold shadow-sm"
+                              >
+                                Clear All
                               </button>
                             </div>
                           </div>
