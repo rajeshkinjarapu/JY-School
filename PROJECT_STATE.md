@@ -3,7 +3,7 @@
 - Teacher Registration 409 Conflict (`Request failed with status code 409`) మరియు Exam Subject Configuration అప్‌డేట్‌లు పూర్తి చేయబడ్డాయి.
 - `teachers.controller.ts` లో `deleteTeacher` చేసినప్పుడు సంబంధిత `User` రికార్డ్ కూడా డిలీట్ అయ్యేలా సెట్ చేశాం. అలాగే `create` లో orphan User రికార్డులను (No Teacher/Student profile) ఆటో-క్లీనప్ చేసి సృష్టించే లాజిక్ జోడించబడింది.
 - Frontend లో Toast Notifications అన్నిటికీ generic status code కాకుండా స్పష్టమైన ఎర్రర్ మెసేజ్ (`error.response?.data?.message`) డిస్‌ప్లే అయ్యేలా `TeacherFormPage`, `TeacherListPage`, `StudentFormPage` మార్చబడ్డాయి.
-- Examination Creation & Edit పేజీలలో పాత సబ్జెక్ట్ మోడ్‌లను తీసివేసి **Class-Wise Tabs (`[ PP1 - A ] [ PP2 - A ] [ 1st - A ] ...`) ని పర్మినెంట్‌గా డీఫాల్ట్ మోడ్‌గా మార్చడం జరిగింది**. పాత పరీక్షలని ఎడిట్ చేసినా లేదా కొత్తవి క్రియేట్ చేసినా సరే ప్రతీ క్లాస్‌కి విడివిడిగా సబ్జెక్టులు & మార్కులు జోడించుకునే ఆప్షన్లు అందుబాటులోకి వచ్చాయి.
+- `FA-1 (6,7)`, `FA- 1 (8,9,10)`, `FA-1 (1,2)`, `FA - 1 (3,4,5)`, `FORMATIVE ASSESSMENT - 1` అనే 5 రకాల ఎగ్జామ్‌లను ఒకే ఒక్క "FORMATIVE ASSESSMENT - 1" ఎగ్జామ్‌గా మార్చే మైగ్రేషన్ స్క్రిప్ట్ సిద్ధమైంది. రన్ చేయగానే విద్యార్థుల మార్కులు ఏమాత్రం మారకుండా 100% పర్‌ఫెక్ట్‌గా ఒకే పరీక్షగా మెర్జ్ అవుతాయి.
 - `exams.controller.ts` లో వస్తున్న TS1184 కాంపైలేషన్ ఎర్రర్ ని `getSubjectsForClassHelper` ని top-level scope కి మార్చి పర్మినెంట్ గా ఫిక్స్ చేయబడింది.
 - Students Page లోడ్‌ని వేగవంతం (Instant Loading) చేయడానికి `StudentListPage.tsx` లో DataCache మరియు Total Count Parsing లాజిక్ అప్‌డేట్ చేయబడింది.
 - Student Profile Page లో వస్తున్న `Student profile not found` ఎర్రర్‌ను సరిచేయడానికి backend controller లో `id`, `userId`, `rollNo` ఆధారంగా ప్రొఫైల్ లోడ్ అయ్యేలా `getById` అప్‌డేట్ చేయబడింది.
