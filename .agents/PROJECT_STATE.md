@@ -1,5 +1,9 @@
+### Recent Updates (Question Paper Generator - Web)
+- **Multi-Section Board Exam Templates**: Re-engineered the Question Paper Generator in the Web App (`NavodayaPaperGeneratorPage.tsx` and `LiveLatexPreview.tsx`) to support a "Section Mode". Users can now create professional board-style papers with multiple sections (e.g., Section-I, Section-II), each with distinct instructions and marks configurations.
+- **AI Integration Enhancement**: Updated the AI question generation and Word Doc import modules to append questions directly to the *currently active section* rather than the global document, allowing for granular section-by-section construction.
+- **Backward Compatibility**: Designed a clever serialization strategy (`<!--BOARD_EXAM_JSON:...-->`) that stores the complex multi-section JSON inside the existing Prisma `content` string field, completely avoiding database migrations and keeping old papers intact.
+
 ### Recent Updates (Transport Module)
-- **Student Transport Dashboard**: Redesigned transport_screen.dart to check isStudent. Created a dedicated Student View featuring 'Live Bus Tracking' card, 'My Route Details' card (with placeholders for bus no, route, pickup/drop times), and 'Driver & Support' card. 1970 date issue in payments history also fixed.
 
 ### Recent Updates (Transport Modules 2)
 - **Student Transport Tabs**: Restructured transport_screen.dart into a Tabbed view for students (Bus Details, Live Tracking) with a fixed non-scrolling AppBar. Modified live_tracking_screen.dart to support isEmbedded parameter to prevent nested AppBars.

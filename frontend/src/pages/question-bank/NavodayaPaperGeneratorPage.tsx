@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 import { LiveLatexPreview } from '../../components/QuestionBank/LiveLatexPreview';
 import type { FloatingImage } from '../../components/QuestionBank/LiveLatexPreview';
 import { api } from '../../api/axios';
+import type { PaperSection } from '../../components/QuestionBank/LiveLatexPreview';
 
 import { PageHeader } from '../../components/UI/PageHeader';
 
@@ -55,9 +56,18 @@ export const NavodayaPaperGeneratorPage = () => {
   const [isDoubleColumn, setIsDoubleColumn] = useState(false);
   
   // Editor State
-  const [content, setContent] = useState(
-    '1. What is 25% of 200?\n(A) 25\n(B) 50\n(C) 75\n(D) 100\n\n2. Solve for x: $2x + 5 = 15$\n(A) 2\n(B) 4\n(C) 5\n(D) 10\n\n3. The perimeter of a rectangle is 40 cm. If its length is 12 cm, what is its breadth?\n(A) 8 cm\n(B) 10 cm\n(C) 12 cm\n(D) 16 cm'
-  );
+  const [content, setContent] = useState('');
+  const [sections, setSections] = useState<PaperSection[]>([{
+    id: 'sec-1',
+    name: 'SECTION - I',
+    instructions: 'Note: (i) Answer ALL the following questions.\n(ii) Each question carries 1 Mark.',
+    marksPerQuestion: '1',
+    totalQuestions: '12',
+    content: '1. What is 25% of 200?\n(A) 25\n(B) 50\n(C) 75\n(D) 100\n\n2. Solve for x: $2x + 5 = 15$\n(A) 2\n(B) 4\n(C) 5\n(D) 10\n\n3. The perimeter of a rectangle is 40 cm. If its length is 12 cm, what is its breadth?\n(A) 8 cm\n(B) 10 cm\n(C) 12 cm\n(D) 16 cm'
+  }]);
+  const [activeSectionId, setActiveSectionId] = useState<string>('sec-1');
+  const [isSectionMode, setIsSectionMode] = useState(true);
+
   const [isGenerating, setIsGenerating] = useState(false);
   const containerRef = React.useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -117,12 +127,29 @@ export const NavodayaPaperGeneratorPage = () => {
   };
 
   const serializeContent = (): string => {
-    if (Object.keys(inlineImages).length === 0) return content;
-    const cleanContent = content.replace(/\[IMG:([a-z0-9]+)\]/g, '');
-    return cleanContent + '\n<!--INLINE_IMAGES:' + JSON.stringify(inlineImages) + '-->';
+    const payload = {
+      sections: isSectionMode ? sections : undefined,
+      inlineImages,
+      text: !isSectionMode ? content : undefined
+    };
+    return '<!--BOARD_EXAM_JSON:' + JSON.stringify(payload) + '-->';
   };
 
-  const deserializeContent = (raw: string): { text: string; images: Record<string, FloatingImage> } => {
+  const deserializeContent = (raw: string): { text: string; images: Record<string, FloatingImage>; loadedSections?: PaperSection[] } => {
+    const jsonMatch = raw.match(/^<!--BOARD_EXAM_JSON:(.*?)-->$/);
+    if (jsonMatch) {
+      try {
+        const parsed = JSON.parse(jsonMatch[1]);
+        return { 
+          text: parsed.text || '', 
+          images: parsed.inlineImages || {},
+          loadedSections: parsed.sections
+        };
+      } catch (e) {
+        console.error("Failed to parse BOARD_EXAM_JSON", e);
+      }
+    }
+
     const imgMatch = raw.match(/\n<!--INLINE_IMAGES:(.*?)-->$/);
     if (imgMatch) {
       try {
@@ -256,7 +283,8 @@ export const NavodayaPaperGeneratorPage = () => {
         }
 
         let generatedText = '\n\n';
-        const lines = content.split('\n');
+        const activeText = isSectionMode ? sections.find(s => s.id === activeSectionId)?.content || '' : content;
+        const lines = activeText.split('\n');
         let maxQ = 0;
         for (const line of lines) {
           const match = line.match(/^(\d+)\.\s/);
@@ -275,7 +303,11 @@ export const NavodayaPaperGeneratorPage = () => {
           generatedText += '\n';
         });
 
-        setContent(prev => prev.trim() + generatedText);
+        if (isSectionMode) {
+          setSections(sections.map(s => s.id === activeSectionId ? { ...s, content: s.content.trim() + generatedText } : s));
+        } else {
+          setContent(prev => prev.trim() + generatedText);
+        }
         toast.success(`✅ ${questions.length} questions extracted from Word document!`, { id: toastId });
         setIsAiModalOpen(false);
       } catch (err: any) {
@@ -358,7 +390,8 @@ export const NavodayaPaperGeneratorPage = () => {
       }
 
       let generatedText = '\n\n';
-      const lines = content.split('\n');
+      const activeText = isSectionMode ? sections.find(s => s.id === activeSectionId)?.content || '' : content;
+      const lines = activeText.split('\n');
       let maxQ = 0;
       for (const line of lines) {
         const match = line.match(/^(\d+)\.\s/);
@@ -377,7 +410,11 @@ export const NavodayaPaperGeneratorPage = () => {
         generatedText += '\n';
       });
 
-      setContent(content.trim() + generatedText);
+      if (isSectionMode) {
+         setSections(sections.map(s => s.id === activeSectionId ? { ...s, content: s.content.trim() + generatedText } : s));
+      } else {
+         setContent(content.trim() + generatedText);
+      }
       setIsGenerating(false);
       setAiImageBase64('');
       setAiImageMimeType('');
@@ -390,7 +427,8 @@ export const NavodayaPaperGeneratorPage = () => {
   };
 
   const autoFormatText = () => {
-    const lines = content.split('\n');
+    const targetText = isSectionMode ? sections.find(s => s.id === activeSectionId)?.content || '' : content;
+    const lines = targetText.split('\n');
     let formatted = [];
     
     for (let i = 0; i < lines.length; i++) {
@@ -423,7 +461,11 @@ export const NavodayaPaperGeneratorPage = () => {
       formatted.push(line);
     }
     
-    setContent(formatted.join('\n'));
+    if (isSectionMode) {
+      setSections(sections.map(s => s.id === activeSectionId ? { ...s, content: formatted.join('\n') } : s));
+    } else {
+      setContent(formatted.join('\n'));
+    }
     toast.success("Auto-formatted text!");
   };
 
@@ -438,8 +480,15 @@ export const NavodayaPaperGeneratorPage = () => {
         setExamDate(p.examDate || '');
         setTime(p.time || '');
         setInstructions(p.instructions || '');
-        const { text, images } = deserializeContent(p.content || '');
-        setContent(text);
+        const { text, images, loadedSections } = deserializeContent(p.content || '');
+        if (loadedSections && loadedSections.length > 0) {
+          setSections(loadedSections);
+          setIsSectionMode(true);
+          setActiveSectionId(loadedSections[0].id);
+        } else {
+          setContent(text);
+          setIsSectionMode(false);
+        }
         setInlineImages(images);
         toast.success('Paper loaded!', { id: 'load' });
       } catch {
@@ -554,8 +603,16 @@ export const NavodayaPaperGeneratorPage = () => {
         {/* Left Side: Editor (Hidden on Print) */}
         <div className="w-1/2 p-6 overflow-y-auto border-r border-slate-200 bg-white print:hidden custom-scrollbar">
           <div className="h-full flex flex-col pb-20">
-            <h3 className="font-semibold text-slate-700 border-b pb-2 mb-4 flex justify-between items-center">
-              <span>Question Content (LaTeX Support)</span>
+            <div className="flex justify-between items-center border-b pb-2 mb-4">
+              <h3 className="font-semibold text-slate-700 flex items-center gap-2">
+                <span>Question Content</span>
+                <button 
+                  onClick={() => setIsSectionMode(!isSectionMode)}
+                  className="text-xs px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded font-medium transition-colors"
+                >
+                  {isSectionMode ? 'Switch to Simple Mode' : 'Switch to Section Mode (Board Exam)'}
+                </button>
+              </h3>
               <div className="flex gap-2">
                 <input 
                   type="file" 
@@ -564,10 +621,6 @@ export const NavodayaPaperGeneratorPage = () => {
                   onChange={handleImageUploadForEditor} 
                   className="hidden" 
                 />
-                <span className="text-xs text-slate-500 bg-white/80 px-2 py-1 rounded-md border border-slate-100 flex items-center gap-1.5 shadow-sm">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-500"><path d="M12 9v2m0 4v.01M5.05 19h13.9c1.66 0 3-1.34 3-3V8c0-1.66-1.34-3-3-3H5.05c-1.66 0-3 1.34-3 3v8c0 1.66 1.34 3 3 3z"/></svg>
-                  Tip: Press Enter 3-4 times to leave empty space for answers
-                </span>
                 <button 
                   onClick={() => imageInputRef.current?.click()}
                   className="px-3 py-1.5 bg-purple-50 text-purple-700 text-xs font-bold rounded-lg hover:bg-purple-100 transition-colors flex items-center gap-1.5 border border-purple-200 shadow-sm"
@@ -578,18 +631,122 @@ export const NavodayaPaperGeneratorPage = () => {
                   onClick={autoFormatText}
                   className="px-3 py-1.5 bg-blue-50 text-blue-700 text-xs font-bold rounded-lg hover:bg-blue-100 transition-colors flex items-center gap-1.5 border border-blue-200 shadow-sm"
                 >
-                  <Wand2 className="w-3.5 h-3.5" /> Auto-Align Format
+                  <Wand2 className="w-3.5 h-3.5" /> Auto-Format
                 </button>
               </div>
-            </h3>
-            <textarea
-              ref={textareaRef}
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              onPaste={handleEditorPaste}
-              className="flex-1 w-full rounded-xl border-slate-200 bg-slate-50 border p-5 font-mono text-base leading-relaxed focus:ring-2 focus:ring-blue-500/20 outline-none resize-none min-h-[400px]"
-              placeholder="1. Question text&#10;(A) Option A&#10;(B) Option B&#10;(C) Option C&#10;(D) Option D&#10;&#10;Tip: You can paste images directly (Ctrl+V) or click 'Insert Image'!"
-            />
+            </div>
+
+            {isSectionMode ? (
+              <div className="flex flex-col h-full">
+                {/* Section Tabs */}
+                <div className="flex gap-2 overflow-x-auto pb-2 mb-4 custom-scrollbar">
+                  {sections.map(sec => (
+                    <button
+                      key={sec.id}
+                      onClick={() => setActiveSectionId(sec.id)}
+                      className={`px-4 py-2 whitespace-nowrap rounded-lg text-sm font-bold border-2 transition-all ${activeSectionId === sec.id ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'}`}
+                    >
+                      {sec.name || 'Unnamed Section'}
+                    </button>
+                  ))}
+                  <button
+                    onClick={() => {
+                      const newId = `sec-${Date.now()}`;
+                      setSections([...sections, {
+                        id: newId,
+                        name: `SECTION - ${['I','II','III','IV','V','VI'][sections.length] || 'NEW'}`,
+                        instructions: 'Note: Answer all questions.',
+                        marksPerQuestion: '1',
+                        totalQuestions: '10',
+                        content: ''
+                      }]);
+                      setActiveSectionId(newId);
+                    }}
+                    className="px-4 py-2 whitespace-nowrap rounded-lg text-sm font-bold border-2 border-dashed border-slate-300 text-slate-500 hover:border-slate-400 hover:text-slate-700 transition-all"
+                  >
+                    + Add Section
+                  </button>
+                </div>
+
+                {/* Active Section Editor */}
+                {sections.map(sec => sec.id === activeSectionId && (
+                  <div key={sec.id} className="flex flex-col flex-1 animate-in fade-in duration-200">
+                    <div className="grid grid-cols-2 gap-4 mb-4">
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-600 mb-1">Section Name</label>
+                        <input
+                          type="text"
+                          value={sec.name}
+                          onChange={e => setSections(sections.map(s => s.id === sec.id ? { ...s, name: e.target.value } : s))}
+                          className="w-full rounded-lg border border-slate-200 p-2 text-sm focus:ring-2 focus:ring-blue-500/20 outline-none"
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                         <div>
+                          <label className="block text-xs font-semibold text-slate-600 mb-1">Total Qs</label>
+                          <input
+                            type="text"
+                            value={sec.totalQuestions}
+                            onChange={e => setSections(sections.map(s => s.id === sec.id ? { ...s, totalQuestions: e.target.value } : s))}
+                            className="w-full rounded-lg border border-slate-200 p-2 text-sm focus:ring-2 focus:ring-blue-500/20 outline-none"
+                          />
+                         </div>
+                         <div>
+                          <label className="block text-xs font-semibold text-slate-600 mb-1">Marks/Q</label>
+                          <input
+                            type="text"
+                            value={sec.marksPerQuestion}
+                            onChange={e => setSections(sections.map(s => s.id === sec.id ? { ...s, marksPerQuestion: e.target.value } : s))}
+                            className="w-full rounded-lg border border-slate-200 p-2 text-sm focus:ring-2 focus:ring-blue-500/20 outline-none"
+                          />
+                         </div>
+                      </div>
+                    </div>
+                    <div className="mb-4">
+                      <label className="block text-xs font-semibold text-slate-600 mb-1">Instructions (Optional)</label>
+                      <textarea
+                        value={sec.instructions}
+                        onChange={e => setSections(sections.map(s => s.id === sec.id ? { ...s, instructions: e.target.value } : s))}
+                        className="w-full rounded-lg border border-slate-200 p-2 text-sm focus:ring-2 focus:ring-blue-500/20 outline-none resize-none h-16"
+                        placeholder="e.g. Note: (i) Answer all questions..."
+                      />
+                    </div>
+                    <textarea
+                      ref={textareaRef}
+                      value={sec.content}
+                      onChange={e => setSections(sections.map(s => s.id === sec.id ? { ...s, content: e.target.value } : s))}
+                      onPaste={handleEditorPaste}
+                      className="flex-1 w-full rounded-xl border border-slate-200 bg-slate-50 p-5 font-mono text-sm leading-relaxed focus:ring-2 focus:ring-blue-500/20 outline-none resize-none min-h-[300px]"
+                      placeholder={`Enter questions for ${sec.name}...`}
+                    />
+                    <div className="flex justify-end mt-2">
+                       <button
+                         onClick={() => {
+                           if(sections.length === 1) return toast.error("Cannot delete the only section.");
+                           if(confirm("Delete this section?")) {
+                             const newSecs = sections.filter(s => s.id !== sec.id);
+                             setSections(newSecs);
+                             setActiveSectionId(newSecs[0].id);
+                           }
+                         }}
+                         className="text-xs text-red-500 hover:text-red-700 font-medium px-2 py-1"
+                       >
+                         Delete Section
+                       </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <textarea
+                ref={textareaRef}
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                onPaste={handleEditorPaste}
+                className="flex-1 w-full rounded-xl border border-slate-200 bg-slate-50 p-5 font-mono text-sm leading-relaxed focus:ring-2 focus:ring-blue-500/20 outline-none resize-none min-h-[400px]"
+                placeholder="1. Question text&#10;(A) Option A&#10;(B) Option B&#10;(C) Option C&#10;(D) Option D"
+              />
+            )}
           </div>
         </div>
 
@@ -618,6 +775,7 @@ export const NavodayaPaperGeneratorPage = () => {
             <div className="paper-zoom origin-top transition-transform print:!transform-none">
             <LiveLatexPreview 
               content={content}
+              sections={isSectionMode ? sections : undefined}
               examName={examName}
               examDate={examDate}
               examSubject={examSubject}

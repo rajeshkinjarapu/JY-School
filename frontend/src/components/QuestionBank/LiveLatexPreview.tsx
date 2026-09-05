@@ -12,8 +12,19 @@ export interface FloatingImage {
   height: number;
 }
 
+export interface PaperSection {
+  id: string;
+  name: string; // e.g., "SECTION - I"
+  instructions: string; // e.g., "Note: (i) Answer ALL the following questions.\n(ii) Each question carries 1 Mark."
+  marksPerQuestion: string; // e.g., "1", "2"
+  totalQuestions: string; // e.g., "12"
+  content: string; // Markdown/LaTeX content
+}
+
 export interface LiveLatexPreviewProps {
-  subjectContents: Record<string, string>;
+  subjectContents?: Record<string, string>;
+  content?: string;
+  sections?: PaperSection[];
   examName: string;
   maxMarks: string;
   time: string;
@@ -28,8 +39,11 @@ export interface LiveLatexPreviewProps {
   onImageDelete?: (id: string) => void;
 }
 
+
 export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
   subjectContents,
+  content,
+  sections,
   examName,
   maxMarks,
   time,
@@ -105,130 +119,157 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
     }
   };
 
+  const parseTextToBlocks = (text: string, subject: string, elements: JSX.Element[]) => {
+    if (!text || text.trim() === '') return;
+    const rawBlocks = text.split(/(\n\n+)/);
+    
+    for (let i = 0; i < rawBlocks.length; i += 2) {
+      const block = rawBlocks[i];
+      if (block.trim() === '') continue; // Skip pure whitespace blocks
+      
+      const separator = i + 1 < rawBlocks.length ? rawBlocks[i + 1] : '';
+      const extraNewlines = Math.max(0, (separator.match(/\n/g) || []).length - 2);
+      const marginBottom = extraNewlines > 0 ? `calc(0.4rem + ${extraNewlines * 3}rem)` : '0.4rem';
+
+      const hasOptions = block.includes('(A)') && block.includes('(B)') && block.includes('(C)') && block.includes('(D)');
+
+      const blockContent = (
+        <React.Fragment key={`${subject}-${i}`}>
+        {!hasOptions ? (
+          (() => {
+            const qNumMatch2 = block.match(/^(\d+)\.\s*/);
+            if (qNumMatch2) {
+              const num = qNumMatch2[1];
+              const restText = block.substring(qNumMatch2[0].length);
+              return (
+                <div className="mb-2 break-inside-avoid text-[11pt] flex whitespace-pre-wrap" style={{ gap: '0.4em' }}>
+                  <strong className="flex-shrink-0">{num}.</strong>
+                  <div dangerouslySetInnerHTML={{ __html: renderLatex(restText) }} />
+                </div>
+              );
+            }
+            return (
+              <div 
+                className="mb-2 break-inside-avoid text-[11pt]"
+                dangerouslySetInnerHTML={{ __html: renderLatex(block) }} 
+              />
+            );
+          })()
+        ) : (
+          (() => {
+            // Make regex robust to avoid matching (B) inside math formulas like $n(A) - n(B)$
+            const optARegex = /(?:^|\n|\s{2,}|\t)\(A\)\s*(.*?)(?=\n\s*\(B\)|\s{2,}\(B\)|\t\(B\)|$)/s;
+            const optBRegex = /(?:^|\n|\s{2,}|\t)\(B\)\s*(.*?)(?=\n\s*\(C\)|\s{2,}\(C\)|\t\(C\)|$)/s;
+            const optCRegex = /(?:^|\n|\s{2,}|\t)\(C\)\s*(.*?)(?=\n\s*\(D\)|\s{2,}\(D\)|\t\(D\)|$)/s;
+            const optDRegex = /(?:^|\n|\s{2,}|\t)\(D\)\s*(.*)/s;
+
+            const splitIndexA = block.indexOf('(A)');
+            const questionText = block.substring(0, splitIndexA).trim();
+            const optionsText = block.substring(splitIndexA);
+
+            const matchA = optionsText.match(optARegex);
+            const matchB = optionsText.match(optBRegex);
+            const matchC = optionsText.match(optCRegex);
+            const matchD = optionsText.match(optDRegex);
+
+            const optA = matchA ? matchA[1].trim() : '';
+            const optB = matchB ? matchB[1].trim() : '';
+            const optC = matchC ? matchC[1].trim() : '';
+            const optD = matchD ? matchD[1].trim() : '';
+            const estimateVisualLength = (text: string) => {
+              let s = text.replace(/\\\(|\\\)|\\\[|\\\]|\$/g, ''); // Remove math delimiters
+              s = s.replace(/\\mathbb|\\mathbf|\\text|\\mathrm/g, ''); // Remove formatting commands
+              s = s.replace(/\\[a-zA-Z]+/g, 'X'); // Replace math commands (\subset, \cup, etc) with a single character 'X'
+              s = s.replace(/[{}_^]/g, ''); // Remove brackets and sub/superscripts
+              return s.replace(/\s+/g, ' ').trim().length;
+            };
+
+            const maxLen = Math.max(
+              estimateVisualLength(optA), 
+              estimateVisualLength(optB), 
+              estimateVisualLength(optC), 
+              estimateVisualLength(optD)
+            );
+            
+            let optionsLayout = '';
+            if (maxLen < 10) {
+              optionsLayout = 'grid grid-cols-4 w-full gap-x-2 gap-y-0.5';
+            } else if (maxLen < 85) {
+              optionsLayout = 'grid grid-cols-2 w-full gap-x-2 gap-y-0.5';
+            } else {
+              optionsLayout = 'flex flex-col w-full gap-0.5';
+            }
+
+            // Extract question number for hanging indent
+            const qMatch = questionText.match(/^(\d+)\.\s*/);
+            const qNum = qMatch ? qMatch[1] : '';
+            const qRest = qMatch ? questionText.substring(qMatch[0].length) : questionText;
+
+            return (
+              <div className="mb-1 break-inside-avoid text-[11pt] leading-snug">
+                <div className="mb-0.5 flex whitespace-pre-wrap" style={{ gap: '0.4em' }}>
+                  <strong className="flex-shrink-0">{qNum}.</strong>
+                  <div dangerouslySetInnerHTML={{ __html: renderLatex(qRest) }} />
+                </div>
+                <div className={`ml-6 pr-4 ${optionsLayout}`}>
+                  <div className="flex"><span className="mr-1.5 font-medium">(A)</span> <span dangerouslySetInnerHTML={{ __html: renderLatex(optA) }} /></div>
+                  <div className="flex"><span className="mr-1.5 font-medium">(B)</span> <span dangerouslySetInnerHTML={{ __html: renderLatex(optB) }} /></div>
+                  <div className="flex"><span className="mr-1.5 font-medium">(C)</span> <span dangerouslySetInnerHTML={{ __html: renderLatex(optC) }} /></div>
+                  <div className="flex"><span className="mr-1.5 font-medium">(D)</span> <span dangerouslySetInnerHTML={{ __html: renderLatex(optD) }} /></div>
+                </div>
+              </div>
+            );
+          })()
+        )}
+        </React.Fragment>
+      );
+
+      elements.push(
+        <div key={`${subject}-block-${i}`} className="w-full relative group break-inside-avoid" style={{ marginBottom }}>
+          {blockContent}
+        </div>
+      );
+    }
+  };
+
   const parseBlocks = () => {
     const elements: JSX.Element[] = [];
     
-    selectedSubjects.forEach(subject => {
-      const subjectText = subjectContents[subject];
-      if (!subjectText || subjectText.trim() === '') return;
-      
-      const rawBlocks = subjectText.split(/(\n\n+)/);
-      
-      // Add subject heading
-      elements.push(
-        <div id={`preview-subject-${subject}`} key={`heading-${subject}`} className="w-full text-center my-3 break-before-auto">
-          <h3 className="font-bold text-[13pt] underline underline-offset-4 uppercase">{subject}</h3>
-        </div>
-      );
-      
-      for (let i = 0; i < rawBlocks.length; i += 2) {
-        const block = rawBlocks[i];
-        if (block.trim() === '') continue; // Skip pure whitespace blocks
-        
-        const separator = i + 1 < rawBlocks.length ? rawBlocks[i + 1] : '';
-        const extraNewlines = Math.max(0, (separator.match(/\n/g) || []).length - 2);
-        const marginBottom = extraNewlines > 0 ? `calc(0.4rem + ${extraNewlines * 3}rem)` : '0.4rem';
-
-        const hasOptions = block.includes('(A)') && block.includes('(B)') && block.includes('(C)') && block.includes('(D)');
-
-        const blockContent = (
-          <React.Fragment key={`${subject}-${i}`}>
-          {!hasOptions ? (
-            (() => {
-              const qNumMatch2 = block.match(/^(\d+)\.\s*/);
-              if (qNumMatch2) {
-                const num = qNumMatch2[1];
-                const restText = block.substring(qNumMatch2[0].length);
-                return (
-                  <div className="mb-2 break-inside-avoid text-[11pt] flex whitespace-pre-wrap" style={{ gap: '0.4em' }}>
-                    <strong className="flex-shrink-0">{num}.</strong>
-                    <div dangerouslySetInnerHTML={{ __html: renderLatex(restText) }} />
-                  </div>
-                );
-              }
-              return (
-                <div 
-                  className="mb-2 break-inside-avoid text-[11pt]"
-                  dangerouslySetInnerHTML={{ __html: renderLatex(block) }} 
-                />
-              );
-            })()
-          ) : (
-            (() => {
-              // Make regex robust to avoid matching (B) inside math formulas like $n(A) - n(B)$
-              const optARegex = /(?:^|\n|\s{2,}|\t)\(A\)\s*(.*?)(?=\n\s*\(B\)|\s{2,}\(B\)|\t\(B\)|$)/s;
-              const optBRegex = /(?:^|\n|\s{2,}|\t)\(B\)\s*(.*?)(?=\n\s*\(C\)|\s{2,}\(C\)|\t\(C\)|$)/s;
-              const optCRegex = /(?:^|\n|\s{2,}|\t)\(C\)\s*(.*?)(?=\n\s*\(D\)|\s{2,}\(D\)|\t\(D\)|$)/s;
-              const optDRegex = /(?:^|\n|\s{2,}|\t)\(D\)\s*(.*)/s;
-
-              const splitIndexA = block.indexOf('(A)');
-              const questionText = block.substring(0, splitIndexA).trim();
-              const optionsText = block.substring(splitIndexA);
-
-              const matchA = optionsText.match(optARegex);
-              const matchB = optionsText.match(optBRegex);
-              const matchC = optionsText.match(optCRegex);
-              const matchD = optionsText.match(optDRegex);
-
-              const optA = matchA ? matchA[1].trim() : '';
-              const optB = matchB ? matchB[1].trim() : '';
-              const optC = matchC ? matchC[1].trim() : '';
-              const optD = matchD ? matchD[1].trim() : '';
-              const estimateVisualLength = (text: string) => {
-                let s = text.replace(/\\\(|\\\)|\\\[|\\\]|\$/g, ''); // Remove math delimiters
-                s = s.replace(/\\mathbb|\\mathbf|\\text|\\mathrm/g, ''); // Remove formatting commands
-                s = s.replace(/\\[a-zA-Z]+/g, 'X'); // Replace math commands (\subset, \cup, etc) with a single character 'X'
-                s = s.replace(/[{}_^]/g, ''); // Remove brackets and sub/superscripts
-                return s.replace(/\s+/g, ' ').trim().length;
-              };
-
-              const maxLen = Math.max(
-                estimateVisualLength(optA), 
-                estimateVisualLength(optB), 
-                estimateVisualLength(optC), 
-                estimateVisualLength(optD)
-              );
-              
-              let optionsLayout = '';
-              if (maxLen < 10) {
-                optionsLayout = 'grid grid-cols-4 w-full gap-x-2 gap-y-0.5';
-              } else if (maxLen < 85) {
-                optionsLayout = 'grid grid-cols-2 w-full gap-x-2 gap-y-0.5';
-              } else {
-                optionsLayout = 'flex flex-col w-full gap-0.5';
-              }
-
-              // Extract question number for hanging indent
-              const qMatch = questionText.match(/^(\d+)\.\s*/);
-              const qNum = qMatch ? qMatch[1] : '';
-              const qRest = qMatch ? questionText.substring(qMatch[0].length) : questionText;
-
-              return (
-                <div className="mb-1 break-inside-avoid text-[11pt] leading-snug">
-                  <div className="mb-0.5 flex whitespace-pre-wrap" style={{ gap: '0.4em' }}>
-                    <strong className="flex-shrink-0">{qNum}.</strong>
-                    <div dangerouslySetInnerHTML={{ __html: renderLatex(qRest) }} />
-                  </div>
-                  <div className={`ml-6 pr-4 ${optionsLayout}`}>
-                    <div className="flex"><span className="mr-1.5 font-medium">(A)</span> <span dangerouslySetInnerHTML={{ __html: renderLatex(optA) }} /></div>
-                    <div className="flex"><span className="mr-1.5 font-medium">(B)</span> <span dangerouslySetInnerHTML={{ __html: renderLatex(optB) }} /></div>
-                    <div className="flex"><span className="mr-1.5 font-medium">(C)</span> <span dangerouslySetInnerHTML={{ __html: renderLatex(optC) }} /></div>
-                    <div className="flex"><span className="mr-1.5 font-medium">(D)</span> <span dangerouslySetInnerHTML={{ __html: renderLatex(optD) }} /></div>
-                  </div>
-                </div>
-              );
-            })()
-          )}
-          </React.Fragment>
-        );
-
+    if (sections && sections.length > 0) {
+      sections.forEach((section, index) => {
         elements.push(
-          <div key={`${subject}-block-${i}`} className="w-full relative group break-inside-avoid" style={{ marginBottom }}>
-            {blockContent}
+          <div key={`section-header-${section.id}`} className="w-full my-4 break-inside-avoid text-center">
+             <h3 className="font-bold text-[12pt] uppercase">{section.name}</h3>
+             {section.instructions && (
+               <div className="text-left mt-2 flex justify-between items-start text-[10pt] font-medium leading-snug">
+                 <div className="flex-1 mr-4 whitespace-pre-wrap">{section.instructions}</div>
+                 {section.marksPerQuestion && section.totalQuestions && (
+                   <div className="flex-shrink-0 whitespace-nowrap">
+                     {section.totalQuestions} x {section.marksPerQuestion} = {Number(section.totalQuestions) * Number(section.marksPerQuestion)} Marks
+                   </div>
+                 )}
+               </div>
+             )}
           </div>
         );
-      }
-    });
+        parseTextToBlocks(section.content, `section-${section.id}`, elements);
+      });
+    } else if (selectedSubjects && selectedSubjects.length > 0 && subjectContents) {
+      selectedSubjects.forEach(subject => {
+        const subjectText = subjectContents[subject];
+        if (!subjectText || subjectText.trim() === '') return;
+        
+        // Add subject heading
+        elements.push(
+          <div id={`preview-subject-${subject}`} key={`heading-${subject}`} className="w-full text-center my-3 break-before-auto">
+            <h3 className="font-bold text-[13pt] underline underline-offset-4 uppercase">{subject}</h3>
+          </div>
+        );
+        parseTextToBlocks(subjectText, subject, elements);
+      });
+    } else if (content) {
+      parseTextToBlocks(content, 'main-content', elements);
+    }
     
     return elements;
   };
