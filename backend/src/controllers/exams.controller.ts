@@ -268,19 +268,25 @@ export const getResults = async (req: AuthRequest, res: Response, next: NextFunc
     const existingMarkIndex = entry.marks.findIndex(m => m.subject === mark.subject.name);
     
     const subKey = mark.subject.name.toUpperCase().trim();
-    // Resolve actual max marks per subject for this student's class config
     const studentClassId = mark.student.classId || (classId as string);
     const studentClassSubjects = getSubjectsForClassHelper(exam.subjects, studentClassId);
-    let actualMax = 50;
 
-    const foundSub = studentClassSubjects.find((s: any) => s.name?.toUpperCase().trim() === subKey);
-    if (foundSub && foundSub.maxMarks) {
-      actualMax = Number(foundSub.maxMarks);
-    } else if (subjectMaxMap.has(subKey)) {
-      actualMax = subjectMaxMap.get(subKey)!;
-    } else if (mark.maxMarks > 0 && mark.maxMarks <= 200) {
-      actualMax = mark.maxMarks;
+    let actualMax = 50;
+    // 1. Primary ground truth: maxMarks stored directly on the Mark record itself
+    if (mark.maxMarks && Number(mark.maxMarks) > 0 && Number(mark.maxMarks) <= 200) {
+      actualMax = Number(mark.maxMarks);
+    } else {
+      // 2. Secondary fallback: classSpecific subjects config or exam subjects
+      const foundSub = studentClassSubjects.find((s: any) => s.name?.toUpperCase().trim() === subKey);
+      if (foundSub && Number(foundSub.maxMarks) > 0) {
+        actualMax = Number(foundSub.maxMarks);
+      } else if (subjectMaxMap.has(subKey) && subjectMaxMap.get(subKey)! > 0) {
+        actualMax = subjectMaxMap.get(subKey)!;
+      } else {
+        actualMax = 50;
+      }
     }
+    if (actualMax <= 0) actualMax = 50;
 
     if (existingMarkIndex !== -1) {
       entry.total = entry.total - entry.marks[existingMarkIndex].obtained + mark.marksObtained;
@@ -299,8 +305,10 @@ export const getResults = async (req: AuthRequest, res: Response, next: NextFunc
       return a.subject.localeCompare(b.subject);
     });
     
-    const totalMax = s.marks.reduce((sum, m) => sum + m.max, 0);
-    const percentage = totalMax > 0 ? parseFloat(((s.total / totalMax) * 100).toFixed(2)) : 0;
+    // Sum total max marks for only the subjects this student actually has in mark sheet
+    const totalMax = s.marks.reduce((sum, m) => sum + (m.max > 0 ? m.max : 50), 0);
+    const rawPercentage = totalMax > 0 ? (s.total / totalMax) * 100 : 0;
+    const percentage = Math.min(100, parseFloat(rawPercentage.toFixed(2)));
     return { ...s, percentage, grade: calculateGrade(s.total, totalMax) };
   });
 

@@ -103,13 +103,14 @@ export const getMarksReport = async (req: Request, res: Response, next: NextFunc
           studentMap[m.studentId][sub.name] = 'N/A';
         });
       }
+      const markMax = (m.maxMarks && m.maxMarks > 0) ? m.maxMarks : 50;
       studentMap[m.studentId][m.subject.name] = m.marksObtained;
       studentMap[m.studentId].totalObtained += m.marksObtained;
-      studentMap[m.studentId].totalMax += m.maxMarks;
+      studentMap[m.studentId].totalMax += markMax;
     });
 
     const reportData = Object.values(studentMap).map(s => {
-      const percentage = s.totalMax > 0 ? Math.round((s.totalObtained / s.totalMax) * 100) : 0;
+      const percentage = s.totalMax > 0 ? Math.min(100, Math.round((s.totalObtained / s.totalMax) * 100)) : 0;
       let grade = 'F';
       if (percentage >= 90) grade = 'A+';
       else if (percentage >= 80) grade = 'A';

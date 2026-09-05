@@ -13,6 +13,7 @@ export const generateOtp = (): string => {
 };
 
 export const calculateGrade = (obtained: number, max: number): string => {
+  if (!max || max <= 0) return 'F';
   const percentage = (obtained / max) * 100;
   if (percentage >= 95) return 'A+';
   if (percentage >= 90) return 'A';
