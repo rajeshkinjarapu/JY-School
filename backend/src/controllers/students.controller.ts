@@ -132,7 +132,7 @@ export const create = async (req: Request, res: Response, next: NextFunction): P
   // The login ID is exactly the Student ID
   const email = rollNo;
 
-  const plainTextPassword = password || defaultPassword;
+  const plainTextPassword = password || 'Student2026';
   const hashedPassword = await bcrypt.hash(plainTextPassword, 10);
 
   const user = await prisma.user.create({
