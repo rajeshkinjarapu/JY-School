@@ -19,7 +19,6 @@ export const CreateExamPage: React.FC = () => {
   const [classes, setClasses] = useState<any[]>([]);
   const [allDbSubjects, setAllDbSubjects] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
-  const [configMode, setConfigMode] = useState<'CLASS_WISE' | 'GLOBAL'>('CLASS_WISE');
 
   const [examName, setExamName] = useState(editExam?.name || '');
   const [examCategory, setExamCategory] = useState<'JEE' | 'BOARD' | ''>('');
@@ -29,11 +28,6 @@ export const CreateExamPage: React.FC = () => {
     editExam?.examDate 
       ? new Date(editExam.examDate).toISOString().split('T')[0] 
       : new Date().toISOString().split('T')[0]
-  );
-
-  // Global legacy subjects list
-  const [selectedExamSubjects, setSelectedExamSubjects] = useState<{id: string, name: string, maxMarks: number, date?: string}[]>(
-    Array.isArray(editExam?.subjects) ? editExam.subjects : []
   );
 
   // Class-wise subjects configuration map: { [classId]: ClassSubjectConfig }
@@ -49,15 +43,30 @@ export const CreateExamPage: React.FC = () => {
       else setExamCategory('');
 
       // Check if editExam has classConfigs inside subjects
-      if (editExam.subjects && typeof editExam.subjects === 'object' && !Array.isArray(editExam.subjects)) {
-        setConfigMode('CLASS_WISE');
-        if (editExam.subjects.classConfigs) {
-          const cfgMap: any = {};
-          editExam.subjects.classConfigs.forEach((cfg: any) => {
-            cfgMap[cfg.classId] = cfg;
-          });
-          setClassConfigs(cfgMap);
-        }
+      if (editExam.subjects && typeof editExam.subjects === 'object' && !Array.isArray(editExam.subjects) && editExam.subjects.classConfigs) {
+        const cfgMap: any = {};
+        editExam.subjects.classConfigs.forEach((cfg: any) => {
+          cfgMap[cfg.classId] = cfg;
+        });
+        setClassConfigs(cfgMap);
+      } else if (Array.isArray(editExam.subjects) && editExam.subjects.length > 0) {
+        // Old exam saved with array of subjects - populate into classConfigs for each class
+        const initialSubs = editExam.subjects.map((s: any) => ({
+          id: s.id || Date.now().toString() + Math.random(),
+          name: s.name,
+          maxMarks: s.maxMarks || 100,
+          date: s.date || (editExam.examDate ? new Date(editExam.examDate).toISOString().split('T')[0] : examDate)
+        }));
+
+        const cfgMap: any = {};
+        (editExam.classes || []).forEach((cls: any) => {
+          cfgMap[cls.id] = {
+            classId: cls.id,
+            className: `${cls.name} - ${cls.section}`,
+            subjects: initialSubs
+          };
+        });
+        setClassConfigs(cfgMap);
       }
     }
   }, [editExam]);
@@ -272,8 +281,6 @@ export const CreateExamPage: React.FC = () => {
     ? activeClassConfig.subjects.reduce((sum, s) => sum + (Number(s.maxMarks) || 0), 0)
     : 0;
 
-  const globalTotalMarks = selectedExamSubjects.reduce((sum, s) => sum + (Number(s.maxMarks) || 0), 0);
-
   const handleCreateExam = async (e: React.FormEvent) => {
     e.preventDefault();
     if (examClassIds.length === 0) {
@@ -300,9 +307,10 @@ export const CreateExamPage: React.FC = () => {
     });
 
     const fallbackGlobalSubjects = Array.from(mergedSubjectsMap.values());
-    const finalSubjectsPayload = configMode === 'CLASS_WISE'
-      ? { classConfigs: classConfigsList, globalSubjects: fallbackGlobalSubjects }
-      : selectedExamSubjects;
+    const finalSubjectsPayload = {
+      classConfigs: classConfigsList,
+      globalSubjects: fallbackGlobalSubjects
+    };
 
     setLoading(true);
     try {
@@ -311,7 +319,7 @@ export const CreateExamPage: React.FC = () => {
           name: examName,
           classIds: examClassIds,
           examDate: new Date(examDate),
-          maxMarks: configMode === 'CLASS_WISE' ? activeClassTotalMarks : globalTotalMarks,
+          maxMarks: activeClassTotalMarks,
           subjects: finalSubjectsPayload
         });
         toast.success('Exam updated successfully!');
@@ -320,7 +328,7 @@ export const CreateExamPage: React.FC = () => {
           name: examName,
           classIds: examClassIds,
           examDate: new Date(examDate),
-          maxMarks: configMode === 'CLASS_WISE' ? activeClassTotalMarks : globalTotalMarks,
+          maxMarks: activeClassTotalMarks,
           subjects: finalSubjectsPayload
         });
         toast.success('Exam created successfully!');
@@ -414,9 +422,9 @@ export const CreateExamPage: React.FC = () => {
                     <label className="block text-xs font-black text-slate-700 mb-2 uppercase tracking-wide">Mode Total Max Marks</label>
                     <div className="relative">
                       <Hash className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                      <input type="number" readOnly value={configMode === 'CLASS_WISE' ? activeClassTotalMarks : globalTotalMarks} className="w-full pl-12 pr-4 py-3 bg-slate-100 border-2 border-slate-200 rounded-xl text-sm font-bold text-slate-500 outline-none shadow-sm cursor-not-allowed" />
+                      <input type="number" readOnly value={activeClassTotalMarks} className="w-full pl-12 pr-4 py-3 bg-slate-100 border-2 border-slate-200 rounded-xl text-sm font-bold text-slate-500 outline-none shadow-sm cursor-not-allowed" />
                     </div>
-                    <p className="text-[10px] text-slate-500 font-semibold mt-2">Auto-calculated from subjects.</p>
+                    <p className="text-[10px] text-slate-500 font-semibold mt-2">Auto-calculated from class subjects.</p>
                   </div>
                 </div>
               </div>
@@ -425,7 +433,7 @@ export const CreateExamPage: React.FC = () => {
             {/* Subjects Card */}
             <div className="bg-white rounded-[2rem] border border-slate-200/80 shadow-sm p-6 sm:p-8">
               
-              {/* Header & Mode Switcher */}
+              {/* Header */}
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
                 <div>
                   <h2 className="text-base sm:text-lg font-black text-slate-800 flex items-center gap-2.5">
@@ -435,289 +443,181 @@ export const CreateExamPage: React.FC = () => {
                     Subjects & Max Marks Configuration
                   </h2>
                   <p className="text-xs font-bold text-slate-500 mt-1">
-                    {configMode === 'CLASS_WISE' 
-                      ? 'Subjects are auto-fetched per class from database master.' 
-                      : 'Single subject list for all assigned classes.'}
+                    Select a class tab below to customize subjects, exam dates, and max marks for that class.
                   </p>
-                </div>
-
-                <div className="flex items-center bg-slate-100 p-1.5 rounded-2xl border border-slate-200 shrink-0">
-                  <button
-                    type="button"
-                    onClick={() => setConfigMode('CLASS_WISE')}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 ${
-                      configMode === 'CLASS_WISE' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-600 hover:text-slate-900'
-                    }`}
-                  >
-                    <Layers className="w-3.5 h-3.5" /> Class-Wise Auto-Fetch
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setConfigMode('GLOBAL')}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 ${
-                      configMode === 'GLOBAL' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-600 hover:text-slate-900'
-                    }`}
-                  >
-                    Global List
-                  </button>
                 </div>
               </div>
 
               {/* CLASS-WISE SUBJECTS MODE */}
-              {configMode === 'CLASS_WISE' && (
-                <div className="space-y-6">
-                  {examClassIds.length === 0 ? (
-                    <div className="py-12 text-center bg-slate-50/60 border-2 border-dashed border-slate-200 rounded-[2rem]">
-                      <Layers className="w-8 h-8 text-slate-400 mx-auto mb-3" />
-                      <h3 className="text-sm font-black text-slate-700">No Classes Selected</h3>
-                      <p className="text-xs font-bold text-slate-500 mt-1">
-                        Select classes from the right sidebar to view and customize their auto-fetched subjects.
-                      </p>
-                    </div>
-                  ) : (
-                    <>
-                      {/* Bulk Apply Bar */}
-                      <div className="bg-indigo-50/60 border border-indigo-100 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3">
-                        <div className="flex items-center gap-2 text-xs font-black text-indigo-900">
-                          <Copy className="w-4 h-4 text-indigo-600" />
-                          <span>Bulk Apply Max Marks across ALL assigned classes:</span>
-                        </div>
-                        <div className="flex items-center gap-2 w-full sm:w-auto">
-                          <input
-                            type="number"
-                            min={1}
-                            value={bulkMarksInput}
-                            onChange={(e) => setBulkMarksInput(Number(e.target.value))}
-                            className="w-20 px-3 py-1.5 bg-white border border-indigo-200 rounded-xl text-xs font-black text-indigo-900 text-center outline-none"
-                          />
-                          <button
-                            type="button"
-                            onClick={handleApplyBulkMarksToAllClasses}
-                            className="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-xl text-xs font-black shadow-sm transition-all whitespace-nowrap"
-                          >
-                            Apply To All Classes
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Class Tabs */}
-                      <div className="flex items-center gap-2 overflow-x-auto pb-2 custom-scrollbar">
-                        {examClassIds.map((cId) => {
-                          const clsCfg = classConfigs[cId];
-                          const isActive = activeClassTab === cId;
-                          return (
-                            <button
-                              key={cId}
-                              type="button"
-                              onClick={() => setActiveClassTab(cId)}
-                              className={`px-4 py-2.5 rounded-xl text-xs font-black transition-all flex items-center gap-2 border shrink-0 ${
-                                isActive
-                                  ? 'bg-indigo-600 text-white border-indigo-600 shadow-md scale-[1.02]'
-                                  : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
-                              }`}
-                            >
-                              <span>{clsCfg?.className || cId}</span>
-                              <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${
-                                isActive ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-600'
-                              }`}>
-                                {clsCfg?.subjects?.length || 0} subs
-                              </span>
-                            </button>
-                          );
-                        })}
-                      </div>
-
-                      {/* Active Class Subjects Editor */}
-                      {activeClassConfig && (
-                        <div className="bg-slate-50/80 rounded-2xl border border-slate-200/80 p-5 space-y-4">
-                          <div className="flex justify-between items-center pb-3 border-b border-slate-200/60">
-                            <div>
-                              <h3 className="text-sm font-black text-slate-800">
-                                {activeClassConfig.className} Subjects
-                              </h3>
-                              <p className="text-[11px] font-bold text-slate-500 mt-0.5">
-                                Total Class Max Marks: <span className="text-indigo-600 font-black">{activeClassTotalMarks} Marks</span>
-                              </p>
-                            </div>
-                            <div className="flex flex-wrap items-center gap-2">
-                              <button
-                                type="button"
-                                onClick={() => handleCopyClassConfigToAll(activeClassTab)}
-                                className="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 px-2.5 py-1.5 rounded-lg text-[11px] font-black shadow-sm flex items-center gap-1"
-                                title="Copy these exact subjects and marks to all other selected classes"
-                              >
-                                <Copy className="w-3.5 h-3.5" /> Copy to All Classes
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => handleApplyBulkMarksToClass(activeClassTab, 50)}
-                                className="bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 px-2.5 py-1.5 rounded-lg text-[11px] font-bold shadow-sm"
-                              >
-                                Set All 50M
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => handleApplyBulkMarksToClass(activeClassTab, 100)}
-                                className="bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 px-2.5 py-1.5 rounded-lg text-[11px] font-bold shadow-sm"
-                              >
-                                Set All 100M
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => addSubjectToClass(activeClassTab)}
-                                className="bg-indigo-600 text-white hover:bg-indigo-700 px-3 py-1.5 rounded-lg text-xs font-black flex items-center gap-1.5 shadow-sm"
-                              >
-                                <Plus className="w-3.5 h-3.5" /> Add Subject
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => handleClearClassSubjects(activeClassTab)}
-                                className="bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 px-2.5 py-1.5 rounded-lg text-[11px] font-bold shadow-sm"
-                              >
-                                Clear All
-                              </button>
-                            </div>
-                          </div>
-
-                          <div className="space-y-3">
-                            {activeClassConfig.subjects.map((sub, i) => (
-                              <div key={sub.id || i} className="flex flex-col sm:flex-row gap-3 bg-white p-3.5 rounded-xl border border-slate-200/70 shadow-sm relative group items-center">
-                                <div className="flex-1 w-full">
-                                  <label className="block text-[10px] font-bold text-slate-400 mb-1 uppercase tracking-wider">Subject Name</label>
-                                  <input
-                                    type="text"
-                                    required
-                                    value={sub.name}
-                                    onChange={(e) => updateSubjectInClass(activeClassTab, i, 'name', e.target.value)}
-                                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-800 outline-none focus:border-indigo-400 focus:bg-white"
-                                  />
-                                </div>
-                                <div className="w-full sm:w-36">
-                                  <label className="block text-[10px] font-bold text-slate-400 mb-1 uppercase tracking-wider">Exam Date</label>
-                                  <input
-                                    type="date"
-                                    value={sub.date || ''}
-                                    onChange={(e) => updateSubjectInClass(activeClassTab, i, 'date', e.target.value)}
-                                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-800 outline-none focus:border-indigo-400 focus:bg-white"
-                                  />
-                                </div>
-                                <div className="w-full sm:w-28">
-                                  <label className="block text-[10px] font-bold text-slate-400 mb-1 uppercase tracking-wider">Max Marks</label>
-                                  <input
-                                    type="number"
-                                    required
-                                    min={1}
-                                    value={sub.maxMarks}
-                                    onChange={(e) => updateSubjectInClass(activeClassTab, i, 'maxMarks', Number(e.target.value))}
-                                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-indigo-700 text-center outline-none focus:border-indigo-400 focus:bg-white"
-                                  />
-                                </div>
-                                <button
-                                  type="button"
-                                  onClick={() => removeSubjectFromClass(activeClassTab, i)}
-                                  className="text-red-400 hover:text-red-600 p-1.5 rounded-lg hover:bg-red-50 transition-colors"
-                                  title="Remove Subject"
-                                >
-                                  <X className="w-4 h-4" />
-                                </button>
-                              </div>
-                            ))}
-
-                            {activeClassConfig.subjects.length === 0 && (
-                              <div className="py-8 text-center text-xs font-bold text-slate-400">
-                                No subjects for this class. Click "Add Subject" to add one.
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      )}
-                    </>
-                  )}
-                </div>
-              )}
-
-              {/* GLOBAL SINGLE LIST MODE */}
-              {configMode === 'GLOBAL' && (
-                <div className="space-y-4">
-                  <div className="flex justify-end mb-2">
-                    <button 
-                      type="button" 
-                      onClick={() => setSelectedExamSubjects([...selectedExamSubjects, { id: Date.now().toString(), name: '', maxMarks: 100, date: examDate }])}
-                      className="bg-indigo-50 text-indigo-600 hover:bg-indigo-100 px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 transition-colors shadow-sm"
-                    >
-                      <Plus className="w-4 h-4" /> Add Subject
-                    </button>
+              <div className="space-y-6">
+                {examClassIds.length === 0 ? (
+                  <div className="py-12 text-center bg-slate-50/60 border-2 border-dashed border-slate-200 rounded-[2rem]">
+                    <Layers className="w-8 h-8 text-slate-400 mx-auto mb-3" />
+                    <h3 className="text-sm font-black text-slate-700">No Classes Selected</h3>
+                    <p className="text-xs font-bold text-slate-500 mt-1">
+                      Select classes from the right sidebar to view and customize their subjects.
+                    </p>
                   </div>
-
-                  {selectedExamSubjects.map((sub, i) => (
-                    <div key={sub.id || i} className="flex flex-col sm:flex-row gap-3 bg-slate-50 p-4 rounded-2xl border border-slate-100 shadow-sm relative group">
-                      <div className="flex-1">
-                        <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase tracking-wider">Subject Name</label>
-                        <input 
-                          type="text" 
-                          required 
-                          placeholder="e.g. Mathematics" 
-                          value={sub.name}
-                          onChange={(e) => {
-                            const newSubs = [...selectedExamSubjects];
-                            newSubs[i].name = e.target.value;
-                            setSelectedExamSubjects(newSubs);
-                          }}
-                          className="w-full px-3 py-2.5 bg-white border-2 border-slate-200 rounded-xl text-sm font-bold text-slate-800 outline-none focus:border-indigo-400 transition-colors"
-                        />
+                ) : (
+                  <>
+                    {/* Bulk Apply Bar */}
+                    <div className="bg-indigo-50/60 border border-indigo-100 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+                      <div className="flex items-center gap-2 text-xs font-black text-indigo-900">
+                        <Copy className="w-4 h-4 text-indigo-600" />
+                        <span>Bulk Apply Max Marks across ALL assigned classes:</span>
                       </div>
-                      <div className="w-full sm:w-40">
-                        <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase tracking-wider">Exam Date</label>
-                        <input 
-                          type="date"
-                          value={sub.date || ''}
-                          onChange={(e) => {
-                            const newSubs = [...selectedExamSubjects];
-                            newSubs[i].date = e.target.value;
-                            setSelectedExamSubjects(newSubs);
-                          }}
-                          className="w-full px-3 py-2.5 bg-white border-2 border-slate-200 rounded-xl text-sm font-bold text-slate-800 outline-none focus:border-indigo-400 transition-colors"
-                        />
-                      </div>
-                      <div className="w-full sm:w-28">
-                        <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase tracking-wider">Max Marks</label>
-                        <input 
-                          type="number" 
-                          required
+                      <div className="flex items-center gap-2 w-full sm:w-auto">
+                        <input
+                          type="number"
                           min={1}
-                          value={sub.maxMarks}
-                          onChange={(e) => {
-                            const newSubs = [...selectedExamSubjects];
-                            newSubs[i].maxMarks = Number(e.target.value);
-                            setSelectedExamSubjects(newSubs);
-                          }}
-                          className="w-full px-3 py-2.5 bg-white border-2 border-slate-200 rounded-xl text-sm font-bold text-indigo-700 outline-none focus:border-indigo-400 text-center transition-colors"
+                          value={bulkMarksInput}
+                          onChange={(e) => setBulkMarksInput(Number(e.target.value))}
+                          className="w-20 px-3 py-1.5 bg-white border border-indigo-200 rounded-xl text-xs font-black text-indigo-900 text-center outline-none"
                         />
+                        <button
+                          type="button"
+                          onClick={handleApplyBulkMarksToAllClasses}
+                          className="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-xl text-xs font-black shadow-sm transition-all whitespace-nowrap"
+                        >
+                          Apply To All Classes
+                        </button>
                       </div>
-                      
-                      <button 
-                        type="button"
-                        onClick={() => setSelectedExamSubjects(selectedExamSubjects.filter((_, idx) => idx !== i))}
-                        className="absolute -top-3 -right-3 w-8 h-8 bg-white border-2 border-slate-100 text-red-500 hover:bg-red-50 hover:border-red-100 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all shadow-sm"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
                     </div>
-                  ))}
-                  
-                  {selectedExamSubjects.length === 0 && (
-                    <div className="py-12 flex flex-col items-center justify-center text-center bg-slate-50/60 border-2 border-dashed border-slate-200 rounded-[2rem]">
-                      <div className="w-14 h-14 bg-white rounded-full flex items-center justify-center shadow-md mb-4 text-slate-400">
-                        <Edit3 className="w-6 h-6" />
+
+                    {/* Class Tabs */}
+                    <div className="flex items-center gap-2 overflow-x-auto pb-2 custom-scrollbar">
+                      {examClassIds.map((cId) => {
+                        const clsCfg = classConfigs[cId];
+                        const isActive = activeClassTab === cId;
+                        return (
+                          <button
+                            key={cId}
+                            type="button"
+                            onClick={() => setActiveClassTab(cId)}
+                            className={`px-4 py-2.5 rounded-xl text-xs font-black transition-all flex items-center gap-2 border shrink-0 ${
+                              isActive
+                                ? 'bg-indigo-600 text-white border-indigo-600 shadow-md scale-[1.02]'
+                                : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                            }`}
+                          >
+                            <span>{clsCfg?.className || cId}</span>
+                            <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${
+                              isActive ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-600'
+                            }`}>
+                              {clsCfg?.subjects?.length || 0} subs
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {/* Active Class Subjects Editor */}
+                    {activeClassConfig && (
+                      <div className="bg-slate-50/80 rounded-2xl border border-slate-200/80 p-5 space-y-4">
+                        <div className="flex justify-between items-center pb-3 border-b border-slate-200/60">
+                          <div>
+                            <h3 className="text-sm font-black text-slate-800">
+                              {activeClassConfig.className} Subjects
+                            </h3>
+                            <p className="text-[11px] font-bold text-slate-500 mt-0.5">
+                              Total Class Max Marks: <span className="text-indigo-600 font-black">{activeClassTotalMarks} Marks</span>
+                            </p>
+                          </div>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => handleCopyClassConfigToAll(activeClassTab)}
+                              className="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 px-2.5 py-1.5 rounded-lg text-[11px] font-black shadow-sm flex items-center gap-1"
+                              title="Copy these exact subjects and marks to all other selected classes"
+                            >
+                              <Copy className="w-3.5 h-3.5" /> Copy to All Classes
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleApplyBulkMarksToClass(activeClassTab, 50)}
+                              className="bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 px-2.5 py-1.5 rounded-lg text-[11px] font-bold shadow-sm"
+                            >
+                              Set All 50M
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleApplyBulkMarksToClass(activeClassTab, 100)}
+                              className="bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 px-2.5 py-1.5 rounded-lg text-[11px] font-bold shadow-sm"
+                            >
+                              Set All 100M
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => addSubjectToClass(activeClassTab)}
+                              className="bg-indigo-600 text-white hover:bg-indigo-700 px-3 py-1.5 rounded-lg text-xs font-black flex items-center gap-1.5 shadow-sm"
+                            >
+                              <Plus className="w-3.5 h-3.5" /> Add Subject
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleClearClassSubjects(activeClassTab)}
+                              className="bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 px-2.5 py-1.5 rounded-lg text-[11px] font-bold shadow-sm"
+                            >
+                              Clear All
+                            </button>
+                          </div>
+                        </div>
+
+                        <div className="space-y-3">
+                          {activeClassConfig.subjects.map((sub, i) => (
+                            <div key={sub.id || i} className="flex flex-col sm:flex-row gap-3 bg-white p-3.5 rounded-xl border border-slate-200/70 shadow-sm relative group items-center">
+                              <div className="flex-1 w-full">
+                                <label className="block text-[10px] font-bold text-slate-400 mb-1 uppercase tracking-wider">Subject Name</label>
+                                <input
+                                  type="text"
+                                  required
+                                  value={sub.name}
+                                  onChange={(e) => updateSubjectInClass(activeClassTab, i, 'name', e.target.value)}
+                                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-800 outline-none focus:border-indigo-400 focus:bg-white"
+                                />
+                              </div>
+                              <div className="w-full sm:w-36">
+                                <label className="block text-[10px] font-bold text-slate-400 mb-1 uppercase tracking-wider">Exam Date</label>
+                                <input
+                                  type="date"
+                                  value={sub.date || ''}
+                                  onChange={(e) => updateSubjectInClass(activeClassTab, i, 'date', e.target.value)}
+                                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-800 outline-none focus:border-indigo-400 focus:bg-white"
+                                />
+                              </div>
+                              <div className="w-full sm:w-28">
+                                <label className="block text-[10px] font-bold text-slate-400 mb-1 uppercase tracking-wider">Max Marks</label>
+                                <input
+                                  type="number"
+                                  required
+                                  min={1}
+                                  value={sub.maxMarks}
+                                  onChange={(e) => updateSubjectInClass(activeClassTab, i, 'maxMarks', Number(e.target.value))}
+                                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-indigo-700 text-center outline-none focus:border-indigo-400 focus:bg-white"
+                                />
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => removeSubjectFromClass(activeClassTab, i)}
+                                className="text-red-400 hover:text-red-600 p-1.5 rounded-lg hover:bg-red-50 transition-colors"
+                                title="Remove Subject"
+                              >
+                                <X className="w-4 h-4" />
+                              </button>
+                            </div>
+                          ))}
+
+                          {activeClassConfig.subjects.length === 0 && (
+                            <div className="py-8 text-center text-xs font-bold text-slate-400">
+                              No subjects for this class. Click "Add Subject" to add one.
+                            </div>
+                          )}
+                        </div>
                       </div>
-                      <h3 className="text-sm font-black text-slate-700">No Subjects Added</h3>
-                      <p className="text-xs font-bold text-slate-500 mt-2 max-w-xs leading-relaxed">
-                        Click the "Add Subject" button above to start configuring the exam structure.
-                      </p>
-                    </div>
-                  )}
-                </div>
-              )}
+                    )}
+                  </>
+                )}
+              </div>
             </div>
           </div>
 
