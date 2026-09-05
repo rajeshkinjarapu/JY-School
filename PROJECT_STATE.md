@@ -1,7 +1,7 @@
 # Project State
 
-- Teacher Registration లో వచ్చిన 409 Conflict (`Request failed with status code 409`) సమస్య పర్మినెంట్ గా ఫిక్స్ చేయబడింది.
-- `teachers.controller.ts` లో `deleteTeacher` చేసినప్పుడు సంబంధిత `User` రికార్డ్ కూడా డిలీట్ అయ్యేలా ప్రొవైడ్ చేయబడింది. అలాగే `create` లో orphan User రికార్డులను ఆటో-క్లీనప్ చేసే లాజిక్ జోడించబడింది.
+- Teacher Registration 409 Conflict (`Request failed with status code 409`) మరియు Exam Subject Configuration అప్‌డేట్‌లు పూర్తి చేయబడ్డాయి.
+- `teachers.controller.ts` లో `deleteTeacher` చేసినప్పుడు సంబంధిత `User` రికార్డ్ కూడా డిలీట్ అయ్యేలా సెట్ చేశాం. అలాగే `create` లో orphan User రికార్డులను (No Teacher/Student profile) ఆటో-క్లీనప్ చేసి సృష్టించే లాజిక్ జోడించబడింది.
 - Frontend లో Toast Notifications అన్నిటికీ generic status code కాకుండా స్పష్టమైన ఎర్రర్ మెసేజ్ (`error.response?.data?.message`) డిస్‌ప్లే అయ్యేలా `TeacherFormPage`, `TeacherListPage`, `StudentFormPage` మార్చబడ్డాయి.
 - Class-Wise Auto-Fetching Exam Subjects & Custom Max Marks ఫీచర్ VPS సర్వర్‌లో 100% విజయవంతంగా డెప్లాయ్ చేయబడింది. PM2 backend రన్నింగ్‌లో ఉంది.
 - `exams.controller.ts` లో వస్తున్న TS1184 కాంపైలేషన్ ఎర్రర్ ని `getSubjectsForClassHelper` ని top-level scope కి మార్చి పర్మినెంట్ గా ఫిక్స్ చేయబడింది.

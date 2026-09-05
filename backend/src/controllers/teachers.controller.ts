@@ -75,10 +75,18 @@ export const create = async (req: AuthRequest, res: Response, next: NextFunction
 
   const existing = await prisma.user.findUnique({ where: { email } });
   if (existing) {
-    const existingTeacher = await prisma.teacher.findUnique({ where: { userId: existing.id } });
-    if (!existingTeacher && existing.role === 'TEACHER') {
-      // Clean up orphan user record from a previously incomplete or deleted teacher
+    const [existingTeacher, existingStudent] = await Promise.all([
+      prisma.teacher.findUnique({ where: { userId: existing.id } }),
+      prisma.student.findUnique({ where: { userId: existing.id } }),
+    ]);
+
+    if (!existingTeacher && !existingStudent && existing.role !== 'SUPER_ADMIN' && existing.role !== 'ADMIN') {
+      // Clean up orphan user record from a previously incomplete or deleted record
       await prisma.user.delete({ where: { id: existing.id } });
+    } else if (existingTeacher) {
+      return next(createError(`Teacher profile with email '${email}' already exists in the faculty.`, 409));
+    } else if (existingStudent) {
+      return next(createError(`A student is already registered with email '${email}'.`, 409));
     } else {
       return next(createError(`Email '${email}' is already registered in the system.`, 409));
     }
