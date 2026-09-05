@@ -32,8 +32,8 @@ class QuestionBankDashboardScreen extends StatelessWidget {
         'route': '/question-bank/saved',
       },
       {
-        'title': 'Navodaya Paper Generator',
-        'description': 'Navodaya Mathematics',
+        'title': 'Question Paper Generator',
+        'description': 'Dual-layout Question Paper Creator',
         'icon': Icons.check_circle_outline,
         'color1': const Color(0xFFEA580C), // from-orange-600
         'color2': const Color(0xFFFB923C), // to-orange-400

@@ -483,7 +483,7 @@ export const NavodayaPaperGeneratorPage = () => {
   return (
     <div ref={containerRef} className="flex flex-col h-full bg-gray-50/50 print:block" style={{ minHeight: 'calc(100vh - 64px)' }}>
       <PageHeader 
-        title="Navodaya Paper Generator" 
+        title="Question Paper Generator" 
         icon={<FileText className="w-5 h-5 text-white" />} 
       />
       

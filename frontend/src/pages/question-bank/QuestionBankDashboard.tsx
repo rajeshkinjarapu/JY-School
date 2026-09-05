@@ -12,7 +12,7 @@ export const QuestionBankDashboard = () => {
   const tools = [
     { title: 'AI Paper Generator', description: 'Dual-layout paper creator', icon: FileUp, color: 'from-blue-700 to-indigo-500' },
     { title: 'Saved AI Papers', description: 'View and edit saved papers', icon: FileText, color: 'from-sky-600 to-cyan-500' },
-    { title: 'Navodaya Paper Generator', description: 'Navodaya Mathematics', icon: CheckCircle, color: 'from-orange-600 to-orange-400' },
+    { title: 'Question Paper Generator', description: 'Dual-layout Question Paper Creator', icon: CheckCircle, color: 'from-orange-600 to-orange-400' },
     { title: 'MCQ Paper Generator', description: 'Custom MCQ Papers', icon: List, color: 'from-emerald-600 to-emerald-400' },
     { title: 'Answer Key', description: 'Manage & generate answer keys', icon: Key, color: 'from-rose-600 to-rose-400' },
   ];
@@ -35,7 +35,7 @@ export const QuestionBankDashboard = () => {
                 else if (tool.title === 'Paper Generator') navigate('/question-bank/papers/new');
                 else if (tool.title === 'AI Paper Generator') navigate('/question-bank/generator');
                 else if (tool.title === 'Saved AI Papers') navigate('/question-bank/saved-papers');
-                else if (tool.title === 'Navodaya Paper Generator') navigate('/question-bank/navodaya-generator');
+                else if (tool.title === 'Question Paper Generator' || tool.title === 'Navodaya Paper Generator') navigate('/question-bank/navodaya-generator');
                 else if (tool.title === 'MCQ Paper Generator') navigate('/question-bank/mcq-generator');
                 else if (tool.title === 'Answer Key') navigate('/answer-key');
                 else if (tool.title === 'Dashboard') navigate('/question-bank');

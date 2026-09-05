@@ -42,7 +42,7 @@ class _NavodayaPaperGeneratorScreenState extends State<NavodayaPaperGeneratorScr
         centerTitle: true,
         iconTheme: const IconThemeData(color: Color(0xFF1E293B)),
         title: Text(
-          'AI Paper Generator',
+          'Question Paper Generator',
           style: GoogleFonts.outfit(
             color: const Color(0xFF1E293B),
             fontSize: 20,
