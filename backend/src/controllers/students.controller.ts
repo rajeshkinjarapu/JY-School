@@ -51,7 +51,7 @@ export const getAll = async (req: AuthRequest, res: Response, next: NextFunction
         take: limit,
         orderBy: { rollNo: 'asc' },
         include: {
-          user: { select: { id: true, name: true, email: true, phone: true, photoUrl: limit <= 50, isActive: true } },
+          user: { select: { id: true, name: true, email: true, phone: true, photoUrl: true, isActive: true } },
           class: { select: { id: true, name: true, section: true } },
         },
       }),
