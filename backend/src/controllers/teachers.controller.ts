@@ -43,8 +43,14 @@ export const getAll = async (req: AuthRequest, res: Response): Promise<void> => 
 
 export const getById = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   const id = req.params.id as string;
-  const teacher = await prisma.teacher.findUnique({
-    where: { id },
+  const teacher = await prisma.teacher.findFirst({
+    where: {
+      OR: [
+        { id },
+        { userId: id },
+        { employeeId: id }
+      ]
+    },
     include: {
       user: { select: { id: true, name: true, email: true, phone: true, photoUrl: true, isActive: true, createdAt: true } },
       classSubjectTeachers: {

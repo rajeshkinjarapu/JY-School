@@ -1,5 +1,6 @@
 # Project State
 
+- Student Profile Page లో వస్తున్న `Student profile not found` ఎర్రర్‌ను సరిచేయడానికి backend controller లో `id`, `userId`, `rollNo` ఆధారంగా ప్రొఫైల్ లోడ్ అయ్యేలా `getById` అప్‌డేట్ చేయబడింది.
 - Flutter Mobile App లో `teacher_attendance_screen.dart` లోని "Submit Attendance" బటన్ ఆండ్రాయిడ్ System Navigation Bar తో ఓవర్‌లాప్ కాకుండా `SafeArea(bottom: true)` జోడించి ఫిక్స్ చేయబడింది.
 - Backend Build & Deployment VPS సర్వర్‌లో 100% విజయవంతంగా పూర్తయింది. PM2 backend రన్నింగ్‌లో ఉంది.
 - Teachers & Students ఫొటోలు లోడ్ కాకపోవడం అనే సమస్య `photoUrl: true` గా మార్చి పర్మినెంట్ గా ఫిక్స్ చేయబడింది.
@@ -11,6 +12,7 @@
 - Student App, Admin App, Universal App లకు కూడా Shorebird Release & Patch workflows ని కరెక్ట్ గా కన్ఫిగర్ చేసి ధృవీకరించడం జరిగింది.
 - Students కి డీఫాల్ట్ పాస్‌వర్డ్ ని `Student2026` గా మార్చడం జరిగింది (Manual & Bulk Import రెండింటిలోనూ).
 - Flutter App Results Screen లో అనవసరంగా వస్తున్న `MATHEMATICS` బగ్ (Max 210) డేటాబేస్ లోని dirty data వల్ల వస్తుందని గుర్తించి, దాన్ని VPS లో నేరుగా SQL/Prisma స్క్రిప్ట్ ద్వారా తొలగించడం జరిగింది.
+
 
 
 
