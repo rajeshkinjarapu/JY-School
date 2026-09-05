@@ -99,13 +99,14 @@ export const StudentListPage: React.FC = () => {
         params: { search, classId, limit: LIMIT, page },
       });
       const data = response.data.data || response.data || [];
-      const totalCount = response.data.meta?.total || data.length;
+      const totalCount = response.data.pagination?.total || response.data.meta?.total || data.length;
       
       setStudents(data);
       setTotal(totalCount);
       
       if (!search && !classId && page === 1) {
         localStorage.setItem('sl_total_cache', String(totalCount));
+        DataCache.set('students', data);
       }
     } catch (err: any) {
       console.error("Failed to load students:", err);
