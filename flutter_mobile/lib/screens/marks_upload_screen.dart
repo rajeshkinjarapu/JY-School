@@ -343,10 +343,23 @@ class _MarksUploadScreenState extends State<MarksUploadScreen> {
         if (_selectedClassId != null && examSubjects['classConfigs'] != null && examSubjects['classConfigs'] is List) {
           final configs = examSubjects['classConfigs'] as List<dynamic>;
           final matchingCfg = configs.firstWhere((c) => c['classId'] == _selectedClassId, orElse: () => null);
-          if (matchingCfg != null && matchingCfg['subjects'] != null) {
+          if (matchingCfg != null && matchingCfg['subjects'] != null && (matchingCfg['subjects'] as List).isNotEmpty) {
             examSubjects = matchingCfg['subjects'];
-          } else if (examSubjects['globalSubjects'] != null) {
+          } else if (examSubjects['globalSubjects'] != null && examSubjects['globalSubjects'] is List && (examSubjects['globalSubjects'] as List).isNotEmpty) {
             examSubjects = examSubjects['globalSubjects'];
+          } else {
+            // FALLBACK: If matching class not found or empty, collect all unique subjects from all classes!
+            final allSubjects = <String, dynamic>{};
+            for (var cfg in configs) {
+              if (cfg['subjects'] is List) {
+                for (var sub in (cfg['subjects'] as List)) {
+                  if (sub is Map && sub['name'] != null) {
+                    allSubjects[sub['name'].toString().toLowerCase()] = sub;
+                  }
+                }
+              }
+            }
+            examSubjects = allSubjects.values.toList();
           }
         } else if (examSubjects['globalSubjects'] != null) {
           examSubjects = examSubjects['globalSubjects'];
