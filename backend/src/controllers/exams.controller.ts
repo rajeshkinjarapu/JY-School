@@ -561,10 +561,30 @@ export const getAllStatus = async (req: AuthRequest, res: Response, next: NextFu
            return true;
          });
          
-         if (Array.isArray(examAllowedSubjects) && examAllowedSubjects.length > 0) {
-           const allowedNames = examAllowedSubjects.map((s: any) => s.name?.trim().toUpperCase());
-           classSubjects = classSubjects.filter(s => allowedNames.includes(s.name?.trim().toUpperCase()));
-         }
+          let targetSubjectsArray: any[] = [];
+          
+          if (examAllowedSubjects) {
+            if (Array.isArray(examAllowedSubjects)) {
+              targetSubjectsArray = examAllowedSubjects;
+            } else if (typeof examAllowedSubjects === 'object') {
+              if (examAllowedSubjects.classConfigs && Array.isArray(examAllowedSubjects.classConfigs)) {
+                const match = examAllowedSubjects.classConfigs.find((c: any) => c.classId === cls.id);
+                if (match && Array.isArray(match.subjects)) {
+                  targetSubjectsArray = match.subjects;
+                }
+              } else if (Array.isArray(examAllowedSubjects.globalSubjects)) {
+                targetSubjectsArray = examAllowedSubjects.globalSubjects;
+              }
+            }
+          }
+
+          if (targetSubjectsArray.length > 0) {
+            const allowedNames = targetSubjectsArray.map((s: any) => s.name?.trim().toUpperCase()).filter(Boolean);
+            classSubjects = classSubjects.filter(s => allowedNames.includes(s.name?.trim().toUpperCase()));
+          } else if (examAllowedSubjects && typeof examAllowedSubjects === 'object' && examAllowedSubjects.classConfigs) {
+            // If classConfigs is used but this class has no subjects configured, it should have 0 subjects.
+            classSubjects = [];
+          }
 
          const enteredSubjectIds = examClassEnteredSubjects[exam.id]?.[cls.id] || new Set<string>();
          
