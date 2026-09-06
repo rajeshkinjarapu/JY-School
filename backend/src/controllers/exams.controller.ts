@@ -562,18 +562,19 @@ export const getAllStatus = async (req: AuthRequest, res: Response, next: NextFu
          });
          
           let targetSubjectsArray: any[] = [];
+          const examSubjectsAny: any = examAllowedSubjects;
           
-          if (examAllowedSubjects) {
-            if (Array.isArray(examAllowedSubjects)) {
-              targetSubjectsArray = examAllowedSubjects;
-            } else if (typeof examAllowedSubjects === 'object') {
-              if (examAllowedSubjects.classConfigs && Array.isArray(examAllowedSubjects.classConfigs)) {
-                const match = examAllowedSubjects.classConfigs.find((c: any) => c.classId === cls.id);
+          if (examSubjectsAny) {
+            if (Array.isArray(examSubjectsAny)) {
+              targetSubjectsArray = examSubjectsAny;
+            } else if (typeof examSubjectsAny === 'object') {
+              if (examSubjectsAny.classConfigs && Array.isArray(examSubjectsAny.classConfigs)) {
+                const match = examSubjectsAny.classConfigs.find((c: any) => c.classId === cls.id);
                 if (match && Array.isArray(match.subjects)) {
                   targetSubjectsArray = match.subjects;
                 }
-              } else if (Array.isArray(examAllowedSubjects.globalSubjects)) {
-                targetSubjectsArray = examAllowedSubjects.globalSubjects;
+              } else if (Array.isArray(examSubjectsAny.globalSubjects)) {
+                targetSubjectsArray = examSubjectsAny.globalSubjects;
               }
             }
           }
@@ -581,7 +582,7 @@ export const getAllStatus = async (req: AuthRequest, res: Response, next: NextFu
           if (targetSubjectsArray.length > 0) {
             const allowedNames = targetSubjectsArray.map((s: any) => s.name?.trim().toUpperCase()).filter(Boolean);
             classSubjects = classSubjects.filter(s => allowedNames.includes(s.name?.trim().toUpperCase()));
-          } else if (examAllowedSubjects && typeof examAllowedSubjects === 'object' && examAllowedSubjects.classConfigs) {
+          } else if (examSubjectsAny && typeof examSubjectsAny === 'object' && examSubjectsAny.classConfigs) {
             // If classConfigs is used but this class has no subjects configured, it should have 0 subjects.
             classSubjects = [];
           }
