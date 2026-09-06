@@ -56,8 +56,17 @@ export const MarksEntryPage: React.FC = () => {
       setStudents(studentsRes.data || []);
 
       // Get subjects from exam JSON
-      const rawExamSubjects = Array.isArray(examObj.subjects) ? examObj.subjects : [];
-      const examSubjects = rawExamSubjects;
+      let examSubjects: any[] = [];
+      if (examObj.subjects && typeof examObj.subjects === 'object' && !Array.isArray(examObj.subjects) && examObj.subjects.classConfigs) {
+        const classConfig = examObj.subjects.classConfigs.find((cfg: any) => cfg.classId === classId);
+        if (classConfig && classConfig.subjects && classConfig.subjects.length > 0) {
+          examSubjects = classConfig.subjects;
+        } else if (examObj.subjects.globalSubjects && Array.isArray(examObj.subjects.globalSubjects)) {
+          examSubjects = examObj.subjects.globalSubjects;
+        }
+      } else if (Array.isArray(examObj.subjects)) {
+        examSubjects = examObj.subjects;
+      }
       setSubjects(examSubjects);
 
       // Map existing marks

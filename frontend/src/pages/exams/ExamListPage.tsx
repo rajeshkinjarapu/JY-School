@@ -1944,9 +1944,13 @@ export const ExamListPage: React.FC = () => {
                           if (!qpExamId) return subjects;
                           const selectedExam = exams.find(e => e.id === qpExamId);
                           if (!selectedExam || !selectedExam.subjects) return [];
-                          const examSubs = Array.isArray(selectedExam.subjects) 
-                            ? selectedExam.subjects 
-                            : (typeof selectedExam.subjects === 'string' ? JSON.parse(selectedExam.subjects) : []);
+                          let examSubs: any[] = [];
+                          const subData = typeof selectedExam.subjects === 'string' ? JSON.parse(selectedExam.subjects) : selectedExam.subjects;
+                          if (subData && typeof subData === 'object' && !Array.isArray(subData) && subData.globalSubjects) {
+                            examSubs = subData.globalSubjects;
+                          } else if (Array.isArray(subData)) {
+                            examSubs = subData;
+                          }
                           
                           return examSubs.map((es: any) => {
                             const subId = es.id || es.subjectId || es.subject?.id;
