@@ -87,7 +87,7 @@ class _StudentPayFeeScreenState extends State<StudentPayFeeScreen> {
       final bytes = await _imageFile!.readAsBytes();
       final filename = _imageFile!.name;
 
-      String feeStructureId = _selectedFee['feeStructureId']?.toString() ?? '';
+      String feeStructureId = _selectedFee['feeStructure']?['id']?.toString() ?? '';
 
       final res = await ApiService.studentPayFeeWithScreenshot(
         amount: double.parse(_amountController.text),
@@ -269,7 +269,15 @@ class _StudentPayFeeScreenState extends State<StudentPayFeeScreen> {
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: _imageFile != null
-                              ? ClipRRect(borderRadius: BorderRadius.circular(12), child: kIsWeb ? Image.network(_imageFile!.path, fit: BoxFit.cover) : Image.file(File(_imageFile!.path), fit: BoxFit.cover))
+                              ? ClipRRect(
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: Builder(builder: (context) {
+                                    if (kIsWeb) {
+                                      return Image.network(_imageFile!.path, fit: BoxFit.cover);
+                                    }
+                                    return Image.file(File(_imageFile!.path), fit: BoxFit.cover);
+                                  }),
+                                )
                               : Column(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [

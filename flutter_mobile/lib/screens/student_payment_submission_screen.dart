@@ -128,6 +128,7 @@ class _StudentPaymentSubmissionScreenState extends State<StudentPaymentSubmissio
                     labelStyle: GoogleFonts.poppins(),
                     prefixIcon: const Icon(Icons.receipt_long),
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+                  ),
                 ),
                 const SizedBox(height: 16),
                 
@@ -159,9 +160,12 @@ class _StudentPaymentSubmissionScreenState extends State<StudentPaymentSubmissio
                     child: _imageFile != null
                         ? ClipRRect(
                             borderRadius: BorderRadius.circular(14),
-                            child: kIsWeb 
-                                ? Image.network(_imageFile!.path, fit: BoxFit.cover)
-                                : Image.file(File(_imageFile!.path), fit: BoxFit.cover),
+                            child: Builder(builder: (context) {
+                              if (kIsWeb) {
+                                return Image.network(_imageFile!.path, fit: BoxFit.cover);
+                              }
+                              return Image.file(File(_imageFile!.path), fit: BoxFit.cover);
+                            }),
                           )
                         : Column(
                             mainAxisAlignment: MainAxisAlignment.center,

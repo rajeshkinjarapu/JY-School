@@ -531,26 +531,17 @@ class _ExamsScreenState extends State<ExamsScreen> {
       );
     }
     
-    // Group marks by Exam
-    final Map<String, List<dynamic>> groupedByExam = {};
-    for (var mark in _examResults) {
-      final exam = mark['exam'] ?? {};
-      final examName = exam['name'] ?? 'Unknown Exam';
-      if (!groupedByExam.containsKey(examName)) {
-        groupedByExam[examName] = [];
-      }
-      groupedByExam[examName]!.add(mark);
-    }
-
+    // The backend returns a list of { exam: {}, marks: [] } objects
     return RefreshIndicator(
       onRefresh: _fetchResults,
       color: const Color(0xFF6366F1),
       child: ListView.builder(
         padding: const EdgeInsets.only(top: 10, left: 20, right: 20, bottom: 40),
-        itemCount: groupedByExam.length,
+        itemCount: _examResults.length,
         itemBuilder: (context, index) {
-          final examName = groupedByExam.keys.elementAt(index);
-          final marks = groupedByExam[examName]!;
+          final examResult = _examResults[index];
+          final examName = examResult['exam']?['name'] ?? 'Unknown Exam';
+          final marks = (examResult['marks'] as List?) ?? [];
           
           double totalObtained = 0;
           double totalMax = 0;
@@ -646,7 +637,7 @@ class _ExamsScreenState extends State<ExamsScreen> {
                   ),
                   padding: const EdgeInsets.all(20),
                   child: Column(
-                    children: marks.map((m) {
+                    children: marks.map<Widget>((m) {
                       final subjectName = m['subject']?['name'] ?? 'Unknown';
                       final obtained = m['marksObtained']?.toString() ?? '-';
                       final max = m['maxMarks']?.toString() ?? '-';

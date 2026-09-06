@@ -43,3 +43,6 @@
 - **Flutter Web Image Upload Fix**: Replaced \Image.file\ with a conditional \kIsWeb ? Image.network : Image.file\ in all payment screens and updated file handling to use \XFile\ to prevent UnsupportedError on Web.
 - **Push Notifications Fix (Flutter & Backend)**: Renamed the Android Notification Channel ID to \jyschool_alerts_v1\ across the Flutter App and Backend to bypass Android channel caching. This ensures the app recreates the channel with \Importance.max\ and custom sound enabled, fixing the missing sounds and missing heads-up hero banners.
 - **Made UTR Optional**: Removed the required validation for the UTR field in both student fee payment screens and added '(Optional)' to the label, making only the screenshot mandatory.
+- **Fixed Fee Payment Submission Error**: Corrected the \eeStructureId\ extraction logic in \student_pay_fee_screen.dart\ to ensure the backend does not throw a validation error.
+- **Fixed Student Results Screen Data Mapping**: Corrected the mapping logic in \exams_screen.dart\ because the backend API already grouped the results by exam. Results now display the original subject marks instead of 'Unknown'.
+- **Fixed Syntax Errors**: Fixed missing parenthesis in \student_payment_submission_screen.dart\ and avoided ternary operator for \Image.file\ in \student_pay_fee_screen.dart\ to prevent Web assertion errors.
