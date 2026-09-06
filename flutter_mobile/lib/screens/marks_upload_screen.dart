@@ -355,6 +355,29 @@ class _MarksUploadScreenState extends State<MarksUploadScreen> {
 
       if (examSubjects is List) {
         var subjects = List<dynamic>.from(examSubjects);
+
+        // *** KEY FIX: Replace fake IDs with real DB Subject IDs by name-matching ***
+        final realSubjectsForClass = _subjects.where(
+          (s) => s['classId']?.toString() == _selectedClassId
+        ).toList();
+
+        subjects = subjects.map((examSub) {
+          final examSubName = examSub['name']?.toString().toLowerCase().trim() ?? '';
+          final realMatch = realSubjectsForClass.firstWhere(
+            (rs) => rs['name']?.toString().toLowerCase().trim() == examSubName,
+            orElse: () => null,
+          );
+          if (realMatch != null) {
+            // Return subject with REAL database ID
+            return {
+              'id': realMatch['id'],
+              'name': examSub['name'],
+              'maxMarks': examSub['maxMarks'] ?? realMatch['maxMarks'] ?? 100,
+            };
+          }
+          return examSub;
+        }).toList();
+
         subjects.sort((a, b) {
           final nameA = (a['name']?.toString() ?? '').toLowerCase();
           final nameB = (b['name']?.toString() ?? '').toLowerCase();
@@ -376,6 +399,7 @@ class _MarksUploadScreenState extends State<MarksUploadScreen> {
     }
     return [];
   }
+
 
   Widget _buildFiltersPanel() {
     List<dynamic> filteredClasses = [];
