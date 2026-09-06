@@ -174,7 +174,7 @@ const TeacherAttendancePage: React.FC = () => {
       />
 
       <div className="flex-1 overflow-auto p-4 sm:p-6 md:p-8">
-        <div className="max-w-5xl mx-auto space-y-6">
+        <div className="w-full max-w-[1600px] mx-auto space-y-6">
           <div className="flex justify-end">
         {/* Month Navigator */}
         <div className="flex items-center gap-3 bg-white p-2 rounded-xl shadow-sm border border-gray-100">
@@ -274,7 +274,7 @@ const TeacherAttendancePage: React.FC = () => {
           )}
 
           {/* Teacher Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
             {filteredTeachers.map(t => {
               const status = attendanceMap[t.id] || 'PRESENT';
               const sc = STATUS_COLORS[status] || STATUS_COLORS.PRESENT;
@@ -329,7 +329,7 @@ const TeacherAttendancePage: React.FC = () => {
 
           {/* Sticky Bottom Bar for Admin Actions */}
           <div className="fixed bottom-0 left-0 right-0 md:left-64 z-40 bg-white/80 backdrop-blur-xl border-t border-slate-200/60 shadow-[0_-4px_24px_rgba(0,0,0,0.02)] p-4 animate-slide-up">
-            <div className="max-w-5xl mx-auto flex items-center justify-between gap-4">
+            <div className="w-full max-w-[1600px] mx-auto flex items-center justify-between gap-4">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center">
                   <UserCheck className="w-5 h-5 text-indigo-600" />
