@@ -706,3 +706,201 @@ class _ExamsScreenState extends State<ExamsScreen> {
     );
   }
 }
+
+class ExamResultCard extends StatefulWidget {
+  final String examName;
+  final double percentage;
+  final double totalObtained;
+  final double totalMax;
+  final List<dynamic> marks;
+  const ExamResultCard({Key? key, required this.examName, required this.percentage, required this.totalObtained, required this.totalMax, required this.marks}) : super(key: key);
+  @override
+  _ExamResultCardState createState() => _ExamResultCardState();
+}
+
+class _ExamResultCardState extends State<ExamResultCard> {
+  bool _isExpanded = false;
+  
+  Color _getGradeColor(String grade) {
+    switch (grade) {
+      case 'A+': case 'A': return const Color(0xFF10B981);
+      case 'B+': case 'B': return const Color(0xFF3B82F6);
+      case 'C': return const Color(0xFFF59E0B);
+      case 'D': return const Color(0xFFEF4444);
+      case 'F': default: return const Color(0xFFEF4444);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 24),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF312E81), Color(0xFF4F46E5)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(color: const Color(0xFF4F46E5).withOpacity(0.3), blurRadius: 20, offset: const Offset(0, 10))
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          InkWell(
+            onTap: () {
+              setState(() {
+                _isExpanded = !_isExpanded;
+              });
+            },
+            borderRadius: _isExpanded 
+              ? const BorderRadius.only(topLeft: Radius.circular(24), topRight: Radius.circular(24))
+              : BorderRadius.circular(24),
+            child: Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.1),
+                borderRadius: _isExpanded 
+                  ? const BorderRadius.only(topLeft: Radius.circular(24), topRight: Radius.circular(24))
+                  : BorderRadius.circular(24),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 76,
+                    height: 76,
+                    padding: const EdgeInsets.all(6),
+                    decoration: const BoxDecoration(shape: BoxShape.circle, color: Colors.white),
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        CircularProgressIndicator(
+                          value: widget.percentage,
+                          strokeWidth: 6,
+                          backgroundColor: const Color(0xFFF1F5F9),
+                          children: [
+                            CircularProgressIndicator(
+                              value: widget.percentage,
+                              strokeWidth: 6,
+                              backgroundColor: const Color(0xFFF1F5F9),
+                              valueColor: AlwaysStoppedAnimation<Color>(widget.percentage >= 0.35 ? const Color(0xFF10B981) : const Color(0xFFEF4444)),
+                            ),
+                            Center(
+                              child: Text(
+                                '${(widget.percentage * 100).toStringAsFixed(0)}%',
+                                style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w900, color: const Color(0xFF1E293B)),
+                              ),
+                            )
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 20),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              widget.examName,
+                              style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+                            ),
+                            const SizedBox(height: 8),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withOpacity(0.2),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Text(
+                                    'Total: ${widget.totalObtained.toStringAsFixed(0)} / ${widget.totalMax.toStringAsFixed(0)}',
+                                    style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.white),
+                                  ),
+                                ),
+                                Icon(_isExpanded ? Icons.keyboard_arrow_up_rounded : Icons.keyboard_arrow_down_rounded, color: Colors.white, size: 28),
+                              ],
+                            )
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              if (_isExpanded)
+                Container(
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.only(bottomLeft: Radius.circular(24), bottomRight: Radius.circular(24)),
+                  ),
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    children: widget.marks.map<Widget>((m) {
+                      final subjectName = m['subject']?['name'] ?? 'Unknown';
+                      final obtained = m['marksObtained']?.toString() ?? '-';
+                      final max = m['maxMarks']?.toString() ?? '-';
+                      final grade = m['grade'] ?? '-';
+                      
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 12),
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF8FAFC),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: const Color(0xFFF1F5F9)),
+                          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.01), blurRadius: 4, offset: const Offset(0, 2))],
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(subjectName, style: GoogleFonts.poppins(color: const Color(0xFF1E293B), fontSize: 14, fontWeight: FontWeight.w700)),
+                                  const SizedBox(height: 4),
+                                  Text('Max Marks: $max', style: GoogleFonts.poppins(color: const Color(0xFF64748B), fontSize: 11, fontWeight: FontWeight.w500)),
+                                ],
+                              ),
+                            ),
+                            Row(
+                              children: [
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    Text(obtained, style: GoogleFonts.outfit(color: const Color(0xFF4F46E5), fontSize: 22, fontWeight: FontWeight.w800)),
+                                    Text('Score', style: GoogleFonts.poppins(color: const Color(0xFF94A3B8), fontSize: 10, fontWeight: FontWeight.w700)),
+                                  ],
+                                ),
+                                const SizedBox(width: 16),
+                                Container(
+                                  width: 44,
+                                  height: 44,
+                                  decoration: BoxDecoration(
+                                    color: _getGradeColor(grade).withOpacity(0.15),
+                                    shape: BoxShape.circle,
+                                    border: Border.all(color: _getGradeColor(grade).withOpacity(0.3), width: 2),
+                                  ),
+                                  child: Center(
+                                    child: Text(
+                                      grade,
+                                      style: GoogleFonts.outfit(color: _getGradeColor(grade), fontSize: 16, fontWeight: FontWeight.bold),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            )
+                          ],
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
+            ],
+          ),
+        );
+      }
+    }

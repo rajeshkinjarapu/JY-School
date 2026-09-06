@@ -46,3 +46,5 @@
 - **Fixed Fee Payment Submission Error**: Corrected the \eeStructureId\ extraction logic in \student_pay_fee_screen.dart\ to ensure the backend does not throw a validation error.
 - **Fixed Student Results Screen Data Mapping**: Corrected the mapping logic in \exams_screen.dart\ because the backend API already grouped the results by exam. Results now display the original subject marks instead of 'Unknown'.
 - **Fixed Syntax Errors**: Fixed missing parenthesis in \student_payment_submission_screen.dart\ and avoided ternary operator for \Image.file\ in \student_pay_fee_screen.dart\ to prevent Web assertion errors.
+
+- Made exams list expandable (Subjects and Marks are hidden by default and shown when clicked) to match user preference.

@@ -1,0 +1,1 @@
+const { PrismaClient } = require('@prisma/client'); const prisma = new PrismaClient(); prisma.mark.findMany({ include: { exam: true, subject: true }, take: 10 }).then(m => console.log(JSON.stringify(m, null, 2))).catch(e => console.error(e)).finally(() => prisma.());
