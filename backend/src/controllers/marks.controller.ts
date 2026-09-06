@@ -122,31 +122,71 @@ export const bulkCreate = async (req: AuthRequest, res: Response, next: NextFunc
     const upsertOps: any[] = [];
     
     for (const m of marks) {
-      // Resolve fake subject ID to real subject ID
+      // ── SUBJECT ID RESOLUTION (4-level fallback chain) ──────────────────────
       let realSubjectId = m.subjectId;
+      let resolvedFakeName: string | null = null;
+      let resolvedMaxMarks: number | null = null;
       const classId = studentClassMap.get(m.studentId);
-      const classExamSubjects = getSubjectsForClass(exam?.subjects, classId);
-      const fakeSubject = classExamSubjects.find((s: any) => String(s.id) === String(m.subjectId) || s.name?.toLowerCase() === m.subjectId?.toLowerCase());
       
-      if (fakeSubject) {
-        let matchingRealSubject = realSubjects.find(
-          s => s.classId === classId && s.name.toLowerCase() === fakeSubject.name.toLowerCase()
+      // Level 1: Check if sent subjectId is ALREADY a valid real DB subject ID
+      const directMatch = realSubjects.find(s => s.id === m.subjectId && s.classId === classId);
+      
+      if (directMatch) {
+        realSubjectId = directMatch.id;
+        resolvedFakeName = directMatch.name;
+      } else {
+        // Level 2: Try to find subject via exam's classConfigs by ID or name
+        const classExamSubjects = getSubjectsForClass(exam?.subjects, classId);
+        const fakeSubject = classExamSubjects.find((s: any) => 
+          String(s.id) === String(m.subjectId) || 
+          s.name?.toLowerCase()?.trim() === m.subjectId?.toLowerCase()?.trim()
         );
-        if (matchingRealSubject) {
-          realSubjectId = matchingRealSubject.id;
+        
+        if (fakeSubject) {
+          resolvedFakeName = fakeSubject.name?.trim() || null;
+          resolvedMaxMarks = fakeSubject.maxMarks ? Number(fakeSubject.maxMarks) : null;
+          
+          // Level 3: Find real DB subject by name in same class
+          const matchingReal = realSubjects.find(
+            s => s.classId === classId && s.name.toLowerCase().trim() === (resolvedFakeName || '').toLowerCase().trim()
+          );
+          
+          if (matchingReal) {
+            realSubjectId = matchingReal.id;
+          } else if (classId && resolvedFakeName) {
+            // Level 4: Auto-create subject in DB so FK is always satisfied
+            const created = await prisma.subject.create({
+              data: {
+                name: resolvedFakeName,
+                code: resolvedFakeName.substring(0, 3).toUpperCase(),
+                classId: classId as string
+              }
+            });
+            realSubjects.push(created);
+            realSubjectId = created.id;
+          }
         } else {
-          // Auto-create subject for this class since it's required for the exam!
-          matchingRealSubject = await prisma.subject.create({
-            data: {
-              name: fakeSubject.name.trim(),
-              code: fakeSubject.name.substring(0, 3).toUpperCase(),
-              classId: classId as string
+          // Level 4b: sent ID not in exam subjects — check if it exists in any class
+          const anyMatch = realSubjects.find(s => s.id === m.subjectId);
+          if (anyMatch && classId) {
+            const sameNameSameClass = realSubjects.find(
+              s => s.classId === classId && s.name.toLowerCase().trim() === anyMatch.name.toLowerCase().trim()
+            );
+            if (sameNameSameClass) {
+              realSubjectId = sameNameSameClass.id;
+              resolvedFakeName = sameNameSameClass.name;
+            } else {
+              const created = await prisma.subject.create({
+                data: { name: anyMatch.name, code: anyMatch.name.substring(0, 3).toUpperCase(), classId: classId as string }
+              });
+              realSubjects.push(created);
+              realSubjectId = created.id;
+              resolvedFakeName = created.name;
             }
-          });
-          realSubjects.push(matchingRealSubject);
-          realSubjectId = matchingRealSubject.id;
+          }
         }
       }
+      // ────────────────────────────────────────────────────────────────────────
 
       // Handle 'AB' (Absent) logic
       let finalMarksObtained = m.marksObtained;
@@ -157,20 +197,18 @@ export const bulkCreate = async (req: AuthRequest, res: Response, next: NextFunc
       }
 
       // Enforce actual max marks for this specific subject
-      let actualMaxMarks = 50;
-      if (m.maxMarks && Number(m.maxMarks) > 0 && Number(m.maxMarks) <= 200) {
+      let actualMaxMarks = 100;
+      if (m.maxMarks && Number(m.maxMarks) > 0 && Number(m.maxMarks) <= 1000) {
         actualMaxMarks = Number(m.maxMarks);
-      } else if (fakeSubject && Number(fakeSubject.maxMarks) > 0) {
-        actualMaxMarks = Number(fakeSubject.maxMarks);
+      } else if (resolvedMaxMarks && resolvedMaxMarks > 0) {
+        actualMaxMarks = resolvedMaxMarks;
       } else if (exam?.examPlans && exam.examPlans.length > 0) {
         const plan = exam.examPlans.find((p: any) => p.subjectId === realSubjectId);
         if (plan && Number(plan.maxMarks) > 0) {
           actualMaxMarks = Number(plan.maxMarks);
         }
-      } else {
-        actualMaxMarks = 50;
       }
-      if (actualMaxMarks <= 0) actualMaxMarks = 50;
+      if (actualMaxMarks <= 0) actualMaxMarks = 100;
 
       // Validate max marks
       if (finalMarksObtained > actualMaxMarks && finalRemarks !== 'AB') {
