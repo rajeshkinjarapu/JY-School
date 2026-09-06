@@ -22,9 +22,13 @@ interface AppInstallUser {
 export const AppInstallsPage: React.FC = () => {
   const [users, setUsers] = useState<AppInstallUser[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'STUDENT' | 'TEACHER'>('STUDENT');
+  const [activeTab, setActiveTab] = useState<'ALL' | 'STUDENT' | 'TEACHER' | 'ADMIN'>('ALL');
 
-  const filteredUsers = users.filter(user => user.role === activeTab);
+  const filteredUsers = activeTab === 'ALL' 
+    ? users 
+    : (activeTab === 'ADMIN' 
+        ? users.filter(user => ['ADMIN', 'SUPER_ADMIN'].includes(user.role)) 
+        : users.filter(user => user.role === activeTab));
 
   const fetchInstalls = async () => {
     setLoading(true);
@@ -46,6 +50,8 @@ export const AppInstallsPage: React.FC = () => {
     switch (role) {
       case 'STUDENT': return <span className="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full dark:bg-blue-900/30 dark:text-blue-300">Student</span>;
       case 'TEACHER': return <span className="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full dark:bg-green-900/30 dark:text-green-300">Teacher</span>;
+      case 'ADMIN':
+      case 'SUPER_ADMIN': return <span className="px-2 py-1 text-xs font-medium bg-purple-100 text-purple-800 rounded-full dark:bg-purple-900/30 dark:text-purple-300">{role.replace('_', ' ')}</span>;
       default: return <span className="px-2 py-1 text-xs font-medium bg-gray-100 text-gray-800 rounded-full dark:bg-gray-800 dark:text-gray-300">{role}</span>;
     }
   };
@@ -79,7 +85,18 @@ export const AppInstallsPage: React.FC = () => {
       </div>
 
       {/* Tabs */}
-      <div className="flex space-x-2 bg-gray-100/50 dark:bg-gray-800/50 p-1 rounded-xl w-fit border border-gray-200 dark:border-gray-700">
+      <div className="flex space-x-2 bg-gray-100/50 dark:bg-gray-800/50 p-1 rounded-xl w-fit border border-gray-200 dark:border-gray-700 overflow-x-auto">
+        <button
+          onClick={() => setActiveTab('ALL')}
+          className={`flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-semibold transition-all ${
+            activeTab === 'ALL'
+              ? 'bg-white dark:bg-gray-700 text-indigo-600 dark:text-indigo-400 shadow-sm'
+              : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
+          }`}
+        >
+          <Users className="w-4 h-4" />
+          All Users
+        </button>
         <button
           onClick={() => setActiveTab('STUDENT')}
           className={`flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-semibold transition-all ${
@@ -99,8 +116,19 @@ export const AppInstallsPage: React.FC = () => {
               : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
           }`}
         >
-          <Users className="w-4 h-4" />
+          <UserCircle className="w-4 h-4" />
           Teachers
+        </button>
+        <button
+          onClick={() => setActiveTab('ADMIN')}
+          className={`flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-semibold transition-all ${
+            activeTab === 'ADMIN'
+              ? 'bg-white dark:bg-gray-700 text-indigo-600 dark:text-indigo-400 shadow-sm'
+              : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
+          }`}
+        >
+          <UserCircle className="w-4 h-4" />
+          Admins
         </button>
       </div>
 
