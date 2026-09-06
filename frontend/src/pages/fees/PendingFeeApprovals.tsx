@@ -31,7 +31,7 @@ export const PendingFeeApprovals: React.FC = () => {
   const fetchPending = async () => {
     try {
       setLoading(true);
-      const res = await api.get('/fees/admin/pending?limit=50');
+      const res = await api.get('/api/fees/admin/pending?limit=50');
       if (res.data.success) {
         setPayments(res.data.data);
       }
@@ -51,7 +51,7 @@ export const PendingFeeApprovals: React.FC = () => {
 
     try {
       const status = isApprove ? 'PAID' : 'REJECTED';
-      const res = await api.put(`/fees/admin/approve/${id}`, { status });
+      const res = await api.put(`/api/fees/admin/approve/${id}`, { status });
       if (res.data.success) {
         toast.success(`Payment ${status.toLowerCase()} successfully`);
         fetchPending();

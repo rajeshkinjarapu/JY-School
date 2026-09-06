@@ -33,7 +33,7 @@ export const AppInstallsPage: React.FC = () => {
   const fetchInstalls = async () => {
     setLoading(true);
     try {
-      const res = await api.get('/users/app-installs');
+      const res = await api.get('/api/users/app-installs');
       setUsers(res.data.data);
     } catch (error) {
       console.error('Failed to fetch app installs', error);
