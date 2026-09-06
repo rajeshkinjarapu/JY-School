@@ -780,22 +780,17 @@ class _ExamResultCardState extends State<ExamResultCard> {
                           value: widget.percentage,
                           strokeWidth: 6,
                           backgroundColor: const Color(0xFFF1F5F9),
-                          children: [
-                            CircularProgressIndicator(
-                              value: widget.percentage,
-                              strokeWidth: 6,
-                              backgroundColor: const Color(0xFFF1F5F9),
-                              valueColor: AlwaysStoppedAnimation<Color>(widget.percentage >= 0.35 ? const Color(0xFF10B981) : const Color(0xFFEF4444)),
-                            ),
-                            Center(
-                              child: Text(
-                                '${(widget.percentage * 100).toStringAsFixed(0)}%',
-                                style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w900, color: const Color(0xFF1E293B)),
-                              ),
-                            )
-                          ],
+                          valueColor: AlwaysStoppedAnimation<Color>(widget.percentage >= 0.35 ? const Color(0xFF10B981) : const Color(0xFFEF4444)),
                         ),
-                      ),
+                        Center(
+                          child: Text(
+                            '${(widget.percentage * 100).toStringAsFixed(0)}%',
+                            style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w900, color: const Color(0xFF1E293B)),
+                          ),
+                        )
+                      ],
+                    ),
+                  ),
                       const SizedBox(width: 20),
                       Expanded(
                         child: Column(
