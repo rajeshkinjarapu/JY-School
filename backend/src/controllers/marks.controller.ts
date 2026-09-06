@@ -126,7 +126,7 @@ export const bulkCreate = async (req: AuthRequest, res: Response, next: NextFunc
       let realSubjectId = m.subjectId;
       const classId = studentClassMap.get(m.studentId);
       const classExamSubjects = getSubjectsForClass(exam?.subjects, classId);
-      const fakeSubject = classExamSubjects.find((s: any) => s.id === m.subjectId || s.name?.toLowerCase() === m.subjectId?.toLowerCase());
+      const fakeSubject = classExamSubjects.find((s: any) => String(s.id) === String(m.subjectId) || s.name?.toLowerCase() === m.subjectId?.toLowerCase());
       
       if (fakeSubject) {
         let matchingRealSubject = realSubjects.find(
@@ -399,7 +399,7 @@ export const clearMarks = async (req: AuthRequest, res: Response, next: NextFunc
     let targetSubjectId = subjectId;
     if (subjectId) {
        const examSubjects: any[] = Array.isArray(exam?.subjects) ? exam.subjects : [];
-       const fakeSubject = examSubjects.find(s => s.id === subjectId);
+       const fakeSubject = examSubjects.find(s => String(s.id) === String(subjectId));
        if (fakeSubject) {
            const realSubject = await prisma.subject.findFirst({
                where: { classId, name: fakeSubject.name }
