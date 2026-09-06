@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import '../services/api_service.dart';
@@ -18,7 +19,7 @@ class _AdminPaymentSettingsScreenState extends State<AdminPaymentSettingsScreen>
   final _ifscCtrl = TextEditingController();
   final _upiCtrl = TextEditingController();
 
-  File? _qrFile;
+  XFile? _qrFile;
   String? _existingQr;
   bool _isLoading = true;
   bool _isSaving = false;
@@ -53,7 +54,7 @@ class _AdminPaymentSettingsScreenState extends State<AdminPaymentSettingsScreen>
     final pickedFile = await picker.pickImage(source: ImageSource.gallery, imageQuality: 70);
     if (pickedFile != null) {
       setState(() {
-        _qrFile = File(pickedFile.path);
+        _qrFile = pickedFile;
       });
     }
   }
@@ -68,7 +69,7 @@ class _AdminPaymentSettingsScreenState extends State<AdminPaymentSettingsScreen>
 
       if (_qrFile != null) {
         fileBytes = await _qrFile!.readAsBytes();
-        fileName = _qrFile!.path.split('/').last;
+        fileName = _qrFile!.name;
       }
 
       final payload = {
@@ -156,7 +157,7 @@ class _AdminPaymentSettingsScreenState extends State<AdminPaymentSettingsScreen>
                             border: Border.all(color: Colors.grey[300]!, width: 2),
                           ),
                           child: _qrFile != null
-                              ? ClipRRect(borderRadius: BorderRadius.circular(14), child: Image.file(_qrFile!, fit: BoxFit.contain))
+                              ? ClipRRect(borderRadius: BorderRadius.circular(14), child: kIsWeb ? Image.network(_qrFile!.path, fit: BoxFit.contain) : Image.file(File(_qrFile!.path), fit: BoxFit.contain))
                               : (_existingQr != null && _existingQr!.isNotEmpty)
                                   ? ClipRRect(borderRadius: BorderRadius.circular(14), child: Image.network(ApiService.getImageUrl(_existingQr!), fit: BoxFit.contain))
                                   : Column(

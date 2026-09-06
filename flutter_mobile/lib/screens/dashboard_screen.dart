@@ -103,6 +103,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       if (mounted) {
         setState(() {
           _user = jsonDecode(userString);
+          _isLoading = false; // <-- Instantly load UI using cached data
         });
       }
     }

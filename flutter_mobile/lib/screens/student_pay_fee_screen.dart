@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import '../services/api_service.dart';
@@ -20,7 +21,7 @@ class _StudentPayFeeScreenState extends State<StudentPayFeeScreen> {
   final _formKey = GlobalKey<FormState>();
   final _amountController = TextEditingController();
   final _utrController = TextEditingController();
-  File? _imageFile;
+  XFile? _imageFile;
   bool _isSubmitting = false;
 
   @override
@@ -64,7 +65,7 @@ class _StudentPayFeeScreenState extends State<StudentPayFeeScreen> {
     final pickedFile = await picker.pickImage(source: ImageSource.gallery, imageQuality: 70);
     if (pickedFile != null) {
       setState(() {
-        _imageFile = File(pickedFile.path);
+        _imageFile = pickedFile;
       });
     }
   }
@@ -84,7 +85,7 @@ class _StudentPayFeeScreenState extends State<StudentPayFeeScreen> {
 
     try {
       final bytes = await _imageFile!.readAsBytes();
-      final filename = _imageFile!.path.split('/').last;
+      final filename = _imageFile!.name;
 
       String feeStructureId = _selectedFee['feeStructureId']?.toString() ?? '';
 
@@ -241,7 +242,7 @@ class _StudentPayFeeScreenState extends State<StudentPayFeeScreen> {
                       ],
 
                       const SizedBox(height: 32),
-                      Text('Reference Number / UTR', style: GoogleFonts.poppins(fontSize: 14, color: Colors.grey[600], fontWeight: FontWeight.w600)),
+                      Text('Reference Number / UTR (Optional)', style: GoogleFonts.poppins(fontSize: 14, color: Colors.grey[600], fontWeight: FontWeight.w600)),
                       const SizedBox(height: 8),
                       TextFormField(
                         controller: _utrController,
@@ -252,7 +253,6 @@ class _StudentPayFeeScreenState extends State<StudentPayFeeScreen> {
                           border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey[300]!)),
                           enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey[300]!)),
                         ),
-                        validator: (val) => val == null || val.isEmpty ? 'Required' : null,
                       ),
 
                       const SizedBox(height: 24),
@@ -269,7 +269,7 @@ class _StudentPayFeeScreenState extends State<StudentPayFeeScreen> {
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: _imageFile != null
-                              ? ClipRRect(borderRadius: BorderRadius.circular(12), child: Image.file(_imageFile!, fit: BoxFit.cover))
+                              ? ClipRRect(borderRadius: BorderRadius.circular(12), child: kIsWeb ? Image.network(_imageFile!.path, fit: BoxFit.cover) : Image.file(File(_imageFile!.path), fit: BoxFit.cover))
                               : Column(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [

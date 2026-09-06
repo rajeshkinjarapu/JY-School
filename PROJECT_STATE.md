@@ -39,3 +39,7 @@
 - **App Installs Not Visible Bug**: Fixed an issue in AppInstallsPage.tsx where app installs by admins were not shown. Added 'All Users' and 'Admins' tabs and set 'All Users' as the default view.
 - **Staff Attendance Redesign**: Revamped the TeacherAttendancePage.tsx Admin View with Dashboard summary cards, a Mark All Present feature, search functionality, colorful status buttons in a grid layout, and a sticky bottom save bar.
 - **Staff Attendance Layout Fix**: Expanded the layout container to utilize the full screen width and adjusted grid column counts for ultra-wide screens.
+- **Mobile App Load Fix**: Modified \DashboardScreen\ to load UI instantly using cached SharedPreferences data, eliminating the blank loading spinner delay on app startup.
+- **Flutter Web Image Upload Fix**: Replaced \Image.file\ with a conditional \kIsWeb ? Image.network : Image.file\ in all payment screens and updated file handling to use \XFile\ to prevent UnsupportedError on Web.
+- **Push Notifications Fix (Flutter & Backend)**: Renamed the Android Notification Channel ID to \jyschool_alerts_v1\ across the Flutter App and Backend to bypass Android channel caching. This ensures the app recreates the channel with \Importance.max\ and custom sound enabled, fixing the missing sounds and missing heads-up hero banners.
+- **Made UTR Optional**: Removed the required validation for the UTR field in both student fee payment screens and added '(Optional)' to the label, making only the screenshot mandatory.

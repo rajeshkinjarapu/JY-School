@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import '../services/api_service.dart';
@@ -17,7 +18,7 @@ class _StudentPaymentSubmissionScreenState extends State<StudentPaymentSubmissio
   final _utrController = TextEditingController();
   final _notesController = TextEditingController();
   
-  File? _imageFile;
+  XFile? _imageFile;
   bool _isSubmitting = false;
   double _dueAmount = 0;
 
@@ -38,7 +39,7 @@ class _StudentPaymentSubmissionScreenState extends State<StudentPaymentSubmissio
     final pickedFile = await picker.pickImage(source: ImageSource.gallery, imageQuality: 70);
     if (pickedFile != null) {
       setState(() {
-        _imageFile = File(pickedFile.path);
+        _imageFile = pickedFile;
       });
     }
   }
@@ -54,7 +55,7 @@ class _StudentPaymentSubmissionScreenState extends State<StudentPaymentSubmissio
 
     try {
       final bytes = await _imageFile!.readAsBytes();
-      final filename = _imageFile!.path.split('/').last;
+      final filename = _imageFile!.name;
 
       final res = await ApiService.studentPayFeeWithScreenshot(
         amount: double.parse(_amountController.text),
@@ -123,12 +124,10 @@ class _StudentPaymentSubmissionScreenState extends State<StudentPaymentSubmissio
                 TextFormField(
                   controller: _utrController,
                   decoration: InputDecoration(
-                    labelText: 'UTR / Reference Number',
+                    labelText: 'UTR / Reference Number (Optional)',
                     labelStyle: GoogleFonts.poppins(),
                     prefixIcon: const Icon(Icons.receipt_long),
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
-                  ),
-                  validator: (val) => val == null || val.isEmpty ? 'Reference number is required' : null,
                 ),
                 const SizedBox(height: 16),
                 
@@ -160,7 +159,9 @@ class _StudentPaymentSubmissionScreenState extends State<StudentPaymentSubmissio
                     child: _imageFile != null
                         ? ClipRRect(
                             borderRadius: BorderRadius.circular(14),
-                            child: Image.file(_imageFile!, fit: BoxFit.cover),
+                            child: kIsWeb 
+                                ? Image.network(_imageFile!.path, fit: BoxFit.cover)
+                                : Image.file(File(_imageFile!.path), fit: BoxFit.cover),
                           )
                         : Column(
                             mainAxisAlignment: MainAxisAlignment.center,
