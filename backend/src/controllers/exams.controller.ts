@@ -74,6 +74,58 @@ export const getById = async (req: AuthRequest, res: Response, next: NextFunctio
 };
 
 
+// ──────────────────────────────────────────────────────────────────────────────
+// PERMANENT FIX: Normalize exam subjects to use REAL database subject IDs.
+// This prevents FK constraint violations during marks submission forever.
+// ──────────────────────────────────────────────────────────────────────────────
+const normalizeSubjectsToRealIds = async (subjects: any): Promise<any> => {
+  if (!subjects) return subjects;
+  
+  const subjectsObj = typeof subjects === 'string' ? JSON.parse(subjects) : subjects;
+  
+  if (!subjectsObj.classConfigs || !Array.isArray(subjectsObj.classConfigs)) return subjectsObj;
+  
+  const normalizedConfigs = await Promise.all(
+    subjectsObj.classConfigs.map(async (cfg: any) => {
+      const classId = cfg.classId;
+      if (!classId || !Array.isArray(cfg.subjects)) return cfg;
+      
+      const normalizedSubjects = await Promise.all(
+        cfg.subjects.map(async (sub: any) => {
+          if (!sub.name) return sub;
+          const subName = sub.name.trim();
+          
+          // Find or create real DB subject for this class
+          let realSubject = await prisma.subject.findFirst({
+            where: { classId, name: { equals: subName, mode: 'insensitive' } }
+          });
+          
+          if (!realSubject) {
+            realSubject = await prisma.subject.create({
+              data: {
+                name: subName,
+                code: subName.substring(0, 3).toUpperCase(),
+                classId,
+              }
+            });
+          }
+          
+          // Return subject with REAL database ID
+          return { ...sub, id: realSubject.id, name: realSubject.name };
+        })
+      );
+      
+      return { ...cfg, subjects: normalizedSubjects };
+    })
+  );
+  
+  // Also normalize globalSubjects if present
+  let normalizedGlobal = subjectsObj.globalSubjects;
+  // (globalSubjects don't have classId, so we skip auto-create for them)
+  
+  return { ...subjectsObj, classConfigs: normalizedConfigs, globalSubjects: normalizedGlobal };
+};
+
 export const create = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
     const { name, classIds, term, examDate, maxMarks, passingMarks, subjects } = req.body;
@@ -89,6 +141,9 @@ export const create = async (req: AuthRequest, res: Response, next: NextFunction
       return next(createError('One or more classes not found', 404));
     }
 
+    // PERMANENT FIX: Normalize subjects to use real DB IDs before saving
+    const normalizedSubjects = subjects ? await normalizeSubjectsToRealIds(subjects) : (subjects || []);
+
     // Create a single exam and link it to all selected classes
     const exam = await prisma.exam.create({
       data: {
@@ -97,7 +152,7 @@ export const create = async (req: AuthRequest, res: Response, next: NextFunction
         examDate: new Date(examDate),
         maxMarks: maxMarks || 100,
         passingMarks: passingMarks || 40,
-        subjects: subjects || [],
+        subjects: normalizedSubjects,
         classes: {
           connect: uniqueClassIds.map(id => ({ id }))
         }
@@ -107,12 +162,13 @@ export const create = async (req: AuthRequest, res: Response, next: NextFunction
       }
     });
 
-    successResponse(res, [exam], 'Exam created', 201); // Sending as array to keep frontend compatible if it expects array
+    successResponse(res, [exam], 'Exam created', 201);
   } catch (error: any) {
     console.error("EXAM CREATE ERROR:", error);
     next(error);
   }
 };
+
 
 export const update = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   const id = req.params.id as string;
@@ -121,11 +177,21 @@ export const update = async (req: AuthRequest, res: Response, next: NextFunction
   const existing = await prisma.exam.findUnique({ where: { id } });
   if (!existing) return next(createError('Exam not found', 404));
 
+  // PERMANENT FIX: Normalize subjects to use real DB IDs before saving
+  let finalSubjects = subjects !== undefined ? subjects : existing.subjects;
+  if (subjects !== undefined && subjects) {
+    try {
+      finalSubjects = await normalizeSubjectsToRealIds(subjects);
+    } catch (e) {
+      finalSubjects = subjects;
+    }
+  }
+
   const data: any = {
     name, term,
     examDate: examDate ? new Date(examDate) : undefined,
     maxMarks, passingMarks,
-    subjects: subjects !== undefined ? subjects : existing.subjects,
+    subjects: finalSubjects,
   };
 
   if (classIds && Array.isArray(classIds)) {
