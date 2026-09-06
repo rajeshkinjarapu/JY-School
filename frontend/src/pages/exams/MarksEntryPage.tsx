@@ -67,7 +67,25 @@ export const MarksEntryPage: React.FC = () => {
       } else if (Array.isArray(examObj.subjects)) {
         examSubjects = examObj.subjects;
       }
+
+      // *** KEY FIX: Replace fake subject IDs with real DB subject IDs ***
+      try {
+        const realSubjectsRes = await api.get(`/api/subjects?classId=${classId}&limit=500`);
+        const realDbSubjects: any[] = realSubjectsRes.data?.data || realSubjectsRes.data || [];
+        examSubjects = examSubjects.map((examSub: any) => {
+          const examSubName = examSub.name?.toLowerCase()?.trim() ?? '';
+          const realMatch = realDbSubjects.find(
+            (rs: any) => rs.name?.toLowerCase()?.trim() === examSubName
+          );
+          if (realMatch) {
+            return { ...examSub, id: realMatch.id };
+          }
+          return examSub;
+        });
+      } catch (e) { /* ignore errors, use original subjects */ }
+
       setSubjects(examSubjects);
+
 
       // Map existing marks
       const flatMarks = marksRes.data || [];
