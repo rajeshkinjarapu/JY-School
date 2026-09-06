@@ -49,12 +49,11 @@ class NotificationService {
 
     // ── 2. Create HIGH_IMPORTANCE channel (Android) ──
     const AndroidNotificationChannel channel = AndroidNotificationChannel(
-      'jyschool_alerts_v1',
+      'jyschool_alerts_v2', // Bumped ID to force recreate channel
       'JY School Important Alerts',
       description: 'Critical school notifications — attendance, fees, exams.',
       importance: Importance.max,
       playSound: true,
-      sound: RawResourceAndroidNotificationSound('jyschool_chime'),
       enableVibration: true,
       showBadge: true,
     );
@@ -196,7 +195,7 @@ class NotificationService {
   // ─────────────────────────────────────────────────────────────
   Future<void> _showHeroBanner(String? title, String? body, String? route) async {
     final AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
-      'jyschool_alerts_v1',
+      'jyschool_alerts_v2',
       'JY School Important Alerts',
       channelDescription: 'Critical school notifications.',
       importance: Importance.max,
@@ -205,7 +204,6 @@ class NotificationService {
       styleInformation: BigTextStyleInformation(body ?? ''),
       ticker: title,
       icon: '@mipmap/ic_launcher',
-      sound: const RawResourceAndroidNotificationSound('jyschool_chime'),
       playSound: true,
     );
 
@@ -213,7 +211,6 @@ class NotificationService {
       presentAlert: true,
       presentBadge: true,
       presentSound: true,
-      sound: 'jyschool_chime.wav',
     );
 
     final NotificationDetails details = NotificationDetails(

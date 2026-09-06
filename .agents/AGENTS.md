@@ -33,3 +33,5 @@
   4. **Shorebird build.gradle.kts Rules:** NEVER add `doNotStrip("**/*.so")` or `ndk { debugSymbolLevel = "NONE" }` — these conflict with Shorebird's internal native library stripping and cause "failed to strip debug symbols" build failure.
 
 - **Universal & Flavor App Sync Rule (Strict Order):** Whenever a modification is made for the Student App, Teacher App, or Admin App, the exact same modification MUST reflect in the Universal App. Conversely, any change made in the Universal App for a specific role MUST reflect in the corresponding flavor app. Since all apps share the same codebase in `flutter_mobile/lib/`, ensure that any role-specific UI or logic uses `AppConfig` or role checks correctly so it works flawlessly across all flavors.
+
+- **Flutter App Update Pre-approval (Strict Order):** Whenever an update is requested for the Flutter app, BEFORE writing any code, I MUST explicitly inform the user whether the requested changes can be updated via Shorebird (Patch) or if they require building a new APK (Release). I MUST wait for the user's explicit approval before proceeding to write or modify any code.
