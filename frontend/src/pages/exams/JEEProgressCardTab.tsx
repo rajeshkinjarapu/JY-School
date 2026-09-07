@@ -540,7 +540,7 @@ export const JEEProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
 
   const uniqueSubjects = Array.from(
     new Set(
-      studentsData.flatMap((s) => s.marks?.map((m: any) => m.subject) || [])
+      studentsData.flatMap((s) => s.marks?.map((m: any) => m.subject?.trim().toUpperCase() || '') || []).filter(Boolean)
     )
   );
 
@@ -858,7 +858,7 @@ export const JEEProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
                       
                       {uniqueSubjects.map((subject, i) => (
                          <td key={i} className="py-3 px-4 text-center font-medium text-gray-700 dark:text-slate-300">
-                           {data.marks?.find((m: any) => m.subject === subject)?.obtained ?? '-'}
+                           {data.marks?.find((m: any) => (m.subject?.trim().toUpperCase() || '') === subject)?.obtained ?? '-'}
                          </td>
                       ))}
 
@@ -897,7 +897,7 @@ export const JEEProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
                                {uniqueSubjects.map((subject, i) => (
                                  <div key={i} className="bg-white dark:bg-slate-800 border border-indigo-100 dark:border-indigo-900/30 rounded-lg p-2 shadow-sm">
                                     <div className="text-[10px] font-bold text-gray-500 uppercase">{subject.substring(0, 3)}</div>
-                                    <div className="font-black text-indigo-700 dark:text-indigo-400">{data.marks?.find((m: any) => m.subject === subject)?.obtained ?? '-'}</div>
+                                    <div className="font-black text-indigo-700 dark:text-indigo-400">{data.marks?.find((m: any) => (m.subject?.trim().toUpperCase() || '') === subject)?.obtained ?? '-'}</div>
                                  </div>
                                ))}
                             </div>
