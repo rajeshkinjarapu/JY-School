@@ -312,7 +312,9 @@ export const getResults = async (req: AuthRequest, res: Response, next: NextFunc
     }
   });
 
-  for (const mark of exam.marks) {
+  // Sort marks by createdAt so newer marks overwrite older marks (in case of duplicates)
+  const sortedMarks = [...exam.marks].sort((a: any, b: any) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+  for (const mark of sortedMarks) {
     const key = mark.studentId;
     if (!studentMap.has(key)) {
       studentMap.set(key, {

@@ -216,6 +216,22 @@ export const bulkCreate = async (req: AuthRequest, res: Response, next: NextFunc
       }
 
       const grade = finalRemarks === 'AB' ? 'F' : calculateGrade(finalMarksObtained, actualMaxMarks);
+      
+      // Cleanup ghost duplicates (marks for the same student, exam, and subject name, but different subjectId)
+      const duplicateSubjectIds = realSubjects
+        .filter(s => s.classId === classId && s.id !== realSubjectId && s.name.toLowerCase().trim() === (resolvedFakeName || '').toLowerCase().trim())
+        .map(s => s.id);
+
+      if (duplicateSubjectIds.length > 0) {
+        upsertOps.push(prisma.mark.deleteMany({
+          where: {
+            studentId: m.studentId,
+            examId: m.examId,
+            subjectId: { in: duplicateSubjectIds }
+          }
+        }));
+      }
+
       upsertOps.push(prisma.mark.upsert({
         where: { studentId_examId_subjectId: { studentId: m.studentId, examId: m.examId, subjectId: realSubjectId } },
         update: { marksObtained: finalMarksObtained, maxMarks: actualMaxMarks, grade, remarks: finalRemarks },
