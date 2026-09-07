@@ -208,7 +208,7 @@ export const ProgressCardTemplate: React.FC<ProgressCardTemplateProps> = ({
                       const max = Number(sub.maxMarks) || 100;
                       const isAB = sub.remarks === 'AB';
                       const obt = isAB ? 'AB' : (Number(sub.obtained) || 0);
-                      const subPct = isAB ? '0.0' : (max > 0 ? ((Number(sub.obtained) || 0) / max) * 100).toFixed(1);
+                      const subPct = isAB ? '0.0' : (max > 0 ? ((Number(sub.obtained) || 0) / max) * 100 : 0).toFixed(1);
                       return (
                         <tr key={i}>
                             <td className="subject-label"><span className="sub-icon">📘</span> {sub.subject}</td>
