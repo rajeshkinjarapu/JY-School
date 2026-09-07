@@ -296,35 +296,61 @@ export const ExamListPage: React.FC = () => {
   };
 
   const downloadClassSampleExcel = async (exam: any, classObj: any) => {
-    const XLSX = await import('xlsx');
-    
-    let subjectNames = ["Maths", "Physics", "Chemistry"];
-    if (exam && exam.subjects) {
-      try {
-        const subjectsObj = typeof exam.subjects === 'string' ? JSON.parse(exam.subjects) : exam.subjects;
-        let classSubjects: any[] = [];
-        if (subjectsObj?.classConfigs) {
-          const cfg = subjectsObj.classConfigs.find((c: any) => c.classId === classObj.id);
-          if (cfg && cfg.subjects && cfg.subjects.length > 0) {
-            classSubjects = cfg.subjects;
-          }
-        }
-        if (classSubjects.length === 0 && subjectsObj?.globalSubjects) {
-          classSubjects = subjectsObj.globalSubjects;
-        }
-        if (classSubjects.length > 0) {
-          subjectNames = classSubjects.map((s: any) => s.name);
-        }
-      } catch (e) {}
-    }
+    const toastId = toast.loading('Generating Excel Sample...');
+    try {
+      const XLSX = await import('xlsx');
+      
+      const res = await api.get('/api/students', { params: { classId: classObj.id, limit: 1000 } });
+      const students = res.data?.data || res.data || [];
+      const sortedStudents = students.sort((a: any, b: any) => (a.rollNumber || '').localeCompare(b.rollNumber || ''));
 
-    const ws = XLSX.utils.json_to_sheet([
-      { "S.No": 1, "Student ID": "STU123", "Student Name": "John Doe", ...Object.fromEntries(subjectNames.map(s => [s, 85])) },
-      { "S.No": 2, "Student ID": "STU124", "Student Name": "Jane Doe", ...Object.fromEntries(subjectNames.map(s => [s, 90])) }
-    ]);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Marks");
-    XLSX.writeFile(wb, `${exam.name}_${classObj.name}_Sample.xlsx`);
+      let subjectNames = ["Maths", "Physics", "Chemistry"];
+      if (exam && exam.subjects) {
+        try {
+          const subjectsObj = typeof exam.subjects === 'string' ? JSON.parse(exam.subjects) : exam.subjects;
+          let classSubjects: any[] = [];
+          if (subjectsObj?.classConfigs) {
+            const cfg = subjectsObj.classConfigs.find((c: any) => c.classId === classObj.id);
+            if (cfg && cfg.subjects && cfg.subjects.length > 0) {
+              classSubjects = cfg.subjects;
+            }
+          }
+          if (classSubjects.length === 0 && subjectsObj?.globalSubjects) {
+            classSubjects = subjectsObj.globalSubjects;
+          }
+          if (classSubjects.length > 0) {
+            subjectNames = classSubjects.map((s: any) => s.name);
+          }
+        } catch (e) {}
+      }
+
+      const rows = sortedStudents.map((st: any, idx: number) => ({
+        "S.No": idx + 1,
+        "Student ID": st.id,
+        "Student Name": st.user?.name || "Unknown",
+        ...Object.fromEntries(subjectNames.map(s => [s, ""])),
+        "Remarks": ""
+      }));
+
+      if (rows.length === 0) {
+        // Fallback dummy row if no students found
+        rows.push({
+          "S.No": 1,
+          "Student ID": "STU123",
+          "Student Name": "John Doe",
+          ...Object.fromEntries(subjectNames.map(s => [s, ""])),
+          "Remarks": ""
+        });
+      }
+
+      const ws = XLSX.utils.json_to_sheet(rows);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Marks");
+      XLSX.writeFile(wb, `${exam.name}_${classObj.name}_Sample.xlsx`);
+      toast.success('Excel Generated Successfully!', { id: toastId });
+    } catch (err) {
+      toast.error('Failed to generate Excel', { id: toastId });
+    }
   };
 
   const downloadClassSamplePDF = async (exam: any, classObj: any) => {
