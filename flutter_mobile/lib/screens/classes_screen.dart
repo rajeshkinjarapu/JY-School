@@ -97,38 +97,54 @@ class _ClassesScreenState extends State<ClassesScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF1F5FB),
       drawer: const AppDrawer(currentRoute: 'classes'),
-      appBar: AppBar(
-        iconTheme: const IconThemeData(color: Colors.white),
-        title: Text(
-          'Classes',
-          style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 20),
-        ),
-        flexibleSpace: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Color(0xFF2E2A66), Color(0xFF4F46E5)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
+      body: RefreshIndicator(
+        color: const Color(0xFF6366F1),
+        onRefresh: _fetchClasses,
+        child: CustomScrollView(
+          slivers: [
+            // Pinned Main Header
+            SliverAppBar(
+              pinned: true,
+              floating: false,
+              iconTheme: const IconThemeData(color: Colors.white),
+              title: Text(
+                'Classes',
+                style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 20),
+              ),
+              flexibleSpace: Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Color(0xFF2E2A66), Color(0xFF4F46E5)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                ),
+              ),
+              elevation: 0,
+              actions: [
+                IconButton(
+                  icon: const Icon(Icons.refresh_rounded, color: Colors.white),
+                  onPressed: _fetchClasses,
+                ),
+                const SizedBox(width: 4),
+              ],
             ),
-          ),
-        ),
-        elevation: 0,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh_rounded, color: Colors.white),
-            onPressed: _fetchClasses,
-          ),
-          const SizedBox(width: 4),
-        ],
-      ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: Color(0xFF6366F1)))
-          : _errorMessage.isNotEmpty
-              ? _buildError()
-              : Column(
+            
+            // Floating Search Box
+            SliverAppBar(
+              floating: true,
+              snap: true,
+              pinned: false,
+              automaticallyImplyLeading: false,
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              toolbarHeight: 0,
+              bottom: PreferredSize(
+                preferredSize: const Size.fromHeight(130),
+                child: Stack(
                   children: [
-                    // ── Stats + Search header ──
                     Container(
+                      height: 65,
                       decoration: const BoxDecoration(
                         gradient: LinearGradient(
                           colors: [Color(0xFF2E2A66), Color(0xFF4F46E5)],
@@ -136,54 +152,63 @@ class _ClassesScreenState extends State<ClassesScreen> {
                           end: Alignment.bottomRight,
                         ),
                       ),
-                      child: Column(
-                        children: [
-                          // Stats row
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                            child: Row(
-                              children: [
-                                _statPill(Icons.school_rounded, '${_classes.length}', 'Total Classes'),
-                                const SizedBox(width: 12),
-                                _statPill(Icons.people_rounded,
-                                    '${_classes.fold<int>(0, (s, c) => s + ((c['_count']?['students'] ?? 0) as int))}',
-                                    'Total Students'),
+                    ),
+                    Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // Stats row
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                          child: Row(
+                            children: [
+                              _statPill(Icons.school_rounded, '${_classes.length}', 'Total Classes'),
+                              const SizedBox(width: 12),
+                              _statPill(Icons.people_rounded,
+                                  '${_classes.fold<int>(0, (s, c) => s + ((c['_count']?['students'] ?? 0) as int))}',
+                                  'Total Students'),
+                            ],
+                          ),
+                        ),
+                        // Search
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
+                          child: Container(
+                            height: 46,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(14),
+                              boxShadow: [
+                                BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 12, offset: const Offset(0, 4)),
                               ],
                             ),
-                          ),
-                          // Search
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
-                            child: Container(
-                              height: 46,
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(14),
-                                boxShadow: [
-                                  BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 12, offset: const Offset(0, 4)),
-                                ],
+                            child: TextField(
+                              style: GoogleFonts.poppins(color: const Color(0xFF1E293B), fontSize: 13),
+                              decoration: InputDecoration(
+                                hintText: 'Search class or teacher...',
+                                hintStyle: GoogleFonts.poppins(color: const Color(0xFF94A3B8), fontSize: 13),
+                                prefixIcon: const Icon(Icons.search_rounded, color: Color(0xFF94A3B8), size: 20),
+                                border: InputBorder.none,
+                                contentPadding: const EdgeInsets.symmetric(vertical: 13),
                               ),
-                              child: TextField(
-                                style: GoogleFonts.poppins(color: const Color(0xFF1E293B), fontSize: 13),
-                                decoration: InputDecoration(
-                                  hintText: 'Search class or teacher...',
-                                  hintStyle: GoogleFonts.poppins(color: const Color(0xFF94A3B8), fontSize: 13),
-                                  prefixIcon: const Icon(Icons.search_rounded, color: Color(0xFF94A3B8), size: 20),
-                                  border: InputBorder.none,
-                                  contentPadding: const EdgeInsets.symmetric(vertical: 13),
-                                ),
-                                onChanged: (v) => setState(() => _searchQuery = v),
-                              ),
+                              onChanged: (v) => setState(() => _searchQuery = v),
                             ),
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
-
-                    // ── List ──
-                    Expanded(
-                      child: _filteredClasses.isEmpty
-                          ? Center(
+                  ],
+                ),
+              ),
+            ),
+            
+            // List
+            _isLoading
+                ? const SliverFillRemaining(child: Center(child: CircularProgressIndicator(color: Color(0xFF6366F1))))
+                : _errorMessage.isNotEmpty
+                    ? SliverFillRemaining(child: _buildError())
+                    : _filteredClasses.isEmpty
+                        ? SliverFillRemaining(
+                            child: Center(
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
@@ -192,21 +217,22 @@ class _ClassesScreenState extends State<ClassesScreen> {
                                   Text('No classes found', style: GoogleFonts.poppins(color: const Color(0xFF94A3B8), fontSize: 14)),
                                 ],
                               ),
-                            )
-                          : RefreshIndicator(
-                              color: const Color(0xFF6366F1),
-                              onRefresh: _fetchClasses,
-                              child: ListView.builder(
-                                padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-                                itemCount: _filteredClasses.length,
-                                itemBuilder: (context, index) {
+                            ),
+                          )
+                        : SliverPadding(
+                            padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+                            sliver: SliverList(
+                              delegate: SliverChildBuilderDelegate(
+                                (context, index) {
                                   return _buildClassCard(_filteredClasses[index], index);
                                 },
+                                childCount: _filteredClasses.length,
                               ),
                             ),
-                    ),
-                  ],
-                ),
+                          ),
+          ],
+        ),
+      ),
     );
   }
 

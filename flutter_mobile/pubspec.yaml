@@ -14,6 +14,7 @@ dependencies:
   # Icons and style
   cupertino_icons: ^1.0.6
   google_fonts: ^6.1.0
+  font_awesome_flutter: ^11.0.0
 
   # API & Utilities
   http: ^1.2.0

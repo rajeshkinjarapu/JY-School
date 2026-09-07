@@ -2,6 +2,7 @@ import 'dart:convert';
 import '../widgets/custom_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../services/api_service.dart';
 import '../widgets/app_drawer.dart';
@@ -174,132 +175,152 @@ class _TeachersScreenState extends State<TeachersScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F7FE), // Premium soft blue-gray background
+      backgroundColor: const Color(0xFFF4F7FE),
       drawer: const AppDrawer(currentRoute: 'teachers'),
-      appBar: AppBar(
-        title: Text('Teachers Directory', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 22)),
-        backgroundColor: Colors.transparent,
-        foregroundColor: Colors.white,
-        elevation: 0,
-        flexibleSpace: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Color(0xFF6366F1), Color(0xFF8B5CF6), Color(0xFFD946EF)], // Vibrant multi-stop gradient
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-          ),
-        ),
-        actions: [
-          Container(
-            margin: const EdgeInsets.only(right: 12),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.white.withOpacity(0.3)),
-            ),
-            child: IconButton(
-              icon: const Icon(Icons.person_add_rounded, size: 22, color: Colors.white), 
-              onPressed: () async {
-                final result = await Navigator.push(context, MaterialPageRoute(builder: (context) => const AddTeacherScreen()));
-                if (result == true) {
-                  _fetchTeachers();
-                }
-              }
-            ),
-          ),
-        ],
-      ),
-      body: Column(
-        children: [
-          // Sleek Header with floating search/filter card
-          Stack(
-            children: [
-              Container(
-                height: 60,
+      body: RefreshIndicator(
+        color: const Color(0xFF8B5CF6),
+        onRefresh: _fetchTeachers,
+        child: CustomScrollView(
+          slivers: [
+            // Pinned Main Header
+            SliverAppBar(
+              pinned: true,
+              floating: false,
+              title: Text('Teachers Directory', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 22)),
+              backgroundColor: Colors.transparent,
+              foregroundColor: Colors.white,
+              elevation: 0,
+              flexibleSpace: Container(
                 decoration: const BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [Color(0xFF6366F1), Color(0xFF8B5CF6), Color(0xFFD946EF)],
+                    colors: [Color(0xFF6366F1), Color(0xFF8B5CF6), Color(0xFFD946EF)], // Vibrant multi-stop gradient
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
-                  borderRadius: BorderRadius.only(
-                    bottomLeft: Radius.circular(32),
-                    bottomRight: Radius.circular(32),
-                  ),
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 10, 16, 20),
-                child: Container(
-                  padding: const EdgeInsets.all(16),
+              actions: [
+                Container(
+                  margin: const EdgeInsets.only(right: 12),
                   decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(24),
-                    boxShadow: [
-                      BoxShadow(color: const Color(0xFF6366F1).withOpacity(0.15), blurRadius: 24, offset: const Offset(0, 8)),
-                    ],
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.white.withOpacity(0.3)),
                   ),
-                  child: Container(
-                    height: 50,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF8FAFC),
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: const Color(0xFFE2E8F0)),
-                    ),
-                    child: TextField(
-                      style: GoogleFonts.poppins(color: const Color(0xFF1E293B)),
-                      decoration: InputDecoration(
-                        hintText: 'Search by name or ID...',
-                        hintStyle: GoogleFonts.poppins(color: const Color(0xFF94A3B8)),
-                        prefixIcon: const Icon(Icons.search_rounded, color: Color(0xFF94A3B8)),
-                        border: InputBorder.none,
-                        contentPadding: const EdgeInsets.symmetric(vertical: 15),
-                      ),
-                      onChanged: _runSearch,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-
-          // Teacher List Header
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-            child: Row(
-              children: [
-                Text(
-                  '${_filteredTeachers.length} Teachers',
-                  style: GoogleFonts.poppins(
-                    color: const Color(0xFF64748B),
-                    fontWeight: FontWeight.w700,
-                    fontSize: 14,
+                  child: IconButton(
+                    icon: const Icon(Icons.person_add_rounded, size: 22, color: Colors.white), 
+                    onPressed: () async {
+                      final result = await Navigator.push(context, MaterialPageRoute(builder: (context) => const AddTeacherScreen()));
+                      if (result == true) {
+                        _fetchTeachers();
+                      }
+                    }
                   ),
                 ),
               ],
             ),
-          ),
-
-          // List
-          Expanded(
-            child: _isLoading
-                ? const Center(child: CircularProgressIndicator(color: Color(0xFF8B5CF6)))
-                : _filteredTeachers.isEmpty
-                    ? _buildEmptyState()
-                    : RefreshIndicator(
-                        color: const Color(0xFF8B5CF6),
-                        onRefresh: _fetchTeachers,
-                        child: ListView.builder(
-                          padding: const EdgeInsets.only(left: 16, right: 16, bottom: 24, top: 4),
-                          itemCount: _filteredTeachers.length,
-                          itemBuilder: (context, index) {
-                            return _buildTeacherCard(_filteredTeachers[index], index);
-                          },
+            
+            // Floating Search Box
+            SliverAppBar(
+              floating: true,
+              snap: true,
+              pinned: false,
+              automaticallyImplyLeading: false,
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              toolbarHeight: 0,
+              bottom: PreferredSize(
+                preferredSize: const Size.fromHeight(115), // Reduced since no classes dropdown
+                child: Stack(
+                  children: [
+                    Container(
+                      height: 57,
+                      decoration: const BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [Color(0xFF6366F1), Color(0xFF8B5CF6), Color(0xFFD946EF)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.only(
+                          bottomLeft: Radius.circular(32),
+                          bottomRight: Radius.circular(32),
                         ),
                       ),
-          ),
-        ],
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 10, 16, 20),
+                      child: Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(24),
+                          boxShadow: [
+                            BoxShadow(color: const Color(0xFF6366F1).withOpacity(0.15), blurRadius: 24, offset: const Offset(0, 8)),
+                          ],
+                        ),
+                        child: Container(
+                          height: 50,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF8FAFC),
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(color: const Color(0xFFE2E8F0)),
+                          ),
+                          child: TextField(
+                            style: GoogleFonts.poppins(color: const Color(0xFF1E293B)),
+                            decoration: InputDecoration(
+                              hintText: 'Search by name or ID...',
+                              hintStyle: GoogleFonts.poppins(color: const Color(0xFF94A3B8)),
+                              prefixIcon: const Icon(Icons.search_rounded, color: Color(0xFF94A3B8)),
+                              border: InputBorder.none,
+                              contentPadding: const EdgeInsets.symmetric(vertical: 15),
+                            ),
+                            onChanged: _runSearch,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            // Teacher List Header
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                child: Row(
+                  children: [
+                    Text(
+                      '${_filteredTeachers.length} Teachers',
+                      style: GoogleFonts.poppins(
+                        color: const Color(0xFF64748B),
+                        fontWeight: FontWeight.w700,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            // List
+            _isLoading
+                ? const SliverFillRemaining(child: Center(child: CircularProgressIndicator(color: Color(0xFF8B5CF6))))
+                : _filteredTeachers.isEmpty
+                    ? SliverFillRemaining(child: _buildEmptyState())
+                    : SliverPadding(
+                        padding: const EdgeInsets.only(left: 16, right: 16, bottom: 24, top: 4),
+                        sliver: SliverList(
+                          delegate: SliverChildBuilderDelegate(
+                            (context, index) {
+                              return _buildTeacherCard(_filteredTeachers[index], index);
+                            },
+                            childCount: _filteredTeachers.length,
+                          ),
+                        ),
+                      ),
+          ],
+        ),
       ),
     );
   }
@@ -402,18 +423,18 @@ class _TeachersScreenState extends State<TeachersScreen> {
                 InkWell(
                   onTap: () => _launchWhatsApp(phone),
                   borderRadius: BorderRadius.circular(24),
-                  child: CustomNetworkImage(
-                    'https://upload.wikimedia.org/wikipedia/commons/thumb/6/6b/WhatsApp.svg/150px-WhatsApp.svg.png',
+                  child: Container(
                     width: 38,
                     height: 38,
-                    errorBuilder: (ctx, err, trace) => Container(
-                      width: 38,
-                      height: 38,
-                      decoration: const BoxDecoration(
-                        color: Color(0xFF25D366),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(Icons.chat_bubble_rounded, color: Colors.white, size: 20),
+                    decoration: const BoxDecoration(
+                      color: Color(0xFF25D366), // WhatsApp Green
+                      shape: BoxShape.circle,
+                    ),
+                    alignment: Alignment.center,
+                    child: const FaIcon(
+                      FontAwesomeIcons.whatsapp,
+                      color: Colors.white,
+                      size: 22,
                     ),
                   ),
                 ),

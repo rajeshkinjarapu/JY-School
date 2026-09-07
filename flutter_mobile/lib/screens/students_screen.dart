@@ -1,4 +1,4 @@
-﻿import 'dart:convert';
+import 'dart:convert';
 import '../widgets/custom_network_image.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
@@ -198,168 +198,187 @@ class _StudentsScreenState extends State<StudentsScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF4F7FE), // Premium soft blue-gray background
       drawer: const AppDrawer(currentRoute: 'students'),
-      appBar: AppBar(
-        title: Text('Students Directory', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 22)),
-        backgroundColor: Colors.transparent,
-        foregroundColor: Colors.white,
-        elevation: 0,
-        flexibleSpace: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Color(0xFF6366F1), Color(0xFF8B5CF6), Color(0xFFD946EF)], // Vibrant multi-stop gradient
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-          ),
-        ),
-        actions: [
-          if (_userRole != 'TEACHER') Container(
-            margin: const EdgeInsets.only(right: 12),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.white.withOpacity(0.3)),
-            ),
-            child: IconButton(
-              icon: const Icon(Icons.person_add_rounded, size: 22, color: Colors.white),
-              onPressed: () async {
-                final result = await Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const AddStudentScreen()),
-                );
-                if (result == true) {
-                  _fetchStudents(_selectedClassId, _searchQuery);
-                }
-              },
-            ),
-          ),
-        ],
-      ),
-      body: Column(
-        children: [
-          // Sleek Header with floating search/filter card
-          Stack(
-            children: [
-              Container(
-                height: 60,
+      body: RefreshIndicator(
+        color: const Color(0xFF8B5CF6),
+        onRefresh: () => _fetchStudents(_selectedClassId, _searchQuery),
+        child: CustomScrollView(
+          slivers: [
+            // Pinned Main Header
+            SliverAppBar(
+              pinned: true,
+              floating: false,
+              title: Text('Students Directory', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 22)),
+              backgroundColor: Colors.transparent,
+              foregroundColor: Colors.white,
+              elevation: 0,
+              flexibleSpace: Container(
                 decoration: const BoxDecoration(
                   gradient: LinearGradient(
                     colors: [Color(0xFF6366F1), Color(0xFF8B5CF6), Color(0xFFD946EF)],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
-                  borderRadius: BorderRadius.only(
-                    bottomLeft: Radius.circular(32),
-                    bottomRight: Radius.circular(32),
-                  ),
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 10, 16, 20),
-                child: Container(
-                  padding: const EdgeInsets.all(16),
+              actions: [
+                if (_userRole != 'TEACHER') Container(
+                  margin: const EdgeInsets.only(right: 12),
                   decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(24),
-                    boxShadow: [
-                      BoxShadow(color: const Color(0xFF6366F1).withOpacity(0.15), blurRadius: 24, offset: const Offset(0, 8)),
-                    ],
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.white.withOpacity(0.3)),
                   ),
-                  child: Column(
-                    children: [
-                      if (_classes.isNotEmpty)
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFF8FAFC),
-                            borderRadius: BorderRadius.circular(14),
-                            border: Border.all(color: const Color(0xFFE2E8F0)),
-                          ),
-                          child: DropdownButtonHideUnderline(
-                            child: DropdownButton<String>(
-                              isExpanded: true,
-                              value: _selectedClassId,
-                              hint: Text('All Classes', style: GoogleFonts.poppins(color: const Color(0xFF64748B), fontWeight: FontWeight.w500)),
-                              icon: const Icon(Icons.keyboard_arrow_down_rounded, color: Color(0xFF6366F1)),
-                              items: _classes.map<DropdownMenuItem<String>>((c) {
-                                final className = '${c['name']} ${c['section'] ?? ''}'.trim();
-                                return DropdownMenuItem<String>(
-                                  value: c['id'],
-                                  child: Text(className, style: GoogleFonts.poppins(color: const Color(0xFF1E293B), fontWeight: FontWeight.bold)),
-                                );
-                              }).toList(),
-                              onChanged: (value) {
-                                if (value != null && value != _selectedClassId) {
-                                  setState(() { _selectedClassId = value; });
-                                  _fetchStudents(value, _searchQuery);
-                                }
-                              },
-                            ),
-                          ),
-                        ),
-                      const SizedBox(height: 12),
-                      Container(
-                        height: 50,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF8FAFC),
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border.all(color: const Color(0xFFE2E8F0)),
-                        ),
-                        child: TextField(
-                          onChanged: _runSearch,
-                          style: GoogleFonts.poppins(fontSize: 14),
-                          decoration: InputDecoration(
-                            hintText: 'Search by name or roll...',
-                            hintStyle: GoogleFonts.poppins(color: const Color(0xFF94A3B8)),
-                            prefixIcon: const Icon(Icons.search_rounded, color: Color(0xFF94A3B8)),
-                            border: InputBorder.none,
-                            contentPadding: const EdgeInsets.symmetric(vertical: 15),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-          
-          // Student List Header
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-            child: Row(
-              children: [
-                Text(
-                  '${_filteredStudents.length} Students',
-                  style: GoogleFonts.poppins(
-                    color: const Color(0xFF64748B),
-                    fontWeight: FontWeight.w700,
-                    fontSize: 14,
+                  child: IconButton(
+                    icon: const Icon(Icons.person_add_rounded, size: 22, color: Colors.white),
+                    onPressed: () async {
+                      final result = await Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const AddStudentScreen()),
+                      );
+                      if (result == true) {
+                        _fetchStudents(_selectedClassId, _searchQuery);
+                      }
+                    },
                   ),
                 ),
               ],
             ),
-          ),
-          
-          // Student List
-          Expanded(
-            child: _isLoading
-                ? const Center(child: CircularProgressIndicator(color: Color(0xFF8B5CF6)))
-                : _filteredStudents.isEmpty
-                    ? _buildEmptyState()
-                    : RefreshIndicator(
-                        color: const Color(0xFF8B5CF6),
-                        onRefresh: () => _fetchStudents(_selectedClassId, _searchQuery),
-                        child: ListView.builder(
-                          padding: const EdgeInsets.only(left: 16, right: 16, bottom: 24, top: 4),
-                          itemCount: _filteredStudents.length,
-                          itemBuilder: (context, index) {
-                            return _buildStudentCard(_filteredStudents[index], index);
-                          },
+            
+            // Floating Search Box
+            SliverAppBar(
+              floating: true,
+              snap: true,
+              pinned: false,
+              automaticallyImplyLeading: false,
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              toolbarHeight: 0,
+              bottom: PreferredSize(
+                preferredSize: const Size.fromHeight(174),
+                child: Stack(
+                  children: [
+                    Container(
+                      height: 85, // Matches the curve effect height
+                      decoration: const BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [Color(0xFF6366F1), Color(0xFF8B5CF6), Color(0xFFD946EF)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.only(
+                          bottomLeft: Radius.circular(32),
+                          bottomRight: Radius.circular(32),
                         ),
                       ),
-          ),
-        ],
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 10, 16, 20),
+                      child: Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(24),
+                          boxShadow: [
+                            BoxShadow(color: const Color(0xFF6366F1).withOpacity(0.15), blurRadius: 24, offset: const Offset(0, 8)),
+                          ],
+                        ),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (_classes.isNotEmpty)
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 16),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFF8FAFC),
+                                  borderRadius: BorderRadius.circular(14),
+                                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                                ),
+                                child: DropdownButtonHideUnderline(
+                                  child: DropdownButton<String>(
+                                    isExpanded: true,
+                                    value: _selectedClassId,
+                                    hint: Text('All Classes', style: GoogleFonts.poppins(color: const Color(0xFF64748B), fontWeight: FontWeight.w500)),
+                                    icon: const Icon(Icons.keyboard_arrow_down_rounded, color: Color(0xFF6366F1)),
+                                    items: _classes.map<DropdownMenuItem<String>>((c) {
+                                      final className = '${c['name']} ${c['section'] ?? ''}'.trim();
+                                      return DropdownMenuItem<String>(
+                                        value: c['id'],
+                                        child: Text(className, style: GoogleFonts.poppins(color: const Color(0xFF1E293B), fontWeight: FontWeight.bold)),
+                                      );
+                                    }).toList(),
+                                    onChanged: (value) {
+                                      if (value != null && value != _selectedClassId) {
+                                        setState(() { _selectedClassId = value; });
+                                        _fetchStudents(value, _searchQuery);
+                                      }
+                                    },
+                                  ),
+                                ),
+                              ),
+                            const SizedBox(height: 12),
+                            Container(
+                              height: 50,
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF8FAFC),
+                                borderRadius: BorderRadius.circular(14),
+                                border: Border.all(color: const Color(0xFFE2E8F0)),
+                              ),
+                              child: TextField(
+                                onChanged: _runSearch,
+                                style: GoogleFonts.poppins(fontSize: 14),
+                                decoration: InputDecoration(
+                                  hintText: 'Search by name or roll...',
+                                  hintStyle: GoogleFonts.poppins(color: const Color(0xFF94A3B8)),
+                                  prefixIcon: const Icon(Icons.search_rounded, color: Color(0xFF94A3B8)),
+                                  border: InputBorder.none,
+                                  contentPadding: const EdgeInsets.symmetric(vertical: 15),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                child: Row(
+                  children: [
+                    Text(
+                      '${_filteredStudents.length} Students',
+                      style: GoogleFonts.poppins(
+                        color: const Color(0xFF64748B),
+                        fontWeight: FontWeight.w700,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            
+            _isLoading
+                ? const SliverFillRemaining(child: Center(child: CircularProgressIndicator(color: Color(0xFF8B5CF6))))
+                : _filteredStudents.isEmpty
+                    ? SliverFillRemaining(child: _buildEmptyState())
+                    : SliverPadding(
+                        padding: const EdgeInsets.only(left: 16, right: 16, bottom: 24, top: 4),
+                        sliver: SliverList(
+                          delegate: SliverChildBuilderDelegate(
+                            (context, index) {
+                              return _buildStudentCard(_filteredStudents[index], index);
+                            },
+                            childCount: _filteredStudents.length,
+                          ),
+                        ),
+                      ),
+          ],
+        ),
       ),
     );
   }

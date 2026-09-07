@@ -13,6 +13,10 @@
 4. **Duplicate Subject Fix**: Fixed the issue where "CHE" (Chemistry) subject was showing twice in the Class Rank List due to case sensitivity.
 5. **Total and Percentage Calculation Fix**: Fixed a bug where duplicate subject marks (due to case sensitivity like Chemistry vs chemistry) were being double-counted in the Total Marks and Percentage in the backend calculations.
 6. **Flutter Progress Card Web Sync**: Integrated the exact Web App Progress Card PDF directly into the Flutter mobile app using `url_launcher`, completely eliminating the need for a separate custom Flutter design.
+7. **Flutter Students Directory UI**: Converted the Students Screen to use `CustomScrollView` and `SliverAppBar` with floating & pinned headers, providing a modern hide-on-scroll search bar experience.
+8. **Flutter Teachers, Classes, Subjects UI**: Converted Teachers, Classes, and Subjects screens to use `CustomScrollView` and `SliverAppBar` with gradient headers and floating search bars (where applicable) to match the premium scroll behavior of the Students screen.
+9. **WhatsApp Icon Fix**: Replaced the custom network image WhatsApp icon with the native `font_awesome_flutter` exact WhatsApp icon for the Teachers Directory screen.
+10. **Push Notifications Fix**: Fixed the issue where hero banner notifications and sounds were missing. The backend (`firebase.ts`) was sending pushes to the outdated `jyschool_alerts_v1` channel while the app was listening on `jyschool_alerts_v2`. Corrected the channel ID and reset the sound to default.
 
 ## Current Pending Task
 - User needs to rebuild frontend PM2 instance to test the new Progress Card.
