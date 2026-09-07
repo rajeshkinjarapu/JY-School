@@ -440,10 +440,6 @@ export const ExamListPage: React.FC = () => {
     const toastId = toast.loading('Processing Excel file...');
 
     try {
-      const subjectsRes: any = await api.get('/api/subjects?limit=500');
-      const subjectsList = subjectsRes.data?.data || subjectsRes.data || [];
-      const subjectMap = new Map(subjectsList.map((s: any) => [s.name.toLowerCase().trim(), s.id]));
-
       const studentsRes = await api.get('/api/students', { params: { classId: classId, limit: 1000 } });
       const studentsList = studentsRes.data?.data || studentsRes.data || [];
       const studentMap = new Map();
@@ -476,10 +472,7 @@ export const ExamListPage: React.FC = () => {
               const normalizedKey = key.toLowerCase().trim();
               if (['student id', 'studentid', 'student_id', 'id', 'remarks', 's.no', 's. no', 'sno', 'student name', 'studentname', 'name'].includes(normalizedKey)) return;
 
-              let subjectId = key;
-              if (subjectMap.has(normalizedKey)) {
-                subjectId = subjectMap.get(normalizedKey);
-              }
+              let subjectId = key; // Backend handles string to correct UUID resolution scoped to classId
 
               const marksObtained = Number(row[key]);
               if (!isNaN(marksObtained)) {
