@@ -262,6 +262,7 @@ export const ExamListPage: React.FC = () => {
               if (!isNaN(marksObtained)) {
                 mappedMarks.push({
                   studentId: String(studentId),
+                  examId: excelExamId,
                   subjectId: subjectId,
                   marksObtained: marksObtained,
                   remarks: row['Remarks'] || row['remarks'] || ''
@@ -363,6 +364,7 @@ export const ExamListPage: React.FC = () => {
               if (!isNaN(marksObtained)) {
                 mappedMarks.push({
                   studentId: String(studentId),
+                  examId: examId,
                   subjectId: subjectId,
                   marksObtained: marksObtained,
                   remarks: row['Remarks'] || row['remarks'] || ''
@@ -1391,7 +1393,7 @@ export const ExamListPage: React.FC = () => {
           </div>
 
           {selectedWrittenExamId && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
               {exams.filter(e => e.id === selectedWrittenExamId).map(exam => (
                 <div key={exam.id} className="relative rounded-2xl p-5 overflow-hidden bg-white dark:bg-slate-900 shadow-sm border border-slate-200/60 dark:border-slate-800 flex flex-col group">
                   <div className="relative z-10">
@@ -1401,31 +1403,47 @@ export const ExamListPage: React.FC = () => {
                     <p className="text-xs font-semibold text-slate-500 mt-1">Select class to enter marks:</p>
                   </div>
                   
-                  <div className="flex flex-col gap-2.5 flex-1 mt-4 relative z-10">
-                    {sortClasses(exam.classes || []).map((c: any) => (
-                      <div key={c.id} className="flex flex-col xl:flex-row gap-3 xl:items-center bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-100 dark:border-slate-800 hover:bg-slate-100 transition-colors">
-                        <div className="flex-1 text-sm font-extrabold text-slate-800 dark:text-slate-200 px-1 truncate">
-                          {c.name} - {c.section}
-                        </div>
-                        <div className="flex flex-wrap gap-2 items-center justify-start xl:justify-end">
-                           <button onClick={() => downloadClassSampleExcel(exam, c)} className="px-3 py-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 cursor-pointer">
-                             <Download className="w-3.5 h-3.5" /> Sample
-                           </button>
-                           <label className="px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 cursor-pointer">
-                             <Upload className="w-3.5 h-3.5" /> Upload
-                             <input type="file" className="hidden" accept=".xlsx,.xls" onChange={(e) => handleClassExcelUpload(e, exam.id, c.id)} />
-                           </label>
-                           <Link to={`/exams/${exam.id}/entry?classId=${c.id}`} className="px-3 py-1.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold rounded-lg text-xs shadow-md shadow-indigo-500/20 transition-all shrink-0 flex items-center gap-1.5 cursor-pointer">
-                             <Edit3 className="w-3.5 h-3.5" /> Enter Marks
-                           </Link>
-                        </div>
-                      </div>
-                    ))}
-                    {(!exam.classes || exam.classes.length === 0) && (
-                      <div className="p-4 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/40 text-center">
-                        <p className="text-xs text-amber-700 dark:text-amber-300 font-bold">No classes assigned to this exam</p>
-                      </div>
-                    )}
+                  <div className="mt-4 relative z-10 w-full overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
+                    <table className="w-full text-left whitespace-nowrap">
+                      <thead className="bg-slate-50 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-800">
+                        <tr>
+                          <th className="px-4 py-3 text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider">Class</th>
+                          <th className="px-4 py-3 text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider text-right">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 bg-white dark:bg-slate-900/50">
+                        {sortClasses(exam.classes || []).map((c: any) => (
+                          <tr key={c.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
+                            <td className="px-4 py-3">
+                              <span className="text-sm font-extrabold text-slate-800 dark:text-slate-200">{c.name} - {c.section}</span>
+                            </td>
+                            <td className="px-4 py-3 text-right">
+                              <div className="flex items-center justify-end gap-2">
+                                 <button onClick={() => downloadClassSampleExcel(exam, c)} className="px-3 py-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer">
+                                   <Download className="w-3.5 h-3.5" /> Sample
+                                 </button>
+                                 <label className="px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer mb-0">
+                                   <Upload className="w-3.5 h-3.5" /> Upload
+                                   <input type="file" className="hidden" accept=".xlsx,.xls" onChange={(e) => handleClassExcelUpload(e, exam.id, c.id)} />
+                                 </label>
+                                 <Link to={`/exams/${exam.id}/entry?classId=${c.id}`} className="px-3 py-1.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold rounded-lg text-xs shadow-md shadow-indigo-500/20 transition-all flex items-center gap-1.5 cursor-pointer inline-flex">
+                                   <Edit3 className="w-3.5 h-3.5" /> Enter Marks
+                                 </Link>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                        {(!exam.classes || exam.classes.length === 0) && (
+                          <tr>
+                            <td colSpan={2} className="px-4 py-6 text-center">
+                              <div className="inline-flex items-center gap-2 p-3 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/40 text-amber-700 dark:text-amber-300">
+                                <span className="text-xs font-bold">No classes assigned to this exam</span>
+                              </div>
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
                   </div>
 
                   {isAdmin && (
