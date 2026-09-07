@@ -17,6 +17,7 @@
 8. **Flutter Teachers, Classes, Subjects UI**: Converted Teachers, Classes, and Subjects screens to use `CustomScrollView` and `SliverAppBar` with gradient headers and floating search bars (where applicable) to match the premium scroll behavior of the Students screen.
 9. **WhatsApp Icon Fix**: Replaced the custom network image WhatsApp icon with the native `font_awesome_flutter` exact WhatsApp icon for the Teachers Directory screen.
 10. **Push Notifications Fix**: Fixed the issue where hero banner notifications and sounds were missing. The backend (`firebase.ts`) was sending pushes to the outdated `jyschool_alerts_v1` channel while the app was listening on `jyschool_alerts_v2`. Corrected the channel ID and reset the sound to default.
+11. **Universal App Welcome Screen**: Designed and implemented a modern `WelcomeScreen` as the new entry point for unauthenticated users in the Universal App. It includes smooth fade and slide animations, the school logo, an attractive illustration, and a primary "Get Started" button that navigates to the Login screen.
 
 ## Current Pending Task
 - User needs to rebuild frontend PM2 instance to test the new Progress Card.

@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'screens/login_screen.dart';
+import 'screens/welcome_screen.dart';
 import 'screens/dashboard_screen.dart';
 import 'screens/main_layout.dart';
 import 'services/api_service.dart';
@@ -139,6 +140,6 @@ class _AuthCheckState extends State<AuthCheck> {
         ),
       );
     }
-    return _isAuthenticated ? const MainLayout() : const LoginScreen();
+    return _isAuthenticated ? const MainLayout() : const WelcomeScreen();
   }
 }
