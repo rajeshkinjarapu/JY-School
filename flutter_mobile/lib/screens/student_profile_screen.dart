@@ -71,11 +71,6 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
     }
     try {
       final studentRes = await ApiService.getStudentById(id.toString()).timeout(const Duration(seconds: 10));
-      Map<String, dynamic>? feeRes;
-      try {
-        feeRes = await ApiService.getFeeStructures().timeout(const Duration(seconds: 10));
-      } catch (_) {}
-
       if (mounted) {
         setState(() {
           if (studentRes['success'] == true && studentRes['data'] != null && studentRes['data'] is Map) {
@@ -83,10 +78,6 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
           } else {
             _studentDetails = widget.student;
           }
-          if (feeRes != null && feeRes['success'] == true && feeRes['data'] is List) {
-            _feeStructures = feeRes['data'] as List<dynamic>;
-          }
-          _isLoading = false;
         });
       }
     } catch (e) {
@@ -94,6 +85,24 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
       if (mounted) {
         setState(() {
           _studentDetails = widget.student;
+        });
+      }
+    }
+
+    try {
+      final feeRes = await ApiService.getFeeStructures().timeout(const Duration(seconds: 10));
+      if (mounted) {
+        setState(() {
+          if (feeRes != null && feeRes['success'] == true && feeRes['data'] is List) {
+            _feeStructures = feeRes['data'] as List<dynamic>;
+          }
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error fetching fee structures: $e');
+      if (mounted) {
+        setState(() {
           _isLoading = false;
         });
       }

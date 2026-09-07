@@ -83,9 +83,18 @@ export const getById = async (req: AuthRequest, res: Response, next: NextFunctio
       user: { select: { id: true, name: true, email: true, phone: true, photoUrl: true, isActive: true, createdAt: true } },
       class: true,
       marks: { 
-        include: { 
+        select: { 
+          id: true,
+          marksObtained: true,
+          maxMarks: true,
+          grade: true,
+          remarks: true,
+          createdAt: true,
+          examId: true,
+          subjectId: true,
+          studentId: true,
           exam: { select: { id: true, name: true, term: true, examDate: true, maxMarks: true, passingMarks: true } }, 
-          subject: true 
+          subject: { select: { id: true, name: true, code: true, classId: true } } 
         }, 
         orderBy: { createdAt: 'desc' } 
       },
