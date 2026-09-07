@@ -813,8 +813,8 @@ export const JEEProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
                 <p className="text-xs font-semibold text-slate-500">Generated {studentsData.length} cards based on exam results.</p>
               </div>
               {isSuperAdmin && (
-                 <button onClick={handlePrintAll} className="hidden md:flex bg-gradient-to-r from-fuchsia-500 to-rose-600 hover:from-fuchsia-600 hover:to-rose-700 text-white shadow-md shadow-fuchsia-500/20 hover:-translate-y-0.5 px-4 py-2.5 rounded-xl text-xs uppercase tracking-widest font-black transition-all duration-300 items-center gap-2">
-                    <Printer className="w-4 h-4" /> Print All Cards
+                 <button onClick={handlePrintAll} className="hidden md:flex whitespace-nowrap flex-shrink-0 bg-gradient-to-r from-fuchsia-500 to-rose-600 hover:from-fuchsia-600 hover:to-rose-700 text-white shadow-md shadow-fuchsia-500/20 hover:-translate-y-0.5 px-4 py-2.5 rounded-xl text-xs uppercase tracking-widest font-black transition-all duration-300 items-center gap-2">
+                    <Printer className="w-4 h-4 shrink-0" /> Print All Cards
                  </button>
               )}
             </div>
