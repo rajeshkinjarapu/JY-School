@@ -189,9 +189,26 @@ export const ExamListPage: React.FC = () => {
   // -------------------------------------------------------------
   const downloadSampleExcel = async () => {
     const XLSX = await import('xlsx');
+    
+    let subjectNames = ["Maths", "Physics", "Chemistry"];
+    const selectedExam = exams.find(e => e.id === excelExamId);
+    if (selectedExam && selectedExam.subjects) {
+      try {
+        const subjectsObj = typeof selectedExam.subjects === 'string' ? JSON.parse(selectedExam.subjects) : selectedExam.subjects;
+        const allSubjects = new Set<string>();
+        if (subjectsObj?.globalSubjects) subjectsObj.globalSubjects.forEach((s: any) => allSubjects.add(s.name));
+        if (subjectsObj?.classConfigs) {
+          subjectsObj.classConfigs.forEach((cfg: any) => {
+            if (cfg.subjects) cfg.subjects.forEach((s: any) => allSubjects.add(s.name));
+          });
+        }
+        if (allSubjects.size > 0) subjectNames = Array.from(allSubjects);
+      } catch (e) {}
+    }
+
     const ws = XLSX.utils.json_to_sheet([
-      { "Student ID": "STU123", "Maths": 85, "Physics": 78, "Chemistry": 92 },
-      { "Student ID": "STU124", "Maths": 90, "Physics": 88, "Chemistry": 89 }
+      { "S.No": 1, "Student ID": "STU123", "Student Name": "John Doe", ...Object.fromEntries(subjectNames.map(s => [s, 85])) },
+      { "S.No": 2, "Student ID": "STU124", "Student Name": "Jane Doe", ...Object.fromEntries(subjectNames.map(s => [s, 90])) }
     ]);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Marks");
@@ -231,7 +248,7 @@ export const ExamListPage: React.FC = () => {
 
             Object.keys(row).forEach((key) => {
               const normalizedKey = key.toLowerCase().trim();
-              if (['student id', 'studentid', 'student_id', 'id', 'remarks'].includes(normalizedKey)) return;
+              if (['student id', 'studentid', 'student_id', 'id', 'remarks', 's.no', 's. no', 'sno', 'student name', 'studentname', 'name'].includes(normalizedKey)) return;
 
               // Assume any other column is a subject
               let subjectId = key;
