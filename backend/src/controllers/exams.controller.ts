@@ -653,10 +653,19 @@ export const getAllStatus = async (req: AuthRequest, res: Response, next: NextFu
             classSubjects = [];
           }
 
-         const enteredSubjectIds = examClassEnteredSubjects[exam.id]?.[cls.id] || new Set<string>();
+         const rawEnteredIds = examClassEnteredSubjects[exam.id]?.[cls.id] || new Set<string>();
          
-         const enteredSubjects = classSubjects.filter(s => enteredSubjectIds.has(s.id));
-         const pendingSubjects = classSubjects.filter(s => !enteredSubjectIds.has(s.id));
+         // Build a set of normalized names for the entered subjects
+         const enteredSubjectNames = new Set<string>();
+         for (const sId of rawEnteredIds) {
+           const sub = classSubjectsMap[cls.id]?.find(s => s.id === sId);
+           if (sub && sub.name) {
+             enteredSubjectNames.add(sub.name.trim().toUpperCase());
+           }
+         }
+         
+         const enteredSubjects = classSubjects.filter(s => enteredSubjectNames.has(s.name?.trim().toUpperCase()));
+         const pendingSubjects = classSubjects.filter(s => !enteredSubjectNames.has(s.name?.trim().toUpperCase()));
          
          const totalSubjects = classSubjects.length;
          const enteredCount = enteredSubjects.length;
