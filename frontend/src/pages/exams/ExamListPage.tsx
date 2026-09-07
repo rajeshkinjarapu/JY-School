@@ -292,6 +292,107 @@ export const ExamListPage: React.FC = () => {
     }
   };
 
+  const downloadClassSampleExcel = async (exam: any, classObj: any) => {
+    const XLSX = await import('xlsx');
+    
+    let subjectNames = ["Maths", "Physics", "Chemistry"];
+    if (exam && exam.subjects) {
+      try {
+        const subjectsObj = typeof exam.subjects === 'string' ? JSON.parse(exam.subjects) : exam.subjects;
+        let classSubjects: any[] = [];
+        if (subjectsObj?.classConfigs) {
+          const cfg = subjectsObj.classConfigs.find((c: any) => c.classId === classObj.id);
+          if (cfg && cfg.subjects && cfg.subjects.length > 0) {
+            classSubjects = cfg.subjects;
+          }
+        }
+        if (classSubjects.length === 0 && subjectsObj?.globalSubjects) {
+          classSubjects = subjectsObj.globalSubjects;
+        }
+        if (classSubjects.length > 0) {
+          subjectNames = classSubjects.map((s: any) => s.name);
+        }
+      } catch (e) {}
+    }
+
+    const ws = XLSX.utils.json_to_sheet([
+      { "S.No": 1, "Student ID": "STU123", "Student Name": "John Doe", ...Object.fromEntries(subjectNames.map(s => [s, 85])) },
+      { "S.No": 2, "Student ID": "STU124", "Student Name": "Jane Doe", ...Object.fromEntries(subjectNames.map(s => [s, 90])) }
+    ]);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Marks");
+    XLSX.writeFile(wb, `${exam.name}_${classObj.name}_Sample.xlsx`);
+  };
+
+  const handleClassExcelUpload = async (e: React.ChangeEvent<HTMLInputElement>, examId: string, classId: string) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    const toastId = toast.loading('Processing Excel file...');
+
+    try {
+      const subjectsRes: any = await api.get('/api/subjects?limit=500');
+      const subjectsList = subjectsRes.data?.data || subjectsRes.data || [];
+      const subjectMap = new Map(subjectsList.map((s: any) => [s.name.toLowerCase().trim(), s.id]));
+
+      const reader = new FileReader();
+      reader.onload = async (evt) => {
+        try {
+          const data = evt.target?.result;
+          const XLSX = await import('xlsx');
+          const workbook = XLSX.read(data, { type: 'binary' });
+          const sheetName = workbook.SheetNames[0];
+          const sheet = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
+          
+          const mappedMarks: any[] = [];
+
+          sheet.forEach((row: any) => {
+            const studentId = row['Student ID'] || row['studentId'] || row['Student Id'] || row['ID'];
+            if (!studentId) return;
+
+            Object.keys(row).forEach((key) => {
+              const normalizedKey = key.toLowerCase().trim();
+              if (['student id', 'studentid', 'student_id', 'id', 'remarks', 's.no', 's. no', 'sno', 'student name', 'studentname', 'name'].includes(normalizedKey)) return;
+
+              let subjectId = key;
+              if (subjectMap.has(normalizedKey)) {
+                subjectId = subjectMap.get(normalizedKey);
+              }
+
+              const marksObtained = Number(row[key]);
+              if (!isNaN(marksObtained)) {
+                mappedMarks.push({
+                  studentId: String(studentId),
+                  subjectId: subjectId,
+                  marksObtained: marksObtained,
+                  remarks: row['Remarks'] || row['remarks'] || ''
+                });
+              }
+            });
+          });
+
+          if (mappedMarks.length === 0) {
+            toast.error('No valid marks found in the file', { id: toastId });
+            return;
+          }
+
+          await api.post('/api/marks/bulk', {
+            examId: examId,
+            marks: mappedMarks
+          });
+          toast.success('Marks uploaded successfully!', { id: toastId });
+        } catch (err: any) {
+          toast.error(err.response?.data?.message || 'Error processing excel file', { id: toastId });
+        }
+      };
+      reader.readAsBinaryString(file);
+    } catch (err) {
+      toast.error('Error uploading excel file', { id: toastId });
+    }
+    
+    e.target.value = '';
+  };
+
   // -------------------------------------------------------------
   // EXAM PLAN Tab States & Logic
   // -------------------------------------------------------------
@@ -1302,13 +1403,22 @@ export const ExamListPage: React.FC = () => {
                   
                   <div className="flex flex-col gap-2.5 flex-1 mt-4 relative z-10">
                     {sortClasses(exam.classes || []).map((c: any) => (
-                      <div key={c.id} className="flex gap-2 items-center bg-slate-50 dark:bg-slate-800/50 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800 hover:bg-slate-100 transition-colors">
-                        <div className="flex-1 text-xs sm:text-sm font-extrabold text-slate-800 dark:text-slate-200 px-1 truncate">
+                      <div key={c.id} className="flex flex-col xl:flex-row gap-3 xl:items-center bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-100 dark:border-slate-800 hover:bg-slate-100 transition-colors">
+                        <div className="flex-1 text-sm font-extrabold text-slate-800 dark:text-slate-200 px-1 truncate">
                           {c.name} - {c.section}
                         </div>
-                        <Link to={`/exams/${exam.id}/entry?classId=${c.id}`} className="px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold rounded-lg text-xs shadow-md shadow-indigo-500/20 transition-all shrink-0">
-                          Enter Marks
-                        </Link>
+                        <div className="flex flex-wrap gap-2 items-center justify-start xl:justify-end">
+                           <button onClick={() => downloadClassSampleExcel(exam, c)} className="px-3 py-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 cursor-pointer">
+                             <Download className="w-3.5 h-3.5" /> Sample
+                           </button>
+                           <label className="px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 cursor-pointer">
+                             <Upload className="w-3.5 h-3.5" /> Upload
+                             <input type="file" className="hidden" accept=".xlsx,.xls" onChange={(e) => handleClassExcelUpload(e, exam.id, c.id)} />
+                           </label>
+                           <Link to={`/exams/${exam.id}/entry?classId=${c.id}`} className="px-3 py-1.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold rounded-lg text-xs shadow-md shadow-indigo-500/20 transition-all shrink-0 flex items-center gap-1.5 cursor-pointer">
+                             <Edit3 className="w-3.5 h-3.5" /> Enter Marks
+                           </Link>
+                        </div>
                       </div>
                     ))}
                     {(!exam.classes || exam.classes.length === 0) && (
