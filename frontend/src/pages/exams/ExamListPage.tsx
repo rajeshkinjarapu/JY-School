@@ -326,10 +326,9 @@ export const ExamListPage: React.FC = () => {
 
       const rows = sortedStudents.map((st: any, idx: number) => ({
         "S.No": idx + 1,
-        "Student ID": st.id,
+        "Student ID": st.rollNo || st.rollNumber || st.id.substring(0, 8),
         "Student Name": st.user?.name || "Unknown",
-        ...Object.fromEntries(subjectNames.map(s => [s, ""])),
-        "Remarks": ""
+        ...Object.fromEntries(subjectNames.map(s => [s, ""]))
       }));
 
       if (rows.length === 0) {
@@ -338,8 +337,7 @@ export const ExamListPage: React.FC = () => {
           "S.No": 1,
           "Student ID": "STU123",
           "Student Name": "John Doe",
-          ...Object.fromEntries(subjectNames.map(s => [s, ""])),
-          "Remarks": ""
+          ...Object.fromEntries(subjectNames.map(s => [s, ""]))
         });
       }
 
@@ -397,28 +395,35 @@ export const ExamListPage: React.FC = () => {
       doc.setFontSize(10);
       doc.text(`Exam: ${exam.name}   |   Class: ${classObj.name} ${classObj.section ? `(${classObj.section})` : ''}`, doc.internal.pageSize.getWidth() / 2, 55, { align: 'center' });
       
-      const head = [["S.No", "Student ID", "Student Name", ...subjectNames, "Remarks"]];
+      const head = [["S.No", "Student ID", "Student Name", ...subjectNames]];
       const body = sortedStudents.map((st: any, idx: number) => [
         (idx + 1).toString(),
-        st.id,
+        st.rollNo || st.rollNumber || st.id.substring(0, 8),
         st.user?.name || "Unknown",
-        ...subjectNames.map(() => ""), 
-        "" 
+        ...subjectNames.map(() => "")
       ]);
+
+      // Calculate dynamic row height to fit A4 page (842pt height)
+      const availableHeight = 842 - 70 - 30; // startY 70, bottom margin 30
+      const headerHeight = 25;
+      let dynamicRowHeight = Math.floor((availableHeight - headerHeight) / Math.max(sortedStudents.length, 1));
+      
+      // Cap the row height between 14pt (min for readability) and 35pt (max to not look too stretched)
+      dynamicRowHeight = Math.max(14, Math.min(dynamicRowHeight, 35));
 
       autoTable(doc, {
         head,
         body,
         startY: 70,
         theme: 'grid',
-        styles: { fontSize: 7.5, cellPadding: 1.5, minCellHeight: 10, textColor: 20 },
-        headStyles: { fillColor: [41, 128, 185], textColor: 255, fontStyle: 'bold', halign: 'center', fontSize: 7.5 },
+        styles: { fontSize: 9, cellPadding: 2, minCellHeight: dynamicRowHeight, textColor: 20, valign: 'middle' },
+        headStyles: { fillColor: [41, 128, 185], textColor: 255, fontStyle: 'bold', halign: 'center', fontSize: 9, minCellHeight: 25 },
         columnStyles: {
-          0: { cellWidth: 25, halign: 'center' }, // S.No
-          1: { cellWidth: 155, fontStyle: 'bold', fontSize: 6.5 }, // ID (UUID is long)
-          2: { cellWidth: 120, fontStyle: 'bold' }, // Name
+          0: { cellWidth: 35, halign: 'center' }, // S.No
+          1: { cellWidth: 85, fontStyle: 'bold', halign: 'center' }, // ID (now short Roll No)
+          2: { cellWidth: 160, fontStyle: 'bold' }, // Name
         },
-        margin: { top: 30, right: 15, bottom: 20, left: 15 },
+        margin: { top: 30, right: 20, bottom: 20, left: 20 },
       });
 
       doc.save(`${exam.name}_${classObj.name}_Marks_Template.pdf`);
@@ -439,6 +444,16 @@ export const ExamListPage: React.FC = () => {
       const subjectsList = subjectsRes.data?.data || subjectsRes.data || [];
       const subjectMap = new Map(subjectsList.map((s: any) => [s.name.toLowerCase().trim(), s.id]));
 
+      const studentsRes = await api.get('/api/students', { params: { classId: classId, limit: 1000 } });
+      const studentsList = studentsRes.data?.data || studentsRes.data || [];
+      const studentMap = new Map();
+      studentsList.forEach((st: any) => {
+        studentMap.set(st.id, st.id); // By UUID just in case
+        if (st.rollNo) studentMap.set(String(st.rollNo).trim().toLowerCase(), st.id);
+        if (st.rollNumber) studentMap.set(String(st.rollNumber).trim().toLowerCase(), st.id);
+        studentMap.set(st.id.substring(0, 8).toLowerCase(), st.id);
+      });
+
       const reader = new FileReader();
       reader.onload = async (evt) => {
         try {
@@ -451,8 +466,11 @@ export const ExamListPage: React.FC = () => {
           const mappedMarks: any[] = [];
 
           sheet.forEach((row: any) => {
-            const studentId = row['Student ID'] || row['studentId'] || row['Student Id'] || row['ID'];
-            if (!studentId) return;
+            const rawStudentId = row['Student ID'] || row['studentId'] || row['Student Id'] || row['ID'];
+            if (!rawStudentId) return;
+            
+            const normalizedRawId = String(rawStudentId).trim().toLowerCase();
+            const realStudentId = studentMap.get(normalizedRawId) || rawStudentId;
 
             Object.keys(row).forEach((key) => {
               const normalizedKey = key.toLowerCase().trim();
@@ -466,7 +484,7 @@ export const ExamListPage: React.FC = () => {
               const marksObtained = Number(row[key]);
               if (!isNaN(marksObtained)) {
                 mappedMarks.push({
-                  studentId: String(studentId),
+                  studentId: String(realStudentId),
                   examId: examId,
                   subjectId: subjectId,
                   marksObtained: marksObtained,
