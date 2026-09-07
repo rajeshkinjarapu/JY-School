@@ -24,11 +24,11 @@ export const ProgressCardTemplate: React.FC<ProgressCardTemplateProps> = ({
     total: data.total || 0,
     academicYear: data.academicYear || "2026-2027",
     location: data.location || "Narasannapeta",
-    marks: data.marks && data.marks.length > 0 ? data.marks : [
+    marks: data.marks && data.marks.length > 0 ? data.marks : (data.studentId || data.rollNo ? [] : [
       { subject: "Mathematics", maxMarks: 100, obtained: 98 },
       { subject: "Physics", maxMarks: 100, obtained: 95 },
       { subject: "Chemistry", maxMarks: 100, obtained: 92 },
-    ]
+    ])
   };
 
   const TOTAL_MAX_MARKS = safeData.marks.reduce((sum: number, m: any) => sum + (Number(m.maxMarks) || 100), 0);

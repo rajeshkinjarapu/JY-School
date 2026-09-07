@@ -276,7 +276,7 @@ export const getResults = async (req: AuthRequest, res: Response, next: NextFunc
   if (!exam) return next(createError('Exam not found', 404));
 
   // Group marks by student
-  const studentMap = new Map<string, { studentId: string; name: string; photo?: string | null; rollNo: string; className: string; academicYear: string; mobile: string; fatherName?: string; marks: any[]; total: number; percentage: number; grade: string }>();
+  const studentMap = new Map<string, { studentId: string; classId: string; name: string; photo?: string | null; rollNo: string; className: string; academicYear: string; mobile: string; fatherName?: string; marks: any[]; total: number; percentage: number; grade: string }>();
   
   if (classId) {
     const classStudents = await prisma.student.findMany({
@@ -287,6 +287,7 @@ export const getResults = async (req: AuthRequest, res: Response, next: NextFunc
     for (const s of classStudents) {
       studentMap.set(s.id, {
         studentId: s.id,
+        classId: s.classId,
         name: s.user.name,
         photo: includePhoto ? (s.user as any).photoUrl : null,
         mobile: (s as any).fatherMobile || (s as any).motherMobile || s.user.phone || '-',
@@ -319,6 +320,7 @@ export const getResults = async (req: AuthRequest, res: Response, next: NextFunc
     if (!studentMap.has(key)) {
       studentMap.set(key, {
         studentId: key,
+        classId: mark.student.classId || (classId as string),
         name: mark.student.user.name,
         photo: includePhoto ? mark.student.user.photoUrl : null,
         mobile: mark.student.fatherMobile || mark.student.motherMobile || mark.student.user.phone || '-',
@@ -366,6 +368,23 @@ export const getResults = async (req: AuthRequest, res: Response, next: NextFunc
   }
 
   const results = Array.from(studentMap.values()).map((s) => {
+    // Populate missing subjects with AB if they have no marks entered for them
+    const studentClassSubjects = getSubjectsForClassHelper(exam.subjects, s.classId || (classId as string));
+    if (studentClassSubjects && studentClassSubjects.length > 0) {
+      studentClassSubjects.forEach((sub: any) => {
+        const subName = sub.name?.trim();
+        if (subName && !s.marks.find(m => m.subject.toUpperCase() === subName.toUpperCase())) {
+           s.marks.push({
+              subject: subName,
+              obtained: 0,
+              max: Number(sub.maxMarks) || 50,
+              grade: 'F',
+              remarks: 'AB'
+           });
+        }
+      });
+    }
+
     s.marks.sort((a, b) => {
       const weightA = subjectOrderMap.has(a.subject.toUpperCase().trim()) ? subjectOrderMap.get(a.subject.toUpperCase().trim())! : 999;
       const weightB = subjectOrderMap.has(b.subject.toUpperCase().trim()) ? subjectOrderMap.get(b.subject.toUpperCase().trim())! : 999;
