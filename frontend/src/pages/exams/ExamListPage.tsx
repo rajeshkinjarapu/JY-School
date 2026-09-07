@@ -385,14 +385,14 @@ export const ExamListPage: React.FC = () => {
         body,
         startY: 70,
         theme: 'grid',
-        styles: { fontSize: 8, cellPadding: 2, minCellHeight: 12 },
-        headStyles: { fillColor: [41, 128, 185], textColor: 255, fontStyle: 'bold', halign: 'center' },
+        styles: { fontSize: 7.5, cellPadding: 1.5, minCellHeight: 10, textColor: 20 },
+        headStyles: { fillColor: [41, 128, 185], textColor: 255, fontStyle: 'bold', halign: 'center', fontSize: 7.5 },
         columnStyles: {
-          0: { cellWidth: 30, halign: 'center' },
-          1: { cellWidth: 70 },
-          2: { cellWidth: 100 },
+          0: { cellWidth: 25, halign: 'center' }, // S.No
+          1: { cellWidth: 155, fontStyle: 'bold', fontSize: 6.5 }, // ID (UUID is long)
+          2: { cellWidth: 120, fontStyle: 'bold' }, // Name
         },
-        margin: { top: 30, right: 20, bottom: 20, left: 20 },
+        margin: { top: 30, right: 15, bottom: 20, left: 15 },
       });
 
       doc.save(`${exam.name}_${classObj.name}_Marks_Template.pdf`);
