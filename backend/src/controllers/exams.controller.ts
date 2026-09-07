@@ -358,9 +358,9 @@ export const getResults = async (req: AuthRequest, res: Response, next: NextFunc
 
     if (existingMarkIndex !== -1) {
       entry.total = entry.total - entry.marks[existingMarkIndex].obtained + mark.marksObtained;
-      entry.marks[existingMarkIndex] = { subject: mark.subject.name, obtained: mark.marksObtained, max: actualMax, grade: mark.grade };
+      entry.marks[existingMarkIndex] = { subject: mark.subject.name, obtained: mark.marksObtained, max: actualMax, grade: mark.grade, remarks: mark.remarks };
     } else {
-      entry.marks.push({ subject: mark.subject.name, obtained: mark.marksObtained, max: actualMax, grade: mark.grade });
+      entry.marks.push({ subject: mark.subject.name, obtained: mark.marksObtained, max: actualMax, grade: mark.grade, remarks: mark.remarks });
       entry.total += mark.marksObtained;
     }
   }
@@ -449,10 +449,14 @@ export const toggleFreezeClass = async (req: AuthRequest, res: Response, next: N
 
     let frozenClasses: string[] = [];
     if (exam.frozenClasses) {
-      if (typeof exam.frozenClasses === 'string') {
-        frozenClasses = JSON.parse(exam.frozenClasses as string);
-      } else if (Array.isArray(exam.frozenClasses)) {
-        frozenClasses = exam.frozenClasses as string[];
+      try {
+        if (typeof exam.frozenClasses === 'string') {
+          frozenClasses = JSON.parse(exam.frozenClasses as string);
+        } else if (Array.isArray(exam.frozenClasses)) {
+          frozenClasses = exam.frozenClasses as string[];
+        }
+      } catch (e) {
+        frozenClasses = [];
       }
     }
 
@@ -703,15 +707,13 @@ export const scanOmr = async (req: AuthRequest, res: Response, next: NextFunctio
       return next(createError('No image uploaded', 400));
     }
 
-    const { examId } = req.body;
+    const { examId, answerKey: reqAnswerKey } = req.body;
     if (!examId) {
       return next(createError('Exam ID is required', 400));
     }
 
-    // Fetch the answer key for this exam if applicable
-    // For now, we will pass an empty answer key and let Python return mock results.
-    // Real implementation would parse QuestionPaper or Exam mapping.
-    const answerKey = JSON.stringify({ "1": "A", "2": "B" });
+    // Fetch the answer key from request if available, otherwise mock
+    const answerKey = reqAnswerKey ? (typeof reqAnswerKey === 'string' ? reqAnswerKey : JSON.stringify(reqAnswerKey)) : JSON.stringify({ "1": "A", "2": "B" });
 
     const imagePath = req.file.path;
     const scriptPath = path.resolve(__dirname, '../../scripts/omr_scanner.py');

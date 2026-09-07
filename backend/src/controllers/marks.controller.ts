@@ -120,8 +120,9 @@ export const bulkCreate = async (req: AuthRequest, res: Response, next: NextFunc
     };
 
     const upsertOps: any[] = [];
+    const deleteOps: any[] = [];
     
-    for (const m of marks) {
+    for (const m of marks as any[]) {
       // ── SUBJECT ID RESOLUTION (4-level fallback chain) ──────────────────────
       let realSubjectId = m.subjectId;
       let resolvedFakeName: string | null = null;
@@ -154,16 +155,9 @@ export const bulkCreate = async (req: AuthRequest, res: Response, next: NextFunc
           if (matchingReal) {
             realSubjectId = matchingReal.id;
           } else if (classId && resolvedFakeName) {
-            // Level 4: Auto-create subject in DB so FK is always satisfied
-            const created = await prisma.subject.create({
-              data: {
-                name: resolvedFakeName,
-                code: resolvedFakeName.substring(0, 3).toUpperCase(),
-                classId: classId as string
-              }
-            });
-            realSubjects.push(created);
-            realSubjectId = created.id;
+             // STRICT VALIDATION: Do NOT auto-create subjects anymore. Prevent ghost subjects.
+             // If subject not found, just skip this mark entry.
+             continue;
           }
         } else {
           // Level 4b: sent ID not in exam subjects — check if it exists in any class
@@ -176,17 +170,20 @@ export const bulkCreate = async (req: AuthRequest, res: Response, next: NextFunc
               realSubjectId = sameNameSameClass.id;
               resolvedFakeName = sameNameSameClass.name;
             } else {
-              const created = await prisma.subject.create({
-                data: { name: anyMatch.name, code: anyMatch.name.substring(0, 3).toUpperCase(), classId: classId as string }
-              });
-              realSubjects.push(created);
-              realSubjectId = created.id;
-              resolvedFakeName = created.name;
+              continue; // STRICT VALIDATION: Do not auto-create
             }
           }
         }
       }
       // ────────────────────────────────────────────────────────────────────────
+
+      // Handle deletion
+      if (m.isDeleted) {
+        deleteOps.push(prisma.mark.deleteMany({
+           where: { studentId: m.studentId, examId: m.examId, subjectId: realSubjectId }
+        }));
+        continue;
+      }
 
       // Handle 'AB' (Absent) logic
       let finalMarksObtained = m.marksObtained;
@@ -239,7 +236,7 @@ export const bulkCreate = async (req: AuthRequest, res: Response, next: NextFunc
       }));
     }
 
-    const results = await prisma.$transaction(upsertOps);
+    const results = await prisma.$transaction([...deleteOps, ...upsertOps]);
 
     // Trigger Notification for Admin & Super Admin
     if (results.length > 0 && marks[0]) {

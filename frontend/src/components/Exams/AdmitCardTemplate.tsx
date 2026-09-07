@@ -38,11 +38,17 @@ export const AdmitCardTemplate: React.FC<AdmitCardTemplateProps> = ({ student, e
       </div>
       <div className="flex-1 text-center pr-10">
         <h1 className={`${doubleSided ? 'text-[34px]' : 'text-[22px] sm:text-[28px]'} whitespace-nowrap font-black uppercase tracking-wider text-slate-900 mb-1`} style={{ fontFamily: '"Georgia", serif' }}>
-          SRI VENKATESWARA JY SCHOOL
+          {settings?.schoolName || "SRI VENKATESWARA JY SCHOOL"}
         </h1>
-        <p className={`${doubleSided ? 'text-[15px]' : 'text-[12px]'} font-bold uppercase tracking-[0.15em] text-slate-700 mb-2`}>
-          (IIT-JEE/NEET Foundation – Olympiads)
-        </p>
+        {settings?.schoolSubtitle ? (
+          <p className={`${doubleSided ? 'text-[15px]' : 'text-[12px]'} font-bold uppercase tracking-[0.15em] text-slate-700 mb-2`}>
+            {settings.schoolSubtitle}
+          </p>
+        ) : (
+          <p className={`${doubleSided ? 'text-[15px]' : 'text-[12px]'} font-bold uppercase tracking-[0.15em] text-slate-700 mb-2`}>
+            (IIT-JEE/NEET Foundation – Olympiads)
+          </p>
+        )}
         {!isBackSide && (
           <div className="flex items-center justify-center gap-2 text-xs font-semibold text-slate-600 bg-white inline-flex px-4 py-1 rounded-full border border-slate-200 shadow-sm">
             <MapPin className="w-3.5 h-3.5 text-slate-800" />

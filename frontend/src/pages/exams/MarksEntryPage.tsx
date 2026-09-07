@@ -119,7 +119,7 @@ export const MarksEntryPage: React.FC = () => {
     setMarksData((prev) => {
       const next = { ...prev };
       if (val === '') {
-        delete next[`${studentId}_${subjectId}`];
+        next[`${studentId}_${subjectId}`] = '';
       } else if (val.toUpperCase() === 'AB') {
         next[`${studentId}_${subjectId}`] = 'AB';
       } else {
@@ -162,11 +162,22 @@ export const MarksEntryPage: React.FC = () => {
 
     const payload = {
       marks: Object.keys(marksData)
-        .filter(key => marksData[key] !== null && marksData[key] !== undefined && marksData[key] !== '')
         .map(key => {
           const [studentId, subjectId] = key.split('_');
           const subjectInfo = subjects.find(s => s.id === subjectId);
           const val = marksData[key];
+          
+          if (val === null || val === undefined || val === '') {
+            return {
+              studentId,
+              examId: id,
+              subjectId,
+              marksObtained: -1,
+              maxMarks: Number(subjectInfo?.maxMarks) || 100,
+              isDeleted: true
+            };
+          }
+          
           const isAB = val === 'AB';
           
           return {

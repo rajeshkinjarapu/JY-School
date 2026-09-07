@@ -31,6 +31,7 @@ export const ProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
   const [teacherSignatureUrl, setTeacherSignatureUrl] = useState('');
   const [examNameOverride, setExamNameOverride] = useState('');
   const [published, setPublished] = useState(false);
+  const [mergedSettings, setMergedSettings] = useState<any>({});
 
   const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
   const resolveUrl = (url: string) => {
@@ -55,6 +56,11 @@ export const ProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
       setTeacherSignatureUrl(examObj.admitCardSettings?.teacherSignatureUrl || globalSettings.teacherSignatureUrl || '');
       setExamNameOverride(examObj.admitCardSettings?.examNameOverride || '');
       setPublished(examObj.admitCardSettings?.progressCardPublished || false);
+      
+      setMergedSettings({
+        ...globalSettings,
+        ...(examObj.admitCardSettings || {})
+      });
     }).catch(() => {});
   }, [selectedExamId]);
 
@@ -138,6 +144,7 @@ export const ProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
       if (selectedExam) {
         selectedExam.admitCardSettings = newSettings;
       }
+      setMergedSettings(newSettings);
       setShowSettings(false);
     } catch (e: any) {
       toast.error('Failed to save settings: ' + e.message);
@@ -650,7 +657,7 @@ export const ProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
           
             {studentsData.map((data, idx) => (
               <div key={data.studentId} id={`progress-card-${idx}`} className="progress-card-wrapper flex justify-center bg-white" style={{ width: '210mm' }}>
-                <ProgressCardTemplate data={data} exam={selectedExam} settings={selectedExam?.admitCardSettings} />
+                <ProgressCardTemplate data={data} exam={selectedExam} settings={mergedSettings} />
               </div>
             ))}
           </div>

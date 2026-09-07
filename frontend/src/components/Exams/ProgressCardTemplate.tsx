@@ -124,9 +124,9 @@ export const ProgressCardTemplate: React.FC<ProgressCardTemplateProps> = ({
               )}
             </div>
             <div className="title-wrap">
-                <div className="school-name">SRI VENKATESWARA JY SCHOOL</div>
-                <div className="school-sub">(IIT-JEE / NEET Foundation · Olympiads)</div>
-                <div className="school-address">Opp. Hero Showroom, SVL Paradise Campus, Narasannapeta</div>
+                <div className="school-name">{settings?.schoolName || "SRI VENKATESWARA JY SCHOOL"}</div>
+                {settings?.schoolSubtitle && <div className="school-sub">{settings.schoolSubtitle}</div>}
+                <div className="school-address">{settings?.schoolAddress || "Opp. Hero Showroom, SVL Paradise Campus, Narasannapeta"}</div>
                 <div className="exam-title">{examTitle}</div>
                 <div className="result-card-label">✦ RESULT CARD ✦</div>
             </div>
@@ -206,12 +206,13 @@ export const ProgressCardTemplate: React.FC<ProgressCardTemplateProps> = ({
                 <tbody>
                     {safeData.marks.map((sub: any, i: number) => {
                       const max = Number(sub.maxMarks) || 100;
-                      const obt = Number(sub.obtained) || 0;
-                      const subPct = max > 0 ? ((obt / max) * 100).toFixed(1) : '0.0';
+                      const isAB = sub.remarks === 'AB';
+                      const obt = isAB ? 'AB' : (Number(sub.obtained) || 0);
+                      const subPct = isAB ? '0.0' : (max > 0 ? ((Number(sub.obtained) || 0) / max) * 100).toFixed(1);
                       return (
                         <tr key={i}>
                             <td className="subject-label"><span className="sub-icon">📘</span> {sub.subject}</td>
-                            <td className="marks-cell">{obt}</td>
+                            <td className={`marks-cell ${isAB ? 'text-red-500' : ''}`} style={isAB ? { color: '#ef4444' } : {}}>{obt}</td>
                             <td className="max-cell">{max}</td>
                             <td className="pct-cell">{subPct}%</td>
                         </tr>
