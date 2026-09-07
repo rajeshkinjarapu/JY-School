@@ -331,7 +331,7 @@ export const getResults = async (req: AuthRequest, res: Response, next: NextFunc
       });
     }
     const entry = studentMap.get(key)!;
-    const existingMarkIndex = entry.marks.findIndex(m => m.subject === mark.subject.name);
+    const existingMarkIndex = entry.marks.findIndex(m => m.subject.trim().toUpperCase() === mark.subject.name.trim().toUpperCase());
     
     const subKey = mark.subject.name.toUpperCase().trim();
     const studentClassId = mark.student.classId || (classId as string);
