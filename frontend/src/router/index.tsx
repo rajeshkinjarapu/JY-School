@@ -73,6 +73,7 @@ const ExamListPage = lazy(routeImports['/exams']);
 const CreateExamPage = lazy(routeImports['/exams/create']);
 const MarksEntryPage = lazy(() => import('../pages/exams/MarksEntryPage'));
 const ReportCardPage = lazy(() => import('../pages/exams/ReportCardPage'));
+const AppProgressCardView = lazy(() => import('../pages/exams/AppProgressCardView').then(m => ({ default: m.AppProgressCardView })));
 
 const TimetablePage = lazy(routeImports['/timetable']);
 const FinancePage = lazy(routeImports['/finance']);
@@ -131,6 +132,10 @@ export const router = createBrowserRouter([
   {
     path: '/reset-password',
     element: withSuspense(<ResetPasswordPage />),
+  },
+  {
+    path: '/app/progress-card/:examId/:studentId',
+    element: withSuspense(<AppProgressCardView />),
   },
   {
     path: '/',
