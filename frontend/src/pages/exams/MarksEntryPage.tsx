@@ -93,7 +93,7 @@ export const MarksEntryPage: React.FC = () => {
       const initialRemarks: { [key: string]: string } = {};
 
       flatMarks.forEach((m: any) => {
-        if (m.student?.classId === classId || (classRes.data && m.student?.rollNo)) { 
+        if (m.student?.classId === classId) { 
           const fakeSub = examSubjects.find((s: any) => s.name?.toLowerCase() === m.subject?.name?.toLowerCase());
           const fakeSubId = fakeSub ? fakeSub.id : m.subjectId;
           initialMarks[`${m.studentId}_${fakeSubId}`] = m.remarks === 'AB' ? 'AB' : m.marksObtained;
