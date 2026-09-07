@@ -82,7 +82,13 @@ export const getById = async (req: AuthRequest, res: Response, next: NextFunctio
     include: {
       user: { select: { id: true, name: true, email: true, phone: true, photoUrl: true, isActive: true, createdAt: true } },
       class: true,
-      marks: { include: { exam: true, subject: true }, orderBy: { createdAt: 'desc' } },
+      marks: { 
+        include: { 
+          exam: { select: { id: true, name: true, term: true, examDate: true, maxMarks: true, passingMarks: true } }, 
+          subject: true 
+        }, 
+        orderBy: { createdAt: 'desc' } 
+      },
       feePayments: { include: { feeStructure: true }, orderBy: { createdAt: 'desc' } },
       feeDiscounts: true,
     },
