@@ -119,7 +119,15 @@ export const ExamStatusTab: React.FC<{ exams: any[] }> = ({ exams }) => {
                   </tr>
                 </thead>
                 <tbody>
-                  {(activeExamData.classes || []).map((cls: any, rowIdx: number) => {
+                  {(activeExamData.classes || []).slice().sort((a: any, b: any) => {
+                    const nameA = a.name.toLowerCase();
+                    const nameB = b.name.toLowerCase();
+                    if (nameA.length !== nameB.length) return nameA.length - nameB.length;
+                    if (nameA !== nameB) return nameA.localeCompare(nameB);
+                    const secA = a.section?.toLowerCase() || '';
+                    const secB = b.section?.toLowerCase() || '';
+                    return secA.localeCompare(secB);
+                  }).map((cls: any, rowIdx: number) => {
                     const hasMarks = classesWithMarks.includes(cls.id);
                     const isExplicitlyFrozen = frozenClasses.includes(cls.id);
                     const stats = cls.subjectStats || { totalSubjects: [], enteredSubjects: [], pendingSubjects: [], progress: 0 };
