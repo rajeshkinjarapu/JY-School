@@ -137,10 +137,18 @@ export const JEEProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
       const currentSettings = selectedExam?.admitCardSettings || {};
       const newSettings = { ...currentSettings, logoUrl, signatureUrl, teacherSignatureUrl, examNameOverride, progressCardPublished: published };
       
+      // Save for current exam
       await api.post(`/api/exams/${selectedExamId}/admit-card-settings`, {
         admitCardPublished: selectedExam?.admitCardPublished || false,
         admitCardSettings: newSettings,
       });
+
+      // Save globally for future exams
+      await api.post('/api/settings', {
+        logoUrl,
+        principalSignatureUrl: signatureUrl,
+        teacherSignatureUrl
+      }).catch(err => console.warn('Could not save globally', err));
       
       toast.success('Settings saved successfully!');
       if (selectedExam) {

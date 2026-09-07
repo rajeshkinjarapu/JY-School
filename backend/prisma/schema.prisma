@@ -485,8 +485,10 @@ model SchoolSettings {
   phone       String?
   email       String?
   website     String?
-  logoUrl     String?
-  currentYear String   @default("2024-2025")
+  logoUrl                   String?
+  principalSignatureUrl     String?
+  teacherSignatureUrl       String?
+  currentYear               String   @default("2024-2025")
   examGradingSystem         String   @default("CBSE Standard (A1-E2)")
   examAutoPublish           Boolean  @default(false)
   examSendSms               Boolean  @default(true)

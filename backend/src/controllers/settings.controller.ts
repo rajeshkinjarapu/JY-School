@@ -22,7 +22,7 @@ export const getSettings = async (req: AuthRequest, res: Response, next: NextFun
 
 export const updateSettings = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const { schoolName, address, phone, email, website, logoUrl, currentYear, examGradingSystem, examAutoPublish, examSendSms, examShowGradesOnAdmitCard, examAdmitCardInstructions, bankName, bankAccountNumber, bankIfsc, upiId } = req.body;
+    const { schoolName, address, phone, email, website, logoUrl, principalSignatureUrl, teacherSignatureUrl, currentYear, examGradingSystem, examAutoPublish, examSendSms, examShowGradesOnAdmitCard, examAdmitCardInstructions, bankName, bankAccountNumber, bankIfsc, upiId } = req.body;
     let settings = await prisma.schoolSettings.findFirst();
 
     let qrCodeUrl = settings?.qrCodeUrl;
@@ -37,7 +37,7 @@ export const updateSettings = async (req: AuthRequest, res: Response, next: Next
     };
 
     const dataPayload = { 
-      schoolName, address, phone, email, website, logoUrl, currentYear, examGradingSystem, 
+      schoolName, address, phone, email, website, logoUrl, principalSignatureUrl, teacherSignatureUrl, currentYear, examGradingSystem, 
       examAutoPublish: parseBool(examAutoPublish, settings?.examAutoPublish ?? false), 
       examSendSms: parseBool(examSendSms, settings?.examSendSms ?? true), 
       examShowGradesOnAdmitCard: parseBool(examShowGradesOnAdmitCard, settings?.examShowGradesOnAdmitCard ?? false), 
