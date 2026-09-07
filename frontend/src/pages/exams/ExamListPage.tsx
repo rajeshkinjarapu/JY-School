@@ -12,6 +12,8 @@ import {
 import toast from 'react-hot-toast';
 import { Link, useSearchParams, useOutletContext, useNavigate } from 'react-router-dom';
 import { formatExamOptionLabel } from '../../utils/formatters';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import { sortClasses } from '../../utils/sortClasses';
 import { SlipTestsTab } from './SlipTestsTab';
 import { AdmitCardTab } from './AdmitCardTab';
@@ -323,6 +325,81 @@ export const ExamListPage: React.FC = () => {
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Marks");
     XLSX.writeFile(wb, `${exam.name}_${classObj.name}_Sample.xlsx`);
+  };
+
+  const downloadClassSamplePDF = async (exam: any, classObj: any) => {
+    const toastId = toast.loading('Generating PDF...');
+    try {
+      const res = await api.get('/api/students', { params: { classId: classObj.id, limit: 1000 } });
+      const students = res.data?.data || res.data || [];
+      const sortedStudents = students.sort((a: any, b: any) => (a.rollNumber || '').localeCompare(b.rollNumber || ''));
+
+      let subjectNames = ["Maths", "Physics", "Chemistry"];
+      if (exam && exam.subjects) {
+        try {
+          const subjectsObj = typeof exam.subjects === 'string' ? JSON.parse(exam.subjects) : exam.subjects;
+          let classSubjects: any[] = [];
+          if (subjectsObj?.classConfigs) {
+            const cfg = subjectsObj.classConfigs.find((c: any) => c.classId === classObj.id);
+            if (cfg && cfg.subjects && cfg.subjects.length > 0) {
+              classSubjects = cfg.subjects;
+            }
+          }
+          if (classSubjects.length === 0 && subjectsObj?.globalSubjects) {
+            classSubjects = subjectsObj.globalSubjects;
+          }
+          if (classSubjects.length > 0) {
+            subjectNames = classSubjects.map((s: any) => s.name);
+          }
+        } catch (e) {}
+      }
+
+      const doc = new jsPDF('p', 'pt', 'a4');
+      
+      let schoolName = "JY SCHOOL";
+      try {
+        const schoolSettingsRes = await api.get('/api/settings/school');
+        if (schoolSettingsRes.data?.data?.name) {
+          schoolName = schoolSettingsRes.data.data.name;
+        }
+      } catch (e) {}
+      
+      doc.setFontSize(14);
+      doc.setFont('helvetica', 'bold');
+      doc.text(schoolName, doc.internal.pageSize.getWidth() / 2, 35, { align: 'center' });
+      
+      doc.setFontSize(10);
+      doc.text(`Exam: ${exam.name}   |   Class: ${classObj.name} ${classObj.section ? `(${classObj.section})` : ''}`, doc.internal.pageSize.getWidth() / 2, 55, { align: 'center' });
+      
+      const head = [["S.No", "Student ID", "Student Name", ...subjectNames, "Remarks"]];
+      const body = sortedStudents.map((st: any, idx: number) => [
+        (idx + 1).toString(),
+        st.id,
+        st.user?.name || "Unknown",
+        ...subjectNames.map(() => ""), 
+        "" 
+      ]);
+
+      autoTable(doc, {
+        head,
+        body,
+        startY: 70,
+        theme: 'grid',
+        styles: { fontSize: 8, cellPadding: 2, minCellHeight: 12 },
+        headStyles: { fillColor: [41, 128, 185], textColor: 255, fontStyle: 'bold', halign: 'center' },
+        columnStyles: {
+          0: { cellWidth: 30, halign: 'center' },
+          1: { cellWidth: 70 },
+          2: { cellWidth: 100 },
+        },
+        margin: { top: 30, right: 20, bottom: 20, left: 20 },
+      });
+
+      doc.save(`${exam.name}_${classObj.name}_Marks_Template.pdf`);
+      toast.success('PDF Generated Successfully!', { id: toastId });
+    } catch (err) {
+      toast.error('Failed to generate PDF', { id: toastId });
+    }
   };
 
   const handleClassExcelUpload = async (e: React.ChangeEvent<HTMLInputElement>, examId: string, classId: string) => {
@@ -1393,7 +1470,7 @@ export const ExamListPage: React.FC = () => {
           </div>
 
           {selectedWrittenExamId && (
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 gap-6">
               {exams.filter(e => e.id === selectedWrittenExamId).map(exam => (
                 <div key={exam.id} className="relative rounded-2xl p-5 overflow-hidden bg-white dark:bg-slate-900 shadow-sm border border-slate-200/60 dark:border-slate-800 flex flex-col group">
                   <div className="relative z-10">
@@ -1403,53 +1480,43 @@ export const ExamListPage: React.FC = () => {
                     <p className="text-xs font-semibold text-slate-500 mt-1">Select class to enter marks:</p>
                   </div>
                   
-                  <div className="mt-4 relative z-10 w-full overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
-                    <table className="w-full text-left whitespace-nowrap">
-                      <thead className="bg-slate-50 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-800">
-                        <tr>
-                          <th className="px-4 py-3 text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider">Class</th>
-                          <th className="px-4 py-3 text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider text-right">Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 bg-white dark:bg-slate-900/50">
-                        {sortClasses(exam.classes || []).map((c: any) => (
-                          <tr key={c.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
-                            <td className="px-4 py-3">
-                              <span className="text-sm font-extrabold text-slate-800 dark:text-slate-200">{c.name} - {c.section}</span>
-                            </td>
-                            <td className="px-4 py-3 text-right">
-                              <div className="flex items-center justify-end gap-2">
-                                 <button onClick={() => downloadClassSampleExcel(exam, c)} className="px-3 py-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer">
-                                   <Download className="w-3.5 h-3.5" /> Sample
-                                 </button>
-                                 <label className="px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer mb-0">
-                                   <Upload className="w-3.5 h-3.5" /> Upload
-                                   <input type="file" className="hidden" accept=".xlsx,.xls" onChange={(e) => handleClassExcelUpload(e, exam.id, c.id)} />
-                                 </label>
-                                 <Link to={`/exams/${exam.id}/entry?classId=${c.id}`} className="px-3 py-1.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold rounded-lg text-xs shadow-md shadow-indigo-500/20 transition-all flex items-center gap-1.5 cursor-pointer inline-flex">
-                                   <Edit3 className="w-3.5 h-3.5" /> Enter Marks
-                                 </Link>
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
-                        {(!exam.classes || exam.classes.length === 0) && (
-                          <tr>
-                            <td colSpan={2} className="px-4 py-6 text-center">
-                              <div className="inline-flex items-center gap-2 p-3 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/40 text-amber-700 dark:text-amber-300">
-                                <span className="text-xs font-bold">No classes assigned to this exam</span>
-                              </div>
-                            </td>
-                          </tr>
-                        )}
-                      </tbody>
-                    </table>
+                  <div className="mt-5 relative z-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                    {sortClasses(exam.classes || []).map((c: any) => (
+                      <div key={c.id} className="flex flex-col bg-slate-50 dark:bg-slate-800/50 p-3.5 rounded-xl border border-slate-200/60 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors shadow-sm">
+                        <div className="flex items-center gap-2 mb-3 pb-2 border-b border-slate-200 dark:border-slate-700">
+                          <div className="w-6 h-6 rounded bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center shrink-0">
+                            <BookOpen className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+                          </div>
+                          <span className="text-sm font-extrabold text-slate-800 dark:text-slate-200 truncate">{c.name} - {c.section}</span>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2 mt-auto">
+                           <button onClick={() => downloadClassSampleExcel(exam, c)} className="w-full py-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer">
+                             <FileSpreadsheet className="w-3.5 h-3.5" /> Excel
+                           </button>
+                           <button onClick={() => downloadClassSamplePDF(exam, c)} className="w-full py-1.5 bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer">
+                             <FileText className="w-3.5 h-3.5" /> PDF
+                           </button>
+                           <label className="w-full py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer mb-0">
+                             <Upload className="w-3.5 h-3.5" /> Upload
+                             <input type="file" className="hidden" accept=".xlsx,.xls" onChange={(e) => handleClassExcelUpload(e, exam.id, c.id)} />
+                           </label>
+                           <Link to={`/exams/${exam.id}/entry?classId=${c.id}`} className="w-full py-1.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold rounded-lg text-xs shadow-md shadow-indigo-500/20 transition-all flex items-center justify-center gap-1.5 cursor-pointer inline-flex">
+                             <Edit3 className="w-3.5 h-3.5" /> Marks
+                           </Link>
+                        </div>
+                      </div>
+                    ))}
+                    {(!exam.classes || exam.classes.length === 0) && (
+                      <div className="col-span-full p-4 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/40 text-center">
+                        <span className="text-xs font-bold text-amber-700 dark:text-amber-300">No classes assigned to this exam</span>
+                      </div>
+                    )}
                   </div>
 
                   {isAdmin && (
                     <div className="pt-3 mt-3 border-t border-slate-100 dark:border-slate-800 relative z-10">
                       <button onClick={() => { setExcelExamId(exam.id); setShowExcelModal(true); }} className="w-full px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow-sm transition-all">
-                        Excel Bulk Upload
+                        Global Excel Bulk Upload
                       </button>
                     </div>
                   )}
