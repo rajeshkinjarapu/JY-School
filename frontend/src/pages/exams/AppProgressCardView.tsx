@@ -142,26 +142,54 @@ export const AppProgressCardView: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-200 py-6 px-4 flex flex-col items-center">
-      <div className="w-full max-w-[794px] flex justify-between items-center mb-6">
+    <div className="min-h-screen bg-gray-200 py-6 flex flex-col items-center overflow-x-hidden">
+      <div className="w-full max-w-[794px] px-4 flex justify-between items-center mb-6">
         <h1 className="text-xl font-bold text-gray-800">Student Progress Card</h1>
         <button
           onClick={downloadPDF}
-          className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-lg shadow-md font-medium transition-colors"
+          className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg shadow-md font-medium transition-colors text-sm"
         >
-          <Download className="w-5 h-5" />
-          <span>Download PDF</span>
+          <Download className="w-4 h-4" />
+          <span>Download</span>
         </button>
       </div>
       
-      {/* Container for the Progress Card that mimics print bounds */}
-      <div className="w-full max-w-[794px] overflow-auto shadow-2xl rounded-xl bg-white">
-        <div ref={cardRef} className="origin-top flex justify-center">
-          <ProgressCardTemplate 
-            data={mappedData} 
-            exam={examData} 
-            settings={settings} 
-          />
+      {/* Container for the Progress Card that mimics print bounds and scales down on mobile */}
+      <div className="w-full flex justify-center pb-12">
+        <div 
+          className="bg-white shadow-2xl origin-top"
+          style={{
+            width: '794px',
+            minHeight: '1123px',
+            transform: 'scale(var(--card-scale, 1))',
+            transformOrigin: 'top center',
+            marginBottom: 'calc(-1123px * (1 - var(--card-scale, 1)))'
+          }}
+          ref={(el) => {
+            if (el) {
+              const updateScale = () => {
+                const screenWidth = window.innerWidth;
+                const padding = 32; // 16px each side
+                if (screenWidth < 794 + padding) {
+                  const scale = (screenWidth - padding) / 794;
+                  el.style.setProperty('--card-scale', scale.toString());
+                } else {
+                  el.style.setProperty('--card-scale', '1');
+                }
+              };
+              updateScale();
+              window.addEventListener('resize', updateScale);
+              return () => window.removeEventListener('resize', updateScale);
+            }
+          }}
+        >
+          <div ref={cardRef} className="w-full h-full">
+            <ProgressCardTemplate 
+              data={mappedData} 
+              exam={examData} 
+              settings={settings} 
+            />
+          </div>
         </div>
       </div>
     </div>

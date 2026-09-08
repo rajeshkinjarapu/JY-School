@@ -9,9 +9,11 @@ const App: React.FC = () => {
   useEffect(() => {
     initNativeMobileApp();
 
-    // Prefetch all core data in background immediately on app boot.
-    // By the time user navigates to any page, data is already in cache → instant render.
-    DataCache.prefetch(['students', 'classes', 'exams', 'teachers', 'subjects']);
+    // Prefetch all core data in background immediately on app boot ONLY if logged in
+    // This prevents unauthenticated public pages (like progress card view) from being redirected to login
+    if (localStorage.getItem('accessToken')) {
+      DataCache.prefetch(['students', 'classes', 'exams', 'teachers', 'subjects']);
+    }
 
     const handleGlobalClick = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
