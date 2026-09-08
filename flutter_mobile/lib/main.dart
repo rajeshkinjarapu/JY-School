@@ -4,6 +4,8 @@ import 'package:flutter/foundation.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'screens/login_screen.dart';
 import 'screens/welcome_screen.dart';
 import 'screens/dashboard_screen.dart';
@@ -38,6 +40,17 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // Global Error Handlers
+  FlutterError.onError = (FlutterErrorDetails details) {
+    FlutterError.presentError(details);
+    debugPrint("Global Flutter Error: ${details.exception}");
+  };
+  PlatformDispatcher.instance.onError = (error, stack) {
+    debugPrint("Global Platform Error: $error");
+    return true; // Prevent app crash
+  };
+
   AppConfig.initialize(AppFlavor.universal);
   
   // Initialize Firebase only on non-web platforms (since web options aren't configured yet)
@@ -118,6 +131,19 @@ class _AuthCheckState extends State<AuthCheck> {
   }
 
   Future<void> _checkStatus() async {
+    // 1. Validate JSON safely to avoid crashes later
+    final prefs = await SharedPreferences.getInstance();
+    final userStr = prefs.getString('user');
+    if (userStr != null) {
+      try {
+        jsonDecode(userStr);
+      } catch (e) {
+        // Data is corrupted, clear everything
+        debugPrint("User data corrupted. Clearing local storage.");
+        await prefs.clear();
+      }
+    }
+
     final token = await ApiService.getToken();
     if (mounted) {
       UpdateService.checkForUpdate(context);

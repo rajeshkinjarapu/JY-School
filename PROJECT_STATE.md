@@ -31,6 +31,11 @@
    - **Print Layout Fix:** Fixed an issue where floating LaTeX images were shifting out of place during print. The print iframe was incorrectly resizing the A4 container to `100%` width instead of `210mm`, causing text reflow which misaligned absolute-positioned images. Ensured all generator pages enforce `210mm` width and `margin: 0` during print.
    - **Saved Papers Preview Fix:** Fixed a bug where viewing a saved paper from the "Saved Papers" page showed a blank screen (because the JSON state `<!--MCQ_DATA_V2-->` was being injected into `dangerouslySetInnerHTML`). Removed the broken preview modal and routed users directly to the proper generator page in edit mode to view/print accurately.
 
+7. **Flutter Mobile App Stability Fixes (Crash Prevention)**:
+   - User reported frequent crashes requiring "clear app data" to resolve.
+   - **Root Causes Fixed:** Handled expired session tokens (`401 Unauthorized`), corrupted local user data (parsing errors), and unhandled generic flutter exceptions.
+   - **Implementation:** Added global error handlers (`FlutterError.onError`, `PlatformDispatcher.instance.onError`) in `main.dart`. Intercepted `SharedPreferences` corrupted JSON using a `try-catch` validation on boot that gracefully clears data instead of crashing. Added a global `401 / 403` interceptor in `api_service.dart` that triggers an automatic logout (`logout()`) and uses `navigatorKey` to safely redirect users back to the Welcome/Login screen instead of locking up the app on old cached tokens.
+
 ## Next Steps / Pending
 - Confirm and test the Shorebird patch workflow integration on the VPS.
 - End-to-end testing of Accountant role on VPS once backend code is pulled and updated.

@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'offline_sync_service.dart';
+import '../main.dart';
 
 class ApiService {
   static const String baseUrl = 'http://66.116.252.191:19998';
@@ -757,6 +758,10 @@ class ApiService {
           
           return {'success': true, 'data': decoded is Map && decoded.containsKey('data') ? decoded['data'] : decoded};
         }
+        if (response.statusCode == 401 || response.statusCode == 403) {
+          await logout();
+          return {'success': false, 'message': 'Session expired. Please login again.'};
+        }
         return {'success': false, 'message': decoded is Map ? (decoded['message'] ?? errorMsg) : errorMsg};
       } catch (e) {
         final prefs = await SharedPreferences.getInstance();
@@ -791,6 +796,10 @@ class ApiService {
       if (response.statusCode == 200 || response.statusCode == 201) {
         return {'success': true, 'data': decoded is Map && decoded.containsKey('data') ? decoded['data'] : decoded};
       }
+      if (response.statusCode == 401 || response.statusCode == 403) {
+        await logout();
+        return {'success': false, 'message': 'Session expired. Please login again.'};
+      }
       return {'success': false, 'message': decoded is Map ? (decoded['message'] ?? errorMsg) : errorMsg};
     } catch (e) {
       await OfflineSyncService.enqueueRequest(method: 'POST', endpoint: endpoint, body: payload);
@@ -812,6 +821,10 @@ class ApiService {
       if (response.statusCode == 200 || response.statusCode == 201) {
         return {'success': true, 'data': decoded is Map && decoded.containsKey('data') ? decoded['data'] : decoded};
       }
+      if (response.statusCode == 401 || response.statusCode == 403) {
+        await logout();
+        return {'success': false, 'message': 'Session expired. Please login again.'};
+      }
       return {'success': false, 'message': decoded is Map ? (decoded['message'] ?? errorMsg) : errorMsg};
     } catch (e) {
       await OfflineSyncService.enqueueRequest(method: 'PUT', endpoint: endpoint, body: payload);
@@ -832,6 +845,10 @@ class ApiService {
       final dynamic decoded = response.body.isNotEmpty ? jsonDecode(response.body) : {};
       if (response.statusCode == 200 || response.statusCode == 204) {
         return {'success': true, 'data': decoded is Map && decoded.containsKey('data') ? decoded['data'] : decoded};
+      }
+      if (response.statusCode == 401 || response.statusCode == 403) {
+        await logout();
+        return {'success': false, 'message': 'Session expired. Please login again.'};
       }
       return {'success': false, 'message': decoded is Map ? (decoded['message'] ?? errorMsg) : errorMsg};
     } catch (e) {
@@ -1229,6 +1246,8 @@ class ApiService {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('accessToken');
     await prefs.remove('refreshToken');
+    await prefs.remove('user');
+    navigatorKey.currentState?.pushNamedAndRemoveUntil('/', (route) => false);
   }
 
   // ==========================================
