@@ -109,6 +109,8 @@ const AnswerKeyPage = lazy(() => import('../pages/question-bank/AnswerKeyPage'))
 const IdCardDashboard = lazy(() => import('../pages/idcards/IdCardDashboard'));
 const IdCardGeneratorPage = lazy(() => import('../pages/idcards/IdCardGeneratorPage'));
 const PendingFeeApprovalsPage = lazy(() => import('../pages/fees/PendingFeeApprovals').then(m => ({ default: m.PendingFeeApprovals })));
+const OnlineExamsPage = lazy(() => import('../pages/exams/OnlineExamsPage'));
+const ManageExamQuestions = lazy(() => import('../pages/exams/ManageExamQuestions'));
 const AttendanceWrapper = () => {
   const { user } = useAuth();
   if (user?.role === 'STUDENT') {
@@ -320,6 +322,22 @@ export const router = createBrowserRouter([
       {
         path: 'exams/:examId/report-card/:studentId',
         element: withSuspense(<ReportCardPage />),
+      },
+      {
+        path: 'online-exams',
+        element: withSuspense(
+          <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN', 'TEACHER']}>
+            <OnlineExamsPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'online-exams/:id/manage',
+        element: withSuspense(
+          <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN', 'TEACHER']}>
+            <ManageExamQuestions />
+          </ProtectedRoute>
+        ),
       },
       {
         path: 'admit-card-view/:id',

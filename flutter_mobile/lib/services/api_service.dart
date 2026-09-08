@@ -287,6 +287,21 @@ class ApiService {
     return _performDelete('/api/exams/$examId', 'Failed to delete exam');
   }
 
+  // ==========================================
+  // ONLINE QUIZZES (STUDENT)
+  // ==========================================
+  static Future<Map<String, dynamic>> getOnlineExams() async {
+    return _performGet('/api/online-exams/student', 'Failed to fetch online exams');
+  }
+
+  static Future<Map<String, dynamic>> getOnlineExamDetails(String id) async {
+    return _performGet('/api/online-exams/$id/student', 'Failed to fetch exam details');
+  }
+
+  static Future<Map<String, dynamic>> submitOnlineExam(String id, List<Map<String, dynamic>> answers) async {
+    return _performPost('/api/online-exams/$id/submit', {'answers': answers}, 'Failed to submit exam');
+  }
+
   static Future<Map<String, dynamic>> getExamById(String examId) async {
     return _performGet('/api/exams/$examId', 'Failed to get exam details');
   }

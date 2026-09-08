@@ -5,6 +5,7 @@ import 'student_admit_card_screen.dart';
 import 'student_question_papers_screen.dart';
 import 'student_results_screen.dart';
 import 'student_progress_card_screen.dart';
+import 'quizzes_screen.dart';
 
 class StudentExamsDashboardScreen extends StatelessWidget {
   final Map<String, dynamic> user;
@@ -101,11 +102,11 @@ class StudentExamsDashboardScreen extends StatelessWidget {
                 ),
                 _buildModuleCard(
                   context: context,
-                  title: 'Online Exams',
+                  title: 'Online Quizzes',
                   subtitle: 'Mock Tests',
                   icon: Icons.laptop_chromebook_rounded,
                   colors: [const Color(0xFF8B5CF6), const Color(0xFFA78BFA)],
-                  onTap: () {},
+                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => QuizzesScreen())),
                 ),
               ],
             ),

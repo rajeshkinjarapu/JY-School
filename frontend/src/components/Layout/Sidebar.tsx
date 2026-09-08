@@ -29,6 +29,7 @@ const NAV_COLORS: Record<string, { text: string; bg: string; glow: string }> = {
   Attendance:    { text: '#fde68a', bg: 'rgba(245,158,11,0.18)',  glow: '0 0 12px rgba(245,158,11,.5)'  },
   'Daily Report':{ text: '#fde68a', bg: 'rgba(245,158,11,0.18)',  glow: '0 0 12px rgba(245,158,11,.5)'  },
   'Examination': { text: '#fca5a5', bg: 'rgba(239,68,68,0.18)',   glow: '0 0 12px rgba(239,68,68,.5)'   },
+  'Online Quizzes': { text: '#c084fc', bg: 'rgba(192,132,252,0.18)', glow: '0 0 12px rgba(192,132,252,.5)' },
   'My Grades':   { text: '#fca5a5', bg: 'rgba(239,68,68,0.18)',   glow: '0 0 12px rgba(239,68,68,.5)'   },
   Timetable:     { text: '#67e8f9', bg: 'rgba(6,182,212,0.18)',   glow: '0 0 12px rgba(6,182,212,.5)'   },
   Leave:         { text: '#fdba74', bg: 'rgba(249,115,22,0.18)',  glow: '0 0 12px rgba(249,115,22,.5)'  },
@@ -85,6 +86,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
       { to: '/attendance',    label: 'Attendance',    icon: CalendarCheck },
       
       { to: '/exams',         label: 'Examination',         icon: ClipboardList },
+      { to: '/online-exams',  label: 'Online Quizzes',      icon: PenTool       },
       { to: '/timetable',     label: 'Timetable',     icon: Calendar      },
       { to: '/leave/gate-pass', label: 'Gate Pass',    icon: MapPin       },
       { to: '/leave',    label: 'Leave',         icon: UserCheck     },
@@ -111,6 +113,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
       { to: '/answer-key',        label: 'Answer Key',     icon: Key           },
       { to: '/homework',          label: 'Homework',       icon: BookOpen      },
       { to: '/exams',             label: 'Examination',    icon: PenTool       },
+      { to: '/online-exams',      label: 'Online Quizzes', icon: PenTool       },
       { to: '/timetable',         label: 'Timetable',      icon: Calendar      },
       
       { to: '/leave', label: 'Leave',          icon: UserCheck     },

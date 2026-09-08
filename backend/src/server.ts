@@ -48,6 +48,7 @@ import questionBankRoutes from './routes/questionBank';
 import generatedPapersRoutes from './routes/generatedPapers';
 import transportRoutes from './routes/transport.routes';
 import answerKeysRoutes from './routes/answerKeys.routes';
+import onlineExamsRoutes from './routes/onlineExams.routes';
 
 const app = express();
 app.set('trust proxy', 1);
@@ -117,6 +118,7 @@ app.use('/api', questionBankRoutes);
 app.use('/api/generated-papers', generatedPapersRoutes);
 app.use('/api/transport', transportRoutes);
 app.use('/api/answer-keys', answerKeysRoutes);
+app.use('/api/online-exams', onlineExamsRoutes);
 
 // Health check
 app.get('/api/health', (_req, res) => {

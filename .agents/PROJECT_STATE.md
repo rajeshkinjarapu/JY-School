@@ -6,7 +6,7 @@
 - **Flutter Profile Bug Fix (2026-09-07)**: Fixed Prisma query syntax and error handling.
 - **Marks Submit Frozen Bug Fix (2026-09-07)**: Fixed a bug in `MarksEntryPage.tsx` where clicking "Submit Marks" for an unfrozen class would silently send marks of OTHER frozen classes back to the server, causing the backend to block the update with "Access Denied".
 
-### 📌 Recent Accomplishments
+### 🚀 Recent Accomplishments
 1. **Study Certificate Generator**: Built `StudyCertificatePage.tsx` with print/PDF features.
 2. **JEE Progress Card UI**: Fixed button wrapping and added borders.
 3. **Global Settings (Logo/Signatures)**: Made the progress card logo, principal signature, and teacher signature globally saved in the database (so they load automatically for all future exams without needing re-upload).
@@ -18,7 +18,7 @@
 9. **WhatsApp Icon Fix**: Replaced the custom network image WhatsApp icon with the native `font_awesome_flutter` exact WhatsApp icon for the Teachers Directory screen.
 10. **Push Notifications Fix**: Fixed the issue where hero banner notifications and sounds were missing. The backend (`firebase.ts`) was sending pushes to the outdated `jyschool_alerts_v1` channel while the app was listening on `jyschool_alerts_v2`. Corrected the channel ID and reset the sound to default.
 11. **Universal App Welcome Screen**: Designed and implemented a modern `WelcomeScreen` as the new entry point for unauthenticated users in the Universal App. It includes smooth fade and slide animations, the school logo, an attractive illustration, and a primary "Get Started" button that navigates to the Login screen.
+12. **Web App Quiz Module (AI Integration)**: Built a complete Backend and Frontend for Online Quizzes using Gemini AI. Added `OnlineExamsPage`, `CreateOnlineExamModal`, and `ManageExamQuestions` with features like AI prompt generation, file upload, copy/paste, and manual entry.
 
 ## Current Pending Task
-- User needs to rebuild frontend PM2 instance to test the new Progress Card.
-- User needs to build and release the Shorebird patch for the Flutter app.
+- Implement Flutter App Quiz Module (Student Screens: Quizzes List, Take Quiz with Timer, Result Screen). Waiting for User's approval on the plan.
