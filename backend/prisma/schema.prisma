@@ -89,6 +89,7 @@ model Student {
   feeStructures         FeeStructure[]
   feeDiscounts          FeeDiscount[]
   onlineExamSubmissions OnlineExamSubmission[]
+  competitiveExamSubmissions CompetitiveExamSubmission[]
   gatePasses            GatePass[]
   transport             StudentTransport?
 
@@ -118,6 +119,7 @@ model Teacher {
   homeworks             Homework[]
   teacherAttendances    TeacherAttendance[]
   salaries              Salary[]
+  competitiveExams      CompetitiveExam[]
 
   @@index([employeeId])
 }
@@ -145,6 +147,7 @@ model Class {
   homeworks        Homework[]
   substitutions    Substitute[]
   timetableHistory TimetableHistory[]
+  competitiveExams CompetitiveExam[]
 
   @@unique([name, section, academicYear])
 }
