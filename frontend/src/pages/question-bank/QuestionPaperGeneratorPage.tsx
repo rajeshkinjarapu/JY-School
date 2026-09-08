@@ -157,7 +157,7 @@ export const QuestionPaperGeneratorPage = () => {
     cloneEl.style.border = 'none';
     cloneEl.style.outline = 'none';
     cloneEl.style.minHeight = '0';
-    cloneEl.style.width = '100%';
+    cloneEl.style.width = '210mm';
 
     let oldIframe = document.getElementById('print-iframe');
     if (oldIframe) { oldIframe.remove(); }
@@ -175,10 +175,16 @@ export const QuestionPaperGeneratorPage = () => {
     const printDocument = iframe.contentWindow?.document;
     if (!printDocument) { window.print(); return; }
 
-    const styleLinks = Array.from(document.querySelectorAll('link[rel="stylesheet"]')).map((l) => l.outerHTML).join('');
-    const styleTags = Array.from(document.querySelectorAll('style')).map((s) => `<style>${s.innerHTML}</style>`).join('');
+    const styleLinks = `
+      <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    `;
 
-    printDocument.write(`<!DOCTYPE html><html><head><meta charset="utf-8"/><meta name="color-scheme" content="light"/><title>Print</title>${styleLinks}${styleTags}<style>:root{color-scheme:light !important;}@page{margin:12.7mm;size:A4;}html,body{margin:0;padding:0;background-color:#ffffff !important;background:#ffffff !important;color:#000000 !important;font-family:serif;}@media print{html,body{background-color:#ffffff !important;background:#ffffff !important;}}#print-root{width:100%;margin:0 auto;background-color:#ffffff !important;}</style></head><body><div id="print-root">${cloneEl.outerHTML}</div></body></html>`);
+    const styleTags = Array.from(document.querySelectorAll('style'))
+      .map(style => style.outerHTML)
+      .join('\n');
+
+    printDocument.write(`<!DOCTYPE html><html><head><meta charset="utf-8"/><meta name="color-scheme" content="light"/><title>Print</title>${styleLinks}${styleTags}<style>:root{color-scheme:light !important;}@page{margin:0;size:A4;}html,body{margin:0;padding:0;background-color:#ffffff !important;background:#ffffff !important;color:#000000 !important;font-family:serif;}@media print{html,body{background-color:#ffffff !important;background:#ffffff !important;}}#print-root{width:210mm;margin:0 auto;background-color:#ffffff !important;}</style></head><body><div id="print-root">${cloneEl.outerHTML}</div></body></html>`);
     printDocument.close();
 
     iframe.onload = () => {

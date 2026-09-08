@@ -72,7 +72,6 @@ const SavedPapersPage = () => {
   // Modals
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
-  const [previewPaper, setPreviewPaper] = useState<GeneratedPaper | null>(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
 
@@ -133,52 +132,7 @@ const SavedPapersPage = () => {
     }
   };
 
-  const handleDownloadPDF = (paper: GeneratedPaper) => {
-    const doc = new jsPDF();
-    doc.setFontSize(16);
-    doc.text(paper.examName, 105, 20, { align: 'center' });
-    doc.setFontSize(12);
-    doc.text(`Subject: ${paper.examSubject}  |  Duration: ${paper.time} mins`, 105, 30, { align: 'center' });
-    
-    doc.setFontSize(10);
-    const splitText = doc.splitTextToSize(removeHtmlTags(paper.content), 180);
-    doc.text(splitText, 15, 45);
-    
-    doc.save(`${paper.examName.replace(/\s+/g, '_')}.pdf`);
-    toast.success('PDF downloaded!');
-  };
 
-  const handlePrint = (paper: GeneratedPaper) => {
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) return toast.error('Pop-up blocked');
-    
-    printWindow.document.write(`
-      <html>
-        <head>
-          <title>${paper.examName}</title>
-          <style>
-            @page { margin: 12.7mm; size: A4; }
-            html, body { font-family: Arial, sans-serif; padding: 40px; line-height: 1.6; margin: 0; background-color: #ffffff !important; background: #ffffff !important; color: #000000 !important; }
-            @media print {
-              html, body { background-color: #ffffff !important; background: #ffffff !important; }
-            }
-            h1 { text-align: center; }
-            .meta { text-align: center; font-style: italic; margin-bottom: 30px; border-bottom: 1px solid #ccc; padding-bottom: 10px; }
-            .content { max-width: 800px; margin: 0 auto; }
-          </style>
-        </head>
-        <body>
-          <h1>${paper.examName}</h1>
-          <div class="meta">Subject: ${paper.examSubject} | Duration: ${paper.time} mins</div>
-          <div class="content">${paper.content}</div>
-          <script>
-            window.onload = () => { window.print(); window.setTimeout(() => window.close(), 500); }
-          </script>
-        </body>
-      </html>
-    `);
-    printWindow.document.close();
-  };
 
   // Filter & Sort Logic
   const uniqueSubjects = ['All', ...Array.from(new Set(papers.map(p => p.examSubject).filter(Boolean)))].sort();
@@ -382,16 +336,10 @@ const SavedPapersPage = () => {
                                 <div className="fixed inset-0 z-10" onClick={() => setActiveDropdown(null)}></div>
                                 <div className="absolute right-0 top-full mt-1 w-48 bg-white border border-slate-200 rounded-xl shadow-lg z-20 py-1.5 animate-in fade-in zoom-in-95">
                                   <button onClick={() => { setActiveDropdown(null); navigate(getGeneratorPath(paper)); }} className="w-full text-left px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2">
-                                    <Edit2 className="w-4 h-4 text-slate-400" /> Edit
+                                    <Edit2 className="w-4 h-4 text-slate-400" /> Open & Edit
                                   </button>
                                   <button onClick={() => { setActiveDropdown(null); handleDuplicate(paper); }} className="w-full text-left px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2">
                                     <Copy className="w-4 h-4 text-slate-400" /> Duplicate
-                                  </button>
-                                  <button onClick={() => { setActiveDropdown(null); handleDownloadPDF(paper); }} className="w-full text-left px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2">
-                                    <Download className="w-4 h-4 text-slate-400" /> Download PDF
-                                  </button>
-                                  <button onClick={() => { setActiveDropdown(null); handlePrint(paper); }} className="w-full text-left px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2">
-                                    <Printer className="w-4 h-4 text-slate-400" /> Print
                                   </button>
                                   <div className="h-px w-full bg-slate-100 my-1"></div>
                                   <button onClick={() => { setActiveDropdown(null); setDeleteId(paper.id); }} className="w-full text-left px-4 py-2 text-sm font-bold text-rose-600 hover:bg-rose-50 flex items-center gap-2">
@@ -415,10 +363,10 @@ const SavedPapersPage = () => {
                       
                       <div className="mt-auto border-t border-slate-100 p-3 pl-4 bg-slate-50/30 rounded-b-2xl">
                         <button 
-                          onClick={() => setPreviewPaper(paper)} 
+                          onClick={() => navigate(getGeneratorPath(paper))} 
                           className="w-full py-2.5 bg-white border border-slate-200 hover:bg-slate-50 hover:border-slate-300 text-slate-700 rounded-xl text-sm font-bold shadow-sm transition-all flex justify-center items-center gap-2"
                         >
-                          <Eye className="w-4 h-4" /> View Paper
+                          <Edit2 className="w-4 h-4" /> Open Paper
                         </button>
                       </div>
                     </div>
@@ -468,11 +416,7 @@ const SavedPapersPage = () => {
                             </td>
                             <td className="px-6 py-4">
                               <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity translate-x-2 group-hover:translate-x-0 duration-200">
-                                <button onClick={() => setPreviewPaper(paper)} className="p-2 text-slate-400 hover:text-slate-800 hover:bg-slate-100 rounded-xl transition-all" title="Preview"><Eye className="w-4 h-4" /></button>
-                                <button onClick={() => handlePrint(paper)} className="p-2 text-slate-400 hover:text-slate-800 hover:bg-slate-100 rounded-xl transition-all" title="Print"><Printer className="w-4 h-4" /></button>
-                                <button onClick={() => handleDownloadPDF(paper)} className="p-2 text-slate-400 hover:text-slate-800 hover:bg-slate-100 rounded-xl transition-all" title="Download"><Download className="w-4 h-4" /></button>
-                                <div className="w-px h-5 bg-slate-200 mx-1"></div>
-                                <button onClick={() => navigate(getGeneratorPath(paper))} className="p-2 text-indigo-500 hover:bg-indigo-50 rounded-xl transition-all" title="Edit"><Edit2 className="w-4 h-4" /></button>
+                                <button onClick={() => navigate(getGeneratorPath(paper))} className="p-2 text-indigo-500 hover:bg-indigo-50 rounded-xl transition-all" title="Open Paper"><Edit2 className="w-4 h-4" /></button>
                                 <button onClick={() => handleDuplicate(paper)} className="p-2 text-emerald-500 hover:bg-emerald-50 rounded-xl transition-all" title="Duplicate"><Copy className="w-4 h-4" /></button>
                                 <button onClick={() => setDeleteId(paper.id)} className="p-2 text-rose-500 hover:bg-rose-50 rounded-xl transition-all" title="Delete"><Trash2 className="w-4 h-4" /></button>
                               </div>
@@ -489,43 +433,7 @@ const SavedPapersPage = () => {
         )}
       </div>
 
-      {/* Quick Preview Modal */}
-      {previewPaper && (
-        <div className="fixed inset-0 z-[100] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6 animate-fade-in">
-          <div className="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden animate-scale-in border border-slate-100">
-            <div className="px-8 py-6 border-b border-slate-100 flex items-start justify-between bg-slate-50/50">
-              <div>
-                <div className="flex items-center gap-3 mb-2">
-                  <span className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider shadow-sm border ${getSubjectColor(previewPaper.examSubject || 'Default').bg} ${getSubjectColor(previewPaper.examSubject || 'Default').text} ${getSubjectColor(previewPaper.examSubject || 'Default').border}`}>
-                    {previewPaper.examSubject || 'General'}
-                  </span>
-                  <span className="text-[11px] font-bold text-slate-500 flex items-center gap-1 bg-white px-2.5 py-1.5 rounded-lg border border-slate-200 shadow-sm"><Clock className="w-3.5 h-3.5 text-slate-400" /> {previewPaper.time} mins</span>
-                </div>
-                <h2 className="text-2xl font-black text-slate-900 mt-2">{previewPaper.examName}</h2>
-              </div>
-              <button onClick={() => setPreviewPaper(null)} className="p-2.5 bg-white hover:bg-rose-50 hover:text-rose-600 text-slate-500 rounded-2xl transition-colors border border-slate-200 shadow-sm group">
-                <X className="w-5 h-5 group-hover:rotate-90 transition-transform" />
-              </button>
-            </div>
-            
-            <div className="flex-1 overflow-y-auto p-8 custom-scrollbar bg-white">
-              <div 
-                className="prose prose-slate max-w-none prose-headings:font-black prose-headings:text-slate-800 prose-p:text-slate-600 prose-p:font-medium prose-p:text-sm prose-a:text-indigo-600"
-                dangerouslySetInnerHTML={{ __html: previewPaper.content }}
-              />
-            </div>
-            
-            <div className="p-6 border-t border-slate-100 bg-slate-50/80 flex justify-end gap-3 backdrop-blur-md">
-              <button onClick={() => handlePrint(previewPaper)} className="px-6 py-3 bg-white border border-slate-200 text-slate-700 font-black rounded-2xl hover:bg-slate-50 shadow-sm flex items-center gap-2 hover:-translate-y-0.5 transition-transform">
-                <Printer className="w-4 h-4" /> Print Paper
-              </button>
-              <button onClick={() => { setPreviewPaper(null); navigate(getGeneratorPath(previewPaper)); }} className="px-6 py-3 bg-indigo-600 text-white font-black rounded-2xl hover:bg-indigo-700 shadow-xl shadow-indigo-600/20 flex items-center gap-2 hover:-translate-y-0.5 transition-transform">
-                <Edit2 className="w-4 h-4" /> Open in Editor
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+
 
       {/* Delete Confirmation Modal */}
       {deleteId && (

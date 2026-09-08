@@ -61,6 +61,7 @@ model User {
   @@index([email])
   @@index([role])
   @@index([isActive])
+  @@index([name])
 }
 
 model Student {
@@ -93,6 +94,7 @@ model Student {
 
   @@index([classId])
   @@index([rollNo])
+  @@index([admissionDate])
 }
 
 model Teacher {
@@ -374,6 +376,7 @@ model FeePayment {
   @@index([feeStructureId])
   @@index([status])
   @@index([receiptNo])
+  @@index([paymentDate])
 }
 
 model FeeDiscount {

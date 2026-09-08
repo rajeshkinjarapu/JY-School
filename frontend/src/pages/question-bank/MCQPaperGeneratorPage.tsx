@@ -174,7 +174,7 @@ export const MCQPaperGeneratorPage = () => {
     cloneEl.style.border = 'none';
     cloneEl.style.outline = 'none';
     cloneEl.style.minHeight = '0';
-    cloneEl.style.width = '100%';
+    cloneEl.style.width = '210mm'; // Keep exact A4 width so floating images match
 
     let oldIframe = document.getElementById('print-iframe');
     if (oldIframe) { oldIframe.remove(); }
@@ -218,7 +218,7 @@ export const MCQPaperGeneratorPage = () => {
           ${styleTags}
           <style>
             :root { color-scheme: light !important; }
-            @page { margin: 12.7mm; size: A4; }
+            @page { margin: 0; size: A4; } /* No margin, exact fit */
             html, body { 
               margin: 0; padding: 0; 
               background-color: #ffffff !important; 
@@ -237,7 +237,7 @@ export const MCQPaperGeneratorPage = () => {
               }
             }
             #print-root {
-              width: 100%;
+              width: 210mm;
               margin: 0 auto;
               background-color: #ffffff !important;
               height: auto !important;

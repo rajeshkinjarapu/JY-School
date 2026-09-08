@@ -96,9 +96,10 @@ export const getById = async (req: AuthRequest, res: Response, next: NextFunctio
           exam: { select: { id: true, name: true, term: true, examDate: true, maxMarks: true, passingMarks: true } }, 
           subject: { select: { id: true, name: true, code: true, classId: true } } 
         }, 
-        orderBy: { createdAt: 'desc' } 
+        orderBy: { createdAt: 'desc' },
+        take: 20
       },
-      feePayments: { include: { feeStructure: true }, orderBy: { createdAt: 'desc' } },
+      feePayments: { include: { feeStructure: true }, orderBy: { createdAt: 'desc' }, take: 20 },
       feeDiscounts: true,
     },
   });
