@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Trash2, Search, User as UserIcon, Shield, Loader } from 'lucide-react';
-import { api } from '../../lib/api';
+import api from '../../api/axios';
 import toast from 'react-hot-toast';
 
 export const StaffManagement: React.FC = () => {
