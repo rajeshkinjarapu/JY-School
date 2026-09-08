@@ -160,6 +160,7 @@ model Subject {
   timetableSlots       Timetable[]
   marks                Mark[]
   onlineExams          OnlineExam[]
+  competitiveExams     CompetitiveExam[]
   examPlans            ExamPlan[]
   questionPapers       QuestionPaper[]
   slipTests            SlipTest[]
@@ -597,6 +598,76 @@ model OnlineExamSubmission {
   submittedAt  DateTime   @default(now())
 
   @@unique([onlineExamId, studentId])
+}
+
+// ==========================================
+// COMPETITIVE EXAMS (MOCK TESTS - NTA STYLE)
+// ==========================================
+
+model CompetitiveExam {
+  id           String                 @id @default(uuid())
+  title        String
+  classId      String
+  class        Class                  @relation(fields: [classId], references: [id])
+  subjectId    String
+  subject      Subject                @relation(fields: [subjectId], references: [id])
+  teacherId    String?
+  teacher      Teacher?               @relation(fields: [teacherId], references: [id])
+  duration     Int                    // duration in minutes
+  startTime    DateTime
+  endTime      DateTime
+  totalMarks   Float                  @default(100)
+  passMarks    Float                  @default(40)
+  negativeMarks Float                 @default(0) // Marks to deduct for wrong answer
+  isPublished  Boolean                @default(false)
+  createdAt    DateTime               @default(now())
+  
+  questions    CompetitiveExamQuestion[]
+  submissions  CompetitiveExamSubmission[]
+}
+
+model CompetitiveExamQuestion {
+  id               String       @id @default(uuid())
+  competitiveExamId String
+  competitiveExam  CompetitiveExam @relation(fields: [competitiveExamId], references: [id], onDelete: Cascade)
+  questionText     String       @db.Text
+  questionType     String       // "MCQ" or "SUBJECTIVE"
+  imageUrl         String?      // Support for Diagram based questions
+  options          String?      // JSON array of strings
+  correctAnswer    String
+  marks            Float        @default(1)
+  chapterName      String?
+  difficulty       String       @default("MEDIUM") // EASY, MEDIUM, HARD
+  
+  responses        CompetitiveExamResponse[]
+}
+
+model CompetitiveExamSubmission {
+  id                String     @id @default(uuid())
+  competitiveExamId String
+  competitiveExam   CompetitiveExam @relation(fields: [competitiveExamId], references: [id], onDelete: Cascade)
+  studentId         String
+  student           Student    @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  marksObtained     Float
+  totalTimeTaken    Int        // in seconds
+  submittedAt       DateTime   @default(now())
+
+  responses         CompetitiveExamResponse[]
+
+  @@unique([competitiveExamId, studentId])
+}
+
+model CompetitiveExamResponse {
+  id                    String     @id @default(uuid())
+  submissionId          String
+  submission            CompetitiveExamSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  questionId            String
+  question              CompetitiveExamQuestion   @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  selectedOption        String?
+  isCorrect             Boolean
+  timeTakenSeconds      Int        // Time spent on this specific question
+
+  @@unique([submissionId, questionId])
 }
 
 model QuestionPaper {

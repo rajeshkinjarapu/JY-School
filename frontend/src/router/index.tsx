@@ -111,6 +111,8 @@ const IdCardGeneratorPage = lazy(() => import('../pages/idcards/IdCardGeneratorP
 const PendingFeeApprovalsPage = lazy(() => import('../pages/fees/PendingFeeApprovals').then(m => ({ default: m.PendingFeeApprovals })));
 const OnlineExamsPage = lazy(() => import('../pages/exams/OnlineExamsPage'));
 const ManageExamQuestions = lazy(() => import('../pages/exams/ManageExamQuestions'));
+const CompetitiveExamsPage = lazy(() => import('../pages/exams/CompetitiveExamsPage'));
+const TakeCompetitiveExamPage = lazy(() => import('../pages/exams/TakeCompetitiveExamPage'));
 const AttendanceWrapper = () => {
   const { user } = useAuth();
   if (user?.role === 'STUDENT') {
@@ -138,6 +140,14 @@ export const router = createBrowserRouter([
   {
     path: '/app/progress-card/:examId/:studentId',
     element: withSuspense(<AppProgressCardView />),
+  },
+  {
+    path: '/take-competitive-exam/:id',
+    element: (
+      <ProtectedRoute allowedRoles={['STUDENT']}>
+        {withSuspense(<TakeCompetitiveExamPage />)}
+      </ProtectedRoute>
+    ),
   },
   {
     path: '/',
@@ -336,6 +346,14 @@ export const router = createBrowserRouter([
         element: withSuspense(
           <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN', 'TEACHER']}>
             <ManageExamQuestions />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'competitive-exams',
+        element: withSuspense(
+          <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN', 'TEACHER', 'STUDENT']}>
+            <CompetitiveExamsPage />
           </ProtectedRoute>
         ),
       },

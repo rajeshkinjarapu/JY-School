@@ -15,7 +15,8 @@ import { rateLimiter } from './middlewares/rateLimiter';
 // Removed auditNotificationMiddleware import
 
 // Routes
-import authRoutes from './routes/auth';
+import authRoutes from './routes/auth.routes';
+import userRoutes from './routes/users';
 import studentRoutes from './routes/students';
 import teacherRoutes from './routes/teachers';
 import classRoutes from './routes/classes';
@@ -33,9 +34,9 @@ import dashboardRoutes from './routes/dashboard';
 import reportRoutes from './routes/reports';
 import settingsRoutes from './routes/settings';
 import uploadRoutes from './routes/uploads';
-import userRoutes from './routes/users';
 import eventRoutes from './routes/events';
 import examsExtendedRoutes from './routes/examsExtended';
+import competitiveExamsRoutes from './routes/competitiveExams.routes';
 
 import latexRoutes from './routes/latex';
 import gatePassRoutes from './routes/gatePass';
@@ -44,11 +45,12 @@ import homeworkRoutes from './routes/homework';
 import teacherAttendanceRoutes from './routes/teacherAttendance';
 import salaryRoutes from './routes/salary';
 import leaveRoutes from './routes/leave';
-import questionBankRoutes from './routes/questionBank';
+import questionBankRoutes from './routes/questionBank.routes';
 import generatedPapersRoutes from './routes/generatedPapers';
 import transportRoutes from './routes/transport.routes';
 import answerKeysRoutes from './routes/answerKeys.routes';
 import onlineExamsRoutes from './routes/onlineExams.routes';
+import competitiveExamsRoutes from './routes/competitiveExams.routes';
 
 const app = express();
 app.set('trust proxy', 1);
@@ -119,6 +121,7 @@ app.use('/api/generated-papers', generatedPapersRoutes);
 app.use('/api/transport', transportRoutes);
 app.use('/api/answer-keys', answerKeysRoutes);
 app.use('/api/online-exams', onlineExamsRoutes);
+app.use('/api/competitive-exams', competitiveExamsRoutes);
 
 // Health check
 app.get('/api/health', (_req, res) => {

@@ -36,6 +36,13 @@
    - **Root Causes Fixed:** Handled expired session tokens (`401 Unauthorized`), corrupted local user data (parsing errors), and unhandled generic flutter exceptions.
    - **Implementation:** Added global error handlers (`FlutterError.onError`, `PlatformDispatcher.instance.onError`) in `main.dart`. Intercepted `SharedPreferences` corrupted JSON using a `try-catch` validation on boot that gracefully clears data instead of crashing. Added a global `401 / 403` interceptor in `api_service.dart` that triggers an automatic logout (`logout()`) and uses `navigatorKey` to safely redirect users back to the Welcome/Login screen instead of locking up the app on old cached tokens.
 
+8. **Competitive Exams (JEE/NEET Mock Test) Module Integration**:
+   - **Backend:** Created dedicated Prisma models (`CompetitiveExam`, `CompetitiveExamQuestion`, `CompetitiveExamSubmission`, `CompetitiveExamResponse`) specifically parallel to standard quizzes to ensure clean schema separation.
+   - **Backend API:** Implemented detailed metrics tracking like `timeTakenSeconds` per question, negative marking evaluation, and AI-powered question generation inside `competitiveExams.controller.ts`.
+   - **Frontend (Web App):** Developed an advanced Desktop Exam Engine matching the standard NTA (TCS iON) layout.
+   - **Anti-Cheat:** Integrated full-screen API enforcement (`document.requestFullscreen`), and window/tab switch detection (`visibilitychange`, `blur` events). Implemented a 3-strike warning system before auto-submitting the test.
+   - **Exam UI:** Added a comprehensive question palette grid with state tracking (Not Visited, Not Answered, Answered, Marked for Review, Answered & Marked for Review).
+
 ## Next Steps / Pending
 - Confirm and test the Shorebird patch workflow integration on the VPS.
 - End-to-end testing of Accountant role on VPS once backend code is pulled and updated.
