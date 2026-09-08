@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import api from '../../api/axios';
 import toast from 'react-hot-toast';
+import { PageHeader } from '../../components/UI/PageHeader';
 
 export const StaffManagement: React.FC = () => {
   const [staff, setStaff] = useState<any[]>([]);
@@ -37,7 +38,7 @@ export const StaffManagement: React.FC = () => {
     try {
       setLoading(true);
       // Fetch only accountants for now (Admin/SuperAdmin fetching can be added later)
-      const res = await api.get('/users?role=ACCOUNTANT');
+      const res = await api.get('/api/users?role=ACCOUNTANT');
       setStaff(res.data.data || []);
     } catch (error) {
       toast.error('Failed to fetch staff');
@@ -49,7 +50,7 @@ export const StaffManagement: React.FC = () => {
   const handleAddStaff = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await api.post('/users', {
+      await api.post('/api/users', {
         name: formName,
         email: formEmail,
         password: formPassword,
@@ -68,7 +69,7 @@ export const StaffManagement: React.FC = () => {
   const handleDeleteStaff = async (id: string) => {
     if (confirm('Are you sure you want to deactivate this staff account?')) {
       try {
-        await api.delete(`/users/${id}`);
+        await api.delete(`/api/users/${id}`);
         toast.success('Staff deactivated successfully!');
         fetchStaff();
       } catch (error) {
@@ -86,29 +87,23 @@ export const StaffManagement: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50/50 p-4 sm:p-8">
-      {/* Header Section */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 tracking-tight flex items-center gap-3">
-            <div className="p-2.5 bg-indigo-600 rounded-xl shadow-lg shadow-indigo-600/20">
-              <Shield className="w-6 h-6 text-white" />
-            </div>
-            Staff Roles & Management
-          </h1>
-          <p className="text-sm text-gray-500 mt-2 font-medium ml-1">
-            Manage your school's administrative and operational staff.
-          </p>
-        </div>
-        <button
-          onClick={() => setShowModal(true)}
-          className="group relative inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-semibold rounded-xl overflow-hidden transition-all hover:scale-[1.02] hover:shadow-xl hover:shadow-indigo-500/30 active:scale-[0.98]"
-        >
-          <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-in-out" />
-          <Plus className="w-5 h-5 relative z-10" />
-          <span className="relative z-10">Add New Staff</span>
-        </button>
-      </div>
+    <div className="flex flex-col h-full bg-gray-50/50" style={{ minHeight: 'calc(100vh - 64px)' }}>
+      <PageHeader
+        title="Staff Roles & Management"
+        subtitle="Manage your school's administrative and operational staff."
+        icon={<Shield className="w-5 h-5 text-indigo-600" />}
+        action={
+          <button
+            onClick={() => setShowModal(true)}
+            className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-semibold rounded-xl hover:shadow-lg hover:shadow-indigo-500/30 transition-all active:scale-95"
+          >
+            <Plus className="w-5 h-5" />
+            Add New Staff
+          </button>
+        }
+      />
+
+      <div className="flex-1 p-4 md:p-6 overflow-auto">
 
       {/* Main Content Card */}
       <div className="bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 overflow-hidden">
@@ -378,6 +373,7 @@ export const StaffManagement: React.FC = () => {
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 };

@@ -41,7 +41,7 @@ export const Header: React.FC<HeaderProps> = ({ onMenuClick, title, forceShow, h
 
   return (
     <header
-      className={`print:hidden lg:hidden sticky top-0 z-30 flex items-center justify-between gap-3 px-3.5 py-2.5 shadow-lg shadow-black/30`}
+      className={`print:hidden sticky top-0 z-30 flex items-center justify-between gap-3 px-3.5 py-2.5 shadow-lg shadow-black/30`}
       style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e1b4b 60%, #0f172a 100%)' }}
     >
       {/* Left: Hamburger + Home + Back + Page Title */}
@@ -54,7 +54,7 @@ export const Header: React.FC<HeaderProps> = ({ onMenuClick, title, forceShow, h
               onMenuClick?.();
               window.dispatchEvent(new CustomEvent('toggleSidebar'));
             }}
-            className="p-2 rounded-xl text-white/90 hover:text-white hover:bg-white/20 transition-all duration-200 cursor-pointer shrink-0 lg:hidden"
+            className="p-2 rounded-xl text-white/90 hover:text-white hover:bg-white/20 transition-all duration-200 cursor-pointer shrink-0"
             aria-label="Open menu"
           >
             <Menu className="w-5 h-5" />
