@@ -1,7 +1,13 @@
 import { Request, Response } from 'express';
-import prisma from '../utils/prisma';
-import { sendResponse, sendError } from '../utils/response';
+import { prisma } from '../utils/prisma';
 import { generateQuizQuestions } from '../utils/gemini';
+
+const sendResponse = (res: Response, statusCode: number, message: string, data?: any) => {
+    return res.status(statusCode).json({ success: true, message, data });
+};
+const sendError = (res: Response, statusCode: number, message: string) => {
+    return res.status(statusCode).json({ success: false, message });
+};
 
 // ----------------------------------------------------------------------
 // Admin: Create Online Exam

@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
-import prisma from '../index';
-import { generateQuestionsWithGemini } from '../utils/gemini';
+import { prisma } from '../utils/prisma';
+import { generateQuizQuestions } from '../utils/gemini';
 
 // ==========================================
 // ADMIN / TEACHER ROUTES
@@ -64,14 +64,7 @@ export const generateCompetitiveQuestionsAI = async (req: Request, res: Response
     const basePrompt = `Generate ${count} ${difficulty} level multiple choice questions for the chapter '${chapterName || 'General'}'. Focus: ${prompt}.
 Return ONLY a valid JSON array of objects with keys: "questionText", "options" (array of 4 strings), "correctAnswer" (must match one option exactly). Do not include markdown code block formatting.`;
 
-    const aiResponse = await generateQuestionsWithGemini(basePrompt, null);
-    
-    // Process response
-    let jsonStr = aiResponse.trim();
-    if (jsonStr.startsWith('```json')) jsonStr = jsonStr.replace(/```json/g, '').replace(/```/g, '').trim();
-    if (jsonStr.startsWith('```')) jsonStr = jsonStr.replace(/```/g, '').trim();
-
-    const questionsData = JSON.parse(jsonStr);
+    const questionsData = await generateQuizQuestions(basePrompt);
     
     const savedQuestions = [];
     for (const q of questionsData) {
@@ -103,7 +96,7 @@ Return ONLY a valid JSON array of objects with keys: "questionText", "options" (
 
 export const getStudentCompetitiveExams = async (req: Request, res: Response) => {
   try {
-    const studentId = req.user?.id; 
+    const studentId = (req as any).user?.id; 
     const student = await prisma.student.findUnique({ where: { userId: studentId } });
     if (!student) return res.status(404).json({ success: false, message: 'Student not found' });
 
@@ -157,7 +150,7 @@ export const submitCompetitiveExam = async (req: Request, res: Response) => {
   try {
     const { id } = req.params; // examId
     const { answers, totalTimeTaken } = req.body; // array of { questionId, selectedOption, timeTakenSeconds }
-    const studentUserId = req.user?.id;
+    const studentUserId = (req as any).user?.id;
 
     const student = await prisma.student.findUnique({ where: { userId: studentUserId } });
     if (!student) return res.status(404).json({ success: false, message: 'Student not found' });

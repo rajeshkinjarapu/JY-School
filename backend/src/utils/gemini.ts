@@ -3,7 +3,7 @@ import fs from 'fs';
 
 // Initialize the Gemini client
 // It will automatically pick up the GEMINI_API_KEY from environment variables
-const ai = new GoogleGenAI();
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY as string });
 
 export const generateQuizQuestions = async (
     prompt: string,
@@ -28,7 +28,7 @@ Make sure 'options' is an array of exactly 4 strings. 'correctAnswer' must exact
             // Upload the file to Gemini via File API
             const uploadedFile = await ai.files.upload({
                 file: file.path,
-                mimeType: file.mimetype,
+                config: { mimeType: file.mimetype }
             });
             
             contents = [

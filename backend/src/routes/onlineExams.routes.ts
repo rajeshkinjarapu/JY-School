@@ -10,7 +10,7 @@ import {
     getAllExamsAdmin,
     generateQuestionsWithAI
 } from '../controllers/onlineExams.controller';
-import { protect, authorize } from '../middlewares/auth';
+import { authenticate, authorize } from '../middlewares/auth';
 import multer from 'multer';
 
 const router = express.Router();
@@ -22,18 +22,18 @@ const upload = multer({
 });
 
 // Admin Routes
-router.post('/', protect, authorize('SUPER_ADMIN', 'ADMIN', 'TEACHER'), createOnlineExam);
-router.get('/admin', protect, authorize('SUPER_ADMIN', 'ADMIN', 'TEACHER'), getAllExamsAdmin);
-router.post('/:id/questions', protect, authorize('SUPER_ADMIN', 'ADMIN', 'TEACHER'), addQuestionToExam);
-router.put('/:id/publish', protect, authorize('SUPER_ADMIN', 'ADMIN', 'TEACHER'), publishOnlineExam);
-router.get('/:id/results', protect, authorize('SUPER_ADMIN', 'ADMIN', 'TEACHER'), getExamResults);
+router.post('/', authenticate, authorize('SUPER_ADMIN', 'ADMIN', 'TEACHER'), createOnlineExam);
+router.get('/admin', authenticate, authorize('SUPER_ADMIN', 'ADMIN', 'TEACHER'), getAllExamsAdmin);
+router.post('/:id/questions', authenticate, authorize('SUPER_ADMIN', 'ADMIN', 'TEACHER'), addQuestionToExam);
+router.put('/:id/publish', authenticate, authorize('SUPER_ADMIN', 'ADMIN', 'TEACHER'), publishOnlineExam);
+router.get('/:id/results', authenticate, authorize('SUPER_ADMIN', 'ADMIN', 'TEACHER'), getExamResults);
 
 // AI Generation Route (Admin)
-router.post('/generate-ai', protect, authorize('SUPER_ADMIN', 'ADMIN', 'TEACHER'), upload.single('file'), generateQuestionsWithAI);
+router.post('/generate-ai', authenticate, authorize('SUPER_ADMIN', 'ADMIN', 'TEACHER'), upload.single('file'), generateQuestionsWithAI);
 
 // Student Routes
-router.get('/student', protect, authorize('STUDENT'), getStudentExams);
-router.get('/:id/take', protect, authorize('STUDENT'), takeExam);
-router.post('/:id/submit', protect, authorize('STUDENT'), submitExam);
+router.get('/student', authenticate, authorize('STUDENT'), getStudentExams);
+router.get('/:id/take', authenticate, authorize('STUDENT'), takeExam);
+router.post('/:id/submit', authenticate, authorize('STUDENT'), submitExam);
 
 export default router;

@@ -15,7 +15,7 @@ import { rateLimiter } from './middlewares/rateLimiter';
 // Removed auditNotificationMiddleware import
 
 // Routes
-import authRoutes from './routes/auth.routes';
+import authRoutes from './routes/auth';
 import userRoutes from './routes/users';
 import studentRoutes from './routes/students';
 import teacherRoutes from './routes/teachers';
@@ -36,8 +36,6 @@ import settingsRoutes from './routes/settings';
 import uploadRoutes from './routes/uploads';
 import eventRoutes from './routes/events';
 import examsExtendedRoutes from './routes/examsExtended';
-import competitiveExamsRoutes from './routes/competitiveExams.routes';
-
 import latexRoutes from './routes/latex';
 import gatePassRoutes from './routes/gatePass';
 import notificationRoutes from './routes/notification.routes';
@@ -45,7 +43,7 @@ import homeworkRoutes from './routes/homework';
 import teacherAttendanceRoutes from './routes/teacherAttendance';
 import salaryRoutes from './routes/salary';
 import leaveRoutes from './routes/leave';
-import questionBankRoutes from './routes/questionBank.routes';
+import questionBankRoutes from './routes/questionBank';
 import generatedPapersRoutes from './routes/generatedPapers';
 import transportRoutes from './routes/transport.routes';
 import answerKeysRoutes from './routes/answerKeys.routes';
