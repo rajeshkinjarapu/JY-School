@@ -1,9 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import api from '@/lib/api';
+import { X } from 'lucide-react';
+import api from '../../api/axios';
 
 interface CreateModalProps {
   isOpen: boolean;
@@ -36,10 +33,8 @@ const CreateOnlineExamModal: React.FC<CreateModalProps> = ({ isOpen, onClose, on
 
   const fetchClasses = async () => {
     try {
-      const res = await api.get('/classes');
-      if (res.data.success) {
-        setClasses(res.data.data);
-      }
+      const res = await api.get('/api/classes');
+      setClasses(res.data?.data || res.data || []);
     } catch (error) {
       console.error(error);
     }
@@ -47,10 +42,8 @@ const CreateOnlineExamModal: React.FC<CreateModalProps> = ({ isOpen, onClose, on
 
   const fetchSubjects = async (classId: string) => {
     try {
-      const res = await api.get(`/subjects?classId=${classId}`);
-      if (res.data.success) {
-        setSubjects(res.data.data);
-      }
+      const res = await api.get(`/api/subjects?classId=${classId}`);
+      setSubjects(res.data?.data || res.data || []);
     } catch (error) {
       console.error(error);
     }
@@ -66,56 +59,58 @@ const CreateOnlineExamModal: React.FC<CreateModalProps> = ({ isOpen, onClose, on
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await api.post('/online-exams', formData);
-      if (res.data.success) {
-        onSuccess();
-      }
+      await api.post('/api/online-exams', formData);
+      onSuccess();
     } catch (error) {
       console.error(error);
+      alert('Failed to create exam. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
-  return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[500px]">
-        <DialogHeader>
-          <DialogTitle>Create Online Exam</DialogTitle>
-          <DialogDescription>Setup a new quiz for your students.</DialogDescription>
-        </DialogHeader>
+  if (!isOpen) return null;
 
-        <form onSubmit={handleSubmit} className="space-y-4 py-4">
-          <div className="space-y-2">
-            <Label>Quiz Title</Label>
-            <Input 
-              required 
-              value={formData.title} 
-              onChange={e => setFormData({...formData, title: e.target.value})} 
+  const inputCls = "w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500";
+  const labelCls = "block text-sm font-medium text-gray-700 mb-1";
+
+  return (
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+      <div className="bg-white rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden">
+        <div className="flex justify-between items-center bg-indigo-600 px-6 py-4 text-white">
+          <h2 className="text-xl font-bold">Create Online Exam</h2>
+          <button onClick={onClose} className="p-1 hover:bg-white/20 rounded-full transition-colors">
+            <X size={22} />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          <div>
+            <label className={labelCls}>Quiz Title</label>
+            <input
+              className={inputCls}
+              required
+              value={formData.title}
+              onChange={e => setFormData({...formData, title: e.target.value})}
               placeholder="e.g. Weekly Math Assessment"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Class</Label>
-              <select 
-                required
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
-                value={formData.classId}
-                onChange={handleClassChange}
-              >
+            <div>
+              <label className={labelCls}>Class</label>
+              <select className={inputCls} required value={formData.classId} onChange={handleClassChange}>
                 <option value="">Select Class</option>
                 {classes.map(c => (
                   <option key={c.id} value={c.id}>{c.name} {c.section}</option>
                 ))}
               </select>
             </div>
-            <div className="space-y-2">
-              <Label>Subject</Label>
-              <select 
+            <div>
+              <label className={labelCls}>Subject</label>
+              <select
+                className={inputCls}
                 required
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
                 value={formData.subjectId}
                 onChange={e => setFormData({...formData, subjectId: e.target.value})}
                 disabled={!formData.classId}
@@ -129,63 +124,42 @@ const CreateOnlineExamModal: React.FC<CreateModalProps> = ({ isOpen, onClose, on
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Start Time</Label>
-              <Input 
-                type="datetime-local" 
-                required
-                value={formData.startTime}
-                onChange={e => setFormData({...formData, startTime: e.target.value})}
-              />
+            <div>
+              <label className={labelCls}>Start Time</label>
+              <input type="datetime-local" className={inputCls} required value={formData.startTime} onChange={e => setFormData({...formData, startTime: e.target.value})} />
             </div>
-            <div className="space-y-2">
-              <Label>End Time</Label>
-              <Input 
-                type="datetime-local" 
-                required
-                value={formData.endTime}
-                onChange={e => setFormData({...formData, endTime: e.target.value})}
-              />
+            <div>
+              <label className={labelCls}>End Time</label>
+              <input type="datetime-local" className={inputCls} required value={formData.endTime} onChange={e => setFormData({...formData, endTime: e.target.value})} />
             </div>
           </div>
 
           <div className="grid grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <Label>Duration (Mins)</Label>
-              <Input 
-                type="number" 
-                required 
-                value={formData.duration}
-                onChange={e => setFormData({...formData, duration: parseInt(e.target.value)})}
-              />
+            <div>
+              <label className={labelCls}>Duration (Mins)</label>
+              <input type="number" className={inputCls} required value={formData.duration} onChange={e => setFormData({...formData, duration: parseInt(e.target.value)})} />
             </div>
-            <div className="space-y-2">
-              <Label>Total Marks</Label>
-              <Input 
-                type="number" 
-                required 
-                value={formData.totalMarks}
-                onChange={e => setFormData({...formData, totalMarks: parseInt(e.target.value)})}
-              />
+            <div>
+              <label className={labelCls}>Total Marks</label>
+              <input type="number" className={inputCls} required value={formData.totalMarks} onChange={e => setFormData({...formData, totalMarks: parseInt(e.target.value)})} />
             </div>
-            <div className="space-y-2">
-              <Label>Pass Marks</Label>
-              <Input 
-                type="number" 
-                required 
-                value={formData.passMarks}
-                onChange={e => setFormData({...formData, passMarks: parseInt(e.target.value)})}
-              />
+            <div>
+              <label className={labelCls}>Pass Marks</label>
+              <input type="number" className={inputCls} required value={formData.passMarks} onChange={e => setFormData({...formData, passMarks: parseInt(e.target.value)})} />
             </div>
           </div>
 
-          <div className="pt-4 flex justify-end gap-2">
-            <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
-            <Button type="submit" disabled={loading}>{loading ? 'Creating...' : 'Create Exam'}</Button>
+          <div className="flex justify-end gap-3 pt-2">
+            <button type="button" onClick={onClose} className="px-5 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium">
+              Cancel
+            </button>
+            <button type="submit" disabled={loading} className="px-5 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium disabled:opacity-50">
+              {loading ? 'Creating...' : 'Create Exam'}
+            </button>
           </div>
         </form>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </div>
   );
 };
 
