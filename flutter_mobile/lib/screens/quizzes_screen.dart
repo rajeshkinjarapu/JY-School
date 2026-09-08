@@ -114,7 +114,7 @@ class _QuizzesScreenState extends State<QuizzesScreen> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(FontAwesomeIcons.clipboardQuestion, size: 64, color: Colors.grey[300]),
+                    FaIcon(FontAwesomeIcons.clipboardQuestion, size: 64, color: Colors.grey[300]),
                     SizedBox(height: 16),
                     Text('No quizzes available', style: TextStyle(fontSize: 18, color: Colors.grey[600])),
                   ],
@@ -157,7 +157,7 @@ class _QuizzesScreenState extends State<QuizzesScreen> {
                                       color: hasSubmitted ? Colors.green[50] : (isUpcoming ? Colors.orange[50] : Colors.purple[50]),
                                       borderRadius: BorderRadius.circular(12),
                                     ),
-                                    child: Icon(
+                                    child: FaIcon(
                                       hasSubmitted ? FontAwesomeIcons.checkDouble : (isUpcoming ? FontAwesomeIcons.lock : FontAwesomeIcons.pen),
                                       color: hasSubmitted ? Colors.green : (isUpcoming ? Colors.orange : Colors.purple),
                                       size: 20,

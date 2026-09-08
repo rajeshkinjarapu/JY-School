@@ -137,7 +137,7 @@ class QuizResultScreen extends StatelessWidget {
                               Row(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Icon(
+                                  FaIcon(
                                     isCorrect ? FontAwesomeIcons.circleCheck : FontAwesomeIcons.circleXmark,
                                     color: isCorrect ? Colors.green : Colors.red,
                                     size: 20,
@@ -182,7 +182,7 @@ class QuizResultScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildStatCard(String title, String value, IconData icon, Color color) {
+  Widget _buildStatCard(String title, String value, dynamic icon, Color color) {
     return Expanded(
       child: Container(
         padding: EdgeInsets.all(16),
@@ -193,7 +193,7 @@ class QuizResultScreen extends StatelessWidget {
         ),
         child: Column(
           children: [
-            Icon(icon, color: color, size: 28),
+            FaIcon(icon, color: color, size: 28),
             SizedBox(height: 12),
             Text(value, style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black87)),
             SizedBox(height: 4),
