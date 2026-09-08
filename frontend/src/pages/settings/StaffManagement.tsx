@@ -174,7 +174,7 @@ export const StaffManagement: React.FC = () => {
                   <tr 
                     key={s.id} 
                     className="hover:bg-indigo-50/30 transition-colors duration-200 group"
-                    style={{ animationDelay: \`\${idx * 50}ms\` }}
+                    style={{ animationDelay: `${idx * 50}ms` }}
                   >
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-4">

@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../services/api_service.dart';
-import 'record_fee_payment_screen.dart';
+import 'student_fee_search_screen.dart';
 import '../widgets/app_drawer.dart';
 
 class AccountantDashboardScreen extends StatefulWidget {
@@ -35,7 +35,7 @@ class _AccountantDashboardScreenState extends State<AccountantDashboardScreen> w
 
   Future<void> _fetchDashboardData() async {
     setState(() => _isLoading = true);
-    final res = await ApiService.get('/dashboard/accountant');
+    final res = await ApiService.getAccountantDashboard();
     if (res['success'] && mounted) {
       setState(() {
         _data = res['data'] ?? {};
@@ -205,7 +205,7 @@ class _AccountantDashboardScreenState extends State<AccountantDashboardScreen> w
           const SizedBox(height: 12),
           InkWell(
             onTap: () {
-              Navigator.push(context, MaterialPageRoute(builder: (_) => const RecordFeePaymentScreen())).then((_) => _fetchDashboardData());
+              Navigator.push(context, MaterialPageRoute(builder: (_) => const StudentFeeSearchScreen())).then((_) => _fetchDashboardData());
             },
             borderRadius: BorderRadius.circular(16),
             child: Container(

@@ -198,6 +198,10 @@ class ApiService {
     return _performGet(url, 'Failed to get students');
   }
 
+  static Future<Map<String, dynamic>> getAccountantDashboard() async {
+    return _performGet('/api/dashboard/accountant', 'Failed to fetch accountant dashboard');
+  }
+
   // ==========================================
   // STAFF / TEACHER ATTENDANCE & HR ENDPOINTS
   // ==========================================
