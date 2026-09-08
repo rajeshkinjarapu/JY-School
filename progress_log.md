@@ -1,8 +1,9 @@
-# JY ERP Progress Log
+గూగుల్ క్లౌడ్ గిట్ నుండి ప్రాజెక్ట్ అప్‌డేట్స్ పొందడానికి కమాండ్స్ యూజర్‌కు అందిస్తున్నాను.
 
-## Date: 2026-09-07
-- **Bug Fix**: "upload chesina marks ki vachina result marks assalu sambandam ledu" (Marks entry mismatch with results). 
-  - **Issue identified**: Exam marksలో కొన్ని సబ్జెక్టులకు పాత duplicate records (same subject name, different subject ID) ఉండటం వల్ల, Results screen లో ఆ పాత రికార్డ్స్ (marks) డిస్ప్లే అవుతున్నాయి. కానీ Marks Entry screen లో కొత్త మార్క్స్ ఎంటర్ అవుతున్నాయి. 
-  - **Resolution**: `backend/src/controllers/marks.controller.ts` లో `bulkCreate` (Submit Marks) ఫంక్షన్ దగ్గర duplicate subjects (same name, different id) ఉంటే వాటికి సంబంధించిన పాత మార్క్స్ ని ఆటోమేటిక్ గా డిలీట్ చేసేలా లాజిక్ రాశాను.
-  - `backend/src/controllers/exams.controller.ts` లో `getResults` API ఎప్పుడూ లేటెస్ట్ (newly updated) మార్క్స్ నే తీసుకునేలా `createdAt` తో సార్టింగ్ (sorting) లాజిక్ అప్డేట్ చేశాను.
-  - **Status**: Backend కోడ్ ఫిక్స్ అయిపోయింది. సర్వర్ లో ఈ కోడ్ ని పుల్ చేసి బిల్డ్ చేస్తే ప్రాబ్లం పర్మినెంట్ గా సాల్వ్ అవుతుంది. 
+దశలు:
+1. లోకల్ కంప్యూటర్‌లో గిట్ నుండి అప్‌డేట్స్ డౌన్‌లోడ్ చేసుకోవడానికి కమాండ్స్ సిద్ధం చేయడం.
+2. VPS సర్వర్‌లో అప్‌డేట్స్ పొందడానికి SSH మరియు గిట్ కమాండ్స్ ఇవ్వడం.
+3. టెర్మినల్ కమాండ్స్ డైరెక్ట్ గా రన్ చేయకూడదు కాబట్టి, కాపీ-పేస్ట్ చేసుకోవడానికి యూజర్ కి అందిస్తున్నాను.
+
+అప్‌డేట్:
+- "Exam Results" పేజీలో సబ్జెక్ట్స్ డబుల్ (ఉదా: PHYSICS రెండుసార్లు) వస్తున్న బగ్‌ని `ResultsTab.tsx` లో సబ్జెక్ట్స్ పేర్లను normalize (trim & uppercase) చేసి పరిష్కరించడం జరిగింది.

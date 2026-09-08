@@ -53,13 +53,13 @@ export const ResultsTab: React.FC<{ exams: any[] }> = ({ exams }) => {
   // Use the order of subjects as returned by the API (which is now sorted correctly)
   const allSubjectsSet = new Set<string>();
   if (results.length > 0) {
-    results[0].marks?.forEach((m: any) => allSubjectsSet.add(m.subject));
+    results[0].marks?.forEach((m: any) => allSubjectsSet.add(m.subject?.trim().toUpperCase()));
   }
   // Fallback to iterating all students if first student doesn't have all subjects
   results.forEach(student => {
-    student.marks?.forEach((m: any) => allSubjectsSet.add(m.subject));
+    student.marks?.forEach((m: any) => allSubjectsSet.add(m.subject?.trim().toUpperCase()));
   });
-  const masterSubjects = Array.from(allSubjectsSet).map(subject => ({ subject, obtained: 0 }));
+  const masterSubjects = Array.from(allSubjectsSet).filter(Boolean).map(subject => ({ subject, obtained: 0 }));
 
   const handlePrint = () => {
     const printContent = document.getElementById('results-print-area');
@@ -183,7 +183,7 @@ export const ResultsTab: React.FC<{ exams: any[] }> = ({ exams }) => {
           student.name,
           student.rollNo || '-',
           ...masterSubjects.map((ms: any) => {
-            const found = student.marks?.find((m: any) => m.subject === ms.subject);
+            const found = student.marks?.find((m: any) => m.subject?.trim().toUpperCase() === ms.subject);
             return found ? found.obtained : '-';
           }),
           student.total,
@@ -432,7 +432,7 @@ export const ResultsTab: React.FC<{ exams: any[] }> = ({ exams }) => {
                           <p className="text-xs text-gray-500 font-semibold print-roll-no">{student.rollNo || '-'}</p>
                         </td>
                         {masterSubjects.map((ms: any, i: number) => {
-                          const found = student.marks?.find((m: any) => m.subject === ms.subject);
+                          const found = student.marks?.find((m: any) => m.subject?.trim().toUpperCase() === ms.subject);
                           return (
                             <td key={i} className="hidden md:table-cell p-4 text-center">
                               <span className="font-bold text-gray-700">{found ? found.obtained : '-'}</span>
@@ -476,7 +476,7 @@ export const ResultsTab: React.FC<{ exams: any[] }> = ({ exams }) => {
                                 <p className="text-xs font-bold text-indigo-500 uppercase mb-2">Subject Marks</p>
                                 <div className="grid grid-cols-2 gap-2">
                                   {masterSubjects.map((ms: any, i: number) => {
-                                    const found = student.marks?.find((m: any) => m.subject === ms.subject);
+                                    const found = student.marks?.find((m: any) => m.subject?.trim().toUpperCase() === ms.subject);
                                     return (
                                       <div key={i} className="flex justify-between items-center bg-white/80 backdrop-blur-sm p-2 rounded-lg border border-white shadow-sm">
                                         <span className="text-xs font-semibold text-gray-500 truncate mr-2">{ms.subject}</span>
