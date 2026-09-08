@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import { API_URL } from '../../config';
+import api from '../../api/axios';
 import { Clock, AlertTriangle, ShieldAlert } from 'lucide-react';
 
 const TakeCompetitiveExamPage = () => {
@@ -48,7 +47,7 @@ const TakeCompetitiveExamPage = () => {
 
   const fetchExam = async () => {
     try {
-      const res = await axios.get(`${API_URL}/api/competitive-exams/${id}/student`, { withCredentials: true });
+      const res = await api.get(`/api/competitive-exams/${id}/student`);
       const examData = res.data.data;
       setExam(examData);
       
@@ -173,10 +172,10 @@ const TakeCompetitiveExamPage = () => {
     const totalTimeTaken = Math.floor((Date.now() - startTimeRef.current) / 1000);
 
     try {
-      await axios.post(`${API_URL}/api/competitive-exams/${id}/submit`, {
+      await api.post(`/api/competitive-exams/${id}/submit`, {
         answers: formattedAnswers,
         totalTimeTaken
-      }, { withCredentials: true });
+      });
       
       alert("Exam submitted successfully!");
       localStorage.removeItem(`exam_running_${id}`);

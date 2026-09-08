@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import axios from 'axios';
-import { API_URL } from '../../config';
+import api from '../../api/axios';
 import { X, Calendar, Clock, BookOpen, AlertCircle } from 'lucide-react';
 
 interface Props {
@@ -34,12 +33,12 @@ const CreateCompetitiveExamModal = ({ onClose }: Props) => {
       const startDateTime = new Date(`${formData.date}T${formData.startTime}`);
       const endDateTime = new Date(`${formData.date}T${formData.endTime}`);
       
-      await axios.post(`${API_URL}/api/competitive-exams`, {
+      await api.post('/api/competitive-exams', {
         ...formData,
         startTime: startDateTime.toISOString(),
         endTime: endDateTime.toISOString(),
         isPublished: true // Auto publish for testing
-      }, { withCredentials: true });
+      });
       
       onClose();
     } catch (error) {

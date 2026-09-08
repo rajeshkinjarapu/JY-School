@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../contexts/AuthContext';
 import { Play, Plus, Clock, FileText, CheckCircle, Lock } from 'lucide-react';
 import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import { API_URL } from '../../config';
+import api from '../../api/axios';
 import CreateCompetitiveExamModal from './CreateCompetitiveExamModal';
 
 const CompetitiveExamsPage = () => {
@@ -28,7 +27,7 @@ const CompetitiveExamsPage = () => {
       // Since admin can see all, let's just fetch student's for now or handle appropriately
       // In a real scenario Admin would select class. For brevity, assuming STUDENT endpoint for students.
       if (user?.role === 'STUDENT') {
-        const res = await axios.get(`${API_URL}/api/competitive-exams/student`, { withCredentials: true });
+        const res = await api.get('/api/competitive-exams/student');
         setExams(res.data.data);
       } else {
         // Mocking teacher view to fetch by a class ID, but we need class selection
