@@ -1,25 +1,127 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Download, Printer, Upload, ChevronLeft, ChevronRight, Plus, X, GraduationCap, FileText, Database } from 'lucide-react';
-import * as XLSX from 'xlsx';
+import { Download, Printer, Upload, ChevronLeft, ChevronRight, Plus, X, GraduationCap, FileText, Database, CheckSquare, Square } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
+import JSZip from 'jszip';
+import { saveAs } from 'file-saver';
 import { toast } from 'react-hot-toast';
 import { PageHeader } from '../../components/UI/PageHeader';
 import { useNavigate } from 'react-router-dom';
+import { api } from '../../api/axios';
 
 const CANVAS_W = 850;
 const CANVAS_H = 1202;
+
+// Sub-component for the actual certificate to allow reuse for screen and print
+const CertificateTemplate = ({ data, logo, rows, id = "cert-template" }: any) => {
+    return (
+        <div id={id} className="cert-a4-canvas">
+            {/* Borders */}
+            <div className="cert-border-outer"></div>
+            <div className="cert-border-inner"></div>
+            <div className="corner tl"></div>
+            <div className="corner tr"></div>
+            <div className="corner bl"></div>
+            <div className="corner br"></div>
+
+            {/* Watermark */}
+            <div className="cert-watermark">
+                {logo && <img src={logo} alt="watermark" />}
+            </div>
+
+            {/* Content */}
+            <div className="cert-content">
+                <div className="c-header">
+                    <div className="c-logo">
+                        {logo ? <img src={logo} alt="Logo" /> : <span className="c-logo-placeholder">🏫</span>}
+                    </div>
+                    <div className="c-school-info">
+                        <div className="c-school-name">JY SCHOOL</div>
+                        <div className="c-school-rc">Rc. No. 281125100013 / Visakhapatnam/2025. Dated :21-10-2025</div>
+                        <div className="c-school-addr">Opp. Hero Showroom, SVL Paradise Campus, Narasannapeta</div>
+                    </div>
+                </div>
+
+                <div className="c-title">Study & Conduct Certificate</div>
+
+                <div className="c-meta-boxes">
+                    <div className="c-meta-box">Admission No. : <span>{data.admission}</span></div>
+                    <div className="c-meta-box">UDISE Code : <span>{data.udise}</span></div>
+                </div>
+
+                <div className="c-body">
+                    <div className="p1">
+                        <span className="c-label">This is to certify that</span>
+                        <span className="c-value c-value-lg">{data.student}</span>
+                        <span className="c-label">, Son/Daughter of</span>
+                        <span className="c-value c-value-lg">{data.parent}</span>
+                        <span className="c-label">, was a bona fide student of this institution.</span>
+                    </div>
+                    <div className="p2">
+                        <span className="c-label">During the period of study, the student's conduct, character, discipline, and behavior were found to be</span>
+                        <span className="c-value" style={{ fontStyle: 'italic' }}>{data.conduct}</span>
+                        <span className="c-label">. The student consistently maintained good moral values, complied with the rules and regulations of the institution, and demonstrated respectful behavior towards teachers, staff, and fellow students.</span>
+                    </div>
+                    <div className="p3">
+                        <span className="c-label">He/She studied the following classes during the years noted below, as recorded in the school records.</span>
+                    </div>
+
+                    <div className="c-table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th style={{ width: '15%' }}>Sl. No.</th>
+                                    <th style={{ width: '35%' }}>Academic Year</th>
+                                    <th style={{ width: '25%' }}>Class</th>
+                                    <th style={{ width: '25%' }}>Remarks</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {rows.length === 0 ? (
+                                    <tr><td colSpan={4} style={{ color: '#999', textAlign: 'center' }}>No records</td></tr>
+                                ) : (
+                                    rows.map((row: any, idx: number) => (
+                                        <tr key={idx}>
+                                            <td>{idx + 1}</td>
+                                            <td>{row.year}</td>
+                                            <td>{row.class}</td>
+                                            <td>{row.remarks}</td>
+                                        </tr>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div className="c-footer">
+                        <div className="c-meta">
+                            <div className="c-meta-line">
+                                <span className="c-label" style={{ marginLeft: 0 }}>Place :</span>
+                                <span className="c-value">{data.place}</span>
+                            </div>
+                            <div className="c-meta-line">
+                                <span className="c-label" style={{ marginLeft: 0 }}>Date &nbsp;:</span>
+                                <span className="c-value">{data.date}</span>
+                            </div>
+                        </div>
+                        <div className="c-signature">
+                            <div className="c-sig-line"></div>
+                            <div className="c-sig-label">Headmaster / Principal</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
 
 export const StudyCertificatePage = () => {
   const navigate = useNavigate();
   const [mode, setMode] = useState<'manual' | 'bulk'>('manual');
   const [logoDataUrl, setLogoDataUrl] = useState<string | null>(null);
   
-  // Manual State
-  const [mStudent, setMStudent] = useState('');
-  const [mParent, setMParent] = useState('');
+  // Shared Data
   const [mConduct, setMConduct] = useState('Excellent');
-  const [mAdmission, setMAdmission] = useState('');
   const [mUdise, setMUdise] = useState('');
   const [mPlace, setMPlace] = useState('');
   const [mDate, setMDate] = useState('');
@@ -29,16 +131,75 @@ export const StudyCertificatePage = () => {
     { year: '2025-26', class: 'VIII', remarks: 'Pro wrote' }
   ]);
 
-  // Bulk State
-  const [bulkData, setBulkData] = useState<any[]>([]);
-  const [bulkIndex, setBulkIndex] = useState(0);
+  // Manual State
+  const [mStudent, setMStudent] = useState('');
+  const [mParent, setMParent] = useState('');
+  const [mAdmission, setMAdmission] = useState('');
 
+  // Bulk / DB State
+  const [classes, setClasses] = useState<any[]>([]);
+  const [selectedClass, setSelectedClass] = useState<string>('');
+  const [selectedSection, setSelectedSection] = useState<string>('');
+  const [students, setStudents] = useState<any[]>([]);
+  const [selectedStudentId, setSelectedStudentId] = useState<string>('');
+  const [bulkSelectedIds, setBulkSelectedIds] = useState<string[]>([]);
   const [isExporting, setIsExporting] = useState(false);
+  const [isZipping, setIsZipping] = useState(false);
+  
+  // Bulk Preview Index
+  const [bulkIndex, setBulkIndex] = useState(0);
 
   const viewportRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
+  const zipCanvasRef = useRef<HTMLDivElement>(null);
 
-  // Resize canvas to fit viewport
+  // Load classes & UDISE on mount
+  useEffect(() => {
+    const savedUdise = localStorage.getItem('study_cert_udise');
+    if (savedUdise) setMUdise(savedUdise);
+
+    api.get('/api/classes?limit=5000')
+      .then((res: any) => setClasses(res.data?.data || res.data || []))
+      .catch(() => toast.error('Failed to load classes'));
+  }, []);
+
+  // Save UDISE on change
+  useEffect(() => {
+    localStorage.setItem('study_cert_udise', mUdise);
+  }, [mUdise]);
+
+  // Fetch students when Class + Section selected
+  useEffect(() => {
+    if (selectedClass && selectedSection) {
+      const cls = classes.find(c => c.className === selectedClass && c.section === selectedSection);
+      if (cls) {
+        api.get(`/api/classes/${cls.id}/students`)
+          .then((res: any) => {
+              setStudents(res.data?.data || res.data || []);
+              setBulkSelectedIds([]); // Reset selection on new fetch
+              setBulkIndex(0);
+          })
+          .catch(() => toast.error('Failed to load students'));
+      } else {
+        setStudents([]);
+      }
+    } else {
+      setStudents([]);
+    }
+  }, [selectedClass, selectedSection, classes]);
+
+  // Handle Manual Student Selection
+  const handleManualStudentSelect = (id: string) => {
+      setSelectedStudentId(id);
+      const s = students.find(x => x.id === id);
+      if (s) {
+          setMStudent(`${s.firstName || ''} ${s.lastName || ''}`.trim());
+          setMParent(s.fatherName || s.guardianName || '');
+          setMAdmission(s.admissionNumber || '');
+      }
+  };
+
+  // Resize canvas to fit viewport (only applies to screen view)
   useEffect(() => {
     const handleResize = () => {
       if (!viewportRef.current || !canvasRef.current) return;
@@ -55,98 +216,16 @@ export const StudyCertificatePage = () => {
 
     handleResize();
     const observer = new ResizeObserver(handleResize);
-    if (viewportRef.current) {
-      observer.observe(viewportRef.current);
-    }
+    if (viewportRef.current) observer.observe(viewportRef.current);
     return () => observer.disconnect();
-  }, [mode]);
+  }, [mode, bulkIndex, mStudent, students]);
 
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = (ev) => {
-      setLogoDataUrl(ev.target?.result as string);
-    };
+    reader.onload = (ev) => setLogoDataUrl(ev.target?.result as string);
     reader.readAsDataURL(file);
-  };
-
-  const handleExcelUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    processExcel(file);
-    e.target.value = '';
-  };
-
-  const processExcel = (file: File) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      try {
-        const data = new Uint8Array(e.target?.result as ArrayBuffer);
-        const workbook = XLSX.read(data, { type: 'array' });
-        const sheetName = workbook.SheetNames[0];
-        const sheet = workbook.Sheets[sheetName];
-        const rows: any[] = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
-        
-        if (rows.length < 2) throw new Error("File seems empty or missing data rows.");
-
-        const headers = rows[0].map((h: any) => String(h).trim().toLowerCase().replace(/\s+/g, ''));
-        const parsedData = [];
-
-        const baseCols = ['student', 'parent', 'conduct', 'admission', 'udise', 'place', 'date'];
-        const colMap: any = {};
-        baseCols.forEach(col => {
-            colMap[col] = headers.findIndex((h: string) => h === col);
-        });
-
-        const yearIndices: number[] = [], classIndices: number[] = [], remarksIndices: number[] = [];
-        for (let i = 1; i <= 10; i++) {
-            const yIdx = headers.findIndex((h: string) => h === `academicyear${i}`);
-            const cIdx = headers.findIndex((h: string) => h === `class${i}`);
-            const rIdx = headers.findIndex((h: string) => h === `remarks${i}`);
-            if (yIdx !== -1 || cIdx !== -1 || rIdx !== -1) {
-                yearIndices.push(yIdx);
-                classIndices.push(cIdx);
-                remarksIndices.push(rIdx);
-            }
-        }
-
-        for (let i = 1; i < rows.length; i++) {
-            const row = rows[i];
-            if (row.every((cell: any) => !String(cell).trim())) continue;
-            const record: any = {};
-            baseCols.forEach(col => {
-                const idx = colMap[col];
-                record[col] = (idx !== undefined && idx !== -1 && row[idx]) ? String(row[idx]).trim() : '';
-            });
-            
-            const aRows = [];
-            const maxRows = Math.max(yearIndices.length, classIndices.length, remarksIndices.length);
-            for (let j = 0; j < maxRows; j++) {
-                const year = (yearIndices[j] !== undefined && yearIndices[j] !== -1 && row[yearIndices[j]]) ? String(row[yearIndices[j]]).trim() : '';
-                const cls = (classIndices[j] !== undefined && classIndices[j] !== -1 && row[classIndices[j]]) ? String(row[classIndices[j]]).trim() : '';
-                const remarks = (remarksIndices[j] !== undefined && remarksIndices[j] !== -1 && row[remarksIndices[j]]) ? String(row[remarksIndices[j]]).trim() : '';
-                if (year || cls || remarks) {
-                    aRows.push({ year, class: cls, remarks });
-                }
-            }
-            record.academicRows = aRows;
-            parsedData.push(record);
-        }
-
-        if (parsedData.length > 0) {
-            setBulkData(parsedData);
-            setBulkIndex(0);
-            setMode('bulk');
-            toast.success(`Loaded ${parsedData.length} records successfully.`);
-        } else {
-            toast.error("No valid data found in Excel.");
-        }
-      } catch (err: any) {
-        toast.error('Error reading Excel file: ' + err.message);
-      }
-    };
-    reader.readAsArrayBuffer(file);
   };
 
   const handlePrint = () => {
@@ -160,9 +239,7 @@ export const StudyCertificatePage = () => {
     try {
         const originalTransform = canvasRef.current.style.transform;
         canvasRef.current.style.transform = 'none';
-        
-        // Force reflow
-        void canvasRef.current.offsetWidth;
+        void canvasRef.current.offsetWidth; // Force reflow
 
         const canvas = await html2canvas(canvasRef.current, {
             scale: 2,
@@ -182,11 +259,15 @@ export const StudyCertificatePage = () => {
         
         pdf.addImage(imgData, 'PNG', 0, 0, pdfW, pdfH);
         
-        const filename = mode === 'manual' 
-            ? `Certificate_${currentData.student?.trim().replace(/\s+/g, '_') || 'Student'}.pdf`
-            : `Certificate_${bulkIndex + 1}.pdf`;
+        let filename = 'Certificate.pdf';
+        if (mode === 'manual' && mStudent) filename = `Certificate_${mStudent.replace(/\s+/g, '_')}.pdf`;
+        else if (mode === 'bulk' && bulkSelectedIds.length > 0) {
+            const s = students.find(x => x.id === bulkSelectedIds[bulkIndex]);
+            if (s) filename = `Certificate_${s.firstName}_${s.lastName}.pdf`;
+        }
             
         pdf.save(filename);
+        toast.success("PDF exported successfully!");
     } catch (err: any) {
         toast.error("Export failed: " + err.message);
     } finally {
@@ -194,46 +275,66 @@ export const StudyCertificatePage = () => {
     }
   };
 
-  const downloadSampleTemplate = () => {
-    const wb = XLSX.utils.book_new();
-    const sampleData = [
-        ['Student', 'Parent', 'Conduct', 'Admission', 'Udise', 'Place', 'Date',
-            'AcademicYear1', 'Class1', 'Remarks1',
-            'AcademicYear2', 'Class2', 'Remarks2',
-            'AcademicYear3', 'Class3', 'Remarks3'
-        ],
-        ['K. Aditya', 'Sri K. Ramesh', 'Excellent', '2538', '2811230381', 'Tirupati', '09 July 2026',
-            '2023-24', 'VI', '',
-            '2024-25', 'VII', '',
-            '2025-26', 'VIII', 'Pro wrote'
-        ],
-        ['M. Sneha', 'Smt. M. Lakshmi', 'Good', '2540', '2811230382', 'Narasannapeta', '15 Aug 2026',
-            '2022-23', 'V', 'Good',
-            '2023-24', 'VI', '',
-            '', '', ''
-        ]
-    ];
-    const ws = XLSX.utils.aoa_to_sheet(sampleData);
-    XLSX.utils.book_append_sheet(wb, ws, 'Data');
-    XLSX.writeFile(wb, 'Certificate_Template_Portrait.xlsx');
+  const handleGenerateZip = async () => {
+      if (bulkSelectedIds.length === 0) return toast.error("Select at least one student!");
+      
+      setIsZipping(true);
+      const toastId = toast.loading('Generating ZIP... Please wait (this may take a minute depending on count)');
+      
+      try {
+          const zip = new JSZip();
+          
+          for (let i = 0; i < bulkSelectedIds.length; i++) {
+              const studentId = bulkSelectedIds[i];
+              const s = students.find(x => x.id === studentId);
+              if (!s) continue;
+              
+              const targetDiv = document.getElementById(`zip-cert-${studentId}`);
+              if (!targetDiv) continue;
+
+              const canvas = await html2canvas(targetDiv, {
+                  scale: 2,
+                  useCORS: true,
+                  backgroundColor: '#FDFBF7',
+                  logging: false,
+                  width: CANVAS_W,
+                  height: CANVAS_H
+              });
+
+              const imgData = canvas.toDataURL('image/png');
+              const pdf = new jsPDF('p', 'mm', 'a4');
+              const pdfW = 210;
+              const pdfH = (CANVAS_H * pdfW) / CANVAS_W;
+              pdf.addImage(imgData, 'PNG', 0, 0, pdfW, pdfH);
+              
+              const pdfBlob = pdf.output('blob');
+              zip.file(`Certificate_${s.firstName}_${s.lastName}.pdf`.replace(/\s+/g, '_'), pdfBlob);
+          }
+
+          const zipBlob = await zip.generateAsync({ type: 'blob' });
+          saveAs(zipBlob, `Study_Certificates_${selectedClass}_${selectedSection}.zip`);
+          toast.success('ZIP downloaded successfully!', { id: toastId });
+      } catch (err: any) {
+          toast.error("ZIP Generation failed: " + err.message, { id: toastId });
+      } finally {
+          setIsZipping(false);
+      }
   };
 
-  // Determine what data to render
+  // Determine what data to render on screen
   const defaultFields = {
     student: '_________________________',
     parent: '_________________________',
-    conduct: '_______________',
+    conduct: mConduct || '_______________',
     admission: '___________',
-    udise: '___________',
-    place: '_______________',
-    date: '_______________'
+    udise: mUdise || '___________',
+    place: mPlace || '_______________',
+    date: mDate || '_______________'
   };
 
-  let currentData: any = {};
-  let currentRows: any[] = [];
-
+  let screenData: any = { ...defaultFields };
   if (mode === 'manual') {
-      currentData = {
+      screenData = {
           student: mStudent || defaultFields.student,
           parent: mParent || defaultFields.parent,
           conduct: mConduct || defaultFields.conduct,
@@ -242,22 +343,24 @@ export const StudyCertificatePage = () => {
           place: mPlace || defaultFields.place,
           date: mDate || defaultFields.date,
       };
-      currentRows = [...academicRows];
-  } else if (mode === 'bulk' && bulkData.length > 0) {
-      const record = bulkData[bulkIndex];
-      currentData = {
-          student: record.student || defaultFields.student,
-          parent: record.parent || defaultFields.parent,
-          conduct: record.conduct || defaultFields.conduct,
-          admission: record.admission || defaultFields.admission,
-          udise: record.udise || defaultFields.udise,
-          place: record.place || defaultFields.place,
-          date: record.date || defaultFields.date,
-      };
-      currentRows = record.academicRows || [];
-  } else {
-      currentData = { ...defaultFields };
+  } else if (mode === 'bulk' && bulkSelectedIds.length > 0) {
+      const s = students.find(x => x.id === bulkSelectedIds[bulkIndex]);
+      if (s) {
+          screenData = {
+              student: `${s.firstName || ''} ${s.lastName || ''}`.trim() || defaultFields.student,
+              parent: s.fatherName || s.guardianName || defaultFields.parent,
+              conduct: mConduct || defaultFields.conduct,
+              admission: s.admissionNumber || defaultFields.admission,
+              udise: mUdise || defaultFields.udise,
+              place: mPlace || defaultFields.place,
+              date: mDate || defaultFields.date,
+          };
+      }
   }
+
+  // Filter unique classes and sections
+  const uniqueClassNames = Array.from(new Set(classes.map(c => c.className))).sort();
+  const availableSections = classes.filter(c => c.className === selectedClass).map(c => c.section).sort();
 
   return (
     <div className="flex flex-col h-[calc(100vh-64px)] overflow-hidden bg-gray-50/50">
@@ -288,12 +391,18 @@ export const StudyCertificatePage = () => {
             width: 850px;
             height: 1202px;
             background: var(--cert-bg);
-            position: absolute;
+            position: relative;
             transform-origin: center center;
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.05);
             overflow: hidden;
-            transition: opacity 0.3s ease;
             font-family: var(--cert-font);
+        }
+        
+        .cert-a4-canvas-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: absolute;
         }
 
         .cert-border-outer { position: absolute; inset: 28px; border: 2px solid var(--cert-gold); pointer-events: none; z-index: 10; }
@@ -352,15 +461,41 @@ export const StudyCertificatePage = () => {
         .c-sig-line { border-bottom: 2px solid var(--cert-navy); margin-bottom: 10px; height: 130px; }
         .c-sig-label { font-family: var(--cert-font); font-size: 16px; font-weight: 700; color: var(--cert-navy); letter-spacing: 1px; text-transform: uppercase; }
 
+        /* EXACT PRINT CSS */
         @media print {
             .no-print { display: none !important; }
-            .cert-viewport { min-height: unset !important; overflow: visible !important; display: block !important; padding: 0 !important; }
+            html, body { 
+                margin: 0 !important; 
+                padding: 0 !important; 
+                background: #fff !important; 
+            }
             @page { size: A4 portrait; margin: 0; }
-            .cert-a4-canvas { position: static !important; transform: none !important; box-shadow: none !important; width: 210mm !important; height: 297mm !important; page-break-after: always; }
+            .print-container { 
+                display: block !important; 
+                width: 210mm !important; 
+                margin: 0 auto; 
+                padding: 0;
+            }
+            .cert-a4-canvas { 
+                position: relative !important; 
+                transform: none !important; 
+                box-shadow: none !important; 
+                width: 210mm !important; 
+                height: 296.8mm !important; 
+                page-break-after: always;
+                page-break-inside: avoid;
+                margin: 0 auto;
+                background: #FDFBF7 !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+            .cert-a4-canvas {
+                zoom: 0.93;
+            }
         }
         `}</style>
 
-        <div className="no-print">
+        <div className="no-print shrink-0">
             <PageHeader 
                 title="Study Certificate Generator" 
                 icon={<GraduationCap className="w-5 h-5" />} 
@@ -372,7 +507,7 @@ export const StudyCertificatePage = () => {
             {/* SIDEBAR */}
             <div className="w-full lg:w-[420px] flex flex-col bg-white border-r border-slate-200 shadow-xl z-10 shrink-0">
                 {/* TABS */}
-                <div className="flex border-b border-slate-200">
+                <div className="flex border-b border-slate-200 shrink-0">
                     <button 
                         onClick={() => setMode('manual')}
                         className={`flex-1 py-4 flex items-center justify-center gap-2 text-sm font-bold transition-all ${mode === 'manual' ? 'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50/50' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'}`}
@@ -383,26 +518,101 @@ export const StudyCertificatePage = () => {
                         onClick={() => setMode('bulk')}
                         className={`flex-1 py-4 flex items-center justify-center gap-2 text-sm font-bold transition-all ${mode === 'bulk' ? 'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50/50' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'}`}
                     >
-                        <Database className="w-4 h-4" /> Bulk Excel
+                        <Database className="w-4 h-4" /> Bulk / Class
                     </button>
                 </div>
 
-                <div className="flex-1 overflow-y-auto p-6">
-                    {mode === 'manual' ? (
-                        <div className="space-y-6 animate-fade-in-up">
-                            {/* Logo Upload */}
-                            <div className="flex items-center gap-4 p-4 bg-slate-50 border border-slate-200 rounded-2xl">
-                                <div className="w-12 h-12 rounded-xl bg-white border border-slate-200 shadow-sm flex items-center justify-center overflow-hidden shrink-0">
-                                    {logoDataUrl ? <img src={logoDataUrl} alt="Logo" className="w-full h-full object-contain p-1" /> : <span className="text-2xl opacity-50">🏫</span>}
+                <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
+                    
+                    {/* COMMON SHARED FIELDS (ALWAYS VISIBLE) */}
+                    <div className="mb-6 space-y-6">
+                        <div className="flex items-center gap-4 p-4 bg-slate-50 border border-slate-200 rounded-2xl">
+                            <div className="w-12 h-12 rounded-xl bg-white border border-slate-200 shadow-sm flex items-center justify-center overflow-hidden shrink-0">
+                                {logoDataUrl ? <img src={logoDataUrl} alt="Logo" className="w-full h-full object-contain p-1" /> : <span className="text-2xl opacity-50">🏫</span>}
+                            </div>
+                            <div className="flex-1">
+                                <label className="block text-xs font-bold text-slate-700 mb-1">School Logo</label>
+                                <input type="file" accept="image/*" onChange={handleLogoUpload} className="text-xs w-full text-slate-500 file:mr-2 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 cursor-pointer" />
+                            </div>
+                        </div>
+
+                        <div>
+                            <h3 className="text-xs uppercase tracking-wider font-bold text-slate-400 mb-3 pb-2 border-b border-slate-100">Common Settings</h3>
+                            <div className="space-y-4">
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">UDISE Code</label>
+                                        <input type="text" value={mUdise} onChange={e => setMUdise(e.target.value)} placeholder="Auto-saves..." className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all outline-none" />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">Conduct & Character</label>
+                                        <select value={mConduct} onChange={e => setMConduct(e.target.value)} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all outline-none cursor-pointer">
+                                            <option value="Excellent">Excellent</option>
+                                            <option value="Very Good">Very Good</option>
+                                            <option value="Good">Good</option>
+                                            <option value="Satisfactory">Satisfactory</option>
+                                        </select>
+                                    </div>
                                 </div>
-                                <div className="flex-1">
-                                    <label className="block text-xs font-bold text-slate-700 mb-1">School Logo</label>
-                                    <input type="file" accept="image/*" onChange={handleLogoUpload} className="text-xs w-full text-slate-500 file:mr-2 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 cursor-pointer" />
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">Place</label>
+                                        <input type="text" value={mPlace} onChange={e => setMPlace(e.target.value)} placeholder="e.g. Srikakulam" className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none" />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">Date</label>
+                                        <input type="date" value={mDate} onChange={e => setMDate(e.target.value)} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none cursor-pointer text-slate-700" />
+                                    </div>
                                 </div>
                             </div>
+                        </div>
 
+                        <div>
+                            <h3 className="text-xs uppercase tracking-wider font-bold text-slate-400 mb-3 pb-2 border-b border-slate-100">Academic Records (Applies to all)</h3>
+                            <div className="space-y-3">
+                                {academicRows.map((row, idx) => (
+                                    <div key={idx} className="flex gap-2 items-center">
+                                        <input type="text" value={row.year} onChange={e => { const r = [...academicRows]; r[idx].year = e.target.value; setAcademicRows(r); }} placeholder="Year" className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none" />
+                                        <input type="text" value={row.class} onChange={e => { const r = [...academicRows]; r[idx].class = e.target.value; setAcademicRows(r); }} placeholder="Class" className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none" />
+                                        <input type="text" value={row.remarks} onChange={e => { const r = [...academicRows]; r[idx].remarks = e.target.value; setAcademicRows(r); }} placeholder="Remarks" className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none" />
+                                        <button onClick={() => setAcademicRows(academicRows.filter((_, i) => i !== idx))} className="text-red-500 hover:bg-red-50 p-1.5 rounded-lg transition-colors">
+                                            <X className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                ))}
+                                <button onClick={() => setAcademicRows([...academicRows, { year: '', class: '', remarks: '' }])} className="text-xs font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 py-2 px-4 rounded-xl flex items-center gap-1.5 transition-colors">
+                                    <Plus className="w-3.5 h-3.5" /> Add Class Record
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {/* MODE SPECIFIC FIELDS */}
+                    {mode === 'manual' ? (
+                        <div className="space-y-6 animate-fade-in-up border-t-2 border-dashed border-slate-200 pt-6">
                             <div>
-                                <h3 className="text-xs uppercase tracking-wider font-bold text-slate-400 mb-3 pb-2 border-b border-slate-100">Student Details</h3>
+                                <h3 className="text-xs uppercase tracking-wider font-bold text-slate-400 mb-3 pb-2 border-b border-slate-100">Student Data (Manual / Autofill)</h3>
+                                
+                                {/* Class/Section Dropdowns to fetch students for autofill */}
+                                <div className="grid grid-cols-2 gap-4 mb-4">
+                                    <select value={selectedClass} onChange={e => { setSelectedClass(e.target.value); setSelectedSection(''); setSelectedStudentId(''); }} className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500/20 outline-none">
+                                        <option value="">Select Class...</option>
+                                        {uniqueClassNames.map(c => <option key={c} value={c}>{c}</option>)}
+                                    </select>
+                                    <select value={selectedSection} onChange={e => { setSelectedSection(e.target.value); setSelectedStudentId(''); }} className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500/20 outline-none" disabled={!selectedClass}>
+                                        <option value="">Select Section...</option>
+                                        {availableSections.map(s => <option key={s} value={s}>{s}</option>)}
+                                    </select>
+                                </div>
+                                {students.length > 0 && (
+                                    <div className="mb-4">
+                                        <select value={selectedStudentId} onChange={e => handleManualStudentSelect(e.target.value)} className="w-full px-3 py-2 bg-indigo-50 border border-indigo-100 text-indigo-700 font-semibold rounded-xl text-sm focus:ring-2 focus:ring-indigo-500/20 outline-none">
+                                            <option value="">-- Select Student to Autofill --</option>
+                                            {students.map(s => <option key={s.id} value={s.id}>{s.firstName} {s.lastName}</option>)}
+                                        </select>
+                                    </div>
+                                )}
+
                                 <div className="space-y-4">
                                     <div>
                                         <label className="block text-xs font-semibold text-slate-700 mb-1.5">Student Full Name</label>
@@ -413,117 +623,67 @@ export const StudyCertificatePage = () => {
                                         <input type="text" value={mParent} onChange={e => setMParent(e.target.value)} placeholder="e.g. Sri K. Ramesh" className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all outline-none" />
                                     </div>
                                     <div>
-                                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">Conduct & Character</label>
-                                        <select value={mConduct} onChange={e => setMConduct(e.target.value)} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all outline-none">
-                                            <option value="Excellent">Excellent</option>
-                                            <option value="Very Good">Very Good</option>
-                                            <option value="Good">Good</option>
-                                            <option value="Satisfactory">Satisfactory</option>
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div>
-                                <h3 className="text-xs uppercase tracking-wider font-bold text-slate-400 mb-3 pb-2 border-b border-slate-100">Certificate Numbers</h3>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
                                         <label className="block text-xs font-semibold text-slate-700 mb-1.5">Admission No.</label>
                                         <input type="text" value={mAdmission} onChange={e => setMAdmission(e.target.value)} placeholder="e.g. 2538" className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all outline-none" />
                                     </div>
-                                    <div>
-                                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">UDISE Code</label>
-                                        <input type="text" value={mUdise} onChange={e => setMUdise(e.target.value)} placeholder="e.g. 281123..." className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all outline-none" />
-                                    </div>
                                 </div>
                             </div>
-
-                            <div>
-                                <h3 className="text-xs uppercase tracking-wider font-bold text-slate-400 mb-3 pb-2 border-b border-slate-100">Academic Records</h3>
-                                <div className="space-y-3">
-                                    {academicRows.map((row, idx) => (
-                                        <div key={idx} className="flex gap-2 items-center">
-                                            <input type="text" value={row.year} onChange={e => { const r = [...academicRows]; r[idx].year = e.target.value; setAcademicRows(r); }} placeholder="Year" className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none" />
-                                            <input type="text" value={row.class} onChange={e => { const r = [...academicRows]; r[idx].class = e.target.value; setAcademicRows(r); }} placeholder="Class" className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none" />
-                                            <input type="text" value={row.remarks} onChange={e => { const r = [...academicRows]; r[idx].remarks = e.target.value; setAcademicRows(r); }} placeholder="Remarks" className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none" />
-                                            <button onClick={() => setAcademicRows(academicRows.filter((_, i) => i !== idx))} className="text-red-500 hover:bg-red-50 p-1.5 rounded-lg transition-colors">
-                                                <X className="w-4 h-4" />
-                                            </button>
-                                        </div>
-                                    ))}
-                                    <button onClick={() => setAcademicRows([...academicRows, { year: '', class: '', remarks: '' }])} className="text-xs font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 py-2 px-4 rounded-xl flex items-center gap-1.5 transition-colors">
-                                        <Plus className="w-3.5 h-3.5" /> Add Class Record
-                                    </button>
-                                </div>
-                            </div>
-
-                            <div>
-                                <h3 className="text-xs uppercase tracking-wider font-bold text-slate-400 mb-3 pb-2 border-b border-slate-100">Place & Date</h3>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">Place</label>
-                                        <input type="text" value={mPlace} onChange={e => setMPlace(e.target.value)} placeholder="Tirupati" className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none" />
-                                    </div>
-                                    <div>
-                                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">Date</label>
-                                        <input type="text" value={mDate} onChange={e => setMDate(e.target.value)} placeholder="09 July 2026" className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none" />
-                                    </div>
-                                </div>
-                            </div>
-
                         </div>
                     ) : (
-                        <div className="space-y-6 animate-fade-in-up">
-                            <div className="border-2 border-dashed border-slate-200 rounded-2xl p-8 text-center bg-slate-50 hover:bg-slate-100 hover:border-indigo-400 transition-all cursor-pointer relative overflow-hidden group">
-                                <input type="file" accept=".xlsx,.xls" onChange={handleExcelUpload} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" />
-                                <div className="flex flex-col items-center gap-3">
-                                    <div className="w-16 h-16 bg-indigo-100 text-indigo-600 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                                        <Upload className="w-8 h-8" />
-                                    </div>
-                                    <div>
-                                        <h4 className="font-bold text-slate-700">Drag & Drop Excel File</h4>
-                                        <p className="text-xs text-slate-500 mt-1">Supports .xlsx, .xls</p>
-                                    </div>
+                        <div className="space-y-6 animate-fade-in-up border-t-2 border-dashed border-slate-200 pt-6">
+                            <div>
+                                <h3 className="text-xs uppercase tracking-wider font-bold text-slate-400 mb-3 pb-2 border-b border-slate-100">Select Class for Bulk</h3>
+                                <div className="grid grid-cols-2 gap-4 mb-4">
+                                    <select value={selectedClass} onChange={e => { setSelectedClass(e.target.value); setSelectedSection(''); }} className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500/20 outline-none font-semibold text-slate-700">
+                                        <option value="">Select Class...</option>
+                                        {uniqueClassNames.map(c => <option key={c} value={c}>{c}</option>)}
+                                    </select>
+                                    <select value={selectedSection} onChange={e => setSelectedSection(e.target.value)} className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500/20 outline-none font-semibold text-slate-700" disabled={!selectedClass}>
+                                        <option value="">Select Section...</option>
+                                        {availableSections.map(s => <option key={s} value={s}>{s}</option>)}
+                                    </select>
                                 </div>
                             </div>
 
-                            <div className="text-center">
-                                <button onClick={downloadSampleTemplate} className="text-xs font-bold text-indigo-600 hover:text-indigo-700 flex items-center justify-center gap-1.5 mx-auto bg-indigo-50 hover:bg-indigo-100 py-2.5 px-5 rounded-xl transition-colors">
-                                    <Download className="w-4 h-4" /> Download Sample Template
-                                </button>
-                            </div>
+                            {selectedClass && selectedSection && students.length > 0 && (
+                                <div>
+                                    <div className="flex items-center justify-between mb-3 border-b border-slate-100 pb-2">
+                                        <h3 className="text-xs uppercase tracking-wider font-bold text-slate-600">Students ({students.length})</h3>
+                                        <div className="flex gap-3">
+                                            <button onClick={() => setBulkSelectedIds(students.map(s => s.id))} className="text-xs font-bold text-indigo-600 hover:text-indigo-700">Select All</button>
+                                            <button onClick={() => setBulkSelectedIds([])} className="text-xs font-bold text-slate-500 hover:text-slate-700">None</button>
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="max-h-60 overflow-y-auto bg-white border border-slate-200 rounded-xl divide-y divide-slate-100 custom-scrollbar">
+                                        {students.map(s => {
+                                            const isSelected = bulkSelectedIds.includes(s.id);
+                                            return (
+                                                <div 
+                                                    key={s.id} 
+                                                    onClick={() => {
+                                                        if (isSelected) setBulkSelectedIds(prev => prev.filter(id => id !== s.id));
+                                                        else setBulkSelectedIds(prev => [...prev, s.id]);
+                                                    }}
+                                                    className={`px-4 py-2.5 flex items-center gap-3 cursor-pointer transition-colors ${isSelected ? 'bg-indigo-50/50' : 'hover:bg-slate-50'}`}
+                                                >
+                                                    {isSelected ? <CheckSquare className="w-4 h-4 text-indigo-600 shrink-0" /> : <Square className="w-4 h-4 text-slate-300 shrink-0" />}
+                                                    <span className={`text-sm font-semibold ${isSelected ? 'text-indigo-900' : 'text-slate-700'}`}>{s.firstName} {s.lastName}</span>
+                                                </div>
+                                            )
+                                        })}
+                                    </div>
+                                    
+                                    <div className="mt-4 p-3 bg-blue-50 text-blue-700 text-xs font-semibold rounded-xl flex items-center gap-2">
+                                        <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></div>
+                                        {bulkSelectedIds.length} Students Selected for Generation
+                                    </div>
+                                </div>
+                            )}
 
-                            {bulkData.length > 0 && (
-                                <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
-                                    <div className="bg-slate-50 border-b border-slate-200 px-4 py-3 flex justify-between items-center">
-                                        <h3 className="text-xs font-bold text-slate-600">Loaded Records ({bulkData.length})</h3>
-                                        <button onClick={() => {setBulkData([]); setBulkIndex(0);}} className="text-xs font-semibold text-red-500 hover:text-red-700">Clear</button>
-                                    </div>
-                                    <div className="max-h-60 overflow-y-auto">
-                                        <table className="w-full text-left text-sm">
-                                            <thead>
-                                                <tr className="bg-slate-50 text-slate-400 text-xs uppercase">
-                                                    <th className="py-2 px-4 font-semibold">#</th>
-                                                    <th className="py-2 px-4 font-semibold">Student</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody className="divide-y divide-slate-100">
-                                                {bulkData.slice(0, 10).map((row, i) => (
-                                                    <tr key={i} className={i === bulkIndex ? 'bg-indigo-50/50' : ''}>
-                                                        <td className="py-2.5 px-4 text-slate-500 font-medium">{i + 1}</td>
-                                                        <td className="py-2.5 px-4 font-bold text-slate-700">{row.student}</td>
-                                                    </tr>
-                                                ))}
-                                                {bulkData.length > 10 && (
-                                                    <tr>
-                                                        <td colSpan={2} className="py-3 text-center text-xs text-slate-400 font-medium">
-                                                            ... and {bulkData.length - 10} more records
-                                                        </td>
-                                                    </tr>
-                                                )}
-                                            </tbody>
-                                        </table>
-                                    </div>
+                            {selectedClass && selectedSection && students.length === 0 && (
+                                <div className="p-6 text-center text-slate-500 bg-slate-50 rounded-xl border border-slate-200">
+                                    No students found in this section.
                                 </div>
                             )}
                         </div>
@@ -534,154 +694,104 @@ export const StudyCertificatePage = () => {
             {/* PREVIEW AREA */}
             <div className="flex-1 bg-slate-100 flex flex-col relative overflow-hidden">
                 {/* PREVIEW HEADER */}
-                <div className="h-16 bg-white border-b border-slate-200 px-6 flex items-center justify-between shrink-0 shadow-sm z-10">
+                <div className="h-16 bg-white border-b border-slate-200 px-6 flex items-center justify-between shrink-0 shadow-sm z-10 no-print">
                     <div className="flex items-center gap-3">
                         <h2 className="text-lg font-black text-slate-800">Live Preview</h2>
                         <span className="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-bold tracking-wide">A4 PORTRAIT</span>
                     </div>
                     
                     <div className="flex items-center gap-3">
-                        {mode === 'bulk' && bulkData.length > 0 && (
+                        {mode === 'bulk' && bulkSelectedIds.length > 0 && (
                             <div className="flex items-center bg-slate-100 rounded-xl p-1 mr-4 border border-slate-200">
                                 <button onClick={() => setBulkIndex(Math.max(0, bulkIndex - 1))} disabled={bulkIndex === 0} className="p-1.5 text-slate-600 hover:bg-white rounded-lg disabled:opacity-50 transition-colors">
                                     <ChevronLeft className="w-5 h-5" />
                                 </button>
-                                <span className="px-4 text-sm font-bold text-slate-700 min-w-[120px] text-center">Record {bulkIndex + 1} of {bulkData.length}</span>
-                                <button onClick={() => setBulkIndex(Math.min(bulkData.length - 1, bulkIndex + 1))} disabled={bulkIndex === bulkData.length - 1} className="p-1.5 text-slate-600 hover:bg-white rounded-lg disabled:opacity-50 transition-colors">
+                                <span className="px-4 text-sm font-bold text-slate-700 min-w-[120px] text-center">View {bulkIndex + 1} of {bulkSelectedIds.length}</span>
+                                <button onClick={() => setBulkIndex(Math.min(bulkSelectedIds.length - 1, bulkIndex + 1))} disabled={bulkIndex === bulkSelectedIds.length - 1} className="p-1.5 text-slate-600 hover:bg-white rounded-lg disabled:opacity-50 transition-colors">
                                     <ChevronRight className="w-5 h-5" />
                                 </button>
                             </div>
                         )}
                         
-                        <button onClick={handlePrint} className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl text-sm font-bold shadow-sm transition-all">
-                            <Printer className="w-4 h-4" /> Print
-                        </button>
-                        <button onClick={handleExportPDF} disabled={isExporting} className="flex items-center gap-2 px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-bold shadow-md shadow-indigo-600/20 transition-all disabled:opacity-70">
-                            {isExporting ? (
-                                <>
-                                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                    Generating...
-                                </>
-                            ) : (
-                                <>
-                                    <Download className="w-4 h-4" /> Export PDF
-                                </>
-                            )}
-                        </button>
+                        {mode === 'manual' || bulkSelectedIds.length === 0 ? (
+                            <>
+                                <button onClick={handlePrint} className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl text-sm font-bold shadow-sm transition-all">
+                                    <Printer className="w-4 h-4" /> Print
+                                </button>
+                                <button onClick={handleExportPDF} disabled={isExporting} className="flex items-center gap-2 px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-bold shadow-md shadow-indigo-600/20 transition-all disabled:opacity-70">
+                                    {isExporting ? 'Generating...' : <><Download className="w-4 h-4" /> Export PDF</>}
+                                </button>
+                            </>
+                        ) : (
+                            <>
+                                <button onClick={handlePrint} className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl text-sm font-bold shadow-sm transition-all">
+                                    <Printer className="w-4 h-4" /> Print All ({bulkSelectedIds.length})
+                                </button>
+                                <button onClick={handleGenerateZip} disabled={isZipping} className="flex items-center gap-2 px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-bold shadow-md shadow-indigo-600/20 transition-all disabled:opacity-70">
+                                    {isZipping ? 'Zipping...' : <><Download className="w-4 h-4" /> ZIP ({bulkSelectedIds.length} PDFs)</>}
+                                </button>
+                            </>
+                        )}
                     </div>
                 </div>
 
-                {/* CANVAS WRAPPER */}
-                <div ref={viewportRef} className="cert-viewport p-8 pb-16 overflow-y-auto bg-slate-100">
-                    <div ref={canvasRef} className="cert-a4-canvas">
-                        
-                        {/* Borders */}
-                        <div className="cert-border-outer"></div>
-                        <div className="cert-border-inner"></div>
-                        <div className="corner tl"></div>
-                        <div className="corner tr"></div>
-                        <div className="corner bl"></div>
-                        <div className="corner br"></div>
-
-                        {/* Watermark */}
-                        <div className="cert-watermark">
-                            {logoDataUrl && <img src={logoDataUrl} alt="watermark" />}
-                        </div>
-
-                        {/* Content */}
-                        <div className="cert-content">
-                            {/* HEADER */}
-                            <div className="c-header">
-                                <div className="c-logo">
-                                    {logoDataUrl ? <img src={logoDataUrl} alt="Logo" /> : <span className="c-logo-placeholder">🏫</span>}
-                                </div>
-                                <div className="c-school-info">
-                                    <div className="c-school-name">JY SCHOOL</div>
-                                    <div className="c-school-rc">Rc. No. 281125100013 / Visakhapatnam/2025. Dated :21-10-2025</div>
-                                    <div className="c-school-addr">Opp. Hero Showroom, SVL Paradise Campus, Narasannapeta</div>
-                                </div>
-                            </div>
-
-                            {/* TITLE */}
-                            <div className="c-title">Study & Conduct Certificate</div>
-
-                            {/* Meta boxes */}
-                            <div className="c-meta-boxes">
-                                <div className="c-meta-box">Admission No. : <span>{currentData.admission}</span></div>
-                                <div className="c-meta-box">UDISE Code : <span>{currentData.udise}</span></div>
-                            </div>
-
-                            {/* BODY */}
-                            <div className="c-body">
-                                <div className="p1">
-                                    <span className="c-label">This is to certify that</span>
-                                    <span className="c-value c-value-lg">{currentData.student}</span>
-                                    <span className="c-label">, Son/Daughter of</span>
-                                    <span className="c-value c-value-lg">{currentData.parent}</span>
-                                    <span className="c-label">, was a bona fide student of this institution.</span>
-                                </div>
-                                <div className="p2">
-                                    <span className="c-label">During the period of study, the student's conduct, character, discipline, and behavior were found to be</span>
-                                    <span className="c-value" style={{ fontStyle: 'italic' }}>{currentData.conduct}</span>
-                                    <span className="c-label">. The student consistently maintained good moral values, complied with the rules and regulations of the institution, and demonstrated respectful behavior towards teachers, staff, and fellow students.</span>
-                                </div>
-                                <div className="p3">
-                                    <span className="c-label">He/She studied the following classes during the years noted below, as recorded in the school records.</span>
-                                </div>
-
-                                {/* TABLE */}
-                                <div className="c-table-wrap">
-                                    <table>
-                                        <thead>
-                                            <tr>
-                                                <th style={{ width: '15%' }}>Sl. No.</th>
-                                                <th style={{ width: '35%' }}>Academic Year</th>
-                                                <th style={{ width: '25%' }}>Class</th>
-                                                <th style={{ width: '25%' }}>Remarks</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {currentRows.length === 0 ? (
-                                                <tr><td colSpan={4} style={{ color: '#999' }}>No records</td></tr>
-                                            ) : (
-                                                currentRows.map((row, idx) => (
-                                                    <tr key={idx}>
-                                                        <td>{idx + 1}</td>
-                                                        <td>{row.year}</td>
-                                                        <td>{row.class}</td>
-                                                        <td>{row.remarks}</td>
-                                                    </tr>
-                                                ))
-                                            )}
-                                        </tbody>
-                                    </table>
-                                </div>
-
-                                {/* FOOTER */}
-                                <div className="c-footer">
-                                    <div className="c-meta">
-                                        <div className="c-meta-line">
-                                            <span className="c-label" style={{ marginLeft: 0 }}>Place :</span>
-                                            <span className="c-value">{currentData.place}</span>
-                                        </div>
-                                        <div className="c-meta-line">
-                                            <span className="c-label" style={{ marginLeft: 0 }}>Date &nbsp;:</span>
-                                            <span className="c-value">{currentData.date}</span>
-                                        </div>
-                                    </div>
-                                    <div className="c-signature">
-                                        <div className="c-sig-line"></div>
-                                        <div className="c-sig-label">Headmaster / Principal</div>
-                                    </div>
-                                </div>
-
-                            </div>
-                        </div>
+                {/* CANVAS WRAPPER (SCREEN PREVIEW) */}
+                <div ref={viewportRef} className="cert-viewport p-8 pb-16 overflow-y-auto bg-slate-100 no-print">
+                    <div ref={canvasRef} className="cert-a4-canvas-wrapper">
+                        {/* We use a wrapper to apply scale dynamically via React ref without breaking the 850x1202 dimension */}
+                        <CertificateTemplate data={screenData} logo={logoDataUrl} rows={academicRows} id="cert-screen" />
                     </div>
                 </div>
-
             </div>
         </div>
+
+        {/* --- HIDDEN PRINT / BULK ZIP CONTAINER --- */}
+        {/* These elements are hidden on screen but visible during window.print(), or used by html2canvas for ZIP generation */}
+        
+        {/* 1. PRINT CONTAINER */}
+        <div className="hidden print-container">
+            {mode === 'manual' || bulkSelectedIds.length === 0 ? (
+                <CertificateTemplate data={screenData} logo={logoDataUrl} rows={academicRows} id="cert-print-single" />
+            ) : (
+                bulkSelectedIds.map(id => {
+                    const s = students.find(x => x.id === id);
+                    if (!s) return null;
+                    const data = {
+                        student: `${s.firstName || ''} ${s.lastName || ''}`.trim() || defaultFields.student,
+                        parent: s.fatherName || s.guardianName || defaultFields.parent,
+                        conduct: mConduct || defaultFields.conduct,
+                        admission: s.admissionNumber || defaultFields.admission,
+                        udise: mUdise || defaultFields.udise,
+                        place: mPlace || defaultFields.place,
+                        date: mDate || defaultFields.date,
+                    };
+                    return <CertificateTemplate key={id} data={data} logo={logoDataUrl} rows={academicRows} id={`cert-print-${id}`} />
+                })
+            )}
+        </div>
+
+        {/* 2. ZIP GENERATION CONTAINER */}
+        <div className="absolute top-[-20000px] left-[-20000px] opacity-0" ref={zipCanvasRef}>
+            {mode === 'bulk' && isZipping && bulkSelectedIds.map(id => {
+                const s = students.find(x => x.id === id);
+                if (!s) return null;
+                const data = {
+                    student: `${s.firstName || ''} ${s.lastName || ''}`.trim() || defaultFields.student,
+                    parent: s.fatherName || s.guardianName || defaultFields.parent,
+                    conduct: mConduct || defaultFields.conduct,
+                    admission: s.admissionNumber || defaultFields.admission,
+                    udise: mUdise || defaultFields.udise,
+                    place: mPlace || defaultFields.place,
+                    date: mDate || defaultFields.date,
+                };
+                return (
+                    <div key={id} id={`zip-cert-${id}`} className="bg-white" style={{width: CANVAS_W, height: CANVAS_H}}>
+                        <CertificateTemplate data={data} logo={logoDataUrl} rows={academicRows} id={`inner-zip-cert-${id}`} />
+                    </div>
+                )
+            })}
+        </div>
+
     </div>
   );
 };
