@@ -83,7 +83,7 @@ const AnnouncementsPage = lazy(routeImports['/announcements']);
 const MessagesPage = lazy(routeImports['/messages']);
 const ReportsPage = lazy(routeImports['/reports']);
 const SettingsPage = lazy(routeImports['/settings']);
-const RolesPage = lazy(() => import('../pages/settings/RolesPage'));
+const StaffManagement = lazy(() => import('../pages/settings/StaffManagement'));
 const ProfilePage = lazy(() => import('../pages/profile/ProfilePage'));
 const LeaveDashboardPage = lazy(() => import('../pages/leave/LeaveDashboardPage'));
 const GatePassPage = lazy(routeImports['/leave/gate-pass']);
@@ -532,10 +532,10 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: 'roles',
+        path: 'staff-management',
         element: withSuspense(
           <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN']}>
-            <RolesPage />
+            <StaffManagement />
           </ProtectedRoute>
         ),
       },

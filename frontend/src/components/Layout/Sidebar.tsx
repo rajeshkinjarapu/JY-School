@@ -48,6 +48,7 @@ const NAV_COLORS: Record<string, { text: string; bg: string; glow: string }> = {
   'Answer Key':  { text: '#fca5a5', bg: 'rgba(239,68,68,0.18)',   glow: '0 0 12px rgba(239,68,68,.5)'   },
   Transport:     { text: '#fcd34d', bg: 'rgba(251,191,36,0.18)', glow: '0 0 12px rgba(251,191,36,.5)' },
   Roles:         { text: '#a5b4fc', bg: 'rgba(99,102,241,0.15)', glow: '0 0 12px rgba(99,102,241,.4)'  },
+  'Staff Roles': { text: '#a5b4fc', bg: 'rgba(99,102,241,0.15)', glow: '0 0 12px rgba(99,102,241,.4)'  },
   'Total Students': { text: '#67e8f9', bg: 'rgba(6,182,212,0.18)',   glow: '0 0 12px rgba(6,182,212,.5)'   },
   'My Attendance':{ text: '#fde68a', bg: 'rgba(245,158,11,0.18)', glow: '0 0 12px rgba(245,158,11,.5)'  },
   'My Salary':   { text: '#c4b5fd', bg: 'rgba(139,92,246,0.18)', glow: '0 0 12px rgba(139,92,246,.5)'  },
@@ -101,6 +102,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
       ...(role === 'SUPER_ADMIN' ? [{ to: '/question-bank', label: 'Question Bank', icon: Database }] : []),
       
       { to: '/transport',     label: 'Transport',     icon: Bus },
+      { to: '/staff-management', label: 'Staff Roles', icon: Shield },
       { to: '/settings',      label: 'Settings',      icon: Settings      },
     ];
     if (role === 'TEACHER') return [...base, 

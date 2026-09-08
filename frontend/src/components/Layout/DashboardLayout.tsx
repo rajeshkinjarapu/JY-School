@@ -93,7 +93,7 @@ export const DashboardLayout: React.FC = () => {
     if (pathname.includes('/office-tools/slip-test')) return 'Slip Test Manager';
     
     if (pathname === '/settings') return 'School Settings';
-    if (pathname === '/roles') return 'Roles & Permissions';
+    if (pathname === '/staff-management') return 'Staff Management';
     if (pathname === '/profile') return 'My Profile';
     
     if (pathname === '/gate-pass' || pathname === '/leave/gate-pass') return 'Gate Pass';
