@@ -1,0 +1,74 @@
+name: Shorebird Patch (All Flavors)
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'flutter_mobile/lib/**'
+      - 'flutter_mobile/pubspec.yaml'
+  workflow_dispatch:
+    inputs:
+      flavor:
+        description: 'Flavor to patch (universal, student, teacher, admin)'
+        required: false
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - universal
+          - student
+          - teacher
+          - admin
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./flutter_mobile
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+
+      - name: Setup Shorebird
+        uses: shorebirdtech/setup-shorebird@v1
+
+      - name: Get Dependencies
+        run: flutter pub get
+
+      - name: Shorebird Patch Universal
+        if: github.event.inputs.flavor == 'all' || github.event.inputs.flavor == 'universal' || github.event_name == 'push'
+        run: shorebird patch android --flavor universal --allow-asset-diffs
+        env:
+          SHOREBIRD_TOKEN: ${{ secrets.SHOREBIRD_TOKEN }}
+
+      - name: Shorebird Patch Student
+        if: github.event.inputs.flavor == 'all' || github.event.inputs.flavor == 'student' || github.event_name == 'push'
+        run: shorebird patch android --flavor student --allow-asset-diffs
+        env:
+          SHOREBIRD_TOKEN: ${{ secrets.SHOREBIRD_TOKEN }}
+
+      - name: Shorebird Patch Teacher
+        if: github.event.inputs.flavor == 'all' || github.event.inputs.flavor == 'teacher' || github.event_name == 'push'
+        run: shorebird patch android --flavor teacher --allow-asset-diffs
+        env:
+          SHOREBIRD_TOKEN: ${{ secrets.SHOREBIRD_TOKEN }}
+
+      - name: Shorebird Patch Admin
+        if: github.event.inputs.flavor == 'all' || github.event.inputs.flavor == 'admin' || github.event_name == 'push'
+        run: shorebird patch android --flavor admin --allow-asset-diffs
+        env:
+          SHOREBIRD_TOKEN: ${{ secrets.SHOREBIRD_TOKEN }}

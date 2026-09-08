@@ -180,82 +180,91 @@ class _TransportScreenState extends State<TransportScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       drawer: const AppDrawer(currentRoute: 'transport'),
-      body: NestedScrollView(
-        headerSliverBuilder: (context, innerBoxIsScrolled) {
-          return [
-            SliverAppBar(
-              expandedHeight: 120.0,
-              floating: false,
-              pinned: true,
-              elevation: 0,
-              backgroundColor: const Color(0xFF1E1B4B),
-              iconTheme: const IconThemeData(color: Colors.white),
-              flexibleSpace: FlexibleSpaceBar(
-                titlePadding: const EdgeInsets.only(left: 60, bottom: 16),
-                title: Text(
-                  'Transport',
-                  style: GoogleFonts.outfit(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 20,
-                  ),
-                ),
-                background: Container(
-                  decoration: const BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [Color(0xFF312E81), Color(0xFF1E1B4B)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                  ),
-                  child: Stack(
-                    children: [
-                      Positioned(
-                        right: -30,
-                        top: -20,
-                        child: Icon(Icons.directions_bus_rounded, size: 150, color: Colors.white.withOpacity(0.05)),
-                      ),
-                    ],
-                  ),
-                ),
+      appBar: AppBar(
+        toolbarHeight: 90,
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Transport',
+              style: GoogleFonts.outfit(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 24,
               ),
-              actions: [
-                IconButton(
-                  icon: const Icon(Icons.refresh_rounded, color: Colors.white),
-                  onPressed: _fetchDashboardStats,
-                )
-              ],
             ),
-          ];
-        },
-        body: _isLoading 
-            ? const Center(child: CircularProgressIndicator(color: Color(0xFF4F46E5)))
-            : RefreshIndicator(
-                onRefresh: _fetchDashboardStats,
-                color: const Color(0xFF4F46E5),
-                child: SingleChildScrollView(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildStatsRow(),
-                      const SizedBox(height: 24),
-                      Text(
-                        'Management Modules',
-                        style: GoogleFonts.outfit(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: const Color(0xFF1E293B),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      _buildGridOptions(),
-                    ],
-                  ),
+            const SizedBox(height: 2),
+            Text(
+              'Fleet Dashboard',
+              style: GoogleFonts.poppins(
+                color: Colors.white70,
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+        backgroundColor: const Color(0xFF1E1B4B),
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.white),
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF312E81), Color(0xFF1E1B4B)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+          child: Stack(
+            children: [
+              Positioned(
+                right: -20,
+                top: 0,
+                bottom: 0,
+                child: Icon(
+                  Icons.directions_bus_rounded,
+                  size: 100,
+                  color: Colors.white.withOpacity(0.06),
                 ),
               ),
+            ],
+          ),
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh_rounded, color: Colors.white),
+            onPressed: _fetchDashboardStats,
+          ),
+          const SizedBox(width: 8),
+        ],
       ),
+      body: _isLoading 
+          ? const Center(child: CircularProgressIndicator(color: Color(0xFF4F46E5)))
+          : RefreshIndicator(
+              onRefresh: _fetchDashboardStats,
+              color: const Color(0xFF4F46E5),
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildStatsRow(),
+                    const SizedBox(height: 24),
+                    Text(
+                      'Management Modules',
+                      style: GoogleFonts.outfit(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: const Color(0xFF1E293B),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    _buildGridOptions(),
+                  ],
+                ),
+              ),
+            ),
     );
   }
 

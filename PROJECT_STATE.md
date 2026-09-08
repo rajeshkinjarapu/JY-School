@@ -41,6 +41,7 @@
 - **Fixed Student Results Screen Data Mapping**: Corrected the mapping logic in \exams_screen.dart\ because the backend API already grouped the results by exam. Results now display the original subject marks instead of 'Unknown'.
 - **Fixed Syntax Errors**: Fixed missing parenthesis in \student_payment_submission_screen.dart\ and avoided ternary operator for \Image.file\ in \student_pay_fee_screen.dart\ to prevent Web assertion errors.
 
-- Provided user with exact commands to download latest updates from Git (local and VPS).
 - **Duplicate Subjects Bug in Results**: Fixed an issue in `ResultsTab.tsx` where subjects with slight variations (like trailing spaces or casing) were appearing as multiple duplicate columns (e.g., "PHYSICS" showing twice). Normalized subjects using `.trim().toUpperCase()` to ensure exact matching and deduplication.
 - **Flutter Progress Card Fix**: Replaced `url_launcher` with `webview_flutter` in `single_progress_card_screen.dart`. Progress cards now open directly inside the Flutter app with 100% identical design to the web app, allowing PDF downloads without browser redirection issues.
+- **Flutter Transport Dashboard Fix**: Re-designed the Admin/Universal Transport Dashboard header in `transport_screen.dart`. Replaced `NestedScrollView` and `SliverAppBar` with a fixed standard `AppBar` so the header no longer scrolls away when scrolling through the transport modules list.
+- **Automated Deployments**: Added a GitHub Actions workflow (`shorebird_patch.yml`) to automatically build and deploy Shorebird patches on every push to the `main` branch.
