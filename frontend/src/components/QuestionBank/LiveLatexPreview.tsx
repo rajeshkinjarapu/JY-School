@@ -37,6 +37,8 @@ export interface LiveLatexPreviewProps {
   inlineImages?: Record<string, FloatingImage | string>;
   onImageUpdate?: (id: string, updates: Partial<FloatingImage>) => void;
   onImageDelete?: (id: string) => void;
+  fontSize?: string;
+  questionSpacing?: string;
 }
 
 
@@ -55,7 +57,9 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
   isDoubleColumn = false,
   inlineImages = {},
   onImageUpdate,
-  onImageDelete
+  onImageDelete,
+  fontSize = 'medium',
+  questionSpacing = 'normal'
 }) => {
   // Helper to balance braces in math strings so KaTeX doesn't crash on bad AI output
   const balanceMath = (math: string) => {
@@ -81,6 +85,23 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
     else if (unescapedClose > unescapedOpen) m = '{'.repeat(unescapedClose - unescapedOpen) + m;
     
     return m;
+  };
+
+  const getFontSizeClass = () => {
+    switch (fontSize) {
+      case 'small': return 'text-[10pt]';
+      case 'large': return 'text-[12pt]';
+      case 'xlarge': return 'text-[14pt]';
+      default: return 'text-[11pt]';
+    }
+  };
+
+  const getSpacingClasses = () => {
+    switch (questionSpacing) {
+      case 'compact': return 'mb-1 leading-none';
+      case 'relaxed': return 'mb-4 leading-relaxed';
+      default: return 'mb-2 leading-snug';
+    }
   };
 
   const renderLatex = (text: string) => {
@@ -142,7 +163,7 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
               const num = qNumMatch2[1];
               const restText = block.substring(qNumMatch2[0].length);
               return (
-                <div className="mb-2 break-inside-avoid text-[11pt] flex whitespace-pre-wrap" style={{ gap: '0.4em' }}>
+                <div className={`break-inside-avoid flex whitespace-pre-wrap ${getFontSizeClass()} ${getSpacingClasses()}`} style={{ gap: '0.4em' }}>
                   <strong className="flex-shrink-0">{num}.</strong>
                   <div dangerouslySetInnerHTML={{ __html: renderLatex(restText) }} />
                 </div>
@@ -150,7 +171,7 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
             }
             return (
               <div 
-                className="mb-2 break-inside-avoid text-[11pt]"
+                className={`break-inside-avoid ${getFontSizeClass()} ${getSpacingClasses()}`}
                 dangerouslySetInnerHTML={{ __html: renderLatex(block) }} 
               />
             );
@@ -206,7 +227,7 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
             const qRest = qMatch ? questionText.substring(qMatch[0].length) : questionText;
 
             return (
-              <div className="mb-1 break-inside-avoid text-[11pt] leading-snug">
+              <div className={`break-inside-avoid ${getFontSizeClass()} ${getSpacingClasses()}`}>
                 <div className="mb-0.5 flex whitespace-pre-wrap" style={{ gap: '0.4em' }}>
                   <strong className="flex-shrink-0">{qNum}.</strong>
                   <div dangerouslySetInnerHTML={{ __html: renderLatex(qRest) }} />

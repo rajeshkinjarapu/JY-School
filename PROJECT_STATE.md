@@ -8,6 +8,8 @@
    - Built a frontend `MasterQuestionBankPage` for Admins/Teachers to manage reusable questions.
    - Designed a highly premium, dedicated `AddMasterQuestionPage` route with a large editor and integrated AI Question Generation.
    - Integrated the "Import from Question Bank" feature into `ManageExamQuestions.tsx` so teachers can directly pull pre-saved questions into JEE/NEET competitive exams.
+3. **MCQ Paper Generator Upgrades**:
+   - Added user-customizable `Font Size` and `Question Spacing` directly into the Paper Settings modal.
 
 ## Important Configurations
 - **VPS IP**: `66.116.252.191`
