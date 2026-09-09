@@ -22,3 +22,11 @@
 
 ## Current Pending Task
 - Implement Flutter App Quiz Module (Student Screens: Quizzes List, Take Quiz with Timer, Result Screen). Waiting for User's approval on the plan.
+
+- **Exam Creation Subjects Sync (2026-09-09)**: Updated CreateExamPage to auto-fetch and populate real Master Subjects from the database for each class during Exam Creation, permanently solving the mismatch between Exam Config subjects and Marks Entry subjects.
+
+- **Marks Entry Decimal Fix (2026-09-09)**: Fixed a bug in MarksEntryPage where typing decimal values like '19.5' was stripping the decimal and converting to '195'. Updated input handler to preserve raw string until submission.
+
+- **Marks Entry AB Fix (2026-09-09)**: Addressed NaN issue when typing AB. Updated exams.controller.ts to properly map marksObtained to 'AB' instead of 0 when remarks is 'AB', ensuring it reflects correctly in Results and Progress Card.
+
+- **Daily Automated Backup (2026-09-09)**: Set up rclone and a cron job on the VPS to automatically dump the jy_school_local database and upload it to Google Drive every day, keeping the last 7 days of backups.

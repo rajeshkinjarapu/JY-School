@@ -9,7 +9,7 @@ class QuizResultScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final obtainedMarks = submission['obtainedMarks'] ?? 0;
+    final obtainedMarks = submission['marksObtained'] ?? 0;
     final totalMarks = exam['totalMarks'] ?? 100;
     final percentage = (obtainedMarks / totalMarks) * 100;
     final isPass = percentage >= (exam['passMarks'] ?? 35);

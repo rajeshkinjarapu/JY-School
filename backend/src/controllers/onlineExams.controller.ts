@@ -160,6 +160,46 @@ export const getAllExamsAdmin = async (req: Request, res: Response) => {
 };
 
 // ----------------------------------------------------------------------
+// Admin: Get Single Exam By ID
+// ----------------------------------------------------------------------
+export const getExamByIdAdmin = async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        const exam = await prisma.onlineExam.findUnique({
+            where: { id },
+            include: {
+                class: { select: { name: true, section: true } },
+                subject: { select: { name: true } },
+                questions: {
+                    include: {
+                        question: true
+                    }
+                }
+            }
+        });
+
+        if (!exam) return sendError(res, 404, 'Exam not found');
+
+        // Map questions to match frontend structure
+        const mappedQuestions = exam.questions.map(q => ({
+            id: q.question.id,
+            questionText: q.question.questionText,
+            options: q.question.options ? JSON.parse(q.question.options) : [],
+            correctAnswer: q.question.correctAnswer,
+            marks: q.question.marks
+        }));
+
+        return sendResponse(res, 200, 'Exam fetched successfully', {
+            ...exam,
+            questions: mappedQuestions
+        });
+    } catch (error) {
+        console.error('Error fetching admin exam by id:', error);
+        return sendError(res, 500, 'Server error while fetching exam');
+    }
+};
+
+// ----------------------------------------------------------------------
 // Admin: Get Exam Results
 // ----------------------------------------------------------------------
 export const getExamResults = async (req: Request, res: Response) => {
@@ -212,7 +252,7 @@ export const getStudentExams = async (req: Request, res: Response) => {
                 subject: { select: { name: true } },
                 submissions: {
                     where: { studentId: studentId },
-                    select: { id: true, marksObtained: true, submittedAt: true }
+                    select: { id: true, marksObtained: true, submittedAt: true, answers: true }
                 },
                 _count: {
                     select: { questions: true }
@@ -232,10 +272,21 @@ export const getStudentExams = async (req: Request, res: Response) => {
             else if (isStarted && !isEnded) status = 'ACTIVE';
             else if (isEnded && !hasSubmitted) status = 'MISSED';
 
+            let submissionObj = null;
+            if (hasSubmitted) {
+                const sub = exam.submissions[0];
+                submissionObj = {
+                    id: sub.id,
+                    marksObtained: sub.marksObtained,
+                    submittedAt: sub.submittedAt,
+                    responses: sub.answers ? JSON.parse(sub.answers) : []
+                };
+            }
+
             return {
                 ...exam,
                 status,
-                submission: hasSubmitted ? exam.submissions[0] : null,
+                submission: submissionObj,
                 submissions: undefined // remove array
             };
         });
@@ -366,10 +417,14 @@ export const submitExam = async (req: Request, res: Response) => {
 
             evaluationDetails.push({
                 questionId: q.id,
-                studentAnswer: studentAnswer || null,
-                correctAnswer: q.correctAnswer,
+                selectedOption: studentAnswer || null,
                 isCorrect,
-                marksAwarded: isCorrect ? q.marks : 0
+                marksAwarded: isCorrect ? q.marks : 0,
+                question: {
+                    questionText: q.questionText,
+                    correctAnswer: q.correctAnswer,
+                    marks: q.marks
+                }
             });
         }
 

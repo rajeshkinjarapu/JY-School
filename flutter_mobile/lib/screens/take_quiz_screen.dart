@@ -134,9 +134,10 @@ class _TakeQuizScreenState extends State<TakeQuizScreen> with WidgetsBindingObse
     setState(() => _isSubmitting = true);
     _timer?.cancel();
 
-    List<Map<String, dynamic>> submitAnswers = [];
+    // Backend expects a Map of { questionId: selectedOption }
+    Map<String, String> submitAnswers = {};
     _answers.forEach((qId, ans) {
-      submitAnswers.add({'questionId': qId, 'selectedOption': ans});
+      submitAnswers[qId] = ans;
     });
 
     try {

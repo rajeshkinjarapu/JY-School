@@ -47,3 +47,17 @@
 - Confirm and test the Shorebird patch workflow integration on the VPS.
 - End-to-end testing of Accountant role on VPS once backend code is pulled and updated.
 - Verify that the new Local VPS Database completely resolves the lag when opening student profile pages.
+- User requested the command to pull the latest git updates. Provided the local git pull and VPS git pull commands.
+
+- Fixed marks saving issue in backend (marks.controller.ts) where missing subjects were silently skipped returning a false success message. Added missing subjects tracking and returning 400 error.
+
+- User faced issue with missing subjects despite adding them. Explained that the Supabase to VPS migration caused the old Exam's subject IDs to lose linkage with the new DB's Subjects. Suggested creating a new exam or editing the existing one.
+
+- Deeply investigated marks not saving issue. Found that when subjects are added via Exam Config but missing in Master Subjects table, strict validation silently skipped them. Changed logic to auto-create missing subjects in the master table during marks entry.
+
+9. **Quiz (Online Exams) Module Integration (Web + Flutter)**:
+   - **WebApp**: Verified `ManageExamQuestions.tsx` works for Admin to add questions. 
+   - **Backend**: Fixed `onlineExams.controller.ts` where student submissions were saved in a way the Flutter app could not parse correctly (`answers` format).
+   - **Backend**: Fixed `getStudentExams` to return `responses` so the detailed review screen shows the answered questions.
+   - **Flutter**: Fixed `take_quiz_screen.dart` payload format to send Map of `{ questionId: selectedOption }` instead of List to match backend parsing logic.
+   - **Flutter**: Fixed variable mismatch (`obtainedMarks` vs `marksObtained`) in `quiz_result_screen.dart` to correctly render results.

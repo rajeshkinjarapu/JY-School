@@ -298,8 +298,10 @@ class ApiService {
     return _performGet('/api/online-exams/$id/student', 'Failed to fetch exam details');
   }
 
-  static Future<Map<String, dynamic>> submitOnlineExam(String id, List<Map<String, dynamic>> answers) async {
-    return _performPost('/api/online-exams/$id/submit', {'answers': answers}, 'Failed to submit exam');
+  static Future<Map<String, dynamic>> submitOnlineExam(String id, Map<String, dynamic> answers) async {
+    return _performPost('/api/online-exams/$id/submit', {
+      'answers': answers,
+    }, 'Failed to submit exam');
   }
 
   static Future<Map<String, dynamic>> getExamById(String examId) async {

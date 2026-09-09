@@ -8,6 +8,7 @@ import {
     submitExam,
     getExamResults,
     getAllExamsAdmin,
+    getExamByIdAdmin,
     generateQuestionsWithAI
 } from '../controllers/onlineExams.controller';
 import { authenticate, authorize } from '../middlewares/auth';
@@ -24,6 +25,7 @@ const upload = multer({
 // Admin Routes
 router.post('/', authenticate, authorize('SUPER_ADMIN', 'ADMIN', 'TEACHER'), createOnlineExam);
 router.get('/admin', authenticate, authorize('SUPER_ADMIN', 'ADMIN', 'TEACHER'), getAllExamsAdmin);
+router.get('/:id/admin', authenticate, authorize('SUPER_ADMIN', 'ADMIN', 'TEACHER'), getExamByIdAdmin);
 router.post('/:id/questions', authenticate, authorize('SUPER_ADMIN', 'ADMIN', 'TEACHER'), addQuestionToExam);
 router.put('/:id/publish', authenticate, authorize('SUPER_ADMIN', 'ADMIN', 'TEACHER'), publishOnlineExam);
 router.get('/:id/results', authenticate, authorize('SUPER_ADMIN', 'ADMIN', 'TEACHER'), getExamResults);
