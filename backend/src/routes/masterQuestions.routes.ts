@@ -5,8 +5,8 @@ import {
   generateMasterQuestionsAI, 
   deleteMasterQuestion 
 } from '../controllers/masterQuestions.controller';
-import { protect } from '../middleware/auth.middleware';
-import { checkRole } from '../middleware/role.middleware';
+import { protect } from '../middlewares/auth.middleware';
+import { checkRole } from '../middlewares/role.middleware';
 
 const router = express.Router();
 

@@ -159,8 +159,8 @@ export const bulkCreate = async (req: AuthRequest, res: Response, next: NextFunc
              const newSubject = await prisma.subject.create({
                data: {
                  name: resolvedFakeName,
-                 classId: classId,
-                 maxMarks: resolvedMaxMarks || 100
+                 code: resolvedFakeName.toUpperCase().replace(/\s/g, '_').substring(0, 10),
+                 classId: classId
                }
              });
              realSubjects.push(newSubject);
@@ -180,8 +180,8 @@ export const bulkCreate = async (req: AuthRequest, res: Response, next: NextFunc
               const newSubject = await prisma.subject.create({
                 data: {
                   name: anyMatch.name,
-                  classId: classId,
-                  maxMarks: 100
+                  code: anyMatch.name.toUpperCase().replace(/\s/g, '_').substring(0, 10),
+                  classId: classId
                 }
               });
               realSubjects.push(newSubject);
