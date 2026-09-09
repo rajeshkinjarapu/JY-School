@@ -236,52 +236,51 @@ export const AddMasterQuestionPage = () => {
             {entryMode === 'ai' && (
               <div className="space-y-5">
                 {/* AI Prompt Card */}
-                <div className="bg-gradient-to-br from-indigo-600 via-violet-600 to-purple-700 rounded-2xl shadow-xl p-8 relative overflow-hidden">
-                  <div className="absolute -top-10 -right-10 w-48 h-48 bg-white/5 rounded-full" />
-                  <div className="absolute -bottom-16 -left-8 w-64 h-64 bg-white/5 rounded-full" />
-                  <div className="relative z-10">
-                    <div className="flex items-center gap-3 mb-2">
-                      <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
-                        <Wand2 className="w-5 h-5 text-white" />
-                      </div>
-                      <div>
-                        <h2 className="text-xl font-bold text-white">AI Question Generator</h2>
-                        <p className="text-indigo-200 text-sm">Powered by Gemini AI — generates complete MCQ questions instantly</p>
-                      </div>
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                  <div className="flex items-center gap-3 px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-indigo-50 to-violet-50">
+                    <div className="w-10 h-10 bg-indigo-100 rounded-xl flex items-center justify-center">
+                      <Wand2 className="w-5 h-5 text-indigo-600" />
                     </div>
+                    <div>
+                      <h2 className="text-lg font-bold text-gray-800">AI Question Generator</h2>
+                      <p className="text-gray-400 text-xs">Powered by Gemini AI — generates complete MCQ questions instantly</p>
+                    </div>
+                    <div className="ml-auto">
+                      <span className="text-xs px-2.5 py-1 bg-indigo-100 text-indigo-700 rounded-full font-bold">✨ SMART</span>
+                    </div>
+                  </div>
 
-                    <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div className="md:col-span-2">
-                        <label className="block text-xs font-bold text-indigo-200 uppercase tracking-wider mb-2">Focus Prompt (Optional)</label>
-                        <textarea
-                          className="w-full h-36 border border-white/20 rounded-2xl px-5 py-4 bg-white/10 text-white placeholder-indigo-300 text-sm outline-none focus:bg-white/20 transition-all resize-none leading-relaxed"
-                          placeholder={"Describe what kind of questions to generate...\n\nExamples:\n• Focus on real-world applications\n• Include diagram-based questions\n• NEET/JEE difficulty level"}
-                          value={aiPrompt}
-                          onChange={e => setAiPrompt(e.target.value)}
-                        />
+                  <div className="p-6 grid grid-cols-1 md:grid-cols-3 gap-5">
+                    <div className="md:col-span-2">
+                      <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Focus Prompt (Optional)</label>
+                      <textarea
+                        className="w-full h-40 border-2 border-gray-100 rounded-2xl px-5 py-4 bg-gray-50 focus:bg-white text-gray-800 placeholder-gray-300 text-sm outline-none focus:border-indigo-300 focus:ring-4 focus:ring-indigo-500/10 transition-all resize-none leading-relaxed"
+                        placeholder={"Describe what kind of questions to generate...\n\nExamples:\n• Focus on real-world applications\n• Include diagram-based questions\n• NEET/JEE difficulty level"}
+                        value={aiPrompt}
+                        onChange={e => setAiPrompt(e.target.value)}
+                      />
+                    </div>
+                    <div className="flex flex-col gap-4">
+                      <div>
+                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Number of Questions</label>
+                        <div className="flex items-center bg-gray-50 rounded-xl border-2 border-gray-100 overflow-hidden">
+                          <button type="button" onClick={() => setAiCount(Math.max(1, aiCount - 1))} className="px-4 py-3 text-gray-600 font-bold text-lg hover:bg-gray-100 transition-colors">−</button>
+                          <span className="flex-1 text-center text-gray-800 font-bold text-xl">{aiCount}</span>
+                          <button type="button" onClick={() => setAiCount(Math.min(10, aiCount + 1))} className="px-4 py-3 text-gray-600 font-bold text-lg hover:bg-gray-100 transition-colors">+</button>
+                        </div>
+                        <p className="text-xs text-gray-400 mt-1 text-center">Max 10 questions</p>
                       </div>
-                      <div className="flex flex-col gap-4">
-                        <div>
-                          <label className="block text-xs font-bold text-indigo-200 uppercase tracking-wider mb-2">Number of Questions</label>
-                          <div className="flex items-center bg-white/10 rounded-xl border border-white/20 overflow-hidden">
-                            <button type="button" onClick={() => setAiCount(Math.max(1, aiCount - 1))} className="px-4 py-3 text-white font-bold text-lg hover:bg-white/10 transition-colors">−</button>
-                            <span className="flex-1 text-center text-white font-bold text-xl">{aiCount}</span>
-                            <button type="button" onClick={() => setAiCount(Math.min(10, aiCount + 1))} className="px-4 py-3 text-white font-bold text-lg hover:bg-white/10 transition-colors">+</button>
-                          </div>
-                          <p className="text-xs text-indigo-300 mt-1 text-center">Max 10 questions</p>
-                        </div>
-                        <div className="flex-1 flex flex-col justify-end">
-                          <button
-                            onClick={handleAIGenerate}
-                            disabled={isGenerating}
-                            className="w-full py-4 bg-white text-indigo-700 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-indigo-50 transition-all shadow-lg disabled:opacity-60 text-base"
-                          >
-                            {isGenerating
-                              ? <><RefreshCw className="w-5 h-5 animate-spin" /> Generating...</>
-                              : <><Sparkles className="w-5 h-5" /> Generate Now</>
-                            }
-                          </button>
-                        </div>
+                      <div className="flex-1 flex flex-col justify-end">
+                        <button
+                          onClick={handleAIGenerate}
+                          disabled={isGenerating}
+                          className="w-full py-4 bg-gradient-to-r from-indigo-600 to-violet-600 text-white rounded-xl font-bold flex items-center justify-center gap-2 hover:from-indigo-700 hover:to-violet-700 transition-all shadow-md shadow-indigo-200 disabled:opacity-60 text-base"
+                        >
+                          {isGenerating
+                            ? <><RefreshCw className="w-5 h-5 animate-spin" /> Generating...</>
+                            : <><Sparkles className="w-5 h-5" /> Generate Now</>
+                          }
+                        </button>
                       </div>
                     </div>
                   </div>
