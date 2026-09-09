@@ -1,20 +1,11 @@
 # JY School Project State
 
 ## Recent Accomplishments
-1. **Competitive Exams Revamp**: Converted UI to a premium layout. Added `getAllCompetitiveExams` API for admins to view all exams globally.
-2. **Master Question Bank (Eduracle Style)**: 
-   - Architected a centralized `MasterQuestion` schema in Prisma.
-   - Built backend APIs to fetch, add, and AI-generate questions.
-   - Built a frontend `MasterQuestionBankPage` for Admins/Teachers to manage reusable questions.
-   - Designed a highly premium, dedicated `AddMasterQuestionPage` route with a large editor and integrated AI Question Generation.
-   - Integrated the "Import from Question Bank" feature into `ManageExamQuestions.tsx` so teachers can directly pull pre-saved questions into JEE/NEET competitive exams.
-3. **MCQ Paper Generator Upgrades**:
-   - Added user-customizable `Font Size` and `Question Spacing` directly into the Paper Settings modal.
-4. **AddMasterQuestionPage Redesign (Professional)**:
-   - Large textarea boxes for each option (min 110px height), supports multi-line content.
-   - Per-option **Text / Image** mode toggle — teachers can switch any option to be an image/diagram.
-   - Drag-and-drop + click image upload for **question diagrams** and **option diagrams**.
-   - Quick-select **A / B / C / D** buttons to auto-fill the correct answer field instantly.
+1. **Master Question Bank - Professional Re-architecture**:
+   - **Phase 1 (API & Dropdowns)**: Fixed `?limit=5000` pagination issue for `classes` and `subjects`. Implemented Smart Dependent Dropdowns (Subjects load dynamically based on selected Class) in both Add Question and Master Bank pages.
+   - **Phase 2 (Premium Dashboard UI)**: Completely redesigned `MasterQuestionBankPage.tsx`. Built a two-column layout with a sleek Sidebar for Filters & Bank Stats. Transformed the questions list into a premium Accordion/Card layout that expands to reveal detailed options, diagrams, and explanations. Added client-side real-time Search.
+   - **AI Question Generation Upgrades**: Designed a split Tab UI for Manual vs AI. Added support for **Document / PDF uploads** in AI mode via `multer` in backend and `FormData` in frontend.
+   - **Rich Media Options**: Per-option Text / Image toggle. Compact Image Upload buttons.
 
 ## Important Configurations
 - **VPS IP**: `66.116.252.191`
@@ -25,5 +16,6 @@
 - **Language**: Interactions must be strictly in Telugu.
 
 ## Next Steps
+- **Phase 3**: Advanced Paper Generator integration (building exams directly from the Master Bank).
 - Implement Bulk Excel Upload for Master Questions if requested.
 - Check flutter app to ensure feature parity for Student mock tests.

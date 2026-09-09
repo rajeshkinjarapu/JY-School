@@ -49,11 +49,20 @@ export const addMasterQuestion = async (req: Request, res: Response) => {
 export const generateMasterQuestionsAI = async (req: Request, res: Response) => {
   try {
     const { subjectId, classId, chapterName, prompt, count, difficulty } = req.body;
+    const file = (req as any).file; // from multer if file was uploaded
 
-    const basePrompt = `Generate ${count} ${difficulty} level multiple choice questions for the chapter '${chapterName}'. Focus: ${prompt}.
+    let basePrompt: string;
+    if (file) {
+      basePrompt = `Generate ${count || 5} ${difficulty || 'MEDIUM'} level multiple choice questions from the uploaded document/image.
+Chapter: ${chapterName || 'General'}.
+Additional Instructions: ${prompt || 'Generate standard MCQ questions based on the content.'}.
+Return ONLY a valid JSON array. Each object must have: "questionText", "options" (array of 4 strings), "correctAnswer" (must match one option exactly), "explanation". Do not include markdown.`;
+    } else {
+      basePrompt = `Generate ${count} ${difficulty} level multiple choice questions for the chapter '${chapterName}'. Focus: ${prompt}.
 Return ONLY a valid JSON array of objects with keys: "questionText", "options" (array of 4 strings), "correctAnswer" (must match one option exactly), "explanation" (short explanation). Do not include markdown code block formatting.`;
+    }
 
-    const questionsData = await generateQuizQuestions(basePrompt);
+    const questionsData = await generateQuizQuestions(basePrompt, file);
     
     const savedQuestions = [];
     for (const q of questionsData) {
@@ -81,6 +90,7 @@ Return ONLY a valid JSON array of objects with keys: "questionText", "options" (
     res.status(500).json({ success: false, message: 'Failed to generate master questions with AI' });
   }
 };
+
 
 export const deleteMasterQuestion = async (req: Request, res: Response) => {
   try {
