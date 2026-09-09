@@ -100,6 +100,7 @@ const NavodayaPaperGeneratorPage = lazy(() => import('../pages/question-bank/Nav
 const MCQPaperGeneratorPage = lazy(() => import('../pages/question-bank/MCQPaperGeneratorPage'));
 const SavedPapersPage = lazy(() => import('../pages/question-bank/SavedPapersPage'));
 const MasterQuestionBankPage = lazy(() => import('../pages/question-bank/MasterQuestionBankPage'));
+const AddMasterQuestionPage = lazy(() => import('../pages/question-bank/AddMasterQuestionPage'));
 const TransportDashboard = lazy(routeImports['/transport']);
 const TransportRoutesPage = lazy(() => import('../pages/transport/RoutesPage'));
 const TransportVehiclesPage = lazy(() => import('../pages/transport/VehiclesPage'));
@@ -495,7 +496,14 @@ export const router = createBrowserRouter([
           </ProtectedRoute>
         ),
       },
-
+      {
+        path: 'question-bank/master-bank/new',
+        element: withSuspense(
+          <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN', 'TEACHER']}>
+            <AddMasterQuestionPage />
+          </ProtectedRoute>
+        ),
+      },
       {
         path: 'question-bank/saved-papers',
         element: withSuspense(

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '../../components/UI/PageHeader';
 import { Database, Plus, Search, Filter, Trash2, Edit, FileText, CheckCircle } from 'lucide-react';
 import api from '../../api/axios';
@@ -23,14 +24,7 @@ export const MasterQuestionBankPage = () => {
   const [loading, setLoading] = useState(true);
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [classes, setClasses] = useState<ClassObj[]>([]);
-  
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [newQ, setNewQ] = useState({
-    subjectId: '', classId: '', chapterName: '', topicName: '',
-    difficulty: 'MEDIUM', questionText: '', options: ['', '', '', ''],
-    correctAnswer: '', marks: 1
-  });
-  const [adding, setAdding] = useState(false);
+  const navigate = useNavigate();
   
   // Filters
   const [subjectId, setSubjectId] = useState('');
@@ -86,38 +80,13 @@ export const MasterQuestionBankPage = () => {
     }
   };
 
-  const handleAddQuestion = async () => {
-    if (!newQ.subjectId || !newQ.classId || !newQ.chapterName || !newQ.questionText || !newQ.correctAnswer) {
-      alert("Please fill in all required fields (Subject, Class, Chapter, Question, and Correct Answer).");
-      return;
-    }
-    setAdding(true);
-    try {
-      await api.post('/api/master-questions', {
-        ...newQ,
-        options: JSON.stringify(newQ.options)
-      });
-      setShowAddModal(false);
-      fetchQuestions(); // Refresh
-      setNewQ({
-        subjectId: '', classId: '', chapterName: '', topicName: '',
-        difficulty: 'MEDIUM', questionText: '', options: ['', '', '', ''],
-        correctAnswer: '', marks: 1
-      });
-    } catch (e) {
-      alert("Failed to add question");
-    } finally {
-      setAdding(false);
-    }
-  };
-
   return (
     <div className="flex-1 overflow-auto bg-gray-50/50" style={{ minHeight: 'calc(100vh - 64px)' }}>
       <PageHeader 
         title="Master Question Bank" 
         icon={<Database className="w-5 h-5" />} 
         action={
-          <button onClick={() => setShowAddModal(true)} className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors shadow-sm font-medium">
+          <button onClick={() => navigate('/question-bank/master-bank/new')} className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors shadow-sm font-medium">
             <Plus className="w-4 h-4" /> Add Questions
           </button>
         }
@@ -195,92 +164,6 @@ export const MasterQuestionBankPage = () => {
           </div>
         )}
       </div>
-
-      {showAddModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl">
-            <h2 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
-              <Database className="w-6 h-6 text-indigo-600" />
-              Add Master Question
-            </h2>
-            
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Class *</label>
-                  <select className="w-full border border-gray-200 rounded-lg px-3 py-2" value={newQ.classId} onChange={e => setNewQ({...newQ, classId: e.target.value})}>
-                    <option value="">Select Class</option>
-                    {classes.map(c => <option key={c.id} value={c.id}>{c.name} {c.section}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Subject *</label>
-                  <select className="w-full border border-gray-200 rounded-lg px-3 py-2" value={newQ.subjectId} onChange={e => setNewQ({...newQ, subjectId: e.target.value})}>
-                    <option value="">Select Subject</option>
-                    {subjects.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-                  </select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Chapter Name *</label>
-                  <input type="text" className="w-full border border-gray-200 rounded-lg px-3 py-2" value={newQ.chapterName} onChange={e => setNewQ({...newQ, chapterName: e.target.value})} placeholder="e.g. Thermodynamics" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Topic Name (Optional)</label>
-                  <input type="text" className="w-full border border-gray-200 rounded-lg px-3 py-2" value={newQ.topicName} onChange={e => setNewQ({...newQ, topicName: e.target.value})} placeholder="e.g. Laws of Thermodynamics" />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Question Text *</label>
-                <textarea className="w-full border border-gray-200 rounded-lg px-3 py-2 h-24" value={newQ.questionText} onChange={e => setNewQ({...newQ, questionText: e.target.value})} placeholder="Enter the question here..." />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                {newQ.options.map((opt, i) => (
-                  <div key={i}>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Option {String.fromCharCode(65 + i)}</label>
-                    <input type="text" className="w-full border border-gray-200 rounded-lg px-3 py-2" value={opt} onChange={e => {
-                      const newOpts = [...newQ.options];
-                      newOpts[i] = e.target.value;
-                      setNewQ({...newQ, options: newOpts});
-                    }} placeholder={`Option ${String.fromCharCode(65 + i)} text`} />
-                  </div>
-                ))}
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Correct Answer * (Exact Text)</label>
-                  <input type="text" className="w-full border border-gray-200 rounded-lg px-3 py-2" value={newQ.correctAnswer} onChange={e => setNewQ({...newQ, correctAnswer: e.target.value})} placeholder="Must match one of the options exactly" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Difficulty & Marks</label>
-                  <div className="flex gap-2">
-                    <select className="flex-1 border border-gray-200 rounded-lg px-3 py-2" value={newQ.difficulty} onChange={e => setNewQ({...newQ, difficulty: e.target.value})}>
-                      <option value="EASY">Easy</option>
-                      <option value="MEDIUM">Medium</option>
-                      <option value="HARD">Hard</option>
-                    </select>
-                    <input type="number" min="1" className="w-20 border border-gray-200 rounded-lg px-3 py-2" value={newQ.marks} onChange={e => setNewQ({...newQ, marks: parseInt(e.target.value) || 1})} />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex justify-end gap-3 mt-8">
-              <button onClick={() => setShowAddModal(false)} className="px-5 py-2 text-gray-600 font-medium hover:bg-gray-100 rounded-lg transition-colors">
-                Cancel
-              </button>
-              <button onClick={handleAddQuestion} disabled={adding} className="px-5 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50">
-                {adding ? 'Saving...' : 'Save Question'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

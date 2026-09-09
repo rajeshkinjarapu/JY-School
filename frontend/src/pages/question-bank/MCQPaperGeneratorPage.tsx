@@ -38,6 +38,9 @@ export const MCQPaperGeneratorPage = () => {
     localStorage.getItem('mcq_exam_instructions') || 'Answer all questions.\nEach question carries equal marks.\nRead questions carefully before answering.'
   );
   
+  const [fontSize, setFontSize] = useState<string>(() => localStorage.getItem('mcq_exam_font_size') || 'medium');
+  const [questionSpacing, setQuestionSpacing] = useState<string>(() => localStorage.getItem('mcq_exam_spacing') || 'normal');
+  
   // Logo is hardcoded from local storage or empty, no upload option in settings
   const [logoBase64] = useState<string>(() => {
     return localStorage.getItem('jy_school_logo') || '';
@@ -861,6 +864,8 @@ export const MCQPaperGeneratorPage = () => {
                   return newImgs;
                 });
               }}
+              fontSize={fontSize}
+              questionSpacing={questionSpacing}
             />
           </div>
           </div>
@@ -1094,6 +1099,34 @@ export const MCQPaperGeneratorPage = () => {
                   placeholder="Enter instructions here..."
                 />
               </div>
+
+              <div className="grid grid-cols-2 gap-6 pt-4 border-t border-slate-100">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Font Size</label>
+                  <select
+                    value={fontSize}
+                    onChange={(e) => setFontSize(e.target.value)}
+                    className="w-full rounded-lg border-slate-200 bg-white border p-2.5 text-sm focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
+                  >
+                    <option value="small">Small</option>
+                    <option value="medium">Medium</option>
+                    <option value="large">Large</option>
+                    <option value="xlarge">Extra Large</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Question Spacing</label>
+                  <select
+                    value={questionSpacing}
+                    onChange={(e) => setQuestionSpacing(e.target.value)}
+                    className="w-full rounded-lg border-slate-200 bg-white border p-2.5 text-sm focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
+                  >
+                    <option value="compact">Compact</option>
+                    <option value="normal">Normal</option>
+                    <option value="relaxed">Relaxed</option>
+                  </select>
+                </div>
+              </div>
               
               <div className="pt-4 border-t border-slate-100">
                 <h4 className="font-medium text-slate-700 flex items-center gap-2 mb-3">
@@ -1204,6 +1237,8 @@ export const MCQPaperGeneratorPage = () => {
                   localStorage.setItem('mcq_exam_date', examDate);
                   localStorage.setItem('mcq_exam_marks', time);
                   localStorage.setItem('mcq_exam_instructions', instructions);
+                  localStorage.setItem('mcq_exam_font_size', fontSize);
+                  localStorage.setItem('mcq_exam_spacing', questionSpacing);
                   setIsSettingsOpen(false);
                   toast.success('Settings saved!');
                 }}

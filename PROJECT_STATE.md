@@ -6,6 +6,7 @@
    - Architected a centralized `MasterQuestion` schema in Prisma.
    - Built backend APIs to fetch, add, and AI-generate questions.
    - Built a frontend `MasterQuestionBankPage` for Admins/Teachers to manage reusable questions.
+   - Designed a highly premium, dedicated `AddMasterQuestionPage` route with a large editor and integrated AI Question Generation.
    - Integrated the "Import from Question Bank" feature into `ManageExamQuestions.tsx` so teachers can directly pull pre-saved questions into JEE/NEET competitive exams.
 
 ## Important Configurations
