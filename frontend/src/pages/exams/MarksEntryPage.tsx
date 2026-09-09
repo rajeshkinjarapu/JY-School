@@ -123,7 +123,8 @@ export const MarksEntryPage: React.FC = () => {
       } else if (val.toUpperCase() === 'AB') {
         next[`${studentId}_${subjectId}`] = 'AB';
       } else {
-        next[`${studentId}_${subjectId}`] = Number(val);
+        // Store the raw string value to allow typing intermediate decimals like "19."
+        next[`${studentId}_${subjectId}`] = val;
       }
       return next;
     });
