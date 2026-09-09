@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Sparkles, Save, ArrowLeft, FileText, Upload, Copy, PlusCircle, RefreshCw, Edit } from 'lucide-react';
+import { Sparkles, Save, ArrowLeft, FileText, Upload, Copy, PlusCircle, RefreshCw, Edit, Database } from 'lucide-react';
 import api from '../../api/axios';
 
 interface Question {
@@ -15,7 +15,7 @@ const ManageExamQuestions = () => {
   const navigate = useNavigate();
   
   const [questions, setQuestions] = useState<Question[]>([]);
-  const [activeTab, setActiveTab] = useState<'ai' | 'manual'>('ai');
+  const [activeTab, setActiveTab] = useState<'ai' | 'manual' | 'bank'>('bank');
   
   // AI Generation States
   const [aiLoading, setAiLoading] = useState(false);
@@ -32,6 +32,29 @@ const ManageExamQuestions = () => {
   });
 
   const [toast, setToast] = useState<{ msg: string; type: 'success' | 'error' } | null>(null);
+
+  // Master Question Bank States
+  const [masterQuestions, setMasterQuestions] = useState<any[]>([]);
+  const [bankLoading, setBankLoading] = useState(false);
+
+  React.useEffect(() => {
+    if (activeTab === 'bank') {
+      fetchMasterQuestions();
+    }
+  }, [activeTab]);
+
+  const fetchMasterQuestions = async () => {
+    setBankLoading(true);
+    try {
+      // In a real scenario, we would pass the exam's subjectId to filter.
+      const res = await api.get('/api/master-questions');
+      setMasterQuestions(res.data?.data || []);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setBankLoading(false);
+    }
+  };
 
   const showToast = (msg: string, type: 'success' | 'error') => {
     setToast({ msg, type });
@@ -130,7 +153,54 @@ const ManageExamQuestions = () => {
               >
                 <Edit className="h-4 w-4" /> Manual Entry
               </button>
+              <button
+                onClick={() => setActiveTab('bank')}
+                className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-medium transition-colors ${activeTab === 'bank' ? 'bg-indigo-600 text-white' : 'text-gray-600 hover:bg-gray-50'}`}
+              >
+                <Database className="h-4 w-4" /> Question Bank
+              </button>
             </div>
+
+            {activeTab === 'bank' && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="font-medium text-gray-800">Master Question Bank</h3>
+                  <button onClick={fetchMasterQuestions} className="text-xs text-indigo-600 hover:underline flex items-center gap-1">
+                    <RefreshCw className={`h-3 w-3 ${bankLoading ? 'animate-spin' : ''}`} /> Refresh
+                  </button>
+                </div>
+                
+                {bankLoading ? (
+                  <div className="text-center py-6 text-sm text-gray-400">Loading questions...</div>
+                ) : masterQuestions.length === 0 ? (
+                  <div className="text-center py-6 text-sm text-gray-400 border border-dashed rounded-lg">No questions found in bank. Add some from the Question Bank Dashboard.</div>
+                ) : (
+                  <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2">
+                    {masterQuestions.map(q => {
+                      let opts = [];
+                      try { opts = JSON.parse(q.options || '[]'); } catch(e) {}
+                      return (
+                        <div key={q.id} className="p-3 border rounded-lg hover:border-indigo-300 transition-colors bg-white">
+                          <div className="flex justify-between items-start mb-2">
+                            <span className="text-xs font-semibold bg-gray-100 px-2 py-0.5 rounded">{q.chapterName}</span>
+                            <button
+                              onClick={() => {
+                                setQuestions([...questions, { questionText: q.questionText, options: opts, correctAnswer: q.correctAnswer, marks: q.marks }]);
+                                showToast("Question added to exam", "success");
+                              }}
+                              className="text-xs bg-indigo-50 text-indigo-600 px-2 py-1 rounded hover:bg-indigo-100 font-medium"
+                            >
+                              + Add to Exam
+                            </button>
+                          </div>
+                          <p className="text-sm font-medium text-gray-800 line-clamp-2">{q.questionText}</p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
 
             {activeTab === 'ai' && (
               <div className="bg-indigo-50 p-4 rounded-lg border border-indigo-100 space-y-4">

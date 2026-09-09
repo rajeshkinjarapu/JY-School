@@ -10,6 +10,7 @@ import { PageHeader } from '../../components/UI/PageHeader';
 export const QuestionBankDashboard = () => {
   const navigate = useNavigate();
   const tools = [
+    { title: 'Master Question Bank', description: 'Centralized pre-saved questions', icon: Database, color: 'from-purple-700 to-fuchsia-500' },
     { title: 'AI Paper Generator', description: 'Dual-layout paper creator', icon: FileUp, color: 'from-blue-700 to-indigo-500' },
     { title: 'Saved AI Papers', description: 'View and edit saved papers', icon: FileText, color: 'from-sky-600 to-cyan-500' },
     { title: 'Question Paper Generator', description: 'Dual-layout Question Paper Creator', icon: CheckCircle, color: 'from-orange-600 to-orange-400' },
@@ -32,6 +33,7 @@ export const QuestionBankDashboard = () => {
               key={index}
               onClick={() => {
                 if (tool.title === 'Questions') navigate('/question-bank/questions');
+                else if (tool.title === 'Master Question Bank') navigate('/question-bank/master-bank');
                 else if (tool.title === 'Paper Generator') navigate('/question-bank/papers/new');
                 else if (tool.title === 'AI Paper Generator') navigate('/question-bank/generator');
                 else if (tool.title === 'Saved AI Papers') navigate('/question-bank/saved-papers');

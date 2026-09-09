@@ -148,6 +148,7 @@ model Class {
   substitutions    Substitute[]
   timetableHistory TimetableHistory[]
   competitiveExams CompetitiveExam[]
+  masterQuestions  MasterQuestion[]
 
   @@unique([name, section, academicYear])
 }
@@ -169,6 +170,7 @@ model Subject {
   slipTests            SlipTest[]
   homeworks            Homework[]
   substitutions        Substitute[]
+  masterQuestions      MasterQuestion[]
 
   @@unique([code, classId])
   @@index([classId])
@@ -627,6 +629,29 @@ model CompetitiveExam {
   
   questions    CompetitiveExamQuestion[]
   submissions  CompetitiveExamSubmission[]
+}
+
+model MasterQuestion {
+  id            String   @id @default(uuid())
+  subjectId     String
+  classId       String?  
+  chapterName   String
+  topicName     String?
+  difficulty    String   @default("MEDIUM")
+  questionType  String   @default("MCQ")
+  questionText  String   @db.Text
+  imageUrl      String?
+  options       String   @db.Text
+  correctAnswer String
+  marks         Float    @default(4)
+  negativeMarks Float    @default(1)
+  explanation   String?  @db.Text
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  subject       Subject  @relation(fields: [subjectId], references: [id])
+  class         Class?   @relation(fields: [classId], references: [id])
 }
 
 model CompetitiveExamQuestion {
