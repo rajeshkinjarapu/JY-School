@@ -122,7 +122,10 @@ export const AddMasterQuestionPage = () => {
 
   const fetchFilters = async () => {
     try {
-      const clsRes = await api.get('/api/classes?limit=5000');
+      const [clsRes, subRes] = await Promise.all([
+        api.get('/api/classes?limit=5000'),
+        api.get('/api/subjects?limit=5000')
+      ]);
       const allC = clsRes.data?.data || [];
       const uniqueClasses: ClassObj[] = [];
       const seen = new Set();
@@ -140,27 +143,11 @@ export const AddMasterQuestionPage = () => {
         return a.name.localeCompare(b.name);
       });
       setClasses(uniqueClasses);
+      setSubjects(subRes.data?.data || []);
     } catch (e) { console.error(e); }
   };
 
-  // Dependent Subjects Loading
-  useEffect(() => {
-    if (formData.classId) {
-      api.get(`/api/classes/${formData.classId}/subjects`)
-        .then(res => {
-          const fetchedSubjects = res.data?.data || [];
-          setSubjects(fetchedSubjects);
-          // If current subjectId is not in the new list, clear it
-          if (formData.subjectId && !fetchedSubjects.some((s: Subject) => s.id === formData.subjectId)) {
-            setFormData(prev => ({ ...prev, subjectId: '' }));
-          }
-        })
-        .catch(console.error);
-    } else {
-      setSubjects([]);
-      setFormData(prev => ({ ...prev, subjectId: '' }));
-    }
-  }, [formData.classId]);
+
 
   const updateOption = (i: number, updates: Partial<OptionData>) =>
     setOptions(prev => prev.map((o, idx) => idx === i ? { ...o, ...updates } : o));

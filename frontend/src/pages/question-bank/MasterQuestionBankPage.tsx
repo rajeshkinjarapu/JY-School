@@ -45,7 +45,10 @@ export const MasterQuestionBankPage = () => {
 
   const fetchFilters = async () => {
     try {
-      const clsRes = await api.get('/api/classes?limit=5000');
+      const [clsRes, subRes] = await Promise.all([
+        api.get('/api/classes?limit=5000'),
+        api.get('/api/subjects?limit=5000')
+      ]);
       const allC = clsRes.data?.data || [];
       const uniqueClasses: ClassObj[] = [];
       const seen = new Set();
@@ -62,27 +65,13 @@ export const MasterQuestionBankPage = () => {
         return a.name.localeCompare(b.name);
       });
       setClasses(uniqueClasses);
+      setSubjects(subRes.data?.data || []);
     } catch (e) {
       console.error(e);
     }
   };
 
-  useEffect(() => {
-    if (classId) {
-      api.get(`/api/classes/${classId}/subjects`)
-        .then(res => {
-          const fetchedSubjects = res.data?.data || [];
-          setSubjects(fetchedSubjects);
-          if (subjectId && !fetchedSubjects.some((s: Subject) => s.id === subjectId)) {
-            setSubjectId('');
-          }
-        })
-        .catch(console.error);
-    } else {
-      setSubjects([]);
-      setSubjectId('');
-    }
-  }, [classId]);
+
 
   const fetchQuestions = async () => {
     setLoading(true);
@@ -187,11 +176,10 @@ export const MasterQuestionBankPage = () => {
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-600 mb-1.5">Subject</label>
-                  <select className="w-full border-2 border-gray-100 rounded-xl px-3.5 py-2.5 bg-gray-50 text-sm font-medium focus:bg-white outline-none focus:border-indigo-300 transition-all cursor-pointer" value={subjectId} onChange={e => setSubjectId(e.target.value)} disabled={!classId}>
+                  <select className="w-full border-2 border-gray-100 rounded-xl px-3.5 py-2.5 bg-gray-50 text-sm font-medium focus:bg-white outline-none focus:border-indigo-300 transition-all cursor-pointer" value={subjectId} onChange={e => setSubjectId(e.target.value)}>
                     <option value="">All Subjects</option>
                     {subjects.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                   </select>
-                  {!classId && <p className="text-[10px] text-gray-400 mt-1">*Select class to view subjects</p>}
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-600 mb-1.5">Difficulty</label>
