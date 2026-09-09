@@ -3,10 +3,11 @@ import { PageHeader } from '../../components/UI/PageHeader';
 import {
   ArrowLeft, Sparkles, Save, Layout, FileText, CheckCircle,
   Database, ImagePlus, Image as ImageIcon, Type, PenLine, Wand2,
-  RefreshCw, ChevronRight, UploadCloud, FileUp, X, BookOpen
+  RefreshCw, ChevronRight, UploadCloud, FileUp, X, BookOpen, Plus
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../api/axios';
+import toast from 'react-hot-toast';
 
 interface Subject { id: string; name: string; }
 interface ClassObj { id: string; name: string; section: string; }
@@ -142,9 +143,33 @@ export const AddMasterQuestionPage = () => {
         if (numA !== numB) return numA - numB;
         return a.name.localeCompare(b.name);
       });
+      // Deduplicate Subjects
+      const allS = subRes.data?.data || [];
+      const uniqueSubjects: any[] = [];
+      const seenS = new Set();
+      for(const s of allS) {
+        if(!seenS.has(s.name)) {
+          seenS.add(s.name);
+          uniqueSubjects.push(s);
+        }
+      }
+      uniqueSubjects.sort((a, b) => a.name.localeCompare(b.name));
+      
       setClasses(uniqueClasses);
-      setSubjects(subRes.data?.data || []);
+      setSubjects(uniqueSubjects);
     } catch (e) { console.error(e); }
+  };
+
+  const handleAddSubject = async () => {
+    const name = window.prompt('Enter new subject name (e.g., Mathematics):');
+    if (!name || !name.trim()) return;
+    try {
+      await api.post('/api/subjects', { name: name.trim() });
+      toast.success('Subject added successfully!');
+      fetchFilters(); // Reload subjects
+    } catch (e: any) {
+      toast.error(e.response?.data?.message || 'Failed to add subject');
+    }
   };
 
 
@@ -257,7 +282,12 @@ export const AddMasterQuestionPage = () => {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-gray-600 mb-1.5">Subject <span className="text-red-500">*</span></label>
+                  <div className="flex justify-between items-center mb-1.5">
+                    <label className="block text-xs font-bold text-gray-600">Subject <span className="text-red-500">*</span></label>
+                    <button type="button" onClick={handleAddSubject} className="text-xs text-indigo-600 font-bold hover:text-indigo-800 flex items-center gap-1">
+                      <Plus className="w-3 h-3" /> Add New
+                    </button>
+                  </div>
                   <select className="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 bg-gray-50 text-sm font-medium focus:bg-white outline-none focus:ring-2 focus:ring-indigo-500/30 transition-all" value={formData.subjectId} onChange={e => setFormData({ ...formData, subjectId: e.target.value })}>
                     <option value="">Select Subject</option>
                     {subjects.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}

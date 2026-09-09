@@ -65,7 +65,20 @@ export const MasterQuestionBankPage = () => {
         return a.name.localeCompare(b.name);
       });
       setClasses(uniqueClasses);
-      setSubjects(subRes.data?.data || []);
+      
+      // Deduplicate Subjects
+      const allS = subRes.data?.data || [];
+      const uniqueSubjects: any[] = [];
+      const seenS = new Set();
+      for(const s of allS) {
+        if(!seenS.has(s.name)) {
+          seenS.add(s.name);
+          uniqueSubjects.push(s);
+        }
+      }
+      uniqueSubjects.sort((a, b) => a.name.localeCompare(b.name));
+      
+      setSubjects(uniqueSubjects);
     } catch (e) {
       console.error(e);
     }
