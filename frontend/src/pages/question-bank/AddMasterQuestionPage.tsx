@@ -123,7 +123,23 @@ export const AddMasterQuestionPage = () => {
   const fetchFilters = async () => {
     try {
       const clsRes = await api.get('/api/classes?limit=5000');
-      setClasses(clsRes.data?.data || []);
+      const allC = clsRes.data?.data || [];
+      const uniqueClasses: ClassObj[] = [];
+      const seen = new Set();
+      for(const c of allC) {
+        if(!seen.has(c.name)) {
+          seen.add(c.name);
+          uniqueClasses.push(c);
+        }
+      }
+      // Sort numerically by parsing the first number if possible, or alphabetically
+      uniqueClasses.sort((a, b) => {
+        const numA = parseInt(a.name) || 0;
+        const numB = parseInt(b.name) || 0;
+        if (numA !== numB) return numA - numB;
+        return a.name.localeCompare(b.name);
+      });
+      setClasses(uniqueClasses);
     } catch (e) { console.error(e); }
   };
 
@@ -250,7 +266,7 @@ export const AddMasterQuestionPage = () => {
                   <label className="block text-xs font-bold text-gray-600 mb-1.5">Class <span className="text-red-500">*</span></label>
                   <select className="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 bg-gray-50 text-sm font-medium focus:bg-white outline-none focus:ring-2 focus:ring-indigo-500/30 transition-all" value={formData.classId} onChange={e => setFormData({ ...formData, classId: e.target.value })}>
                     <option value="">Select Class</option>
-                    {classes.map(c => <option key={c.id} value={c.id}>{c.name} {c.section}</option>)}
+                    {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                   </select>
                 </div>
                 <div>
