@@ -39,6 +39,18 @@ export const getCompetitiveExamsByClass = async (req: Request, res: Response) =>
   }
 };
 
+export const getAllCompetitiveExams = async (req: Request, res: Response) => {
+  try {
+    const exams = await prisma.competitiveExam.findMany({
+      include: { subject: true, class: true, _count: { select: { questions: true } } },
+      orderBy: { createdAt: 'desc' }
+    });
+    res.json({ success: true, data: exams });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Failed to fetch all competitive exams' });
+  }
+};
+
 export const addCompetitiveQuestion = async (req: Request, res: Response) => {
   try {
     const { examId } = req.params;
