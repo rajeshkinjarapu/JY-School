@@ -359,11 +359,12 @@ export const getResults = async (req: AuthRequest, res: Response, next: NextFunc
     if (actualMax <= 0) actualMax = 50;
 
     if (existingMarkIndex !== -1) {
-      entry.total = entry.total - entry.marks[existingMarkIndex].obtained + mark.marksObtained;
-      entry.marks[existingMarkIndex] = { subject: mark.subject.name, obtained: mark.marksObtained, max: actualMax, grade: mark.grade, remarks: mark.remarks };
+      const oldObtained = entry.marks[existingMarkIndex].obtained === 'AB' ? 0 : entry.marks[existingMarkIndex].obtained;
+      entry.total = entry.total - oldObtained + (mark.remarks === 'AB' ? 0 : mark.marksObtained);
+      entry.marks[existingMarkIndex] = { subject: mark.subject.name, obtained: mark.remarks === 'AB' ? 'AB' : mark.marksObtained, max: actualMax, grade: mark.grade, remarks: mark.remarks };
     } else {
-      entry.marks.push({ subject: mark.subject.name, obtained: mark.marksObtained, max: actualMax, grade: mark.grade, remarks: mark.remarks });
-      entry.total += mark.marksObtained;
+      entry.marks.push({ subject: mark.subject.name, obtained: mark.remarks === 'AB' ? 'AB' : mark.marksObtained, max: actualMax, grade: mark.grade, remarks: mark.remarks });
+      entry.total += (mark.remarks === 'AB' ? 0 : mark.marksObtained);
     }
   }
 
@@ -376,7 +377,7 @@ export const getResults = async (req: AuthRequest, res: Response, next: NextFunc
         if (subName && !s.marks.find(m => m.subject.toUpperCase() === subName.toUpperCase())) {
            s.marks.push({
               subject: subName,
-              obtained: 0,
+              obtained: 'AB',
               max: Number(sub.maxMarks) || 50,
               grade: 'F',
               remarks: 'AB'
