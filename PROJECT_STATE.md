@@ -10,6 +10,11 @@
    - Integrated the "Import from Question Bank" feature into `ManageExamQuestions.tsx` so teachers can directly pull pre-saved questions into JEE/NEET competitive exams.
 3. **MCQ Paper Generator Upgrades**:
    - Added user-customizable `Font Size` and `Question Spacing` directly into the Paper Settings modal.
+4. **AddMasterQuestionPage Redesign (Professional)**:
+   - Large textarea boxes for each option (min 110px height), supports multi-line content.
+   - Per-option **Text / Image** mode toggle — teachers can switch any option to be an image/diagram.
+   - Drag-and-drop + click image upload for **question diagrams** and **option diagrams**.
+   - Quick-select **A / B / C / D** buttons to auto-fill the correct answer field instantly.
 
 ## Important Configurations
 - **VPS IP**: `66.116.252.191`

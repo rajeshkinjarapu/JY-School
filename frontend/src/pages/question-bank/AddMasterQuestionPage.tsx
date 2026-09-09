@@ -1,282 +1,361 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { PageHeader } from '../../components/UI/PageHeader';
-import { ArrowLeft, Sparkles, Save, Layout, FileText, CheckCircle, Database } from 'lucide-react';
+import {
+  ArrowLeft, Sparkles, Save, Layout, FileText, CheckCircle,
+  Database, ImagePlus, Image as ImageIcon, Type
+} from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../api/axios';
 
 interface Subject { id: string; name: string; }
 interface ClassObj { id: string; name: string; section: string; }
+type OptionMode = 'text' | 'image';
+interface OptionData { text: string; imageBase64: string; mode: OptionMode; }
+
+const OPTION_LABELS = ['A', 'B', 'C', 'D'];
+const OPTION_COLORS = [
+  { bg: 'bg-blue-50', border: 'border-blue-200', badge: 'bg-blue-500', ring: 'focus:ring-blue-400/30', active: 'bg-blue-500 text-white border-blue-500' },
+  { bg: 'bg-violet-50', border: 'border-violet-200', badge: 'bg-violet-500', ring: 'focus:ring-violet-400/30', active: 'bg-violet-500 text-white border-violet-500' },
+  { bg: 'bg-amber-50', border: 'border-amber-200', badge: 'bg-amber-500', ring: 'focus:ring-amber-400/30', active: 'bg-amber-500 text-white border-amber-500' },
+  { bg: 'bg-emerald-50', border: 'border-emerald-200', badge: 'bg-emerald-500', ring: 'focus:ring-emerald-400/30', active: 'bg-emerald-500 text-white border-emerald-500' },
+];
+
+const ImageUploadBox = ({ imageBase64, onUpload, onRemove }: { imageBase64: string; onUpload: (b: string) => void; onRemove: () => void; }) => {
+  const ref = useRef<HTMLInputElement>(null);
+  const handleFile = (file: File) => {
+    const reader = new FileReader();
+    reader.onload = e => onUpload(e.target?.result as string);
+    reader.readAsDataURL(file);
+  };
+  return (
+    <div className="w-full">
+      <input ref={ref} type="file" accept="image/*" className="hidden"
+        onChange={e => { if (e.target.files?.[0]) handleFile(e.target.files[0]); }} />
+      {imageBase64 ? (
+        <div className="relative rounded-xl overflow-hidden border-2 border-indigo-200 group">
+          <img src={imageBase64} alt="uploaded" className="w-full max-h-60 object-contain bg-gray-50" />
+          <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
+            <button type="button" onClick={() => ref.current?.click()} className="px-3 py-1.5 bg-white text-gray-800 rounded-lg text-xs font-semibold">Change</button>
+            <button type="button" onClick={onRemove} className="px-3 py-1.5 bg-red-500 text-white rounded-lg text-xs font-semibold">Remove</button>
+          </div>
+        </div>
+      ) : (
+        <button
+          type="button"
+          onClick={() => ref.current?.click()}
+          onDragOver={e => e.preventDefault()}
+          onDrop={e => { e.preventDefault(); const f = e.dataTransfer.files?.[0]; if (f?.type.startsWith('image/')) handleFile(f); }}
+          className="w-full h-36 rounded-xl border-2 border-dashed border-gray-200 hover:border-indigo-400 bg-gray-50 hover:bg-indigo-50/50 flex flex-col items-center justify-center gap-2 transition-all group"
+        >
+          <ImagePlus className="w-8 h-8 text-gray-300 group-hover:text-indigo-400 transition-colors" />
+          <span className="text-sm text-gray-400 group-hover:text-indigo-500 font-medium">Click or drag image here</span>
+          <span className="text-xs text-gray-300">PNG, JPG, GIF supported</span>
+        </button>
+      )}
+    </div>
+  );
+};
 
 export const AddMasterQuestionPage = () => {
   const navigate = useNavigate();
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [classes, setClasses] = useState<ClassObj[]>([]);
   const [loading, setLoading] = useState(false);
-
-  const [newQ, setNewQ] = useState({
+  const [questionImageBase64, setQuestionImageBase64] = useState('');
+  const [formData, setFormData] = useState({
     subjectId: '', classId: '', chapterName: '', topicName: '',
-    difficulty: 'MEDIUM', questionText: '', options: ['', '', '', ''],
-    correctAnswer: '', marks: 1, explanation: ''
+    difficulty: 'MEDIUM', questionText: '', correctAnswer: '', marks: 4, explanation: ''
   });
-  
+  const [options, setOptions] = useState<OptionData[]>([
+    { text: '', imageBase64: '', mode: 'text' },
+    { text: '', imageBase64: '', mode: 'text' },
+    { text: '', imageBase64: '', mode: 'text' },
+    { text: '', imageBase64: '', mode: 'text' },
+  ]);
   const [aiPrompt, setAiPrompt] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
 
-  useEffect(() => {
-    fetchFilters();
-  }, []);
+  useEffect(() => { fetchFilters(); }, []);
 
   const fetchFilters = async () => {
     try {
-      const [subRes, clsRes] = await Promise.all([
-        api.get('/api/subjects'),
-        api.get('/api/classes')
-      ]);
+      const [subRes, clsRes] = await Promise.all([api.get('/api/subjects'), api.get('/api/classes')]);
       setSubjects(subRes.data?.data || []);
       setClasses(clsRes.data?.data || []);
-    } catch (e) {
-      console.error(e);
-    }
+    } catch (e) { console.error(e); }
   };
 
+  const updateOption = (i: number, updates: Partial<OptionData>) =>
+    setOptions(prev => prev.map((o, idx) => idx === i ? { ...o, ...updates } : o));
+
   const handleSave = async () => {
-    if (!newQ.subjectId || !newQ.classId || !newQ.chapterName || !newQ.questionText || !newQ.correctAnswer) {
-      alert("Please fill in all required fields (Class, Subject, Chapter, Question Text, and Correct Answer).");
-      return;
+    if (!formData.subjectId || !formData.classId || !formData.chapterName || !formData.questionText || !formData.correctAnswer) {
+      alert('Please fill all required fields.'); return;
     }
     setLoading(true);
     try {
+      const optionsForSave = options.map(o =>
+        o.mode === 'image' && o.imageBase64 ? `[IMAGE:${o.imageBase64}]` : o.text
+      );
       await api.post('/api/master-questions', {
-        ...newQ,
-        options: JSON.stringify(newQ.options)
+        ...formData,
+        imageUrl: questionImageBase64 || undefined,
+        options: JSON.stringify(optionsForSave)
       });
       navigate('/question-bank/master-bank');
-    } catch (e) {
-      alert("Failed to save question.");
-    } finally {
-      setLoading(false);
-    }
+    } catch { alert('Failed to save question.'); }
+    finally { setLoading(false); }
   };
 
   const handleAIGenerate = async () => {
-    if (!newQ.subjectId || !newQ.classId || !newQ.chapterName) {
-      alert("Please select Class, Subject and enter a Chapter Name first.");
-      return;
+    if (!formData.subjectId || !formData.classId || !formData.chapterName) {
+      alert('Please select Class, Subject and enter Chapter Name first.'); return;
     }
     setIsGenerating(true);
     try {
-      // The current backend generate-ai endpoint generates AND saves the questions.
-      // We will generate 1 question, and then extract the first one's data.
       const res = await api.post('/api/master-questions/generate-ai', {
-        subjectId: newQ.subjectId,
-        classId: newQ.classId,
-        chapterName: newQ.chapterName,
-        difficulty: newQ.difficulty,
-        prompt: aiPrompt || "Generate a standard question",
-        count: 1
+        subjectId: formData.subjectId, classId: formData.classId,
+        chapterName: formData.chapterName, difficulty: formData.difficulty,
+        prompt: aiPrompt || 'Generate a standard question', count: 1
       });
-      
       const generated = res.data?.data?.[0];
       if (generated) {
-        let opts = ['', '', '', ''];
-        try { opts = JSON.parse(generated.options); } catch (e) {}
-        setNewQ({
-          ...newQ,
-          questionText: generated.questionText,
-          options: opts.length === 4 ? opts : ['', '', '', ''],
-          correctAnswer: generated.correctAnswer,
-          explanation: generated.explanation || ''
-        });
-        alert("AI generated and saved a question successfully! You can modify it or save a new one.");
+        let opts: string[] = [];
+        try { opts = JSON.parse(generated.options); } catch {}
+        setFormData(prev => ({ ...prev, questionText: generated.questionText, correctAnswer: generated.correctAnswer, explanation: generated.explanation || '' }));
+        setOptions(opts.slice(0, 4).map(t => ({ text: t, imageBase64: '', mode: 'text' as OptionMode })));
+        alert('AI generated! Review and save.');
       }
-    } catch (e) {
-      alert("AI Generation failed.");
-    } finally {
-      setIsGenerating(false);
-    }
+    } catch { alert('AI Generation failed.'); }
+    finally { setIsGenerating(false); }
   };
 
   return (
-    <div className="flex flex-col h-full bg-[#f8f9fc] overflow-hidden" style={{ minHeight: 'calc(100vh - 64px)' }}>
-      <PageHeader 
-        title="Add Master Question" 
-        icon={<Database className="w-5 h-5" />} 
+    <div className="flex flex-col bg-[#f4f6fb]" style={{ minHeight: 'calc(100vh - 64px)' }}>
+      <PageHeader
+        title="Add Master Question"
+        icon={<Database className="w-5 h-5" />}
         action={
           <div className="flex gap-3">
-            <button onClick={() => navigate('/question-bank/master-bank')} className="px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 flex items-center gap-2 font-medium shadow-sm transition-all">
-              <ArrowLeft className="w-4 h-4" /> Back to Bank
+            <button onClick={() => navigate('/question-bank/master-bank')} className="px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 flex items-center gap-2 font-semibold shadow-sm transition-all">
+              <ArrowLeft className="w-4 h-4" /> Back
             </button>
-            <button onClick={handleSave} disabled={loading} className="px-5 py-2 bg-gradient-to-r from-indigo-600 to-violet-600 text-white rounded-lg hover:from-indigo-700 hover:to-violet-700 flex items-center gap-2 font-medium shadow-md transition-all transform hover:scale-[1.02] disabled:opacity-50">
+            <button onClick={handleSave} disabled={loading} className="px-6 py-2 bg-gradient-to-r from-indigo-600 to-violet-600 text-white rounded-xl flex items-center gap-2 font-semibold shadow-lg shadow-indigo-300/40 transition-all hover:scale-[1.02] disabled:opacity-50">
               <Save className="w-4 h-4" /> {loading ? 'Saving...' : 'Save Question'}
             </button>
           </div>
         }
       />
-      
-      <div className="flex-1 overflow-auto p-6">
-        <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-6">
-          
-          {/* Left Sidebar - Meta Configuration */}
-          <div className="w-full lg:w-1/3 xl:w-1/4 space-y-6">
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-              <h3 className="text-lg font-bold text-gray-800 mb-5 flex items-center gap-2">
-                <Layout className="w-5 h-5 text-indigo-500" />
-                Configuration
+
+      <div className="flex-1 p-6 overflow-auto">
+        <div className="max-w-[1400px] mx-auto flex flex-col xl:flex-row gap-6">
+
+          {/* LEFT SIDEBAR */}
+          <div className="w-full xl:w-72 flex-shrink-0 space-y-5">
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
+              <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                <Layout className="w-4 h-4 text-indigo-400" /> Configuration
               </h3>
-              
-              <div className="space-y-4">
+              <div className="space-y-3.5">
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">Class <span className="text-red-500">*</span></label>
-                  <select className="w-full border border-gray-200 rounded-xl px-4 py-2.5 bg-gray-50 focus:bg-white transition-colors outline-none focus:ring-2 focus:ring-indigo-500/50" value={newQ.classId} onChange={e => setNewQ({...newQ, classId: e.target.value})}>
+                  <label className="block text-xs font-bold text-gray-600 mb-1.5">Class <span className="text-red-500">*</span></label>
+                  <select className="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 bg-gray-50 text-sm font-medium focus:bg-white outline-none focus:ring-2 focus:ring-indigo-500/30 transition-all" value={formData.classId} onChange={e => setFormData({ ...formData, classId: e.target.value })}>
                     <option value="">Select Class</option>
                     {classes.map(c => <option key={c.id} value={c.id}>{c.name} {c.section}</option>)}
                   </select>
                 </div>
-                
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">Subject <span className="text-red-500">*</span></label>
-                  <select className="w-full border border-gray-200 rounded-xl px-4 py-2.5 bg-gray-50 focus:bg-white transition-colors outline-none focus:ring-2 focus:ring-indigo-500/50" value={newQ.subjectId} onChange={e => setNewQ({...newQ, subjectId: e.target.value})}>
+                  <label className="block text-xs font-bold text-gray-600 mb-1.5">Subject <span className="text-red-500">*</span></label>
+                  <select className="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 bg-gray-50 text-sm font-medium focus:bg-white outline-none focus:ring-2 focus:ring-indigo-500/30 transition-all" value={formData.subjectId} onChange={e => setFormData({ ...formData, subjectId: e.target.value })}>
                     <option value="">Select Subject</option>
                     {subjects.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                   </select>
                 </div>
-
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">Chapter <span className="text-red-500">*</span></label>
-                  <input type="text" className="w-full border border-gray-200 rounded-xl px-4 py-2.5 bg-gray-50 focus:bg-white transition-colors outline-none focus:ring-2 focus:ring-indigo-500/50" placeholder="e.g. Kinematics" value={newQ.chapterName} onChange={e => setNewQ({...newQ, chapterName: e.target.value})} />
+                  <label className="block text-xs font-bold text-gray-600 mb-1.5">Chapter <span className="text-red-500">*</span></label>
+                  <input type="text" className="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 bg-gray-50 text-sm font-medium focus:bg-white outline-none focus:ring-2 focus:ring-indigo-500/30 transition-all" placeholder="e.g. Kinematics" value={formData.chapterName} onChange={e => setFormData({ ...formData, chapterName: e.target.value })} />
                 </div>
-                
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">Topic (Optional)</label>
-                  <input type="text" className="w-full border border-gray-200 rounded-xl px-4 py-2.5 bg-gray-50 focus:bg-white transition-colors outline-none focus:ring-2 focus:ring-indigo-500/50" placeholder="e.g. Projectile Motion" value={newQ.topicName} onChange={e => setNewQ({...newQ, topicName: e.target.value})} />
+                  <label className="block text-xs font-bold text-gray-600 mb-1.5">Topic (Optional)</label>
+                  <input type="text" className="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 bg-gray-50 text-sm font-medium focus:bg-white outline-none focus:ring-2 focus:ring-indigo-500/30 transition-all" placeholder="e.g. Projectile Motion" value={formData.topicName} onChange={e => setFormData({ ...formData, topicName: e.target.value })} />
                 </div>
-
-                <div className="flex gap-3">
+                <div className="flex gap-2.5">
                   <div className="flex-1">
-                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">Difficulty</label>
-                    <select className="w-full border border-gray-200 rounded-xl px-4 py-2.5 bg-gray-50 focus:bg-white outline-none focus:ring-2 focus:ring-indigo-500/50" value={newQ.difficulty} onChange={e => setNewQ({...newQ, difficulty: e.target.value})}>
+                    <label className="block text-xs font-bold text-gray-600 mb-1.5">Difficulty</label>
+                    <select className="w-full border border-gray-200 rounded-xl px-3 py-2.5 bg-gray-50 text-sm font-medium focus:bg-white outline-none focus:ring-2 focus:ring-indigo-500/30" value={formData.difficulty} onChange={e => setFormData({ ...formData, difficulty: e.target.value })}>
                       <option value="EASY">Easy</option>
                       <option value="MEDIUM">Medium</option>
                       <option value="HARD">Hard</option>
                     </select>
                   </div>
-                  <div className="w-24">
-                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">Marks</label>
-                    <input type="number" min="1" className="w-full border border-gray-200 rounded-xl px-4 py-2.5 bg-gray-50 focus:bg-white outline-none focus:ring-2 focus:ring-indigo-500/50 text-center" value={newQ.marks} onChange={e => setNewQ({...newQ, marks: parseInt(e.target.value) || 1})} />
+                  <div className="w-20">
+                    <label className="block text-xs font-bold text-gray-600 mb-1.5">Marks</label>
+                    <input type="number" min="1" className="w-full border border-gray-200 rounded-xl px-2 py-2.5 bg-gray-50 text-sm font-bold text-center focus:bg-white outline-none focus:ring-2 focus:ring-indigo-500/30" value={formData.marks} onChange={e => setFormData({ ...formData, marks: parseInt(e.target.value) || 1 })} />
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* AI Generator Box */}
-            <div className="bg-gradient-to-br from-indigo-50 to-violet-50 rounded-2xl shadow-sm border border-indigo-100 p-6 relative overflow-hidden">
-              <div className="absolute top-0 right-0 p-4 opacity-10">
-                <Sparkles className="w-24 h-24 text-indigo-600" />
-              </div>
-              <h3 className="text-lg font-bold text-indigo-900 mb-2 flex items-center gap-2 relative z-10">
-                <Sparkles className="w-5 h-5 text-indigo-600" />
-                AI Generate
+            {/* AI Generator */}
+            <div className="bg-gradient-to-br from-indigo-600 via-violet-600 to-purple-700 rounded-2xl shadow-lg p-5 relative overflow-hidden">
+              <div className="absolute -top-4 -right-4 w-24 h-24 bg-white/10 rounded-full" />
+              <div className="absolute -bottom-6 -left-4 w-32 h-32 bg-white/5 rounded-full" />
+              <h3 className="text-sm font-bold text-white mb-1 flex items-center gap-2 relative z-10">
+                <Sparkles className="w-4 h-4" /> AI Generate
               </h3>
-              <p className="text-xs text-indigo-700/70 mb-4 relative z-10 leading-relaxed">
-                Need inspiration? Let AI generate a question based on your chapter and topic.
+              <p className="text-xs text-indigo-200 mb-3 relative z-10 leading-relaxed">
+                Set class/subject/chapter above, then let AI generate a complete question.
               </p>
-              <textarea 
-                className="w-full border border-indigo-200 rounded-xl px-4 py-3 bg-white/60 focus:bg-white transition-colors outline-none focus:ring-2 focus:ring-indigo-500/50 text-sm mb-4 relative z-10 resize-none h-24 placeholder-indigo-300"
-                placeholder="Optional prompt (e.g. 'Focus on real-world applications of Newton's laws')"
-                value={aiPrompt}
-                onChange={e => setAiPrompt(e.target.value)}
-              />
-              <button 
-                onClick={handleAIGenerate}
-                disabled={isGenerating}
-                className="w-full py-2.5 bg-indigo-600 text-white rounded-xl font-medium shadow-md shadow-indigo-600/20 hover:bg-indigo-700 transition-all relative z-10 flex justify-center items-center gap-2 disabled:opacity-60"
-              >
-                {isGenerating ? (
-                  <><span className="animate-spin text-xl">⏳</span> Generating...</>
-                ) : (
-                  <><Sparkles className="w-4 h-4" /> Generate Magic</>
-                )}
+              <textarea className="w-full border border-white/20 rounded-xl px-3.5 py-2.5 bg-white/10 text-white placeholder-indigo-300 text-sm outline-none focus:bg-white/20 transition-all resize-none mb-3 relative z-10" rows={3} placeholder="Optional focus prompt..." value={aiPrompt} onChange={e => setAiPrompt(e.target.value)} />
+              <button onClick={handleAIGenerate} disabled={isGenerating} className="w-full py-2.5 bg-white text-indigo-700 rounded-xl font-bold text-sm flex items-center justify-center gap-2 hover:bg-indigo-50 transition-all shadow-md disabled:opacity-60 relative z-10">
+                {isGenerating ? <><span className="animate-spin">⚡</span> Generating...</> : <><Sparkles className="w-4 h-4" /> Generate Question</>}
               </button>
             </div>
           </div>
 
-          {/* Right Main Panel - Large Editor */}
-          <div className="w-full lg:w-2/3 xl:w-3/4 flex flex-col gap-6">
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col h-full">
-              <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
-                <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
-                  <FileText className="w-5 h-5 text-indigo-500" />
-                  Question Editor
-                </h3>
-              </div>
-              
-              <div className="p-6 flex-1 flex flex-col">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Question Text <span className="text-red-500">*</span></label>
-                <textarea 
-                  className="w-full flex-1 min-h-[300px] border border-gray-200 rounded-xl p-5 bg-gray-50 focus:bg-white transition-colors outline-none focus:ring-2 focus:ring-indigo-500/50 text-[15px] leading-relaxed text-gray-800 resize-none font-medium" 
-                  placeholder="Type your question here... (Supports multiple lines and rich text structure)"
-                  value={newQ.questionText}
-                  onChange={e => setNewQ({...newQ, questionText: e.target.value})}
-                />
-              </div>
+          {/* MAIN EDITOR */}
+          <div className="flex-1 min-w-0 space-y-5">
 
-              <div className="p-6 border-t border-gray-100 bg-gray-50/30">
-                <h4 className="text-sm font-bold text-gray-800 mb-4 flex items-center gap-2">
-                  <CheckCircle className="w-4 h-4 text-green-500" /> Options & Answer
-                </h4>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                  {newQ.options.map((opt, i) => (
-                    <div key={i} className="flex flex-col">
-                      <label className="text-xs font-semibold text-gray-500 mb-1 ml-1 uppercase tracking-wider">Option {String.fromCharCode(65 + i)}</label>
-                      <div className="relative">
-                        <div className="absolute left-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded bg-gray-200 text-gray-600 flex items-center justify-center text-xs font-bold">
-                          {String.fromCharCode(65 + i)}
+            {/* QUESTION */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+              <div className="flex items-center gap-3 px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
+                <div className="w-8 h-8 bg-indigo-100 rounded-xl flex items-center justify-center">
+                  <FileText className="w-4 h-4 text-indigo-600" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-gray-800">Question</h3>
+                  <p className="text-xs text-gray-400">Write the question. Optionally attach a figure/diagram below.</p>
+                </div>
+              </div>
+              <div className="p-6 space-y-4">
+                <div>
+                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 block">
+                    Question Text <span className="text-red-500">*</span>
+                  </label>
+                  <textarea
+                    className="w-full min-h-[200px] border-2 border-gray-100 rounded-2xl p-5 bg-gray-50/50 focus:bg-white outline-none focus:border-indigo-300 focus:ring-4 focus:ring-indigo-500/10 text-base leading-relaxed text-gray-800 resize-y font-medium transition-all placeholder-gray-300"
+                    placeholder={"Type your question here...\n\nTip: You can write multi-line questions, include formulas (LaTeX), and attach a diagram image below."}
+                    value={formData.questionText}
+                    onChange={e => setFormData({ ...formData, questionText: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 flex items-center gap-2">
+                    <ImageIcon className="w-3.5 h-3.5" /> Question Diagram / Figure (Optional)
+                  </label>
+                  <ImageUploadBox imageBase64={questionImageBase64} onUpload={setQuestionImageBase64} onRemove={() => setQuestionImageBase64('')} />
+                </div>
+              </div>
+            </div>
+
+            {/* OPTIONS */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+              <div className="flex items-center gap-3 px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
+                <div className="w-8 h-8 bg-green-100 rounded-xl flex items-center justify-center">
+                  <CheckCircle className="w-4 h-4 text-green-600" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-gray-800">Options</h3>
+                  <p className="text-xs text-gray-400">Each option can be text or a diagram image — toggle per option using the Text/Image switch</p>
+                </div>
+              </div>
+              <div className="p-6 grid grid-cols-1 lg:grid-cols-2 gap-5">
+                {options.map((opt, i) => {
+                  const color = OPTION_COLORS[i];
+                  const lbl = OPTION_LABELS[i];
+                  return (
+                    <div key={i} className={`rounded-2xl border-2 ${color.border} ${color.bg} p-4 flex flex-col gap-3 transition-shadow hover:shadow-md`}>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span className={`w-7 h-7 rounded-lg ${color.badge} text-white text-sm font-bold flex items-center justify-center shadow-sm`}>{lbl}</span>
+                          <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Option {lbl}</span>
                         </div>
-                        <input 
-                          type="text" 
-                          className="w-full border border-gray-200 rounded-xl pl-11 pr-4 py-3 bg-white outline-none focus:ring-2 focus:ring-indigo-500/50 text-sm font-medium" 
-                          value={opt} 
-                          onChange={e => {
-                            const newOpts = [...newQ.options];
-                            newOpts[i] = e.target.value;
-                            setNewQ({...newQ, options: newOpts});
-                          }} 
-                          placeholder={`Enter option ${String.fromCharCode(65 + i)} text`} 
+                        <div className="flex items-center bg-white rounded-xl p-0.5 shadow-sm border border-gray-100">
+                          <button type="button" onClick={() => updateOption(i, { mode: 'text' })}
+                            className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all ${opt.mode === 'text' ? 'bg-gray-800 text-white shadow-sm' : 'text-gray-400 hover:text-gray-700'}`}>
+                            <Type className="w-3 h-3" /> Text
+                          </button>
+                          <button type="button" onClick={() => updateOption(i, { mode: 'image' })}
+                            className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all ${opt.mode === 'image' ? 'bg-gray-800 text-white shadow-sm' : 'text-gray-400 hover:text-gray-700'}`}>
+                            <ImageIcon className="w-3 h-3" /> Image
+                          </button>
+                        </div>
+                      </div>
+
+                      {opt.mode === 'text' && (
+                        <textarea
+                          className={`w-full min-h-[110px] bg-white/70 border border-white rounded-xl p-3.5 outline-none focus:ring-2 ${color.ring} text-sm font-medium text-gray-800 resize-y placeholder-gray-300 transition-all leading-relaxed`}
+                          placeholder={`Enter option ${lbl} content...\n\nCan include text, numbers, expressions etc.`}
+                          value={opt.text}
+                          onChange={e => updateOption(i, { text: e.target.value })}
                         />
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                      )}
 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Correct Answer (Exact Match) <span className="text-red-500">*</span></label>
-                    <div className="relative">
-                      <div className="absolute left-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-green-100 text-green-600 flex items-center justify-center">
-                        <CheckCircle className="w-4 h-4" />
-                      </div>
-                      <input 
-                        type="text" 
-                        className="w-full border-2 border-green-200 rounded-xl pl-11 pr-4 py-3 bg-green-50 outline-none focus:border-green-400 focus:ring-4 focus:ring-green-500/20 text-sm font-bold text-green-800 placeholder-green-300 transition-all" 
-                        value={newQ.correctAnswer} 
-                        onChange={e => setNewQ({...newQ, correctAnswer: e.target.value})} 
-                        placeholder="Must perfectly match one of the options above" 
-                      />
+                      {opt.mode === 'image' && (
+                        <div className="space-y-2">
+                          <ImageUploadBox imageBase64={opt.imageBase64} onUpload={b => updateOption(i, { imageBase64: b })} onRemove={() => updateOption(i, { imageBase64: '' })} />
+                          <input type="text" className="w-full bg-white/70 border border-white rounded-xl px-3.5 py-2 text-xs text-gray-500 outline-none focus:ring-2 focus:ring-gray-300 placeholder-gray-300" placeholder="Optional caption for this image..." value={opt.text} onChange={e => updateOption(i, { text: e.target.value })} />
+                        </div>
+                      )}
                     </div>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Explanation (Optional)</label>
-                    <textarea 
-                      className="w-full border border-gray-200 rounded-xl px-4 py-3 bg-white outline-none focus:ring-2 focus:ring-indigo-500/50 text-sm resize-none h-12" 
-                      value={newQ.explanation} 
-                      onChange={e => setNewQ({...newQ, explanation: e.target.value})} 
-                      placeholder="Brief explanation for the answer..." 
-                    />
-                  </div>
-                </div>
-
+                  );
+                })}
               </div>
+            </div>
+
+            {/* ANSWER & EXPLANATION */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+              <div className="flex items-center gap-3 px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
+                <div className="w-8 h-8 bg-emerald-100 rounded-xl flex items-center justify-center">
+                  <CheckCircle className="w-4 h-4 text-emerald-600" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-gray-800">Answer & Explanation</h3>
+                  <p className="text-xs text-gray-400">Click A / B / C / D to quickly mark the correct answer</p>
+                </div>
+              </div>
+              <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div>
+                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 block">Correct Answer <span className="text-red-500">*</span></label>
+                  <div className="flex gap-2 mb-3">
+                    {OPTION_LABELS.map((lbl, i) => {
+                      const optText = options[i].mode === 'text' ? options[i].text : `[Option ${lbl}]`;
+                      const isSelected = formData.correctAnswer === optText;
+                      return (
+                        <button key={lbl} type="button"
+                          onClick={() => setFormData({ ...formData, correctAnswer: optText })}
+                          className={`flex-1 py-2.5 rounded-xl font-bold text-sm border-2 transition-all ${isSelected ? OPTION_COLORS[i].active : 'border-gray-200 text-gray-500 hover:border-gray-300 bg-gray-50'}`}>
+                          {lbl}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <input
+                    type="text"
+                    className="w-full border-2 border-emerald-200 rounded-xl px-4 py-3 bg-emerald-50 text-sm font-bold text-emerald-800 outline-none focus:border-emerald-400 focus:ring-4 focus:ring-emerald-300/20 placeholder-emerald-300 transition-all"
+                    placeholder="Or type the correct answer manually..."
+                    value={formData.correctAnswer}
+                    onChange={e => setFormData({ ...formData, correctAnswer: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 block">Explanation (Optional)</label>
+                  <textarea
+                    className="w-full min-h-[140px] border-2 border-gray-100 rounded-xl px-4 py-3 bg-gray-50 text-sm text-gray-700 outline-none focus:border-gray-300 focus:ring-4 focus:ring-gray-200/50 resize-y placeholder-gray-300 transition-all leading-relaxed"
+                    placeholder="Explain why this is the correct answer..."
+                    value={formData.explanation}
+                    onChange={e => setFormData({ ...formData, explanation: e.target.value })}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* SAVE BUTTON */}
+            <div className="flex justify-end pb-6">
+              <button onClick={handleSave} disabled={loading}
+                className="px-10 py-3.5 bg-gradient-to-r from-indigo-600 to-violet-600 text-white rounded-2xl font-bold text-base flex items-center gap-3 shadow-xl shadow-indigo-300/40 hover:from-indigo-700 hover:to-violet-700 hover:scale-[1.02] transition-all disabled:opacity-50">
+                <Save className="w-5 h-5" /> {loading ? 'Saving...' : 'Save Question to Bank'}
+              </button>
             </div>
           </div>
 
