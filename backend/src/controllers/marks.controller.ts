@@ -155,9 +155,16 @@ export const bulkCreate = async (req: AuthRequest, res: Response, next: NextFunc
           if (matchingReal) {
             realSubjectId = matchingReal.id;
           } else if (classId && resolvedFakeName) {
-             // STRICT VALIDATION: Do NOT auto-create subjects anymore. Prevent ghost subjects.
-             // If subject not found, just skip this mark entry.
-             continue;
+             // AUTO-CREATE SUBJECT: If the subject is not found in master list, auto-create it to prevent blocking marks entry
+             const newSubject = await prisma.subject.create({
+               data: {
+                 name: resolvedFakeName,
+                 classId: classId,
+                 maxMarks: resolvedMaxMarks || 100
+               }
+             });
+             realSubjects.push(newSubject);
+             realSubjectId = newSubject.id;
           }
         } else {
           // Level 4b: sent ID not in exam subjects — check if it exists in any class
@@ -170,7 +177,15 @@ export const bulkCreate = async (req: AuthRequest, res: Response, next: NextFunc
               realSubjectId = sameNameSameClass.id;
               resolvedFakeName = sameNameSameClass.name;
             } else {
-              continue; // STRICT VALIDATION: Do not auto-create
+              const newSubject = await prisma.subject.create({
+                data: {
+                  name: anyMatch.name,
+                  classId: classId,
+                  maxMarks: 100
+                }
+              });
+              realSubjects.push(newSubject);
+              realSubjectId = newSubject.id;
             }
           }
         }
