@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { PageHeader } from '../../components/UI/PageHeader';
 import {
   ArrowLeft, Sparkles, Save, Layout, FileText, CheckCircle,
-  Database, ImagePlus, Image as ImageIcon, Type
+  Database, ImagePlus, Image as ImageIcon, Type, PenLine, Wand2,
+  RefreshCw, ChevronRight
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../api/axios';
@@ -10,6 +11,7 @@ import api from '../../api/axios';
 interface Subject { id: string; name: string; }
 interface ClassObj { id: string; name: string; section: string; }
 type OptionMode = 'text' | 'image';
+type EntryMode = 'manual' | 'ai';
 interface OptionData { text: string; imageBase64: string; mode: OptionMode; }
 
 const OPTION_LABELS = ['A', 'B', 'C', 'D'];
@@ -61,6 +63,7 @@ export const AddMasterQuestionPage = () => {
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [classes, setClasses] = useState<ClassObj[]>([]);
   const [loading, setLoading] = useState(false);
+  const [entryMode, setEntryMode] = useState<EntryMode>('manual');
   const [questionImageBase64, setQuestionImageBase64] = useState('');
   const [formData, setFormData] = useState({
     subjectId: '', classId: '', chapterName: '', topicName: '',
@@ -72,8 +75,13 @@ export const AddMasterQuestionPage = () => {
     { text: '', imageBase64: '', mode: 'text' },
     { text: '', imageBase64: '', mode: 'text' },
   ]);
+
+  // AI Mode state
   const [aiPrompt, setAiPrompt] = useState('');
+  const [aiCount, setAiCount] = useState(1);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [aiGeneratedList, setAiGeneratedList] = useState<any[]>([]);
+  const [selectedAiIdx, setSelectedAiIdx] = useState<number | null>(null);
 
   useEffect(() => { fetchFilters(); }, []);
 
@@ -112,22 +120,27 @@ export const AddMasterQuestionPage = () => {
       alert('Please select Class, Subject and enter Chapter Name first.'); return;
     }
     setIsGenerating(true);
+    setAiGeneratedList([]);
+    setSelectedAiIdx(null);
     try {
       const res = await api.post('/api/master-questions/generate-ai', {
         subjectId: formData.subjectId, classId: formData.classId,
         chapterName: formData.chapterName, difficulty: formData.difficulty,
-        prompt: aiPrompt || 'Generate a standard question', count: 1
+        prompt: aiPrompt || 'Generate standard MCQ questions', count: aiCount
       });
-      const generated = res.data?.data?.[0];
-      if (generated) {
-        let opts: string[] = [];
-        try { opts = JSON.parse(generated.options); } catch {}
-        setFormData(prev => ({ ...prev, questionText: generated.questionText, correctAnswer: generated.correctAnswer, explanation: generated.explanation || '' }));
-        setOptions(opts.slice(0, 4).map(t => ({ text: t, imageBase64: '', mode: 'text' as OptionMode })));
-        alert('AI generated! Review and save.');
-      }
+      const generated = res.data?.data || [];
+      setAiGeneratedList(generated);
+      if (generated.length > 0) setSelectedAiIdx(0);
     } catch { alert('AI Generation failed.'); }
     finally { setIsGenerating(false); }
+  };
+
+  const applyAiQuestion = (q: any) => {
+    let opts: string[] = [];
+    try { opts = JSON.parse(q.options); } catch {}
+    setFormData(prev => ({ ...prev, questionText: q.questionText, correctAnswer: q.correctAnswer, explanation: q.explanation || '' }));
+    setOptions(opts.slice(0, 4).map(t => ({ text: t, imageBase64: '', mode: 'text' as OptionMode })));
+    setEntryMode('manual');
   };
 
   return (
@@ -150,9 +163,9 @@ export const AddMasterQuestionPage = () => {
       <div className="flex-1 p-6 overflow-auto">
         <div className="max-w-[1400px] mx-auto flex flex-col xl:flex-row gap-6">
 
-          {/* LEFT SIDEBAR */}
-          <div className="w-full xl:w-72 flex-shrink-0 space-y-5">
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
+          {/* LEFT SIDEBAR — Config only */}
+          <div className="w-full xl:w-64 flex-shrink-0">
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 sticky top-6">
               <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4 flex items-center gap-2">
                 <Layout className="w-4 h-4 text-indigo-400" /> Configuration
               </h3>
@@ -195,170 +208,285 @@ export const AddMasterQuestionPage = () => {
                 </div>
               </div>
             </div>
-
-            {/* AI Generator */}
-            <div className="bg-gradient-to-br from-indigo-600 via-violet-600 to-purple-700 rounded-2xl shadow-lg p-5 relative overflow-hidden">
-              <div className="absolute -top-4 -right-4 w-24 h-24 bg-white/10 rounded-full" />
-              <div className="absolute -bottom-6 -left-4 w-32 h-32 bg-white/5 rounded-full" />
-              <h3 className="text-sm font-bold text-white mb-1 flex items-center gap-2 relative z-10">
-                <Sparkles className="w-4 h-4" /> AI Generate
-              </h3>
-              <p className="text-xs text-indigo-200 mb-3 relative z-10 leading-relaxed">
-                Set class/subject/chapter above, then let AI generate a complete question.
-              </p>
-              <textarea className="w-full border border-white/20 rounded-xl px-3.5 py-2.5 bg-white/10 text-white placeholder-indigo-300 text-sm outline-none focus:bg-white/20 transition-all resize-none mb-3 relative z-10" rows={3} placeholder="Optional focus prompt..." value={aiPrompt} onChange={e => setAiPrompt(e.target.value)} />
-              <button onClick={handleAIGenerate} disabled={isGenerating} className="w-full py-2.5 bg-white text-indigo-700 rounded-xl font-bold text-sm flex items-center justify-center gap-2 hover:bg-indigo-50 transition-all shadow-md disabled:opacity-60 relative z-10">
-                {isGenerating ? <><span className="animate-spin">⚡</span> Generating...</> : <><Sparkles className="w-4 h-4" /> Generate Question</>}
-              </button>
-            </div>
           </div>
 
-          {/* MAIN EDITOR */}
+          {/* MAIN CONTENT */}
           <div className="flex-1 min-w-0 space-y-5">
 
-            {/* QUESTION */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-              <div className="flex items-center gap-3 px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
-                <div className="w-8 h-8 bg-indigo-100 rounded-xl flex items-center justify-center">
-                  <FileText className="w-4 h-4 text-indigo-600" />
-                </div>
-                <div>
-                  <h3 className="text-base font-bold text-gray-800">Question</h3>
-                  <p className="text-xs text-gray-400">Write the question. Optionally attach a figure/diagram below.</p>
-                </div>
-              </div>
-              <div className="p-6 space-y-4">
-                <div>
-                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 block">
-                    Question Text <span className="text-red-500">*</span>
-                  </label>
-                  <textarea
-                    className="w-full min-h-[200px] border-2 border-gray-100 rounded-2xl p-5 bg-gray-50/50 focus:bg-white outline-none focus:border-indigo-300 focus:ring-4 focus:ring-indigo-500/10 text-base leading-relaxed text-gray-800 resize-y font-medium transition-all placeholder-gray-300"
-                    placeholder={"Type your question here...\n\nTip: You can write multi-line questions, include formulas (LaTeX), and attach a diagram image below."}
-                    value={formData.questionText}
-                    onChange={e => setFormData({ ...formData, questionText: e.target.value })}
-                  />
-                </div>
-                <div>
-                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 flex items-center gap-2">
-                    <ImageIcon className="w-3.5 h-3.5" /> Question Diagram / Figure (Optional)
-                  </label>
-                  <ImageUploadBox imageBase64={questionImageBase64} onUpload={setQuestionImageBase64} onRemove={() => setQuestionImageBase64('')} />
-                </div>
-              </div>
+            {/* TAB SWITCHER */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-2 flex gap-2">
+              <button
+                onClick={() => setEntryMode('manual')}
+                className={`flex-1 flex items-center justify-center gap-2.5 py-3 rounded-xl font-bold text-sm transition-all ${entryMode === 'manual' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-300/40' : 'text-gray-400 hover:text-gray-700 hover:bg-gray-50'}`}
+              >
+                <PenLine className="w-4 h-4" />
+                Manual Entry
+              </button>
+              <button
+                onClick={() => setEntryMode('ai')}
+                className={`flex-1 flex items-center justify-center gap-2.5 py-3 rounded-xl font-bold text-sm transition-all ${entryMode === 'ai' ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-md shadow-indigo-300/40' : 'text-gray-400 hover:text-gray-700 hover:bg-gray-50'}`}
+              >
+                <Wand2 className="w-4 h-4" />
+                AI Generate
+                <span className={`text-xs px-1.5 py-0.5 rounded-full font-semibold ${entryMode === 'ai' ? 'bg-white/20' : 'bg-indigo-100 text-indigo-600'}`}>SMART</span>
+              </button>
             </div>
 
-            {/* OPTIONS */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-              <div className="flex items-center gap-3 px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
-                <div className="w-8 h-8 bg-green-100 rounded-xl flex items-center justify-center">
-                  <CheckCircle className="w-4 h-4 text-green-600" />
-                </div>
-                <div>
-                  <h3 className="text-base font-bold text-gray-800">Options</h3>
-                  <p className="text-xs text-gray-400">Each option can be text or a diagram image — toggle per option using the Text/Image switch</p>
-                </div>
-              </div>
-              <div className="p-6 grid grid-cols-1 lg:grid-cols-2 gap-5">
-                {options.map((opt, i) => {
-                  const color = OPTION_COLORS[i];
-                  const lbl = OPTION_LABELS[i];
-                  return (
-                    <div key={i} className={`rounded-2xl border-2 ${color.border} ${color.bg} p-4 flex flex-col gap-3 transition-shadow hover:shadow-md`}>
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <span className={`w-7 h-7 rounded-lg ${color.badge} text-white text-sm font-bold flex items-center justify-center shadow-sm`}>{lbl}</span>
-                          <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Option {lbl}</span>
+            {/* ========== AI GENERATE MODE ========== */}
+            {entryMode === 'ai' && (
+              <div className="space-y-5">
+                {/* AI Prompt Card */}
+                <div className="bg-gradient-to-br from-indigo-600 via-violet-600 to-purple-700 rounded-2xl shadow-xl p-8 relative overflow-hidden">
+                  <div className="absolute -top-10 -right-10 w-48 h-48 bg-white/5 rounded-full" />
+                  <div className="absolute -bottom-16 -left-8 w-64 h-64 bg-white/5 rounded-full" />
+                  <div className="relative z-10">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+                        <Wand2 className="w-5 h-5 text-white" />
+                      </div>
+                      <div>
+                        <h2 className="text-xl font-bold text-white">AI Question Generator</h2>
+                        <p className="text-indigo-200 text-sm">Powered by Gemini AI — generates complete MCQ questions instantly</p>
+                      </div>
+                    </div>
+
+                    <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="md:col-span-2">
+                        <label className="block text-xs font-bold text-indigo-200 uppercase tracking-wider mb-2">Focus Prompt (Optional)</label>
+                        <textarea
+                          className="w-full h-36 border border-white/20 rounded-2xl px-5 py-4 bg-white/10 text-white placeholder-indigo-300 text-sm outline-none focus:bg-white/20 transition-all resize-none leading-relaxed"
+                          placeholder={"Describe what kind of questions to generate...\n\nExamples:\n• Focus on real-world applications\n• Include diagram-based questions\n• NEET/JEE difficulty level"}
+                          value={aiPrompt}
+                          onChange={e => setAiPrompt(e.target.value)}
+                        />
+                      </div>
+                      <div className="flex flex-col gap-4">
+                        <div>
+                          <label className="block text-xs font-bold text-indigo-200 uppercase tracking-wider mb-2">Number of Questions</label>
+                          <div className="flex items-center bg-white/10 rounded-xl border border-white/20 overflow-hidden">
+                            <button type="button" onClick={() => setAiCount(Math.max(1, aiCount - 1))} className="px-4 py-3 text-white font-bold text-lg hover:bg-white/10 transition-colors">−</button>
+                            <span className="flex-1 text-center text-white font-bold text-xl">{aiCount}</span>
+                            <button type="button" onClick={() => setAiCount(Math.min(10, aiCount + 1))} className="px-4 py-3 text-white font-bold text-lg hover:bg-white/10 transition-colors">+</button>
+                          </div>
+                          <p className="text-xs text-indigo-300 mt-1 text-center">Max 10 questions</p>
                         </div>
-                        <div className="flex items-center bg-white rounded-xl p-0.5 shadow-sm border border-gray-100">
-                          <button type="button" onClick={() => updateOption(i, { mode: 'text' })}
-                            className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all ${opt.mode === 'text' ? 'bg-gray-800 text-white shadow-sm' : 'text-gray-400 hover:text-gray-700'}`}>
-                            <Type className="w-3 h-3" /> Text
-                          </button>
-                          <button type="button" onClick={() => updateOption(i, { mode: 'image' })}
-                            className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all ${opt.mode === 'image' ? 'bg-gray-800 text-white shadow-sm' : 'text-gray-400 hover:text-gray-700'}`}>
-                            <ImageIcon className="w-3 h-3" /> Image
+                        <div className="flex-1 flex flex-col justify-end">
+                          <button
+                            onClick={handleAIGenerate}
+                            disabled={isGenerating}
+                            className="w-full py-4 bg-white text-indigo-700 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-indigo-50 transition-all shadow-lg disabled:opacity-60 text-base"
+                          >
+                            {isGenerating
+                              ? <><RefreshCw className="w-5 h-5 animate-spin" /> Generating...</>
+                              : <><Sparkles className="w-5 h-5" /> Generate Now</>
+                            }
                           </button>
                         </div>
                       </div>
-
-                      {opt.mode === 'text' && (
-                        <textarea
-                          className={`w-full min-h-[110px] bg-white/70 border border-white rounded-xl p-3.5 outline-none focus:ring-2 ${color.ring} text-sm font-medium text-gray-800 resize-y placeholder-gray-300 transition-all leading-relaxed`}
-                          placeholder={`Enter option ${lbl} content...\n\nCan include text, numbers, expressions etc.`}
-                          value={opt.text}
-                          onChange={e => updateOption(i, { text: e.target.value })}
-                        />
-                      )}
-
-                      {opt.mode === 'image' && (
-                        <div className="space-y-2">
-                          <ImageUploadBox imageBase64={opt.imageBase64} onUpload={b => updateOption(i, { imageBase64: b })} onRemove={() => updateOption(i, { imageBase64: '' })} />
-                          <input type="text" className="w-full bg-white/70 border border-white rounded-xl px-3.5 py-2 text-xs text-gray-500 outline-none focus:ring-2 focus:ring-gray-300 placeholder-gray-300" placeholder="Optional caption for this image..." value={opt.text} onChange={e => updateOption(i, { text: e.target.value })} />
-                        </div>
-                      )}
                     </div>
-                  );
-                })}
-              </div>
-            </div>
+                  </div>
+                </div>
 
-            {/* ANSWER & EXPLANATION */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-              <div className="flex items-center gap-3 px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
-                <div className="w-8 h-8 bg-emerald-100 rounded-xl flex items-center justify-center">
-                  <CheckCircle className="w-4 h-4 text-emerald-600" />
-                </div>
-                <div>
-                  <h3 className="text-base font-bold text-gray-800">Answer & Explanation</h3>
-                  <p className="text-xs text-gray-400">Click A / B / C / D to quickly mark the correct answer</p>
-                </div>
+                {/* AI Results */}
+                {aiGeneratedList.length > 0 && (
+                  <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                    <div className="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-emerald-50 to-white flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 bg-emerald-100 rounded-xl flex items-center justify-center">
+                          <CheckCircle className="w-4 h-4 text-emerald-600" />
+                        </div>
+                        <div>
+                          <h3 className="font-bold text-gray-800">Generated Questions</h3>
+                          <p className="text-xs text-gray-400">{aiGeneratedList.length} question(s) generated — click to preview, then use it</p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="p-5 space-y-3">
+                      {aiGeneratedList.map((q, idx) => {
+                        let opts: string[] = [];
+                        try { opts = JSON.parse(q.options); } catch {}
+                        const isSelected = selectedAiIdx === idx;
+                        return (
+                          <div
+                            key={idx}
+                            onClick={() => setSelectedAiIdx(idx)}
+                            className={`rounded-xl border-2 p-4 cursor-pointer transition-all ${isSelected ? 'border-indigo-400 bg-indigo-50' : 'border-gray-100 hover:border-indigo-200 hover:bg-gray-50'}`}
+                          >
+                            <div className="flex items-start justify-between gap-4">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2 mb-2">
+                                  <span className="w-6 h-6 bg-indigo-100 text-indigo-700 rounded-full text-xs font-bold flex items-center justify-center">{idx + 1}</span>
+                                  <p className="text-sm font-semibold text-gray-800 leading-snug">{q.questionText}</p>
+                                </div>
+                                {isSelected && (
+                                  <div className="mt-3 grid grid-cols-2 gap-1.5 ml-8">
+                                    {opts.map((opt, oi) => (
+                                      <div key={oi} className={`text-xs px-3 py-1.5 rounded-lg font-medium flex items-center gap-2 ${opt === q.correctAnswer ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' : 'bg-gray-100 text-gray-600'}`}>
+                                        <span className="font-bold">{OPTION_LABELS[oi]}.</span> {opt}
+                                        {opt === q.correctAnswer && <CheckCircle className="w-3 h-3 ml-auto flex-shrink-0" />}
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                              <button
+                                onClick={e => { e.stopPropagation(); applyAiQuestion(q); }}
+                                className="flex-shrink-0 flex items-center gap-1.5 px-4 py-2 bg-indigo-600 text-white rounded-xl text-xs font-bold hover:bg-indigo-700 transition-colors shadow-sm"
+                              >
+                                Use This <ChevronRight className="w-3 h-3" />
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
-              <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-5">
-                <div>
-                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 block">Correct Answer <span className="text-red-500">*</span></label>
-                  <div className="flex gap-2 mb-3">
-                    {OPTION_LABELS.map((lbl, i) => {
-                      const optText = options[i].mode === 'text' ? options[i].text : `[Option ${lbl}]`;
-                      const isSelected = formData.correctAnswer === optText;
+            )}
+
+            {/* ========== MANUAL ENTRY MODE ========== */}
+            {entryMode === 'manual' && (
+              <div className="space-y-5">
+                {/* QUESTION */}
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                  <div className="flex items-center gap-3 px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
+                    <div className="w-8 h-8 bg-indigo-100 rounded-xl flex items-center justify-center">
+                      <FileText className="w-4 h-4 text-indigo-600" />
+                    </div>
+                    <div>
+                      <h3 className="text-base font-bold text-gray-800">Question</h3>
+                      <p className="text-xs text-gray-400">Write the question. Optionally attach a figure/diagram below.</p>
+                    </div>
+                  </div>
+                  <div className="p-6 space-y-4">
+                    <div>
+                      <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 block">Question Text <span className="text-red-500">*</span></label>
+                      <textarea
+                        className="w-full min-h-[200px] border-2 border-gray-100 rounded-2xl p-5 bg-gray-50/50 focus:bg-white outline-none focus:border-indigo-300 focus:ring-4 focus:ring-indigo-500/10 text-base leading-relaxed text-gray-800 resize-y font-medium transition-all placeholder-gray-300"
+                        placeholder={"Type your question here...\n\nTip: You can write multi-line questions, include formulas (LaTeX), and attach a diagram image below."}
+                        value={formData.questionText}
+                        onChange={e => setFormData({ ...formData, questionText: e.target.value })}
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 flex items-center gap-2"><ImageIcon className="w-3.5 h-3.5" /> Question Diagram / Figure (Optional)</label>
+                      <ImageUploadBox imageBase64={questionImageBase64} onUpload={setQuestionImageBase64} onRemove={() => setQuestionImageBase64('')} />
+                    </div>
+                  </div>
+                </div>
+
+                {/* OPTIONS */}
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                  <div className="flex items-center gap-3 px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
+                    <div className="w-8 h-8 bg-green-100 rounded-xl flex items-center justify-center">
+                      <CheckCircle className="w-4 h-4 text-green-600" />
+                    </div>
+                    <div>
+                      <h3 className="text-base font-bold text-gray-800">Options</h3>
+                      <p className="text-xs text-gray-400">Each option can be text or a diagram image — toggle per option</p>
+                    </div>
+                  </div>
+                  <div className="p-6 grid grid-cols-1 lg:grid-cols-2 gap-5">
+                    {options.map((opt, i) => {
+                      const color = OPTION_COLORS[i];
+                      const lbl = OPTION_LABELS[i];
                       return (
-                        <button key={lbl} type="button"
-                          onClick={() => setFormData({ ...formData, correctAnswer: optText })}
-                          className={`flex-1 py-2.5 rounded-xl font-bold text-sm border-2 transition-all ${isSelected ? OPTION_COLORS[i].active : 'border-gray-200 text-gray-500 hover:border-gray-300 bg-gray-50'}`}>
-                          {lbl}
-                        </button>
+                        <div key={i} className={`rounded-2xl border-2 ${color.border} ${color.bg} p-4 flex flex-col gap-3 transition-shadow hover:shadow-md`}>
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <span className={`w-7 h-7 rounded-lg ${color.badge} text-white text-sm font-bold flex items-center justify-center shadow-sm`}>{lbl}</span>
+                              <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Option {lbl}</span>
+                            </div>
+                            <div className="flex items-center bg-white rounded-xl p-0.5 shadow-sm border border-gray-100">
+                              <button type="button" onClick={() => updateOption(i, { mode: 'text' })}
+                                className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all ${opt.mode === 'text' ? 'bg-gray-800 text-white shadow-sm' : 'text-gray-400 hover:text-gray-700'}`}>
+                                <Type className="w-3 h-3" /> Text
+                              </button>
+                              <button type="button" onClick={() => updateOption(i, { mode: 'image' })}
+                                className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all ${opt.mode === 'image' ? 'bg-gray-800 text-white shadow-sm' : 'text-gray-400 hover:text-gray-700'}`}>
+                                <ImageIcon className="w-3 h-3" /> Image
+                              </button>
+                            </div>
+                          </div>
+                          {opt.mode === 'text' && (
+                            <textarea
+                              className={`w-full min-h-[110px] bg-white/70 border border-white rounded-xl p-3.5 outline-none focus:ring-2 ${color.ring} text-sm font-medium text-gray-800 resize-y placeholder-gray-300 transition-all leading-relaxed`}
+                              placeholder={`Enter option ${lbl} content...`}
+                              value={opt.text}
+                              onChange={e => updateOption(i, { text: e.target.value })}
+                            />
+                          )}
+                          {opt.mode === 'image' && (
+                            <div className="space-y-2">
+                              <ImageUploadBox imageBase64={opt.imageBase64} onUpload={b => updateOption(i, { imageBase64: b })} onRemove={() => updateOption(i, { imageBase64: '' })} />
+                              <input type="text" className="w-full bg-white/70 border border-white rounded-xl px-3.5 py-2 text-xs text-gray-500 outline-none focus:ring-2 focus:ring-gray-300 placeholder-gray-300" placeholder="Optional caption..." value={opt.text} onChange={e => updateOption(i, { text: e.target.value })} />
+                            </div>
+                          )}
+                        </div>
                       );
                     })}
                   </div>
-                  <input
-                    type="text"
-                    className="w-full border-2 border-emerald-200 rounded-xl px-4 py-3 bg-emerald-50 text-sm font-bold text-emerald-800 outline-none focus:border-emerald-400 focus:ring-4 focus:ring-emerald-300/20 placeholder-emerald-300 transition-all"
-                    placeholder="Or type the correct answer manually..."
-                    value={formData.correctAnswer}
-                    onChange={e => setFormData({ ...formData, correctAnswer: e.target.value })}
-                  />
                 </div>
-                <div>
-                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 block">Explanation (Optional)</label>
-                  <textarea
-                    className="w-full min-h-[140px] border-2 border-gray-100 rounded-xl px-4 py-3 bg-gray-50 text-sm text-gray-700 outline-none focus:border-gray-300 focus:ring-4 focus:ring-gray-200/50 resize-y placeholder-gray-300 transition-all leading-relaxed"
-                    placeholder="Explain why this is the correct answer..."
-                    value={formData.explanation}
-                    onChange={e => setFormData({ ...formData, explanation: e.target.value })}
-                  />
+
+                {/* ANSWER & EXPLANATION */}
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                  <div className="flex items-center gap-3 px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
+                    <div className="w-8 h-8 bg-emerald-100 rounded-xl flex items-center justify-center">
+                      <CheckCircle className="w-4 h-4 text-emerald-600" />
+                    </div>
+                    <div>
+                      <h3 className="text-base font-bold text-gray-800">Answer & Explanation</h3>
+                      <p className="text-xs text-gray-400">Click A / B / C / D to quickly mark the correct answer</p>
+                    </div>
+                  </div>
+                  <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div>
+                      <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 block">Correct Answer <span className="text-red-500">*</span></label>
+                      <div className="flex gap-2 mb-3">
+                        {OPTION_LABELS.map((lbl, i) => {
+                          const optText = options[i].mode === 'text' ? options[i].text : `[Option ${lbl}]`;
+                          const isSelected = formData.correctAnswer === optText;
+                          return (
+                            <button key={lbl} type="button"
+                              onClick={() => setFormData({ ...formData, correctAnswer: optText })}
+                              className={`flex-1 py-2.5 rounded-xl font-bold text-sm border-2 transition-all ${isSelected ? OPTION_COLORS[i].active : 'border-gray-200 text-gray-500 hover:border-gray-300 bg-gray-50'}`}>
+                              {lbl}
+                            </button>
+                          );
+                        })}
+                      </div>
+                      <input
+                        type="text"
+                        className="w-full border-2 border-emerald-200 rounded-xl px-4 py-3 bg-emerald-50 text-sm font-bold text-emerald-800 outline-none focus:border-emerald-400 focus:ring-4 focus:ring-emerald-300/20 placeholder-emerald-300 transition-all"
+                        placeholder="Or type the correct answer manually..."
+                        value={formData.correctAnswer}
+                        onChange={e => setFormData({ ...formData, correctAnswer: e.target.value })}
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 block">Explanation (Optional)</label>
+                      <textarea
+                        className="w-full min-h-[140px] border-2 border-gray-100 rounded-xl px-4 py-3 bg-gray-50 text-sm text-gray-700 outline-none focus:border-gray-300 focus:ring-4 focus:ring-gray-200/50 resize-y placeholder-gray-300 transition-all leading-relaxed"
+                        placeholder="Explain why this is the correct answer..."
+                        value={formData.explanation}
+                        onChange={e => setFormData({ ...formData, explanation: e.target.value })}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* SAVE BUTTON */}
+                <div className="flex justify-end pb-6">
+                  <button onClick={handleSave} disabled={loading}
+                    className="px-10 py-3.5 bg-gradient-to-r from-indigo-600 to-violet-600 text-white rounded-2xl font-bold text-base flex items-center gap-3 shadow-xl shadow-indigo-300/40 hover:from-indigo-700 hover:to-violet-700 hover:scale-[1.02] transition-all disabled:opacity-50">
+                    <Save className="w-5 h-5" /> {loading ? 'Saving...' : 'Save Question to Bank'}
+                  </button>
                 </div>
               </div>
-            </div>
+            )}
 
-            {/* SAVE BUTTON */}
-            <div className="flex justify-end pb-6">
-              <button onClick={handleSave} disabled={loading}
-                className="px-10 py-3.5 bg-gradient-to-r from-indigo-600 to-violet-600 text-white rounded-2xl font-bold text-base flex items-center gap-3 shadow-xl shadow-indigo-300/40 hover:from-indigo-700 hover:to-violet-700 hover:scale-[1.02] transition-all disabled:opacity-50">
-                <Save className="w-5 h-5" /> {loading ? 'Saving...' : 'Save Question to Bank'}
-              </button>
-            </div>
           </div>
-
         </div>
       </div>
     </div>

@@ -1,6 +1,6 @@
 # Custom Rules
 
-- **Always Provide VPS SSH Details Rule (Strict Order):** Whenever providing commands to be executed on the VPS (for git pull, prisma generate, backend/frontend builds, PM2 restart, or DB scripts), ALWAYS explicitly include the SSH login command (`ssh root@66.116.252.191`) at the very top of the command block so the user can easily copy and connect to the VPS terminal if they aren't already connected, followed by the exact `cd` path and build commands.
+- **Always Provide VPS SSH Details Rule (Strict Order — NO EXCEPTIONS):** Whenever providing commands to be executed on the VPS (for git pull, prisma generate, backend/frontend builds, PM2 restart, or DB scripts), ALWAYS explicitly include the SSH login command (`ssh root@66.116.252.191`) at the very top of the command block. NEVER assume the user is already connected to the VPS. NEVER write phrases like "ఇప్పటికే SSH లో ఉన్నారు కాబట్టి" or "since you're already connected". ALWAYS provide the full block starting with `ssh root@66.116.252.191`, then `cd` path, then all build commands — every single time, without exception. This is a hard rule with zero tolerance for omissions.
 
 - **Exact Terminal Commands with Path (Strict Order):** Whenever providing a terminal command for the user to run, always include the exact cd command to navigate to the required folder path first, so the user can copy and paste the entire block seamlessly.
 
