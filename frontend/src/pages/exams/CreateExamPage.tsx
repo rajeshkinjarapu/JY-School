@@ -103,22 +103,34 @@ export const CreateExamPage: React.FC = () => {
         
         // If class config doesn't exist yet, initialize with standard manual subjects
         if (!updated[cId]) {
-          let defaultSubs = [
-            { id: Date.now().toString() + '_1', name: 'ENGLISH', maxMarks: 100, date: examDate },
-            { id: Date.now().toString() + '_2', name: 'MATHEMATICS', maxMarks: 100, date: examDate },
-            { id: Date.now().toString() + '_3', name: 'SCIENCE', maxMarks: 100, date: examDate },
-            { id: Date.now().toString() + '_4', name: 'SOCIAL', maxMarks: 100, date: examDate }
-          ];
-
-          // Nursery / PP1 / PP2 custom defaults if class name starts with NUR or PP
-          const upperName = cls.name.toUpperCase();
-          if (upperName.includes('NUR') || upperName.includes('PP') || upperName.includes('LKG') || upperName.includes('UKG')) {
+          const dbSubsForClass = allDbSubjects.filter(s => s.classId === cId);
+          let defaultSubs: any[] = [];
+          
+          if (dbSubsForClass.length > 0) {
+            defaultSubs = dbSubsForClass.map((s, idx) => ({
+              id: s.id,
+              name: s.name,
+              maxMarks: 100,
+              date: examDate
+            }));
+          } else {
             defaultSubs = [
               { id: Date.now().toString() + '_1', name: 'ENGLISH', maxMarks: 100, date: examDate },
-              { id: Date.now().toString() + '_2', name: 'MATHS', maxMarks: 100, date: examDate },
-              { id: Date.now().toString() + '_3', name: 'GENERAL AWARENESS', maxMarks: 100, date: examDate },
-              { id: Date.now().toString() + '_4', name: 'RHYMES, ART & CRAFT', maxMarks: 100, date: examDate }
+              { id: Date.now().toString() + '_2', name: 'MATHEMATICS', maxMarks: 100, date: examDate },
+              { id: Date.now().toString() + '_3', name: 'SCIENCE', maxMarks: 100, date: examDate },
+              { id: Date.now().toString() + '_4', name: 'SOCIAL', maxMarks: 100, date: examDate }
             ];
+  
+            // Nursery / PP1 / PP2 custom defaults if class name starts with NUR or PP
+            const upperName = cls.name.toUpperCase();
+            if (upperName.includes('NUR') || upperName.includes('PP') || upperName.includes('LKG') || upperName.includes('UKG')) {
+              defaultSubs = [
+                { id: Date.now().toString() + '_1', name: 'ENGLISH', maxMarks: 100, date: examDate },
+                { id: Date.now().toString() + '_2', name: 'MATHS', maxMarks: 100, date: examDate },
+                { id: Date.now().toString() + '_3', name: 'GENERAL AWARENESS', maxMarks: 100, date: examDate },
+                { id: Date.now().toString() + '_4', name: 'RHYMES, ART & CRAFT', maxMarks: 100, date: examDate }
+              ];
+            }
           }
 
           updated[cId] = {
@@ -142,7 +154,7 @@ export const CreateExamPage: React.FC = () => {
     if (examClassIds.length > 0 && !examClassIds.includes(activeClassTab)) {
       setActiveClassTab(examClassIds[0]);
     }
-  }, [examClassIds, classes, examDate]);
+  }, [examClassIds, classes, examDate, allDbSubjects]);
 
   const handleClassToggle = (classId: string) => {
     if (examClassIds.includes(classId)) {
