@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ChevronLeft, Sparkles, Upload, Save, Printer, FileText, Settings, Maximize, X, Wand2, BookOpen, ImagePlus, HelpCircle, PenTool, Eye, ZoomIn, ZoomOut } from 'lucide-react';
+import { ChevronLeft, Sparkles, Upload, Save, Printer, FileText, Settings, Maximize, X, Wand2, BookOpen, ImagePlus, HelpCircle, PenTool, Eye, ZoomIn, ZoomOut, Database, CheckSquare, Square } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { LiveLatexPreview } from '../../components/QuestionBank/LiveLatexPreview';
@@ -53,6 +53,120 @@ export const MCQPaperGeneratorPage = () => {
   const [aiInstructions, setAiInstructions] = useState('Generate MCQ questions');
   const [aiImageBase64, setAiImageBase64] = useState<string>('');
   const [aiImageMimeType, setAiImageMimeType] = useState<string>('');
+  
+  // Import from Bank Modal State
+  const [isBankModalOpen, setIsBankModalOpen] = useState(false);
+  const [bankQuestions, setBankQuestions] = useState<any[]>([]);
+  const [bankLoading, setBankLoading] = useState(false);
+  const [bankFilters, setBankFilters] = useState({ classId: '', subjectId: '', difficulty: '', chapterName: '' });
+  const [bankSelectedIds, setBankSelectedIds] = useState<Set<string>>(new Set());
+  const [bankClasses, setBankClasses] = useState<any[]>([]);
+  const [bankSubjects, setBankSubjects] = useState<any[]>([]);
+  const [answerKeys, setAnswerKeys] = useState<Record<string, Record<string, string>>>({});
+  const [isAnswerKeyModalOpen, setIsAnswerKeyModalOpen] = useState(false);
+
+  useEffect(() => {
+    if (isBankModalOpen && bankClasses.length === 0) {
+      Promise.all([
+        api.get('/api/classes?limit=5000'),
+        api.get('/api/subjects?limit=5000')
+      ]).then(([clsRes, subRes]) => {
+        const allC = clsRes.data?.data || [];
+        const uniqueClasses: any[] = [];
+        const seen = new Set();
+        for (const c of allC) {
+          if (!seen.has(c.name)) {
+            seen.add(c.name);
+            uniqueClasses.push(c);
+          }
+        }
+        setBankClasses(uniqueClasses);
+        setBankSubjects(subRes.data?.data || []);
+      }).catch(console.error);
+    }
+  }, [isBankModalOpen]);
+
+  useEffect(() => {
+    if (!isBankModalOpen) return;
+    setBankLoading(true);
+    const params = new URLSearchParams();
+    if (bankFilters.classId) params.append('classId', bankFilters.classId);
+    if (bankFilters.subjectId) params.append('subjectId', bankFilters.subjectId);
+    if (bankFilters.difficulty) params.append('difficulty', bankFilters.difficulty);
+    
+    api.get(`/api/master-questions?${params.toString()}`)
+      .then(res => setBankQuestions(res.data?.data || []))
+      .catch(console.error)
+      .finally(() => setBankLoading(false));
+  }, [isBankModalOpen, bankFilters]);
+
+  const toggleBankSelection = (id: string) => {
+    setBankSelectedIds(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(id)) newSet.delete(id);
+      else newSet.add(id);
+      return newSet;
+    });
+  };
+
+  const handleImportSelected = () => {
+    const selected = bankQuestions.filter(q => bankSelectedIds.has(q.id));
+    if (selected.length === 0) {
+      toast.error('No questions selected');
+      return;
+    }
+
+    let generatedText = '\n\n';
+    const currentContent = subjectContents[activeSubjectTab] || '';
+    const lines = currentContent.split('\n');
+    let maxQ = 0;
+    for (const line of lines) {
+      const match = line.match(/^(\d+)\.\s/);
+      if (match) {
+        const num = parseInt(match[1], 10);
+        if (num > maxQ) maxQ = num;
+      }
+    }
+
+    const newAnswers = { ...(answerKeys[activeSubjectTab] || {}) };
+
+    selected.forEach((q, i) => {
+      const qNum = maxQ + i + 1;
+      generatedText += `${qNum}. ${q.questionText}\n`;
+      if (q.imageUrl) {
+        generatedText += `[IMAGE:${q.imageUrl}]\n`;
+      }
+      try {
+        const opts = JSON.parse(q.options || '[]');
+        opts.forEach((opt: string, idx: number) => {
+           generatedText += `(${String.fromCharCode(65 + idx)}) ${opt}\n`;
+        });
+      } catch (e) {}
+      generatedText += '\n';
+      
+      // Save correct answer mapped to option letter (A, B, C, D)
+      // Since correctAnswer in DB is the full text, we need to find its letter index
+      let correctLetter = '?';
+      try {
+         const opts = JSON.parse(q.options || '[]');
+         const cIndex = opts.findIndex((o: string) => o === q.correctAnswer);
+         if (cIndex !== -1) {
+            correctLetter = String.fromCharCode(65 + cIndex);
+         }
+      } catch(e){}
+      newAnswers[qNum.toString()] = correctLetter;
+    });
+
+    setSubjectContents(prev => ({ 
+      ...prev, 
+      [activeSubjectTab]: (prev[activeSubjectTab] || '').trim() + generatedText 
+    }));
+    setAnswerKeys(prev => ({ ...prev, [activeSubjectTab]: newAnswers }));
+    
+    setIsBankModalOpen(false);
+    setBankSelectedIds(new Set());
+    toast.success(`Imported ${selected.length} questions from Master Bank!`);
+  };
   
   // Settings State
   const [activeAiModel, setActiveAiModel] = useState<string>(() => localStorage.getItem('jy_active_ai_model') || 'gemini');
@@ -128,17 +242,22 @@ export const MCQPaperGeneratorPage = () => {
   const serializeContent = (): string => {
     const data = {
       subjectContents,
-      inlineImages
+      inlineImages,
+      answerKeys
     };
     return "<!--MCQ_DATA_V2-->\n" + JSON.stringify(data);
   };
 
-  const deserializeContent = (raw: string): { textData: Record<string, string>; images: Record<string, FloatingImage> } => {
+  const deserializeContent = (raw: string): { textData: Record<string, string>; images: Record<string, FloatingImage>; keys: Record<string, Record<string, string>> } => {
     if (raw.startsWith("<!--MCQ_DATA_V2-->\n")) {
       try {
         const jsonStr = raw.replace("<!--MCQ_DATA_V2-->\n", "");
         const parsed = JSON.parse(jsonStr);
-        return { textData: parsed.subjectContents || {}, images: parsed.inlineImages || {} };
+        return { 
+          textData: parsed.subjectContents || {}, 
+          images: parsed.inlineImages || {},
+          keys: parsed.answerKeys || {}
+        };
       } catch (e) {
         console.error("Failed to parse V2 data", e);
       }
@@ -164,7 +283,8 @@ export const MCQPaperGeneratorPage = () => {
     }
     
     textContent = textContent.replace(/\[IMG:([a-z0-9]+)\]/g, '');
-    return { textData: { 'General': textContent }, images: migratedImages };
+    
+    return { textData: { 'General': textContent }, images: migratedImages, keys: {} };
   };
 
   const handlePrint = () => {
@@ -537,6 +657,7 @@ export const MCQPaperGeneratorPage = () => {
       setSubjectContents({
         'Telugu': '1. What is 25% of 200?\n(A) 25\n(B) 50\n(C) 75\n(D) 100\n\n2. Solve for x: $2x + 5 = 15$\n(A) 2\n(B) 4\n(C) 5\n(D) 10\n\n3. The perimeter of a rectangle is 40 cm. If its length is 12 cm, what is its breadth?\n(A) 8 cm\n(B) 10 cm\n(C) 12 cm\n(D) 16 cm'
       });
+      setAnswerKeys({});
       setActiveSubjectTab('Telugu');
       setInlineImages({});
       return;
@@ -554,8 +675,9 @@ export const MCQPaperGeneratorPage = () => {
         setExamDate(p.examDate || '');
         setTime(p.time || '');
         setInstructions(p.instructions || '');
-        const { textData, images } = deserializeContent(p.content || '');
+        const { textData, images, keys } = deserializeContent(p.content || '');
         setSubjectContents(textData);
+        setAnswerKeys(keys);
         if (p.examSubject) {
           const loadedSubjects = p.examSubject.split(', ');
           if (loadedSubjects.length > 0 && loadedSubjects[0] !== '') {
@@ -678,8 +800,16 @@ export const MCQPaperGeneratorPage = () => {
           </button>
           
           <button
+            onClick={() => setIsBankModalOpen(true)}
+            className="px-3 py-1.5 md:px-4 md:py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg md:rounded-xl hover:shadow-lg hover:shadow-blue-500/30 font-bold text-xs md:text-sm md:font-medium transition-all flex items-center gap-1.5 md:gap-2 shadow-sm"
+          >
+            <Database className="w-3.5 h-3.5 md:w-4 md:h-4" />
+            <span className="hidden sm:inline">Import from Bank</span>
+          </button>
+          
+          <button
             onClick={() => setIsAiModalOpen(true)}
-            className="px-3 py-1.5 md:px-4 md:py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg md:rounded-xl hover:shadow-lg hover:shadow-purple-500/30 font-bold text-xs md:text-sm md:font-medium transition-all flex items-center gap-1.5 md:gap-2 shadow-sm"
+            className="px-3 py-1.5 md:px-4 md:py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg md:rounded-xl hover:shadow-lg hover:shadow-purple-500/30 font-bold text-xs md:text-sm md:font-medium transition-all flex items-center gap-1.5 md:gap-2 shadow-sm"
           >
             <Sparkles className="w-3.5 h-3.5 md:w-4 md:h-4" />
             <span className="hidden sm:inline">AI Gen</span>
@@ -694,9 +824,17 @@ export const MCQPaperGeneratorPage = () => {
           </button>
 
           <button
+            onClick={() => setIsAnswerKeyModalOpen(true)}
+            className="px-3 py-1.5 md:px-4 md:py-2 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-lg md:rounded-xl hover:shadow-lg hover:shadow-emerald-500/30 font-bold text-xs md:text-sm md:font-medium transition-all flex items-center gap-1.5 md:gap-2 shadow-sm"
+          >
+            <CheckSquare className="w-3.5 h-3.5 md:w-4 md:h-4" />
+            <span className="hidden sm:inline">Answer Key</span>
+          </button>
+
+          <button
             onClick={handleSave}
             disabled={isSaving}
-            className="px-3 py-1.5 md:px-4 md:py-2 bg-emerald-600 text-white rounded-lg md:rounded-xl hover:bg-emerald-700 font-bold text-xs md:text-sm md:font-medium transition-all flex items-center gap-1.5 md:gap-2 disabled:opacity-60 shadow-sm"
+            className="px-3 py-1.5 md:px-4 md:py-2 bg-indigo-600 text-white rounded-lg md:rounded-xl hover:bg-indigo-700 font-bold text-xs md:text-sm md:font-medium transition-all flex items-center gap-1.5 md:gap-2 disabled:opacity-60 shadow-sm"
           >
             <Save className="w-3.5 h-3.5 md:w-4 md:h-4" />
             <span className="hidden sm:inline">{isSaving ? 'Saving...' : paperId ? 'Update' : 'Save'}</span>
@@ -1309,6 +1447,180 @@ export const MCQPaperGeneratorPage = () => {
               >
                 Close
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Import from Bank Modal */}
+      {isBankModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setIsBankModalOpen(false)}></div>
+          <div className="relative bg-white w-full max-w-5xl h-[85vh] rounded-2xl shadow-2xl flex flex-col border border-slate-200 overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between p-5 border-b border-slate-100 bg-white">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600">
+                  <Database className="w-5 h-5" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-slate-800">Import from Master Question Bank</h2>
+                  <p className="text-sm text-slate-500">Select questions to add to {activeSubjectTab}</p>
+                </div>
+              </div>
+              <button onClick={() => setIsBankModalOpen(false)} className="p-2 hover:bg-slate-100 rounded-full transition-colors">
+                <X className="w-5 h-5 text-slate-400" />
+              </button>
+            </div>
+            
+            <div className="flex flex-1 overflow-hidden">
+              {/* Left Sidebar: Filters */}
+              <div className="w-64 bg-slate-50 border-r border-slate-100 p-5 overflow-y-auto hidden md:block">
+                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Filters</h3>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-600 mb-1">Class</label>
+                    <select className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none" value={bankFilters.classId} onChange={e => setBankFilters({ ...bankFilters, classId: e.target.value })}>
+                      <option value="">All Classes</option>
+                      {bankClasses.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-600 mb-1">Subject</label>
+                    <select className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none" value={bankFilters.subjectId} onChange={e => setBankFilters({ ...bankFilters, subjectId: e.target.value })}>
+                      <option value="">All Subjects</option>
+                      {bankSubjects.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-600 mb-1">Difficulty</label>
+                    <select className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none" value={bankFilters.difficulty} onChange={e => setBankFilters({ ...bankFilters, difficulty: e.target.value })}>
+                      <option value="">All Difficulties</option>
+                      <option value="EASY">Easy</option>
+                      <option value="MEDIUM">Medium</option>
+                      <option value="HARD">Hard</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Right Side: Questions List */}
+              <div className="flex-1 bg-white flex flex-col overflow-hidden">
+                <div className="flex-1 overflow-y-auto p-5 custom-scrollbar">
+                  {bankLoading ? (
+                    <div className="flex items-center justify-center h-full text-slate-400">Loading questions...</div>
+                  ) : bankQuestions.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center h-full text-slate-400">
+                      <Database className="w-12 h-12 mb-3 text-slate-200" />
+                      <p>No questions found.</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {bankQuestions.map(q => {
+                        const isSelected = bankSelectedIds.has(q.id);
+                        return (
+                          <div 
+                            key={q.id} 
+                            onClick={() => toggleBankSelection(q.id)}
+                            className={`p-4 rounded-xl border-2 cursor-pointer transition-all flex gap-4 ${isSelected ? 'border-indigo-500 bg-indigo-50/30' : 'border-slate-100 hover:border-slate-300 bg-white'}`}
+                          >
+                            <div className="mt-1">
+                              {isSelected ? <CheckSquare className="w-5 h-5 text-indigo-600" /> : <Square className="w-5 h-5 text-slate-300" />}
+                            </div>
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-1.5">
+                                <span className="px-2 py-0.5 bg-slate-100 text-slate-600 text-[10px] font-bold rounded-md">{q.subject?.name}</span>
+                                <span className="px-2 py-0.5 bg-slate-100 text-slate-600 text-[10px] font-bold rounded-md">{q.chapterName}</span>
+                                <span className={`px-2 py-0.5 text-[10px] font-bold rounded-md ${q.difficulty === 'HARD' ? 'bg-rose-50 text-rose-600' : q.difficulty === 'MEDIUM' ? 'bg-amber-50 text-amber-600' : 'bg-emerald-50 text-emerald-600'}`}>{q.difficulty}</span>
+                              </div>
+                              <p className="text-sm font-semibold text-slate-800 line-clamp-2">{q.questionText}</p>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+                
+                {/* Footer Action */}
+                <div className="p-4 border-t border-slate-100 bg-slate-50 flex justify-between items-center">
+                  <div className="text-sm font-medium text-slate-600">
+                    <span className="font-bold text-indigo-600">{bankSelectedIds.size}</span> questions selected
+                  </div>
+                  <div className="flex gap-3">
+                    <button onClick={() => setIsBankModalOpen(false)} className="px-4 py-2 bg-white border border-slate-200 text-slate-600 font-semibold rounded-xl hover:bg-slate-50">
+                      Cancel
+                    </button>
+                    <button onClick={handleImportSelected} disabled={bankSelectedIds.size === 0} className="px-6 py-2 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 disabled:opacity-50 transition-colors">
+                      Add to Paper
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Answer Key Modal */}
+      {isAnswerKeyModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 print:block print:inset-auto print:relative print:p-0">
+          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm print:hidden" onClick={() => setIsAnswerKeyModalOpen(false)}></div>
+          <div className="relative bg-white w-full max-w-3xl max-h-[85vh] rounded-2xl shadow-2xl flex flex-col border border-slate-200 overflow-hidden animate-in zoom-in-95 duration-200 print:shadow-none print:border-none print:h-auto print:max-h-none print:max-w-none">
+            <div className="flex items-center justify-between p-5 border-b border-slate-100 bg-white print:hidden">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-teal-50 flex items-center justify-center text-teal-600">
+                  <CheckSquare className="w-5 h-5" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-slate-800">Answer Key</h2>
+                  <p className="text-sm text-slate-500">Correct answers for imported questions</p>
+                </div>
+              </div>
+              <button onClick={() => setIsAnswerKeyModalOpen(false)} className="p-2 hover:bg-slate-100 rounded-full transition-colors">
+                <X className="w-5 h-5 text-slate-400" />
+              </button>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto p-6 bg-slate-50 custom-scrollbar print:bg-white print:p-0 print:overflow-visible">
+              <div className="hidden print:block text-center mb-8">
+                <h1 className="text-2xl font-bold">{examName} - Answer Key</h1>
+              </div>
+              {Object.keys(answerKeys).length === 0 || Object.values(answerKeys).every(obj => Object.keys(obj).length === 0) ? (
+                <div className="flex flex-col items-center justify-center py-12 text-slate-400 print:hidden">
+                  <BookOpen className="w-12 h-12 mb-3 text-slate-200" />
+                  <p>No answers available. Import questions from the Master Bank to see the answer key.</p>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  {Object.entries(answerKeys).map(([subject, keys]) => {
+                    if (Object.keys(keys).length === 0) return null;
+                    return (
+                      <div key={subject} className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm print:shadow-none print:border-none">
+                        <div className="bg-slate-100 px-4 py-2 border-b border-slate-200 font-bold text-slate-700 print:bg-white print:border-b-2 print:border-black print:px-0">
+                          {subject}
+                        </div>
+                        <div className="p-4 grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-4 print:p-0 print:mt-4 print:grid-cols-5">
+                          {Object.entries(keys).sort((a, b) => parseInt(a[0]) - parseInt(b[0])).map(([qNum, ans]) => (
+                            <div key={qNum} className="flex items-center justify-between p-2 rounded-lg bg-slate-50 border border-slate-100 print:border-slate-300 print:bg-white print:break-inside-avoid">
+                              <span className="text-xs font-semibold text-slate-500 print:text-black">Q.{qNum}</span>
+                              <span className="text-sm font-bold text-teal-600 print:text-black">{ans}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+            
+            <div className="p-4 border-t border-slate-100 bg-white flex justify-end print:hidden">
+               <button 
+                 onClick={() => window.print()}
+                 className="px-4 py-2 bg-slate-800 text-white font-medium rounded-xl hover:bg-slate-900 transition-colors shadow-sm flex items-center gap-2"
+               >
+                 <Printer className="w-4 h-4" /> Print Key
+               </button>
             </div>
           </div>
         </div>

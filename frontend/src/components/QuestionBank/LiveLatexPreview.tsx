@@ -112,8 +112,8 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
       fixedText = fixedText.replace(/\\\\\]/g, '\\]');
       fixedText = fixedText.replace(/\\\\\[/g, '\\[');
 
-      // We removed the [IMG:id] replacement because images are now floating
-      let withImages = fixedText.replace(/\[IMG:([a-z0-9]+)\]/g, '');
+      // Support for native inline images (from Master Question Bank)
+      let withImages = fixedText.replace(/\[IMAGE:(.*?)\]/g, '<img src="$1" style="max-width:100%; max-height:160px; object-fit:contain; margin-top:8px; display:block;" />');
 
       let normalized = withImages.replace(/\\\[([\s\S]*?)\\\]/g, '$$$$$1$$$$');
       normalized = normalized.replace(/\\\(([\s\S]*?)\\\)/g, '$$$1$$');
