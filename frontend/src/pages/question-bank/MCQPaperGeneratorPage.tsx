@@ -197,9 +197,36 @@ export const MCQPaperGeneratorPage = () => {
     const id = generateImageId();
     setInlineImages(prev => ({
       ...prev,
-      [id]: { dataUrl, x: 50, y: 50, width: 200, height: 200 }
+      [id]: dataUrl // Store as raw string to denote it's an inline editor image
     }));
-    toast.success('Image added! You can drag and resize it in the preview.');
+    
+    const textToInsert = `\n[IMAGE:${id}]\n`;
+    const textarea = textareaRef.current;
+    
+    if (textarea) {
+      const startPos = textarea.selectionStart;
+      const endPos = textarea.selectionEnd;
+      const text = subjectContents[activeSubjectTab] || '';
+      
+      const newText = text.substring(0, startPos) + textToInsert + text.substring(endPos);
+      
+      setSubjectContents(prev => ({
+        ...prev,
+        [activeSubjectTab]: newText
+      }));
+      
+      setTimeout(() => {
+        textarea.focus();
+        textarea.setSelectionRange(startPos + textToInsert.length, startPos + textToInsert.length);
+      }, 10);
+    } else {
+      setSubjectContents(prev => ({
+        ...prev,
+        [activeSubjectTab]: (prev[activeSubjectTab] || '') + textToInsert
+      }));
+    }
+    
+    toast.success('Image added inline! Delete the [IMAGE:id] text to remove it.');
   };
 
   const handleEditorPaste = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {

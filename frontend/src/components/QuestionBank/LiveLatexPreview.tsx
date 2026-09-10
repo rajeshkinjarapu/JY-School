@@ -112,8 +112,15 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
       fixedText = fixedText.replace(/\\\\\]/g, '\\]');
       fixedText = fixedText.replace(/\\\\\[/g, '\\[');
 
-      // Support for native inline images (from Master Question Bank)
-      let withImages = fixedText.replace(/\[IMAGE:(.*?)\]/g, '<img src="$1" style="max-width:100%; max-height:160px; object-fit:contain; margin-top:8px; display:block;" />');
+      // Support for native inline images and editor-inserted images
+      let withImages = fixedText.replace(/\[IMAGE:(.*?)\]/g, (match, urlOrId) => {
+        let src = urlOrId;
+        if (inlineImages && inlineImages[urlOrId]) {
+           const imgData = inlineImages[urlOrId];
+           src = typeof imgData === 'string' ? imgData : imgData.dataUrl;
+        }
+        return `<img src="${src}" style="max-width:100%; max-height:160px; object-fit:contain; margin-top:8px; margin-bottom:8px; display:block;" />`;
+      });
 
       let normalized = withImages.replace(/\\\[([\s\S]*?)\\\]/g, '$$$$$1$$$$');
       normalized = normalized.replace(/\\\(([\s\S]*?)\\\)/g, '$$$1$$');
@@ -372,15 +379,16 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
 
       </div>
 
-      {/* Floating Images Layer */}
+      {/* Floating Images Layer (Legacy support for old saved papers) */}
       {Object.entries(inlineImages).map(([id, imgData]) => {
-        // Handle migration from old string format
-        const isString = typeof imgData === 'string';
-        const dataUrl = isString ? imgData : (imgData as FloatingImage).dataUrl;
-        const x = isString ? 50 : (imgData as FloatingImage).x;
-        const y = isString ? 50 : (imgData as FloatingImage).y;
-        const width = isString ? 200 : (imgData as FloatingImage).width;
-        const height = isString ? 200 : (imgData as FloatingImage).height;
+        // Skip rendering as floating if it is a string (new inline format)
+        if (typeof imgData === 'string') return null;
+        
+        const dataUrl = imgData.dataUrl;
+        const x = imgData.x;
+        const y = imgData.y;
+        const width = imgData.width;
+        const height = imgData.height;
 
         return (
           <Rnd

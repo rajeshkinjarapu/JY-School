@@ -11,6 +11,8 @@
      - Implemented an Answer Key Modal that automatically tracks the correct options of all imported questions and saves them to the paper state for later printing.
 13. **API Performance Optimization (Lazy Loading Photos)**: Fixed massive lag on the Students & Teachers List page. Instead of returning huge Base64 strings in the JSON payload, built a new `GET /api/users/:id/photo` endpoint. The list API now returns this URL, allowing the browser to lazy-load photos asynchronously without freezing the app.
 14. **AI Answer Key Generator**: Integrated Gemini AI directly into the Answer Key Modal (`MCQPaperGeneratorPage.tsx`). Clicking "AI Auto-Solve" now reads the current paper content and solves all questions. The modal is specifically designed with a multi-column A4 print layout featuring the main school header, exam name, and print export capability.
+15. **OpenRouter & Ox Alpha Integration**: Added support for OpenRouter API in the Answer Key Generator settings. Configured the backend to use the powerful "Ox Alpha" (`stealth/ox-alpha`) model by default when the OpenRouter option is selected.
+16. **Flutter Progress Card Premium Redesign**: Completely overhauled `progress_card_native.dart` in the Flutter mobile app. Used `FittedBox` with an exact A4 aspect ratio (794x1123) to perfectly mirror the premium CSS layout of the web app's `ProgressCardTemplate.tsx`. This guarantees a pixel-perfect, highly professional A4 print look on any mobile screen.
 
 ## Important Configurations
 - **VPS IP**: `66.116.252.191`
