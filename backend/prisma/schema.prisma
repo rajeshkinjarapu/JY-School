@@ -148,7 +148,6 @@ model Class {
   substitutions    Substitute[]
   timetableHistory TimetableHistory[]
   competitiveExams CompetitiveExam[]
-  masterQuestions  MasterQuestion[]
 
   @@unique([name, section, academicYear])
 }
@@ -634,7 +633,7 @@ model CompetitiveExam {
 model MasterQuestion {
   id            String   @id @default(uuid())
   subjectId     String
-  classId       String?  
+  className     String?  // Manually entered class name
   chapterName   String
   topicName     String?
   difficulty    String   @default("MEDIUM")
@@ -651,7 +650,6 @@ model MasterQuestion {
   updatedAt     DateTime @updatedAt
 
   subject       Subject  @relation(fields: [subjectId], references: [id])
-  class         Class?   @relation(fields: [classId], references: [id])
 }
 
 model CompetitiveExamQuestion {

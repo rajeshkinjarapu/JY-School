@@ -38,7 +38,18 @@ export const getAll = async (req: AuthRequest, res: Response): Promise<void> => 
     prisma.teacher.count({ where }),
   ]);
 
-  paginatedResponse(res, teachers, total, page, limit, 'Teachers fetched');
+  const sanitizedTeachers = teachers.map(teacher => {
+    let avatarUrl = teacher.user.photoUrl;
+    if (avatarUrl && avatarUrl.startsWith('data:image')) {
+      avatarUrl = `/api/users/${teacher.user.id}/photo`;
+    }
+    return {
+      ...teacher,
+      user: { ...teacher.user, photoUrl: avatarUrl }
+    };
+  });
+
+  paginatedResponse(res, sanitizedTeachers, total, page, limit, 'Teachers fetched');
 };
 
 export const getById = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {

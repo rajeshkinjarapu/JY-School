@@ -100,7 +100,15 @@ export const getAll = async (req: AuthRequest, res: Response): Promise<void> => 
     prisma.user.count({ where }),
   ]);
 
-  paginatedResponse(res, users, total, page, limit, 'Users fetched');
+  const sanitizedUsers = users.map(user => {
+    let avatarUrl = user.photoUrl;
+    if (avatarUrl && avatarUrl.startsWith('data:image')) {
+      avatarUrl = `/api/users/${user.id}/photo`;
+    }
+    return { ...user, photoUrl: avatarUrl };
+  });
+
+  paginatedResponse(res, sanitizedUsers, total, page, limit, 'Users fetched');
 };
 
 export const getById = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
@@ -115,6 +123,40 @@ export const getById = async (req: AuthRequest, res: Response, next: NextFunctio
   });
   if (!user) return next(createError('User not found', 404));
   successResponse(res, user, 'User fetched');
+};
+
+export const getUserPhoto = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  const id = req.params.id as string;
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id },
+      select: { photoUrl: true }
+    });
+
+    if (!user || !user.photoUrl) {
+      return next(createError('Photo not found', 404));
+    }
+
+    const photoUrl = user.photoUrl;
+
+    if (photoUrl.startsWith('data:image')) {
+      const matches = photoUrl.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
+      if (!matches || matches.length !== 3) {
+        return next(createError('Invalid photo format', 400));
+      }
+      const type = matches[1];
+      const buffer = Buffer.from(matches[2], 'base64');
+      res.set('Content-Type', type);
+      res.set('Cache-Control', 'public, max-age=86400'); // Cache for 1 day
+      res.send(buffer);
+    } else if (photoUrl.startsWith('http')) {
+      res.redirect(photoUrl);
+    } else {
+      res.redirect(`/${photoUrl.replace(/^\/+/, '')}`);
+    }
+  } catch (error) {
+    next(error);
+  }
 };
 
 export const createUser = async (req: Request, res: Response, next: NextFunction): Promise<void> => {

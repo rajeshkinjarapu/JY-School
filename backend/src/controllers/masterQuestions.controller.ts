@@ -8,16 +8,16 @@ import { generateQuizQuestions } from '../utils/gemini';
 
 export const getMasterQuestions = async (req: Request, res: Response) => {
   try {
-    const { subjectId, classId, chapterName, difficulty } = req.query;
+    const { subjectId, className, chapterName, difficulty } = req.query;
     const filter: any = {};
     if (subjectId) filter.subjectId = String(subjectId);
-    if (classId) filter.classId = String(classId);
+    if (className) filter.className = String(className);
     if (chapterName) filter.chapterName = String(chapterName);
     if (difficulty) filter.difficulty = String(difficulty);
 
     const questions = await prisma.masterQuestion.findMany({
       where: filter,
-      include: { subject: true, class: true },
+      include: { subject: true },
       orderBy: { createdAt: 'desc' }
     });
     res.json({ success: true, data: questions });
@@ -29,11 +29,11 @@ export const getMasterQuestions = async (req: Request, res: Response) => {
 
 export const addMasterQuestion = async (req: Request, res: Response) => {
   try {
-    const { subjectId, classId, chapterName, topicName, difficulty, questionType, questionText, imageUrl, options, correctAnswer, marks, negativeMarks, explanation } = req.body;
+    const { subjectId, className, chapterName, topicName, difficulty, questionType, questionText, imageUrl, options, correctAnswer, marks, negativeMarks, explanation } = req.body;
     
     const q = await prisma.masterQuestion.create({
       data: {
-        subjectId, classId, chapterName, topicName, difficulty: difficulty || 'MEDIUM',
+        subjectId, className, chapterName, topicName, difficulty: difficulty || 'MEDIUM',
         questionType: questionType || 'MCQ', questionText, imageUrl, 
         options: JSON.stringify(options), correctAnswer, 
         marks: marks || 4, negativeMarks: negativeMarks || 1, explanation
@@ -46,9 +46,28 @@ export const addMasterQuestion = async (req: Request, res: Response) => {
   }
 };
 
+export const updateMasterQuestion = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { subjectId, className, chapterName, topicName, difficulty, questionType, questionText, imageUrl, options, correctAnswer, marks, negativeMarks, explanation } = req.body;
+    const q = await prisma.masterQuestion.update({
+      where: { id },
+      data: {
+        subjectId, className, chapterName, topicName, difficulty,
+        questionType, questionText, imageUrl, options: JSON.stringify(options),
+        correctAnswer, marks, negativeMarks, explanation
+      }
+    });
+    res.status(201).json({ success: true, data: q });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: 'Failed to add question to master bank' });
+  }
+};
+
 export const generateMasterQuestionsAI = async (req: Request, res: Response) => {
   try {
-    const { subjectId, classId, chapterName, prompt, count, difficulty } = req.body;
+    const { subjectId, className, chapterName, prompt, count, difficulty } = req.body;
     const file = (req as any).file; // from multer if file was uploaded
 
     let basePrompt: string;
@@ -58,18 +77,20 @@ Chapter: ${chapterName || 'General'}.
 Additional Instructions: ${prompt || 'Generate standard MCQ questions based on the content.'}.
 Return ONLY a valid JSON array. Each object must have: "questionText", "options" (array of 4 strings), "correctAnswer" (must match one option exactly), "explanation". Do not include markdown.`;
     } else {
-      basePrompt = `Generate ${count} ${difficulty} level multiple choice questions for the chapter '${chapterName}'. Focus: ${prompt}.
-Return ONLY a valid JSON array of objects with keys: "questionText", "options" (array of 4 strings), "correctAnswer" (must match one option exactly), "explanation" (short explanation). Do not include markdown code block formatting.`;
+      basePrompt = `Generate ${count || 5} ${difficulty || 'MEDIUM'} level multiple choice questions.
+Chapter: ${chapterName || 'General'}.
+Prompt: ${prompt || 'Generate standard MCQ questions'}.
+Return ONLY a valid JSON array. Each object must have: "questionText", "options" (array of 4 strings), "correctAnswer" (must match one option exactly), "explanation". Do not include markdown.`;
     }
 
-    const questionsData = await generateQuizQuestions(basePrompt, file);
-    
+    const generatedArray = await generateQuizQuestions(basePrompt, file);
+
     const savedQuestions = [];
-    for (const q of questionsData) {
+    for (const q of generatedArray) {
       const saved = await prisma.masterQuestion.create({
         data: {
           subjectId,
-          classId,
+          className,
           chapterName,
           questionText: q.questionText,
           questionType: 'MCQ',

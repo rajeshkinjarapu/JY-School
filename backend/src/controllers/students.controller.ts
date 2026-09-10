@@ -58,7 +58,18 @@ export const getAll = async (req: AuthRequest, res: Response, next: NextFunction
       prisma.student.count({ where }),
     ]);
 
-    const responseBody = { success: true, data: students, pagination: { total, page, limit, totalPages: Math.ceil(total / limit) } };
+    const sanitizedStudents = students.map(student => {
+      let avatarUrl = student.user.photoUrl;
+      if (avatarUrl && avatarUrl.startsWith('data:image')) {
+        avatarUrl = `/api/users/${student.user.id}/photo`;
+      }
+      return {
+        ...student,
+        user: { ...student.user, photoUrl: avatarUrl }
+      };
+    });
+
+    const responseBody = { success: true, data: sanitizedStudents, pagination: { total, page, limit, totalPages: Math.ceil(total / limit) } };
     if (useCache) {
       await cache.set(cacheKey, responseBody, 180); // 3 min cache
     }

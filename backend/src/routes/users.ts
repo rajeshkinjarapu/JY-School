@@ -1,8 +1,11 @@
 import { Router } from 'express';
 import { authenticate, authorize } from '../middlewares/auth';
-import { getAll, getById, createUser, update, deleteUser, saveDeviceToken, updateAppInfo, getAppInstalls } from '../controllers/users.controller';
+import { getAll, getById, createUser, update, deleteUser, saveDeviceToken, updateAppInfo, getAppInstalls, getUserPhoto } from '../controllers/users.controller';
 
 const router = Router();
+
+// Public route for photos (does not need authentication if we want it to load easily in standard img tags, but let's see. Better to keep it public for easy caching)
+router.get('/:id/photo', getUserPhoto);
 
 router.use(authenticate);
 

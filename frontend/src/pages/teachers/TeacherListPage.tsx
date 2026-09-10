@@ -242,6 +242,7 @@ export const TeacherListPage: React.FC = () => {
                             <img
                               src={getPhotoUrl(teacher.user?.photoUrl)}
                               alt={name}
+                              loading="lazy"
                               className="w-12 h-16 rounded object-cover border border-gray-300 shadow-sm"
                             />
                           ) : (
