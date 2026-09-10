@@ -1,16 +1,14 @@
 # Project State: JY School ERP
 
 ## Latest Updates (2026-09-10)
-- **App Startup Crash Fix (Flutter)**: Fixed intermittent crashes on app startup caused by outdated or corrupted data in `SharedPreferences`. Added strict schema validation (`is Map<String, dynamic>` and `containsKey('role')`) in `main.dart` and `main_layout.dart`. If the cached JSON fails validation, the app now automatically clears the storage and safely routes the user to the Login screen without crashing.
-- **Progress Card Data Fix**: Fixed the issue in Flutter where the marks table was not rendering properly. The app was looking for `maxMarks` instead of `max` from the API. The `ProgressCardNative` widget has been updated to handle both `max` and `maxMarks` safely, along with correct 'AB' (Absent) calculation.
-- **Progress Card PDF Export**: The PDF generation in `SingleProgressCardScreen` now dynamically creates the filename using the student's name (e.g. `ALLAMSETTY_LIKHITHA_ProgressCard.pdf`).
-- **Null Safety Fixes**: Fixed a crash in `SingleProgressCardScreen` when the `className` was null or missing a hyphen separator.
-- **Marks Entry Screen Redesign**: Completely redesigned the `SingleSubjectMarksEntryScreen` (All Subjects Marks) to have a premium, beautiful, and colorful UI with vibrant gradients, custom student avatars, and a modern card-based layout.
-- **OpenRouter (stealth/ox-alpha)**: Integrated OpenRouter and `stealth/ox-alpha` model for the backend MCQ Generation service.
-- **MCQ Generator Image Tagging**: Fixed how the backend parses MCQ generator image texts, wrapping them safely in `[IMAGE:id]` markers.
+- **Automatic Logout (2 days)**: Updated the backend JWT token expiration time from 365 days to 2 days (`JWT_EXPIRES_IN=2d`). The Flutter app is already equipped to handle `401 Unauthorized` responses and will automatically redirect the user to the login screen, effectively forcing a logout every 2 days.
+- **App Startup Crash Fix (Flutter)**: Fixed intermittent crashes on app startup caused by outdated or corrupted data in `SharedPreferences`. Added strict schema validation in `main.dart` and `main_layout.dart`.
+- **Progress Card Data Fix**: Fixed the issue in Flutter where the marks table was not rendering properly due to mismatched JSON keys (`max` vs `maxMarks`).
+- **Progress Card PDF Export**: PDF filename is dynamically generated with the student's name.
+- **Marks Entry Screen Redesign**: Redesigned the `SingleSubjectMarksEntryScreen` (All Subjects Marks) to have a premium, beautiful, and colorful UI.
 
 ## Pending Manual Actions for User
-- **VPS Backend Schema Deployment**: The local Prisma schema was updated with `status` and `scheduledFor` fields. These changes must be deployed to the VPS database using:
+- **VPS Backend Deployment (CRITICAL)**: The backend token expiration logic and Prisma schema (`status`, `scheduledFor`) were updated. These changes must be deployed to the VPS database and server using:
   ```bash
   ssh root@66.116.252.191
   cd /root/JY-School/backend
