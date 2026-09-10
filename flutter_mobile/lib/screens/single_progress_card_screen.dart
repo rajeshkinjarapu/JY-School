@@ -99,8 +99,8 @@ class _SingleProgressCardScreenState extends State<SingleProgressCardScreen> {
         _mappedData = {
           'studentName': targetStudent['name'],
           'rollNo': targetStudent['rollNo'],
-          'className': targetStudent['className']?.split('-')[0]?.trim() ?? widget.className,
-          'section': targetStudent['className']?.split('-').length > 1 ? targetStudent['className']?.split('-')[1]?.trim() : "",
+          'className': (targetStudent['className']?.toString() ?? '').split('-').isNotEmpty ? targetStudent['className']?.toString().split('-')[0].trim() : widget.className,
+          'section': (targetStudent['className']?.toString() ?? '').split('-').length > 1 ? targetStudent['className']?.toString().split('-')[1].trim() : "",
           'mobile': targetStudent['mobile'],
           'rank': targetStudent['rank'],
           'photo': targetStudent['photo'] != null ? 'http://66.116.252.191:19998${targetStudent['photo']}' : '',
@@ -158,7 +158,9 @@ class _SingleProgressCardScreenState extends State<SingleProgressCardScreen> {
       );
 
       final Uint8List pdfBytes = await pdf.save();
-      final String fileName = '${_mappedData?['studentName']?.toString().replaceAll(' ', '_') ?? 'Student'}_ProgressCard.pdf';
+      final String rawName = _mappedData?['studentName']?.toString() ?? 'Student';
+      final String cleanName = rawName.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_').replaceAll(RegExp(r'_+'), '_');
+      final String fileName = '${cleanName}_ProgressCard.pdf';
 
       // 3. Save to temp dir
       final dir = await getTemporaryDirectory();

@@ -1,27 +1,34 @@
-# JY School Project State
+# Project State: JY School ERP
 
-## Recent Accomplishments
-1. **Master Question Bank - Professional Re-architecture**:
-   - **Phase 1 (API & Dropdowns)**: Fixed `?limit=5000` pagination issue for `classes` and `subjects`. Implemented Smart Dependent Dropdowns.
-   - **Phase 2 (Premium Dashboard UI)**: Completely redesigned `MasterQuestionBankPage.tsx`. Built a two-column layout with a sleek Sidebar for Filters & Bank Stats. Transformed the questions list into a premium Accordion/Card layout.
-   - **Phase 3 & 4 (Paper Generator Integration)**: Built a powerful bridge between the Master Bank and the MCQ Paper Generator. 
-     - Added an "Import from Bank" Modal with advanced Class, Subject, and Difficulty filters.
-     - Implemented a Text/Image Injection Engine that perfectly formats database questions (Q + Options) into LaTeX markdown.
-     - Upgraded `LiveLatexPreview` to natively support `[IMAGE:url]` tags inside the generated paper, allowing diagrams from the bank to render seamlessly.
-     - Implemented an Answer Key Modal that automatically tracks the correct options of all imported questions and saves them to the paper state for later printing.
-13. **API Performance Optimization (Lazy Loading Photos)**: Fixed massive lag on the Students & Teachers List page. Instead of returning huge Base64 strings in the JSON payload, built a new `GET /api/users/:id/photo` endpoint. The list API now returns this URL, allowing the browser to lazy-load photos asynchronously without freezing the app.
-14. **AI Answer Key Generator**: Integrated Gemini AI directly into the Answer Key Modal (`MCQPaperGeneratorPage.tsx`). Clicking "AI Auto-Solve" now reads the current paper content and solves all questions. The modal is specifically designed with a multi-column A4 print layout featuring the main school header, exam name, and print export capability.
-15. **OpenRouter & Ox Alpha Integration**: Added support for OpenRouter API in the Answer Key Generator settings. Configured the backend to use the powerful "Ox Alpha" (`stealth/ox-alpha`) model by default when the OpenRouter option is selected.
-16. **Flutter Progress Card Premium Redesign**: Completely overhauled `progress_card_native.dart` in the Flutter mobile app. Used `FittedBox` with an exact A4 aspect ratio (794x1123) to perfectly mirror the premium CSS layout of the web app's `ProgressCardTemplate.tsx`. This guarantees a pixel-perfect, highly professional A4 print look on any mobile screen.
+## Latest Updates (2026-09-10)
+- **Progress Card Data Fix**: Fixed the issue in Flutter where the marks table was not rendering properly. The app was looking for `maxMarks` instead of `max` from the API. The `ProgressCardNative` widget has been updated to handle both `max` and `maxMarks` safely, along with correct 'AB' (Absent) calculation.
+- **Progress Card PDF Export**: The PDF generation in `SingleProgressCardScreen` now dynamically creates the filename using the student's name (e.g. `ALLAMSETTY_LIKHITHA_ProgressCard.pdf`).
+- **Null Safety Fixes**: Fixed a crash in `SingleProgressCardScreen` when the `className` was null or missing a hyphen separator.
+- **Marks Entry Screen Redesign**: Completely redesigned the `SingleSubjectMarksEntryScreen` (All Subjects Marks) to have a premium, beautiful, and colorful UI with vibrant gradients, custom student avatars, and a modern card-based layout.
+- **OpenRouter (stealth/ox-alpha)**: Integrated OpenRouter and `stealth/ox-alpha` model for the backend MCQ Generation service.
+- **MCQ Generator Image Tagging**: Fixed how the backend parses MCQ generator image texts, wrapping them safely in `[IMAGE:id]` markers.
 
-## Important Configurations
-- **VPS IP**: `66.116.252.191`
-- **Backend Port**: `19998`
-- **Frontend Port**: `19999`
-- **Database**: PostgreSQL (Supabase / Local)
-- **Deployment**: Must use Git to push locally, then pull on VPS, run `npm run build` and `pm2 restart` on both frontend and backend.
-- **Language**: Interactions must be strictly in Telugu.
+## Pending Manual Actions for User
+- **VPS Backend Schema Deployment**: The local Prisma schema was updated with `status` and `scheduledFor` fields. These changes must be deployed to the VPS database using:
+  ```bash
+  ssh root@66.116.252.191
+  cd /root/JY-School/backend
+  git pull origin main
+  npx prisma generate
+  npx prisma db push
+  npm run build
+  pm2 restart backend
+  ```
+- **Flutter App Update**: The new UI and progress card fixes need to be patched to users using Shorebird:
+  ```bash
+  cd "c:\Users\SRI\Desktop\JY School\JY-School-main\flutter_mobile"
+  shorebird patch android --flavor student --target lib/main_student.dart
+  shorebird patch android --flavor teacher --target lib/main_teacher.dart
+  shorebird patch android --flavor admin --target lib/main_admin.dart
+  ```
 
-## Next Steps
-- Implement Bulk Excel Upload for Master Questions if requested.
-- Check Flutter app to ensure feature parity for Student mock tests.
+## Known Architecture Context
+- **Backend (Node.js API)**: Hosted on VPS at `http://66.116.252.191:19998`
+- **Frontend (Web App)**: Hosted on VPS at `http://66.116.252.191:19999`
+- **Databases**: Supabase (Postgres) primary; local Postgres on VPS (`jy_school_local`) for heavy items (Question Papers).
+- **Mobile Apps**: Built with Flutter and managed via Shorebird for OTA patches.

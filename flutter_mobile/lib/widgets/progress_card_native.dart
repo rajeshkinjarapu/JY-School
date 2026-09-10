@@ -13,27 +13,35 @@ class ProgressCardNative extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final String studentName = data['studentName'] ?? "Student Name";
-    final String rollNo = data['rollNo'] ?? "Roll No";
-    final String className = data['className'] ?? "Class";
-    final String section = data['section'] ?? "Section";
-    final String mobile = data['mobile'] ?? "";
+    final String studentName = data['studentName']?.toString() ?? "Student Name";
+    final String rollNo = data['rollNo']?.toString() ?? "Roll No";
+    final String className = data['className']?.toString() ?? "Class";
+    final String section = data['section']?.toString() ?? "Section";
+    final String mobile = data['mobile']?.toString() ?? "";
     final String rank = data['rank']?.toString() ?? "";
-    final String academicYear = data['academicYear'] ?? "2026-2027";
-    final String location = data['location'] ?? "School Location";
-    final String photo = data['photo'] ?? "";
+    final String academicYear = data['academicYear']?.toString() ?? "2026-2027";
+    final String location = data['location']?.toString() ?? "School Location";
+    final String photo = data['photo']?.toString() ?? "";
     
-    final List<dynamic> marksList = data['marks'] ?? [];
+    final List<dynamic> rawMarks = data['marks'] is List ? data['marks'] : [];
+    final List<Map<String, dynamic>> marksList = rawMarks.whereType<Map<String, dynamic>>().toList();
+    
     double totalObtained = 0;
     double totalMax = 0;
     
     for (var m in marksList) {
-      totalObtained += double.tryParse(m['obtained']?.toString() ?? '0') ?? 0;
-      totalMax += double.tryParse(m['maxMarks']?.toString() ?? '100') ?? 100;
+      bool isAB = m['obtained']?.toString().toUpperCase() == 'AB' || m['remarks']?.toString().toUpperCase() == 'AB';
+      double obt = isAB ? 0 : (double.tryParse(m['obtained']?.toString() ?? '0') ?? 0);
+      double mx = double.tryParse(m['max']?.toString() ?? m['maxMarks']?.toString() ?? '100') ?? 100;
+      
+      totalObtained += obt;
+      totalMax += mx;
     }
     
     if (totalMax == 0) totalMax = 100;
     final double totalPct = (totalObtained / totalMax) * 100;
+    final double safeTotalPct = totalPct.isNaN || totalPct.isInfinite ? 0.0 : totalPct;
+    final double safeWidthFactor = (safeTotalPct / 100).clamp(0.0, 1.0);
 
     return Center(
       child: AspectRatio(
@@ -105,7 +113,7 @@ class ProgressCardNative extends StatelessWidget {
                               child: Column(
                                 children: [
                                   Text(
-                                    settings['schoolName'] ?? 'SRI VENKATESWARA JY SCHOOL',
+                                    settings['schoolName']?.toString() ?? 'SRI VENKATESWARA JY SCHOOL',
                                     style: const TextStyle(
                                       fontFamily: 'Times New Roman',
                                       fontSize: 28,
@@ -117,7 +125,7 @@ class ProgressCardNative extends StatelessWidget {
                                   ),
                                   const SizedBox(height: 2),
                                   Text(
-                                    settings['schoolSubtitle'] ?? '(IIT-JEE / NEET Foundation - Olympiads)',
+                                    settings['schoolSubtitle']?.toString() ?? '(IIT-JEE / NEET Foundation - Olympiads)',
                                     style: const TextStyle(
                                       fontFamily: 'Times New Roman',
                                       fontSize: 16,
@@ -128,7 +136,7 @@ class ProgressCardNative extends StatelessWidget {
                                   ),
                                   const SizedBox(height: 2),
                                   Text(
-                                    settings['address'] ?? 'Opp. Hero Showroom, SVL Paradise Campus, Narasannapeta',
+                                    settings['address']?.toString() ?? 'Opp. Hero Showroom, SVL Paradise Campus, Narasannapeta',
                                     style: GoogleFonts.outfit(
                                       fontSize: 13,
                                       color: const Color(0xFF5A7A8A),
@@ -138,7 +146,7 @@ class ProgressCardNative extends StatelessWidget {
                                   ),
                                   const SizedBox(height: 6),
                                   Text(
-                                    data['examName'] ?? 'JEE MAINS MODEL EXAMINATION - 8',
+                                    data['examName']?.toString() ?? 'JEE MAINS MODEL EXAMINATION - 8',
                                     style: GoogleFonts.outfit(
                                       fontSize: 22,
                                       color: const Color(0xFF0B1A33),
@@ -333,9 +341,11 @@ class ProgressCardNative extends StatelessWidget {
                                   int idx = entry.key;
                                   var m = entry.value;
                                   bool isEven = idx % 2 == 1;
-                                  double obt = double.tryParse(m['obtained']?.toString() ?? '0') ?? 0;
-                                  double mx = double.tryParse(m['maxMarks']?.toString() ?? '100') ?? 100;
-                                  double pct = mx > 0 ? (obt/mx)*100 : 0;
+                                  
+                                  bool isAB = m['obtained']?.toString().toUpperCase() == 'AB' || m['remarks']?.toString().toUpperCase() == 'AB';
+                                  double obt = isAB ? 0 : (double.tryParse(m['obtained']?.toString() ?? '0') ?? 0);
+                                  double mx = double.tryParse(m['max']?.toString() ?? m['maxMarks']?.toString() ?? '100') ?? 100;
+                                  double pct = (mx > 0 && !isAB) ? (obt/mx)*100 : 0;
                                   
                                   return Container(
                                     decoration: BoxDecoration(
@@ -349,12 +359,12 @@ class ProgressCardNative extends StatelessWidget {
                                           children: [
                                             const SizedBox(width: 4),
                                             Container(width: 10, height: 14, decoration: BoxDecoration(color: const Color(0xFF3498DB), borderRadius: BorderRadius.circular(2)), margin: const EdgeInsets.only(right: 10)),
-                                            Expanded(child: Text(m['subject'] ?? 'Unknown', style: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.w600, color: const Color(0xFF1A3A5A)))),
+                                            Expanded(child: Text(m['subject']?.toString() ?? 'Unknown', style: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.w600, color: const Color(0xFF1A3A5A)))),
                                           ],
                                         )),
-                                        Expanded(flex: 2, child: Center(child: Text(obt.toStringAsFixed(0), style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold, color: const Color(0xFF0B1A33))))),
+                                        Expanded(flex: 2, child: Center(child: Text(isAB ? 'AB' : obt.toStringAsFixed(0), style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold, color: isAB ? const Color(0xFFE74C3C) : const Color(0xFF0B1A33))))),
                                         Expanded(flex: 2, child: Center(child: Text(mx.toStringAsFixed(0), style: GoogleFonts.outfit(fontSize: 14, color: const Color(0xFF6A8AAA))))),
-                                        Expanded(flex: 2, child: Center(child: Text('${pct.toStringAsFixed(1)}%', style: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.bold, color: const Color(0xFF1A4A7A))))),
+                                        Expanded(flex: 2, child: Center(child: Text(isAB ? '0.0%' : '${pct.toStringAsFixed(1)}%', style: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.bold, color: const Color(0xFF1A4A7A))))),
                                       ],
                                     ),
                                   );
@@ -382,7 +392,7 @@ class ProgressCardNative extends StatelessWidget {
                                       )),
                                       Expanded(flex: 2, child: Center(child: Text(totalObtained.toStringAsFixed(0), style: GoogleFonts.outfit(fontSize: 19, fontWeight: FontWeight.w900, color: const Color(0xFFC0392B))))),
                                       Expanded(flex: 2, child: Center(child: Text(totalMax.toStringAsFixed(0), style: GoogleFonts.outfit(fontSize: 15, fontWeight: FontWeight.w700, color: const Color(0xFF6A8AAA))))),
-                                      Expanded(flex: 2, child: Center(child: Text('${totalPct.toStringAsFixed(1)}%', style: GoogleFonts.outfit(fontSize: 15, fontWeight: FontWeight.bold, color: const Color(0xFF1A4A7A))))),
+                                      Expanded(flex: 2, child: Center(child: Text('${safeTotalPct.toStringAsFixed(1)}%', style: GoogleFonts.outfit(fontSize: 15, fontWeight: FontWeight.bold, color: const Color(0xFF1A4A7A))))),
                                     ],
                                   ),
                                 ),
@@ -417,7 +427,7 @@ class ProgressCardNative extends StatelessWidget {
                               ),
                               alignment: Alignment.centerLeft,
                               child: FractionallySizedBox(
-                                widthFactor: totalPct / 100,
+                                widthFactor: safeWidthFactor,
                                 child: Container(
                                   decoration: BoxDecoration(
                                     gradient: const LinearGradient(colors: [Color(0xFF1A4A7A), Color(0xFF3498DB)]),
@@ -464,7 +474,7 @@ class ProgressCardNative extends StatelessWidget {
                                     ],
                                   ),
                                   const SizedBox(height: 4),
-                                  Text('${totalPct.toStringAsFixed(1)}%', style: GoogleFonts.outfit(fontSize: 46, fontWeight: FontWeight.w900, color: const Color(0xFFC0392B), height: 1.0, letterSpacing: -1.0)),
+                                  Text('${safeTotalPct.toStringAsFixed(1)}%', style: GoogleFonts.outfit(fontSize: 46, fontWeight: FontWeight.w900, color: const Color(0xFFC0392B), height: 1.0, letterSpacing: -1.0)),
                                 ],
                               ),
                               Row(
@@ -485,7 +495,7 @@ class ProgressCardNative extends StatelessWidget {
                         color: const Color(0xFF0B1A33),
                         alignment: Alignment.center,
                         child: Text(
-                          '★ This is a system-generated result card for ${data['examName'] ?? 'EXAMINATION'} ★',
+                          '★ This is a system-generated result card for ${data['examName']?.toString() ?? 'EXAMINATION'} ★',
                           style: GoogleFonts.outfit(fontSize: 11, fontWeight: FontWeight.w500, color: const Color(0xFFAABACA), letterSpacing: 0.5),
                         ),
                       )
