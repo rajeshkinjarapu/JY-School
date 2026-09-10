@@ -10,6 +10,7 @@
      - Upgraded `LiveLatexPreview` to natively support `[IMAGE:url]` tags inside the generated paper, allowing diagrams from the bank to render seamlessly.
      - Implemented an Answer Key Modal that automatically tracks the correct options of all imported questions and saves them to the paper state for later printing.
 13. **API Performance Optimization (Lazy Loading Photos)**: Fixed massive lag on the Students & Teachers List page. Instead of returning huge Base64 strings in the JSON payload, built a new `GET /api/users/:id/photo` endpoint. The list API now returns this URL, allowing the browser to lazy-load photos asynchronously without freezing the app.
+14. **AI Answer Key Generator**: Integrated Gemini AI directly into the Answer Key Modal (`MCQPaperGeneratorPage.tsx`). Clicking "AI Auto-Solve" now reads the current paper content and solves all questions. The modal is specifically designed with a multi-column A4 print layout featuring the main school header, exam name, and print export capability.
 
 ## Important Configurations
 - **VPS IP**: `66.116.252.191`

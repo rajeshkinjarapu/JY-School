@@ -1,4 +1,4 @@
-import { parseWithGemini, parseDocxWithGemini } from '../controllers/question-bank/import.controller';
+import { parseWithGemini, parseDocxWithGemini, generateAnswerKeyWithGemini } from '../controllers/question-bank/import.controller';
 import { bulkCreateQuestions } from '../controllers/question-bank/question.controller';
 import { Router } from 'express';
 import {
@@ -103,6 +103,7 @@ router.delete('/templates/:id', authenticate, authorize('SUPER_ADMIN', 'ADMIN'),
 
 // AI and Bulk Imports
 router.post('/questions/import-ai', authenticate, authorize('SUPER_ADMIN', 'ADMIN', 'TEACHER'), parseWithGemini);
+router.post('/questions/solve-ai', authenticate, authorize('SUPER_ADMIN', 'ADMIN', 'TEACHER'), generateAnswerKeyWithGemini);
 router.post('/questions/import-docx', authenticate, authorize('SUPER_ADMIN', 'ADMIN', 'TEACHER'), docxUpload.single('file'), parseDocxWithGemini);
 router.post('/questions/bulk', authenticate, authorize('SUPER_ADMIN', 'ADMIN', 'TEACHER'), bulkCreateQuestions);
 export default router;

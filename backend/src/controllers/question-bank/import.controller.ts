@@ -273,3 +273,60 @@ Return ONLY a raw JSON array (no markdown code blocks) where each element has:
     }
   }
 };
+
+/**
+ * generateAnswerKeyWithGemini
+ * Solves the provided question paper using Gemini AI and returns an answer key.
+ */
+export const generateAnswerKeyWithGemini = async (req: Request, res: Response) => {
+  try {
+    const { subjectContents, apiKey } = req.body;
+    
+    if (!subjectContents || typeof subjectContents !== 'object') {
+      return res.status(400).json({ message: 'subjectContents is required' });
+    }
+
+    const activeKey = apiKey || process.env.GEMINI_API_KEY;
+    if (!activeKey) throw new Error('Gemini API key is missing');
+
+    const ai = new GoogleGenAI({ apiKey: activeKey });
+    
+    const prompt = `You are an expert exam evaluator. I am providing you with the text of an exam paper. The paper may contain multiple subjects, each with a list of multiple-choice questions.
+
+Your job:
+- Read every question and its options carefully.
+- Determine the correct answer for each question.
+- Return ONLY a raw JSON object (no markdown code blocks) mapping the Subject Name to another object that maps Question Number to the Correct Option Letter (A, B, C, or D).
+
+Example Output Format:
+{
+  "Maths": {
+    "1": "A",
+    "2": "C"
+  },
+  "Physics": {
+    "26": "B"
+  }
+}
+
+Exam Paper Content:
+${JSON.stringify(subjectContents)}
+`;
+
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: [{ role: 'user', parts: [{ text: prompt }] }],
+      config: { responseMimeType: 'application/json' },
+    });
+
+    let answerKey = {};
+    if (response.text) {
+      answerKey = JSON.parse(response.text.replace(/\`\`\`json\n?|\`\`\`/g, ''));
+    }
+
+    return res.status(200).json({ answerKey });
+  } catch (error: any) {
+    console.error('generateAnswerKeyWithGemini error:', error);
+    return res.status(500).json({ message: error.message || 'Failed to generate answer key.' });
+  }
+};

@@ -64,6 +64,7 @@ export const MCQPaperGeneratorPage = () => {
   const [bankSubjects, setBankSubjects] = useState<any[]>([]);
   const [answerKeys, setAnswerKeys] = useState<Record<string, Record<string, string>>>({});
   const [isAnswerKeyModalOpen, setIsAnswerKeyModalOpen] = useState(false);
+  const [isAiSolving, setIsAiSolving] = useState(false);
 
   useEffect(() => {
     if (isBankModalOpen && bankClasses.length === 0) {
@@ -595,6 +596,36 @@ export const MCQPaperGeneratorPage = () => {
       console.error(error);
       setIsGenerating(false);
       toast.error("AI Generation failed: " + (error.response?.data?.message || error.message), { id: 'ai-gen' });
+    }
+  };
+
+  const handleAiSolve = async () => {
+    setIsAiSolving(true);
+    const toastId = toast.loading('AI is solving the question paper... Please wait.');
+    try {
+      let selectedKey = undefined;
+      if (activeAiModel === 'gemini') selectedKey = geminiApiKey;
+      const payload = {
+        subjectContents,
+        apiKey: selectedKey || undefined
+      };
+      const response = await api.post('/api/questions/solve-ai', payload);
+      const generatedKey = response.data.answerKey;
+      
+      if (generatedKey && Object.keys(generatedKey).length > 0) {
+         setAnswerKeys(prev => ({
+            ...prev,
+            ...generatedKey
+         }));
+         toast.success('AI successfully generated the answer key!', { id: toastId });
+      } else {
+         toast.error('AI failed to generate answers.', { id: toastId });
+      }
+    } catch (error: any) {
+      console.error(error);
+      toast.error("AI Solve failed: " + (error.response?.data?.message || error.message), { id: toastId });
+    } finally {
+      setIsAiSolving(false);
     }
   };
 
@@ -1582,28 +1613,35 @@ export const MCQPaperGeneratorPage = () => {
             </div>
             
             <div className="flex-1 overflow-y-auto p-6 bg-slate-50 custom-scrollbar print:bg-white print:p-0 print:overflow-visible">
-              <div className="hidden print:block text-center mb-8">
-                <h1 className="text-2xl font-bold">{examName} - Answer Key</h1>
+              <div className="hidden print:block text-center mb-6">
+                <div className="flex flex-col items-center border-b-2 border-black pb-4 mb-4">
+                  {logoBase64 && <img src={logoBase64} alt="School Logo" className="w-16 h-16 object-contain mb-2" />}
+                  <h1 className="text-2xl font-black uppercase font-serif tracking-wide">SRI VENKATESWARA JY SCHOOL</h1>
+                  <h2 className="text-sm font-bold">(IIT-JEE/NEET Foundation - Olympiads)</h2>
+                  <h3 className="text-xs font-semibold mt-1">Opp. Hero Showroom, SVL Paradise Campus, Narasannapeta</h3>
+                  <h2 className="text-lg font-bold mt-2 uppercase">{examName}</h2>
+                  <h3 className="text-md font-bold mt-1 underline">ANSWER KEY</h3>
+                </div>
               </div>
               {Object.keys(answerKeys).length === 0 || Object.values(answerKeys).every(obj => Object.keys(obj).length === 0) ? (
                 <div className="flex flex-col items-center justify-center py-12 text-slate-400 print:hidden">
                   <BookOpen className="w-12 h-12 mb-3 text-slate-200" />
-                  <p>No answers available. Import questions from the Master Bank to see the answer key.</p>
+                  <p>No answers available. Click "AI Auto-Solve" or import questions from the bank.</p>
                 </div>
               ) : (
-                <div className="space-y-6">
+                <div className="space-y-6 print:space-y-0 print:grid print:grid-cols-3 print:gap-8">
                   {Object.entries(answerKeys).map(([subject, keys]) => {
                     if (Object.keys(keys).length === 0) return null;
                     return (
-                      <div key={subject} className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm print:shadow-none print:border-none">
-                        <div className="bg-slate-100 px-4 py-2 border-b border-slate-200 font-bold text-slate-700 print:bg-white print:border-b-2 print:border-black print:px-0">
+                      <div key={subject} className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm print:shadow-none print:border-none print:break-inside-avoid">
+                        <div className="bg-slate-100 px-4 py-2 border-b border-slate-200 font-bold text-slate-700 print:bg-white print:border-b-2 print:border-black print:px-0 text-center print:text-lg">
                           {subject}
                         </div>
-                        <div className="p-4 grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-4 print:p-0 print:mt-4 print:grid-cols-5">
+                        <div className="p-4 grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-4 print:p-0 print:mt-3 print:flex print:flex-col print:gap-1.5">
                           {Object.entries(keys).sort((a, b) => parseInt(a[0]) - parseInt(b[0])).map(([qNum, ans]) => (
-                            <div key={qNum} className="flex items-center justify-between p-2 rounded-lg bg-slate-50 border border-slate-100 print:border-slate-300 print:bg-white print:break-inside-avoid">
-                              <span className="text-xs font-semibold text-slate-500 print:text-black">Q.{qNum}</span>
-                              <span className="text-sm font-bold text-teal-600 print:text-black">{ans}</span>
+                            <div key={qNum} className="flex items-center justify-between p-2 rounded-lg bg-slate-50 border border-slate-100 print:border-none print:bg-white print:p-0 print:w-3/4 print:mx-auto">
+                              <span className="text-xs font-semibold text-slate-500 print:text-black print:font-bold print:text-sm">{qNum}.</span>
+                              <span className="text-sm font-bold text-teal-600 print:text-black print:text-sm">{ans}</span>
                             </div>
                           ))}
                         </div>
@@ -1614,7 +1652,14 @@ export const MCQPaperGeneratorPage = () => {
               )}
             </div>
             
-            <div className="p-4 border-t border-slate-100 bg-white flex justify-end print:hidden">
+            <div className="p-4 border-t border-slate-100 bg-white flex justify-end print:hidden gap-3">
+               <button 
+                 onClick={handleAiSolve}
+                 disabled={isAiSolving}
+                 className="px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-medium rounded-xl hover:shadow-lg hover:shadow-purple-500/30 transition-all flex items-center gap-2 disabled:opacity-50"
+               >
+                 <Wand2 className="w-4 h-4" /> {isAiSolving ? 'Solving...' : 'AI Auto-Solve'}
+               </button>
                <button 
                  onClick={() => window.print()}
                  className="px-4 py-2 bg-slate-800 text-white font-medium rounded-xl hover:bg-slate-900 transition-colors shadow-sm flex items-center gap-2"
