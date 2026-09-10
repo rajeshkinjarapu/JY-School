@@ -324,7 +324,7 @@ ${JSON.stringify(subjectContents)}
     } else if (provider === 'openrouter') {
       if (!apiKey) throw new Error('OpenRouter API key is missing');
       const response = await axios.post('https://openrouter.ai/api/v1/chat/completions', {
-        model: 'google/gemini-flash-1.5',
+        model: 'google/gemini-2.5-flash',
         response_format: { type: "json_object" },
         messages: [{ role: 'user', content: prompt }]
       }, {
