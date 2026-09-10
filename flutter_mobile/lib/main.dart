@@ -136,9 +136,12 @@ class _AuthCheckState extends State<AuthCheck> {
     final userStr = prefs.getString('user');
     if (userStr != null) {
       try {
-        jsonDecode(userStr);
+        final decoded = jsonDecode(userStr);
+        if (decoded is! Map<String, dynamic> || !decoded.containsKey('role')) {
+          throw const FormatException('Invalid user schema');
+        }
       } catch (e) {
-        // Data is corrupted, clear everything
+        // Data is corrupted or outdated schema, clear everything
         debugPrint("User data corrupted. Clearing local storage.");
         await prefs.clear();
       }

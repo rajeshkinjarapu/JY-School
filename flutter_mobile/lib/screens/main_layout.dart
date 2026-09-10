@@ -38,8 +38,15 @@ class _MainLayoutState extends State<MainLayout> {
     setState(() {
       final userStr = prefs.getString('user');
       if (userStr != null) {
-        _userData = jsonDecode(userStr);
-        _userRole = _userData['role'] ?? '';
+        try {
+          final decoded = jsonDecode(userStr);
+          if (decoded is Map<String, dynamic>) {
+            _userData = decoded;
+            _userRole = _userData['role'] ?? '';
+          }
+        } catch (e) {
+          debugPrint('Error parsing user data in MainLayout: $e');
+        }
       }
       _isLoading = false;
     });

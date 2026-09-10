@@ -1,6 +1,7 @@
 # Project State: JY School ERP
 
 ## Latest Updates (2026-09-10)
+- **App Startup Crash Fix (Flutter)**: Fixed intermittent crashes on app startup caused by outdated or corrupted data in `SharedPreferences`. Added strict schema validation (`is Map<String, dynamic>` and `containsKey('role')`) in `main.dart` and `main_layout.dart`. If the cached JSON fails validation, the app now automatically clears the storage and safely routes the user to the Login screen without crashing.
 - **Progress Card Data Fix**: Fixed the issue in Flutter where the marks table was not rendering properly. The app was looking for `maxMarks` instead of `max` from the API. The `ProgressCardNative` widget has been updated to handle both `max` and `maxMarks` safely, along with correct 'AB' (Absent) calculation.
 - **Progress Card PDF Export**: The PDF generation in `SingleProgressCardScreen` now dynamically creates the filename using the student's name (e.g. `ALLAMSETTY_LIKHITHA_ProgressCard.pdf`).
 - **Null Safety Fixes**: Fixed a crash in `SingleProgressCardScreen` when the `className` was null or missing a hyphen separator.
@@ -19,7 +20,7 @@
   npm run build
   pm2 restart backend
   ```
-- **Flutter App Update**: The new UI and progress card fixes need to be patched to users using Shorebird:
+- **Flutter App Update**: The new UI and crash fixes need to be patched to users using Shorebird:
   ```bash
   cd "c:\Users\SRI\Desktop\JY School\JY-School-main\flutter_mobile"
   shorebird patch android --flavor student --target lib/main_student.dart
