@@ -280,17 +280,12 @@ Return ONLY a raw JSON array (no markdown code blocks) where each element has:
  */
 export const generateAnswerKeyWithGemini = async (req: Request, res: Response) => {
   try {
-    const { subjectContents, apiKey } = req.body;
+    const { subjectContents, provider = 'gemini', apiKey } = req.body;
     
     if (!subjectContents || typeof subjectContents !== 'object') {
       return res.status(400).json({ message: 'subjectContents is required' });
     }
 
-    const activeKey = apiKey || process.env.GEMINI_API_KEY;
-    if (!activeKey) throw new Error('Gemini API key is missing');
-
-    const ai = new GoogleGenAI({ apiKey: activeKey });
-    
     const prompt = `You are an expert exam evaluator. I am providing you with the text of an exam paper. The paper may contain multiple subjects, each with a list of multiple-choice questions.
 
 Your job:
@@ -313,15 +308,65 @@ Exam Paper Content:
 ${JSON.stringify(subjectContents)}
 `;
 
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: [{ role: 'user', parts: [{ text: prompt }] }],
-      config: { responseMimeType: 'application/json' },
-    });
-
     let answerKey = {};
-    if (response.text) {
-      answerKey = JSON.parse(response.text.replace(/\`\`\`json\n?|\`\`\`/g, ''));
+    let responseText = '';
+
+    if (provider === 'gemini') {
+      const activeKey = apiKey || process.env.GEMINI_API_KEY;
+      if (!activeKey) throw new Error('Gemini API key is missing');
+      const ai = new GoogleGenAI({ apiKey: activeKey });
+      const response = await ai.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        config: { responseMimeType: 'application/json' },
+      });
+      responseText = response.text || '';
+    } else if (provider === 'openrouter') {
+      if (!apiKey) throw new Error('OpenRouter API key is missing');
+      const response = await axios.post('https://openrouter.ai/api/v1/chat/completions', {
+        model: 'google/gemini-flash-1.5',
+        response_format: { type: "json_object" },
+        messages: [{ role: 'user', content: prompt }]
+      }, {
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      responseText = response.data.choices[0].message.content || '';
+    } else if (provider === 'chatgpt') {
+       if (!apiKey) throw new Error('ChatGPT API key is missing');
+       const response = await axios.post('https://api.openai.com/v1/chat/completions', {
+         model: 'gpt-4o-mini',
+         response_format: { type: "json_object" },
+         messages: [{ role: 'user', content: prompt }]
+       }, {
+         headers: {
+           'Authorization': `Bearer ${apiKey}`,
+           'Content-Type': 'application/json'
+         }
+       });
+       responseText = response.data.choices[0].message.content || '';
+    } else if (provider === 'claude') {
+       if (!apiKey) throw new Error('Claude API key is missing');
+       const response = await axios.post('https://api.anthropic.com/v1/messages', {
+         model: 'claude-3-haiku-20240307',
+         max_tokens: 4000,
+         messages: [{ role: 'user', content: prompt }]
+       }, {
+         headers: {
+           'x-api-key': apiKey,
+           'anthropic-version': '2023-06-01',
+           'Content-Type': 'application/json'
+         }
+       });
+       responseText = response.data.content[0].text || '';
+    } else {
+       throw new Error('Unsupported provider');
+    }
+
+    if (responseText) {
+      answerKey = JSON.parse(responseText.replace(/\`\`\`json\n?|\`\`\`/g, ''));
     }
 
     return res.status(200).json({ answerKey });

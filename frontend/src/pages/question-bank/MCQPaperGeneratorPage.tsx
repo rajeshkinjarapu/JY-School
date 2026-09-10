@@ -170,10 +170,11 @@ export const MCQPaperGeneratorPage = () => {
   };
   
   // Settings State
-  const [activeAiModel, setActiveAiModel] = useState<string>(() => localStorage.getItem('jy_active_ai_model') || 'gemini');
-  const [geminiApiKey, setGeminiApiKey] = useState<string>(() => localStorage.getItem('jy_gemini_api_key') || '');
-  const [claudeApiKey, setClaudeApiKey] = useState<string>(() => localStorage.getItem('jy_claude_api_key') || '');
-  const [chatgptApiKey, setChatgptApiKey] = useState<string>(() => localStorage.getItem('jy_chatgpt_api_key') || '');
+  const [activeAiModel, setActiveAiModel] = useState(localStorage.getItem('jy_active_ai_model') || 'gemini');
+  const [geminiApiKey, setGeminiApiKey] = useState(localStorage.getItem('jy_gemini_api_key') || '');
+  const [claudeApiKey, setClaudeApiKey] = useState(localStorage.getItem('jy_claude_api_key') || '');
+  const [chatgptApiKey, setChatgptApiKey] = useState(localStorage.getItem('jy_chatgpt_api_key') || '');
+  const [openRouterApiKey, setOpenRouterApiKey] = useState(localStorage.getItem('jy_openrouter_api_key') || '');
   const [deepseekApiKey, setDeepseekApiKey] = useState<string>(() => localStorage.getItem('jy_deepseek_api_key') || '');
   
   // Editor State
@@ -605,8 +606,13 @@ export const MCQPaperGeneratorPage = () => {
     try {
       let selectedKey = undefined;
       if (activeAiModel === 'gemini') selectedKey = geminiApiKey;
+      else if (activeAiModel === 'claude') selectedKey = claudeApiKey;
+      else if (activeAiModel === 'chatgpt') selectedKey = chatgptApiKey;
+      else if (activeAiModel === 'openrouter') selectedKey = openRouterApiKey;
+
       const payload = {
         subjectContents,
+        provider: activeAiModel,
         apiKey: selectedKey || undefined
       };
       const response = await api.post('/api/questions/solve-ai', payload);
@@ -1389,6 +1395,36 @@ export const MCQPaperGeneratorPage = () => {
                           }}
                           className="w-full rounded-lg border-slate-200 bg-white border p-2 text-sm focus:ring-2 focus:ring-emerald-500/20 outline-none"
                           placeholder="OpenAI API Key"
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  <div className={`p-3 rounded-xl border-2 transition-all ${activeAiModel === 'openrouter' ? 'border-blue-500 bg-blue-50' : 'border-slate-200 bg-white'}`}>
+                    <label className="flex items-center gap-3 cursor-pointer">
+                      <input 
+                        type="radio" 
+                        name="ai_model" 
+                        checked={activeAiModel === 'openrouter'}
+                        onChange={() => {
+                          setActiveAiModel('openrouter');
+                          localStorage.setItem('jy_active_ai_model', 'openrouter');
+                        }}
+                        className="w-4 h-4 text-blue-600 focus:ring-blue-500"
+                      />
+                      <span className="font-medium text-slate-700">OpenRouter (Any Model)</span>
+                    </label>
+                    {activeAiModel === 'openrouter' && (
+                      <div className="mt-3 pl-7">
+                        <input
+                          type="password"
+                          value={openRouterApiKey}
+                          onChange={(e) => {
+                            setOpenRouterApiKey(e.target.value);
+                            localStorage.setItem('jy_openrouter_api_key', e.target.value);
+                          }}
+                          className="w-full rounded-lg border-slate-200 bg-white border p-2 text-sm focus:ring-2 focus:ring-blue-500/20 outline-none"
+                          placeholder="sk-or-v1-..."
                         />
                       </div>
                     )}
