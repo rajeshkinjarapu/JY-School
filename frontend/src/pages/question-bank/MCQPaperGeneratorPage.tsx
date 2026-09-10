@@ -1412,7 +1412,7 @@ export const MCQPaperGeneratorPage = () => {
                         }}
                         className="w-4 h-4 text-blue-600 focus:ring-blue-500"
                       />
-                      <span className="font-medium text-slate-700">OpenRouter (Any Model)</span>
+                      <span className="font-medium text-slate-700">OpenRouter (Ox Alpha)</span>
                     </label>
                     {activeAiModel === 'openrouter' && (
                       <div className="mt-3 pl-7">
