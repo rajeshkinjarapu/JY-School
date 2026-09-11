@@ -750,7 +750,7 @@ export const NavodayaPaperGeneratorPage = () => {
                 onChange={(e) => setContent(e.target.value)}
                 onPaste={handleEditorPaste}
                 className="flex-1 w-full rounded-xl border border-slate-200 bg-slate-50 p-5 font-mono text-sm leading-relaxed focus:ring-2 focus:ring-blue-500/20 outline-none resize-none min-h-[400px]"
-                placeholder="1. Question text&#10;(A) Option A&#10;(B) Option B&#10;(C) Option C&#10;(D) Option D"
+                placeholder="1. Descriptive question text here...&#10;&#10;2. Multiple choice question text here...&#10;(A) Option A&#10;(B) Option B&#10;(C) Option C&#10;(D) Option D&#10;&#10;Tip: Just type the question! If you add (A)(B)(C)(D) it becomes a Bit."
               />
             )}
           </div>
@@ -762,20 +762,6 @@ export const NavodayaPaperGeneratorPage = () => {
             <h3 className="font-semibold text-slate-700 flex items-center gap-2">
               Live Preview
             </h3>
-            <div className="flex bg-slate-200 rounded-lg p-1">
-              <button 
-                onClick={() => setIsDoubleColumn(false)}
-                className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${!isDoubleColumn ? 'bg-white shadow text-blue-600' : 'text-slate-600 hover:text-slate-800'}`}
-              >
-                Single View
-              </button>
-              <button 
-                onClick={() => setIsDoubleColumn(true)}
-                className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${isDoubleColumn ? 'bg-white shadow text-blue-600' : 'text-slate-600 hover:text-slate-800'}`}
-              >
-                Double View
-              </button>
-            </div>
           </div>
           <div className="flex justify-center p-8 print:p-0 print:block">
             <div className="paper-zoom origin-top transition-transform print:!transform-none">
