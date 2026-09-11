@@ -42,6 +42,7 @@ export interface LiveLatexPreviewProps {
   showHeader?: boolean;
   realSubject?: string;
   showSubjectHeadings?: boolean;
+  parseMode?: 'smart' | 'raw';
 }
 
 
@@ -65,7 +66,8 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
   questionSpacing = 'normal',
   showHeader = true,
   realSubject = '',
-  showSubjectHeadings = true
+  showSubjectHeadings = true,
+  parseMode = 'smart'
 }) => {
   // Helper to balance braces in math strings so KaTeX doesn't crash on bad AI output
   const balanceMath = (math: string) => {
@@ -144,7 +146,23 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
             const math = balanceMath(inlinePart.slice(1, -1));
             return katex.renderToString(math, { displayMode: false, throwOnError: false });
           }
-          return inlinePart.replace(/\n/g, '<br/>');
+          
+          let textPart = inlinePart;
+          if (parseMode === 'raw') {
+            for(let i=0; i<3; i++) {
+              textPart = textPart.replace(/\\textbf{([^{}]*)}/g, '<b>$1</b>');
+              textPart = textPart.replace(/\\textit{([^{}]*)}/g, '<i>$1</i>');
+              textPart = textPart.replace(/\\underline{([^{}]*)}/g, '<u>$1</u>');
+            }
+            textPart = textPart.replace(/\\section\*{([^{}]*)}/g, '<h2 class="text-2xl font-bold mt-6 mb-3">$1</h2>');
+            textPart = textPart.replace(/\\section{([^{}]*)}/g, '<h2 class="text-2xl font-bold mt-6 mb-3">$1</h2>');
+            textPart = textPart.replace(/\\subsection\*{([^{}]*)}/g, '<h3 class="text-xl font-bold mt-4 mb-2">$1</h3>');
+            textPart = textPart.replace(/\\subsection{([^{}]*)}/g, '<h3 class="text-xl font-bold mt-4 mb-2">$1</h3>');
+            textPart = textPart.replace(/\\begin{center}([\s\S]*?)\\end{center}/g, '<div class="text-center w-full flex justify-center">$1</div>');
+            textPart = textPart.replace(/\\newpage/g, '<div style="page-break-after: always" class="w-full h-8 border-b-2 border-dashed border-slate-300 my-4 print:border-0 print:h-0"></div>');
+          }
+          
+          return textPart.replace(/\n/g, '<br/>');
         }).join('');
       }).join('');
     } catch (e) {
@@ -300,15 +318,30 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
         // Add subject heading
         if (showSubjectHeadings) {
           elements.push(
-            <div id={`preview-subject-${subject}`} key={`heading-${subject}`} className="w-full text-center my-3 break-before-auto">
-              <h3 className="font-bold text-[13pt] underline underline-offset-4 uppercase">{subject}</h3>
+            <div key={`heading-${subject}`} className="w-full mt-4 mb-2 break-inside-avoid text-center">
+              <h3 className="font-bold text-[12pt] uppercase border-b-2 border-black inline-block px-4 pb-1">
+                {subject}
+              </h3>
             </div>
           );
         }
-        parseTextToBlocks(subjectText, subject, elements);
+        
+        if (parseMode === 'raw') {
+          elements.push(
+            <div key={`raw-content-${subject}`} className="w-full whitespace-pre-wrap break-words" dangerouslySetInnerHTML={{ __html: renderLatex(subjectText) }} />
+          );
+        } else {
+          parseTextToBlocks(subjectText, subject, elements);
+        }
       });
     } else if (content) {
-      parseTextToBlocks(content, 'main-content', elements);
+      if (parseMode === 'raw') {
+        elements.push(
+          <div key="raw-content" className="w-full whitespace-pre-wrap break-words" dangerouslySetInnerHTML={{ __html: renderLatex(content) }} />
+        );
+      } else {
+        parseTextToBlocks(content, 'single-content', elements);
+      }
     }
     
     return elements;

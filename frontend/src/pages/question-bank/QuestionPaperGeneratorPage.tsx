@@ -54,6 +54,7 @@ export const QuestionPaperGeneratorPage = () => {
     return localStorage.getItem('jy_deepseek_api_key') || '';
   });
   const [isDoubleColumn, setIsDoubleColumn] = useState(false);
+  const [editorMode, setEditorMode] = useState<'smart' | 'raw'>('smart');
   
   // Editor State
   const [content, setContent] = useState(
@@ -602,7 +603,23 @@ export const QuestionPaperGeneratorPage = () => {
         <div className="w-1/2 p-6 overflow-y-auto border-r border-slate-200 bg-white print:hidden custom-scrollbar">
           <div className="h-full flex flex-col pb-20">
             <h3 className="font-semibold text-slate-700 border-b pb-2 mb-4 flex justify-between items-center">
-              <span>Question Content (LaTeX Support)</span>
+              <div className="flex items-center gap-3">
+                <span>Question Content</span>
+                <div className="flex bg-slate-100/80 rounded-lg p-0.5 border border-slate-200 shadow-inner">
+                  <button
+                    onClick={() => setEditorMode('smart')}
+                    className={`px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide rounded-md transition-all ${editorMode === 'smart' ? 'bg-white text-blue-600 shadow-sm ring-1 ring-black/5' : 'text-slate-500 hover:text-slate-700'}`}
+                  >
+                    Smart Exam
+                  </button>
+                  <button
+                    onClick={() => setEditorMode('raw')}
+                    className={`px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide rounded-md transition-all ${editorMode === 'raw' ? 'bg-white text-emerald-600 shadow-sm ring-1 ring-black/5' : 'text-slate-500 hover:text-slate-700'}`}
+                  >
+                    Raw Book
+                  </button>
+                </div>
+              </div>
               <div className="flex gap-2">
                 <input 
                   type="file" 
@@ -636,7 +653,9 @@ export const QuestionPaperGeneratorPage = () => {
               onPaste={handleEditorPaste}
               onKeyDown={handleEditorKeyDown}
               className="flex-1 w-full rounded-xl border-slate-200 bg-slate-50 border p-5 font-mono text-base leading-relaxed focus:ring-2 focus:ring-blue-500/20 outline-none resize-none min-h-[400px]"
-              placeholder="1. Descriptive question text here...&#10;&#10;2. Multiple choice question text here...&#10;(A) Option A&#10;(B) Option B&#10;(C) Option C&#10;(D) Option D&#10;&#10;Tip: Just type the question! If you add (A)(B)(C)(D) it becomes a Bit. Press Enter 3-4 times for answer space."
+              placeholder={editorMode === 'smart' ? 
+                "1. Descriptive question text here...\n\n2. Multiple choice question...\n(A) Option A\n(B) Option B\n(C) Option C\n(D) Option D" : 
+                "Write your raw LaTeX or Markdown text here...\n\n\\section{Chapter 1}\n\\textbf{Bold text} and \\textit{italic text}."}
             />
           </div>
         </div>
@@ -661,17 +680,26 @@ export const QuestionPaperGeneratorPage = () => {
               logoBase64={logoBase64}
               maxMarks={maxMarks}
               time={time}
-              instructions={instructions.split('\n').filter(i => i.trim() !== '')}
+              instructions={instructions.split('\n')}
+              fontSize={fontSize}
+              questionSpacing={questionSpacing}
+              showHeader={showPaperHeader}
               isDoubleColumn={isDoubleColumn}
               inlineImages={inlineImages}
-              onImageUpdate={(id, updates) => setInlineImages(prev => ({ ...prev, [id]: { ...prev[id], ...updates } }))}
+              onImageUpdate={(id, updates) => {
+                setInlineImages(prev => ({
+                  ...prev,
+                  [id]: { ...prev[id], ...updates } as FloatingImage
+                }));
+              }}
               onImageDelete={(id) => {
                 setInlineImages(prev => {
-                  const newImgs = { ...prev };
-                  delete newImgs[id];
-                  return newImgs;
+                  const copy = { ...prev };
+                  delete copy[id];
+                  return copy;
                 });
               }}
+              parseMode={editorMode}
             />
           </div>
           </div>
