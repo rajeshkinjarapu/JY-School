@@ -18,6 +18,7 @@ export const QuestionPaperGeneratorPage = () => {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [examName, setExamName] = useState<string>(() => localStorage.getItem('jy_exam_name') || 'FINAL EXAMINATION');
   const [examSubject, setExamSubject] = useState<string>(() => localStorage.getItem('jy_exam_subject') || 'GRAND TEST');
+  const [realSubject, setRealSubject] = useState<string>(() => localStorage.getItem('jy_exam_subject_real') || '');
   const [examDate, setExamDate] = useState<string>(() => localStorage.getItem('jy_exam_date') || '');
   const [maxMarks, setMaxMarks] = useState('100');
   const [time, setTime] = useState<string>(() => localStorage.getItem('jy_exam_marks') || '75');
@@ -637,6 +638,8 @@ export const QuestionPaperGeneratorPage = () => {
               examName={examName}
               examDate={examDate}
               examSubject={examSubject}
+              realSubject={realSubject}
+              showSubjectHeadings={false}
               logoBase64={logoBase64}
               maxMarks={maxMarks}
               time={time}
@@ -788,13 +791,29 @@ export const QuestionPaperGeneratorPage = () => {
             </div>
             
             <div className="p-6 space-y-5 overflow-y-auto flex-1 custom-scrollbar">
-              <div className="grid grid-cols-2 gap-6">
+              <div className="grid grid-cols-3 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Class</label>
                   <input
                     type="text"
                     value={examSubject}
-                    onChange={(e) => setExamSubject(e.target.value)}
+                    onChange={(e) => {
+                      setExamSubject(e.target.value);
+                      localStorage.setItem('jy_exam_subject', e.target.value);
+                    }}
+                    className="w-full rounded-lg border-slate-200 bg-white border p-2.5 text-sm focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Subject</label>
+                  <input
+                    type="text"
+                    value={realSubject}
+                    onChange={(e) => {
+                      setRealSubject(e.target.value);
+                      localStorage.setItem('jy_exam_subject_real', e.target.value);
+                    }}
+                    placeholder="Optional"
                     className="w-full rounded-lg border-slate-200 bg-white border p-2.5 text-sm focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
                   />
                 </div>
@@ -803,7 +822,10 @@ export const QuestionPaperGeneratorPage = () => {
                   <input
                     type="text"
                     value={examDate}
-                    onChange={(e) => setExamDate(e.target.value)}
+                    onChange={(e) => {
+                      setExamDate(e.target.value);
+                      localStorage.setItem('jy_exam_date', e.target.value);
+                    }}
                     placeholder="DD/MM/YYYY"
                     className="w-full rounded-lg border-slate-200 bg-white border p-2.5 text-sm focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
                   />

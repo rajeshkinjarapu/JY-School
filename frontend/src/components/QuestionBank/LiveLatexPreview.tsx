@@ -40,6 +40,8 @@ export interface LiveLatexPreviewProps {
   fontSize?: string;
   questionSpacing?: string;
   showHeader?: boolean;
+  realSubject?: string;
+  showSubjectHeadings?: boolean;
 }
 
 
@@ -61,7 +63,9 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
   onImageDelete,
   fontSize = 'medium',
   questionSpacing = 'normal',
-  showHeader = true
+  showHeader = true,
+  realSubject = '',
+  showSubjectHeadings = true
 }) => {
   // Helper to balance braces in math strings so KaTeX doesn't crash on bad AI output
   const balanceMath = (math: string) => {
@@ -167,14 +171,14 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
         <React.Fragment key={`${subject}-${i}`}>
         {!hasOptions ? (
           (() => {
-            const qNumMatch2 = block.match(/^(\d+)\.\s*/);
+            const qNumMatch2 = block.match(/^(\d+|[IVXLCDM]+)\.\s+/i);
             if (qNumMatch2) {
-              const num = qNumMatch2[1];
+              const numStr = qNumMatch2[1];
               const restText = block.substring(qNumMatch2[0].length);
               return (
-                <div className={`break-inside-avoid flex whitespace-pre-wrap ${getFontSizeClass()} ${getSpacingClasses()}`} style={{ gap: '0.4em' }}>
-                  <strong className="flex-shrink-0">{num}.</strong>
-                  <div dangerouslySetInnerHTML={{ __html: renderLatex(restText) }} />
+                <div className={`break-inside-avoid flex whitespace-pre-wrap ${getFontSizeClass()} ${getSpacingClasses()}`}>
+                  <strong className="flex-shrink-0 w-10 text-left">{numStr}.</strong>
+                  <div className="flex-1" dangerouslySetInnerHTML={{ __html: renderLatex(restText) }} />
                 </div>
               );
             }
@@ -231,17 +235,21 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
             }
 
             // Extract question number for hanging indent
-            const qMatch = questionText.match(/^(\d+)\.\s*/);
-            const qNum = qMatch ? qMatch[1] : '';
+            const qMatch = questionText.match(/^(\d+|[IVXLCDM]+)\.\s+/i);
+            const qNumStr = qMatch ? qMatch[1] : '';
             const qRest = qMatch ? questionText.substring(qMatch[0].length) : questionText;
 
             return (
               <div className={`break-inside-avoid ${getFontSizeClass()} ${getSpacingClasses()}`}>
-                <div className="mb-0.5 flex whitespace-pre-wrap" style={{ gap: '0.4em' }}>
-                  <strong className="flex-shrink-0">{qNum}.</strong>
-                  <div dangerouslySetInnerHTML={{ __html: renderLatex(qRest) }} />
+                <div className="mb-0.5 flex whitespace-pre-wrap">
+                  {qNumStr ? (
+                    <strong className="flex-shrink-0 w-10 text-left">{qNumStr}.</strong>
+                  ) : (
+                    <div className="flex-shrink-0 w-10"></div>
+                  )}
+                  <div className="flex-1" dangerouslySetInnerHTML={{ __html: renderLatex(qRest) }} />
                 </div>
-                <div className={`ml-6 pr-4 ${optionsLayout}`}>
+                <div className={`ml-10 pr-4 ${optionsLayout}`}>
                   <div className="flex"><span className="mr-1.5 font-medium">(A)</span> <span dangerouslySetInnerHTML={{ __html: renderLatex(optA) }} /></div>
                   <div className="flex"><span className="mr-1.5 font-medium">(B)</span> <span dangerouslySetInnerHTML={{ __html: renderLatex(optB) }} /></div>
                   <div className="flex"><span className="mr-1.5 font-medium">(C)</span> <span dangerouslySetInnerHTML={{ __html: renderLatex(optC) }} /></div>
@@ -290,11 +298,13 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
         if (!subjectText || subjectText.trim() === '') return;
         
         // Add subject heading
-        elements.push(
-          <div id={`preview-subject-${subject}`} key={`heading-${subject}`} className="w-full text-center my-3 break-before-auto">
-            <h3 className="font-bold text-[13pt] underline underline-offset-4 uppercase">{subject}</h3>
-          </div>
-        );
+        if (showSubjectHeadings) {
+          elements.push(
+            <div id={`preview-subject-${subject}`} key={`heading-${subject}`} className="w-full text-center my-3 break-before-auto">
+              <h3 className="font-bold text-[13pt] underline underline-offset-4 uppercase">{subject}</h3>
+            </div>
+          );
+        }
         parseTextToBlocks(subjectText, subject, elements);
       });
     } else if (content) {
@@ -355,6 +365,7 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
             <div className="flex flex-col text-[10.5pt] font-medium px-1 gap-0.5">
               <div className="flex justify-between items-center">
                 <div><span className="font-bold">Class:</span> {examSubject || '_______________'}</div>
+                {realSubject && <div><span className="font-bold">Subject:</span> {realSubject}</div>}
                 <div><span className="font-bold">Marks:</span> {time || '75'}</div>
               </div>
               <div className="flex justify-between items-center">
