@@ -59,6 +59,8 @@ export const QuestionPaperGeneratorPage = () => {
     const saved = localStorage.getItem('jy_exam_show_header');
     return saved !== null ? saved === 'true' : true;
   });
+  const [fontSize, setFontSize] = useState<string>(() => localStorage.getItem('jy_exam_font_size') || 'medium');
+  const [questionSpacing, setQuestionSpacing] = useState<string>(() => localStorage.getItem('jy_exam_spacing') || 'normal');
   
   // Editor State
   const [content, setContent] = useState(
@@ -685,6 +687,8 @@ export const QuestionPaperGeneratorPage = () => {
               maxMarks={maxMarks}
               time={time}
               instructions={instructions.split('\n')}
+              fontSize={fontSize}
+              questionSpacing={questionSpacing}
               showHeader={showPaperHeader}
               isDoubleColumn={isDoubleColumn}
               inlineImages={inlineImages}
@@ -878,6 +882,43 @@ export const QuestionPaperGeneratorPage = () => {
                     className="w-full rounded-lg border-slate-200 bg-white border p-2.5 text-sm focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
                   />
                 </div>
+              </div>
+              <div className="flex items-center justify-between pt-4 border-t border-slate-100">
+                <div>
+                  <span className="block text-sm font-medium text-slate-700">Text Size</span>
+                  <span className="block text-xs text-slate-500">Adjust the font size of the questions</span>
+                </div>
+                <select
+                  value={fontSize}
+                  onChange={(e) => {
+                    setFontSize(e.target.value);
+                    localStorage.setItem('jy_exam_font_size', e.target.value);
+                  }}
+                  className="rounded-lg border-slate-200 bg-white border p-2 text-sm focus:ring-2 focus:ring-blue-500/20 outline-none w-32"
+                >
+                  <option value="small">Small</option>
+                  <option value="medium">Medium</option>
+                  <option value="large">Large</option>
+                  <option value="xlarge">Extra Large</option>
+                </select>
+              </div>
+              <div className="flex items-center justify-between pt-4 border-t border-slate-100">
+                <div>
+                  <span className="block text-sm font-medium text-slate-700">Paragraph Height</span>
+                  <span className="block text-xs text-slate-500">Adjust spacing between questions</span>
+                </div>
+                <select
+                  value={questionSpacing}
+                  onChange={(e) => {
+                    setQuestionSpacing(e.target.value);
+                    localStorage.setItem('jy_exam_spacing', e.target.value);
+                  }}
+                  className="rounded-lg border-slate-200 bg-white border p-2 text-sm focus:ring-2 focus:ring-blue-500/20 outline-none w-32"
+                >
+                  <option value="compact">Compact</option>
+                  <option value="normal">Normal</option>
+                  <option value="relaxed">Relaxed</option>
+                </select>
               </div>
               <div className="flex items-center justify-between pt-4 border-t border-slate-100">
                 <div>
