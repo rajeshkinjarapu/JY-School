@@ -63,6 +63,9 @@ export const QuestionPaperGeneratorPage = () => {
     const saved = localStorage.getItem('jy_exam_show_border');
     return saved !== null ? saved === 'true' : false;
   });
+  const [pageBorderPadding, setPageBorderPadding] = useState<string>(() => localStorage.getItem('jy_exam_border_padding') || 'medium');
+  const [pageBorderThickness, setPageBorderThickness] = useState<string>(() => localStorage.getItem('jy_exam_border_thickness') || 'medium');
+  const [pageBorderStyle, setPageBorderStyle] = useState<string>(() => localStorage.getItem('jy_exam_border_style') || 'double');
   const [fontSize, setFontSize] = useState<string>(() => localStorage.getItem('jy_exam_font_size') || 'medium');
   const [questionSpacing, setQuestionSpacing] = useState<string>(() => localStorage.getItem('jy_exam_spacing') || 'normal');
   
@@ -744,6 +747,9 @@ export const QuestionPaperGeneratorPage = () => {
               questionSpacing={questionSpacing}
               showHeader={showPaperHeader}
               showPageBorder={showPageBorder}
+              pageBorderPadding={pageBorderPadding}
+              pageBorderThickness={pageBorderThickness}
+              pageBorderStyle={pageBorderStyle}
               isDoubleColumn={isDoubleColumn}
               inlineImages={inlineImages}
               onImageUpdate={(id, updates) => {
@@ -1010,6 +1016,58 @@ export const QuestionPaperGeneratorPage = () => {
                   <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
                 </label>
               </div>
+
+              {showPageBorder && (
+                <div className="grid grid-cols-3 gap-4 pt-4 border-t border-slate-50">
+                  <div>
+                    <label className="block text-xs font-medium text-slate-600 mb-1">Border Padding</label>
+                    <select
+                      value={pageBorderPadding}
+                      onChange={(e) => {
+                        setPageBorderPadding(e.target.value);
+                        localStorage.setItem('jy_exam_border_padding', e.target.value);
+                      }}
+                      className="w-full rounded-lg border-slate-200 bg-slate-50 border p-2 text-sm focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
+                    >
+                      <option value="none">None (Edge)</option>
+                      <option value="small">Small (4mm)</option>
+                      <option value="medium">Medium (8mm)</option>
+                      <option value="large">Large (12mm)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-slate-600 mb-1">Border Thickness</label>
+                    <select
+                      value={pageBorderThickness}
+                      onChange={(e) => {
+                        setPageBorderThickness(e.target.value);
+                        localStorage.setItem('jy_exam_border_thickness', e.target.value);
+                      }}
+                      className="w-full rounded-lg border-slate-200 bg-slate-50 border p-2 text-sm focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
+                    >
+                      <option value="thin">Thin (1px)</option>
+                      <option value="medium">Medium (2px)</option>
+                      <option value="thick">Thick (4px)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-slate-600 mb-1">Border Style</label>
+                    <select
+                      value={pageBorderStyle}
+                      onChange={(e) => {
+                        setPageBorderStyle(e.target.value);
+                        localStorage.setItem('jy_exam_border_style', e.target.value);
+                      }}
+                      className="w-full rounded-lg border-slate-200 bg-slate-50 border p-2 text-sm focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
+                    >
+                      <option value="solid">Solid</option>
+                      <option value="double">Double</option>
+                      <option value="dashed">Dashed</option>
+                    </select>
+                  </div>
+                </div>
+              )}
+
               <div className="pt-2 border-t border-slate-100">
                 <label className="block text-sm font-medium text-slate-700 mb-1">School Logo</label>
                 <input

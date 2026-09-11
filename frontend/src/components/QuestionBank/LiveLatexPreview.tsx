@@ -44,6 +44,9 @@ export interface LiveLatexPreviewProps {
   showSubjectHeadings?: boolean;
   parseMode?: 'smart' | 'raw';
   showPageBorder?: boolean;
+  pageBorderPadding?: string;
+  pageBorderThickness?: string;
+  pageBorderStyle?: string;
 }
 
 
@@ -69,7 +72,10 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
   realSubject = '',
   showSubjectHeadings = true,
   parseMode = 'smart',
-  showPageBorder = false
+  showPageBorder = false,
+  pageBorderPadding = 'medium',
+  pageBorderThickness = 'medium',
+  pageBorderStyle = 'solid'
 }) => {
   // Helper to balance braces in math strings so KaTeX doesn't crash on bad AI output
   const balanceMath = (math: string) => {
@@ -351,10 +357,23 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
 
   return (
     <div 
-      className={`bg-white text-black shadow-2xl print:shadow-none mx-auto relative w-[210mm] min-h-[297mm] print:w-[210mm] print:min-h-0 print:m-0 ${showPageBorder ? 'border-[3px] border-double border-slate-900 print:border-black' : ''}`} 
+      className="bg-white text-black shadow-2xl print:shadow-none mx-auto relative w-[210mm] min-h-[297mm] print:w-[210mm] print:min-h-0 print:m-0" 
       style={{ boxSizing: 'border-box', fontFamily: "'TeX Gyre Schola', 'TeXGyreSchola', serif, 'Mandali'" }}
       id="a4-preview-paper"
     >
+      {showPageBorder && (
+        <div 
+          className="absolute border-slate-900 print:border-black pointer-events-none z-50" 
+          style={{
+            top: pageBorderPadding === 'small' ? '4mm' : pageBorderPadding === 'medium' ? '8mm' : pageBorderPadding === 'large' ? '12mm' : '0',
+            bottom: pageBorderPadding === 'small' ? '4mm' : pageBorderPadding === 'medium' ? '8mm' : pageBorderPadding === 'large' ? '12mm' : '0',
+            left: pageBorderPadding === 'small' ? '4mm' : pageBorderPadding === 'medium' ? '8mm' : pageBorderPadding === 'large' ? '12mm' : '0',
+            right: pageBorderPadding === 'small' ? '4mm' : pageBorderPadding === 'medium' ? '8mm' : pageBorderPadding === 'large' ? '12mm' : '0',
+            borderWidth: pageBorderThickness === 'thin' ? '1px' : pageBorderThickness === 'medium' ? '2px' : '4px',
+            borderStyle: pageBorderStyle || 'solid'
+          }}
+        />
+      )}
       <style>{`
         .katex-display {
           overflow-x: auto;
