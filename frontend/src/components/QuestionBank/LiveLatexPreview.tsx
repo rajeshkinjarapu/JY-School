@@ -43,6 +43,7 @@ export interface LiveLatexPreviewProps {
   realSubject?: string;
   showSubjectHeadings?: boolean;
   parseMode?: 'smart' | 'raw';
+  showPageBorder?: boolean;
 }
 
 
@@ -67,7 +68,8 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
   showHeader = true,
   realSubject = '',
   showSubjectHeadings = true,
-  parseMode = 'smart'
+  parseMode = 'smart',
+  showPageBorder = false
 }) => {
   // Helper to balance braces in math strings so KaTeX doesn't crash on bad AI output
   const balanceMath = (math: string) => {
@@ -349,8 +351,8 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
 
   return (
     <div 
-      className="bg-white text-black shadow-2xl print:shadow-none mx-auto relative w-[210mm] min-h-[297mm] print:w-full print:min-h-0 print:m-0" 
-      style={{ boxSizing: 'border-box', fontFamily: "'TeX Gyre Schola', 'TeXGyreSchola', serif, 'Mandali'", border: 'none' }}
+      className={`bg-white text-black shadow-2xl print:shadow-none mx-auto relative w-[210mm] min-h-[297mm] print:w-[210mm] print:min-h-0 print:m-0 ${showPageBorder ? 'border-[3px] border-double border-slate-900 print:border-black' : ''}`} 
+      style={{ boxSizing: 'border-box', fontFamily: "'TeX Gyre Schola', 'TeXGyreSchola', serif, 'Mandali'" }}
       id="a4-preview-paper"
     >
       <style>{`

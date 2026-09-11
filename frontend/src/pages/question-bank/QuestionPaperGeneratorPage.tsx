@@ -59,6 +59,10 @@ export const QuestionPaperGeneratorPage = () => {
     const saved = localStorage.getItem('jy_exam_show_header');
     return saved !== null ? saved === 'true' : true;
   });
+  const [showPageBorder, setShowPageBorder] = useState<boolean>(() => {
+    const saved = localStorage.getItem('jy_exam_show_border');
+    return saved !== null ? saved === 'true' : false;
+  });
   const [fontSize, setFontSize] = useState<string>(() => localStorage.getItem('jy_exam_font_size') || 'medium');
   const [questionSpacing, setQuestionSpacing] = useState<string>(() => localStorage.getItem('jy_exam_spacing') || 'normal');
   
@@ -739,6 +743,7 @@ export const QuestionPaperGeneratorPage = () => {
               fontSize={fontSize}
               questionSpacing={questionSpacing}
               showHeader={showPaperHeader}
+              showPageBorder={showPageBorder}
               isDoubleColumn={isDoubleColumn}
               inlineImages={inlineImages}
               onImageUpdate={(id, updates) => {
@@ -982,6 +987,24 @@ export const QuestionPaperGeneratorPage = () => {
                     onChange={(e) => {
                       setShowPaperHeader(e.target.checked);
                       localStorage.setItem('jy_exam_show_header', String(e.target.checked));
+                    }}
+                  />
+                  <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                </label>
+              </div>
+              <div className="flex items-center justify-between pt-4 border-t border-slate-100">
+                <div>
+                  <span className="block text-sm font-medium text-slate-700">Show Page Border</span>
+                  <span className="block text-xs text-slate-500">Add a professional double line border around the page</span>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    className="sr-only peer"
+                    checked={showPageBorder}
+                    onChange={(e) => {
+                      setShowPageBorder(e.target.checked);
+                      localStorage.setItem('jy_exam_show_border', String(e.target.checked));
                     }}
                   />
                   <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
