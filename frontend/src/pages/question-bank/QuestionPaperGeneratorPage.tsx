@@ -681,9 +681,6 @@ export const QuestionPaperGeneratorPage = () => {
               maxMarks={maxMarks}
               time={time}
               instructions={instructions.split('\n')}
-              fontSize={fontSize}
-              questionSpacing={questionSpacing}
-              showHeader={showPaperHeader}
               isDoubleColumn={isDoubleColumn}
               inlineImages={inlineImages}
               onImageUpdate={(id, updates) => {
