@@ -6,6 +6,7 @@
 - **Progress Card Data Fix**: Fixed the issue in Flutter where the marks table was not rendering properly due to mismatched JSON keys (`max` vs `maxMarks`).
 - **Progress Card PDF Export**: PDF filename is dynamically generated with the student's name.
 - **Marks Entry Screen Redesign**: Redesigned the `SingleSubjectMarksEntryScreen` (All Subjects Marks) to have a premium, beautiful, and colorful UI.
+- **MCQ Paper Generator**: Added a "Show Paper Header" toggle in Paper Settings. When turned off, the school logo, school name, and general instructions are hidden, saving space for tests or combined subject papers.
 
 ## Pending Manual Actions for User
 - **VPS Backend Deployment (CRITICAL)**: The backend token expiration logic and Prisma schema (`status`, `scheduledFor`) were updated. These changes must be deployed to the VPS database and server using:
@@ -24,6 +25,14 @@
   shorebird patch android --flavor student --target lib/main_student.dart
   shorebird patch android --flavor teacher --target lib/main_teacher.dart
   shorebird patch android --flavor admin --target lib/main_admin.dart
+  ```
+- **VPS Frontend Deployment**: The MCQ Paper Generator UI was updated. Deploy the frontend to VPS using:
+  ```bash
+  ssh root@66.116.252.191
+  cd /root/JY-School/frontend
+  git pull origin main
+  npm run build
+  pm2 restart frontend
   ```
 
 ## Known Architecture Context

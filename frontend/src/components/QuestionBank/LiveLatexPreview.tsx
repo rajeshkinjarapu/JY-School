@@ -39,6 +39,7 @@ export interface LiveLatexPreviewProps {
   onImageDelete?: (id: string) => void;
   fontSize?: string;
   questionSpacing?: string;
+  showHeader?: boolean;
 }
 
 
@@ -59,7 +60,8 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
   onImageUpdate,
   onImageDelete,
   fontSize = 'medium',
-  questionSpacing = 'normal'
+  questionSpacing = 'normal',
+  showHeader = true
 }) => {
   // Helper to balance braces in math strings so KaTeX doesn't crash on bad AI output
   const balanceMath = (math: string) => {
@@ -327,41 +329,43 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
       <div className="pt-3 pb-3 px-8 print:p-0 lining-nums tabular-nums">
         
         {/* Header Section */}
-        <div className="mb-2 border-b-2 border-black pb-1.5">
-          {/* Logo left | School name center | spacer right */}
-          <div className="grid grid-cols-[80px_1fr_80px] items-center">
-            <div>
-              <img 
-                src={logoBase64 || '/logo.png'} 
-                alt="Logo" 
-                className="w-[78px] h-[78px] object-contain"
-              />
+        {showHeader && (
+          <div className="mb-2 border-b-2 border-black pb-1.5">
+            {/* Logo left | School name center | spacer right */}
+            <div className="grid grid-cols-[80px_1fr_80px] items-center">
+              <div>
+                <img 
+                  src={logoBase64 || '/logo.png'} 
+                  alt="Logo" 
+                  className="w-[78px] h-[78px] object-contain"
+                />
+              </div>
+              <div className="text-center">
+                <h1 className="text-[1.55rem] font-bold uppercase tracking-wider mb-0.5 whitespace-nowrap">SRI VENKATESWARA JY SCHOOL</h1>
+                <h2 className="text-sm font-semibold mb-0.5">(IIT-JEE/NEET Foundation – Olympiads)</h2>
+                <p className="text-xs">Opp. Hero Showroom, SVL Paradise Campus, Narasannapeta</p>
+              </div>
+              <div />
             </div>
-            <div className="text-center">
-              <h1 className="text-[1.55rem] font-bold uppercase tracking-wider mb-0.5 whitespace-nowrap">SRI VENKATESWARA JY SCHOOL</h1>
-              <h2 className="text-sm font-semibold mb-0.5">(IIT-JEE/NEET Foundation – Olympiads)</h2>
-              <p className="text-xs">Opp. Hero Showroom, SVL Paradise Campus, Narasannapeta</p>
+            
+            <div className="text-center mt-1 mb-1">
+               <h3 className="text-base font-bold uppercase">{examName || 'EXAMINATION'}</h3>
             </div>
-            <div />
+            
+            <div className="flex flex-col text-[10.5pt] font-medium px-1 gap-0.5">
+              <div className="flex justify-between items-center">
+                <div><span className="font-bold">Class:</span> {examSubject || '_______________'}</div>
+                <div><span className="font-bold">Marks:</span> {time || '75'}</div>
+              </div>
+              <div className="flex justify-between items-center">
+                <div><span className="font-bold">Date:</span> {examDate || '___/___/20__'}</div>
+              </div>
+            </div>
           </div>
-          
-          <div className="text-center mt-1 mb-1">
-             <h3 className="text-base font-bold uppercase">{examName || 'EXAMINATION'}</h3>
-          </div>
-          
-          <div className="flex flex-col text-[10.5pt] font-medium px-1 gap-0.5">
-            <div className="flex justify-between items-center">
-              <div><span className="font-bold">Class:</span> {examSubject || '_______________'}</div>
-              <div><span className="font-bold">Marks:</span> {time || '75'}</div>
-            </div>
-            <div className="flex justify-between items-center">
-              <div><span className="font-bold">Date:</span> {examDate || '___/___/20__'}</div>
-            </div>
-          </div>
-        </div>
+        )}
 
         {/* Instructions Section */}
-        {instructions.length > 0 && (
+        {showHeader && instructions.length > 0 && (
           <div className="mb-3 text-[10pt] leading-snug break-inside-avoid">
             <h3 className="font-bold mb-1 uppercase underline underline-offset-2">General Instructions:</h3>
             <ul className="list-disc pl-5 m-0 space-y-0.5">

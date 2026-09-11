@@ -40,6 +40,7 @@ export const MCQPaperGeneratorPage = () => {
   
   const [fontSize, setFontSize] = useState<string>(() => localStorage.getItem('mcq_exam_font_size') || 'medium');
   const [questionSpacing, setQuestionSpacing] = useState<string>(() => localStorage.getItem('mcq_exam_spacing') || 'normal');
+  const [showPaperHeader, setShowPaperHeader] = useState<boolean>(() => localStorage.getItem('mcq_exam_show_header') !== 'false');
   
   // Logo is hardcoded from local storage or empty, no upload option in settings
   const [logoBase64] = useState<string>(() => {
@@ -1068,6 +1069,7 @@ export const MCQPaperGeneratorPage = () => {
               }}
               fontSize={fontSize}
               questionSpacing={questionSpacing}
+              showHeader={showPaperHeader}
             />
           </div>
           </div>
@@ -1328,6 +1330,25 @@ export const MCQPaperGeneratorPage = () => {
                     <option value="relaxed">Relaxed</option>
                   </select>
                 </div>
+              </div>
+              
+              <div className="pt-4 mt-2 border-t border-slate-100 flex items-center justify-between">
+                <div>
+                  <h4 className="font-medium text-slate-700">Show Paper Header</h4>
+                  <p className="text-xs text-slate-500">Display school name, logo, class, and instructions at the top.</p>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input 
+                    type="checkbox" 
+                    className="sr-only peer"
+                    checked={showPaperHeader}
+                    onChange={(e) => {
+                      setShowPaperHeader(e.target.checked);
+                      localStorage.setItem('mcq_exam_show_header', e.target.checked ? 'true' : 'false');
+                    }}
+                  />
+                  <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                </label>
               </div>
               
               <div className="pt-4 border-t border-slate-100">
