@@ -273,12 +273,17 @@ export const MCQPaperGeneratorPage = () => {
     const data = {
       subjectContents,
       inlineImages,
-      answerKeys
+      answerKeys,
+      settings: {
+        fontSize,
+        questionSpacing,
+        showPaperHeader
+      }
     };
     return "<!--MCQ_DATA_V2-->\n" + JSON.stringify(data);
   };
 
-  const deserializeContent = (raw: string): { textData: Record<string, string>; images: Record<string, FloatingImage>; keys: Record<string, Record<string, string>> } => {
+  const deserializeContent = (raw: string): { textData: Record<string, string>; images: Record<string, FloatingImage>; keys: Record<string, Record<string, string>>; settings?: any } => {
     if (raw.startsWith("<!--MCQ_DATA_V2-->\n")) {
       try {
         const jsonStr = raw.replace("<!--MCQ_DATA_V2-->\n", "");
@@ -286,7 +291,8 @@ export const MCQPaperGeneratorPage = () => {
         return { 
           textData: parsed.subjectContents || {}, 
           images: parsed.inlineImages || {},
-          keys: parsed.answerKeys || {}
+          keys: parsed.answerKeys || {},
+          settings: parsed.settings
         };
       } catch (e) {
         console.error("Failed to parse V2 data", e);
@@ -314,7 +320,7 @@ export const MCQPaperGeneratorPage = () => {
     
     textContent = textContent.replace(/\[IMG:([a-z0-9]+)\]/g, '');
     
-    return { textData: { 'General': textContent }, images: migratedImages, keys: {} };
+    return { textData: { 'General': textContent }, images: migratedImages, keys: {}, settings: undefined };
   };
 
   const handlePrint = () => {
@@ -719,6 +725,9 @@ export const MCQPaperGeneratorPage = () => {
       setExamDate(localStorage.getItem('mcq_exam_date') || '');
       setTime(localStorage.getItem('mcq_exam_marks') || '75');
       setInstructions(localStorage.getItem('mcq_exam_instructions') || 'Answer all questions.\nEach question carries equal marks.\nRead questions carefully before answering.');
+      setFontSize(localStorage.getItem('mcq_exam_font_size') || 'medium');
+      setQuestionSpacing(localStorage.getItem('mcq_exam_spacing') || 'normal');
+      setShowPaperHeader(localStorage.getItem('mcq_exam_show_header') !== 'false');
       setSubjectContents({
         'Telugu': '1. What is 25% of 200?\n(A) 25\n(B) 50\n(C) 75\n(D) 100\n\n2. Solve for x: $2x + 5 = 15$\n(A) 2\n(B) 4\n(C) 5\n(D) 10\n\n3. The perimeter of a rectangle is 40 cm. If its length is 12 cm, what is its breadth?\n(A) 8 cm\n(B) 10 cm\n(C) 12 cm\n(D) 16 cm'
       });
@@ -740,9 +749,21 @@ export const MCQPaperGeneratorPage = () => {
         setExamDate(p.examDate || '');
         setTime(p.time || '');
         setInstructions(p.instructions || '');
-        const { textData, images, keys } = deserializeContent(p.content || '');
+        const { textData, images, keys, settings } = deserializeContent(p.content || '');
         setSubjectContents(textData);
         setAnswerKeys(keys);
+        
+        if (settings) {
+          if (settings.fontSize) setFontSize(settings.fontSize);
+          if (settings.questionSpacing) setQuestionSpacing(settings.questionSpacing);
+          if (settings.showPaperHeader !== undefined) setShowPaperHeader(settings.showPaperHeader);
+        } else {
+          // Legacy papers explicitly had the header ON, normal spacing, medium font.
+          setFontSize('medium');
+          setQuestionSpacing('normal');
+          setShowPaperHeader(true);
+        }
+        
         if (p.examSubject) {
           const loadedSubjects = p.examSubject.split(', ');
           if (loadedSubjects.length > 0 && loadedSubjects[0] !== '') {
