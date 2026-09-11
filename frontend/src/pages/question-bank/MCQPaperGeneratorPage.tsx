@@ -249,6 +249,25 @@ export const MCQPaperGeneratorPage = () => {
     }
   };
 
+  const handleEditorKeyDown = (
+    e: React.KeyboardEvent<HTMLTextAreaElement>,
+    value: string,
+    setValue: (val: string) => void
+  ) => {
+    if (e.key === 'Tab') {
+      e.preventDefault();
+      const target = e.currentTarget;
+      const start = target.selectionStart;
+      const end = target.selectionEnd;
+      const tabCharacter = '    '; // 4 spaces
+      const newValue = value.substring(0, start) + tabCharacter + value.substring(end);
+      setValue(newValue);
+      setTimeout(() => {
+        target.selectionStart = target.selectionEnd = start + tabCharacter.length;
+      }, 0);
+    }
+  };
+
   const handleImageUploadForEditor = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -1010,9 +1029,10 @@ export const MCQPaperGeneratorPage = () => {
             <textarea
               ref={textareaRef}
               value={subjectContents[activeSubjectTab] || ''}
-              onChange={(e) => setSubjectContents(prev => ({ ...prev, [activeSubjectTab]: e.target.value }))}
+              onChange={(e) => setSubjectContents({ ...subjectContents, [activeSubjectTab]: e.target.value })}
               onPaste={handleEditorPaste}
-              className="flex-1 w-full mt-2 rounded-xl border-slate-200 bg-slate-50 border p-5 font-mono text-base leading-relaxed focus:ring-2 focus:ring-blue-500/20 outline-none resize-none min-h-[400px]"
+              onKeyDown={(e) => handleEditorKeyDown(e, subjectContents[activeSubjectTab] || '', (val) => setSubjectContents({ ...subjectContents, [activeSubjectTab]: val }))}
+              className="w-full rounded-xl border border-slate-200 bg-slate-50 p-5 font-mono text-sm leading-relaxed focus:ring-2 focus:ring-blue-500/20 outline-none min-h-[400px] resize-none"
               placeholder={`Enter questions for ${activeSubjectTab}...\n1. Question text\n(A) Option A\n(B) Option B\n(C) Option C\n(D) Option D`}
             />
           </div>

@@ -106,6 +106,25 @@ export const NavodayaPaperGeneratorPage = () => {
     }
   };
 
+  const handleEditorKeyDown = (
+    e: React.KeyboardEvent<HTMLTextAreaElement>,
+    value: string,
+    setValue: (val: string) => void
+  ) => {
+    if (e.key === 'Tab') {
+      e.preventDefault();
+      const target = e.currentTarget;
+      const start = target.selectionStart;
+      const end = target.selectionEnd;
+      const tabCharacter = '    '; // 4 spaces
+      const newValue = value.substring(0, start) + tabCharacter + value.substring(end);
+      setValue(newValue);
+      setTimeout(() => {
+        target.selectionStart = target.selectionEnd = start + tabCharacter.length;
+      }, 0);
+    }
+  };
+
   const handleImageUploadForEditor = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -722,6 +741,7 @@ export const NavodayaPaperGeneratorPage = () => {
                       value={sec.content}
                       onChange={e => setSections(sections.map(s => s.id === sec.id ? { ...s, content: e.target.value } : s))}
                       onPaste={handleEditorPaste}
+                      onKeyDown={(e) => handleEditorKeyDown(e, sec.content, (val) => setSections(sections.map(s => s.id === sec.id ? { ...s, content: val } : s)))}
                       className="flex-1 w-full rounded-xl border border-slate-200 bg-slate-50 p-5 font-mono text-sm leading-relaxed focus:ring-2 focus:ring-blue-500/20 outline-none resize-none min-h-[300px]"
                       placeholder={`Enter questions for ${sec.name}...`}
                     />
@@ -749,6 +769,7 @@ export const NavodayaPaperGeneratorPage = () => {
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
                 onPaste={handleEditorPaste}
+                onKeyDown={(e) => handleEditorKeyDown(e, content, setContent)}
                 className="flex-1 w-full rounded-xl border border-slate-200 bg-slate-50 p-5 font-mono text-sm leading-relaxed focus:ring-2 focus:ring-blue-500/20 outline-none resize-none min-h-[400px]"
                 placeholder="1. Descriptive question text here...&#10;&#10;2. Multiple choice question text here...&#10;(A) Option A&#10;(B) Option B&#10;(C) Option C&#10;(D) Option D&#10;&#10;Tip: Just type the question! If you add (A)(B)(C)(D) it becomes a Bit."
               />

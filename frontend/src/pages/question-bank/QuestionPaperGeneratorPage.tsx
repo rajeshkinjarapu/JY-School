@@ -98,6 +98,23 @@ export const QuestionPaperGeneratorPage = () => {
     // If no image, let normal text paste happen
   };
 
+  const handleEditorKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Tab') {
+      e.preventDefault();
+      const start = e.currentTarget.selectionStart;
+      const end = e.currentTarget.selectionEnd;
+      const tabCharacter = '    '; // 4 spaces
+      const newContent = content.substring(0, start) + tabCharacter + content.substring(end);
+      setContent(newContent);
+      
+      setTimeout(() => {
+        if (textareaRef.current) {
+          textareaRef.current.selectionStart = textareaRef.current.selectionEnd = start + tabCharacter.length;
+        }
+      }, 0);
+    }
+  };
+
   const handleImageUploadForEditor = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -617,6 +634,7 @@ export const QuestionPaperGeneratorPage = () => {
               value={content}
               onChange={(e) => setContent(e.target.value)}
               onPaste={handleEditorPaste}
+              onKeyDown={handleEditorKeyDown}
               className="flex-1 w-full rounded-xl border-slate-200 bg-slate-50 border p-5 font-mono text-base leading-relaxed focus:ring-2 focus:ring-blue-500/20 outline-none resize-none min-h-[400px]"
               placeholder="1. Descriptive question text here...&#10;&#10;2. Multiple choice question text here...&#10;(A) Option A&#10;(B) Option B&#10;(C) Option C&#10;(D) Option D&#10;&#10;Tip: Just type the question! If you add (A)(B)(C)(D) it becomes a Bit. Press Enter 3-4 times for answer space."
             />
