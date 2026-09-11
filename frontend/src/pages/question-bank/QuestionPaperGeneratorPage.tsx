@@ -55,6 +55,10 @@ export const QuestionPaperGeneratorPage = () => {
   });
   const [isDoubleColumn, setIsDoubleColumn] = useState(false);
   const [editorMode, setEditorMode] = useState<'smart' | 'raw'>('smart');
+  const [showPaperHeader, setShowPaperHeader] = useState<boolean>(() => {
+    const saved = localStorage.getItem('jy_exam_show_header');
+    return saved !== null ? saved === 'true' : true;
+  });
   
   // Editor State
   const [content, setContent] = useState(
@@ -681,6 +685,7 @@ export const QuestionPaperGeneratorPage = () => {
               maxMarks={maxMarks}
               time={time}
               instructions={instructions.split('\n')}
+              showHeader={showPaperHeader}
               isDoubleColumn={isDoubleColumn}
               inlineImages={inlineImages}
               onImageUpdate={(id, updates) => {
@@ -873,6 +878,24 @@ export const QuestionPaperGeneratorPage = () => {
                     className="w-full rounded-lg border-slate-200 bg-white border p-2.5 text-sm focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
                   />
                 </div>
+              </div>
+              <div className="flex items-center justify-between pt-4 border-t border-slate-100">
+                <div>
+                  <span className="block text-sm font-medium text-slate-700">Show Paper Header</span>
+                  <span className="block text-xs text-slate-500">Show school logo, name, and instructions at the top</span>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    className="sr-only peer"
+                    checked={showPaperHeader}
+                    onChange={(e) => {
+                      setShowPaperHeader(e.target.checked);
+                      localStorage.setItem('jy_exam_show_header', String(e.target.checked));
+                    }}
+                  />
+                  <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                </label>
               </div>
               <div className="pt-2 border-t border-slate-100">
                 <label className="block text-sm font-medium text-slate-700 mb-1">School Logo</label>
