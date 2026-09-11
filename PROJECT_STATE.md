@@ -12,6 +12,7 @@
 - **Editor Usability (Tab Key)**: Intercepted the Tab key down event across all paper generator textareas (AI, MCQ, Navodaya) to insert 4 spaces instead of shifting focus, simulating an MS Word-like indentation experience.
 - **Raw LaTeX / Book Mode**: Introduced an editor mode toggle (`Smart Exam` | `Raw Book`) in the AI Paper Generator. The `Raw Book` mode bypasses the intelligent question/option aligner, rendering text and math exactly as written. Enhanced the LaTeX frontend parser to support basic structural tags like `\section`, `\subsection`, `\textbf`, `\textit`, `\underline`, `\begin{center}`, and `\newpage` allowing users to format books seamlessly.
 - **AI Paper Generator Formatting Options**: Added "Show Paper Header", "Text Size", and "Paragraph Height" controls in the Paper Settings for the AI Paper Generator, giving users complete control over the layout density and header visibility.
+- **Resizable Split Layout**: Implemented a professional, draggable resize handle between the Editor and the Live Preview in the AI Paper Generator, allowing users to dynamically adjust the width of both panes for a better workspace experience.
 
 ## Pending Manual Actions for User
 - **VPS Backend Deployment (CRITICAL)**: The backend token expiration logic and Prisma schema (`status`, `scheduledFor`) were updated. These changes must be deployed to the VPS database and server using:

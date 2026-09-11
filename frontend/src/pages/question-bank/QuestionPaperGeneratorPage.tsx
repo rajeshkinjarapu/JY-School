@@ -62,6 +62,41 @@ export const QuestionPaperGeneratorPage = () => {
   const [fontSize, setFontSize] = useState<string>(() => localStorage.getItem('jy_exam_font_size') || 'medium');
   const [questionSpacing, setQuestionSpacing] = useState<string>(() => localStorage.getItem('jy_exam_spacing') || 'normal');
   
+  // Resizer State
+  const [leftWidth, setLeftWidth] = useState(50);
+  const dragRef = useRef<HTMLDivElement>(null);
+  const isDragging = useRef(false);
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isDragging.current) return;
+      const newWidth = (e.clientX / window.innerWidth) * 100;
+      if (newWidth > 20 && newWidth < 80) {
+        setLeftWidth(newWidth);
+      }
+    };
+    const handleMouseUp = () => {
+      if (isDragging.current) {
+        isDragging.current = false;
+        document.body.style.cursor = 'default';
+        document.body.style.userSelect = 'auto';
+      }
+    };
+    
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, []);
+
+  const handleDragStart = () => {
+    isDragging.current = true;
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+  };
+  
   // Editor State
   const [content, setContent] = useState(
     '1. What is the capital of France?\n(A) London\n(B) Paris\n(C) Berlin\n(D) Madrid\n\n2. Solve for x: $2x + 5 = 15$\n(A) 2\n(B) 4\n(C) 5\n(D) 10\n\n3. Which of the following is the quadratic formula?\n(A) $x = \\frac{b}{2a}$\n(B) $x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$\n(C) $x = mc^2$\n(D) $x = y + c$'
@@ -606,7 +641,7 @@ export const QuestionPaperGeneratorPage = () => {
       <div className="flex-1 flex overflow-hidden print:overflow-visible h-[calc(100vh-80px)] print:h-auto print:block">
         
         {/* Left Side: Editor (Hidden on Print) */}
-        <div className="w-1/2 p-6 overflow-y-auto border-r border-slate-200 bg-white print:hidden custom-scrollbar">
+        <div style={{ width: `${leftWidth}%` }} className="p-6 overflow-y-auto border-r border-slate-200 bg-white print:hidden custom-scrollbar shrink-0">
           <div className="h-full flex flex-col pb-20">
             <h3 className="font-semibold text-slate-700 border-b pb-2 mb-4 flex justify-between items-center">
               <div className="flex items-center gap-3">
@@ -666,8 +701,22 @@ export const QuestionPaperGeneratorPage = () => {
           </div>
         </div>
 
+        {/* DRAGGER */}
+        <div 
+          ref={dragRef}
+          onMouseDown={handleDragStart}
+          className="w-2 bg-slate-200 hover:bg-blue-400 cursor-col-resize flex items-center justify-center transition-colors print:hidden shrink-0 group relative z-50 border-r border-slate-300 shadow-sm"
+        >
+          <div className="flex flex-col gap-1 items-center justify-center opacity-50 group-hover:opacity-100 transition-opacity">
+            <div className="w-0.5 h-1 bg-slate-500 rounded-full"></div>
+            <div className="w-0.5 h-1 bg-slate-500 rounded-full"></div>
+            <div className="w-0.5 h-1 bg-slate-500 rounded-full"></div>
+            <div className="w-0.5 h-1 bg-slate-500 rounded-full"></div>
+          </div>
+        </div>
+
         {/* Right Side: Live Preview (Full Width on Print) */}
-        <div className="w-1/2 overflow-y-auto bg-slate-100 print:w-full print:bg-white custom-scrollbar flex flex-col relative print:overflow-visible print:block print:absolute print:inset-0 print:z-[999] print:h-auto">
+        <div style={{ width: `calc(${100 - leftWidth}% - 8px)` }} className="overflow-y-auto bg-slate-100 print:w-full print:bg-white custom-scrollbar flex flex-col relative print:overflow-visible print:block print:absolute print:inset-0 print:z-[999] print:h-auto shrink-0">
           <div className="sticky top-0 z-10 bg-slate-100/80 backdrop-blur-md border-b border-slate-200 px-6 py-3 flex justify-between items-center print:hidden">
             <h3 className="font-semibold text-slate-700 flex items-center gap-2">
               Live Preview
