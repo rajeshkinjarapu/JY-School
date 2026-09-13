@@ -884,7 +884,7 @@ export const JEEProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
           
             {studentsData.map((data, idx) => (
               <div key={data.studentId} id={`progress-card-${idx}`} className="progress-card-wrapper justify-center bg-white hidden" style={{ width: '210mm' }}>
-                <ProgressCardTemplate data={data} exam={selectedExam} settings={selectedExam?.admitCardSettings} />
+                <ProgressCardTemplate data={data} exam={selectedExam} settings={{ ...(selectedExam?.admitCardSettings || {}), logoUrl, signatureUrl, teacherSignatureUrl, examNameOverride }} />
               </div>
             ))}
           </div>

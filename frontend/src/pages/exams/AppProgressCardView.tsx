@@ -187,7 +187,7 @@ export const AppProgressCardView: React.FC = () => {
             <ProgressCardTemplate 
               data={mappedData} 
               exam={examData} 
-              settings={settings} 
+              settings={{ ...settings, ...(examData?.admitCardSettings || {}) }} 
             />
           </div>
         </div>
