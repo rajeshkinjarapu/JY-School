@@ -253,8 +253,18 @@ export const update = async (req: Request, res: Response, next: NextFunction): P
 
 export const deleteUser = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   const id = req.params.id as string;
+  const isHardDelete = req.query.hard === 'true';
   const existing = await prisma.user.findUnique({ where: { id } });
   if (!existing) return next(createError('User not found', 404));
-  await prisma.user.update({ where: { id }, data: { isActive: false } });
-  successResponse(res, null, 'User deactivated');
+  
+  if (isHardDelete) {
+    // Delete related records manually if cascade is not fully configured on all relations
+    await prisma.student.deleteMany({ where: { userId: id } }).catch(() => {});
+    await prisma.teacher.deleteMany({ where: { userId: id } }).catch(() => {});
+    await prisma.user.delete({ where: { id } });
+    successResponse(res, null, 'User permanently deleted');
+  } else {
+    await prisma.user.update({ where: { id }, data: { isActive: false } });
+    successResponse(res, null, 'User deactivated');
+  }
 };

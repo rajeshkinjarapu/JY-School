@@ -279,6 +279,17 @@ export const SettingsPage: React.FC = () => {
     }
   };
 
+  const handleHardDeleteUser = async (userId: string) => {
+    if (!window.confirm('WARNING: Are you sure you want to PERMANENTLY DELETE this user? This cannot be undone!')) return;
+    try {
+      await api.delete(`/api/users/${userId}?hard=true`);
+      toast.success('User permanently deleted');
+      fetchUsers();
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to delete user');
+    }
+  };
+
   if (loadingSettings) return <LoadingSpinner size="lg" className="h-[50vh]" />;
 
   return (
@@ -539,7 +550,7 @@ export const SettingsPage: React.FC = () => {
                             </div>
                           </td>
                           <td className="px-6 py-4 text-right">
-                            <div className="flex justify-end gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                            <div className="flex justify-end gap-2 transition-opacity">
                               <button
                                 onClick={() => handleOpenEditModal(user)}
                                 className="p-2 rounded-xl text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-all cursor-pointer"
@@ -547,14 +558,21 @@ export const SettingsPage: React.FC = () => {
                               >
                                 <Edit className="w-4 h-4" />
                               </button>
-                              <button
-                                onClick={() => handleDeleteUser(user.id)}
-                                disabled={!user.isActive}
-                                className="p-2 rounded-xl text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 transition-all cursor-pointer disabled:opacity-30 disabled:hover:bg-transparent"
-                                title="Deactivate"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </button>
+                                <button
+                                  onClick={() => handleDeleteUser(user.id)}
+                                  disabled={!user.isActive}
+                                  className="p-2 rounded-xl text-gray-400 hover:text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-900/30 transition-all cursor-pointer disabled:opacity-30 disabled:hover:bg-transparent"
+                                  title="Deactivate"
+                                >
+                                  <svg xmlns="http://www.w3.org/.svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-user-x"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="17" x2="22" y1="8" y2="13"/><line x1="22" x2="17" y1="8" y2="13"/></svg>
+                                </button>
+                                <button
+                                  onClick={() => handleHardDeleteUser(user.id)}
+                                  className="p-2 rounded-xl text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 transition-all cursor-pointer"
+                                  title="Hard Delete"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
                             </div>
                           </td>
                         </tr>
