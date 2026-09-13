@@ -35,14 +35,7 @@ export const JEEProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
   const [published, setPublished] = useState(false);
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
 
-  const formatName = (name: string) => {
-    if (!name) return "";
-    const parts = name.trim().split(" ");
-    if (parts.length > 1) {
-      return `${parts[0].charAt(0)}. ${parts.slice(1).join(" ")}`;
-    }
-    return name;
-  };
+
 
   const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
   const resolveUrl = (url: string) => {
@@ -798,7 +791,7 @@ export const JEEProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
                         <span className="font-black text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 px-2 py-1 rounded-md text-xs">#{data.rank}</span>
                       </td>
                       <td className="py-3 px-4 font-bold text-gray-900 dark:text-slate-200">
-                        {formatName(data.studentName)}
+                        {data.studentName}
                       </td>
                       {!isTeacher && <td className="py-3 px-4 text-gray-600 dark:text-slate-400 font-medium">{data.rollNo || '-'}</td>}
                       
