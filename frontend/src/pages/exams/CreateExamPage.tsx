@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { ArrowLeft, Save, Plus, X, Edit3, Calendar, FileText, CheckCircle, Hash, Layers, RefreshCw, Copy } from 'lucide-react';
+import { ArrowLeft, Save, Plus, X, Edit3, Calendar, FileText, CheckCircle, Hash, Layers, RefreshCw, Copy, Upload } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../../api/axios';
 import { PageHeader } from '../../components/UI/PageHeader';
@@ -35,6 +35,12 @@ export const CreateExamPage: React.FC = () => {
   const [classConfigs, setClassConfigs] = useState<{ [classId: string]: ClassSubjectConfig }>({});
   const [activeClassTab, setActiveClassTab] = useState<string>('');
   const [bulkMarksInput, setBulkMarksInput] = useState<number>(100);
+
+  // Progress Card Settings
+  const [logoUrl, setLogoUrl] = useState(editExam?.admitCardSettings?.logoUrl || '');
+  const [signatureUrl, setSignatureUrl] = useState(editExam?.admitCardSettings?.signatureUrl || '');
+  const [teacherSignatureUrl, setTeacherSignatureUrl] = useState(editExam?.admitCardSettings?.teacherSignatureUrl || '');
+
 
   useEffect(() => {
     fetchInitialData();
@@ -290,6 +296,30 @@ export const CreateExamPage: React.FC = () => {
     toast.success(`Applied ${bulkMarksInput} Max Marks to ALL assigned classes!`);
   };
 
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'signature' | 'teacherSignature' | 'logo') => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const formData = new FormData();
+    formData.append('file', file);
+    try {
+      const res = await api.post('/api/uploads/image', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      if (type === 'signature') setSignatureUrl(res.data.url);
+      if (type === 'teacherSignature') setTeacherSignatureUrl(res.data.url);
+      if (type === 'logo') setLogoUrl(res.data.url);
+      toast.success(`${type === 'logo' ? 'Logo' : type === 'signature' ? 'Principal Signature' : 'Teacher Signature'} uploaded successfully!`);
+    } catch (err) {
+      toast.error('Failed to upload image');
+    }
+  };
+
+  const resolveUrl = (url: string) => {
+    if (!url) return '';
+    if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) return url;
+    return `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${url}`;
+  };
+
   // Calculate total max marks across active tab or overall
   const activeClassConfig = classConfigs[activeClassTab];
   const activeClassTotalMarks = activeClassConfig
@@ -328,6 +358,14 @@ export const CreateExamPage: React.FC = () => {
     };
 
     setLoading(true);
+    
+    const admitCardSettings = {
+      ...(editExam?.admitCardSettings || {}),
+      logoUrl,
+      signatureUrl,
+      teacherSignatureUrl
+    };
+
     try {
       if (editExam?.id) {
         await api.put(`/api/exams/${editExam.id}`, {
@@ -335,7 +373,8 @@ export const CreateExamPage: React.FC = () => {
           classIds: examClassIds,
           examDate: new Date(examDate),
           maxMarks: activeClassTotalMarks,
-          subjects: finalSubjectsPayload
+          subjects: finalSubjectsPayload,
+          admitCardSettings
         });
         toast.success('Exam updated successfully!');
       } else {
@@ -344,7 +383,8 @@ export const CreateExamPage: React.FC = () => {
           classIds: examClassIds,
           examDate: new Date(examDate),
           maxMarks: activeClassTotalMarks,
-          subjects: finalSubjectsPayload
+          subjects: finalSubjectsPayload,
+          admitCardSettings
         });
         toast.success('Exam created successfully!');
       }
@@ -440,6 +480,64 @@ export const CreateExamPage: React.FC = () => {
                       <input type="number" readOnly value={activeClassTotalMarks} className="w-full pl-12 pr-4 py-3 bg-slate-100 border-2 border-slate-200 rounded-xl text-sm font-bold text-slate-500 outline-none shadow-sm cursor-not-allowed" />
                     </div>
                     <p className="text-[10px] text-slate-500 font-semibold mt-2">Auto-calculated from class subjects.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Progress Card Settings Card */}
+            <div className="bg-white rounded-[2rem] border border-slate-200/80 shadow-sm p-6 sm:p-8">
+              <h2 className="text-base sm:text-lg font-black text-slate-800 flex items-center gap-2.5 mb-6">
+                <span className="p-1.5 bg-pink-50 text-pink-600 rounded-lg dark:bg-pink-950/50 dark:text-pink-400">
+                  <FileText className="w-5 h-5" />
+                </span>
+                Progress Card Images (Logo & Signatures)
+              </h2>
+              <p className="text-xs font-bold text-slate-500 mb-6">These images will be displayed on the progress cards generated for this exam.</p>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="space-y-3">
+                  <label className="block text-[10px] font-black uppercase tracking-wider text-slate-500">School Logo</label>
+                  <div className="flex flex-col items-start gap-3">
+                    {logoUrl ? (
+                      <img src={resolveUrl(logoUrl)} alt="Logo" className="h-14 object-contain border border-slate-200 rounded-lg p-1 bg-white" />
+                    ) : (
+                      <div className="h-14 w-14 border-2 border-dashed border-slate-300 rounded-lg flex items-center justify-center text-[10px] font-bold text-slate-400">No Logo</div>
+                    )}
+                    <label className="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest cursor-pointer transition-colors flex items-center gap-2">
+                      <Upload className="w-3.5 h-3.5" /> Upload Logo
+                      <input type="file" accept="image/*" className="hidden" onChange={(e) => handleFileUpload(e, 'logo')} />
+                    </label>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <label className="block text-[10px] font-black uppercase tracking-wider text-slate-500">Principal Signature</label>
+                  <div className="flex flex-col items-start gap-3">
+                    {signatureUrl ? (
+                      <img src={resolveUrl(signatureUrl)} alt="Principal Sign" className="h-14 object-contain border border-slate-200 rounded-lg p-1 bg-white" />
+                    ) : (
+                      <div className="h-14 w-24 border-2 border-dashed border-slate-300 rounded-lg flex items-center justify-center text-[10px] font-bold text-slate-400 text-center">No Sign</div>
+                    )}
+                    <label className="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest cursor-pointer transition-colors flex items-center gap-2">
+                      <Upload className="w-3.5 h-3.5" /> Upload Sign
+                      <input type="file" accept="image/*" className="hidden" onChange={(e) => handleFileUpload(e, 'signature')} />
+                    </label>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <label className="block text-[10px] font-black uppercase tracking-wider text-slate-500">Teacher Signature</label>
+                  <div className="flex flex-col items-start gap-3">
+                    {teacherSignatureUrl ? (
+                      <img src={resolveUrl(teacherSignatureUrl)} alt="Teacher Sign" className="h-14 object-contain border border-slate-200 rounded-lg p-1 bg-white" />
+                    ) : (
+                      <div className="h-14 w-24 border-2 border-dashed border-slate-300 rounded-lg flex items-center justify-center text-[10px] font-bold text-slate-400 text-center">No Sign</div>
+                    )}
+                    <label className="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest cursor-pointer transition-colors flex items-center gap-2">
+                      <Upload className="w-3.5 h-3.5" /> Upload Sign
+                      <input type="file" accept="image/*" className="hidden" onChange={(e) => handleFileUpload(e, 'teacherSignature')} />
+                    </label>
                   </div>
                 </div>
               </div>

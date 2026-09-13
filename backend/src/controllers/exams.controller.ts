@@ -128,7 +128,7 @@ const normalizeSubjectsToRealIds = async (subjects: any): Promise<any> => {
 
 export const create = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const { name, classIds, term, examDate, maxMarks, passingMarks, subjects } = req.body;
+    const { name, classIds, term, examDate, maxMarks, passingMarks, subjects, admitCardSettings } = req.body;
 
     if (!classIds || !Array.isArray(classIds) || classIds.length === 0) {
       return next(createError('Please provide at least one class', 400));
@@ -153,6 +153,7 @@ export const create = async (req: AuthRequest, res: Response, next: NextFunction
         maxMarks: maxMarks || 100,
         passingMarks: passingMarks || 40,
         subjects: normalizedSubjects,
+        admitCardSettings: admitCardSettings || {},
         classes: {
           connect: uniqueClassIds.map(id => ({ id }))
         }
@@ -172,7 +173,7 @@ export const create = async (req: AuthRequest, res: Response, next: NextFunction
 
 export const update = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   const id = req.params.id as string;
-  const { name, term, examDate, maxMarks, passingMarks, subjects, classIds } = req.body;
+  const { name, term, examDate, maxMarks, passingMarks, subjects, classIds, admitCardSettings } = req.body;
 
   const existing = await prisma.exam.findUnique({ where: { id } });
   if (!existing) return next(createError('Exam not found', 404));
@@ -193,6 +194,10 @@ export const update = async (req: AuthRequest, res: Response, next: NextFunction
     maxMarks, passingMarks,
     subjects: finalSubjects,
   };
+
+  if (admitCardSettings !== undefined) {
+    data.admitCardSettings = admitCardSettings;
+  }
 
   if (classIds && Array.isArray(classIds)) {
     data.classes = {
