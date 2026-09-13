@@ -37,14 +37,23 @@ export const CreateExamPage: React.FC = () => {
   const [bulkMarksInput, setBulkMarksInput] = useState<number>(100);
 
   // Progress Card Settings
-  const [logoUrl, setLogoUrl] = useState(editExam?.admitCardSettings?.logoUrl || '');
-  const [signatureUrl, setSignatureUrl] = useState(editExam?.admitCardSettings?.signatureUrl || '');
-  const [teacherSignatureUrl, setTeacherSignatureUrl] = useState(editExam?.admitCardSettings?.teacherSignatureUrl || '');
-
+  const [logoUrl, setLogoUrl] = useState('');
+  const [signatureUrl, setSignatureUrl] = useState('');
+  const [teacherSignatureUrl, setTeacherSignatureUrl] = useState('');
 
   useEffect(() => {
     fetchInitialData();
     if (editExam) {
+      // Fetch full exam details because location.state.exam lacks admitCardSettings
+      api.get(`/api/exams/${editExam.id}`).then((res: any) => {
+        const fullExam = res.data;
+        if (fullExam?.admitCardSettings) {
+          setLogoUrl(fullExam.admitCardSettings.logoUrl || '');
+          setSignatureUrl(fullExam.admitCardSettings.signatureUrl || '');
+          setTeacherSignatureUrl(fullExam.admitCardSettings.teacherSignatureUrl || '');
+        }
+      }).catch(err => console.error('Failed to load full exam', err));
+
       if (editExam.name.includes('JEE')) setExamCategory('JEE');
       else if (['FA-1', 'FA-2', 'FA-3', 'FA-4', 'SA-1', 'SA-2', 'Pre-Final'].some(t => editExam.name.includes(t))) setExamCategory('BOARD');
       else setExamCategory('');
