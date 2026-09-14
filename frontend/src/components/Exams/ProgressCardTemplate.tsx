@@ -80,10 +80,10 @@ export const ProgressCardTemplate: React.FC<ProgressCardTemplateProps> = ({
         .jee-card .deco-line .line { flex: 1; max-width: 140px; height: 2px; background: linear-gradient(90deg, transparent, #f39c12, transparent); }
         .jee-card .student-info { margin: 4px 20px 10px 20px !important; border: 2px solid #f39c12; border-radius: 12px; overflow: hidden; background: linear-gradient(135deg, #ffffff 0%, #fef8f0 100%); box-shadow: 0 6px 20px rgba(243, 156, 18, 0.12); display: flex; position: relative; flex-shrink: 0; }
         .jee-card .student-info .info-details { flex: 1; display: flex; flex-direction: column; }
-        .jee-card .student-info .info-row { display: grid; grid-template-columns: 150px 1fr; border-bottom: 1px solid #f5ede4; }
+        .jee-card .student-info .info-row { display: grid; grid-template-columns: 175px 1fr; border-bottom: 1px solid #f5ede4; }
         .jee-card .student-info .info-row:last-child { border-bottom: none; }
-        .jee-card .student-info .info-row .label { background: #fdf9f4; padding: 7px 18px; font-weight: 600; font-size: 13px; color: #6a3a1a; border-right: 1px solid #f5ede4; display: flex; align-items: center; gap: 6px; white-space: nowrap; }
-        .jee-card .student-info .info-row .value { padding: 7px 18px; font-weight: 600; font-size: 14px; color: #0b1a33; background: transparent; display: flex; align-items: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 120px; }
+        .jee-card .student-info .info-row .label { background: #fdf9f4; padding: 6px 18px; font-weight: 600; font-size: 13px; color: #6a3a1a; border-right: 1px solid #f5ede4; display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+        .jee-card .student-info .info-row .value { padding: 6px 18px; font-weight: 600; font-size: 14px; color: #0b1a33; background: transparent; display: flex; align-items: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 120px; }
         .jee-card .student-info .info-row:nth-child(even) { background: #fefcf9; }
         .jee-card .student-info .photo-col { position: absolute; right: 16px; top: 16px; display: flex; align-items: center; justify-content: center; }
         .jee-card .student-info .photo-col img { width: 95px; height: 114px; object-fit: cover; border: 3px solid #f39c12; box-shadow: 0 4px 10px rgba(243, 156, 18, 0.2); border-radius: 8px; background: #fff; flex-shrink: 0; }
@@ -104,13 +104,13 @@ export const ProgressCardTemplate: React.FC<ProgressCardTemplateProps> = ({
         .perf-table tbody .total-row td { background: linear-gradient(90deg, #fdf9f4, #fff3e0) !important; font-weight: 700; font-size: 15px; border-top: 2.5px solid #f39c12; border-bottom: 2.5px solid #f39c12; }
         .perf-table tbody .total-row .total-label { text-align: left; padding-left: 20px; color: #0b1a33; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; }
         .perf-table tbody .total-row .marks-cell { font-size: 19px; color: #c0392b; font-weight: 900; }
-        .jee-card .score-bar-wrap { margin: 8px 28px 18px 28px; background: linear-gradient(to right, #ffffff, #f9fbfd); border: 1px solid #dce4ed; border-radius: 12px; padding: 16px 20px; flex-shrink: 0; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
+        .jee-card .score-bar-wrap { margin: 6px 28px 10px 28px; background: linear-gradient(to right, #ffffff, #f9fbfd); border: 1px solid #dce4ed; border-radius: 12px; padding: 10px 20px; flex-shrink: 0; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
         .jee-card .score-bar { height: 16px; background: #eef2f7; border-radius: 20px; overflow: hidden; position: relative; border: 1px solid #dce4ed; }
         .jee-card .score-bar .fill { height: 100%; background: linear-gradient(90deg, #1a4a7a, #3498db); border-radius: 20px; transition: width 0.5s ease; position: relative; }
         .jee-card .score-bar .fill::after { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0) 100%); background-size: 200% 100%; animation: shimmer 2s infinite linear; }
         @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
         .jee-card .score-labels { display: flex; justify-content: space-between; margin-top: 8px; font-size: 12px; font-weight: 600; color: #6a8aaa; }
-        .jee-card .result-footer { margin: auto 28px 20px 28px; padding-top: 18px; border-top: 2px dashed #dce4ed; display: flex; justify-content: space-between; align-items: flex-end; }
+        .jee-card .result-footer { margin: auto 28px 14px 28px; padding-top: 12px; border-top: 2px dashed #dce4ed; display: flex; justify-content: space-between; align-items: flex-end; }
         .jee-card .result-footer .left { display: flex; flex-direction: column; gap: 4px; }
         .jee-card .result-footer .total-label { font-size: 16px; font-weight: 800; color: #1a4a7a; text-transform: uppercase; letter-spacing: 0.5px; }
         .jee-card .result-footer .percentage { font-size: 46px; font-weight: 900; color: #c0392b; line-height: 1; letter-spacing: -1px; text-shadow: 1px 1px 0px rgba(192,57,43,0.1); }
@@ -169,10 +169,7 @@ export const ProgressCardTemplate: React.FC<ProgressCardTemplateProps> = ({
                     <div className="label">📖 Section</div>
                     <div className="value">{safeData.section}</div>
                 </div>
-                <div className="info-row">
-                    <div className="label">📞 Mobile</div>
-                    <div className="value">{safeData.mobile}</div>
-                </div>
+
                 <div className="info-row">
                     <div className="label">📅 Academic Year</div>
                     <div className="value">{safeData.academicYear}</div>
