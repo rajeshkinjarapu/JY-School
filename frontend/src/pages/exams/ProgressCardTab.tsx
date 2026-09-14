@@ -52,9 +52,9 @@ export const ProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
       const globalSettings = settingsRes.data?.data || settingsRes.data || {};
 
       setLogoUrl(examObj.admitCardSettings?.logoUrl || globalSettings.logoUrl || '');
-      setSignatureUrl(examObj.admitCardSettings?.signatureUrl || globalSettings.signatureUrl || globalSettings.principalSignatureUrl || '');
+      setSignatureUrl(examObj.admitCardSettings?.signatureUrl || examObj.admitCardSettings?.principalSignatureUrl || globalSettings.principalSignatureUrl || globalSettings.signatureUrl || '');
       setTeacherSignatureUrl(examObj.admitCardSettings?.teacherSignatureUrl || globalSettings.teacherSignatureUrl || '');
-      setExamNameOverride(examObj.admitCardSettings?.examNameOverride || '');
+      setExamNameOverride(examObj.admitCardSettings?.examTitleOverride || examObj.name);
       setPublished(examObj.admitCardSettings?.progressCardPublished || false);
       
       setMergedSettings({

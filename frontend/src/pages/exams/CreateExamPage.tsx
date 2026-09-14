@@ -44,14 +44,24 @@ export const CreateExamPage: React.FC = () => {
   useEffect(() => {
     fetchInitialData();
     if (editExam) {
-      // Fetch full exam details because location.state.exam lacks admitCardSettings
-      api.get(`/api/exams/${editExam.id}`).then((res: any) => {
+      // Fetch full exam details and global settings together
+      Promise.all([
+        api.get(`/api/exams/${editExam.id}`),
+        api.get('/api/settings').catch(() => ({ data: {} }))
+      ]).then(([res, settingsRes]: any) => {
         const fullExam = res.data;
+        const globalSettings = settingsRes.data?.data || settingsRes.data || {};
+        
         if (fullExam?.admitCardSettings) {
           setFullExamSettings(fullExam.admitCardSettings);
-          setLogoUrl(fullExam.admitCardSettings.logoUrl || '');
-          setSignatureUrl(fullExam.admitCardSettings.signatureUrl || '');
-          setTeacherSignatureUrl(fullExam.admitCardSettings.teacherSignatureUrl || '');
+          setLogoUrl(fullExam.admitCardSettings.logoUrl || globalSettings.logoUrl || '');
+          setSignatureUrl(fullExam.admitCardSettings.signatureUrl || fullExam.admitCardSettings.principalSignatureUrl || globalSettings.principalSignatureUrl || globalSettings.signatureUrl || '');
+          setTeacherSignatureUrl(fullExam.admitCardSettings.teacherSignatureUrl || globalSettings.teacherSignatureUrl || '');
+        } else {
+          // If no admit card settings exist for the exam, use global
+          setLogoUrl(globalSettings.logoUrl || '');
+          setSignatureUrl(globalSettings.principalSignatureUrl || globalSettings.signatureUrl || '');
+          setTeacherSignatureUrl(globalSettings.teacherSignatureUrl || '');
         }
       }).catch(err => console.error('Failed to load full exam', err));
 
@@ -90,15 +100,24 @@ export const CreateExamPage: React.FC = () => {
 
   const fetchInitialData = async () => {
     try {
-      const [classRes, subRes]: any = await Promise.all([
+      const [classRes, subRes, settingsRes]: any = await Promise.all([
         api.get('/api/classes?limit=500'),
-        api.get('/api/subjects?limit=5000')
+        api.get('/api/subjects?limit=5000'),
+        api.get('/api/settings').catch(() => ({ data: {} }))
       ]);
       const classList = classRes.data || classRes || [];
       const subList = subRes.data || subRes || [];
+      const globalSettings = settingsRes.data?.data || settingsRes.data || {};
+      
       const sortedClasses = sortClasses(classList);
       setClasses(sortedClasses);
       setAllDbSubjects(subList);
+
+      if (!editExam) {
+        setLogoUrl(globalSettings.logoUrl || '');
+        setSignatureUrl(globalSettings.principalSignatureUrl || globalSettings.signatureUrl || '');
+        setTeacherSignatureUrl(globalSettings.teacherSignatureUrl || '');
+      }
     } catch {
       toast.error('Failed to load initial data');
     }
