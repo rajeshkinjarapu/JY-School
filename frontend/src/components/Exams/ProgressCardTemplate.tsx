@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { Award } from 'lucide-react';
 
 interface ProgressCardTemplateProps {
@@ -12,14 +12,12 @@ export const ProgressCardTemplate: React.FC<ProgressCardTemplateProps> = ({
   exam = {}, 
   settings = {} 
 }) => {
-  // Fallback data for preview
   const safeData = {
     studentName: data.studentName || "VENKATA SAI KUMAR",
     rollNo: data.rollNo || "SVJY-2026-045",
     className: data.className || "Class X",
     section: data.section || "Olympiad Batch",
-    mobile: data.mobile || "+91 9876543210",
-    rank: data.rank || "1",
+    rank: data.rank || "",
     photo: data.photo || "",
     total: data.total || 0,
     academicYear: data.academicYear || "2026-2027",
@@ -48,232 +46,182 @@ export const ProgressCardTemplate: React.FC<ProgressCardTemplateProps> = ({
     return `${API_BASE.replace(/\/+$/, '')}/${url.replace(/^\/+/, '')}`;
   };
 
+  const infoRows = [
+    { icon: '`u{1F464}', label: 'Student Name', value: safeData.studentName },
+    { icon: '`u{1F194}', label: 'Student ID', value: safeData.rollNo },
+    { icon: '`u{1F4DA}', label: 'Class', value: safeData.className },
+    { icon: '`u{1F4D6}', label: 'Section', value: safeData.section },
+    { icon: '`u{1F4C5}', label: 'Academic Year', value: safeData.academicYear },
+    { icon: '`u{1F4CD}', label: 'Location', value: safeData.location },
+    ...(safeData.rank ? [{ icon: '`u{1F3C5}', label: 'Class Rank', value: `#${safeData.rank}` }] : []),
+  ];
+
   return (
-    <div className="w-[794px] h-[1123px] bg-white rounded-xl shadow-2xl flex flex-col relative overflow-hidden font-sans print:shadow-none mx-auto shrink-0" style={{ fontFamily: "'Segoe UI', 'Roboto', system-ui, -apple-system, sans-serif" }}>
+    <div
+      className="w-[794px] bg-white mx-auto shrink-0 print:shadow-none"
+      style={{
+        fontFamily: "'Segoe UI','Roboto',system-ui,-apple-system,sans-serif",
+        boxShadow: '0 8px 40px rgba(0,0,0,0.18)',
+        borderRadius: 12,
+        overflow: 'hidden',
+        border: '2px solid #0b1a33',
+        outline: '3px solid #1a4a7a',
+        outlineOffset: -6,
+        boxSizing: 'border-box',
+        background: '#ffffff',
+      }}
+    >
       <style>{`
         @media print {
           @page { size: A4 portrait; margin: 0; }
-          body { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; margin: 0; padding: 0; }
-          .w-\\[794px\\] { width: 100% !important; max-width: 210mm !important; margin: 0 auto !important; }
-          .h-\\[1123px\\] { height: 296mm !important; max-height: 296mm !important; page-break-after: always; box-shadow: none !important; }
-          .jee-card { border: 2px solid #0b1a33 !important; outline: 3px solid #1a4a7a !important; }
-          .jee-card .card-header { padding: 12px 24px 8px 24px !important; }
-          .jee-card .student-info { margin: 4px 20px 10px 20px !important; }
-          .jee-card .perf-table-wrap { margin: 2px 20px 10px 20px !important; }
-          .jee-card .score-bar-wrap { margin: 4px 20px 12px 20px !important; padding: 10px 16px !important; }
-          .jee-card .result-footer { margin: auto 20px 10px 20px !important; padding-top: 10px !important; }
+          body { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; margin: 0 !important; padding: 0 !important; background: white !important; }
+          .progress-card-wrapper { page-break-after: always; break-after: page; page-break-inside: avoid; }
+          .w-\\\\[794px\\\\] { width: 210mm !important; max-width: 210mm !important; margin: 0 !important; box-shadow: none !important; border-radius: 0 !important; }
         }
-        .jee-card { background: linear-gradient(145deg, #ffffff 0%, #fdfcf9 100%); height: 100%; display: flex; flex-direction: column; position: relative; border: 2px solid #0b1a33; outline: 3px solid #1a4a7a; outline-offset: -6px; box-sizing: border-box; }
-        .jee-card .top-bar { height: 10px; background: linear-gradient(90deg, #0b1a33 0%, #1a4a7a 30%, #f39c12 60%, #d4a017 100%); flex-shrink: 0; }
-        .jee-card .card-header { display: flex; align-items: center; padding: 18px 32px 12px 32px; gap: 16px; flex-shrink: 0; border-bottom: 3px solid #f39c12; background: linear-gradient(to bottom, rgba(255,255,255,0.9), rgba(255,255,255,1)); }
-        .jee-card .card-header .logo-wrap { width: 100px; height: 100px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-        .jee-card .card-header .logo-wrap img { max-width: 100%; max-height: 100px; object-fit: contain; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1)); }
-        .jee-card .card-header .title-wrap { text-align: center; flex: 1; padding: 0 8px; }
-        .jee-card .card-header .title-wrap .school-name { font-size: 28px; font-weight: 900; color: #0b1a33; letter-spacing: 1.5px; font-family: 'Times New Roman', 'Georgia', serif; line-height: 1.2; white-space: nowrap; text-shadow: 1px 1px 0px rgba(0,0,0,0.05); }
-        .jee-card .card-header .title-wrap .school-sub { font-size: 16px; font-weight: 400; color: #1a4a7a; letter-spacing: 0.8px; margin: 2px 0; white-space: nowrap; }
-        .jee-card .card-header .title-wrap .school-address { font-size: 13px; font-weight: 400; color: #5a7a8a; letter-spacing: 0.3px; margin-top: 2px; white-space: nowrap; }
-        .jee-card .card-header .title-wrap .exam-title { font-size: 22px; font-weight: 400; color: #0b1a33; letter-spacing: 2px; margin: 6px 0 0; text-transform: uppercase; white-space: nowrap; }
-        .jee-card .card-header .title-wrap .result-card-label { font-size: 18px; font-weight: 400; color: #d4a017; letter-spacing: 4px; margin-top: 2px; text-transform: uppercase; white-space: nowrap; }
-        .jee-card .card-header .spacer { width: 100px; flex-shrink: 0; }
-        .jee-card .deco-line { display: flex; align-items: center; justify-content: center; gap: 14px; padding: 6px 32px 10px 32px; flex-shrink: 0; }
-        .jee-card .deco-line .ornament { font-size: 18px; color: #d4a017; flex-shrink: 0; }
-        .jee-card .deco-line .line { flex: 1; max-width: 140px; height: 2px; background: linear-gradient(90deg, transparent, #f39c12, transparent); }
-        .jee-card .student-info { margin: 4px 20px 10px 20px !important; border: 2px solid #f39c12; border-radius: 12px; overflow: hidden; background: linear-gradient(135deg, #ffffff 0%, #fef8f0 100%); box-shadow: 0 6px 20px rgba(243, 156, 18, 0.12); display: flex; position: relative; flex-shrink: 0; }
-        .jee-card .student-info .info-details { flex: 1; display: flex; flex-direction: column; }
-        .jee-card .student-info .info-row { display: grid; grid-template-columns: 175px 1fr; border-bottom: 1px solid #f5ede4; }
-        .jee-card .student-info .info-row:last-child { border-bottom: none; }
-        .jee-card .student-info .info-row .label { background: #fdf9f4; padding: 6px 18px; font-weight: 600; font-size: 13px; color: #6a3a1a; border-right: 1px solid #f5ede4; display: flex; align-items: center; gap: 6px; white-space: nowrap; }
-        .jee-card .student-info .info-row .value { padding: 6px 18px; font-weight: 600; font-size: 14px; color: #0b1a33; background: transparent; display: flex; align-items: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 120px; }
-        .jee-card .student-info .info-row:nth-child(even) { background: #fefcf9; }
-        .jee-card .student-info .photo-col { position: absolute; right: 16px; top: 16px; display: flex; align-items: center; justify-content: center; }
-        .jee-card .student-info .photo-col img { width: 95px; height: 114px; object-fit: cover; border: 3px solid #f39c12; box-shadow: 0 4px 10px rgba(243, 156, 18, 0.2); border-radius: 8px; background: #fff; flex-shrink: 0; }
-        .jee-card .student-info .photo-col .placeholder-photo { width: 95px; height: 114px; background: #ede8e0; display: flex; align-items: center; justify-content: center; color: #8a7a6a; font-size: 44px; border: 3px dashed #c8b8a8; border-radius: 6px; flex-shrink: 0; }
-        .jee-card .perf-table-wrap { margin: 4px 28px 12px 28px; padding: 0; flex-shrink: 0; }
-        .jee-card .perf-table-wrap .perf-title { font-size: 16px; font-weight: 700; color: #0b1a33; margin-bottom: 10px; display: flex; align-items: center; gap: 12px; white-space: nowrap; }
-        .jee-card .perf-table-wrap .perf-title .icon { font-size: 22px; }
-        .jee-card .perf-table-wrap .perf-title .max-hint { margin-left: auto; font-size: 13px; font-weight: 400; color: #6a8aaa; white-space: nowrap; }
-        .perf-table { width: 100%; border-collapse: collapse; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06); font-size: 14px; border: 2px solid #e8e0d8; }
-        .perf-table thead tr { background: linear-gradient(135deg, #0b1a33, #1a4a7a, #0b1a33); }
-        .perf-table thead th { color: #ffffff; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; padding: 12px 16px; text-align: center; white-space: nowrap; font-size: 13px; border: 1px solid rgba(255,255,255,0.1); }
-        .perf-table tbody td { padding: 9px 16px; text-align: center; white-space: nowrap; border: 1px solid #e8e0d8; background: #fff; font-weight: 500; color: #0b1a33; }
-        .perf-table tbody tr:nth-child(even) td { background: #fdfcf9; }
-        .perf-table tbody .subject-label { font-weight: 600; text-align: left; padding-left: 20px; color: #1a3a5a; }
-        .perf-table tbody .marks-cell { font-weight: 700; font-size: 16px; }
-        .perf-table tbody .max-cell { color: #6a8aaa; font-weight: 400; }
-        .perf-table tbody .pct-cell { font-weight: 700; color: #1a4a7a; }
-        .perf-table tbody .total-row td { background: linear-gradient(90deg, #fdf9f4, #fff3e0) !important; font-weight: 700; font-size: 15px; border-top: 2.5px solid #f39c12; border-bottom: 2.5px solid #f39c12; }
-        .perf-table tbody .total-row .total-label { text-align: left; padding-left: 20px; color: #0b1a33; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; }
-        .perf-table tbody .total-row .marks-cell { font-size: 19px; color: #c0392b; font-weight: 900; }
-        .jee-card .score-bar-wrap { margin: 6px 28px 10px 28px; background: linear-gradient(to right, #ffffff, #f9fbfd); border: 1px solid #dce4ed; border-radius: 12px; padding: 10px 20px; flex-shrink: 0; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
-        .jee-card .score-bar { height: 16px; background: #eef2f7; border-radius: 20px; overflow: hidden; position: relative; border: 1px solid #dce4ed; }
-        .jee-card .score-bar .fill { height: 100%; background: linear-gradient(90deg, #1a4a7a, #3498db); border-radius: 20px; transition: width 0.5s ease; position: relative; }
-        .jee-card .score-bar .fill::after { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0) 100%); background-size: 200% 100%; animation: shimmer 2s infinite linear; }
-        @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
-        .jee-card .score-labels { display: flex; justify-content: space-between; margin-top: 8px; font-size: 12px; font-weight: 600; color: #6a8aaa; }
-        .jee-card .result-footer { margin: auto 28px 14px 28px; padding-top: 12px; border-top: 2px dashed #dce4ed; display: flex; justify-content: space-between; align-items: flex-end; }
-        .jee-card .result-footer .left { display: flex; flex-direction: column; gap: 4px; }
-        .jee-card .result-footer .total-label { font-size: 16px; font-weight: 800; color: #1a4a7a; text-transform: uppercase; letter-spacing: 0.5px; }
-        .jee-card .result-footer .percentage { font-size: 46px; font-weight: 900; color: #c0392b; line-height: 1; letter-spacing: -1px; text-shadow: 1px 1px 0px rgba(192,57,43,0.1); }
-        .jee-card .result-footer .signatures { display: flex; gap: 40px; }
-        .jee-card .result-footer .sig-block { display: flex; flex-direction: column; align-items: center; width: 140px; }
-        .jee-card .result-footer .sig-block img { max-width: 140px; max-height: 50px; object-fit: contain; margin-bottom: 6px; }
-        .jee-card .result-footer .sig-block .sig-placeholder { width: 100%; height: 50px; border-bottom: 1.5px dashed #c8d6e4; margin-bottom: 6px; }
-        .jee-card .result-footer .sig-label { font-size: 13px; font-weight: 600; color: #1a3a5a; text-align: center; }
-        .jee-card .card-footer-note { background: #0b1a33; color: #aabaca; font-size: 11px; text-align: center; padding: 8px; font-weight: 500; letter-spacing: 0.5px; flex-shrink: 0; }
       `}</style>
 
-      <div className="jee-card">
-        <div className="top-bar"></div>
+      <div style={{ height: 10, background: 'linear-gradient(90deg,#0b1a33 0%,#1a4a7a 30%,#f39c12 60%,#d4a017 100%)' }} />
 
-        <div className="card-header">
-            <div className="logo-wrap">
-              {resolveUrl(logoUrl) ? (
-                <img src={resolveUrl(logoUrl)} alt="Logo" />
-              ) : (
-                <Award className="w-12 h-12 text-[#1a4a7a]" />
-              )}
-            </div>
-            <div className="title-wrap">
-                <div className="school-name">{settings?.schoolName || "SRI VENKATESWARA JY SCHOOL"}</div>
-                {settings?.schoolSubtitle && <div className="school-sub">{settings.schoolSubtitle}</div>}
-                <div className="school-address">{settings?.schoolAddress || "Opp. Hero Showroom, SVL Paradise Campus, Narasannapeta"}</div>
-                <div className="exam-title">{examTitle}</div>
-                <div className="result-card-label">✦ RESULT CARD ✦</div>
-            </div>
-            <div className="spacer"></div>
+      <div style={{ display: 'flex', alignItems: 'center', padding: '16px 28px 12px 28px', gap: 16, borderBottom: '3px solid #f39c12', background: 'linear-gradient(to bottom,rgba(255,255,255,0.96),#fff)' }}>
+        <div style={{ width: 90, height: 90, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          {resolveUrl(logoUrl) ? (
+            <img src={resolveUrl(logoUrl)} alt="Logo" style={{ maxWidth: '100%', maxHeight: 90, objectFit: 'contain' }} />
+          ) : (
+            <Award style={{ width: 48, height: 48, color: '#1a4a7a' }} />
+          )}
         </div>
-
-        <div className="deco-line">
-            <span className="ornament">✦</span>
-            <div className="line"></div>
-            <span className="ornament" style={{ color: '#d4a017' }}>★</span>
-            <div className="line"></div>
-            <span className="ornament">✦</span>
+        <div style={{ textAlign: 'center', flex: 1, padding: '0 8px' }}>
+          <div style={{ fontSize: 26, fontWeight: 900, color: '#0b1a33', letterSpacing: 1.5, fontFamily: "'Times New Roman','Georgia',serif", lineHeight: 1.2, whiteSpace: 'nowrap' }}>
+            {settings?.schoolName || "SRI VENKATESWARA JY SCHOOL"}
+          </div>
+          {settings?.schoolSubtitle && (
+            <div style={{ fontSize: 15, color: '#1a4a7a', letterSpacing: 0.8, margin: '2px 0', whiteSpace: 'nowrap' }}>{settings.schoolSubtitle}</div>
+          )}
+          <div style={{ fontSize: 12, color: '#5a7a8a', marginTop: 2, whiteSpace: 'nowrap' }}>
+            {settings?.schoolAddress || "Opp. Hero Showroom, SVL Paradise Campus, Narasannapeta"}
+          </div>
+          <div style={{ fontSize: 20, fontWeight: 400, color: '#0b1a33', letterSpacing: 2, margin: '5px 0 0', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
+            {examTitle}
+          </div>
+          <div style={{ fontSize: 16, fontWeight: 400, color: '#d4a017', letterSpacing: 4, marginTop: 2, whiteSpace: 'nowrap' }}>
+            `u{2726} RESULT CARD `u{2726}
+          </div>
         </div>
+        <div style={{ width: 90, flexShrink: 0 }} />
+      </div>
 
-        <div className="student-info">
-            <div className="info-details">
-                <div className="info-row">
-                    <div className="label">👤 Student Name</div>
-                    <div className="value">{safeData.studentName}</div>
-                </div>
-                <div className="info-row">
-                    <div className="label">🆔 Student ID</div>
-                    <div className="value">{safeData.rollNo}</div>
-                </div>
-                <div className="info-row">
-                    <div className="label">📚 Class</div>
-                    <div className="value">{safeData.className}</div>
-                </div>
-                <div className="info-row">
-                    <div className="label">📖 Section</div>
-                    <div className="value">{safeData.section}</div>
-                </div>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 14, padding: '6px 32px 8px 32px' }}>
+        <span style={{ fontSize: 16, color: '#d4a017' }}>`u{2726}</span>
+        <div style={{ flex: 1, maxWidth: 140, height: 2, background: 'linear-gradient(90deg,transparent,#f39c12,transparent)' }} />
+        <span style={{ fontSize: 16, color: '#d4a017' }}>*</span>
+        <div style={{ flex: 1, maxWidth: 140, height: 2, background: 'linear-gradient(90deg,transparent,#f39c12,transparent)' }} />
+        <span style={{ fontSize: 16, color: '#d4a017' }}>`u{2726}</span>
+      </div>
 
-                <div className="info-row">
-                    <div className="label">📅 Academic Year</div>
-                    <div className="value">{safeData.academicYear}</div>
-                </div>
-                <div className="info-row">
-                    <div className="label">📍 Location</div>
-                    <div className="value">{safeData.location}</div>
-                </div>
-                {safeData.rank && (
-                  <div className="info-row">
-                    <div className="label">🏅 Class Rank</div>
-                    <div className="value">#{safeData.rank}</div>
-                  </div>
-                )}
+      <div style={{ margin: '0 24px 14px 24px', border: '2px solid #f39c12', borderRadius: 12, overflow: 'hidden', background: 'linear-gradient(135deg,#ffffff,#fef8f0)', boxShadow: '0 4px 16px rgba(243,156,18,0.10)', display: 'flex', position: 'relative' }}>
+        <div style={{ flex: 1 }}>
+          {infoRows.map((row, i) => (
+            <div key={i} style={{ display: 'grid', gridTemplateColumns: '175px 1fr', borderBottom: i < infoRows.length - 1 ? '1px solid #f5ede4' : 'none', background: i % 2 === 1 ? '#fefcf9' : 'transparent' }}>
+              <div style={{ padding: '7px 16px', fontWeight: 600, fontSize: 13, color: '#6a3a1a', borderRight: '1px solid #f5ede4', display: 'flex', alignItems: 'center', gap: 6, background: '#fdf9f4', whiteSpace: 'nowrap' }}>
+                {row.icon} {row.label}
+              </div>
+              <div style={{ padding: '7px 16px', paddingRight: 120, fontWeight: 600, fontSize: 14, color: '#0b1a33', display: 'flex', alignItems: 'center', overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>
+                {row.value}
+              </div>
             </div>
-            <div className="photo-col">
-                {safeData.photo ? (
-                  <img src={resolveUrl(safeData.photo)} alt="Student Photo" />
-                ) : (
-                  <div className="placeholder-photo">📷</div>
-                )}
-            </div>
+          ))}
         </div>
-
-        <div className="perf-table-wrap">
-            <div className="perf-title">
-                <span className="icon">📊</span>
-                <span>Performance Summary</span>
-                <span className="max-hint">Max Marks: {TOTAL_MAX_MARKS}</span>
-            </div>
-
-            <table className="perf-table">
-                <thead>
-                    <tr>
-                        <th style={{ textAlign: 'left', paddingLeft: '20px' }}>Subject</th>
-                        <th>Marks</th>
-                        <th>Max Marks</th>
-                        <th>%</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {safeData.marks.map((sub: any, i: number) => {
-                      const max = Number(sub.maxMarks) || 100;
-                      const isAB = sub.remarks === 'AB';
-                      const obt = isAB ? 'AB' : (Number(sub.obtained) || 0);
-                      const subPct = isAB ? '0.0' : (max > 0 ? ((Number(sub.obtained) || 0) / max) * 100 : 0).toFixed(1);
-                      return (
-                        <tr key={i}>
-                            <td className="subject-label"><span className="sub-icon">📘</span> {sub.subject}</td>
-                            <td className={`marks-cell ${isAB ? 'text-red-500' : ''}`} style={isAB ? { color: '#ef4444' } : {}}>{obt}</td>
-                            <td className="max-cell">{max}</td>
-                            <td className="pct-cell">{subPct}%</td>
-                        </tr>
-                      );
-                    })}
-                    <tr className="total-row">
-                        <td className="total-label">📌 TOTAL</td>
-                        <td className="marks-cell">{safeData.total}</td>
-                        <td className="max-cell">{TOTAL_MAX_MARKS}</td>
-                        <td className="pct-cell">{totalPct}%</td>
-                    </tr>
-                </tbody>
-            </table>
+        <div style={{ position: 'absolute', right: 14, top: 12 }}>
+          {resolveUrl(safeData.photo) ? (
+            <img src={resolveUrl(safeData.photo)} alt="Student" style={{ width: 90, height: 108, objectFit: 'cover', border: '3px solid #f39c12', borderRadius: 8, boxShadow: '0 4px 10px rgba(243,156,18,0.2)', background: '#fff' }} />
+          ) : (
+            <div style={{ width: 90, height: 108, background: '#ede8e0', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#8a7a6a', fontSize: 38, border: '3px dashed #c8b8a8', borderRadius: 6 }}>`u{1F4F7}</div>
+          )}
         </div>
+      </div>
 
-        <div className="score-bar-wrap">
-            <div className="score-bar">
-                <div className="fill" style={{ width: `${barWidth}%` }}></div>
-            </div>
-            <div className="score-labels">
-                <span>0</span>
-                <span>Threshold: {PASS_THRESHOLD}%</span>
-                <span>{TOTAL_MAX_MARKS}</span>
-            </div>
+      <div style={{ margin: '0 24px 12px 24px' }}>
+        <div style={{ fontSize: 15, fontWeight: 700, color: '#0b1a33', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span style={{ fontSize: 20 }}>`u{1F4CA}</span>
+          <span>Performance Summary</span>
+          <span style={{ marginLeft: 'auto', fontSize: 12, fontWeight: 400, color: '#6a8aaa' }}>Max Marks: {TOTAL_MAX_MARKS}</span>
         </div>
+        <table style={{ width: '100%', borderCollapse: 'collapse', borderRadius: 10, overflow: 'hidden', boxShadow: '0 4px 12px rgba(0,0,0,0.06)', fontSize: 14, border: '2px solid #e8e0d8' }}>
+          <thead>
+            <tr style={{ background: 'linear-gradient(135deg,#0b1a33,#1a4a7a,#0b1a33)' }}>
+              <th style={{ color: '#fff', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, padding: '10px 16px 10px 20px', textAlign: 'left', fontSize: 12, border: '1px solid rgba(255,255,255,0.1)' }}>Subject</th>
+              <th style={{ color: '#fff', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, padding: '10px 16px', textAlign: 'center', fontSize: 12, border: '1px solid rgba(255,255,255,0.1)' }}>Marks</th>
+              <th style={{ color: '#fff', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, padding: '10px 16px', textAlign: 'center', fontSize: 12, border: '1px solid rgba(255,255,255,0.1)' }}>Max Marks</th>
+              <th style={{ color: '#fff', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, padding: '10px 16px', textAlign: 'center', fontSize: 12, border: '1px solid rgba(255,255,255,0.1)' }}>%</th>
+            </tr>
+          </thead>
+          <tbody>
+            {safeData.marks.map((sub: any, i: number) => {
+              const max = Number(sub.maxMarks) || 100;
+              const isAB = sub.remarks === 'AB';
+              const obt = isAB ? 'AB' : (Number(sub.obtained) || 0);
+              const subPct = isAB ? '0.0' : (max > 0 ? ((Number(sub.obtained) || 0) / max) * 100 : 0).toFixed(1);
+              return (
+                <tr key={i} style={{ background: i % 2 === 1 ? '#fdfcf9' : '#fff' }}>
+                  <td style={{ padding: '8px 16px 8px 20px', textAlign: 'left', border: '1px solid #e8e0d8', fontWeight: 600, color: '#1a3a5a' }}>`u{1F4D8} {sub.subject}</td>
+                  <td style={{ padding: '8px 16px', textAlign: 'center', border: '1px solid #e8e0d8', fontWeight: 700, fontSize: 15, color: isAB ? '#ef4444' : '#0b1a33' }}>{obt}</td>
+                  <td style={{ padding: '8px 16px', textAlign: 'center', border: '1px solid #e8e0d8', color: '#6a8aaa' }}>{max}</td>
+                  <td style={{ padding: '8px 16px', textAlign: 'center', border: '1px solid #e8e0d8', fontWeight: 700, color: '#1a4a7a' }}>{subPct}%</td>
+                </tr>
+              );
+            })}
+            <tr style={{ background: 'linear-gradient(90deg,#fdf9f4,#fff3e0)' }}>
+              <td style={{ padding: '9px 16px 9px 20px', textAlign: 'left', border: '2.5px solid #f39c12', fontWeight: 900, color: '#0b1a33', textTransform: 'uppercase', letterSpacing: 1, fontSize: 14 }}>`u{1F4CC} TOTAL</td>
+              <td style={{ padding: '9px 16px', textAlign: 'center', border: '2.5px solid #f39c12', fontWeight: 900, fontSize: 18, color: '#c0392b' }}>{safeData.total}</td>
+              <td style={{ padding: '9px 16px', textAlign: 'center', border: '2.5px solid #f39c12', color: '#6a8aaa' }}>{TOTAL_MAX_MARKS}</td>
+              <td style={{ padding: '9px 16px', textAlign: 'center', border: '2.5px solid #f39c12', fontWeight: 700, color: '#1a4a7a' }}>{totalPct}%</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
 
-        <div className="result-footer">
-            <div className="left">
-                <div className="total-label">📋 Total Marks: {safeData.total} / {TOTAL_MAX_MARKS}</div>
-                <div className="percentage">{totalPct}%</div>
-            </div>
-            <div className="signatures">
-                <div className="sig-block">
-                    {resolveUrl(teacherSignatureUrl) ? (
-                      <img src={resolveUrl(teacherSignatureUrl)} alt="Teacher Signature" />
-                    ) : (
-                      <div className="sig-placeholder"></div>
-                    )}
-                    <div className="sig-label">✍ Teacher Signature</div>
-                </div>
-                <div className="sig-block">
-                    {resolveUrl(principalSignatureUrl) ? (
-                      <img src={resolveUrl(principalSignatureUrl)} alt="Principal Signature" />
-                    ) : (
-                      <div className="sig-placeholder"></div>
-                    )}
-                    <div className="sig-label">✍ Principal Signature</div>
-                </div>
-            </div>
+      <div style={{ margin: '0 24px 14px 24px', background: 'linear-gradient(to right,#fff,#f9fbfd)', border: '1px solid #dce4ed', borderRadius: 12, padding: '10px 18px', boxShadow: '0 2px 8px rgba(0,0,0,0.03)' }}>
+        <div style={{ height: 14, background: '#eef2f7', borderRadius: 20, overflow: 'hidden', border: '1px solid #dce4ed' }}>
+          <div style={{ height: '100%', width: `${barWidth}%`, background: 'linear-gradient(90deg,#1a4a7a,#3498db)', borderRadius: 20 }} />
         </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6, fontSize: 11, fontWeight: 600, color: '#6a8aaa' }}>
+          <span>0</span>
+          <span>Threshold: {PASS_THRESHOLD}%</span>
+          <span>{TOTAL_MAX_MARKS}</span>
+        </div>
+      </div>
 
-        <div className="card-footer-note">
-            ★ This is a system-generated result card for {examTitle} ★
+      <div style={{ margin: '0 24px 16px 24px', paddingTop: 12, borderTop: '2px dashed #dce4ed', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+        <div>
+          <div style={{ fontSize: 15, fontWeight: 800, color: '#1a4a7a', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+            `u{1F4CB} Total Marks: {safeData.total} / {TOTAL_MAX_MARKS}
+          </div>
+          <div style={{ fontSize: 44, fontWeight: 900, color: '#c0392b', lineHeight: 1, letterSpacing: -1 }}>
+            {totalPct}%
+          </div>
         </div>
+        <div style={{ display: 'flex', gap: 36 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: 130 }}>
+            {resolveUrl(teacherSignatureUrl) ? (
+              <img src={resolveUrl(teacherSignatureUrl)} alt="Teacher Signature" style={{ maxWidth: 130, maxHeight: 52, objectFit: 'contain', marginBottom: 6 }} />
+            ) : (
+              <div style={{ width: '100%', height: 52, borderBottom: '1.5px dashed #c8d6e4', marginBottom: 6 }} />
+            )}
+            <div style={{ fontSize: 12, fontWeight: 600, color: '#1a3a5a', textAlign: 'center' }}>`u{270D} Teacher Signature</div>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: 130 }}>
+            {resolveUrl(principalSignatureUrl) ? (
+              <img src={resolveUrl(principalSignatureUrl)} alt="Principal Signature" style={{ maxWidth: 130, maxHeight: 52, objectFit: 'contain', marginBottom: 6 }} />
+            ) : (
+              <div style={{ width: '100%', height: 52, borderBottom: '1.5px dashed #c8d6e4', marginBottom: 6 }} />
+            )}
+            <div style={{ fontSize: 12, fontWeight: 600, color: '#1a3a5a', textAlign: 'center' }}>`u{270D} Principal Signature</div>
+          </div>
+        </div>
+      </div>
+
+      <div style={{ background: '#0b1a33', color: '#aabaca', fontSize: 11, textAlign: 'center', padding: '7px 8px', fontWeight: 500, letterSpacing: 0.5 }}>
+        * This is a system-generated result card for {examTitle} *
       </div>
     </div>
   );
