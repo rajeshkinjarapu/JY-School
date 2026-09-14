@@ -419,7 +419,9 @@ export const ProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
                     if (confirmPublish) {
                       setPublished(true);
                       try {
-                        const newSettings = { ...(selectedExam.admitCardSettings || {}), progressCardPublished: true };
+                        const currentRes: any = await api.get(`/api/exams/${selectedExamId}`);
+                        const currentSettings = currentRes.data?.admitCardSettings || {};
+                        const newSettings = { ...currentSettings, progressCardPublished: true };
                         await api.post(`/api/exams/${selectedExamId}/admit-card-settings`, {
                           admitCardPublished: selectedExam?.admitCardPublished || false,
                           admitCardSettings: newSettings

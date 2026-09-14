@@ -36,10 +36,10 @@ export const CreateExamPage: React.FC = () => {
   const [activeClassTab, setActiveClassTab] = useState<string>('');
   const [bulkMarksInput, setBulkMarksInput] = useState<number>(100);
 
-  // Progress Card Settings
   const [logoUrl, setLogoUrl] = useState('');
   const [signatureUrl, setSignatureUrl] = useState('');
   const [teacherSignatureUrl, setTeacherSignatureUrl] = useState('');
+  const [fullExamSettings, setFullExamSettings] = useState<any>({});
 
   useEffect(() => {
     fetchInitialData();
@@ -48,6 +48,7 @@ export const CreateExamPage: React.FC = () => {
       api.get(`/api/exams/${editExam.id}`).then((res: any) => {
         const fullExam = res.data;
         if (fullExam?.admitCardSettings) {
+          setFullExamSettings(fullExam.admitCardSettings);
           setLogoUrl(fullExam.admitCardSettings.logoUrl || '');
           setSignatureUrl(fullExam.admitCardSettings.signatureUrl || '');
           setTeacherSignatureUrl(fullExam.admitCardSettings.teacherSignatureUrl || '');
@@ -369,7 +370,7 @@ export const CreateExamPage: React.FC = () => {
     setLoading(true);
     
     const admitCardSettings = {
-      ...(editExam?.admitCardSettings || {}),
+      ...fullExamSettings,
       logoUrl,
       signatureUrl,
       teacherSignatureUrl

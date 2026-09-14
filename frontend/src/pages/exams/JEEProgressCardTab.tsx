@@ -113,7 +113,8 @@ export const JEEProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
   const handleSaveSettings = async () => {
     if (!selectedExamId) return;
     try {
-      const currentSettings = selectedExam?.admitCardSettings || {};
+      const currentRes: any = await api.get(`/api/exams/${selectedExamId}`);
+      const currentSettings = currentRes.data?.admitCardSettings || {};
       const newSettings = { ...currentSettings, logoUrl, signatureUrl, teacherSignatureUrl, examNameOverride, progressCardPublished: published };
       
       // Save for current exam
@@ -642,7 +643,9 @@ export const JEEProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
                    if (confirmPublish) {
                      setPublished(true);
                      try {
-                       const newSettings = { ...(selectedExam.admitCardSettings || {}), progressCardPublished: true };
+                       const currentRes: any = await api.get(`/api/exams/${selectedExamId}`);
+                       const currentSettings = currentRes.data?.admitCardSettings || {};
+                       const newSettings = { ...currentSettings, progressCardPublished: true };
                        await api.post(`/api/exams/${selectedExamId}/admit-card-settings`, {
                          admitCardPublished: selectedExam?.admitCardPublished || false,
                          admitCardSettings: newSettings
