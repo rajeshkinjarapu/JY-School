@@ -19,7 +19,7 @@ export const AdmitCardTemplate: React.FC<AdmitCardTemplateProps> = ({ student, e
   // Resolve relative /uploads/ paths to the backend URL so images load correctly on Vercel
   const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
   const resolveUrl = (url: string) => {
-    if (!url) return '';
+    if (!url || url === 'null' || url === 'undefined') return '';
     if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) return url;
     return `${API_BASE.replace(/\/+$/, '')}/${url.replace(/^\/+/, '')}`;
   };

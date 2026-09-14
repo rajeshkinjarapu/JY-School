@@ -43,7 +43,7 @@ export const ProgressCardTemplate: React.FC<ProgressCardTemplateProps> = ({
 
   const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
   const resolveUrl = (url: string) => {
-    if (!url) return '';
+    if (!url || url === 'null' || url === 'undefined') return '';
     if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) return url;
     return `${API_BASE.replace(/\/+$/, '')}/${url.replace(/^\/+/, '')}`;
   };
@@ -61,8 +61,6 @@ export const ProgressCardTemplate: React.FC<ProgressCardTemplateProps> = ({
         .jee-card { background: linear-gradient(145deg, #ffffff 0%, #fdfcf9 100%); height: 100%; display: flex; flex-direction: column; position: relative; border: 2px solid #0b1a33; outline: 3px solid #1a4a7a; outline-offset: -6px; box-sizing: border-box; }
         .jee-card .top-bar { height: 10px; background: linear-gradient(90deg, #0b1a33 0%, #1a4a7a 30%, #f39c12 60%, #d4a017 100%); flex-shrink: 0; }
         .jee-card .card-header { display: flex; align-items: center; padding: 18px 32px 12px 32px; gap: 16px; flex-shrink: 0; border-bottom: 3px solid #f39c12; background: linear-gradient(to bottom, rgba(255,255,255,0.9), rgba(255,255,255,1)); }
-        .jee-card .photo-col { width: 110px; height: 135px; border: 2px solid #e0d4c3; background: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 4px 10px rgba(0,0,0,0.05); overflow: hidden; border-radius: 6px; }
-        .jee-card .photo-col img { width: 100%; height: 100%; object-fit: cover; object-position: top; }
         .jee-card .card-header .logo-wrap { width: 100px; height: 100px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
         .jee-card .card-header .logo-wrap img { max-width: 100%; max-height: 100px; object-fit: contain; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1)); }
         .jee-card .card-header .title-wrap { text-align: center; flex: 1; padding: 0 8px; }
@@ -124,7 +122,7 @@ export const ProgressCardTemplate: React.FC<ProgressCardTemplateProps> = ({
 
         <div className="card-header">
             <div className="logo-wrap">
-              {logoUrl ? (
+              {resolveUrl(logoUrl) ? (
                 <img src={resolveUrl(logoUrl)} alt="Logo" />
               ) : (
                 <Award className="w-12 h-12 text-[#1a4a7a]" />
@@ -253,7 +251,7 @@ export const ProgressCardTemplate: React.FC<ProgressCardTemplateProps> = ({
             </div>
             <div className="signatures">
                 <div className="sig-block">
-                    {teacherSignatureUrl ? (
+                    {resolveUrl(teacherSignatureUrl) ? (
                       <img src={resolveUrl(teacherSignatureUrl)} alt="Teacher Signature" />
                     ) : (
                       <div className="sig-placeholder"></div>
@@ -261,7 +259,7 @@ export const ProgressCardTemplate: React.FC<ProgressCardTemplateProps> = ({
                     <div className="sig-label">✍ Teacher Signature</div>
                 </div>
                 <div className="sig-block">
-                    {principalSignatureUrl ? (
+                    {resolveUrl(principalSignatureUrl) ? (
                       <img src={resolveUrl(principalSignatureUrl)} alt="Principal Signature" />
                     ) : (
                       <div className="sig-placeholder"></div>
