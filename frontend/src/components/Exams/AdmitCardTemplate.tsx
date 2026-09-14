@@ -21,7 +21,7 @@ export const AdmitCardTemplate: React.FC<AdmitCardTemplateProps> = ({ student, e
   const resolveUrl = (url: string) => {
     if (!url) return '';
     if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) return url;
-    return `${API_BASE}${url}`;
+    return `${API_BASE.replace(/\/+$/, '')}/${url.replace(/^\/+/, '')}`;
   };
   
   const signatureUrl = resolveUrl(settings.signatureUrl || '');

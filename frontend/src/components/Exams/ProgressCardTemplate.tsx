@@ -45,13 +45,20 @@ export const ProgressCardTemplate: React.FC<ProgressCardTemplateProps> = ({
   const resolveUrl = (url: string) => {
     if (!url) return '';
     if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) return url;
-    return `${API_BASE}${url}`;
+    return `${API_BASE.replace(/\/+$/, '')}/${url.replace(/^\/+/, '')}`;
   };
 
   return (
     <div className="w-[794px] h-[1123px] bg-white rounded-xl shadow-2xl flex flex-col relative overflow-hidden font-sans print:shadow-none mx-auto shrink-0" style={{ fontFamily: "'Segoe UI', 'Roboto', system-ui, -apple-system, sans-serif" }}>
       <style>{`
-        .jee-card { background: linear-gradient(145deg, #ffffff 0%, #fdfcf9 100%); height: 100%; display: flex; flex-direction: column; position: relative; border: 2px solid #0b1a33; outline: 3px solid #1a4a7a; outline-offset: -6px; }
+        @media print {
+          @page { size: A4 portrait; margin: 0; }
+          body { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; margin: 0; padding: 0; }
+          .w-\\[794px\\] { width: 100% !important; max-width: 210mm !important; margin: 0 auto !important; }
+          .h-\\[1123px\\] { height: 297mm !important; max-height: 297mm !important; page-break-after: always; box-shadow: none !important; }
+          .jee-card { border: 2px solid #0b1a33 !important; outline: 3px solid #1a4a7a !important; }
+        }
+        .jee-card { background: linear-gradient(145deg, #ffffff 0%, #fdfcf9 100%); height: 100%; display: flex; flex-direction: column; position: relative; border: 2px solid #0b1a33; outline: 3px solid #1a4a7a; outline-offset: -6px; box-sizing: border-box; }
         .jee-card .top-bar { height: 10px; background: linear-gradient(90deg, #0b1a33 0%, #1a4a7a 30%, #f39c12 60%, #d4a017 100%); flex-shrink: 0; }
         .jee-card .card-header { display: flex; align-items: center; padding: 18px 32px 12px 32px; gap: 16px; flex-shrink: 0; border-bottom: 3px solid #f39c12; background: linear-gradient(to bottom, rgba(255,255,255,0.9), rgba(255,255,255,1)); }
         .jee-card .photo-col { width: 110px; height: 135px; border: 2px solid #e0d4c3; background: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 4px 10px rgba(0,0,0,0.05); overflow: hidden; border-radius: 6px; }
