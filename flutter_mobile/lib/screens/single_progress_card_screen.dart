@@ -232,11 +232,14 @@ class _SingleProgressCardScreenState extends State<SingleProgressCardScreen> {
                         child: SingleChildScrollView(
                           padding: const EdgeInsets.all(16),
                           child: Center(
-                            child: RepaintBoundary(
-                              key: _cardKey,
-                              child: ProgressCardNative(
-                                data: _mappedData ?? {},
-                                settings: _settings ?? {},
+                            child: FittedBox(
+                              fit: BoxFit.contain,
+                              child: RepaintBoundary(
+                                key: _cardKey,
+                                child: ProgressCardNative(
+                                  data: _mappedData ?? {},
+                                  settings: _settings ?? {},
+                                ),
                               ),
                             ),
                           ),

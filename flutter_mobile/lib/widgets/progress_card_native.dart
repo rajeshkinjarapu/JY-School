@@ -44,39 +44,24 @@ class ProgressCardNative extends StatelessWidget {
     final double safeWidthFactor = (safeTotalPct / 100).clamp(0.0, 1.0);
 
     return Center(
-      child: AspectRatio(
-        aspectRatio: 794 / 1123,
+      child: Container(
+        width: 794,
+        constraints: const BoxConstraints(minHeight: 1123),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          border: Border.all(color: const Color(0xFF0B1A33), width: 2),
+          boxShadow: [
+            BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 20, offset: const Offset(0, 10))
+          ]
+        ),
         child: Container(
+          margin: const EdgeInsets.all(3),
           decoration: BoxDecoration(
-            color: Colors.white,
-            boxShadow: [
-              BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 20, offset: const Offset(0, 10))
-            ]
+            border: Border.all(color: const Color(0xFF1A4A7A), width: 3),
           ),
-          child: FittedBox(
-            fit: BoxFit.contain,
-            child: Container(
-              width: 794,
-              height: 1123,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                border: Border.all(color: const Color(0xFF0B1A33), width: 2),
-              ),
-              child: Stack(
-                children: [
-                  // Inner outline
-                  Positioned.fill(
-                    child: Container(
-                      margin: const EdgeInsets.all(3),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: const Color(0xFF1A4A7A), width: 3),
-                      ),
-                    ),
-                  ),
-                  
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
                       // Top gradient bar
                       Container(
                         height: 10,
@@ -449,7 +434,7 @@ class ProgressCardNative extends StatelessWidget {
                         ),
                       ),
                       
-                      const Spacer(),
+                      const SizedBox(height: 40),
                       
                       // Footer Signatures
                       Padding(
@@ -501,13 +486,9 @@ class ProgressCardNative extends StatelessWidget {
                       )
                     ],
                   ),
-                ],
+                ),
               ),
-            ),
-          ),
-        ),
-      ),
-    );
+            );
   }
 
   Widget _buildInfoRowA4(String label, String value, IconData icon, bool isEven) {
