@@ -11,9 +11,10 @@ export const AdmissionsListPage = () => {
   const fetchAdmissions = async () => {
     try {
       const res = await api.get('/api/admissions');
-      setAdmissions(res.data.data);
+      setAdmissions(res.data || []);
     } catch (error) {
       toast.error('Failed to fetch admissions');
+      setAdmissions([]);
     } finally {
       setLoading(false);
     }
