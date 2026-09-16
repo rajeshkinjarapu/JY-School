@@ -6,7 +6,7 @@ import {
   createTestimonial, updateTestimonial, deleteTestimonial,
   createNews, updateNews, deleteNews 
 } from '../controllers/website.controller';
-import { protect, restrictTo } from '../middleware/auth';
+import { protect, restrictTo } from '../middlewares/auth';
 
 const router = Router();
 

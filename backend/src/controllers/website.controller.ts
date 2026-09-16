@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { prisma } from '../lib/prisma';
+import { prisma } from '../utils/prisma';
 
 export const getWebsiteData = async (req: Request, res: Response) => {
   try {
