@@ -29,10 +29,8 @@ export const AttendanceMarkingPage: React.FC = () => {
       setClasses(data || []);
       
       if (data && data.length > 0) {
-        const uniqueNames = Array.from(new Set(data.map((c: any) => c.name)));
-        setSelectedClassName(uniqueNames[0] as string);
-        const sections = data.filter((c: any) => c.name === uniqueNames[0]).map((c: any) => c.section);
-        setSelectedSection(sections[0] as string);
+        setSelectedClassName('All Classes');
+        setSelectedSection('All Sections');
       }
     } catch (e) {
       console.error(e);
@@ -44,29 +42,37 @@ export const AttendanceMarkingPage: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if (selectedClassName) {
+    if (selectedClassName && selectedClassName !== 'All Classes') {
       const sections = classes.filter(c => c.name === selectedClassName).map(c => c.section);
       if (sections.length > 0 && !sections.includes(selectedSection)) {
         setSelectedSection(sections[0]);
       }
+    } else if (selectedClassName === 'All Classes') {
+      setSelectedSection('All Sections');
     }
   }, [selectedClassName, classes]);
 
   const loadStudentRoster = async () => {
-    const matchedClass = classes.find(c => c.name === selectedClassName && c.section === selectedSection);
-    if (!matchedClass) {
-      toast.error('No matching class-section found.');
-      return;
+    let classId = 'ALL';
+    if (selectedClassName !== 'All Classes') {
+      const matchedClass = classes.find(c => c.name === selectedClassName && c.section === selectedSection);
+      if (!matchedClass) {
+        toast.error('No matching class-section found.');
+        return;
+      }
+      classId = matchedClass.id;
     }
 
-    const classId = matchedClass.id;
     setActiveClassId(classId);
     setLoading(true);
 
     try {
+      const attendancePromise = api.get(`/api/attendance/class`, { params: { classId, date } });
+      const studentsPromise = classId === 'ALL' ? api.get('/api/students') : api.get(`/api/classes/${classId}/students`);
+      
       const [attendanceRes, studentsRes]: any = await Promise.all([
-        api.get(`/api/attendance/class`, { params: { classId, date } }),
-        api.get(`/api/classes/${classId}/students`),
+        attendancePromise,
+        studentsPromise,
       ]);
       const attendanceList = attendanceRes.data || [];
       const studentList = studentsRes.data || [];
@@ -120,8 +126,8 @@ export const AttendanceMarkingPage: React.FC = () => {
     });
   };
 
-  const uniqueClassNames = Array.from(new Set(classes.map(c => c.name)));
-  const availableSections = classes.filter(c => c.name === selectedClassName).map(c => c.section);
+  const uniqueClassNames = ['All Classes', ...Array.from(new Set(classes.map(c => c.name)))];
+  const availableSections = selectedClassName === 'All Classes' ? ['All Sections'] : classes.filter(c => c.name === selectedClassName).map(c => c.section);
 
   const filteredStudents = students.filter(student =>
     student.user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||

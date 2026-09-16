@@ -11,21 +11,36 @@ export const getByClass = async (req: AuthRequest, res: Response, next: NextFunc
   const { classId, date } = req.query as { classId: string; date: string };
   if (!classId || !date) return next(createError('classId and date are required', 400));
 
-  const cls = await prisma.class.findUnique({ where: { id: classId } });
-  if (!cls) return next(createError('Class not found', 404));
-
   const targetDate = new Date(date);
-  const students = await prisma.student.findMany({
-    where: { classId },
-    include: {
-      user: { select: { name: true, photoUrl: true } },
-      attendance: {
-        where: { date: targetDate },
-        take: 1,
+  let students;
+
+  if (classId === 'ALL') {
+    students = await prisma.student.findMany({
+      include: {
+        user: { select: { name: true, photoUrl: true } },
+        attendance: {
+          where: { date: targetDate },
+          take: 1,
+        },
       },
-    },
-    orderBy: { rollNo: 'asc' },
-  });
+      orderBy: [{ classId: 'asc' }, { rollNo: 'asc' }],
+    });
+  } else {
+    const cls = await prisma.class.findUnique({ where: { id: classId } });
+    if (!cls) return next(createError('Class not found', 404));
+
+    students = await prisma.student.findMany({
+      where: { classId },
+      include: {
+        user: { select: { name: true, photoUrl: true } },
+        attendance: {
+          where: { date: targetDate },
+          take: 1,
+        },
+      },
+      orderBy: { rollNo: 'asc' },
+    });
+  }
 
   const result = students.map((s) => ({
     studentId: s.id,
@@ -74,24 +89,37 @@ export const markBulk = async (req: AuthRequest, res: Response, next: NextFuncti
   const teacher = await prisma.teacher.findFirst({ where: { userId: req.user!.id } });
   const targetDate = new Date(date);
 
-  const cls = await prisma.class.findUnique({ where: { id: classId } });
-  const className = cls ? `${cls.name}-${cls.section}` : 'Class';
+  let className = 'Class';
+  if (classId !== 'ALL') {
+    const cls = await prisma.class.findUnique({ where: { id: classId } });
+    if (cls) className = `${cls.name}-${cls.section}`;
+  } else {
+    className = 'All Classes';
+  }
 
-  const upsertOps = records.map((r) =>
-    prisma.attendance.upsert({
+  const studentIds = records.map(r => r.studentId);
+  const students = await prisma.student.findMany({
+    where: { id: { in: studentIds } },
+    select: { id: true, classId: true, userId: true },
+  });
+  const studentMap = new Map(students.map(s => [s.id, s]));
+
+  const upsertOps = records.map((r) => {
+    const actualClassId = studentMap.get(r.studentId)?.classId || classId;
+    return prisma.attendance.upsert({
       where: { studentId_date: { studentId: r.studentId, date: targetDate } },
       update: { status: r.status as any, note: r.note, markedById: req.user!.id, teacherId: teacher?.id || null },
       create: {
         studentId: r.studentId,
-        classId,
+        classId: actualClassId,
         date: targetDate,
         status: r.status as any,
         note: r.note,
         markedById: req.user!.id,
         teacherId: teacher?.id || null,
       },
-    })
-  );
+    });
+  });
 
   await prisma.$transaction(upsertOps);
 
@@ -138,12 +166,14 @@ export const markBulk = async (req: AuthRequest, res: Response, next: NextFuncti
 
 export const getReport = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   const { classId, studentId, startDate, endDate } = req.query as {
-    classId?: string; studentId?: string; startDate: string; endDate: string;
+    classId?: string; studentId?: string; startDate?: string; endDate?: string;
   };
-  if (!startDate || !endDate) return next(createError('startDate and endDate are required', 400));
+
+  const start = startDate ? new Date(startDate) : new Date(new Date().getFullYear(), 0, 1);
+  const end = endDate ? new Date(endDate) : new Date();
 
   const where: any = {
-    date: { gte: new Date(startDate), lte: new Date(endDate) },
+    date: { gte: start, lte: end },
   };
   if (classId) where.classId = classId;
   if (studentId) where.studentId = studentId;
@@ -302,16 +332,17 @@ export const getDashboardStats = async (req: AuthRequest, res: Response, next: N
       if (record.status === 'PRESENT' || record.status === 'LATE') {
         todayPresent++;
         cStat.present++;
-      } else if (record.status === 'ABSENT') {
-        todayAbsent++;
-        cStat.absent++;
-      } else if (record.status === 'EXCUSED') {
-        todayLeave++;
-        cStat.absent++; // Count leave as absent for class stat %
+      } else if (record.status === 'ABSENT' || record.status === 'EXCUSED') {
+        if (record.status === 'ABSENT') {
+          todayAbsent++;
+        } else {
+          todayLeave++;
+        }
+        cStat.absent++; // Count leave/absent as absent for class stat %
         studentsOnLeave.push({
           studentName: record.student.user.name,
           className: clsName,
-          reason: record.note || 'Leave'
+          reason: record.status === 'ABSENT' ? 'Absent' : (record.note || 'Leave')
         });
       }
     });

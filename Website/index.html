@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SRI VENKATESWARA JY SCHOOL | Shaping Minds, Building Futures</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Poppins', 'sans-serif'],
+                    },
+                    colors: {
+                        brandBlue: '#1e3a8a',
+                        brandOrange: '#f97316',
+                        brandLight: '#f8fafc'
+                    },
+                    animation: {
+                        'fade-in-up': 'fadeInUp 0.8s ease-out forwards',
+                        'fade-in': 'fadeIn 1s ease-out forwards',
+                    },
+                    keyframes: {
+                        fadeInUp: {
+                            '0%': { opacity: '0', transform: 'translateY(30px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        },
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        .hover-lift {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .hover-lift:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.15);
+        }
+        .nav-link {
+            position: relative;
+            padding-bottom: 4px;
+        }
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: -2px;
+            left: 0;
+            background-color: #f97316;
+            transition: width 0.3s ease;
+        }
+        .nav-link:hover::after { width: 100%; }
+        .hero-gradient {
+            background: linear-gradient(135deg, #eff6ff 0%, #fff7ed 50%, #f0fdf4 100%);
+        }
+        .stat-card-1 { background: linear-gradient(135deg, #1e3a8a, #3b5bd9); }
+        .stat-card-2 { background: linear-gradient(135deg, #f97316, #fb923c); }
+        .stat-card-3 { background: linear-gradient(135deg, #059669, #10b981); }
+        .stat-card-4 { background: linear-gradient(135deg, #7c3aed, #a855f7); }
+        .stat-card-5 { background: linear-gradient(135deg, #dc2626, #f87171); }
+        .program-icon { transition: transform 0.3s ease; }
+        .program-card:hover .program-icon { transform: scale(1.1) rotate(5deg); }
+        .section-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 16px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+
+<body class="font-sans text-gray-800 bg-white overflow-x-hidden">
+
+    <!-- Top Bar -->
+    <div class="bg-brandOrange text-white text-sm font-medium py-1.5 px-6 hidden md:flex justify-between items-center">
+        <div class="flex gap-6">
+            <a href="tel:+919876543210" class="flex items-center gap-2 hover:text-orange-100 transition-colors">
+                <i class="fa-solid fa-phone"></i> +91 98765 43210
+            </a>
+            <a href="mailto:info@svjyschool.edu.in" class="flex items-center gap-2 hover:text-orange-100 transition-colors">
+                <i class="fa-solid fa-envelope"></i> info@svjyschool.edu.in
+            </a>
+        </div>
+        <div class="flex items-center gap-3">
+            <span class="text-white/90 text-[11px] uppercase tracking-wider font-bold">Follow Us:</span>
+            <a href="#" class="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center hover:bg-white hover:text-brandOrange transition-colors"><i class="fa-brands fa-facebook-f text-xs"></i></a>
+            <a href="#" class="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center hover:bg-white hover:text-brandOrange transition-colors"><i class="fa-brands fa-instagram text-xs"></i></a>
+            <a href="#" class="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center hover:bg-white hover:text-brandOrange transition-colors"><i class="fa-brands fa-youtube text-xs"></i></a>
+        </div>
+    </div>
+
+    <!-- Navbar -->
+    <nav class="sticky top-0 z-50 bg-brandBlue shadow-lg transition-all duration-300">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-20">
+                <!-- Logo -->
+                <div class="flex items-center gap-3 cursor-pointer">
+                    <img src="./logo_.png" alt="JY School Logo" class="w-16 h-16 object-contain">
+                    <div class="flex flex-col">
+                        <span class="text-base font-bold text-white leading-tight tracking-wider">SRI VENKATESWARA</span>
+                        <span class="text-2xl text-brandOrange font-black tracking-widest uppercase leading-tight">JY School</span>
+                    </div>
+                </div>
+
+                <!-- Desktop Menu -->
+                <div class="hidden md:flex items-center space-x-8 text-sm font-semibold text-gray-200">
+                    <a href="#" class="nav-link hover:text-white">Home</a>
+                    <a href="#mission" class="nav-link hover:text-white">About Us</a>
+                    <a href="#programs" class="nav-link hover:text-white">Academics</a>
+                    <a href="#admissions" class="nav-link hover:text-white">Admissions</a>
+                    <a href="#" class="nav-link hover:text-white">Contact Us</a>
+                </div>
+
+                <!-- Buttons -->
+                <div class="hidden md:flex items-center gap-3">
+                    <a href="http://66.116.252.191:19999/login" class="px-5 py-2.5 text-sm font-semibold text-white border-2 border-white rounded-full hover:bg-white hover:text-brandBlue transition-all duration-300 flex items-center gap-2">
+                        <i class="fa-solid fa-user-circle"></i> Login
+                    </a>
+                    <a href="#admissions" class="px-6 py-2.5 text-sm font-bold text-white bg-brandOrange rounded-full shadow-lg hover:bg-orange-600 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-0.5 flex items-center gap-2">
+                        Apply Now <i class="fa-solid fa-arrow-right text-xs"></i>
+                    </a>
+                </div>
+
+                <!-- Mobile Menu Button -->
+                <div class="md:hidden flex items-center">
+                    <button id="mobile-menu-btn" class="text-white hover:text-gray-300 focus:outline-none">
+                        <i class="fa-solid fa-bars text-2xl"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile Menu -->
+        <div id="mobile-menu" class="hidden md:hidden border-t border-gray-100">
+            <div class="px-4 pt-4 pb-6 space-y-3 flex flex-col text-sm font-medium text-gray-700">
+                <a href="#" class="block px-3 py-2 rounded-md hover:bg-gray-50 hover:text-brandBlue">Home</a>
+                <a href="#mission" class="block px-3 py-2 rounded-md hover:bg-gray-50 hover:text-brandBlue">About Us</a>
+                <a href="#programs" class="block px-3 py-2 rounded-md hover:bg-gray-50 hover:text-brandBlue">Academics</a>
+                <a href="#admissions" class="block px-3 py-2 rounded-md hover:bg-gray-50 hover:text-brandBlue">Admissions</a>
+                <div class="pt-4 border-t border-gray-100 flex flex-col gap-3">
+                    <a href="http://66.116.252.191:19999/login" class="w-full px-5 py-2.5 text-sm font-semibold text-brandBlue border-2 border-brandBlue rounded-full text-center block">
+                        <i class="fa-solid fa-user-circle mr-1"></i> Login
+                    </a>
+                    <a href="#admissions" class="w-full px-6 py-2.5 text-sm font-semibold text-white bg-brandOrange rounded-full text-center shadow-md block">
+                        Apply Now <i class="fa-solid fa-arrow-right ml-1 text-xs"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ======== HERO SECTION ======== -->
+    <section class="hero-gradient relative overflow-hidden pt-5 pb-12 lg:pt-5 lg:pb-16">
+        <div class="absolute top-0 right-0 w-[500px] h-[500px] bg-brandBlue opacity-[0.04] rounded-full -mr-40 -mt-40 blur-3xl"></div>
+        <div class="absolute bottom-0 left-0 w-[400px] h-[400px] bg-brandOrange opacity-[0.05] rounded-full -ml-32 -mb-32 blur-3xl"></div>
+
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+
+                <!-- LEFT: Text Content -->
+                <div class="animate-fade-in-up">
+                    <div class="inline-flex items-center gap-2 bg-brandBlue/10 border border-brandBlue/20 px-4 py-2 rounded-full mb-6">
+                        <span class="w-2 h-2 bg-brandOrange rounded-full"></span>
+                        <span class="text-brandBlue font-bold text-[11px] tracking-[0.15em] uppercase">Excellence in Education Since 2005</span>
+                    </div>
+
+                    <h1 class="text-[2.6rem] md:text-5xl lg:text-[3.4rem] font-black text-slate-900 leading-[1.1] tracking-tight mb-5">
+                        Shaping<br>
+                        <span class="text-brandBlue">Brilliant</span> Minds,<br>
+                        <span class="text-brandOrange">Building</span> Futures
+                    </h1>
+
+                    <p class="text-gray-600 text-lg leading-relaxed mb-7 max-w-lg">
+                        At <span class="font-bold text-brandBlue">Sri Venkateswara JY School</span>, we empower students with knowledge, values, and skills — nurturing every child to become a confident, responsible global citizen.
+                    </p>
+
+                    <!-- Feature Tags -->
+                    <div class="flex flex-wrap gap-3 mb-8">
+                        <span class="flex items-center gap-2 bg-white border border-gray-200 text-gray-700 text-xs font-semibold px-4 py-2 rounded-full shadow-sm">
+                            <i class="fa-solid fa-check-circle text-green-500"></i> IIT-JEE Foundation
+                        </span>
+                        <span class="flex items-center gap-2 bg-white border border-gray-200 text-gray-700 text-xs font-semibold px-4 py-2 rounded-full shadow-sm">
+                            <i class="fa-solid fa-check-circle text-green-500"></i> NEET Preparation
+                        </span>
+                        <span class="flex items-center gap-2 bg-white border border-gray-200 text-gray-700 text-xs font-semibold px-4 py-2 rounded-full shadow-sm">
+                            <i class="fa-solid fa-check-circle text-green-500"></i> Olympiad Training
+                        </span>
+                    </div>
+
+                    <!-- CTA Buttons -->
+                    <div class="flex flex-wrap gap-4">
+                        <a href="#admissions" class="px-8 py-4 bg-brandBlue text-white font-bold rounded-full shadow-lg hover:bg-blue-800 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 flex items-center gap-2">
+                            Enroll Today <i class="fa-solid fa-arrow-right"></i>
+                        </a>
+                        <a href="#programs" class="px-8 py-4 bg-white text-brandBlue border-2 border-brandBlue font-bold rounded-full hover:bg-brandBlue hover:text-white transition-all duration-300 flex items-center gap-2">
+                            <i class="fa-solid fa-book-open text-brandOrange"></i> Explore Programs
+                        </a>
+                    </div>
+                </div>
+
+                <!-- RIGHT: School Image -->
+                <div class="relative animate-fade-in flex justify-center">
+                    <div class="relative w-[92%] mx-auto">
+                        <img src="./image.png"
+                            alt="Students at Sri Venkateswara JY School"
+                            class="rounded-3xl shadow-2xl w-full h-auto border-4 border-white hover:scale-[1.02] transition-transform duration-500">
+
+                        <!-- Floating Badge Bottom Left -->
+                        <div class="absolute -bottom-5 -left-5 bg-white p-4 rounded-2xl shadow-xl z-20 flex items-center gap-3 border border-gray-100">
+                            <div class="bg-brandOrange/10 p-2.5 rounded-xl text-brandOrange">
+                                <i class="fa-solid fa-award text-xl"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm font-black text-gray-800">Excellence Award</p>
+                                <p class="text-xs text-gray-500">Best School 2024</p>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ======== STATS SECTION ======== -->
+    <section class="py-12 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-5">
+                <div class="stat-card-1 rounded-2xl p-6 text-center text-white hover-lift cursor-pointer">
+                    <i class="fa-solid fa-graduation-cap text-3xl mb-3 opacity-90"></i>
+                    <h3 class="text-3xl font-black mb-1">25+</h3>
+                    <p class="text-xs font-semibold opacity-80 uppercase tracking-wider">Years of Excellence</p>
+                </div>
+                <div class="stat-card-2 rounded-2xl p-6 text-center text-white hover-lift cursor-pointer">
+                    <i class="fa-solid fa-users text-3xl mb-3 opacity-90"></i>
+                    <h3 class="text-3xl font-black mb-1">1500+</h3>
+                    <p class="text-xs font-semibold opacity-80 uppercase tracking-wider">Students Enrolled</p>
+                </div>
+                <div class="stat-card-3 rounded-2xl p-6 text-center text-white hover-lift cursor-pointer">
+                    <i class="fa-solid fa-chalkboard-user text-3xl mb-3 opacity-90"></i>
+                    <h3 class="text-3xl font-black mb-1">120+</h3>
+                    <p class="text-xs font-semibold opacity-80 uppercase tracking-wider">Expert Teachers</p>
+                </div>
+                <div class="stat-card-4 rounded-2xl p-6 text-center text-white hover-lift cursor-pointer">
+                    <i class="fa-solid fa-trophy text-3xl mb-3 opacity-90"></i>
+                    <h3 class="text-3xl font-black mb-1">50+</h3>
+                    <p class="text-xs font-semibold opacity-80 uppercase tracking-wider">Awards Won</p>
+                </div>
+                <div class="stat-card-5 rounded-2xl p-6 text-center text-white hover-lift cursor-pointer col-span-2 md:col-span-1">
+                    <i class="fa-solid fa-heart text-3xl mb-3 opacity-90"></i>
+                    <h3 class="text-3xl font-black mb-1">98%</h3>
+                    <p class="text-xs font-semibold opacity-80 uppercase tracking-wider">Parent Satisfaction</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ======== MISSION & VISION ======== -->
+    <section id="mission" class="py-20 bg-gray-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-14">
+                <div class="section-badge bg-brandBlue/10 text-brandBlue mb-4">
+                    <i class="fa-solid fa-bullseye text-brandOrange"></i> Who We Are
+                </div>
+                <h2 class="text-3xl md:text-4xl font-black text-gray-900 mb-4">Our Mission & Vision</h2>
+                <p class="text-gray-500 text-lg max-w-2xl mx-auto">Dedicated to building a future where every student thrives academically, emotionally, and socially.</p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
+                <div class="rounded-3xl overflow-hidden shadow-xl hover-lift">
+                    <img src="https://images.unsplash.com/photo-1577896851231-70ef18881754?q=80&w=2070&auto=format&fit=crop"
+                        alt="Students learning" class="w-full h-[420px] object-cover hover:scale-105 transition-transform duration-700">
+                </div>
+                <div class="space-y-6">
+                    <div class="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 hover-lift group">
+                        <div class="flex items-center gap-4 mb-5">
+                            <div class="w-14 h-14 bg-brandBlue/10 rounded-2xl flex items-center justify-center text-brandBlue group-hover:bg-brandBlue group-hover:text-white transition-colors duration-300">
+                                <i class="fa-solid fa-bullseye text-2xl"></i>
+                            </div>
+                            <div>
+                                <p class="text-xs font-bold text-brandOrange uppercase tracking-widest">What We Do</p>
+                                <h3 class="text-xl font-black text-gray-900">Our Mission</h3>
+                            </div>
+                        </div>
+                        <p class="text-gray-600 leading-relaxed">To provide a nurturing and inclusive environment that encourages academic excellence, creativity, and character development — preparing students for a successful, meaningful future.</p>
+                        <a href="#" class="inline-flex items-center gap-2 text-brandBlue font-bold mt-5 hover:text-brandOrange transition-colors group">
+                            Learn More <i class="fa-solid fa-arrow-right group-hover:translate-x-1 transition-transform"></i>
+                        </a>
+                    </div>
+                    <div class="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 hover-lift group">
+                        <div class="flex items-center gap-4 mb-5">
+                            <div class="w-14 h-14 bg-brandOrange/10 rounded-2xl flex items-center justify-center text-brandOrange group-hover:bg-brandOrange group-hover:text-white transition-colors duration-300">
+                                <i class="fa-solid fa-eye text-2xl"></i>
+                            </div>
+                            <div>
+                                <p class="text-xs font-bold text-brandBlue uppercase tracking-widest">Where We're Headed</p>
+                                <h3 class="text-xl font-black text-gray-900">Our Vision</h3>
+                            </div>
+                        </div>
+                        <p class="text-gray-600 leading-relaxed">To be a leading school recognized for delivering quality education and inspiring students to achieve their full potential and make a positive impact on the world.</p>
+                        <a href="#" class="inline-flex items-center gap-2 text-brandBlue font-bold mt-5 hover:text-brandOrange transition-colors group">
+                            Learn More <i class="fa-solid fa-arrow-right group-hover:translate-x-1 transition-transform"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ======== PROGRAMS SECTION ======== -->
+    <section id="programs" class="py-20 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center max-w-3xl mx-auto mb-14">
+                <div class="section-badge bg-brandOrange/10 text-brandOrange mb-4">
+                    <i class="fa-solid fa-book-open"></i> Academic Excellence
+                </div>
+                <h2 class="text-3xl md:text-4xl font-black text-gray-900 mb-4">Programs We Offer</h2>
+                <p class="text-gray-500 text-lg">A wide range of academic and co-curricular programs designed to bring out the best in every student.</p>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5">
+                <div class="program-card bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 rounded-3xl p-7 text-center hover-lift group cursor-pointer">
+                    <div class="program-icon w-16 h-16 mx-auto bg-brandBlue rounded-2xl flex items-center justify-center text-white mb-5 shadow-lg shadow-blue-200">
+                        <i class="fa-solid fa-flask text-2xl"></i>
+                    </div>
+                    <h3 class="text-base font-black text-gray-900 mb-2">STEM Program</h3>
+                    <p class="text-xs text-gray-500 mb-4 leading-relaxed">Building critical thinking and problem-solving skills.</p>
+                    <span class="text-brandBlue text-xs font-bold flex items-center justify-center gap-1 group-hover:gap-2 transition-all">Learn More <i class="fa-solid fa-arrow-right text-xs"></i></span>
+                </div>
+                <div class="program-card bg-gradient-to-br from-orange-50 to-amber-50 border border-orange-100 rounded-3xl p-7 text-center hover-lift group cursor-pointer">
+                    <div class="program-icon w-16 h-16 mx-auto bg-brandOrange rounded-2xl flex items-center justify-center text-white mb-5 shadow-lg shadow-orange-200">
+                        <i class="fa-solid fa-robot text-2xl"></i>
+                    </div>
+                    <h3 class="text-base font-black text-gray-900 mb-2">Robotics</h3>
+                    <p class="text-xs text-gray-500 mb-4 leading-relaxed">Hands-on learning in robotics, coding, and engineering.</p>
+                    <span class="text-brandOrange text-xs font-bold flex items-center justify-center gap-1 group-hover:gap-2 transition-all">Learn More <i class="fa-solid fa-arrow-right text-xs"></i></span>
+                </div>
+                <div class="program-card bg-gradient-to-br from-green-50 to-emerald-50 border border-green-100 rounded-3xl p-7 text-center hover-lift group cursor-pointer">
+                    <div class="program-icon w-16 h-16 mx-auto bg-emerald-600 rounded-2xl flex items-center justify-center text-white mb-5 shadow-lg shadow-green-200">
+                        <i class="fa-solid fa-futbol text-2xl"></i>
+                    </div>
+                    <h3 class="text-base font-black text-gray-900 mb-2">Sports Program</h3>
+                    <p class="text-xs text-gray-500 mb-4 leading-relaxed">Encouraging physical fitness, teamwork, and leadership.</p>
+                    <span class="text-emerald-600 text-xs font-bold flex items-center justify-center gap-1 group-hover:gap-2 transition-all">Learn More <i class="fa-solid fa-arrow-right text-xs"></i></span>
+                </div>
+                <div class="program-card bg-gradient-to-br from-purple-50 to-fuchsia-50 border border-purple-100 rounded-3xl p-7 text-center hover-lift group cursor-pointer">
+                    <div class="program-icon w-16 h-16 mx-auto bg-purple-600 rounded-2xl flex items-center justify-center text-white mb-5 shadow-lg shadow-purple-200">
+                        <i class="fa-solid fa-palette text-2xl"></i>
+                    </div>
+                    <h3 class="text-base font-black text-gray-900 mb-2">Arts Program</h3>
+                    <p class="text-xs text-gray-500 mb-4 leading-relaxed">Nurturing creativity and expression through visual arts.</p>
+                    <span class="text-purple-600 text-xs font-bold flex items-center justify-center gap-1 group-hover:gap-2 transition-all">Learn More <i class="fa-solid fa-arrow-right text-xs"></i></span>
+                </div>
+                <div class="program-card bg-gradient-to-br from-cyan-50 to-teal-50 border border-cyan-100 rounded-3xl p-7 text-center hover-lift group cursor-pointer">
+                    <div class="program-icon w-16 h-16 mx-auto bg-cyan-600 rounded-2xl flex items-center justify-center text-white mb-5 shadow-lg shadow-cyan-200">
+                        <i class="fa-solid fa-language text-2xl"></i>
+                    </div>
+                    <h3 class="text-base font-black text-gray-900 mb-2">Language Program</h3>
+                    <p class="text-xs text-gray-500 mb-4 leading-relaxed">Building strong communication skills and global proficiency.</p>
+                    <span class="text-cyan-600 text-xs font-bold flex items-center justify-center gap-1 group-hover:gap-2 transition-all">Learn More <i class="fa-solid fa-arrow-right text-xs"></i></span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ======== WHY CHOOSE US ======== -->
+    <section class="py-20 bg-brandBlue relative overflow-hidden">
+        <div class="absolute top-0 right-0 w-96 h-96 bg-white opacity-[0.03] rounded-full -mr-40 -mt-40"></div>
+        <div class="absolute bottom-0 left-0 w-72 h-72 bg-white opacity-[0.03] rounded-full -ml-24 -mb-24"></div>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div class="text-center mb-14">
+                <div class="inline-flex items-center gap-2 bg-white/10 px-4 py-2 rounded-full mb-4">
+                    <i class="fa-solid fa-star text-brandOrange text-xs"></i>
+                    <span class="text-white font-bold text-[11px] tracking-[0.15em] uppercase">Why Parents Choose Us</span>
+                </div>
+                <h2 class="text-3xl md:text-4xl font-black text-white mb-4">Why Choose SRI VENKATESWARA JY SCHOOL?</h2>
+                <p class="text-blue-200 text-lg max-w-2xl mx-auto">We go beyond textbooks — shaping character, confidence, and career-ready skills.</p>
+            </div>
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                <div class="bg-white/10 border border-white/20 p-6 rounded-2xl text-center hover-lift cursor-pointer group">
+                    <div class="w-14 h-14 bg-white/10 rounded-xl mx-auto flex items-center justify-center mb-4 group-hover:bg-brandOrange transition-colors">
+                        <i class="fa-solid fa-user-tie text-2xl text-white"></i>
+                    </div>
+                    <h4 class="font-bold text-white text-sm leading-tight">Experienced Faculty</h4>
+                </div>
+                <div class="bg-white/10 border border-white/20 p-6 rounded-2xl text-center hover-lift cursor-pointer group">
+                    <div class="w-14 h-14 bg-white/10 rounded-xl mx-auto flex items-center justify-center mb-4 group-hover:bg-brandOrange transition-colors">
+                        <i class="fa-solid fa-building-columns text-2xl text-white"></i>
+                    </div>
+                    <h4 class="font-bold text-white text-sm leading-tight">Modern Classrooms</h4>
+                </div>
+                <div class="bg-white/10 border border-white/20 p-6 rounded-2xl text-center hover-lift cursor-pointer group">
+                    <div class="w-14 h-14 bg-white/10 rounded-xl mx-auto flex items-center justify-center mb-4 group-hover:bg-brandOrange transition-colors">
+                        <i class="fa-solid fa-child-reaching text-2xl text-white"></i>
+                    </div>
+                    <h4 class="font-bold text-white text-sm leading-tight">Holistic Development</h4>
+                </div>
+                <div class="bg-white/10 border border-white/20 p-6 rounded-2xl text-center hover-lift cursor-pointer group">
+                    <div class="w-14 h-14 bg-white/10 rounded-xl mx-auto flex items-center justify-center mb-4 group-hover:bg-brandOrange transition-colors">
+                        <i class="fa-solid fa-shield-halved text-2xl text-white"></i>
+                    </div>
+                    <h4 class="font-bold text-white text-sm leading-tight">Safe &amp; Secure Campus</h4>
+                </div>
+                <div class="bg-white/10 border border-white/20 p-6 rounded-2xl text-center hover-lift cursor-pointer group">
+                    <div class="w-14 h-14 bg-white/10 rounded-xl mx-auto flex items-center justify-center mb-4 group-hover:bg-brandOrange transition-colors">
+                        <i class="fa-solid fa-globe text-2xl text-white"></i>
+                    </div>
+                    <h4 class="font-bold text-white text-sm leading-tight">Global Perspective</h4>
+                </div>
+                <div class="bg-white/10 border border-white/20 p-6 rounded-2xl text-center hover-lift cursor-pointer group">
+                    <div class="w-14 h-14 bg-white/10 rounded-xl mx-auto flex items-center justify-center mb-4 group-hover:bg-brandOrange transition-colors">
+                        <i class="fa-solid fa-graduation-cap text-2xl text-white"></i>
+                    </div>
+                    <h4 class="font-bold text-white text-sm leading-tight">Future Skills Focus</h4>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ======== TESTIMONIALS ======== -->
+    <section class="py-20 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-14">
+                <div class="section-badge bg-yellow-50 text-yellow-700 mb-4">
+                    <i class="fa-solid fa-star text-yellow-500"></i> Testimonials
+                </div>
+                <h2 class="text-3xl md:text-4xl font-black text-gray-900 mb-4">What Parents &amp; Students Say</h2>
+                <p class="text-gray-500 text-lg max-w-xl mx-auto">Real stories from the families who trust us with their children's future.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 p-8 rounded-3xl hover-lift relative">
+                    <div class="flex gap-1 text-yellow-400 mb-4">
+                        <i class="fa-solid fa-star text-sm"></i><i class="fa-solid fa-star text-sm"></i><i class="fa-solid fa-star text-sm"></i><i class="fa-solid fa-star text-sm"></i><i class="fa-solid fa-star text-sm"></i>
+                    </div>
+                    <p class="text-gray-700 mb-6 leading-relaxed">"Sri Venkateswara JY School has been a wonderful place for my child to grow academically and personally. The teachers are truly dedicated."</p>
+                    <div class="flex items-center gap-3">
+                        <div class="w-12 h-12 rounded-full bg-brandBlue flex items-center justify-center text-white font-bold text-lg">P</div>
+                        <div>
+                            <h4 class="font-black text-gray-900 text-sm">Priya Sharma</h4>
+                            <p class="text-xs text-gray-500">Parent of Grade 8 Student</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-brandBlue p-8 rounded-3xl hover-lift relative shadow-xl shadow-blue-200">
+                    <div class="flex gap-1 text-yellow-400 mb-4">
+                        <i class="fa-solid fa-star text-sm"></i><i class="fa-solid fa-star text-sm"></i><i class="fa-solid fa-star text-sm"></i><i class="fa-solid fa-star text-sm"></i><i class="fa-solid fa-star text-sm"></i>
+                    </div>
+                    <p class="text-blue-100 mb-6 leading-relaxed">"The teachers are supportive and the environment is perfect for learning. I cleared JEE with the foundation I got here — it changed my life!"</p>
+                    <div class="flex items-center gap-3">
+                        <div class="w-12 h-12 rounded-full bg-brandOrange flex items-center justify-center text-white font-bold text-lg">A</div>
+                        <div>
+                            <h4 class="font-black text-white text-sm">Aarav Mehta</h4>
+                            <p class="text-xs text-blue-300">Alumni, JEE Qualifier</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-gradient-to-br from-orange-50 to-amber-50 border border-orange-100 p-8 rounded-3xl hover-lift relative">
+                    <div class="flex gap-1 text-yellow-400 mb-4">
+                        <i class="fa-solid fa-star text-sm"></i><i class="fa-solid fa-star text-sm"></i><i class="fa-solid fa-star text-sm"></i><i class="fa-solid fa-star text-sm"></i><i class="fa-solid fa-star text-sm"></i>
+                    </div>
+                    <p class="text-gray-700 mb-6 leading-relaxed">"I'm glad my daughter is in a school that values character, confidence, and creativity alongside academics. Best decision we made!"</p>
+                    <div class="flex items-center gap-3">
+                        <div class="w-12 h-12 rounded-full bg-brandOrange flex items-center justify-center text-white font-bold text-lg">N</div>
+                        <div>
+                            <h4 class="font-black text-gray-900 text-sm">Neha Verma</h4>
+                            <p class="text-xs text-gray-500">Parent of Grade 10 Student</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ======== ADMISSIONS CTA ======== -->
+    <section id="admissions" class="py-20 bg-gradient-to-r from-brandOrange via-orange-500 to-amber-500 relative overflow-hidden">
+        <div class="absolute top-0 right-0 w-64 h-64 bg-white opacity-10 rounded-full -mr-20 -mt-20"></div>
+        <div class="absolute bottom-0 left-0 w-48 h-48 bg-white opacity-10 rounded-full -ml-10 -mb-10"></div>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div class="flex flex-col md:flex-row items-center justify-between gap-8">
+                <div class="flex items-center gap-6">
+                    <div class="bg-white/20 p-5 rounded-2xl text-white hidden sm:flex items-center justify-center">
+                        <i class="fa-solid fa-graduation-cap text-5xl"></i>
+                    </div>
+                    <div>
+                        <p class="text-white/80 text-sm font-semibold uppercase tracking-widest mb-2">Don't Miss Out!</p>
+                        <h2 class="text-3xl md:text-4xl font-black text-white mb-2">ADMISSIONS OPEN FOR 2027 – 2028</h2>
+                        <p class="text-white/90 text-lg">Limited seats available! Enroll your child today and give them the best start.</p>
+                    </div>
+                </div>
+                <div class="flex flex-col gap-3 items-center shrink-0">
+                    <button class="whitespace-nowrap px-10 py-4 bg-white text-brandOrange font-black text-lg rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 flex items-center gap-3">
+                        Apply Now <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                    <p class="text-white/70 text-xs">Free counseling available</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ======== LATEST NEWS ======== -->
+    <section class="py-20 bg-gray-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center mb-12">
+                <div>
+                    <div class="section-badge bg-brandBlue/10 text-brandBlue mb-3">
+                        <i class="fa-solid fa-newspaper text-brandOrange"></i> Latest Updates
+                    </div>
+                    <h2 class="text-3xl font-black text-gray-900">Latest News &amp; Events</h2>
+                </div>
+                <a href="#" class="text-brandBlue font-bold hover:text-brandOrange transition-colors flex items-center gap-2 text-sm">
+                    View All <i class="fa-solid fa-arrow-right"></i>
+                </a>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-7">
+                <div class="bg-white rounded-3xl overflow-hidden shadow-sm hover-lift border border-gray-100 group">
+                    <div class="relative overflow-hidden h-52">
+                        <img src="https://images.unsplash.com/photo-1564069114553-7215e1ff1890?q=80&w=800&auto=format&fit=crop"
+                            alt="Science Exhibition" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                        <div class="absolute top-4 left-4 bg-brandOrange text-white text-xs font-bold px-3 py-1.5 rounded-full">20 May 2024</div>
+                    </div>
+                    <div class="p-6">
+                        <span class="text-xs font-bold text-brandBlue uppercase tracking-wider bg-brandBlue/10 px-3 py-1 rounded-full">Science</span>
+                        <h3 class="text-lg font-black text-gray-900 mt-3 mb-2 group-hover:text-brandBlue transition-colors">Science Exhibition 2024</h3>
+                        <p class="text-gray-500 text-sm mb-4 leading-relaxed">Students showcased innovative projects and experiments across various scientific disciplines.</p>
+                        <a href="#" class="text-brandBlue text-sm font-bold flex items-center gap-1 group-hover:gap-2 transition-all">Read More <i class="fa-solid fa-arrow-right text-xs"></i></a>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-3xl overflow-hidden shadow-sm hover-lift border border-gray-100 group">
+                    <div class="relative overflow-hidden h-52">
+                        <img src="https://images.unsplash.com/photo-1526676037777-05a232554f77?q=80&w=800&auto=format&fit=crop"
+                            alt="Sports Meet" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                        <div class="absolute top-4 left-4 bg-emerald-600 text-white text-xs font-bold px-3 py-1.5 rounded-full">15 May 2024</div>
+                    </div>
+                    <div class="p-6">
+                        <span class="text-xs font-bold text-emerald-700 uppercase tracking-wider bg-emerald-50 px-3 py-1 rounded-full">Sports</span>
+                        <h3 class="text-lg font-black text-gray-900 mt-3 mb-2 group-hover:text-brandBlue transition-colors">Inter-School Sports Meet</h3>
+                        <p class="text-gray-500 text-sm mb-4 leading-relaxed">Our students won multiple medals and made us proud in the regional sports competition.</p>
+                        <a href="#" class="text-brandBlue text-sm font-bold flex items-center gap-1 group-hover:gap-2 transition-all">Read More <i class="fa-solid fa-arrow-right text-xs"></i></a>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-3xl overflow-hidden shadow-sm hover-lift border border-gray-100 group">
+                    <div class="relative overflow-hidden h-52">
+                        <img src="https://images.unsplash.com/photo-1544531586-fde5298cdd40?q=80&w=800&auto=format&fit=crop"
+                            alt="Award Ceremony" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                        <div class="absolute top-4 left-4 bg-purple-600 text-white text-xs font-bold px-3 py-1.5 rounded-full">10 May 2024</div>
+                    </div>
+                    <div class="p-6">
+                        <span class="text-xs font-bold text-purple-700 uppercase tracking-wider bg-purple-50 px-3 py-1 rounded-full">Awards</span>
+                        <h3 class="text-lg font-black text-gray-900 mt-3 mb-2 group-hover:text-brandBlue transition-colors">Excellence Awards Ceremony</h3>
+                        <p class="text-gray-500 text-sm mb-4 leading-relaxed">Honoring the achievements of outstanding students in academics and co-curricular activities.</p>
+                        <a href="#" class="text-brandBlue text-sm font-bold flex items-center gap-1 group-hover:gap-2 transition-all">Read More <i class="fa-solid fa-arrow-right text-xs"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ======== FOOTER ======== -->
+    <footer class="bg-gray-950 text-white pt-16 pb-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
+                <div>
+                    <div class="flex items-center gap-3 mb-5">
+                        <img src="./logo_.png" alt="Logo" class="w-12 h-12 object-contain">
+                        <div>
+                            <span class="block text-base font-bold text-white leading-tight">SRI VENKATESWARA</span>
+                            <span class="block text-lg font-black text-brandOrange tracking-widest uppercase">JY School</span>
+                        </div>
+                    </div>
+                    <p class="text-gray-400 text-sm leading-relaxed mb-6">Inspiring excellence, building character, and empowering students to create a better tomorrow.</p>
+                    <div class="flex gap-3">
+                        <a href="#" class="w-10 h-10 rounded-xl bg-gray-800 flex items-center justify-center hover:bg-brandOrange transition-colors"><i class="fa-brands fa-facebook-f text-sm"></i></a>
+                        <a href="#" class="w-10 h-10 rounded-xl bg-gray-800 flex items-center justify-center hover:bg-brandOrange transition-colors"><i class="fa-brands fa-instagram text-sm"></i></a>
+                        <a href="#" class="w-10 h-10 rounded-xl bg-gray-800 flex items-center justify-center hover:bg-brandOrange transition-colors"><i class="fa-brands fa-youtube text-sm"></i></a>
+                    </div>
+                </div>
+
+                <div>
+                    <h4 class="text-base font-black mb-6 text-white">Quick Links</h4>
+                    <ul class="space-y-3 text-sm text-gray-400">
+                        <li><a href="#" class="hover:text-brandOrange transition-colors flex items-center gap-2"><i class="fa-solid fa-chevron-right text-xs text-brandOrange"></i>About Us</a></li>
+                        <li><a href="#" class="hover:text-brandOrange transition-colors flex items-center gap-2"><i class="fa-solid fa-chevron-right text-xs text-brandOrange"></i>Academics</a></li>
+                        <li><a href="#" class="hover:text-brandOrange transition-colors flex items-center gap-2"><i class="fa-solid fa-chevron-right text-xs text-brandOrange"></i>Admissions</a></li>
+                        <li><a href="#" class="hover:text-brandOrange transition-colors flex items-center gap-2"><i class="fa-solid fa-chevron-right text-xs text-brandOrange"></i>Campus Life</a></li>
+                        <li><a href="#" class="hover:text-brandOrange transition-colors flex items-center gap-2"><i class="fa-solid fa-chevron-right text-xs text-brandOrange"></i>News &amp; Events</a></li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h4 class="text-base font-black mb-6 text-white">Useful Links</h4>
+                    <ul class="space-y-3 text-sm text-gray-400">
+                        <li><a href="http://66.116.252.191:19999/login" class="hover:text-brandOrange transition-colors flex items-center gap-2"><i class="fa-solid fa-chevron-right text-xs text-brandOrange"></i>Parents Portal</a></li>
+                        <li><a href="#" class="hover:text-brandOrange transition-colors flex items-center gap-2"><i class="fa-solid fa-chevron-right text-xs text-brandOrange"></i>Library</a></li>
+                        <li><a href="#" class="hover:text-brandOrange transition-colors flex items-center gap-2"><i class="fa-solid fa-chevron-right text-xs text-brandOrange"></i>Careers</a></li>
+                        <li><a href="#" class="hover:text-brandOrange transition-colors flex items-center gap-2"><i class="fa-solid fa-chevron-right text-xs text-brandOrange"></i>Gallery</a></li>
+                        <li><a href="#" class="hover:text-brandOrange transition-colors flex items-center gap-2"><i class="fa-solid fa-chevron-right text-xs text-brandOrange"></i>FAQs</a></li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h4 class="text-base font-black mb-6 text-white">Contact Us</h4>
+                    <ul class="space-y-4 text-sm text-gray-400 mb-6">
+                        <li class="flex items-start gap-3">
+                            <i class="fa-solid fa-location-dot mt-1 text-brandOrange shrink-0"></i>
+                            <span>123 Education Street, Knowledge City, KL 560001</span>
+                        </li>
+                        <li class="flex items-center gap-3">
+                            <i class="fa-solid fa-phone text-brandOrange shrink-0"></i>
+                            <span>+91 98765 43210</span>
+                        </li>
+                        <li class="flex items-center gap-3">
+                            <i class="fa-solid fa-envelope text-brandOrange shrink-0"></i>
+                            <span>info@svjyschool.edu.in</span>
+                        </li>
+                    </ul>
+                    <h4 class="text-sm font-black mb-3 text-white">Subscribe to Newsletter</h4>
+                    <div class="flex rounded-xl overflow-hidden border border-gray-700">
+                        <input type="email" placeholder="Enter your email" class="w-full px-4 py-2.5 bg-gray-800 text-sm focus:outline-none text-white placeholder-gray-500">
+                        <button class="bg-brandOrange px-4 py-2.5 hover:bg-orange-600 transition-colors shrink-0">
+                            <i class="fa-solid fa-paper-plane text-white"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="border-t border-gray-800 pt-8 flex flex-col md:flex-row justify-between items-center text-sm text-gray-500">
+                <p>&copy; 2024 SRI VENKATESWARA JY SCHOOL. All Rights Reserved.</p>
+                <div class="flex gap-6 mt-4 md:mt-0">
+                    <a href="#" class="hover:text-white transition-colors">Privacy Policy</a>
+                    <a href="#" class="hover:text-white transition-colors">Terms &amp; Conditions</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript for Mobile Menu Toggle -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+            const mobileMenu = document.getElementById('mobile-menu');
+            const icon = mobileMenuBtn.querySelector('i');
+
+            mobileMenuBtn.addEventListener('click', function () {
+                mobileMenu.classList.toggle('hidden');
+                if (mobileMenu.classList.contains('hidden')) {
+                    icon.classList.remove('fa-xmark');
+                    icon.classList.add('fa-bars');
+                } else {
+                    icon.classList.remove('fa-bars');
+                    icon.classList.add('fa-xmark');
+                }
+            });
+
+            const mobileLinks = mobileMenu.querySelectorAll('a');
+            mobileLinks.forEach(link => {
+                link.addEventListener('click', () => {
+                    mobileMenu.classList.add('hidden');
+                    icon.classList.remove('fa-xmark');
+                    icon.classList.add('fa-bars');
+                });
+            });
+        });
+    </script>
+    <script src="./cms.js"></script>
+</body>
+</html>

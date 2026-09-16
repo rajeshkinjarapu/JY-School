@@ -1051,3 +1051,58 @@ model PushSubscription {
 
   @@index([userId])
 }
+
+// ==========================================
+// WEBSITE CMS MODELS
+// ==========================================
+
+model WebsiteSettings {
+  id              String   @id @default("1")
+  heroTitle       String   @default("Shaping Brilliant Minds, Building Futures")
+  heroSubtitle    String   @default("IIT / NEET / OLYMPIAD FOUNDATION")
+  heroDescription String   @default("At Sri Venkateswara JY School, we nurture young minds with knowledge, values, and skills to become responsible global citizens.")
+  contactPhone    String   @default("+91 98765 43210")
+  contactEmail    String   @default("info@svjyschool.edu.in")
+  contactAddress  String   @default("123 Education Street, Knowledge City, KL 560001")
+  facebookUrl     String?
+  instagramUrl    String?
+  youtubeUrl      String?
+  updatedAt       DateTime @updatedAt
+}
+
+model WebsiteStat {
+  id    String @id @default(uuid())
+  label String
+  value String
+  color String // e.g. blue, orange, green
+  icon  String // fontawesome class
+  order Int    @default(0)
+}
+
+model WebsiteProgram {
+  id          String  @id @default(uuid())
+  title       String
+  description String
+  icon        String
+  color       String
+  order       Int     @default(0)
+}
+
+model WebsiteTestimonial {
+  id      String @id @default(uuid())
+  name    String
+  role    String
+  text    String
+  rating  Int    @default(5)
+  order   Int    @default(0)
+}
+
+model WebsiteNews {
+  id          String   @id @default(uuid())
+  title       String
+  description String
+  date        DateTime
+  tag         String   @default("News")
+  order       Int      @default(0)
+}
+

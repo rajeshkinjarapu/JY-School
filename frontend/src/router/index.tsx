@@ -69,6 +69,7 @@ const AttendanceMarkingPage = lazy(() => import('../pages/attendance/AttendanceM
 const MyAttendancePage = lazy(() => import('../pages/attendance/MyAttendancePage').then((mod) => ({ default: mod.MyAttendancePage })));
 const AttendanceReportPage = lazy(() => import('../pages/attendance/AttendanceReportPage'));
 const AttendanceDailyReportPage = lazy(() => import('../pages/attendance/AttendanceDailyReportPage'));
+const TodayAbsenteesPage = lazy(() => import('../pages/attendance/TodayAbsenteesPage'));
 const ExamListPage = lazy(routeImports['/exams']);
 const CreateExamPage = lazy(routeImports['/exams/create']);
 const MarksEntryPage = lazy(() => import('../pages/exams/MarksEntryPage'));
@@ -83,6 +84,7 @@ const AnnouncementsPage = lazy(routeImports['/announcements']);
 const MessagesPage = lazy(routeImports['/messages']);
 const ReportsPage = lazy(routeImports['/reports']);
 const SettingsPage = lazy(routeImports['/settings']);
+const WebsiteManagerPage = lazy(() => import('../pages/settings/WebsiteManagerPage').then(m => ({ default: m.WebsiteManagerPage })));
 const StaffManagement = lazy(() => import('../pages/settings/StaffManagement'));
 const ProfilePage = lazy(() => import('../pages/profile/ProfilePage'));
 const LeaveDashboardPage = lazy(() => import('../pages/leave/LeaveDashboardPage'));
@@ -314,6 +316,10 @@ export const router = createBrowserRouter([
       {
         path: 'attendance/daily-report',
         element: withSuspense(<AttendanceDailyReportPage />),
+      },
+      {
+        path: 'attendance/absentees-today',
+        element: withSuspense(<TodayAbsenteesPage />),
       },
       {
         path: 'exams',
@@ -581,6 +587,14 @@ export const router = createBrowserRouter([
         element: withSuspense(
           <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN']}>
             <SettingsPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'settings/website',
+        element: withSuspense(
+          <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN']}>
+            <WebsiteManagerPage />
           </ProtectedRoute>
         ),
       },

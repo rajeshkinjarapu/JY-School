@@ -50,6 +50,7 @@ import answerKeysRoutes from './routes/answerKeys.routes';
 import onlineExamsRoutes from './routes/onlineExams.routes';
 import competitiveExamsRoutes from './routes/competitiveExams.routes';
 import masterQuestionsRoutes from './routes/masterQuestions.routes';
+import websiteRoutes from './routes/website.routes';
 
 const app = express();
 app.set('trust proxy', 1);
@@ -122,6 +123,7 @@ app.use('/api/answer-keys', answerKeysRoutes);
 app.use('/api/online-exams', onlineExamsRoutes);
 app.use('/api/competitive-exams', competitiveExamsRoutes);
 app.use('/api/master-questions', masterQuestionsRoutes);
+app.use('/api/website', websiteRoutes);
 
 // Health check
 app.get('/api/health', (_req, res) => {

@@ -73,6 +73,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.removeItem('refreshToken');
     localStorage.removeItem('user');
     setUser(null);
+    window.location.href = 'https://jyschool.vercel.app/';
   };
 
   const updateUser = (updatedUser: User) => {

@@ -244,7 +244,7 @@ export default function AttendanceDashboard() {
           <div className="grid grid-cols-2 gap-3">
             {[
               { to: '/attendance/mark', label: 'Register', icon: Edit, color: 'text-blue-600' },
-              { to: '/leave/request-log', label: 'Leaves', icon: FileText, color: 'text-emerald-600' },
+              { to: '/attendance/absentees-today', label: 'Leaves', icon: FileText, color: 'text-emerald-600' },
               { to: '#', label: 'Holidays', icon: Calendar, color: 'text-amber-600' },
               { to: '#', label: 'Late Entry', icon: Clock, color: 'text-rose-600' }
             ].map((s, i) => (
