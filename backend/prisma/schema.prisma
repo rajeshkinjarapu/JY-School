@@ -1106,3 +1106,19 @@ model WebsiteNews {
   order       Int      @default(0)
 }
 
+
+model AdmissionInquiry {
+  id             String   @id @default(uuid())
+  studentName    String
+  fatherName     String?
+  motherName     String?
+  phone          String
+  aadharNo       String?
+  dob            DateTime?
+  gender         String?
+  classApplied   String?
+  address        String?
+  status         String   @default("PENDING") // PENDING, CONTACTED, ENROLLED, REJECTED
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}

@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admissions Registration | JY School</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Poppins', 'sans-serif'] },
+                    colors: { brandBlue: '#1e3a8a', brandOrange: '#f97316' }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-50 font-sans text-gray-800 antialiased min-h-screen flex flex-col">
+
+    <!-- Header -->
+    <header class="bg-brandBlue text-white shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <img src="./logo_.png" alt="JY School" class="w-12 h-12 object-contain bg-white rounded-full p-1">
+                <div>
+                    <h1 class="text-sm font-bold leading-tight">SRI VENKATESWARA</h1>
+                    <h2 class="text-xl font-black text-brandOrange uppercase leading-tight">JY SCHOOL</h2>
+                </div>
+            </div>
+            <a href="index.html" class="text-white hover:text-orange-200 transition-colors flex items-center gap-2 font-semibold">
+                <i class="fa-solid fa-arrow-left"></i> Back to Home
+            </a>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-grow py-12 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-3xl mx-auto">
+            
+            <div class="text-center mb-10">
+                <h2 class="text-3xl font-black text-brandBlue uppercase tracking-wide">Student Admission Registration</h2>
+                <p class="text-gray-500 mt-2">Please fill out the form below to apply for admission. Our office will contact you shortly.</p>
+            </div>
+
+            <!-- Success Message (Hidden initially) -->
+            <div id="successMessage" class="hidden mb-8 p-6 bg-green-50 border border-green-200 rounded-2xl text-center shadow-lg shadow-green-100/50">
+                <div class="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4 text-white">
+                    <i class="fa-solid fa-check text-3xl"></i>
+                </div>
+                <h3 class="text-2xl font-bold text-green-800 mb-2">Application Submitted!</h3>
+                <p class="text-green-700">Thank you for your interest in JY School. Our admission counselor will contact you soon.</p>
+                <button onclick="window.location.reload()" class="mt-6 px-6 py-2 bg-green-600 text-white font-bold rounded-full hover:bg-green-700 transition-colors">Submit Another</button>
+            </div>
+
+            <!-- Error Message -->
+            <div id="errorMessage" class="hidden mb-8 p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl font-semibold flex items-center gap-3">
+                <i class="fa-solid fa-circle-exclamation"></i>
+                <span id="errorText">An error occurred. Please try again.</span>
+            </div>
+
+            <form id="admissionForm" class="bg-white rounded-[2rem] border border-gray-100 shadow-xl shadow-indigo-100/20 p-6 sm:p-10 space-y-8">
+                
+                <!-- Section 1: Student Details -->
+                <div>
+                    <h3 class="text-lg font-black text-brandBlue uppercase tracking-wider mb-6 flex items-center gap-2 border-b pb-2">
+                        <i class="fa-solid fa-user-graduate"></i> Student Details
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="space-y-1">
+                            <label class="text-[11px] font-black uppercase tracking-wider text-gray-500">Student Full Name <span class="text-red-500">*</span></label>
+                            <input type="text" id="studentName" required class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brandOrange focus:border-brandOrange outline-none transition-all font-semibold" placeholder="Enter full name">
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-[11px] font-black uppercase tracking-wider text-gray-500">Class Applied For <span class="text-red-500">*</span></label>
+                            <select id="classApplied" required class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brandOrange focus:border-brandOrange outline-none transition-all font-semibold">
+                                <option value="">Select Class</option>
+                                <option value="Nursery">Nursery</option>
+                                <option value="LKG">LKG</option>
+                                <option value="UKG">UKG</option>
+                                <option value="Class 1">Class 1</option>
+                                <option value="Class 2">Class 2</option>
+                                <option value="Class 3">Class 3</option>
+                                <option value="Class 4">Class 4</option>
+                                <option value="Class 5">Class 5</option>
+                                <option value="Class 6">Class 6</option>
+                                <option value="Class 7">Class 7</option>
+                                <option value="Class 8">Class 8</option>
+                                <option value="Class 9">Class 9</option>
+                                <option value="Class 10">Class 10</option>
+                            </select>
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-[11px] font-black uppercase tracking-wider text-gray-500">Date of Birth</label>
+                            <input type="date" id="dob" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brandOrange focus:border-brandOrange outline-none transition-all font-semibold">
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-[11px] font-black uppercase tracking-wider text-gray-500">Gender</label>
+                            <select id="gender" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brandOrange focus:border-brandOrange outline-none transition-all font-semibold">
+                                <option value="">Select Gender</option>
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                            </select>
+                        </div>
+                        <div class="space-y-1 md:col-span-2">
+                            <label class="text-[11px] font-black uppercase tracking-wider text-gray-500">Aadhar Number</label>
+                            <input type="text" id="aadharNo" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brandOrange focus:border-brandOrange outline-none transition-all font-semibold" placeholder="12-digit Aadhar (Optional)">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 2: Parent/Guardian Details -->
+                <div>
+                    <h3 class="text-lg font-black text-brandBlue uppercase tracking-wider mb-6 flex items-center gap-2 border-b pb-2 mt-8">
+                        <i class="fa-solid fa-users"></i> Parent / Guardian Details
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="space-y-1">
+                            <label class="text-[11px] font-black uppercase tracking-wider text-gray-500">Father's Name</label>
+                            <input type="text" id="fatherName" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brandOrange focus:border-brandOrange outline-none transition-all font-semibold" placeholder="Father's full name">
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-[11px] font-black uppercase tracking-wider text-gray-500">Mother's Name</label>
+                            <input type="text" id="motherName" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brandOrange focus:border-brandOrange outline-none transition-all font-semibold" placeholder="Mother's full name">
+                        </div>
+                        <div class="space-y-1 md:col-span-2">
+                            <label class="text-[11px] font-black uppercase tracking-wider text-gray-500">Contact Phone Number <span class="text-red-500">*</span></label>
+                            <input type="tel" id="phone" required class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brandOrange focus:border-brandOrange outline-none transition-all font-semibold" placeholder="10-digit mobile number">
+                        </div>
+                        <div class="space-y-1 md:col-span-2">
+                            <label class="text-[11px] font-black uppercase tracking-wider text-gray-500">Full Address</label>
+                            <textarea id="address" rows="3" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brandOrange focus:border-brandOrange outline-none transition-all font-semibold" placeholder="Enter complete residential address"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pt-6">
+                    <button type="submit" id="submitBtn" class="w-full bg-brandBlue text-white text-lg font-bold py-4 rounded-xl shadow-xl shadow-blue-500/30 hover:bg-blue-900 transition-all transform hover:-translate-y-1 flex items-center justify-center gap-2">
+                        Submit Application <i class="fa-solid fa-paper-plane"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </main>
+
+    <footer class="bg-brandBlue py-6 text-center text-white/70 text-sm">
+        <p>&copy; 2026 SRI VENKATESWARA JY SCHOOL. All rights reserved.</p>
+    </footer>
+
+    <script>
+        const API_URL = 'http://66.116.252.191:19998'; // Replace with production backend URL if different
+        
+        document.getElementById('admissionForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const submitBtn = document.getElementById('submitBtn');
+            const errorMsg = document.getElementById('errorMessage');
+            const errorText = document.getElementById('errorText');
+            
+            errorMsg.classList.add('hidden');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = 'Submitting... <i class="fa-solid fa-circle-notch fa-spin"></i>';
+            submitBtn.classList.add('opacity-70');
+
+            const payload = {
+                studentName: document.getElementById('studentName').value,
+                fatherName: document.getElementById('fatherName').value,
+                motherName: document.getElementById('motherName').value,
+                phone: document.getElementById('phone').value,
+                classApplied: document.getElementById('classApplied').value,
+                dob: document.getElementById('dob').value,
+                gender: document.getElementById('gender').value,
+                aadharNo: document.getElementById('aadharNo').value,
+                address: document.getElementById('address').value
+            };
+
+            try {
+                const response = await fetch(`${API_URL}/api/admissions/apply`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    document.getElementById('admissionForm').classList.add('hidden');
+                    document.getElementById('successMessage').classList.remove('hidden');
+                    window.scrollTo(0, 0);
+                } else {
+                    throw new Error(data.message || 'Submission failed');
+                }
+            } catch (err) {
+                errorMsg.classList.remove('hidden');
+                errorText.textContent = err.message || 'Server error. Please try again later or call the office.';
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = 'Submit Application <i class="fa-solid fa-paper-plane"></i>';
+                submitBtn.classList.remove('opacity-70');
+            }
+        });
+    </script>
+</body>
+</html>

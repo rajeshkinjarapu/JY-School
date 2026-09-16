@@ -34,6 +34,13 @@ export const OfficeToolsDashboard = () => {
       icon: Server, 
       gradient: 'from-rose-500 to-orange-400',
       shadow: 'shadow-rose-500/30'
+    },
+    { 
+      title: 'ADMISSIONS', 
+      description: 'Manage website admission inquiries', 
+      icon: Book, 
+      gradient: 'from-emerald-500 to-teal-400',
+      shadow: 'shadow-emerald-500/30'
     }
   ];
 
@@ -57,6 +64,8 @@ export const OfficeToolsDashboard = () => {
                     navigate('/office-tools/slip-test');
                   } else if (tool.title === 'STUDY CERTIFICATE') {
                     navigate('/office-tools/study-certificate');
+                  } else if (tool.title === 'ADMISSIONS') {
+                    navigate('/office-tools/admissions');
                   }
                 }}
                 className="group relative bg-white/60 dark:bg-slate-900/40 backdrop-blur-md border border-white/20 dark:border-slate-800 p-6 rounded-3xl shadow-lg hover:shadow-xl hover:bg-white/80 dark:hover:bg-slate-900/60 transition-all duration-300 hover:-translate-y-1 cursor-pointer overflow-hidden flex flex-col items-start gap-4 animate-fade-in-up"
