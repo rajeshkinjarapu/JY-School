@@ -5,6 +5,18 @@ import { authenticate, authorize } from '../middlewares/auth';
 const router = express.Router();
 const prisma = new PrismaClient();
 
+// Public route to fetch admission settings (like QR Code)
+router.get('/config', async (req, res) => {
+  try {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    const settings = await prisma.settings.findFirst();
+    res.json({ success: true, qrCodeUrl: settings?.qrCodeUrl, upiId: settings?.upiId });
+  } catch (error) {
+    res.status(500).json({ success: false });
+  }
+});
+
 // Public route: Submit a new admission application from the website
 router.post('/apply', async (req, res) => {
   try {
