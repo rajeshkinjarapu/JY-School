@@ -6,7 +6,7 @@ import {
   createTestimonial, updateTestimonial, deleteTestimonial,
   createNews, updateNews, deleteNews 
 } from '../controllers/website.controller';
-import { protect, restrictTo } from '../middlewares/auth';
+import { authenticate, authorize } from '../middlewares/auth';
 
 const router = Router();
 
@@ -14,8 +14,8 @@ const router = Router();
 router.get('/data', getWebsiteData);
 
 // Protected Admin Routes
-router.use(protect);
-router.use(restrictTo('SUPER_ADMIN', 'ADMIN'));
+router.use(authenticate);
+router.use(authorize('SUPER_ADMIN', 'ADMIN'));
 
 router.put('/settings', updateSettings);
 
