@@ -1,281 +1,302 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admissions Registration | JY School</title>
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <!-- FontAwesome -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: { sans: ['Poppins', 'sans-serif'] },
-                    colors: { brandBlue: '#1e3a8a', brandOrange: '#f97316' }
-                }
-            }
-        }
-    </script>
+    <script>tailwind.config={theme:{extend:{fontFamily:{sans:['Inter','sans-serif']},colors:{brandBlue:'#1e3a8a',brandOrange:'#f97316'}}}}</script>
+    <style>
+        body{background:#f0f4f8;}
+        .card{background:white;border-radius:10px;border:1px solid #e2e8f0;overflow:hidden;}
+        .card-header{background:#f0f4ff;border-bottom:1px solid #dde5ff;padding:8px 14px;display:flex;align-items:center;gap:7px;font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#1e3a8a;}
+        .card-body{padding:12px 14px;}
+        .fl{display:flex;align-items:center;gap:8px;}
+        .g2{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+        .cs2{grid-column:span 2;}
+        .fg{margin-bottom:8px;}
+        .lbl{display:block;font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#94a3b8;margin-bottom:3px;}
+        .lbl span{color:#ef4444;}
+        .inp{width:100%;padding:7px 10px;font-size:12px;font-weight:500;color:#1e293b;background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:7px;outline:none;font-family:inherit;transition:border .15s,box-shadow .15s;}
+        .inp:focus{border-color:#1e3a8a;box-shadow:0 0 0 3px rgba(30,58,138,.08);background:#fff;}
+        .inp::placeholder{color:#cbd5e1;font-weight:400;}
+        select.inp{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24'%3E%3Cpath fill='%2394a3b8' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;background-color:#f8fafc;appearance:none;padding-right:26px;}
+        textarea.inp{resize:none;}
+        input[type=file].inp{padding:5px 10px;}
+        #imgPreview{width:72px;height:72px;flex-shrink:0;border-radius:8px;border:2px dashed #cbd5e1;display:flex;align-items:center;justify-content:center;background:#f8fafc;overflow:hidden;}
+        #imgPreview img{width:100%;height:100%;object-fit:cover;border-radius:6px;}
+        .qrbox{background:linear-gradient(135deg,#f0f4ff,#fff);border:1.5px solid #c7d7ff;border-radius:9px;padding:10px 12px;display:flex;align-items:center;gap:12px;}
+        .qrbox img{width:70px;height:70px;object-fit:contain;border-radius:6px;background:white;padding:3px;border:1px solid #e2e8f0;flex-shrink:0;}
+        .sbtn{width:100%;padding:11px;background:linear-gradient(135deg,#1e3a8a,#1d4ed8);color:white;font-size:13px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;border:none;border-radius:9px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 4px 16px rgba(30,58,138,.25);transition:all .2s;}
+        .sbtn:hover{background:linear-gradient(135deg,#1e40af,#2563eb);transform:translateY(-1px);box-shadow:0 6px 20px rgba(30,58,138,.35);}
+        .sbtn:disabled{opacity:.65;cursor:not-allowed;transform:none;}
+        @media(max-width:900px){.mg{grid-template-columns:1fr!important;} .g2{grid-template-columns:1fr;} .cs2{grid-column:span 1;}}
+    </style>
 </head>
-<body class="bg-gray-50 font-sans text-gray-800 antialiased min-h-screen flex flex-col">
+<body style="font-family:Inter,sans-serif;min-height:100vh;display:flex;flex-direction:column;">
 
-    <!-- Header -->
-    <header class="bg-brandBlue text-white shadow-lg sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-            <div class="flex items-center gap-3">
-                <img src="./logo_.png" alt="JY School" class="w-12 h-12 object-contain bg-white rounded-full p-1">
-                <div>
-                    <h1 class="text-sm font-bold leading-tight">SRI VENKATESWARA</h1>
-                    <h2 class="text-xl font-black text-brandOrange uppercase leading-tight">JY SCHOOL</h2>
-                </div>
+<header style="background:#1e3a8a;color:white;position:sticky;top:0;z-index:50;box-shadow:0 2px 10px rgba(0,0,0,.3);">
+    <div style="max-width:1200px;margin:0 auto;padding:10px 16px;display:flex;justify-content:space-between;align-items:center;">
+        <div class="fl">
+            <img src="./logo_.png" alt="JY School" style="width:38px;height:38px;object-fit:contain;background:white;border-radius:50%;padding:3px;">
+            <div>
+                <div style="font-size:9px;font-weight:600;opacity:.7;line-height:1.2;">SRI VENKATESWARA</div>
+                <div style="font-size:15px;font-weight:900;color:#f97316;line-height:1.2;letter-spacing:-.01em;">JY SCHOOL</div>
             </div>
-            <a href="index.html" class="text-white hover:text-orange-200 transition-colors flex items-center gap-2 font-semibold">
-                <i class="fa-solid fa-arrow-left"></i> Back to Home
-            </a>
         </div>
-    </header>
+        <a href="index.html" style="color:rgba(255,255,255,.8);font-size:12px;font-weight:600;text-decoration:none;display:flex;align-items:center;gap:6px;">
+            <i class="fa-solid fa-arrow-left"></i> Back to Home
+        </a>
+    </div>
+</header>
 
-    <!-- Main Content -->
-    <main class="flex-grow py-12 px-4 sm:px-6 lg:px-8">
-        <div class="max-w-7xl mx-auto">
-            
-            <div class="text-center mb-10">
-                <h2 class="text-3xl font-black text-brandBlue uppercase tracking-wide">Student Admission Registration</h2>
-                <p class="text-gray-500 mt-2">Please fill out the form below to apply for admission. Our office will contact you shortly.</p>
-            </div>
+<main style="flex:1;padding:16px 12px;">
+<div style="max-width:1200px;margin:0 auto;">
 
-            <!-- Success Message (Hidden initially) -->
-            <div id="successMessage" class="hidden mb-8 p-6 bg-green-50 border border-green-200 rounded-2xl text-center shadow-lg shadow-green-100/50">
-                <div class="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4 text-white">
-                    <i class="fa-solid fa-check text-3xl"></i>
+    <div style="margin-bottom:12px;display:flex;align-items:flex-start;justify-content:space-between;">
+        <div>
+            <div style="font-size:18px;font-weight:900;color:#1e3a8a;letter-spacing:-.02em;"><i class="fa-solid fa-graduation-cap" style="color:#f97316;margin-right:8px;"></i>Student Admission Registration</div>
+            <div style="font-size:11px;color:#94a3b8;font-weight:500;margin-top:2px;">Fill in the details. Our admission team will contact you shortly.</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;background:#fff8f0;border:1px solid #fed7aa;border-radius:8px;padding:6px 10px;">
+            <i class="fa-solid fa-shield-halved" style="color:#f97316;font-size:13px;"></i>
+            <span style="font-size:10px;font-weight:700;color:#c2410c;">Secure Form</span>
+        </div>
+    </div>
+
+    <div id="successMessage" style="display:none;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:24px;text-align:center;margin-bottom:12px;">
+        <div style="width:44px;height:44px;background:#22c55e;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 10px;color:white;font-size:18px;"><i class="fa-solid fa-check"></i></div>
+        <div style="font-size:16px;font-weight:800;color:#166534;margin-bottom:4px;">Application Submitted!</div>
+        <div style="font-size:12px;color:#15803d;">Our counselor will contact you soon.</div>
+        <button onclick="window.location.reload()" style="margin-top:12px;padding:7px 18px;background:#16a34a;color:white;font-size:12px;font-weight:700;border:none;border-radius:8px;cursor:pointer;">Submit Another</button>
+    </div>
+    <div id="errorMessage" style="display:none;background:#fef2f2;border:1px solid #fecaca;border-radius:9px;padding:10px 14px;margin-bottom:10px;display:none;align-items:center;gap:8px;color:#b91c1c;font-size:12px;font-weight:600;">
+        <i class="fa-solid fa-circle-exclamation"></i><span id="errorText">Error occurred.</span>
+    </div>
+
+    <form id="admissionForm">
+        <div class="mg" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;align-items:start;">
+
+            <!-- COLUMN 1: STUDENT -->
+            <div class="card">
+                <div class="card-header"><i class="fa-solid fa-user-graduate"></i> Student Details</div>
+                <div class="card-body">
+                    <div class="fg">
+                        <label class="lbl">Student Photo (Optional)</label>
+                        <div class="fl">
+                            <div id="imgPreview"><i class="fa-solid fa-camera" style="color:#94a3b8;font-size:22px;"></i></div>
+                            <div style="flex:1;">
+                                <input type="file" id="studentImage" accept="image/*" onchange="previewImg(this)" class="inp">
+                                <div style="font-size:9px;color:#94a3b8;margin-top:3px;">JPG/PNG · Max 2MB</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="g2">
+                        <div class="fg cs2">
+                            <label class="lbl">Student Full Name <span>*</span></label>
+                            <input type="text" id="studentName" required class="inp" placeholder="Enter full name">
+                        </div>
+                        <div class="fg">
+                            <label class="lbl">Class Applied For <span>*</span></label>
+                            <select id="classApplied" required class="inp">
+                                <option value="">Select</option>
+                                <option>Nursery</option><option>LKG</option><option>UKG</option>
+                                <option>Class 1</option><option>Class 2</option><option>Class 3</option>
+                                <option>Class 4</option><option>Class 5</option><option>Class 6</option>
+                                <option>Class 7</option><option>Class 8</option><option>Class 9</option>
+                                <option>Class 10</option>
+                            </select>
+                        </div>
+                        <div class="fg">
+                            <label class="lbl">Gender</label>
+                            <select id="gender" class="inp"><option value="">Select</option><option>Male</option><option>Female</option></select>
+                        </div>
+                        <div class="fg">
+                            <label class="lbl">Date of Birth</label>
+                            <input type="date" id="dob" class="inp">
+                        </div>
+                        <div class="fg">
+                            <label class="lbl">Aadhar No. (Optional)</label>
+                            <input type="text" id="aadharNo" class="inp" placeholder="12-digit">
+                        </div>
+                    </div>
                 </div>
-                <h3 class="text-2xl font-bold text-green-800 mb-2">Application Submitted!</h3>
-                <p class="text-green-700">Thank you for your interest in JY School. Our admission counselor will contact you soon.</p>
-                <button onclick="window.location.reload()" class="mt-6 px-6 py-2 bg-green-600 text-white font-bold rounded-full hover:bg-green-700 transition-colors">Submit Another</button>
             </div>
 
-            <!-- Error Message -->
-            <div id="errorMessage" class="hidden mb-8 p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl font-semibold flex items-center gap-3">
-                <i class="fa-solid fa-circle-exclamation"></i>
-                <span id="errorText">An error occurred. Please try again.</span>
+            <!-- COLUMN 2: PARENT -->
+            <div class="card">
+                <div class="card-header"><i class="fa-solid fa-users"></i> Parent / Guardian Details</div>
+                <div class="card-body">
+                    <div class="fg">
+                        <label class="lbl">Father's Name</label>
+                        <input type="text" id="fatherName" class="inp" placeholder="Father's full name">
+                    </div>
+                    <div class="fg">
+                        <label class="lbl">Mother's Name</label>
+                        <input type="text" id="motherName" class="inp" placeholder="Mother's full name">
+                    </div>
+                    <div class="fg">
+                        <label class="lbl">Phone Number <span>*</span></label>
+                        <input type="tel" id="phone" required class="inp" placeholder="10-digit mobile number">
+                    </div>
+                    <div class="fg">
+                        <label class="lbl">Full Address</label>
+                        <textarea id="address" rows="5" class="inp" placeholder="House No., Street, City, Pincode"></textarea>
+                    </div>
+                </div>
             </div>
 
-            <form id="admissionForm" class="bg-white rounded-2xl border border-gray-100 shadow-xl shadow-indigo-100/20 p-6 sm:p-8">
-                
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    
-                    <!-- Left Column: Student Details -->
-                    <div>
-                        <h3 class="text-base font-black text-brandBlue uppercase tracking-wider mb-4 flex items-center gap-2 border-b pb-2">
-                            <i class="fa-solid fa-user-graduate"></i> Student Details
-                        </h3>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div class="space-y-1 md:col-span-2">
-                                <label class="text-[11px] font-black uppercase tracking-wider text-gray-500">Student Photo (Optional)</label>
-                                <input type="file" id="studentImage" accept="image/*" class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-brandOrange focus:border-brandOrange outline-none transition-all font-semibold text-sm">
-                            </div>
-                            <div class="space-y-1">
-                                <label class="text-[11px] font-black uppercase tracking-wider text-gray-500">Student Full Name <span class="text-red-500">*</span></label>
-                                <input type="text" id="studentName" required class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-brandOrange focus:border-brandOrange outline-none transition-all font-semibold text-sm" placeholder="Enter full name">
-                            </div>
-                            <div class="space-y-1">
-                                <label class="text-[11px] font-black uppercase tracking-wider text-gray-500">Class Applied For <span class="text-red-500">*</span></label>
-                                <select id="classApplied" required class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-brandOrange focus:border-brandOrange outline-none transition-all font-semibold text-sm">
-                                    <option value="">Select Class</option>
-                                    <option value="Nursery">Nursery</option>
-                                    <option value="LKG">LKG</option>
-                                    <option value="UKG">UKG</option>
-                                    <option value="Class 1">Class 1</option>
-                                    <option value="Class 2">Class 2</option>
-                                    <option value="Class 3">Class 3</option>
-                                    <option value="Class 4">Class 4</option>
-                                    <option value="Class 5">Class 5</option>
-                                    <option value="Class 6">Class 6</option>
-                                    <option value="Class 7">Class 7</option>
-                                    <option value="Class 8">Class 8</option>
-                                    <option value="Class 9">Class 9</option>
-                                    <option value="Class 10">Class 10</option>
-                                </select>
-                            </div>
-                            <div class="space-y-1">
-                                <label class="text-[11px] font-black uppercase tracking-wider text-gray-500">Date of Birth</label>
-                                <input type="date" id="dob" class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-brandOrange focus:border-brandOrange outline-none transition-all font-semibold text-sm">
-                            </div>
-                            <div class="space-y-1">
-                                <label class="text-[11px] font-black uppercase tracking-wider text-gray-500">Gender</label>
-                                <select id="gender" class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-brandOrange focus:border-brandOrange outline-none transition-all font-semibold text-sm">
-                                    <option value="">Select Gender</option>
-                                    <option value="Male">Male</option>
-                                    <option value="Female">Female</option>
-                                </select>
-                            </div>
-                            <div class="space-y-1 md:col-span-2">
-                                <label class="text-[11px] font-black uppercase tracking-wider text-gray-500">Aadhar Number</label>
-                                <input type="text" id="aadharNo" class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-brandOrange focus:border-brandOrange outline-none transition-all font-semibold text-sm" placeholder="12-digit Aadhar (Optional)">
+            <!-- COLUMN 3: PAYMENT -->
+            <div class="card">
+                <div class="card-header"><i class="fa-solid fa-wallet"></i> Admission Fee & Payment</div>
+                <div class="card-body">
+                    <div class="g2">
+                        <div class="fg">
+                            <label class="lbl">Admission Fee (&#8377;)</label>
+                            <input type="number" id="admissionFee" class="inp" placeholder="e.g. 5000">
+                        </div>
+                        <div class="fg">
+                            <label class="lbl">Payment Method</label>
+                            <div class="inp" style="background:#f0f4ff;display:flex;align-items:center;gap:6px;cursor:default;">
+                                <i class="fa-solid fa-qrcode" style="color:#1e3a8a;font-size:12px;"></i>
+                                <input type="hidden" id="paymentMethod" value="UPI">
+                                <span style="font-size:12px;font-weight:800;color:#1e3a8a;">UPI</span>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Right Column: Parent & Payment Details -->
-                    <div class="space-y-6">
-                        
-                        <!-- Parent Details -->
-                        <div>
-                            <h3 class="text-base font-black text-brandBlue uppercase tracking-wider mb-4 flex items-center gap-2 border-b pb-2">
-                                <i class="fa-solid fa-users"></i> Parent / Guardian Details
-                            </h3>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div class="space-y-1">
-                                    <label class="text-[11px] font-black uppercase tracking-wider text-gray-500">Father's Name</label>
-                                    <input type="text" id="fatherName" class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-brandOrange focus:border-brandOrange outline-none transition-all font-semibold text-sm" placeholder="Father's full name">
-                                </div>
-                                <div class="space-y-1">
-                                    <label class="text-[11px] font-black uppercase tracking-wider text-gray-500">Mother's Name</label>
-                                    <input type="text" id="motherName" class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-brandOrange focus:border-brandOrange outline-none transition-all font-semibold text-sm" placeholder="Mother's full name">
-                                </div>
-                                <div class="space-y-1 md:col-span-2">
-                                    <label class="text-[11px] font-black uppercase tracking-wider text-gray-500">Contact Phone Number <span class="text-red-500">*</span></label>
-                                    <input type="tel" id="phone" required class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-brandOrange focus:border-brandOrange outline-none transition-all font-semibold text-sm" placeholder="10-digit mobile number">
-                                </div>
-                                <div class="space-y-1 md:col-span-2">
-                                    <label class="text-[11px] font-black uppercase tracking-wider text-gray-500">Full Address</label>
-                                    <textarea id="address" rows="2" class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-brandOrange focus:border-brandOrange outline-none transition-all font-semibold text-sm" placeholder="Enter complete residential address"></textarea>
-                                </div>
+                    <!-- QR Code area -->
+                    <div class="fg">
+                        <div id="qrLoadBox" class="qrbox" style="justify-content:center;gap:8px;">
+                            <i class="fa-solid fa-circle-notch fa-spin" style="color:#1e3a8a;"></i>
+                            <span style="font-size:11px;color:#64748b;">Loading payment QR...</span>
+                        </div>
+                        <div id="qrBox" class="qrbox" style="display:none;">
+                            <img id="schoolQr" src="" alt="QR Code">
+                            <div>
+                                <div style="font-size:10px;font-weight:800;color:#1e3a8a;margin-bottom:4px;">Scan to Pay via UPI</div>
+                                <div id="schoolUpiId" style="font-size:9px;font-family:monospace;background:#f0f4ff;color:#3730a3;padding:2px 7px;border-radius:5px;border:1px solid #c7d7ff;display:inline-block;"></div>
+                                <div style="margin-top:6px;font-size:9px;color:#64748b;line-height:1.5;">1. Scan QR<br>2. Pay amount<br>3. Upload screenshot below</div>
                             </div>
                         </div>
-
-                        <!-- Payment Details -->
-                        <div>
-                            <h3 class="text-base font-black text-brandBlue uppercase tracking-wider mb-4 flex items-center gap-2 border-b pb-2">
-                                <i class="fa-solid fa-wallet"></i> Admission Fee & Payment
-                            </h3>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div class="space-y-1">
-                                    <label class="text-[11px] font-black uppercase tracking-wider text-gray-500">Admission Fee (₹)</label>
-                                    <input type="number" id="admissionFee" class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-brandOrange focus:border-brandOrange outline-none transition-all font-semibold text-sm" placeholder="e.g. 5000">
-                                </div>
-                                <div class="space-y-1">
-                                    <label class="text-[11px] font-black uppercase tracking-wider text-gray-500">Payment Method</label>
-                                    <input type="text" id="paymentMethod" value="UPI" readonly class="w-full px-3 py-2 bg-gray-100 border border-gray-200 rounded-lg text-gray-700 outline-none font-bold text-sm">
-                                </div>
-                                <div class="space-y-3 md:col-span-2" id="receiptDiv">
-                                    <div id="qrCodeContainer" class="hidden flex items-center justify-between p-3 border border-gray-200 rounded-lg bg-gray-50">
-                                        <div>
-                                            <p class="text-xs font-bold text-gray-700 mb-1">Scan to Pay via UPI</p>
-                                            <p id="schoolUpiId" class="text-[10px] text-gray-500 font-mono bg-white px-2 py-1 rounded border border-gray-200 inline-block"></p>
-                                        </div>
-                                        <img id="schoolQrCode" src="" alt="QR" class="w-20 h-20 object-contain rounded bg-white p-1 border border-gray-200">
-                                    </div>
-                                    <div>
-                                        <label class="text-[11px] font-black uppercase tracking-wider text-gray-500">Upload UPI Receipt <span class="text-red-500">*</span></label>
-                                        <input type="file" id="paymentReceipt" accept="image/*" class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-brandOrange focus:border-brandOrange outline-none transition-all font-semibold text-sm" required>
-                                    </div>
-                                </div>
-                            </div>
+                        <div id="qrNoBox" class="qrbox" style="display:none;justify-content:center;">
+                            <i class="fa-solid fa-circle-info" style="color:#94a3b8;"></i>
+                            <span style="font-size:11px;color:#94a3b8;">QR not configured. Pay at office.</span>
                         </div>
+                    </div>
 
+                    <div class="fg">
+                        <label class="lbl">Upload Payment Receipt <span>*</span></label>
+                        <input type="file" id="paymentReceipt" accept="image/*" class="inp" required>
+                        <div style="font-size:9px;color:#94a3b8;margin-top:3px;"><i class="fa-solid fa-info-circle"></i> Screenshot of successful UPI payment</div>
+                    </div>
+
+                    <div style="background:#fff8f0;border:1px solid #fed7aa;border-radius:7px;padding:8px 10px;">
+                        <div style="font-size:9px;font-weight:800;color:#c2410c;margin-bottom:2px;"><i class="fa-solid fa-triangle-exclamation"></i> NOTE</div>
+                        <div style="font-size:9px;color:#9a3412;line-height:1.5;">Payment is optional. Form can be submitted without payment. You can pay at school office later.</div>
                     </div>
                 </div>
+            </div>
 
-                <div class="pt-6 mt-6 border-t border-gray-100">
-                    <button type="submit" id="submitBtn" class="w-full md:w-1/2 mx-auto bg-brandBlue text-white text-base font-bold py-3 rounded-xl shadow-lg shadow-blue-500/30 hover:bg-blue-900 transition-all transform hover:-translate-y-1 flex items-center justify-center gap-2">
-                        Submit Application <i class="fa-solid fa-paper-plane"></i>
-                    </button>
-                </div>
-            </form>
         </div>
-    </main>
 
-    <footer class="bg-brandBlue py-6 text-center text-white/70 text-sm">
-        <p>&copy; 2026 SRI VENKATESWARA JY SCHOOL. All rights reserved.</p>
-    </footer>
+        <div style="margin-top:12px;">
+            <button type="submit" id="submitBtn" class="sbtn">
+                <i class="fa-solid fa-paper-plane"></i> Submit Admission Application
+            </button>
+        </div>
+    </form>
 
-    <script>
-        const API_URL = ''; // Relative path for Vercel Proxy to avoid HTTPS mixed content issue
-        
-        const toBase64 = file => new Promise((resolve, reject) => {
-            if (!file) return resolve(null);
-            const reader = new FileReader();
-            reader.readAsDataURL(file);
-            reader.onload = () => resolve(reader.result);
-            reader.onerror = error => reject(error);
+</div>
+</main>
+
+<footer style="background:#1e3a8a;color:rgba(255,255,255,.5);text-align:center;padding:10px;font-size:11px;">
+    &copy; 2026 Sri Venkateswara JY School. All rights reserved.
+</footer>
+
+<script>
+const API_URL = '';
+
+function previewImg(input) {
+    const box = document.getElementById('imgPreview');
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = e => { box.innerHTML = '<img src="' + e.target.result + '" alt="Preview">'; };
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+const toBase64 = file => new Promise((resolve, reject) => {
+    if (!file) return resolve(null);
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = error => reject(error);
+});
+
+fetch(API_URL + '/api/admissions/config')
+    .then(r => r.json())
+    .then(data => {
+        document.getElementById('qrLoadBox').style.display = 'none';
+        if (data.success && data.qrCodeUrl) {
+            const src = data.qrCodeUrl.startsWith('http') ? data.qrCodeUrl : 'http://66.116.252.191:19998' + data.qrCodeUrl;
+            document.getElementById('schoolQr').src = src;
+            document.getElementById('schoolUpiId').textContent = data.upiId || '';
+            document.getElementById('qrBox').style.display = 'flex';
+        } else {
+            document.getElementById('qrNoBox').style.display = 'flex';
+            document.getElementById('paymentReceipt').removeAttribute('required');
+        }
+    })
+    .catch(() => {
+        document.getElementById('qrLoadBox').style.display = 'none';
+        document.getElementById('qrNoBox').style.display = 'flex';
+        document.getElementById('paymentReceipt').removeAttribute('required');
+    });
+
+document.getElementById('admissionForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('submitBtn');
+    const errDiv = document.getElementById('errorMessage');
+    errDiv.style.display = 'none';
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Submitting...';
+    try {
+        const studentImage = await toBase64(document.getElementById('studentImage').files[0]);
+        const paymentReceipt = await toBase64(document.getElementById('paymentReceipt').files[0]);
+        const payload = {
+            studentName: document.getElementById('studentName').value,
+            fatherName: document.getElementById('fatherName').value,
+            motherName: document.getElementById('motherName').value,
+            phone: document.getElementById('phone').value,
+            classApplied: document.getElementById('classApplied').value,
+            dob: document.getElementById('dob').value,
+            gender: document.getElementById('gender').value,
+            aadharNo: document.getElementById('aadharNo').value,
+            address: document.getElementById('address').value,
+            admissionFee: document.getElementById('admissionFee').value,
+            paymentMethod: document.getElementById('paymentMethod').value,
+            studentImage, paymentReceipt
+        };
+        const response = await fetch(API_URL + '/api/admissions/apply', {
+            method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload)
         });
-
-        // Load Settings for QR Code
-        fetch(`${API_URL}/api/admissions/config`)
-            .then(res => res.json())
-            .then(data => {
-                if (data.success && data.qrCodeUrl) {
-                    const qrImg = document.getElementById('schoolQrCode');
-                    qrImg.src = data.qrCodeUrl.startsWith('http') ? data.qrCodeUrl : `${API_URL}${data.qrCodeUrl}`;
-                    document.getElementById('schoolUpiId').textContent = data.upiId || 'No UPI ID Provided';
-                    document.getElementById('qrCodeContainer').classList.remove('hidden');
-                }
-            })
-            .catch(err => console.error('Failed to load QR code config', err));
-
-        document.getElementById('admissionForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const submitBtn = document.getElementById('submitBtn');
-            const errorMsg = document.getElementById('errorMessage');
-            const errorText = document.getElementById('errorText');
-            
-            errorMsg.classList.add('hidden');
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = 'Uploading & Submitting... <i class="fa-solid fa-circle-notch fa-spin"></i>';
-            submitBtn.classList.add('opacity-70');
-
-            try {
-                const studentImageFile = document.getElementById('studentImage').files[0];
-                const paymentReceiptFile = document.getElementById('paymentReceipt').files[0];
-
-                const studentImage = await toBase64(studentImageFile);
-                const paymentReceipt = await toBase64(paymentReceiptFile);
-
-                const payload = {
-                    studentName: document.getElementById('studentName').value,
-                    fatherName: document.getElementById('fatherName').value,
-                    motherName: document.getElementById('motherName').value,
-                    phone: document.getElementById('phone').value,
-                    classApplied: document.getElementById('classApplied').value,
-                    dob: document.getElementById('dob').value,
-                    gender: document.getElementById('gender').value,
-                    aadharNo: document.getElementById('aadharNo').value,
-                    address: document.getElementById('address').value,
-                    admissionFee: document.getElementById('admissionFee').value,
-                    paymentMethod: document.getElementById('paymentMethod').value,
-                    studentImage,
-                    paymentReceipt
-                };
-                const response = await fetch(`${API_URL}/api/admissions/apply`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-
-                const data = await response.json();
-
-                if (response.ok && data.success) {
-                    document.getElementById('admissionForm').classList.add('hidden');
-                    document.getElementById('successMessage').classList.remove('hidden');
-                    window.scrollTo(0, 0);
-                } else {
-                    throw new Error(data.message || 'Submission failed');
-                }
-            } catch (err) {
-                errorMsg.classList.remove('hidden');
-                errorText.textContent = err.message || 'Server error. Please try again later or call the office.';
-            } finally {
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = 'Submit Application <i class="fa-solid fa-paper-plane"></i>';
-                submitBtn.classList.remove('opacity-70');
-            }
-        });
-    </script>
+        const data = await response.json();
+        if (response.ok && data.success) {
+            document.getElementById('admissionForm').style.display = 'none';
+            document.getElementById('successMessage').style.display = 'block';
+            window.scrollTo({top: 0, behavior: 'smooth'});
+        } else { throw new Error(data.message || 'Submission failed'); }
+    } catch(err) {
+        errDiv.style.display = 'flex';
+        document.getElementById('errorText').textContent = err.message || 'Server error. Please try again.';
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Submit Admission Application';
+    }
+});
+</script>
 </body>
 </html>
