@@ -55,7 +55,7 @@ class _FinanceReportsScreenState extends State<FinanceReportsScreen> {
 
         for (var p in payments) {
           final amt = double.tryParse(p['amountPaid']?.toString() ?? '0') ?? 0.0;
-          final method = p['paymentMethod'] ?? 'CASH';
+          final method = p['method'] ?? p['paymentMethod'] ?? 'CASH';
           
           if (p['status'] == 'PAID' || p['status'] == null) {
             collected += amt;

@@ -176,9 +176,10 @@ class _AdminPaymentSettingsScreenState extends State<AdminPaymentSettingsScreen>
                 ),
               ),
             ),
-      bottomSheet: SafeArea(
+      bottomNavigationBar: SafeArea(
+        bottom: true,
         child: Padding(
-          padding: const EdgeInsets.all(16.0),
+          padding: EdgeInsets.only(left: 16.0, right: 16.0, top: 16.0, bottom: MediaQuery.of(context).padding.bottom > 0 ? 16.0 : 24.0),
           child: ElevatedButton(
             onPressed: _isSaving ? null : _saveSettings,
             style: ElevatedButton.styleFrom(
