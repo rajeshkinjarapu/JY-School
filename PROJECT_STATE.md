@@ -61,3 +61,10 @@
 - **Frontend (Web App)**: Hosted on VPS at `http://66.116.252.191:19999`
 - **Databases**: Supabase (Postgres) primary; local Postgres on VPS (`jy_school_local`) for heavy items (Question Papers).
 - **Mobile Apps**: Built with Flutter and managed via Shorebird for OTA patches.
+
+### Added Admissions Module
+- Added Prisma Schema model for AdmissionInquiry.
+- Added API routes for admissions.
+- Added Admissions dashboard card and list page in Admin Panel.
+- Created public 'apply.html' registration page for Website.
+- Linked Website Apply Now buttons to 'apply.html'.
