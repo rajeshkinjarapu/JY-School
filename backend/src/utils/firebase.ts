@@ -32,7 +32,7 @@ export const sendPushNotification = async (token: string, title: string, body: s
         priority: 'high',
         notification: {
           sound: 'default',
-          channelId: 'jyschool_alerts_v2', // Match the Flutter app channel ID
+          channelId: 'jyschool_alerts_v3', // Match the Flutter app channel ID
           defaultSound: true,
           defaultVibrateTimings: true,
           priority: 'max'

@@ -49,7 +49,7 @@ class NotificationService {
 
     // ── 2. Create HIGH_IMPORTANCE channel (Android) ──
     const AndroidNotificationChannel channel = AndroidNotificationChannel(
-      'jyschool_alerts_v2', // Bumped ID to force recreate channel
+      'jyschool_alerts_v3', // Bumped ID to force recreate channel
       'JY School Important Alerts',
       description: 'Critical school notifications — attendance, fees, exams.',
       importance: Importance.max,
@@ -195,7 +195,7 @@ class NotificationService {
   // ─────────────────────────────────────────────────────────────
   Future<void> _showHeroBanner(String? title, String? body, String? route) async {
     final AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
-      'jyschool_alerts_v2',
+      'jyschool_alerts_v3',
       'JY School Important Alerts',
       channelDescription: 'Critical school notifications.',
       importance: Importance.max,
