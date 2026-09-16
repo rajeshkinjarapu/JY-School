@@ -163,7 +163,7 @@ export const ProgressCardTemplate: React.FC<ProgressCardTemplateProps> = ({
               const subPct = isAB ? '0.0' : (max > 0 ? ((Number(sub.obtained) || 0) / max) * 100 : 0).toFixed(1);
               return (
                 <tr key={i} style={{ background: i % 2 === 1 ? '#fdfcf9' : '#fff' }}>
-                  <td style={{ padding: '8px 16px 8px 20px', textAlign: 'left', border: '1px solid #e8e0d8', fontWeight: 600, color: '#1a3a5a' }}>`u{1F4D8} {sub.subject}</td>
+                  <td style={{ padding: '8px 16px 8px 20px', textAlign: 'left', border: '1px solid #e8e0d8', fontWeight: 600, color: '#1a3a5a' }}>📘 {sub.subject}</td>
                   <td style={{ padding: '8px 16px', textAlign: 'center', border: '1px solid #e8e0d8', fontWeight: 700, fontSize: 15, color: isAB ? '#ef4444' : '#0b1a33' }}>{obt}</td>
                   <td style={{ padding: '8px 16px', textAlign: 'center', border: '1px solid #e8e0d8', color: '#6a8aaa' }}>{max}</td>
                   <td style={{ padding: '8px 16px', textAlign: 'center', border: '1px solid #e8e0d8', fontWeight: 700, color: '#1a4a7a' }}>{subPct}%</td>
@@ -171,7 +171,7 @@ export const ProgressCardTemplate: React.FC<ProgressCardTemplateProps> = ({
               );
             })}
             <tr style={{ background: 'linear-gradient(90deg,#fdf9f4,#fff3e0)' }}>
-              <td style={{ padding: '9px 16px 9px 20px', textAlign: 'left', border: '2.5px solid #f39c12', fontWeight: 900, color: '#0b1a33', textTransform: 'uppercase', letterSpacing: 1, fontSize: 14 }}>`u{1F4CC} TOTAL</td>
+              <td style={{ padding: '9px 16px 9px 20px', textAlign: 'left', border: '2.5px solid #f39c12', fontWeight: 900, color: '#0b1a33', textTransform: 'uppercase', letterSpacing: 1, fontSize: 14 }}>📌 TOTAL</td>
               <td style={{ padding: '9px 16px', textAlign: 'center', border: '2.5px solid #f39c12', fontWeight: 900, fontSize: 18, color: '#c0392b' }}>{safeData.total}</td>
               <td style={{ padding: '9px 16px', textAlign: 'center', border: '2.5px solid #f39c12', color: '#6a8aaa' }}>{TOTAL_MAX_MARKS}</td>
               <td style={{ padding: '9px 16px', textAlign: 'center', border: '2.5px solid #f39c12', fontWeight: 700, color: '#1a4a7a' }}>{totalPct}%</td>
@@ -194,7 +194,7 @@ export const ProgressCardTemplate: React.FC<ProgressCardTemplateProps> = ({
       <div style={{ margin: '0 24px 16px 24px', paddingTop: 12, borderTop: '2px dashed #dce4ed', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
         <div>
           <div style={{ fontSize: 15, fontWeight: 800, color: '#1a4a7a', textTransform: 'uppercase', letterSpacing: 0.5 }}>
-            `u{1F4CB} Total Marks: {safeData.total} / {TOTAL_MAX_MARKS}
+            📋 Total Marks: {safeData.total} / {TOTAL_MAX_MARKS}
           </div>
           <div style={{ fontSize: 44, fontWeight: 900, color: '#c0392b', lineHeight: 1, letterSpacing: -1 }}>
             {totalPct}%
@@ -207,7 +207,7 @@ export const ProgressCardTemplate: React.FC<ProgressCardTemplateProps> = ({
             ) : (
               <div style={{ width: '100%', height: 52, borderBottom: '1.5px dashed #c8d6e4', marginBottom: 6 }} />
             )}
-            <div style={{ fontSize: 12, fontWeight: 600, color: '#1a3a5a', textAlign: 'center' }}>`u{270D} Teacher Signature</div>
+            <div style={{ fontSize: 12, fontWeight: 600, color: '#1a3a5a', textAlign: 'center' }}>✍ Teacher Signature</div>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: 130 }}>
             {resolveUrl(principalSignatureUrl) ? (
@@ -215,7 +215,7 @@ export const ProgressCardTemplate: React.FC<ProgressCardTemplateProps> = ({
             ) : (
               <div style={{ width: '100%', height: 52, borderBottom: '1.5px dashed #c8d6e4', marginBottom: 6 }} />
             )}
-            <div style={{ fontSize: 12, fontWeight: 600, color: '#1a3a5a', textAlign: 'center' }}>`u{270D} Principal Signature</div>
+            <div style={{ fontSize: 12, fontWeight: 600, color: '#1a3a5a', textAlign: 'center' }}>✍ Principal Signature</div>
           </div>
         </div>
       </div>
