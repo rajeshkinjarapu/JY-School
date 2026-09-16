@@ -10,7 +10,8 @@ router.post('/apply', async (req, res) => {
   try {
     const { 
       studentName, fatherName, motherName, phone, 
-      aadharNo, dob, gender, classApplied, address 
+      aadharNo, dob, gender, classApplied, address,
+      studentImage, admissionFee, paymentMethod, paymentReceipt
     } = req.body;
 
     if (!studentName || !phone) {
@@ -29,7 +30,12 @@ router.post('/apply', async (req, res) => {
         dob: dob ? new Date(dob) : null,
         gender,
         classApplied,
-        address
+        address,
+        studentImage,
+        admissionFee,
+        paymentMethod,
+        paymentReceipt,
+        paymentStatus: paymentReceipt ? 'COMPLETED' : 'PENDING'
       }
     });
 

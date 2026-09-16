@@ -1119,6 +1119,14 @@ model AdmissionInquiry {
   classApplied   String?
   address        String?
   status         String   @default("PENDING") // PENDING, CONTACTED, ENROLLED, REJECTED
+  
+  // New Fields
+  studentImage   String?
+  admissionFee   String?
+  paymentMethod  String?  // CASH, UPI
+  paymentReceipt String?
+  paymentStatus  String   @default("PENDING") // PENDING, COMPLETED
+  
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 }

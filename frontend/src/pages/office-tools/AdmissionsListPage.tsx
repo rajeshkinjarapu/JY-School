@@ -70,11 +70,12 @@ export const AdmissionsListPage = () => {
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="bg-gray-50 border-b border-gray-200 text-xs uppercase tracking-wider text-gray-500">
+                    <th className="p-4 font-bold w-16">Photo</th>
                     <th className="p-4 font-bold">Student Name</th>
                     <th className="p-4 font-bold">Parents</th>
                     <th className="p-4 font-bold">Contact</th>
-                    <th className="p-4 font-bold">Class Applied</th>
-                    <th className="p-4 font-bold">Date</th>
+                    <th className="p-4 font-bold">Class & Fee</th>
+                    <th className="p-4 font-bold">Payment</th>
                     <th className="p-4 font-bold">Status</th>
                     <th className="p-4 font-bold text-right">Actions</th>
                   </tr>
@@ -83,8 +84,18 @@ export const AdmissionsListPage = () => {
                   {admissions.map(adm => (
                     <tr key={adm.id} className="hover:bg-gray-50 transition-colors">
                       <td className="p-4">
+                        {adm.studentImage ? (
+                          <img src={adm.studentImage} alt="Student" className="w-10 h-10 rounded-full object-cover border border-gray-200" />
+                        ) : (
+                          <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-400">
+                            <Book className="w-5 h-5" />
+                          </div>
+                        )}
+                      </td>
+                      <td className="p-4">
                         <div className="font-bold text-gray-900">{adm.studentName}</div>
                         <div className="text-xs text-gray-500">{adm.gender} {adm.dob ? `• ${new Date(adm.dob).toLocaleDateString()}` : ''}</div>
+                        <div className="text-xs text-gray-400 mt-1">{new Date(adm.createdAt).toLocaleDateString()}</div>
                       </td>
                       <td className="p-4 text-sm text-gray-700">
                         {adm.fatherName && <div>F: {adm.fatherName}</div>}
@@ -95,11 +106,25 @@ export const AdmissionsListPage = () => {
                           <Phone className="w-3 h-3" /> {adm.phone}
                         </a>
                       </td>
-                      <td className="p-4 text-sm font-bold text-gray-700">
-                        {adm.classApplied || '-'}
+                      <td className="p-4 text-sm text-gray-700">
+                        <div className="font-bold">{adm.classApplied || '-'}</div>
+                        {adm.admissionFee && <div className="text-xs text-green-600 font-semibold mt-1">₹{adm.admissionFee}</div>}
                       </td>
-                      <td className="p-4 text-sm text-gray-500">
-                        {new Date(adm.createdAt).toLocaleDateString()}
+                      <td className="p-4">
+                        {adm.paymentMethod ? (
+                          <div className="flex flex-col items-start gap-1">
+                            <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${adm.paymentStatus === 'COMPLETED' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                              {adm.paymentMethod} • {adm.paymentStatus}
+                            </span>
+                            {adm.paymentReceipt && (
+                              <a href={adm.paymentReceipt} target="_blank" rel="noreferrer" className="text-xs text-blue-600 hover:underline flex items-center gap-1">
+                                View Receipt
+                              </a>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-xs text-gray-400">No Payment</span>
+                        )}
                       </td>
                       <td className="p-4">
                         {getStatusBadge(adm.status)}
