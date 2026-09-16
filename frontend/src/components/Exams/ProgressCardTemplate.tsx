@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { Award } from 'lucide-react';
 
 interface ProgressCardTemplateProps {
@@ -104,18 +104,18 @@ export const ProgressCardTemplate: React.FC<ProgressCardTemplateProps> = ({
             {examTitle}
           </div>
           <div style={{ fontSize: 16, fontWeight: 400, color: '#d4a017', letterSpacing: 4, marginTop: 2, whiteSpace: 'nowrap' }}>
-            `u{2726} RESULT CARD `u{2726}
+            ✦ RESULT CARD ✦
           </div>
         </div>
         <div style={{ width: 90, flexShrink: 0 }} />
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 14, padding: '6px 32px 8px 32px' }}>
-        <span style={{ fontSize: 16, color: '#d4a017' }}>`u{2726}</span>
+        <span style={{ fontSize: 16, color: '#d4a017' }}>✦</span>
         <div style={{ flex: 1, maxWidth: 140, height: 2, background: 'linear-gradient(90deg,transparent,#f39c12,transparent)' }} />
         <span style={{ fontSize: 16, color: '#d4a017' }}>*</span>
         <div style={{ flex: 1, maxWidth: 140, height: 2, background: 'linear-gradient(90deg,transparent,#f39c12,transparent)' }} />
-        <span style={{ fontSize: 16, color: '#d4a017' }}>`u{2726}</span>
+        <span style={{ fontSize: 16, color: '#d4a017' }}>✦</span>
       </div>
 
       <div style={{ margin: '0 24px 14px 24px', border: '2px solid #f39c12', borderRadius: 12, overflow: 'hidden', background: 'linear-gradient(135deg,#ffffff,#fef8f0)', boxShadow: '0 4px 16px rgba(243,156,18,0.10)', display: 'flex', position: 'relative' }}>
@@ -135,14 +135,14 @@ export const ProgressCardTemplate: React.FC<ProgressCardTemplateProps> = ({
           {resolveUrl(safeData.photo) ? (
             <img src={resolveUrl(safeData.photo)} alt="Student" style={{ width: 90, height: 108, objectFit: 'cover', border: '3px solid #f39c12', borderRadius: 8, boxShadow: '0 4px 10px rgba(243,156,18,0.2)', background: '#fff' }} />
           ) : (
-            <div style={{ width: 90, height: 108, background: '#ede8e0', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#8a7a6a', fontSize: 38, border: '3px dashed #c8b8a8', borderRadius: 6 }}>`u{1F4F7}</div>
+            <div style={{ width: 90, height: 108, background: '#ede8e0', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#8a7a6a', fontSize: 38, border: '3px dashed #c8b8a8', borderRadius: 6 }}>📷</div>
           )}
         </div>
       </div>
 
       <div style={{ margin: '0 24px 12px 24px' }}>
         <div style={{ fontSize: 15, fontWeight: 700, color: '#0b1a33', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 10 }}>
-          <span style={{ fontSize: 20 }}>`u{1F4CA}</span>
+          <span style={{ fontSize: 20 }}>📊</span>
           <span>Performance Summary</span>
           <span style={{ marginLeft: 'auto', fontSize: 12, fontWeight: 400, color: '#6a8aaa' }}>Max Marks: {TOTAL_MAX_MARKS}</span>
         </div>
