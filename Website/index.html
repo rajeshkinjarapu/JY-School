@@ -130,7 +130,22 @@
                 <div class="hidden md:flex items-center space-x-8 text-sm font-semibold text-gray-200">
                     <a href="#" class="nav-link hover:text-white">Home</a>
                     <a href="#mission" class="nav-link hover:text-white">About Us</a>
-                    <a href="#programs" class="nav-link hover:text-white">Academics</a>
+                    <div class="relative group">
+                        <button class="nav-link hover:text-white flex items-center gap-1 focus:outline-none">
+                            Academics <i class="fa-solid fa-chevron-down text-[10px]"></i>
+                        </button>
+                        <div class="absolute left-0 mt-6 w-56 bg-white rounded-md shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform origin-top-left border border-gray-100 flex flex-col z-50 py-1">
+                            <a href="#" class="px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-orange-50 hover:text-brandOrange transition-colors border-b border-gray-50 last:border-0">Examinations</a>
+                            <a href="#" class="px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-orange-50 hover:text-brandOrange transition-colors border-b border-gray-50 last:border-0">Results</a>
+                            <a href="#" class="px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-orange-50 hover:text-brandOrange transition-colors border-b border-gray-50 last:border-0">Curriculum</a>
+                            <a href="#" class="px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-orange-50 hover:text-brandOrange transition-colors border-b border-gray-50 last:border-0">Promotion Policy</a>
+                            <a href="#" class="px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-orange-50 hover:text-brandOrange transition-colors border-b border-gray-50 last:border-0">Awards</a>
+                            <a href="#" class="px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-orange-50 hover:text-brandOrange transition-colors border-b border-gray-50 last:border-0">Behavioral Policy</a>
+                            <a href="#" class="px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-orange-50 hover:text-brandOrange transition-colors border-b border-gray-50 last:border-0 flex justify-between items-center">Pattern of Education <i class="fa-solid fa-chevron-down text-[10px]"></i></a>
+                            <a href="#" class="px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-orange-50 hover:text-brandOrange transition-colors border-b border-gray-50 last:border-0">School Activities</a>
+                            <a href="#" class="px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-orange-50 hover:text-brandOrange transition-colors border-b border-gray-50 last:border-0">School Events</a>
+                        </div>
+                    </div>
                     <a href="#admissions" class="nav-link hover:text-white">Admissions</a>
                     <a href="#" class="nav-link hover:text-white">Contact Us</a>
                 </div>
