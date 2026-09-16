@@ -10,7 +10,7 @@
     <script>tailwind.config={theme:{extend:{fontFamily:{sans:['Inter','sans-serif']},colors:{brandBlue:'#1e3a8a',brandOrange:'#f97316'}}}}</script>
     <style>
         body{background:#f0f4f8;}
-        .card{background:white;border-radius:10px;border:1px solid #e2e8f0;overflow:hidden;}
+        .card{background:white;border-radius:10px;border:1px solid #e2e8f0;overflow:hidden;display:flex;flex-direction:column;} .card-body{flex:1;display:flex;flex-direction:column;}
         .card-header{background:#f0f4ff;border-bottom:1px solid #dde5ff;padding:8px 14px;display:flex;align-items:center;gap:7px;font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#1e3a8a;}
         .card-body{padding:12px 14px;}
         .fl{display:flex;align-items:center;gap:8px;}
@@ -52,7 +52,7 @@
     </div>
 </header>
 
-<main style="flex:1;padding:16px 12px;">
+<main style="flex:1;padding:12px;">
 <div style="max-width:1200px;margin:0 auto;">
 
     <div style="margin-bottom:12px;display:flex;align-items:flex-start;justify-content:space-between;">
@@ -143,7 +143,7 @@
                     </div>
                     <div class="fg">
                         <label class="lbl">Full Address</label>
-                        <textarea id="address" rows="5" class="inp" placeholder="House No., Street, City, Pincode"></textarea>
+                        <textarea id="address" rows="8" style="flex:1;" class="inp" placeholder="House No., Street, City, Pincode"></textarea>
                     </div>
                 </div>
             </div>
@@ -300,3 +300,6 @@ document.getElementById('admissionForm').addEventListener('submit', async (e) =>
 </script>
 </body>
 </html>
+
+
+
