@@ -84,7 +84,7 @@ export const WebsiteManagerPage = () => {
             key={tab}
             onClick={() => setActiveTab(tab)}
             className={`pb-3 px-4 text-sm font-medium transition-colors border-b-2 ${
-              activeTab === tab ? 'border-brandBlue text-brandBlue' : 'border-transparent text-gray-500 hover:text-gray-700'
+              activeTab === tab ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700'
             }`}
           >
             {tab.charAt(0).toUpperCase() + tab.slice(1)}
@@ -112,7 +112,7 @@ export const WebsiteManagerPage = () => {
             </div>
           </div>
 
-          <button type="submit" className="bg-brandBlue text-white px-6 py-2 rounded-lg hover:bg-blue-700">Save General Settings</button>
+          <button type="submit" className="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700">Save General Settings</button>
         </form>
       )}
 
@@ -128,7 +128,7 @@ export const WebsiteManagerPage = () => {
                 const val = (document.getElementById('statValue') as HTMLInputElement).value;
                 const lab = (document.getElementById('statLabel') as HTMLInputElement).value;
                 const col = (document.getElementById('statColor') as HTMLInputElement).value;
-                if(val && lab) handleAddItem('stats', { value: val, label: lab, color: col || 'bg-brandBlue', icon: 'fa-star' }, setStats, stats);
+                if(val && lab) handleAddItem('stats', { value: val, label: lab, color: col || 'bg-indigo-600', icon: 'fa-star' }, setStats, stats);
               }} className="bg-green-600 text-white rounded">Add Stat</button>
            </div>
            
