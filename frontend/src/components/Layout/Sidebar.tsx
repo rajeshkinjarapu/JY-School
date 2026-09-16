@@ -44,6 +44,7 @@ const NAV_COLORS: Record<string, { text: string; bg: string; glow: string }> = {
   Messages:      { text: '#f0abfc', bg: 'rgba(217,70,239,0.18)', glow: '0 0 12px rgba(217,70,239,.5)'  },
   Reports:       { text: '#fda4af', bg: 'rgba(244,63,94,0.18)',  glow: '0 0 12px rgba(244,63,94,.5)'   },
   Settings:      { text: '#94a3b8', bg: 'rgba(100,116,139,0.18)',glow: '0 0 12px rgba(100,116,139,.5)' },
+  'Website CMS': { text: '#ec4899', bg: 'rgba(236,72,153,0.18)', glow: '0 0 12px rgba(236,72,153,.5)' },
   'Office Tools':{ text: '#67e8f9', bg: 'rgba(6,182,212,0.18)', glow: '0 0 12px rgba(6,182,212,.5)' },
   'ID Cards':    { text: '#818cf8', bg: 'rgba(99,102,241,0.18)', glow: '0 0 12px rgba(99,102,241,.5)' },
   'Question Bank':{ text: '#6366f1', bg: 'rgba(99,102,241,0.18)', glow: '0 0 12px rgba(99,102,241,.5)' },
@@ -118,6 +119,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
       
       { to: '/transport',     label: 'Transport',     icon: Bus },
       { to: '/staff-management', label: 'Staff Roles', icon: Shield },
+      { to: '/settings/website', label: 'Website CMS', icon: Target },
       { to: '/settings',      label: 'Settings',      icon: Settings      },
     ];
     if (role === 'TEACHER') return [...base, 
