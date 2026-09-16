@@ -214,57 +214,59 @@ class ProgressCardNative extends StatelessWidget {
                             colors: [Color(0xFFFFFFFF), Color(0xFFFEF8F0)]
                           )
                         ),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            Expanded(
-                              child: Column(
-                                children: [
-                                  _buildInfoRowA4('STUDENT NAME', studentName, Icons.person, false),
-                                  _buildInfoRowA4('STUDENT ID', rollNo, Icons.badge, true),
-                                  _buildInfoRowA4('CLASS', className, Icons.school, false),
-                                  _buildInfoRowA4('SECTION', section, Icons.class_, true),
-                                  _buildInfoRowA4('MOBILE', mobile, Icons.phone, false),
-                                  _buildInfoRowA4('ACADEMIC YEAR', academicYear, Icons.calendar_today, true),
-                                  _buildInfoRowA4('LOCATION', location, Icons.location_on, false),
-                                  _buildInfoRowA4('CLASS RANK', rank.isNotEmpty ? '#$rank' : '-', Icons.emoji_events, true),
-                                ],
-                              ),
-                            ),
-                            // Photo Area
-                            Container(
-                              width: 130,
-                              padding: const EdgeInsets.fromLTRB(12, 14, 20, 14),
-                              decoration: const BoxDecoration(
-                                border: Border(left: BorderSide(color: Color(0xFFF5EDE4), width: 2)),
-                                gradient: LinearGradient(
-                                  begin: Alignment.topCenter,
-                                  end: Alignment.bottomCenter,
-                                  colors: [Color(0xFFFEFCF9), Color(0xFFFCF7EF)]
-                                )
-                              ),
-                              child: Center(
-                                child: Container(
-                                  width: 95,
-                                  height: 114,
-                                  decoration: BoxDecoration(
-                                    border: Border.all(color: const Color(0xFFF39C12), width: 3),
-                                    borderRadius: BorderRadius.circular(8),
-                                    color: Colors.white,
-                                    boxShadow: [
-                                      BoxShadow(color: const Color(0xFFF39C12).withOpacity(0.2), blurRadius: 12, offset: const Offset(0, 6))
-                                    ]
-                                  ),
-                                  child: ClipRRect(
-                                    borderRadius: BorderRadius.circular(5),
-                                    child: photo.isNotEmpty
-                                      ? Image.network(photo, fit: BoxFit.cover, errorBuilder: (_,__,___) => const Icon(Icons.person, size: 50, color: Colors.grey))
-                                      : const Icon(Icons.person, size: 50, color: Colors.grey)
-                                  ),
+                        child: IntrinsicHeight(
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  children: [
+                                    _buildInfoRowA4('STUDENT NAME', studentName, Icons.person, false),
+                                    _buildInfoRowA4('STUDENT ID', rollNo, Icons.badge, true),
+                                    _buildInfoRowA4('CLASS', className, Icons.school, false),
+                                    _buildInfoRowA4('SECTION', section, Icons.class_, true),
+                                    _buildInfoRowA4('MOBILE', mobile, Icons.phone, false),
+                                    _buildInfoRowA4('ACADEMIC YEAR', academicYear, Icons.calendar_today, true),
+                                    _buildInfoRowA4('LOCATION', location, Icons.location_on, false),
+                                    _buildInfoRowA4('CLASS RANK', rank.isNotEmpty ? '#$rank' : '-', Icons.emoji_events, true),
+                                  ],
                                 ),
                               ),
-                            )
-                          ],
+                              // Photo Area
+                              Container(
+                                width: 130,
+                                padding: const EdgeInsets.fromLTRB(12, 14, 20, 14),
+                                decoration: const BoxDecoration(
+                                  border: Border(left: BorderSide(color: Color(0xFFF5EDE4), width: 2)),
+                                  gradient: LinearGradient(
+                                    begin: Alignment.topCenter,
+                                    end: Alignment.bottomCenter,
+                                    colors: [Color(0xFFFEFCF9), Color(0xFFFCF7EF)]
+                                  )
+                                ),
+                                child: Center(
+                                  child: Container(
+                                    width: 95,
+                                    height: 114,
+                                    decoration: BoxDecoration(
+                                      border: Border.all(color: const Color(0xFFF39C12), width: 3),
+                                      borderRadius: BorderRadius.circular(8),
+                                      color: Colors.white,
+                                      boxShadow: [
+                                        BoxShadow(color: const Color(0xFFF39C12).withOpacity(0.2), blurRadius: 12, offset: const Offset(0, 6))
+                                      ]
+                                    ),
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(5),
+                                      child: photo.isNotEmpty
+                                        ? Image.network(photo, fit: BoxFit.cover, errorBuilder: (_,__,___) => const Icon(Icons.person, size: 50, color: Colors.grey))
+                                        : const Icon(Icons.person, size: 50, color: Colors.grey)
+                                    ),
+                                  ),
+                                ),
+                              )
+                            ],
+                          ),
                         ),
                       ),
                       

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ChevronLeft, Sparkles, Upload, Save, Printer, FileText, Settings, Maximize, X, Wand2, BookOpen, ImagePlus, HelpCircle, PenTool, Eye, ZoomIn, ZoomOut, Database, CheckSquare, Square } from 'lucide-react';
+import { ChevronLeft, Sparkles, Upload, Save, Printer, FileText, Settings, Maximize, X, Wand2, BookOpen, ImagePlus, HelpCircle, PenTool, Eye, ZoomIn, ZoomOut, Database, CheckSquare, Square, Menu } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { LiveLatexPreview } from '../../components/QuestionBank/LiveLatexPreview';
@@ -868,8 +868,15 @@ export const MCQPaperGeneratorPage = () => {
       />
       
       {/* Actions Toolbar */}
-      <div className="bg-white border-b border-slate-200 px-4 py-3 flex flex-wrap items-center justify-between gap-3 print:hidden shadow-sm z-10">
-        <div className="flex items-center gap-2">
+      <div className="bg-white border-b border-slate-200 px-4 py-3 flex items-center gap-2 md:gap-3 print:hidden shadow-sm z-10 overflow-x-auto whitespace-nowrap custom-scrollbar">
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <button
+            onClick={() => window.dispatchEvent(new CustomEvent('toggleDesktopSidebar'))}
+            className="p-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 rounded-xl transition-colors hidden lg:flex items-center justify-center border border-indigo-200"
+            title="Toggle Sidebar"
+          >
+            <Menu className="w-5 h-5" />
+          </button>
           <button
             onClick={() => navigate('/question-bank')}
             className="p-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition-colors flex items-center justify-center"
@@ -879,7 +886,7 @@ export const MCQPaperGeneratorPage = () => {
           </button>
         </div>
         
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-shrink-0">
           <button
             onClick={() => navigate('/question-bank/saved-papers')}
             className="p-2 bg-slate-100 text-slate-700 rounded-xl hover:bg-slate-200 transition-all flex items-center gap-2 text-sm font-medium"
@@ -926,14 +933,6 @@ export const MCQPaperGeneratorPage = () => {
           >
             <Printer className="w-3.5 h-3.5" />
             PDF
-          </button>
-
-          <button
-            onClick={() => setIsAnswerKeyModalOpen(true)}
-            className="px-3 py-1.5 md:px-4 md:py-2 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-lg md:rounded-xl hover:shadow-lg hover:shadow-emerald-500/30 font-bold text-xs md:text-sm md:font-medium transition-all flex items-center gap-1.5 md:gap-2 shadow-sm"
-          >
-            <CheckSquare className="w-3.5 h-3.5 md:w-4 md:h-4" />
-            <span className="hidden sm:inline">Answer Key</span>
           </button>
 
           <button
