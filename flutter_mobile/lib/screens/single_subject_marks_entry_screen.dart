@@ -434,9 +434,48 @@ class _SingleSubjectMarksEntryScreenState extends State<SingleSubjectMarksEntryS
                           ),
                         )
                       : ListView.builder(
-                          padding: const EdgeInsets.only(left: 16, right: 16, bottom: 100, top: 0),
-                          itemCount: filteredStudents.length,
+                          padding: const EdgeInsets.only(left: 16, right: 16, bottom: 16, top: 0),
+                          itemCount: filteredStudents.length + 1,
                           itemBuilder: (context, index) {
+                            if (index == filteredStudents.length) {
+                              return SafeArea(
+                                bottom: true,
+                                child: Container(
+                                  margin: const EdgeInsets.only(top: 16, bottom: 24),
+                                  width: double.infinity,
+                                  height: 60,
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(20),
+                                    gradient: const LinearGradient(
+                                      colors: [Color(0xFF0F2027), Color(0xFF203A43), Color(0xFF2C5364)],
+                                      begin: Alignment.centerLeft,
+                                      end: Alignment.centerRight,
+                                    ),
+                                    boxShadow: [
+                                      BoxShadow(color: const Color(0xFF203A43).withOpacity(0.4), blurRadius: 20, offset: const Offset(0, 10))
+                                    ],
+                                  ),
+                                  child: ElevatedButton(
+                                    onPressed: _isSubmitting ? null : _submitMarks,
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.transparent,
+                                      shadowColor: Colors.transparent,
+                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                                    ),
+                                    child: _isSubmitting
+                                        ? const SizedBox(width: 28, height: 28, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 3))
+                                        : Row(
+                                            mainAxisAlignment: MainAxisAlignment.center,
+                                            children: [
+                                              const Icon(Icons.cloud_upload_rounded, color: Colors.white, size: 24),
+                                              const SizedBox(width: 12),
+                                              Text('SUBMIT MARKS', style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.w800, color: Colors.white, letterSpacing: 1.0)),
+                                            ],
+                                          ),
+                                  ),
+                                ),
+                              );
+                            }
                             final item = filteredStudents[index];
                             final student = item['student'];
                             final sNo = item['originalIndex'];
@@ -445,44 +484,6 @@ class _SingleSubjectMarksEntryScreenState extends State<SingleSubjectMarksEntryS
                         ),
             ),
           ],
-        ),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      floatingActionButton: SafeArea(
-        bottom: true,
-        child: Container(
-          margin: const EdgeInsets.all(16),
-          width: double.infinity,
-          height: 60,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
-            gradient: const LinearGradient(
-              colors: [Color(0xFF0F2027), Color(0xFF203A43), Color(0xFF2C5364)],
-              begin: Alignment.centerLeft,
-              end: Alignment.centerRight,
-            ),
-            boxShadow: [
-              BoxShadow(color: const Color(0xFF203A43).withOpacity(0.4), blurRadius: 20, offset: const Offset(0, 10))
-            ],
-          ),
-          child: ElevatedButton(
-            onPressed: _isSubmitting ? null : _submitMarks,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.transparent,
-              shadowColor: Colors.transparent,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-            ),
-            child: _isSubmitting
-                ? const SizedBox(width: 28, height: 28, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 3))
-                : Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.cloud_upload_rounded, color: Colors.white, size: 24),
-                      const SizedBox(width: 12),
-                      Text('Submit All Marks', style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.w800, color: Colors.white, letterSpacing: 1.0)),
-                    ],
-                  ),
-          ),
         ),
       ),
     );
