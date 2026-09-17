@@ -125,11 +125,13 @@ def align_omr_sheet(image):
     return cv2.resize(image, (PAGE_WIDTH, PAGE_HEIGHT), interpolation=cv2.INTER_LANCZOS4)
 
 
-def evaluate_bubble_white_fill(thresh_img, cx, cy, radius=8, search_window=4):
+def evaluate_bubble_white_fill(thresh_img, cx, cy, radius=7, search_window=2):
     """
     Measures solid white bubble fill in Black Vision binary image.
-    Hollow bubbles have black center (fill_ratio < 0.25).
-    Filled ink bubbles are solid white (fill_ratio > 0.45).
+    Stays strictly within the inner bubble interior (radius*0.80 = ~5px).
+    Never bleeds onto the outer circle boundary.
+    Hollow bubbles with letters have fill_ratio < 0.25.
+    Pen-filled bubbles have fill_ratio > 0.45.
     """
     h, w = thresh_img.shape[:2]
     best_fill = 0.0
@@ -146,7 +148,7 @@ def evaluate_bubble_white_fill(thresh_img, cx, cy, radius=8, search_window=4):
                 mask = np.zeros(patch.shape, dtype=np.uint8)
                 pcx = int(cur_x - x1)
                 pcy = int(cur_y - y1)
-                cv2.circle(mask, (pcx, pcy), int(radius * 0.85), 255, -1)
+                cv2.circle(mask, (pcx, pcy), int(radius * 0.80), 255, -1)
 
                 bubble_pixels = patch[mask == 255]
                 if len(bubble_pixels) > 0:
@@ -181,21 +183,23 @@ def process_omr(image_path, answer_key=None):
         color_preview = cv2.cvtColor(thresh, cv2.COLOR_GRAY2BGR)
 
         # ----------------------------------------------------
-        # Step 3: Student ID Extraction (up to 6 vertical columns)
+        # Step 3: Student ID Extraction (6 vertical columns under digit boxes)
+        # In JY School OMR, first 2 boxes are 'J' 'Y' (no bubbles).
+        # Bubble columns 0..5 correspond to digits 1..6 of student roll number.
         # ----------------------------------------------------
-        id_origin_x = 120
-        id_origin_y = 398
-        id_labels_gap = 34    # Gap between columns
-        id_bubbles_gap = 26   # Gap between vertical digit bubbles 0..9
+        id_origin_x = 172     # First bubble column starts at x = 172
+        id_origin_y = 416     # Bubble 0 starts at y = 416
+        id_labels_gap = 32    # Gap between columns
+        id_bubbles_gap = 25.5 # Gap between vertical digit bubbles 0..9
 
         detected_digits = []
         for col in range(6):
-            col_x = id_origin_x + col * id_labels_gap
+            col_x = int(round(id_origin_x + col * id_labels_gap))
             col_scores = []
 
             for digit in range(10):
-                bubble_y = id_origin_y + digit * id_bubbles_gap
-                fill_ratio = evaluate_bubble_white_fill(thresh, col_x, bubble_y, radius=8)
+                bubble_y = int(round(id_origin_y + digit * id_bubbles_gap))
+                fill_ratio = evaluate_bubble_white_fill(thresh, col_x, bubble_y, radius=7, search_window=3)
                 col_scores.append({
                     "digit": str(digit),
                     "cx": col_x,
@@ -207,12 +211,13 @@ def process_omr(image_path, answer_key=None):
             top = col_scores[0]
             second = col_scores[1]
 
-            # In black vision, solid filled white bubble has fill > 0.35
-            if top["fill"] >= 0.35 and (top["fill"] - second["fill"] >= 0.10 or top["fill"] >= 0.50):
+            # In black vision with radius=7, an unfilled bubble has fill < 0.25
+            # A filled pen ink bubble has fill > 0.45
+            if top["fill"] >= 0.38 and (top["fill"] - second["fill"] >= 0.12 or top["fill"] >= 0.55):
                 detected_digits.append(top["digit"])
                 # Draw bright cyan circle around detected ID digit bubble
                 cv2.circle(color_preview, (top["cx"], top["cy"]), 12, (255, 255, 0), 2)
-                cv2.circle(color_preview, (top["cx"], top["cy"]), 5, (255, 255, 0), -1)
+                cv2.circle(color_preview, (top["cx"], top["cy"]), 4, (255, 255, 0), -1)
             else:
                 detected_digits.append("X")
 
@@ -225,10 +230,10 @@ def process_omr(image_path, answer_key=None):
         # ----------------------------------------------------
         # Step 4: 75 Questions Extraction (5 columns of 15 Qs)
         # ----------------------------------------------------
-        block_x_origins = [112, 302, 492, 682, 872]
-        q_start_y = 825
-        q_labels_gap = 36     # Vertical gap between consecutive questions
-        q_bubbles_gap = 28    # Horizontal gap between options A, B, C, D
+        block_x_origins = [140, 330, 520, 710, 900]
+        q_start_y = 816
+        q_labels_gap = 35.5   # Vertical gap between consecutive questions
+        q_bubbles_gap = 26.5  # Horizontal gap between options A, B, C, D
         options = ["A", "B", "C", "D"]
 
         detected_answers = {}
@@ -246,13 +251,13 @@ def process_omr(image_path, answer_key=None):
             for row_idx in range(15):
                 q_num = block_start_q + row_idx
                 q_str = str(q_num)
-                row_y = q_start_y + row_idx * q_labels_gap
+                row_y = int(round(q_start_y + row_idx * q_labels_gap))
 
                 opt_scores = []
                 for opt_idx, opt_char in enumerate(options):
-                    bx = col_x + opt_idx * q_bubbles_gap
+                    bx = int(round(col_x + opt_idx * q_bubbles_gap))
                     by = row_y
-                    fill_ratio = evaluate_bubble_white_fill(thresh, bx, by, radius=8)
+                    fill_ratio = evaluate_bubble_white_fill(thresh, bx, by, radius=7, search_window=3)
                     opt_scores.append({
                         "option": opt_char,
                         "cx": bx,
@@ -264,7 +269,7 @@ def process_omr(image_path, answer_key=None):
                 top_opt = opt_scores[0]
                 second_opt = opt_scores[1]
 
-                # Clear check: top option must be filled solid white
+                # Clear check: top option must be filled solid white (radius=7 avoids outer ring)
                 is_filled = (top_opt["fill"] >= 0.38 and (top_opt["fill"] - second_opt["fill"] >= 0.12)) or (top_opt["fill"] >= 0.55)
 
                 if is_filled:

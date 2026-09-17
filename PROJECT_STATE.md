@@ -2,10 +2,13 @@
 
 ## 2. Recent Updates & Progress
 - **OMR Scanner Alignment & Black Vision Fixes (2026-09-17)**:
-  - **Udayraj OMR Checker Architecture Analysis**: Clarified that Udayraj Deshmukh's `OMRChecker` is a CLI tool designed specifically for custom sheets with concentric circle bullseye markers (`omr_marker.jpg`), and its official repo states `--autoAlign flag is deprecated due to low performance on generic OMR sheets`. Because standard school OMR sheets lack these bullseye markers, a direct standalone Black Vision engine was implemented.
-  - **Zero-Distortion Paper Alignment (`align_omr_sheet`)**: Replaced the previous 4-point quadrilateral perspective warp (which was picking internal lines and falsely slanting straight flatbed scans by ~15 degrees) with strict upright corner marker verification and an axis-aligned outer bounding box crop (`image[y:y+h, x:x+w]`). Guaranteed 0% tilt/slant.
-  - **Expanded Student ID Detection to 6 Digits**: The Student ID section contains 6 boxes and 6 vertical bubble columns (`269657`). Expanded detection from 4 to 6 columns.
-  - **Flexible Student Roll Number DB Query**: Updated `exams.controller.ts` to search for student roll numbers using the exact string, the numeric string (`269657`), and the last 4 digits (`0421` or `9657`) to ensure automatic student identification and name population.
+  - **Udayraj OMR Checker Architecture Analysis**: Clarified that Udayraj Deshmukh's `OMRChecker` is a CLI tool designed specifically for custom sheets with concentric circle bullseye markers (`omr_marker.jpg`), and its official repo states `--autoAlign flag is deprecated due to low performance on generic OMR sheets`.
+  - **Zero-Distortion Paper Alignment (`align_omr_sheet`)**: Replaced the previous 4-point quadrilateral perspective warp with strict upright corner marker verification and an axis-aligned outer bounding box crop (`image[y:y+h, x:x+w]`). Guaranteed 0% tilt/slant.
+  - **Calibrated Grid Coordinates**:
+    - Student ID: Shifted X-origin from 120 to 172 to bypass printed 'J' and 'Y' header boxes. Calibrated 6 vertical columns (x=172, gap=32px, y=416, gap=25.5px) to accurately capture `269657`.
+    - Question Blocks: Shifted block X-origins to `[140, 330, 520, 710, 900]` (+28px shift to eliminate overlap on Q.No) and row Y-start to 816 (gap=35.5px, bubbles gap=26.5px).
+    - Reduced evaluation probe radius from 8 to 7px (with search window 2px) to prevent ring bleed and guarantee clean separation between filled and unfilled bubbles.
+  - **Flexible Student Roll Number DB Query**: Searches exact string, numeric digits, and last 4 digits in `exams.controller.ts`.
   - **Black Vision Live Overlay**: Generates an inverted high-contrast preview with glowing green rings (correct answers), red rings (incorrect answers), and cyan rings (Student ID).
 
 ## Previous Updates (2026-09-16)
