@@ -737,35 +737,44 @@ export const scanOmr = async (req: AuthRequest, res: Response, next: NextFunctio
       return next(createError('Exam ID is required', 400));
     }
 
-    // Fetch the answer key from request if available, otherwise mock
-    const answerKey = reqAnswerKey ? (typeof reqAnswerKey === 'string' ? reqAnswerKey : JSON.stringify(reqAnswerKey)) : JSON.stringify({ "1": "A", "2": "B" });
+    // Parse the answer key safely
+    let answerKeyObj: Record<string, string> = {};
+    if (reqAnswerKey) {
+      try {
+        answerKeyObj = typeof reqAnswerKey === 'string' ? JSON.parse(reqAnswerKey) : reqAnswerKey;
+      } catch {
+        answerKeyObj = {};
+      }
+    }
 
     const imagePath = req.file.path;
     const scriptPath = path.resolve(__dirname, '../../scripts/omr_scanner.py');
 
-    // Make sure we have a Python runner, fallback to python3
+    // Write answer key to a temp JSON file to avoid shell escaping issues
+    const answerKeyPath = imagePath + '_answerkey.json';
+    fs.writeFileSync(answerKeyPath, JSON.stringify(answerKeyObj));
+
     const pythonCmd = process.platform === 'win32' ? 'python' : 'python3';
 
-    exec(`${pythonCmd} "${scriptPath}" "${imagePath}" '${answerKey}'`, (error, stdout, stderr) => {
-      // Clean up the uploaded image immediately
-      fs.unlink(imagePath, (err) => { if (err) console.error("Error deleting temp OMR image:", err); });
+    exec(`${pythonCmd} "${scriptPath}" "${imagePath}" "${answerKeyPath}"`, (error, stdout, stderr) => {
+      // Clean up temp files
+      fs.unlink(imagePath, () => {});
+      fs.unlink(answerKeyPath, () => {});
 
       if (error) {
         console.error("OMR Python Error:", stderr || error.message);
-        return next(createError('Failed to process OMR sheet', 500));
+        return next(createError(`OMR processing failed: ${stderr || error.message}`, 500));
       }
 
       try {
         const result = JSON.parse(stdout.trim());
         if (result.error) {
-           return next(createError(result.error, 400));
+          return next(createError(result.error, 400));
         }
-
-        // Ideally, we'd lookup the student by ID here.
         successResponse(res, result, 'OMR Scan completed');
       } catch (e) {
-        console.error("OMR Parse Error:", stdout);
-        next(createError('Invalid output from OMR scanner', 500));
+        console.error("OMR Parse Error. stdout:", stdout, "stderr:", stderr);
+        next(createError('Invalid output from OMR scanner: ' + stdout.substring(0, 200), 500));
       }
     });
 
@@ -773,3 +782,4 @@ export const scanOmr = async (req: AuthRequest, res: Response, next: NextFunctio
     next(error);
   }
 };
+

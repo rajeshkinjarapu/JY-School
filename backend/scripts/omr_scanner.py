@@ -114,15 +114,16 @@ def process_omr(image_path, answer_key):
 
 if __name__ == "__main__":
     if len(sys.argv) < 3:
-        print(json.dumps({"error": "Missing arguments: image_path and answer_key required"}))
+        print(json.dumps({"error": "Missing arguments: image_path and answer_key_json_path required"}))
         sys.exit(1)
 
     img_path = sys.argv[1]
-    ans_key_raw = sys.argv[2]
+    ans_key_path = sys.argv[2]
 
     try:
-        ans_key = json.loads(ans_key_raw)
-    except Exception:
+        with open(ans_key_path, 'r') as f:
+            ans_key = json.load(f)
+    except Exception as e:
         ans_key = {}
 
     output = process_omr(img_path, ans_key)
