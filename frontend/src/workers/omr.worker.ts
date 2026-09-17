@@ -1,24 +1,38 @@
-/* eslint-disable no-restricted-globals */
-
-// Define Module for OpenCV.js
-(self as any).Module = {
-  onRuntimeInitialized() {
-    self.postMessage({ type: 'INIT_SUCCESS' });
-  }
-};
-
-// This worker runs OpenCV processing to keep the main UI thread unblocked
 self.importScripts('https://docs.opencv.org/4.8.0/opencv.js');
 
 self.onmessage = async (e) => {
   const { type, payload } = e.data;
   
   if (type === 'INIT') {
-    // Check if it's already ready
-    if (typeof (self as any).cv !== 'undefined' && (self as any).cv.Mat) {
-       self.postMessage({ type: 'INIT_SUCCESS' });
-    }
-    // Else wait for onRuntimeInitialized to fire
+    let attempts = 0;
+    const checkCv = setInterval(() => {
+      attempts++;
+      
+      // If cv is defined
+      if (typeof (self as any).cv !== 'undefined') {
+        
+        // If cv is an uninitialized function (OpenCV 4.x Promise)
+        if (typeof (self as any).cv === 'function') {
+          clearInterval(checkCv);
+          (self as any).cv().then((resolvedCv: any) => {
+             (self as any).cv = resolvedCv;
+             self.postMessage({ type: 'INIT_SUCCESS' });
+          }).catch((err: any) => {
+             self.postMessage({ type: 'INIT_ERROR', payload: "Failed to load OpenCV: " + err });
+          });
+        } 
+        // If cv is an object with Mat (already initialized)
+        else if ((self as any).cv.Mat) {
+          clearInterval(checkCv);
+          self.postMessage({ type: 'INIT_SUCCESS' });
+        }
+      }
+      
+      if (attempts > 150) { // 15 seconds timeout
+         clearInterval(checkCv);
+         self.postMessage({ type: 'INIT_ERROR', payload: "Scanner Engine taking too long to load. Please check your internet." });
+      }
+    }, 100);
   }
 
   if (type === 'PROCESS_IMAGE') {
