@@ -31,11 +31,13 @@ def process_omr(image_path, answer_key):
         closed = cv2.morphologyEx(thresh, cv2.MORPH_CLOSE, small_kernel)
 
         # --- Step 2: Find all bubble contours ---
-        contours, _ = cv2.findContours(closed, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        # Use cv2.RETR_LIST instead of RETR_EXTERNAL so outer black sheet borders
+        # do not swallow/hide interior bubbles!
+        contours, _ = cv2.findContours(closed, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
 
         total_pixels = original_h * original_w
-        min_area = total_pixels * 0.00003   # ~40-60px for small ID bubbles
-        max_area = total_pixels * 0.0040    # ~3000-4000px
+        min_area = total_pixels * 0.00002   # ~25-40px for small bubbles
+        max_area = total_pixels * 0.0035    # ~3500px
 
         bubbles = []
         for cnt in contours:
@@ -46,13 +48,13 @@ def process_omr(image_path, answer_key):
             if perimeter == 0:
                 continue
             circularity = 4 * np.pi * area / (perimeter * perimeter)
-            if circularity < 0.22:
+            if circularity < 0.18:
                 continue
             x, y, w, h = cv2.boundingRect(cnt)
             aspect = w / h if h > 0 else 0
-            if not (0.50 <= aspect <= 1.90):
+            if not (0.45 <= aspect <= 2.20):
                 continue
-            if w < 7 or h < 7 or w > original_w * 0.05 or h > original_h * 0.05:
+            if w < 6 or h < 6 or w > original_w * 0.06 or h > original_h * 0.06:
                 continue
 
             cx = x + w // 2
@@ -69,18 +71,33 @@ def process_omr(image_path, answer_key):
                 "is_filled": filled_ratio > 0.28
             })
 
+        # Deduplicate nested/concentric contours (e.g. inner and outer edges of hollow rings)
+        deduped = []
+        min_d2 = (original_w * 0.008) ** 2
+        for b in bubbles:
+            dup = False
+            for db in deduped:
+                if (b["cx"] - db["cx"]) ** 2 + (b["cy"] - db["cy"]) ** 2 < min_d2:
+                    dup = True
+                    if b["area"] > db["area"]:
+                        db.update(b)
+                    break
+            if not dup:
+                deduped.append(b)
+        bubbles = deduped
+
         # --- Step 3: Region Splitting (Student ID vs Questions) ---
-        # Student ID box is strictly on the left side, below header and above instructions
+        # Student ID box: left side (X: 5%-40%, Y: 10%-36%)
         id_bubbles = [
             b for b in bubbles
-            if (0.11 * original_h <= b["cy"] <= 0.32 * original_h) and
-               (0.05 * original_w <= b["cx"] <= 0.38 * original_w)
+            if (0.10 * original_h <= b["cy"] <= 0.36 * original_h) and
+               (0.05 * original_w <= b["cx"] <= 0.40 * original_w)
         ]
 
-        # Question area is across the sheet, between instructions and marks table
+        # Questions: from below instructions to above bottom marks table (Y: 38%-88%)
         q_bubbles = [
             b for b in bubbles
-            if (0.32 * original_h <= b["cy"] <= 0.86 * original_h) and
+            if (0.38 * original_h <= b["cy"] <= 0.88 * original_h) and
                (0.04 * original_w <= b["cx"] <= 0.96 * original_w)
         ]
 
@@ -120,7 +137,7 @@ def process_omr(image_path, answer_key):
                 max_b = max(col, key=lambda b: b["filled_ratio"])
                 min_b = min(col, key=lambda b: b["filled_ratio"])
 
-                if max_b["filled_ratio"] > 0.25 and (max_b["filled_ratio"] > min_b["filled_ratio"] + 0.10 or max_b["filled_ratio"] > 0.38):
+                if max_b["filled_ratio"] > 0.25 and (max_b["filled_ratio"] > min_b["filled_ratio"] + 0.08 or max_b["filled_ratio"] > 0.35):
                     # Highlight filled ID bubble in solid blue
                     cv2.rectangle(color_preview, (max_b["x"], max_b["y"]), (max_b["x"]+max_b["w"], max_b["y"]+max_b["h"]), (255, 100, 0), -1)
 
@@ -150,7 +167,7 @@ def process_omr(image_path, answer_key):
             _, buffer = cv2.imencode('.jpg', color_preview, [cv2.IMWRITE_JPEG_QUALITY, 65])
             processed_b64 = base64.b64encode(buffer).decode('utf-8')
             return {
-                "error": "No question bubbles detected. Ensure scanning area is clear.",
+                "error": f"No question bubbles detected. (Total contours: {len(contours)}, Candidates: {len(bubbles)}, ID bubbles: {len(id_bubbles)}). Ensure scanning area is clear.",
                 "processed_image": processed_b64
             }
 

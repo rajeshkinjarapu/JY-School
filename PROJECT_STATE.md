@@ -82,9 +82,7 @@
 - **Refactored Detection**:
   - Replaced large morphological kernel with a 3x3 kernel to seal hairline gaps without merging neighboring bubbles.
   - Lowered `min_area` to `total_pixels * 0.00003` to accurately capture smaller Student ID bubbles (10-12px).
-  - Relaxed circularity to `>= 0.22` to accommodate hand-filled bubbles.
-  - Constrained Student ID detection strictly to the left box (X: 5%-38%, Y: 11%-32%) to eliminate logo, name, and phone number noise.
-  - Structured question recognition into 5 distinct column blocks (15 questions each = 75 questions) to eliminate skew/tilt alignment errors.
+  - Switched from `cv2.RETR_EXTERNAL` to `cv2.RETR_LIST` with spatial deduplication so that full-sheet outer border lines do not hide inner bubble contours.
   - Enhanced backend controller (`exams.controller.ts`) student lookup with flexible roll number matching (`JY26-XXXX` or numeric `XXXX`), fixed async exec callback and typed query for clean build.
   - Switched visual preview overlay to draw crisp highlights directly on the original color scanned paper image.
 
