@@ -28,14 +28,23 @@ def process_omr(image_path, answer_key):
         # Initial placeholder — will be overwritten after color drawing
         processed_b64 = ""
 
-        # --- Step 2: Find all bubble contours ---
-        contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        # --- Step 2: Morphological Close to fill hollow bubble rings ---
+        # OMR bubbles are printed as hollow rings. Closing fills them so
+        # contour circularity becomes high and detection works reliably.
+        kernel_size = max(3, int(original_w * 0.012))  # ~1.2% of width
+        if kernel_size % 2 == 0:
+            kernel_size += 1
+        kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (kernel_size, kernel_size))
+        closed = cv2.morphologyEx(thresh, cv2.MORPH_CLOSE, kernel)
 
-        # Filter contours that look like bubbles (circular, right size)
+        # --- Step 3: Find all bubble contours on filled image ---
+        contours, _ = cv2.findContours(closed, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+        # Filter contours that look like filled bubbles (circular, right size)
         total_pixels = original_h * original_w
-        min_area = total_pixels * 0.00008
-        max_area = total_pixels * 0.006
-        
+        min_area = total_pixels * 0.00015
+        max_area = total_pixels * 0.008
+
         bubbles = []
         for cnt in contours:
             area = cv2.contourArea(cnt)
@@ -45,14 +54,15 @@ def process_omr(image_path, answer_key):
             if perimeter == 0:
                 continue
             circularity = 4 * np.pi * area / (perimeter * perimeter)
-            if circularity < 0.35:   # Relaxed to capture ID bubbles too
+            if circularity < 0.5:   # After closing, filled circles have high circularity
                 continue
             x, y, w, h = cv2.boundingRect(cnt)
             aspect = w / h if h > 0 else 0
-            if not (0.5 < aspect < 2.0):   # Slightly wider range
+            if not (0.5 < aspect < 2.0):
                 continue
             cx = x + w // 2
             cy = y + h // 2
+            # Use ORIGINAL thresh (not closed) to measure fill ratio
             roi = thresh[y:y+h, x:x+w]
             filled_ratio = cv2.countNonZero(roi) / (w * h) if (w * h) > 0 else 0
             bubbles.append({
