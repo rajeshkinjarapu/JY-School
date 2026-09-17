@@ -216,8 +216,8 @@ def process_omr(image_path, answer_key=None):
             if top["fill"] >= 0.38 and (top["fill"] - second["fill"] >= 0.12 or top["fill"] >= 0.55):
                 detected_digits.append(top["digit"])
                 # Draw bright cyan circle around detected ID digit bubble
-                cv2.circle(color_preview, (top["cx"], top["cy"]), 12, (255, 255, 0), 2)
-                cv2.circle(color_preview, (top["cx"], top["cy"]), 4, (255, 255, 0), -1)
+                cv2.circle(color_preview, (int(top["cx"]), int(top["cy"])), 12, (255, 255, 0), 2)
+                cv2.circle(color_preview, (int(top["cx"]), int(top["cy"])), 4, (255, 255, 0), -1)
             else:
                 detected_digits.append("X")
 
@@ -292,31 +292,31 @@ def process_omr(image_path, answer_key=None):
                         q_mark = 4
                         correct_count += 1
                         # CORRECT: Bright Green outline + inner dot on white bubble
-                        cv2.circle(color_preview, (chosen_cx, chosen_cy), 12, (0, 255, 0), 2)
-                        cv2.circle(color_preview, (chosen_cx, chosen_cy), 5, (0, 255, 0), -1)
+                        cv2.circle(color_preview, (int(round(chosen_cx)), int(round(chosen_cy))), 12, (0, 255, 0), 2)
+                        cv2.circle(color_preview, (int(round(chosen_cx)), int(round(chosen_cy))), 4, (0, 255, 0), -1)
                     elif chosen_option != "-":
                         q_mark = 0
                         wrong_count += 1
                         # WRONG: Bright Red outline + inner dot on student's picked white bubble
-                        cv2.circle(color_preview, (chosen_cx, chosen_cy), 12, (0, 0, 255), 2)
-                        cv2.circle(color_preview, (chosen_cx, chosen_cy), 5, (0, 0, 255), -1)
+                        cv2.circle(color_preview, (int(round(chosen_cx)), int(round(chosen_cy))), 12, (0, 0, 255), 2)
+                        cv2.circle(color_preview, (int(round(chosen_cx)), int(round(chosen_cy))), 4, (0, 0, 255), -1)
 
                         # Highlight correct option with subtle green ring
                         corr_opt_idx = options.index(correct_ans) if correct_ans in options else -1
                         if corr_opt_idx >= 0:
-                            corr_cx = col_x + corr_opt_idx * q_bubbles_gap
-                            cv2.circle(color_preview, (corr_cx, row_y), 11, (0, 255, 0), 1)
+                            corr_cx = int(round(col_x + corr_opt_idx * q_bubbles_gap))
+                            cv2.circle(color_preview, (corr_cx, int(round(row_y))), 11, (0, 255, 0), 1)
                     else:
                         unattempted_count += 1
                         # Unattempted: Show subtle hint on correct answer
                         corr_opt_idx = options.index(correct_ans) if correct_ans in options else -1
                         if corr_opt_idx >= 0:
-                            corr_cx = col_x + corr_opt_idx * q_bubbles_gap
-                            cv2.circle(color_preview, (corr_cx, row_y), 8, (120, 120, 120), 1)
+                            corr_cx = int(round(col_x + corr_opt_idx * q_bubbles_gap))
+                            cv2.circle(color_preview, (corr_cx, int(round(row_y))), 8, (120, 120, 120), 1)
                 else:
                     # No answer key supplied: Highlight marked bubble in cyan
                     if chosen_option != "-":
-                        cv2.circle(color_preview, (chosen_cx, chosen_cy), 11, (255, 255, 0), 2)
+                        cv2.circle(color_preview, (int(round(chosen_cx)), int(round(chosen_cy))), 11, (255, 255, 0), 2)
 
                 # Subject-wise marks aggregation
                 if q_num <= 25:

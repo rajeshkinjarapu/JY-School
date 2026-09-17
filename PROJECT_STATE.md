@@ -4,10 +4,11 @@
 - **OMR Scanner Alignment & Black Vision Fixes (2026-09-17)**:
   - **Udayraj OMR Checker Architecture Analysis**: Clarified that Udayraj Deshmukh's `OMRChecker` is a CLI tool designed specifically for custom sheets with concentric circle bullseye markers (`omr_marker.jpg`), and its official repo states `--autoAlign flag is deprecated due to low performance on generic OMR sheets`.
   - **Zero-Distortion Paper Alignment (`align_omr_sheet`)**: Replaced the previous 4-point quadrilateral perspective warp with strict upright corner marker verification and an axis-aligned outer bounding box crop (`image[y:y+h, x:x+w]`). Guaranteed 0% tilt/slant.
-  - **Calibrated Grid Coordinates**:
+  - **Calibrated Grid Coordinates & OpenCV Type Fix**:
     - Student ID: Shifted X-origin from 120 to 172 to bypass printed 'J' and 'Y' header boxes. Calibrated 6 vertical columns (x=172, gap=32px, y=416, gap=25.5px) to accurately capture `269657`.
     - Question Blocks: Shifted block X-origins to `[140, 330, 520, 710, 900]` (+28px shift to eliminate overlap on Q.No) and row Y-start to 816 (gap=35.5px, bubbles gap=26.5px).
     - Reduced evaluation probe radius from 8 to 7px (with search window 2px) to prevent ring bleed and guarantee clean separation between filled and unfilled bubbles.
+    - Wrapped all coordinates passed to `cv2.circle` with explicit `int(round(...))` to resolve OpenCV 5.0 float center overload error.
   - **Flexible Student Roll Number DB Query**: Searches exact string, numeric digits, and last 4 digits in `exams.controller.ts`.
   - **Black Vision Live Overlay**: Generates an inverted high-contrast preview with glowing green rings (correct answers), red rings (incorrect answers), and cyan rings (Student ID).
 
