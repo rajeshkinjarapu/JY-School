@@ -32,8 +32,9 @@ def process_omr(image_path, answer_key):
         contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
         # Filter contours that look like bubbles (circular, right size)
-        min_area = (original_h * original_w) * 0.0001
-        max_area = (original_h * original_w) * 0.005
+        total_pixels = original_h * original_w
+        min_area = total_pixels * 0.00008
+        max_area = total_pixels * 0.006
         
         bubbles = []
         for cnt in contours:
@@ -43,13 +44,12 @@ def process_omr(image_path, answer_key):
             perimeter = cv2.arcLength(cnt, True)
             if perimeter == 0:
                 continue
-            # Re-tightened to ignore handwritten text and lines
             circularity = 4 * np.pi * area / (perimeter * perimeter)
-            if circularity < 0.45:  
+            if circularity < 0.35:   # Relaxed to capture ID bubbles too
                 continue
             x, y, w, h = cv2.boundingRect(cnt)
             aspect = w / h if h > 0 else 0
-            if not (0.6 < aspect < 1.6):  
+            if not (0.5 < aspect < 2.0):   # Slightly wider range
                 continue
             cx = x + w // 2
             cy = y + h // 2
@@ -60,20 +60,20 @@ def process_omr(image_path, answer_key):
                 "x": x, "y": y, "w": w, "h": h,
                 "area": area,
                 "filled_ratio": filled_ratio,
-                "is_filled": filled_ratio > 0.25
+                "is_filled": filled_ratio > 0.22
             })
 
         # --- Region Splitting (Student ID vs Questions) ---
-        # The Student ID block is located at the top-left portion of the sheet.
-        # We can split bubbles by their Y-coordinate.
-        id_region_threshold = original_h * 0.28  # Top 28% of the image
+        # Student ID box is at top portion. Use top 38% for ID region.
+        id_region_threshold = original_h * 0.38
         
         id_bubbles = [b for b in bubbles if b["cy"] < id_region_threshold]
-        q_bubbles = [b for b in bubbles if b["cy"] >= id_region_threshold]
+        q_bubbles  = [b for b in bubbles if b["cy"] >= id_region_threshold]
 
         # --- Parse Student ID ---
+        # Only 4 digits are bubbled (JY26- is fixed prefix)
         student_id_str = "AUTO_DETECT"
-        if len(id_bubbles) >= 10:  # Assuming at least some ID bubbles found
+        if len(id_bubbles) >= 4:  # Need at least 4 bubbles (one per digit column)
             id_bubbles.sort(key=lambda b: b["cx"])
             id_x_coords = [b["cx"] for b in id_bubbles]
             id_x_sorted = sorted(set(id_x_coords))
