@@ -11,6 +11,13 @@ def process_omr(image_path, answer_key):
         if image is None:
             return {"error": "Could not read image"}
 
+        # Resize large images to max 1200px wide to keep output size small
+        max_dim = 1200
+        h0, w0 = image.shape[:2]
+        if max(h0, w0) > max_dim:
+            scale = max_dim / max(h0, w0)
+            image = cv2.resize(image, (int(w0 * scale), int(h0 * scale)), interpolation=cv2.INTER_AREA)
+
         original_h, original_w = image.shape[:2]
 
         # --- Step 1: Preprocess ---
@@ -18,11 +25,8 @@ def process_omr(image_path, answer_key):
         blurred = cv2.GaussianBlur(gray, (5, 5), 0)
         thresh = cv2.threshold(blurred, 0, 255, cv2.THRESH_BINARY_INV | cv2.THRESH_OTSU)[1]
 
-        # Generate True Black Vision Preview (Threshold Mask)
-        # This shows exactly what the AI sees: sheet is black, ink is white
-        preview_colored = cv2.cvtColor(thresh, cv2.COLOR_GRAY2BGR)
-        _, buffer = cv2.imencode('.jpg', preview_colored, [cv2.IMWRITE_JPEG_QUALITY, 85])
-        processed_b64 = base64.b64encode(buffer).decode('utf-8')
+        # Initial placeholder — will be overwritten after color drawing
+        processed_b64 = ""
 
         # --- Step 2: Find all bubble contours ---
         contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
@@ -292,8 +296,8 @@ def process_omr(image_path, answer_key):
                 else:
                     chemistry += marks
 
-        # Encode color preview to base64
-        _, buffer = cv2.imencode('.jpg', color_preview)
+        # Encode color preview at lower quality to keep base64 size small
+        _, buffer = cv2.imencode('.jpg', color_preview, [cv2.IMWRITE_JPEG_QUALITY, 60])
         processed_b64 = base64.b64encode(buffer).decode('utf-8')
 
         return {
