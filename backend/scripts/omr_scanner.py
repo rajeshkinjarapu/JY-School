@@ -53,15 +53,18 @@ def order_points(pts):
     return rect
 
 
-def four_point_transform(image, pts, target_w=PAGE_WIDTH, target_h=PAGE_HEIGHT):
+def four_point_transform(image, pts, dst_pts=None, target_w=PAGE_WIDTH, target_h=PAGE_HEIGHT):
     """Perspective warp given 4 points to canonical target dimensions"""
     rect = order_points(pts)
-    dst = np.array([
-        [0, 0],
-        [target_w - 1, 0],
-        [target_w - 1, target_h - 1],
-        [0, target_h - 1]
-    ], dtype="float32")
+    if dst_pts is None:
+        dst = np.array([
+            [0, 0],
+            [target_w - 1, 0],
+            [target_w - 1, target_h - 1],
+            [0, target_h - 1]
+        ], dtype="float32")
+    else:
+        dst = dst_pts
 
     M = cv2.getPerspectiveTransform(rect, dst)
     warped = cv2.warpPerspective(image, M, (target_w, target_h), flags=cv2.INTER_LANCZOS4)
@@ -124,7 +127,14 @@ def detect_and_warp_page(image):
             marker_centers["br"],
             marker_centers["bl"]
         ], dtype="float32")
-        return four_point_transform(image, pts)
+        # On canonical 1100x1550 sheet, marker centers are ~50px inset from page borders
+        dst_marker_pts = np.array([
+            [50, 50],
+            [PAGE_WIDTH - 50, 50],
+            [PAGE_WIDTH - 50, PAGE_HEIGHT - 50],
+            [50, PAGE_HEIGHT - 50]
+        ], dtype="float32")
+        return four_point_transform(image, pts, dst_pts=dst_marker_pts)
 
     # Step 2: Fallback to largest outer rectangular contour (e.g. paper / border)
     edges = cv2.Canny(blurred, 50, 150)
@@ -145,37 +155,37 @@ def detect_and_warp_page(image):
     return cv2.resize(image, (PAGE_WIDTH, PAGE_HEIGHT), interpolation=cv2.INTER_AREA)
 
 
-def evaluate_bubble_fill(gray_img, cx, cy, radius=9):
+def evaluate_bubble_fill(gray_img, cx, cy, radius=9, search_window=3):
     """
-    Measures fill ratio inside circular bubble.
+    Measures fill ratio inside circular bubble with small local jitter search.
     Returns:
     - mean_intensity: 0 (black/ink) to 255 (white/paper)
     - fill_ratio: 0.0 (empty) to 1.0 (fully filled)
     """
     h, w = gray_img.shape[:2]
-    x1, x2 = max(0, int(cx - radius)), min(w, int(cx + radius + 1))
-    y1, y2 = max(0, int(cy - radius)), min(h, int(cy + radius + 1))
+    best_mean = 255.0
 
-    patch = gray_img[y1:y2, x1:x2]
-    if patch.size == 0:
-        return 255.0, 0.0
+    # Search in a small local window for the bubble's darkest ink core
+    for dx in (-search_window, 0, search_window):
+        for dy in (-search_window, 0, search_window):
+            cur_x, cur_y = cx + dx, cy + dy
+            x1, x2 = max(0, int(cur_x - radius)), min(w, int(cur_x + radius + 1))
+            y1, y2 = max(0, int(cur_y - radius)), min(h, int(cur_y + radius + 1))
 
-    # Circular mask to sample inside bubble only
-    mask = np.zeros(patch.shape, dtype=np.uint8)
-    pcx = int(cx - x1)
-    pcy = int(cy - y1)
-    cv2.circle(mask, (pcx, pcy), int(radius * 0.85), 255, -1)
-
-    bubble_pixels = patch[mask == 255]
-    if len(bubble_pixels) == 0:
-        mean_val = float(np.mean(patch))
-    else:
-        mean_val = float(np.mean(bubble_pixels))
+            patch = gray_img[y1:y2, x1:x2]
+            if patch.size > 0:
+                mask = np.zeros(patch.shape, dtype=np.uint8)
+                pcx = int(cur_x - x1)
+                pcy = int(cur_y - y1)
+                cv2.circle(mask, (pcx, pcy), int(radius * 0.85), 255, -1)
+                bubble_pixels = patch[mask == 255]
+                mean_val = float(np.mean(bubble_pixels)) if len(bubble_pixels) > 0 else float(np.mean(patch))
+                if mean_val < best_mean:
+                    best_mean = mean_val
 
     # In standard scans: Paper background is ~190-240, Filled ink is ~30-110
-    # Inverted fill score: higher means darker ink
-    fill_score = max(0.0, min(1.0, (215.0 - mean_val) / 125.0))
-    return mean_val, fill_score
+    fill_score = max(0.0, min(1.0, (215.0 - best_mean) / 125.0))
+    return best_mean, fill_score
 
 
 def process_omr(image_path, answer_key=None):
