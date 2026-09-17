@@ -74,8 +74,8 @@ def process_omr(image_path, answer_key):
             })
 
         # --- Region Splitting (Student ID vs Questions) ---
-        # Student ID box is at top portion. Use top 38% for ID region.
-        id_region_threshold = original_h * 0.38
+        # Student ID box is at top ~25-30% of the sheet height.
+        id_region_threshold = original_h * 0.30
         
         id_bubbles = [b for b in bubbles if b["cy"] < id_region_threshold]
         q_bubbles  = [b for b in bubbles if b["cy"] >= id_region_threshold]
