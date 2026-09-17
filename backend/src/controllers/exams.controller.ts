@@ -774,12 +774,15 @@ export const scanOmr = async (req: AuthRequest, res: Response, next: NextFunctio
 
         // --- Fetch Student Name from DB based on detected student_id ---
         if (result.student_id && result.student_id !== "AUTO_DETECT") {
+          const rawId = result.student_id;
+          const cleanDigits = rawId.replace(/[^0-9]/g, '');
           const student = await prisma.student.findFirst({
             where: {
-              rollNo: {
-                contains: result.student_id,
-                mode: 'insensitive'
-              }
+              OR: [
+                { rollNo: { equals: rawId, mode: 'insensitive' } },
+                { rollNo: { contains: rawId, mode: 'insensitive' } },
+                ...(cleanDigits.length >= 3 ? [{ rollNo: { contains: cleanDigits, mode: 'insensitive' } }] : [])
+              ]
             },
             include: {
               user: true
@@ -788,6 +791,7 @@ export const scanOmr = async (req: AuthRequest, res: Response, next: NextFunctio
           if (student && student.user) {
              result.student_name = student.user.name;
              result.real_student_id = student.id; // DB ID for saving marks
+             result.student_id = student.rollNo || rawId;
           } else {
              result.student_name = "Unknown Student";
           }

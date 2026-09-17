@@ -76,3 +76,15 @@
 - Added Admissions dashboard card and list page in Admin Panel.
 - Created public 'apply.html' registration page for Website.
 - Linked Website Apply Now buttons to 'apply.html'.
+
+### OMR Scanner Pro Fixes
+- **Root Cause Identified**: The large morphological closing kernel (`w * 0.012`) was merging adjacent question options A, B, C, D into horizontal blobs, violating circularity & aspect ratio checks and causing "No question bubbles detected".
+- **Refactored Detection**:
+  - Replaced large morphological kernel with a 3x3 kernel to seal hairline gaps without merging neighboring bubbles.
+  - Lowered `min_area` to `total_pixels * 0.00003` to accurately capture smaller Student ID bubbles (10-12px).
+  - Relaxed circularity to `>= 0.22` to accommodate hand-filled bubbles.
+  - Constrained Student ID detection strictly to the left box (X: 5%-38%, Y: 11%-32%) to eliminate logo, name, and phone number noise.
+  - Structured question recognition into 5 distinct column blocks (15 questions each = 75 questions) to eliminate skew/tilt alignment errors.
+  - Enhanced backend controller (`exams.controller.ts`) student lookup with flexible roll number matching (`JY26-XXXX` or numeric `XXXX`).
+  - Switched visual preview overlay to draw crisp highlights directly on the original color scanned paper image.
+
