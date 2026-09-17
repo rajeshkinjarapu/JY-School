@@ -756,7 +756,7 @@ export const scanOmr = async (req: AuthRequest, res: Response, next: NextFunctio
 
     const pythonCmd = process.platform === 'win32' ? 'python' : 'python3';
 
-    exec(`${pythonCmd} "${scriptPath}" "${imagePath}" "${answerKeyPath}"`, { maxBuffer: 1024 * 1024 * 50 }, (error, stdout, stderr) => {
+    exec(`${pythonCmd} "${scriptPath}" "${imagePath}" "${answerKeyPath}"`, { maxBuffer: 1024 * 1024 * 50 }, async (error, stdout, stderr) => {
       // Clean up temp files
       fs.unlink(imagePath, () => {});
       fs.unlink(answerKeyPath, () => {});
@@ -776,18 +776,19 @@ export const scanOmr = async (req: AuthRequest, res: Response, next: NextFunctio
         if (result.student_id && result.student_id !== "AUTO_DETECT") {
           const rawId = result.student_id;
           const cleanDigits = rawId.replace(/[^0-9]/g, '');
-          const student = await prisma.student.findFirst({
-            where: {
-              OR: [
-                { rollNo: { equals: rawId, mode: 'insensitive' } },
-                { rollNo: { contains: rawId, mode: 'insensitive' } },
-                ...(cleanDigits.length >= 3 ? [{ rollNo: { contains: cleanDigits, mode: 'insensitive' } }] : [])
-              ]
-            },
-            include: {
-              user: true
-            }
+          const searchConditions: any[] = [
+            { rollNo: { equals: rawId, mode: 'insensitive' } },
+            { rollNo: { contains: rawId, mode: 'insensitive' } },
+          ];
+          if (cleanDigits.length >= 3) {
+            searchConditions.push({ rollNo: { contains: cleanDigits, mode: 'insensitive' } });
+          }
+
+          const student: any = await prisma.student.findFirst({
+            where: { OR: searchConditions },
+            include: { user: true }
           });
+
           if (student && student.user) {
              result.student_name = student.user.name;
              result.real_student_id = student.id; // DB ID for saving marks
