@@ -30,3 +30,4 @@
 - **Marks Entry AB Fix (2026-09-09)**: Addressed NaN issue when typing AB. Updated exams.controller.ts to properly map marksObtained to 'AB' instead of 0 when remarks is 'AB', ensuring it reflects correctly in Results and Progress Card.
 
 - **Daily Automated Backup (2026-09-09)**: Set up rclone and a cron job on the VPS to automatically dump the jy_school_local database and upload it to Google Drive every day, keeping the last 7 days of backups.
+- **Desktop Fluid Layout Fix (2026-09-17)**: Added a dynamic scaling script in \index.html\ to adjust the root font-size based on the viewport width (using 1536px as base) for screens >= 1024px. This ensures the web app UI proportions look identical whether opened on small laptops (1366px) or large monitors (1920px).

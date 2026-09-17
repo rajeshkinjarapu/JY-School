@@ -14,6 +14,26 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <meta name="format-detection" content="telephone=no, date=no, email=no, address=no" />
     <title>JY School</title>
+    <script>
+      (function() {
+        function adjustDesktopScale() {
+          if (window.innerWidth >= 1024) {
+            // Scale the root font size based on a standard 1536px desktop width
+            // This ensures the website looks proportionally identical on 1366px and 1920px screens
+            var scale = window.innerWidth / 1536;
+            // Prevent it from becoming too massive on ultra-wide screens
+            if (scale > 1.25) scale = 1.25;
+            document.documentElement.style.fontSize = (16 * scale) + 'px';
+          } else {
+            // Reset for mobile and tablet (let native responsive classes handle it)
+            document.documentElement.style.fontSize = '';
+          }
+        }
+        window.addEventListener('resize', adjustDesktopScale);
+        window.addEventListener('DOMContentLoaded', adjustDesktopScale);
+        adjustDesktopScale();
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
