@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Upload, CheckCircle, Save, Scan, Edit, Loader, AlertTriangle, Image as ImageIcon, ChevronRight, FileText } from "lucide-react";
+import { Upload, CheckCircle, Save, Scan, Loader, AlertTriangle, Image as ImageIcon, FileText, Maximize, Minimize, Key } from "lucide-react";
 import toast from "react-hot-toast";
-import * as XLSX from "xlsx";
 import api from "../../../api/axios";
+import { ManageAnswerKeyModal } from "./ManageAnswerKeyModal";
 
 // Helper for sending messages to worker
 const processImageWithWorker = (worker: Worker, file: File, id: string): Promise<any> => {
@@ -38,8 +38,10 @@ const processImageWithWorker = (worker: Worker, file: File, id: string): Promise
 
 export const OMRScannerPage: React.FC = () => {
   const [exams, setExams] = useState<any[]>([]);
+  const [classes, setClasses] = useState<any[]>([]);
   const [selectedExamId, setSelectedExamId] = useState("");
   const [selectedClassId, setSelectedClassId] = useState("");
+  
   const [worker, setWorker] = useState<Worker | null>(null);
   const [workerReady, setWorkerReady] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -48,17 +50,23 @@ export const OMRScannerPage: React.FC = () => {
   const [uploadedImages, setUploadedImages] = useState<File[]>([]);
   const [processedResults, setProcessedResults] = useState<any[]>([]);
   
+  // Modals & UI State
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isFullScreen, setIsFullScreen] = useState(false);
+
   // Live Preview State
   const [currentPreviewUrl, setCurrentPreviewUrl] = useState<string | null>(null);
   const [currentScanningFile, setCurrentScanningFile] = useState<string | null>(null);
 
   useEffect(() => {
     api.get("/api/exams").then((res: any) => setExams(res.data));
+    api.get("/api/classes").then((res: any) => setClasses(res.data));
     
     // Initialize Worker
     const omrWorker = new Worker(new URL("../../../workers/omr.worker.ts", import.meta.url), { type: 'module' });
     omrWorker.onmessage = (e) => {
       if (e.data.type === 'INIT_SUCCESS') setWorkerReady(true);
+      if (e.data.type === 'INIT_ERROR') toast.error(e.data.payload);
     };
     omrWorker.postMessage({ type: 'INIT' });
     setWorker(omrWorker);
@@ -66,50 +74,37 @@ export const OMRScannerPage: React.FC = () => {
     return () => omrWorker.terminate();
   }, []);
 
-  const selectedExam = exams.find(e => e.id === selectedExamId);
-  
-  // Deduplicate classes
-  const uniqueClasses = selectedExam?.classes ? Array.from(new Map(selectedExam.classes.map((c: any) => [c.name, c])).values()) : [];
-  
-  const handleAnswerChange = (qNum: number, answer: string) => {
-    setAnswerKey(prev => ({ ...prev, [qNum]: answer }));
+  // Fetch Answer Key whenever Exam or Class changes (or modal closes)
+  const fetchAnswerKey = async () => {
+    if (!selectedExamId || !selectedClassId) {
+      setAnswerKey({});
+      return;
+    }
+    try {
+      const res = await api.get(`/api/exams/answer-key?examId=${selectedExamId}&classId=${selectedClassId}`);
+      setAnswerKey(res.data || {});
+    } catch (err) {
+      console.error(err);
+    }
   };
 
-  const handleExcelUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  useEffect(() => {
+    fetchAnswerKey();
+  }, [selectedExamId, selectedClassId, isModalOpen]); // Refresh on modal close
 
-    const reader = new FileReader();
-    reader.onload = (evt) => {
-      try {
-        const bstr = evt.target?.result;
-        const wb = XLSX.read(bstr, { type: "binary" });
-        const wsname = wb.SheetNames[0];
-        const ws = wb.Sheets[wsname];
-        const data = XLSX.utils.sheet_to_json(ws, { header: 1 }) as any[][];
-        
-        const newKey: Record<number, string> = {};
-        data.forEach(row => {
-          if (row.length >= 2) {
-            const q = parseInt(row[0]);
-            const a = row[1]?.toString().trim().toUpperCase();
-            if (!isNaN(q) && q >= 1 && q <= 75 && ["A", "B", "C", "D"].includes(a)) {
-              newKey[q] = a;
-            }
-          }
-        });
-        setAnswerKey(newKey);
-        toast.success("Answer Key loaded from Excel!");
-      } catch (err) {
-        toast.error("Error reading Excel file.");
-      }
-    };
-    reader.readAsBinaryString(file);
+  // Toggle Full Screen (Hides Sidebar via CSS classes dynamically)
+  const toggleFullScreen = () => {
+    setIsFullScreen(!isFullScreen);
+    if (!isFullScreen) {
+      document.body.classList.add('omr-fullscreen');
+    } else {
+      document.body.classList.remove('omr-fullscreen');
+    }
   };
 
   const processImages = async () => {
-    if (!worker || !workerReady) return toast.error("Scanner engine is still initializing. Please wait.");
-    if (Object.keys(answerKey).length === 0) return toast.error("Please enter the Answer Key first.");
+    if (!worker || !workerReady) return toast.error("Scanner engine is not ready.");
+    if (Object.keys(answerKey).length === 0) return toast.error("Master Answer Key is missing. Please manage answer key first.");
     if (uploadedImages.length === 0) return toast.error("Please select images to process.");
 
     setIsProcessing(true);
@@ -119,7 +114,6 @@ export const OMRScannerPage: React.FC = () => {
       const file = uploadedImages[i];
       const fileId = `img_${i}`;
       
-      // Setup Live Preview
       setCurrentScanningFile(file.name);
       const objectUrl = URL.createObjectURL(file);
       setCurrentPreviewUrl(objectUrl);
@@ -127,7 +121,6 @@ export const OMRScannerPage: React.FC = () => {
       try {
         const result = await processImageWithWorker(worker, file, fileId);
         
-        // Evaluate against answer key
         let maths = 0, physics = 0, chemistry = 0;
         let doubtful = false;
         
@@ -159,7 +152,6 @@ export const OMRScannerPage: React.FC = () => {
         toast.error(`Error processing ${file.name}: ${err}`);
       }
       
-      // Cleanup preview URL
       URL.revokeObjectURL(objectUrl);
     }
     
@@ -171,7 +163,7 @@ export const OMRScannerPage: React.FC = () => {
   };
 
   return (
-    <div className="h-[calc(100vh-6rem)] flex flex-col bg-gray-50 dark:bg-gray-950 overflow-hidden">
+    <div className={`flex flex-col bg-gray-50 dark:bg-gray-950 overflow-hidden ${isFullScreen ? 'fixed inset-0 z-50 bg-white dark:bg-gray-950' : 'h-[calc(100vh-6rem)]'}`}>
       
       {/* Header */}
       <div className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 px-6 py-4 flex justify-between items-center z-10 shrink-0 shadow-sm">
@@ -186,6 +178,10 @@ export const OMRScannerPage: React.FC = () => {
         </div>
         
         <div className="flex items-center gap-4">
+          <button onClick={toggleFullScreen} className="text-gray-500 hover:text-indigo-600 dark:text-gray-400 dark:hover:text-indigo-400 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors" title={isFullScreen ? "Exit Focus Mode" : "Focus Mode (Hide Sidebar)"}>
+            {isFullScreen ? <Minimize size={20} /> : <Maximize size={20} />}
+          </button>
+
           {!workerReady ? (
              <span className="text-amber-500 text-sm font-semibold flex items-center gap-2 bg-amber-50 dark:bg-amber-900/20 px-3 py-1.5 rounded-full border border-amber-200 dark:border-amber-800/50">
                <Loader className="animate-spin w-4 h-4"/> Engine Initializing...
@@ -211,7 +207,6 @@ export const OMRScannerPage: React.FC = () => {
           </div>
           
           <div className="flex-1 flex items-center justify-center p-8 relative">
-            {/* Scanning Overlay Effect */}
             {isProcessing && currentPreviewUrl && (
               <div className="absolute inset-0 pointer-events-none z-20 flex justify-center">
                  <div className="w-[80%] h-1 bg-emerald-400 shadow-[0_0_15px_#34d399] animate-[scan_2s_ease-in-out_infinite] opacity-70"></div>
@@ -243,13 +238,12 @@ export const OMRScannerPage: React.FC = () => {
         {/* RIGHT PANEL: Controls, Uploads, Results */}
         <div className="flex flex-col bg-gray-50 dark:bg-gray-950 overflow-y-auto custom-scrollbar">
           
-          {/* Controls Section */}
           <div className="p-6 space-y-6">
             
             {/* Top Setup Card */}
             <div className="bg-white dark:bg-gray-900 rounded-2xl p-5 shadow-sm border border-gray-200 dark:border-gray-800">
               <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4 border-b border-gray-100 dark:border-gray-800 pb-2">1. Exam Context</h4>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-4 mb-4">
                 <div>
                   <label className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1 block">Target Exam</label>
                   <select className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 transition-shadow outline-none" value={selectedExamId} onChange={e => setSelectedExamId(e.target.value)}>
@@ -261,41 +255,29 @@ export const OMRScannerPage: React.FC = () => {
                   <label className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1 block">Target Class</label>
                   <select className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 transition-shadow outline-none" value={selectedClassId} onChange={e => setSelectedClassId(e.target.value)}>
                     <option value="">Select Class</option>
-                    {(uniqueClasses as any[]).map((c: any) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                    {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                   </select>
                 </div>
               </div>
-            </div>
 
-            {/* Answer Key Card */}
-            <div className="bg-white dark:bg-gray-900 rounded-2xl p-5 shadow-sm border border-gray-200 dark:border-gray-800 flex flex-col max-h-[300px]">
-              <div className="flex justify-between items-center mb-4 shrink-0">
-                <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider">2. Master Answer Key</h4>
-                <label className="bg-indigo-50 dark:bg-indigo-900/30 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 text-indigo-700 dark:text-indigo-400 px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer transition-colors flex items-center gap-1.5 border border-indigo-200 dark:border-indigo-800">
-                  <Upload size={14} /> Import Excel (.xlsx)
-                  <input type="file" accept=".xlsx, .xls" className="hidden" onChange={handleExcelUpload} />
-                </label>
-              </div>
-              
-              <div className="overflow-y-auto custom-scrollbar pr-2 grid grid-cols-3 gap-6">
-                <div>
-                  <div className="sticky top-0 bg-white dark:bg-gray-900 pb-2 mb-2 border-b border-indigo-100 dark:border-gray-800 font-bold text-xs text-indigo-600 tracking-wide z-10">MATHS (1-25)</div>
-                  {Array.from({ length: 25 }).map((_, i) => (
-                    <div key={i+1} className="flex items-center gap-2 mb-1.5"><span className="w-6 text-right text-xs text-gray-500 font-medium">{i+1}.</span><select className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded px-2 py-0.5 text-xs font-bold" value={answerKey[i+1] || ""} onChange={e => handleAnswerChange(i+1, e.target.value)}><option value="">-</option><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option></select></div>
-                  ))}
+              {/* Answer Key State */}
+              <div className="flex items-center justify-between bg-indigo-50 dark:bg-indigo-900/10 p-3 rounded-xl border border-indigo-100 dark:border-indigo-800/30">
+                <div className="flex items-center gap-2">
+                  <Key size={18} className="text-indigo-600 dark:text-indigo-400" />
+                  <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">Master Answer Key</span>
                 </div>
-                <div>
-                  <div className="sticky top-0 bg-white dark:bg-gray-900 pb-2 mb-2 border-b border-teal-100 dark:border-gray-800 font-bold text-xs text-teal-600 tracking-wide z-10">PHYSICS (26-50)</div>
-                  {Array.from({ length: 25 }).map((_, i) => (
-                    <div key={i+26} className="flex items-center gap-2 mb-1.5"><span className="w-6 text-right text-xs text-gray-500 font-medium">{i+26}.</span><select className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded px-2 py-0.5 text-xs font-bold" value={answerKey[i+26] || ""} onChange={e => handleAnswerChange(i+26, e.target.value)}><option value="">-</option><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option></select></div>
-                  ))}
-                </div>
-                <div>
-                  <div className="sticky top-0 bg-white dark:bg-gray-900 pb-2 mb-2 border-b border-amber-100 dark:border-gray-800 font-bold text-xs text-amber-600 tracking-wide z-10">CHEMISTRY (51-75)</div>
-                  {Array.from({ length: 25 }).map((_, i) => (
-                    <div key={i+51} className="flex items-center gap-2 mb-1.5"><span className="w-6 text-right text-xs text-gray-500 font-medium">{i+51}.</span><select className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded px-2 py-0.5 text-xs font-bold" value={answerKey[i+51] || ""} onChange={e => handleAnswerChange(i+51, e.target.value)}><option value="">-</option><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option></select></div>
-                  ))}
-                </div>
+                {Object.keys(answerKey).length > 0 ? (
+                  <span className="text-xs font-bold text-emerald-600 bg-emerald-100 px-2 py-1 rounded">Ready ({Object.keys(answerKey).length} Ans)</span>
+                ) : (
+                  <span className="text-xs font-bold text-red-600 bg-red-100 px-2 py-1 rounded">Missing</span>
+                )}
+                
+                <button 
+                  onClick={() => setIsModalOpen(true)}
+                  disabled={!selectedExamId || !selectedClassId}
+                  className="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-xs px-4 py-1.5 rounded-lg font-bold transition-colors">
+                  Manage Key
+                </button>
               </div>
             </div>
 
@@ -326,7 +308,7 @@ export const OMRScannerPage: React.FC = () => {
             {processedResults.length > 0 && (
               <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-800 overflow-hidden flex flex-col">
                 <div className="p-4 bg-gray-50 dark:bg-gray-900/50 border-b border-gray-200 dark:border-gray-800 flex justify-between items-center">
-                  <h3 className="text-sm font-bold text-gray-800 dark:text-gray-200 flex items-center gap-2"><Award size={16} className="text-emerald-500"/> Scan Results ({processedResults.length})</h3>
+                  <h3 className="text-sm font-bold text-gray-800 dark:text-gray-200 flex items-center gap-2">Scan Results ({processedResults.length})</h3>
                   <button className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-1.5 rounded-lg text-xs font-bold transition-colors shadow-sm flex items-center gap-1.5"><Save size={14}/> Save to DB</button>
                 </div>
                 
@@ -363,12 +345,17 @@ export const OMRScannerPage: React.FC = () => {
                 </div>
               </div>
             )}
-            
-            {/* Bottom Padding */}
             <div className="h-10"></div>
           </div>
         </div>
       </div>
+
+      <ManageAnswerKeyModal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+        examId={selectedExamId}
+        classId={selectedClassId}
+      />
     </div>
   );
 };

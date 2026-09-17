@@ -7,13 +7,26 @@ self.onmessage = async (e) => {
   const { type, payload } = e.data;
   
   if (type === 'INIT') {
-    // Wait for OpenCV to initialize
-    const checkCv = setInterval(() => {
-      if (typeof (self as any).cv !== 'undefined' && (self as any).cv.Mat) {
-        clearInterval(checkCv);
-        self.postMessage({ type: 'INIT_SUCCESS' });
-      }
-    }, 100);
+    // OpenCV 4.x loads as a function returning a Promise
+    if (typeof (self as any).cv === 'function') {
+      (self as any).cv().then((resolvedCv: any) => {
+         (self as any).cv = resolvedCv;
+         self.postMessage({ type: 'INIT_SUCCESS' });
+      }).catch((err: any) => {
+         self.postMessage({ type: 'INIT_ERROR', payload: 'Failed to load OpenCV: ' + err });
+      });
+    } else {
+      // Fallback for older OpenCV versions
+      const checkCv = setInterval(() => {
+        if (typeof (self as any).cv !== 'undefined' && (self as any).cv.Mat) {
+          clearInterval(checkCv);
+          self.postMessage({ type: 'INIT_SUCCESS' });
+        }
+      }, 100);
+      
+      // Stop checking after 15 seconds to prevent infinite loops
+      setTimeout(() => clearInterval(checkCv), 15000);
+    }
   }
 
   if (type === 'PROCESS_IMAGE') {

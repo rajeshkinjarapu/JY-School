@@ -125,6 +125,7 @@ model Teacher {
 }
 
 model Class {
+  answerKeys    ExamAnswerKey[]
   id               String    @id @default(uuid())
   name             String    // e.g. "Grade 10"
   section          String    // e.g. "A"
@@ -208,6 +209,7 @@ model Attendance {
 }
 
 model Exam {
+  answerKeys    ExamAnswerKey[]
   id                 String     @id @default(uuid())
   name               String
   term               String     // "Term 1", "Term 2", "Final"
@@ -1130,3 +1132,18 @@ model AdmissionInquiry {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 }
+
+model ExamAnswerKey {
+  id        String   @id @default(uuid())
+  examId    String
+  classId   String
+  answers   Json     // Stores { '1': 'A', '2': 'B', ... }
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  exam      Exam     @relation(fields: [examId], references: [id], onDelete: Cascade)
+  class     Class    @relation(fields: [classId], references: [id], onDelete: Cascade)
+
+  @@unique([examId, classId])
+}
+
