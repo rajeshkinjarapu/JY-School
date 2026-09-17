@@ -2,12 +2,11 @@
 """
 JY School - Production OMR Engine & Scanner Pro
 Features:
-- Solid alignment without slant/distortion:
-  Uses the 4 corner black fiducial markers or the outer border bounding box.
-  Never tilts or warps a flat scan.
-- Black Vision bubble detection:
-  Directly measures solid white bubble fill in inverted binary space.
-- Student ID extraction: 4 vertical columns, digits 0 to 9 -> JY26-XXXX.
+- Solid Paper Segmentation: Isolates white paper from black scanner bed/desk margins.
+- Zero-Distortion Alignment: Direct upright crop and resize to canonical (1100, 1550).
+- Dynamic Adaptive Snapping: Searches locally for true circular bubble centers.
+- Black Vision bubble detection: Directly measures solid white bubble fill in inverted binary space.
+- Student ID extraction: 6 vertical columns, digits 0 to 9 -> 269657.
 - 75 Questions: 5 blocks of 15 questions with options A, B, C, D.
 - Master Answer Key evaluation with subject marks (Maths 1-25, Physics 26-50, Chemistry 51-75).
 - High-contrast Black Vision preview with glowing Green, Red, and Cyan markings.
@@ -26,137 +25,94 @@ PAGE_WIDTH = 1100
 PAGE_HEIGHT = 1550
 
 
-def order_points(pts):
-    """Order coordinates: top-left, top-right, bottom-right, bottom-left"""
-    rect = np.zeros((4, 2), dtype="float32")
-    s = pts.sum(axis=1)
-    rect[0] = pts[np.argmin(s)]
-    rect[2] = pts[np.argmax(s)]
-
-    diff = np.diff(pts, axis=1)
-    rect[1] = pts[np.argmin(diff)]
-    rect[3] = pts[np.argmax(diff)]
-    return rect
-
-
 def align_omr_sheet(image):
     """
     Cleanly rectifies the OMR sheet to canonical (1100, 1550).
-    Guarantees the sheet is NEVER tilted or distorted:
-    1. Detects the 4 corner black fiducial markers if present and warps cleanly.
-    2. Fallback: Detects the outer black border frame bounding box and crops/resizes.
-    3. Fallback: Direct clean resize without diagonal shear.
+    Guarantees 0% tilt/slant:
+    1. Isolates the white paper sheet from surrounding black/dark scanner bed.
+    2. Crops strictly to the paper bounds so scanner margins don't offset the grid.
+    3. Resizes cleanly to canonical (1100, 1550).
     """
     h, w = image.shape[:2]
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY) if len(image.shape) == 3 else image.copy()
 
-    # Otsu threshold to isolate black ink from paper/desk
-    blurred = cv2.GaussianBlur(gray, (5, 5), 0)
-    _, ink_mask = cv2.threshold(blurred, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
+    # Step 1: Detect the white paper sheet (bright paper vs dark scanner background)
+    blurred = cv2.GaussianBlur(gray, (7, 7), 0)
+    _, paper_thresh = cv2.threshold(blurred, 120, 255, cv2.THRESH_BINARY)
 
-    # Search in the 4 corner zones for the 4 solid black fiducial markers
-    qw = int(w * 0.22)
-    qh = int(h * 0.22)
-    quads = {
-        "tl": (0, qw, 0, qh, 0, 0),
-        "tr": (w - qw, w, 0, qh, w - qw, 0),
-        "bl": (0, qw, h - qh, h, 0, h - qh),
-        "br": (w - qw, w, h - qh, h, w - qw, h - qh),
-    }
-
-    markers = {}
-    for qname, (x1, x2, y1, y2, ox, oy) in quads.items():
-        patch = ink_mask[y1:y2, x1:x2]
-        cnts, _ = cv2.findContours(patch, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-        best_pt = None
-        best_score = 0
-        min_area = (qw * qh) * 0.003
-        max_area = (qw * qh) * 0.25
-
-        for c in cnts:
-            area = cv2.contourArea(c)
-            if min_area < area < max_area:
-                bx, by, bw, bh = cv2.boundingRect(c)
-                aspect = bw / float(bh) if bh > 0 else 0
-                if 0.65 <= aspect <= 1.55:
-                    extent = area / float(bw * bh)
-                    if extent > 0.55:  # Solid square or rectangle
-                        if area > best_score:
-                            best_score = area
-                            best_pt = (ox + bx + bw / 2.0, oy + by + bh / 2.0)
-        if best_pt:
-            markers[qname] = best_pt
-
-    # If all 4 corner markers are found, verify they form a valid upright rectangle
-    if len(markers) == 4:
-        tl = markers["tl"]
-        tr = markers["tr"]
-        br = markers["br"]
-        bl = markers["bl"]
-        # Sanity check: horizontal and vertical alignment within 4% of image dimensions
-        top_diff = abs(tl[1] - tr[1])
-        bot_diff = abs(bl[1] - br[1])
-        left_diff = abs(tl[0] - bl[0])
-        right_diff = abs(tr[0] - br[0])
-        if top_diff < (h * 0.05) and bot_diff < (h * 0.05) and left_diff < (w * 0.05) and right_diff < (w * 0.05):
-            pts = np.array([tl, tr, br, bl], dtype="float32")
-            dst = np.array([
-                [45, 45],
-                [PAGE_WIDTH - 45, 45],
-                [PAGE_WIDTH - 45, PAGE_HEIGHT - 45],
-                [45, PAGE_HEIGHT - 45]
-            ], dtype="float32")
-            M = cv2.getPerspectiveTransform(order_points(pts), dst)
-            return cv2.warpPerspective(image, M, (PAGE_WIDTH, PAGE_HEIGHT), flags=cv2.INTER_LANCZOS4)
-
-    # Fallback: Find the outer black border frame bounding box (guaranteed 0% tilt)
-    cnts, _ = cv2.findContours(ink_mask, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
-    cnts = sorted(cnts, key=cv2.contourArea, reverse=True)
-
-    for c in cnts[:5]:
-        area = cv2.contourArea(c)
-        if area > (w * h * 0.28):
-            bx, by, bw, bh = cv2.boundingRect(c)
-            if bw > w * 0.45 and bh > h * 0.45 and bh > bw:
-                cropped = image[by:by+bh, bx:bx+bw]
+    cnts, _ = cv2.findContours(paper_thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    if cnts:
+        largest = max(cnts, key=cv2.contourArea)
+        area = cv2.contourArea(largest)
+        # If paper sheet contour covers > 35% of image, crop off the dark scanner bed
+        if area > (w * h * 0.35):
+            bx, by, bw, bh = cv2.boundingRect(largest)
+            if bw > (w * 0.45) and bh > (h * 0.45):
+                # Small padding inside to eliminate scanner border edge noise
+                pad_x = int(bw * 0.008)
+                pad_y = int(bh * 0.008)
+                x1 = min(w - 1, max(0, bx + pad_x))
+                y1 = min(h - 1, max(0, by + pad_y))
+                x2 = max(x1 + 10, min(w, bx + bw - pad_x))
+                y2 = max(y1 + 10, min(h, by + bh - pad_y))
+                cropped = image[y1:y2, x1:x2]
                 return cv2.resize(cropped, (PAGE_WIDTH, PAGE_HEIGHT), interpolation=cv2.INTER_LANCZOS4)
 
-    # Fallback: Direct clean resize (guaranteed 0% tilt)
+    # Fallback: Clean resize to canonical dimensions
     return cv2.resize(image, (PAGE_WIDTH, PAGE_HEIGHT), interpolation=cv2.INTER_LANCZOS4)
 
 
-def evaluate_bubble_white_fill(thresh_img, cx, cy, radius=7, search_window=2):
+def snap_to_bubble_center(thresh_img, cx, cy, search_radius=5):
     """
-    Measures solid white bubble fill in Black Vision binary image.
-    Stays strictly within the inner bubble interior (radius*0.80 = ~5px).
-    Never bleeds onto the outer circle boundary.
-    Hollow bubbles with letters have fill_ratio < 0.25.
-    Pen-filled bubbles have fill_ratio > 0.45.
+    Finds the exact center of maximum white fill in local window.
+    Locks onto the physical bubble even if scan has a small shift.
     """
     h, w = thresh_img.shape[:2]
-    best_fill = 0.0
+    best_x, best_y = cx, cy
+    best_white_count = -1
 
-    # Search in small local window around (cx, cy)
-    for dx in (-search_window, 0, search_window):
-        for dy in (-search_window, 0, search_window):
-            cur_x, cur_y = cx + dx, cy + dy
-            x1, x2 = max(0, int(cur_x - radius)), min(w, int(cur_x + radius + 1))
-            y1, y2 = max(0, int(cur_y - radius)), min(h, int(cur_y + radius + 1))
-
+    for dx in range(-search_radius, search_radius + 1, 2):
+        for dy in range(-search_radius, search_radius + 1, 2):
+            cur_x = cx + dx
+            cur_y = cy + dy
+            x1, x2 = max(0, cur_x - 5), min(w, cur_x + 6)
+            y1, y2 = max(0, cur_y - 5), min(h, cur_y + 6)
             patch = thresh_img[y1:y2, x1:x2]
             if patch.size > 0:
-                mask = np.zeros(patch.shape, dtype=np.uint8)
-                pcx = int(cur_x - x1)
-                pcy = int(cur_y - y1)
-                cv2.circle(mask, (pcx, pcy), int(radius * 0.80), 255, -1)
+                white_count = int(np.count_nonzero(patch == 255))
+                if white_count > best_white_count:
+                    best_white_count = white_count
+                    best_x, best_y = cur_x, cur_y
 
-                bubble_pixels = patch[mask == 255]
-                if len(bubble_pixels) > 0:
-                    white_ratio = float(np.count_nonzero(bubble_pixels == 255)) / float(len(bubble_pixels))
-                    if white_ratio > best_fill:
-                        best_fill = white_ratio
+    return int(best_x), int(best_y)
 
-    return best_fill
+
+def evaluate_bubble_white_fill(thresh_img, cx, cy, radius=6):
+    """
+    Measures solid white bubble fill in Black Vision binary image.
+    Uses radius=6 to stay strictly inside the bubble interior.
+    Never bleeds onto the outer circle boundary.
+    Hollow bubbles with letters have fill_ratio < 0.22.
+    Pen-filled bubbles have fill_ratio > 0.40.
+    """
+    h, w = thresh_img.shape[:2]
+    x1, x2 = max(0, int(cx - radius)), min(w, int(cx + radius + 1))
+    y1, y2 = max(0, int(cy - radius)), min(h, int(cy + radius + 1))
+
+    patch = thresh_img[y1:y2, x1:x2]
+    if patch.size == 0:
+        return 0.0
+
+    mask = np.zeros(patch.shape, dtype=np.uint8)
+    pcx = int(cx - x1)
+    pcy = int(cy - y1)
+    cv2.circle(mask, (pcx, pcy), int(radius * 0.85), 255, -1)
+
+    bubble_pixels = patch[mask == 255]
+    if len(bubble_pixels) == 0:
+        return 0.0
+
+    return float(np.count_nonzero(bubble_pixels == 255)) / float(len(bubble_pixels))
 
 
 def process_omr(image_path, answer_key=None):
@@ -171,11 +127,11 @@ def process_omr(image_path, answer_key=None):
         if image is None:
             return {"error": f"Could not read image from {image_path}"}
 
-        # Step 1: Align sheet without slant
+        # Step 1: Align sheet without slant & remove scanner margins
         aligned = align_omr_sheet(image)
         gray = cv2.cvtColor(aligned, cv2.COLOR_BGR2GRAY) if len(aligned.shape) == 3 else aligned.copy()
 
-        # Step 2: Black Vision binary representation
+        # Step 2: Black Vision binary representation (White ink, Black paper)
         blurred = cv2.GaussianBlur(gray, (5, 5), 0)
         thresh = cv2.threshold(blurred, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)[1]
 
@@ -184,13 +140,14 @@ def process_omr(image_path, answer_key=None):
 
         # ----------------------------------------------------
         # Step 3: Student ID Extraction (6 vertical columns under digit boxes)
-        # In JY School OMR, first 2 boxes are 'J' 'Y' (no bubbles).
+        # In JY School OMR:
+        # First 2 boxes are 'J' 'Y' (no bubbles).
         # Bubble columns 0..5 correspond to digits 1..6 of student roll number.
         # ----------------------------------------------------
-        id_origin_x = 172     # First bubble column starts at x = 172
-        id_origin_y = 416     # Bubble 0 starts at y = 416
+        id_origin_x = 150     # First bubble column under digit 1
+        id_origin_y = 342     # Bubble 0 starts at y = 342
         id_labels_gap = 32    # Gap between columns
-        id_bubbles_gap = 25.5 # Gap between vertical digit bubbles 0..9
+        id_bubbles_gap = 17.8 # Gap between vertical digit bubbles 0..9
 
         detected_digits = []
         for col in range(6):
@@ -199,11 +156,13 @@ def process_omr(image_path, answer_key=None):
 
             for digit in range(10):
                 bubble_y = int(round(id_origin_y + digit * id_bubbles_gap))
-                fill_ratio = evaluate_bubble_white_fill(thresh, col_x, bubble_y, radius=7, search_window=3)
+                # Snap to actual bubble center in local window
+                scx, scy = snap_to_bubble_center(thresh, col_x, bubble_y, search_radius=4)
+                fill_ratio = evaluate_bubble_white_fill(thresh, scx, scy, radius=6)
                 col_scores.append({
                     "digit": str(digit),
-                    "cx": col_x,
-                    "cy": bubble_y,
+                    "cx": scx,
+                    "cy": scy,
                     "fill": fill_ratio
                 })
 
@@ -211,12 +170,12 @@ def process_omr(image_path, answer_key=None):
             top = col_scores[0]
             second = col_scores[1]
 
-            # In black vision with radius=7, an unfilled bubble has fill < 0.25
-            # A filled pen ink bubble has fill > 0.45
-            if top["fill"] >= 0.38 and (top["fill"] - second["fill"] >= 0.12 or top["fill"] >= 0.55):
+            # In black vision with radius=6, an unfilled bubble has fill < 0.22
+            # A filled pen ink bubble has fill > 0.40
+            if top["fill"] >= 0.35 and (top["fill"] - second["fill"] >= 0.12 or top["fill"] >= 0.50):
                 detected_digits.append(top["digit"])
                 # Draw bright cyan circle around detected ID digit bubble
-                cv2.circle(color_preview, (int(top["cx"]), int(top["cy"])), 12, (255, 255, 0), 2)
+                cv2.circle(color_preview, (int(top["cx"]), int(top["cy"])), 11, (255, 255, 0), 2)
                 cv2.circle(color_preview, (int(top["cx"]), int(top["cy"])), 4, (255, 255, 0), -1)
             else:
                 detected_digits.append("X")
@@ -229,11 +188,12 @@ def process_omr(image_path, answer_key=None):
 
         # ----------------------------------------------------
         # Step 4: 75 Questions Extraction (5 columns of 15 Qs)
+        # Block 1 (Q1-15), Block 2 (Q16-30), Block 3 (Q31-45), Block 4 (Q46-60), Block 5 (Q61-75)
         # ----------------------------------------------------
-        block_x_origins = [140, 330, 520, 710, 900]
-        q_start_y = 816
-        q_labels_gap = 35.5   # Vertical gap between consecutive questions
-        q_bubbles_gap = 26.5  # Horizontal gap between options A, B, C, D
+        block_x_origins = [115, 315, 515, 715, 915]
+        q_start_y = 760
+        q_labels_gap = 34.5   # Vertical gap between consecutive questions
+        q_bubbles_gap = 24.0  # Horizontal gap between options A, B, C, D
         options = ["A", "B", "C", "D"]
 
         detected_answers = {}
@@ -257,11 +217,13 @@ def process_omr(image_path, answer_key=None):
                 for opt_idx, opt_char in enumerate(options):
                     bx = int(round(col_x + opt_idx * q_bubbles_gap))
                     by = row_y
-                    fill_ratio = evaluate_bubble_white_fill(thresh, bx, by, radius=7, search_window=3)
+                    # Snap to actual bubble center in local window
+                    sbx, sby = snap_to_bubble_center(thresh, bx, by, search_radius=4)
+                    fill_ratio = evaluate_bubble_white_fill(thresh, sbx, sby, radius=6)
                     opt_scores.append({
                         "option": opt_char,
-                        "cx": bx,
-                        "cy": by,
+                        "cx": sbx,
+                        "cy": sby,
                         "fill": fill_ratio
                     })
 
@@ -269,8 +231,8 @@ def process_omr(image_path, answer_key=None):
                 top_opt = opt_scores[0]
                 second_opt = opt_scores[1]
 
-                # Clear check: top option must be filled solid white (radius=7 avoids outer ring)
-                is_filled = (top_opt["fill"] >= 0.38 and (top_opt["fill"] - second_opt["fill"] >= 0.12)) or (top_opt["fill"] >= 0.55)
+                # Clear relative check: top option must have distinct ink fill
+                is_filled = (top_opt["fill"] >= 0.35 and (top_opt["fill"] - second_opt["fill"] >= 0.12)) or (top_opt["fill"] >= 0.50)
 
                 if is_filled:
                     chosen_option = top_opt["option"]
@@ -292,20 +254,20 @@ def process_omr(image_path, answer_key=None):
                         q_mark = 4
                         correct_count += 1
                         # CORRECT: Bright Green outline + inner dot on white bubble
-                        cv2.circle(color_preview, (int(round(chosen_cx)), int(round(chosen_cy))), 12, (0, 255, 0), 2)
+                        cv2.circle(color_preview, (int(round(chosen_cx)), int(round(chosen_cy))), 11, (0, 255, 0), 2)
                         cv2.circle(color_preview, (int(round(chosen_cx)), int(round(chosen_cy))), 4, (0, 255, 0), -1)
                     elif chosen_option != "-":
                         q_mark = 0
                         wrong_count += 1
                         # WRONG: Bright Red outline + inner dot on student's picked white bubble
-                        cv2.circle(color_preview, (int(round(chosen_cx)), int(round(chosen_cy))), 12, (0, 0, 255), 2)
+                        cv2.circle(color_preview, (int(round(chosen_cx)), int(round(chosen_cy))), 11, (0, 0, 255), 2)
                         cv2.circle(color_preview, (int(round(chosen_cx)), int(round(chosen_cy))), 4, (0, 0, 255), -1)
 
                         # Highlight correct option with subtle green ring
                         corr_opt_idx = options.index(correct_ans) if correct_ans in options else -1
                         if corr_opt_idx >= 0:
                             corr_cx = int(round(col_x + corr_opt_idx * q_bubbles_gap))
-                            cv2.circle(color_preview, (corr_cx, int(round(row_y))), 11, (0, 255, 0), 1)
+                            cv2.circle(color_preview, (corr_cx, int(round(row_y))), 10, (0, 255, 0), 1)
                     else:
                         unattempted_count += 1
                         # Unattempted: Show subtle hint on correct answer
@@ -316,7 +278,7 @@ def process_omr(image_path, answer_key=None):
                 else:
                     # No answer key supplied: Highlight marked bubble in cyan
                     if chosen_option != "-":
-                        cv2.circle(color_preview, (int(round(chosen_cx)), int(round(chosen_cy))), 11, (255, 255, 0), 2)
+                        cv2.circle(color_preview, (int(round(chosen_cx)), int(round(chosen_cy))), 10, (255, 255, 0), 2)
 
                 # Subject-wise marks aggregation
                 if q_num <= 25:
@@ -350,25 +312,22 @@ def process_omr(image_path, answer_key=None):
         }
 
     except Exception as e:
-        import traceback
-        return {"error": f"OMR Error: {str(e)}: {traceback.format_exc()}"}
+        return {"error": str(e)}
 
 
 if __name__ == "__main__":
-    if len(sys.argv) < 3:
-        print(json.dumps({"error": "Usage: python omr_scanner.py <image_path> <answer_key_json_path>"}))
+    if len(sys.argv) < 2:
+        print(json.dumps({"error": "Usage: python omr_scanner.py <image_path> [answer_key_json]"}))
         sys.exit(1)
 
-    in_img_path = sys.argv[1]
-    in_ans_key_path = sys.argv[2]
+    img_file = sys.argv[1]
+    key_dict = {}
 
-    loaded_ans_key = {}
-    if os.path.exists(in_ans_key_path):
+    if len(sys.argv) >= 3:
         try:
-            with open(in_ans_key_path, 'r', encoding='utf-8') as f:
-                loaded_ans_key = json.load(f)
+            key_dict = json.loads(sys.argv[2])
         except Exception:
-            loaded_ans_key = {}
+            key_dict = {}
 
-    result_data = process_omr(in_img_path, loaded_ans_key)
-    print(json.dumps(result_data))
+    res = process_omr(img_file, key_dict)
+    print(json.dumps(res))
