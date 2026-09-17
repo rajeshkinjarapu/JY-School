@@ -228,14 +228,14 @@ def process_omr(image_path, answer_key):
 
                 detected_answers[str(q_num)] = selected_answer
 
-                # Score calculation (JEE pattern: +4 correct, -1 wrong)
+                # Score calculation (No negative marks: +4 correct, 0 wrong)
                 correct_ans = answer_key.get(str(q_num))
                 if selected_answer not in ["-", "DOUBTFUL"] and correct_ans:
                     if selected_answer == correct_ans:
                         marks = 4
                         correct += 1
                     else:
-                        marks = -1
+                        marks = 0  # No negative marks
                         wrong += 1
                 else:
                     marks = 0
