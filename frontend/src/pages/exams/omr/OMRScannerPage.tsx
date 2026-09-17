@@ -255,7 +255,7 @@ export const OMRScannerPage: React.FC = () => {
                   <label className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1 block">Target Class</label>
                   <select className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 transition-shadow outline-none" value={selectedClassId} onChange={e => setSelectedClassId(e.target.value)}>
                     <option value="">Select Class</option>
-                    {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                    {classes.map(c => <option key={c.id} value={c.id}>{c.name} - {c.section}</option>)}
                   </select>
                 </div>
               </div>
