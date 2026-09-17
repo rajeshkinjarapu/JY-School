@@ -11,6 +11,8 @@ import { ManageAnswerKeyModal } from "./ManageAnswerKeyModal";
 interface ScanResult {
   fileName: string;
   student_id: string;
+  student_name: string;
+  real_student_id?: string;
   maths: number;
   physics: number;
   chemistry: number;
@@ -116,6 +118,8 @@ export const OMRScannerPage: React.FC = () => {
         results.push({
           fileName: file.name,
           student_id: data.student_id || "UNKNOWN",
+          student_name: data.student_name || "Not Detected",
+          real_student_id: data.real_student_id,
           maths: data.marks?.maths || 0,
           physics: data.marks?.physics || 0,
           chemistry: data.marks?.chemistry || 0,
@@ -134,6 +138,40 @@ export const OMRScannerPage: React.FC = () => {
     setCurrentFileName(null);
     setIsProcessing(false);
     if (results.length > 0) toast.success(`${results.length} sheets processed successfully!`);
+  };
+
+  const handleSaveAll = async () => {
+    if (processedResults.length === 0) return toast.error("No results to save.");
+    if (!selectedExamId || !selectedClassId) return toast.error("Exam and Class must be selected.");
+
+    const marksToSave: any[] = [];
+    let missingStudents = 0;
+
+    processedResults.forEach((res) => {
+      if (!res.real_student_id) {
+        missingStudents++;
+        return;
+      }
+      marksToSave.push({ studentId: res.real_student_id, examId: selectedExamId, subjectId: "Maths", marksObtained: res.maths, maxMarks: 100 });
+      marksToSave.push({ studentId: res.real_student_id, examId: selectedExamId, subjectId: "Physics", marksObtained: res.physics, maxMarks: 100 });
+      marksToSave.push({ studentId: res.real_student_id, examId: selectedExamId, subjectId: "Chemistry", marksObtained: res.chemistry, maxMarks: 100 });
+    });
+
+    if (marksToSave.length === 0) {
+      return toast.error("No valid students found in the scanned results.");
+    }
+
+    try {
+      const loadingToast = toast.loading("Saving marks to database...");
+      await api.post("/api/marks/bulk", { marks: marksToSave });
+      toast.dismiss(loadingToast);
+      toast.success("Marks saved successfully!");
+      if (missingStudents > 0) {
+        toast.error(`${missingStudents} sheets were skipped because the student ID was not found in DB.`);
+      }
+    } catch (err: any) {
+      toast.error(`Failed to save: ${err?.response?.data?.message || err.message}`);
+    }
   };
 
   const totalCorrect = processedResults.reduce((a, b) => a + b.correct, 0);
@@ -400,7 +438,7 @@ export const OMRScannerPage: React.FC = () => {
                     <button onClick={() => { setProcessedResults([]); setUploadedFiles([]); setPreviewUrls([]); setCurrentPreview(null); }} className="text-xs text-gray-400 hover:text-red-500 flex items-center gap-1 transition-colors">
                       <RefreshCw size={12} /> Reset
                     </button>
-                    <button className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-4 py-1.5 rounded-lg font-bold transition-colors flex items-center gap-1.5">
+                    <button onClick={handleSaveAll} className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-4 py-1.5 rounded-lg font-bold transition-colors flex items-center gap-1.5">
                       <Save size={12} /> Save All
                     </button>
                   </div>
@@ -410,7 +448,7 @@ export const OMRScannerPage: React.FC = () => {
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="bg-gray-50 dark:bg-gray-800/50 text-xs text-gray-500 dark:text-gray-400 font-bold uppercase">
-                        <th className="px-4 py-3 text-left">File / Student</th>
+                        <th className="px-4 py-3 text-left">Student Info</th>
                         <th className="px-3 py-3 text-center text-indigo-500">Maths</th>
                         <th className="px-3 py-3 text-center text-teal-500">Phy</th>
                         <th className="px-3 py-3 text-center text-amber-500">Chem</th>
@@ -422,8 +460,8 @@ export const OMRScannerPage: React.FC = () => {
                       {processedResults.map((res, i) => (
                         <tr key={i} className="hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-colors">
                           <td className="px-4 py-3">
-                            <p className="font-bold text-gray-800 dark:text-gray-200 text-xs truncate max-w-[120px]" title={res.fileName}>{res.fileName}</p>
-                            <p className="text-gray-400 text-xs font-mono">{res.student_id}</p>
+                            <p className="font-bold text-gray-800 dark:text-gray-200 text-xs truncate max-w-[150px]">{res.student_name}</p>
+                            <p className="text-indigo-500 text-[10px] font-bold mt-0.5">{res.student_id}</p>
                           </td>
                           <td className="px-3 py-3 text-center font-bold text-indigo-600">{res.maths}</td>
                           <td className="px-3 py-3 text-center font-bold text-teal-600">{res.physics}</td>

@@ -771,6 +771,30 @@ export const scanOmr = async (req: AuthRequest, res: Response, next: NextFunctio
         if (result.error) {
           return next(createError(result.error, 400));
         }
+
+        // --- Fetch Student Name from DB based on detected student_id ---
+        if (result.student_id && result.student_id !== "AUTO_DETECT") {
+          const student = await prisma.student.findFirst({
+            where: {
+              rollNo: {
+                contains: result.student_id,
+                mode: 'insensitive'
+              }
+            },
+            include: {
+              user: true
+            }
+          });
+          if (student && student.user) {
+             result.student_name = student.user.name;
+             result.real_student_id = student.id; // DB ID for saving marks
+          } else {
+             result.student_name = "Unknown Student";
+          }
+        } else {
+             result.student_name = "Not Detected";
+        }
+
         successResponse(res, result, 'OMR Scan completed');
       } catch (e) {
         console.error("OMR Parse Error. stdout:", stdout, "stderr:", stderr);

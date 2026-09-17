@@ -29,7 +29,7 @@ def process_omr(image_path, answer_key):
 
         # Filter contours that look like bubbles (circular, right size)
         min_area = (original_h * original_w) * 0.0001
-        max_area = (original_h * original_w) * 0.006
+        max_area = (original_h * original_w) * 0.005
         
         bubbles = []
         for cnt in contours:
@@ -39,12 +39,13 @@ def process_omr(image_path, answer_key):
             perimeter = cv2.arcLength(cnt, True)
             if perimeter == 0:
                 continue
+            # Re-tightened to ignore handwritten text and lines
             circularity = 4 * np.pi * area / (perimeter * perimeter)
-            if circularity < 0.2:  # Massively relaxed from 0.5
+            if circularity < 0.45:  
                 continue
             x, y, w, h = cv2.boundingRect(cnt)
             aspect = w / h if h > 0 else 0
-            if not (0.3 < aspect < 3.0):  # Massively relaxed from 0.5-2.0
+            if not (0.6 < aspect < 1.6):  
                 continue
             cx = x + w // 2
             cy = y + h // 2
@@ -58,20 +59,90 @@ def process_omr(image_path, answer_key):
                 "is_filled": filled_ratio > 0.25
             })
 
-        # REMOVED the < 10 bubbles error check completely!
-        # This guarantees the Black Vision image is ALWAYS returned to the frontend
-        # so we can visually debug exactly which bubbles were detected.
+        # --- Region Splitting (Student ID vs Questions) ---
+        # The Student ID block is located at the top-left portion of the sheet.
+        # We can split bubbles by their Y-coordinate.
+        id_region_threshold = original_h * 0.28  # Top 28% of the image
+        
+        id_bubbles = [b for b in bubbles if b["cy"] < id_region_threshold]
+        q_bubbles = [b for b in bubbles if b["cy"] >= id_region_threshold]
 
-        # --- Step 4: Group bubbles into columns (A, B, C, D options) ---
-        # Sort all bubbles by X first to find column clusters
-        bubbles.sort(key=lambda b: b["cx"])
+        # --- Parse Student ID ---
+        student_id_str = "AUTO_DETECT"
+        if len(id_bubbles) >= 10:  # Assuming at least some ID bubbles found
+            id_bubbles.sort(key=lambda b: b["cx"])
+            id_x_coords = [b["cx"] for b in id_bubbles]
+            id_x_sorted = sorted(set(id_x_coords))
+            
+            # Find ID columns
+            id_gap_threshold = original_w * 0.015
+            id_x_clusters = []
+            current_cluster = [id_x_sorted[0]]
+            for i in range(1, len(id_x_sorted)):
+                if id_x_sorted[i] - id_x_sorted[i-1] > id_gap_threshold:
+                    id_x_clusters.append(np.mean(current_cluster))
+                    current_cluster = [id_x_sorted[i]]
+                else:
+                    current_cluster.append(id_x_sorted[i])
+            id_x_clusters.append(np.mean(current_cluster))
+            
+            # Group ID bubbles by row (0-9)
+            id_bubbles.sort(key=lambda b: b["cy"])
+            id_y_coords = [b["cy"] for b in id_bubbles]
+            id_y_sorted = sorted(set(id_y_coords))
+            id_y_clusters = []
+            if id_y_sorted:
+                current_cluster = [id_y_sorted[0]]
+                for i in range(1, len(id_y_sorted)):
+                    if id_y_sorted[i] - id_y_sorted[i-1] > original_h * 0.01:
+                        id_y_clusters.append(np.mean(current_cluster))
+                        current_cluster = [id_y_sorted[i]]
+                    else:
+                        current_cluster.append(id_y_sorted[i])
+                id_y_clusters.append(np.mean(current_cluster))
 
-        # Cluster X coordinates into groups using gap detection
-        x_coords = [b["cx"] for b in bubbles]
+            # Read the bubbled digits per column
+            parsed_digits = []
+            def nearest_cluster(val, clusters):
+                return min(range(len(clusters)), key=lambda i: abs(clusters[i] - val))
+                
+            for col_cx in id_x_clusters:
+                # Find all bubbles in this column
+                col_bubbles = [b for b in id_bubbles if nearest_cluster(b["cx"], id_x_clusters) == id_x_clusters.index(col_cx)]
+                # Find the most filled bubble in this column
+                filled_col_bubbles = [b for b in col_bubbles if b["is_filled"]]
+                if filled_col_bubbles:
+                    best_bubble = max(filled_col_bubbles, key=lambda b: b["filled_ratio"])
+                    row_idx = nearest_cluster(best_bubble["cy"], id_y_clusters)
+                    # Row 0 usually maps to digit 0, row 1 to 1, etc.
+                    parsed_digits.append(str(row_idx))
+                else:
+                    # Missing digit
+                    parsed_digits.append("X")
+            
+            numeric_part = "".join(parsed_digits)
+            clean_digits = numeric_part.replace("X", "")
+            
+            # Since JY26- is common and they only bubble the remaining 4 digits:
+            if len(clean_digits) >= 4:
+                # Take the last 4 digits in case it detected some extra noise columns
+                student_id_str = f"JY26-{clean_digits[-4:]}"
+            else:
+                student_id_str = f"JY26-{numeric_part}"
+
+        # --- Step 4: Group QUESTION bubbles into columns (A, B, C, D options) ---
+        if not q_bubbles:
+            return {
+                "error": "No question bubbles detected. Ensure scanning area is clear.",
+                "processed_image": processed_b64
+            }
+
+        q_bubbles.sort(key=lambda b: b["cx"])
+        x_coords = [b["cx"] for b in q_bubbles]
         x_sorted = sorted(set(x_coords))
         
-        # Find X clusters using a gap threshold
-        gap_threshold = original_w * 0.02  # 2% of image width
+        # Find X clusters for questions
+        gap_threshold = original_w * 0.02
         x_clusters = []
         current_cluster = [x_sorted[0]]
         for i in range(1, len(x_sorted)):
@@ -82,21 +153,16 @@ def process_omr(image_path, answer_key):
                 current_cluster.append(x_sorted[i])
         x_clusters.append(np.mean(current_cluster))
 
-        # For JEE OMR: we expect 4 option columns (A,B,C,D) repeated 3 times
-        # So we need clusters that are multiples of 4
-        # Find the most likely column count
         num_x_clusters = len(x_clusters)
-        
-        # Assign each bubble to nearest x-cluster
         def nearest_cluster(cx, clusters):
             return min(range(len(clusters)), key=lambda i: abs(clusters[i] - cx))
 
-        for b in bubbles:
+        for b in q_bubbles:
             b["col_idx"] = nearest_cluster(b["cx"], x_clusters)
 
-        # --- Step 5: Group by Y (rows = question numbers) ---
-        bubbles.sort(key=lambda b: b["cy"])
-        y_coords = [b["cy"] for b in bubbles]
+        # --- Step 5: Group QUESTION bubbles by Y (rows = question numbers) ---
+        q_bubbles.sort(key=lambda b: b["cy"])
+        y_coords = [b["cy"] for b in q_bubbles]
         y_sorted = sorted(set(y_coords))
         
         y_gap_threshold = original_h * 0.012
@@ -110,19 +176,13 @@ def process_omr(image_path, answer_key):
                 current_cluster.append(y_sorted[i])
         y_clusters.append(np.mean(current_cluster))
 
-        for b in bubbles:
+        for b in q_bubbles:
             b["row_idx"] = nearest_cluster(b["cy"], y_clusters)
 
         # --- Step 6: Build a grid and detect answers ---
-        # For JEE OMR with 4 options per question:
-        # Group all bubbles by (row_idx, col_idx)
         num_rows = len(y_clusters)
         num_cols = len(x_clusters)
 
-        # Group columns into sets of 4 (each set = one question column)
-        # Determine how many question column groups there are
-        # For our sheet: 3 groups (Maths 1-25, Physics 26-50, Chem 51-75)
-        # Each group has 4 option columns (A,B,C,D)
         options_per_q = 4
         question_col_groups = num_cols // options_per_q if num_cols >= options_per_q else 1
 
@@ -135,15 +195,12 @@ def process_omr(image_path, answer_key):
         option_labels = ["A", "B", "C", "D"]
 
         q_num = 0
-        questions_per_group = num_rows  # rows = questions per subject column
-
         for group_idx in range(question_col_groups):
             base_col = group_idx * options_per_q
             for row_idx in range(num_rows):
                 q_num += 1
-                # Get all bubbles in this row for this group's columns
                 row_group_bubbles = [
-                    b for b in bubbles
+                    b for b in q_bubbles
                     if b["row_idx"] == row_idx and (base_col <= b["col_idx"] < base_col + options_per_q)
                 ]
 
@@ -151,16 +208,12 @@ def process_omr(image_path, answer_key):
                     detected_answers[str(q_num)] = "-"
                     continue
 
-                # Sort by x to get A, B, C, D order
                 row_group_bubbles.sort(key=lambda b: b["cx"])
-
-                # Find the most filled bubble
                 filled_bubbles = [b for b in row_group_bubbles if b["is_filled"]]
                 
                 if len(filled_bubbles) == 0:
                     selected_answer = "-"
                 elif len(filled_bubbles) > 1:
-                    # Check if truly multiple filled or just one much darker
                     ratios = [b["filled_ratio"] for b in row_group_bubbles]
                     max_ratio = max(ratios)
                     really_filled = [b for b in row_group_bubbles if b["filled_ratio"] > max_ratio * 0.7]
@@ -187,7 +240,6 @@ def process_omr(image_path, answer_key):
                 else:
                     marks = 0
 
-                # Subject assignment (25 per subject)
                 if q_num <= 25:
                     maths += marks
                 elif q_num <= 50:
@@ -197,7 +249,7 @@ def process_omr(image_path, answer_key):
 
         return {
             "success": True,
-            "student_id": "AUTO_DETECT",
+            "student_id": student_id_str,
             "processed_image": processed_b64,
             "answers": detected_answers,
             "bubbles_found": len(bubbles),

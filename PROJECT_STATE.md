@@ -1,7 +1,12 @@
 # Project State: JY School ERP
 
-## Latest Updates (2026-09-17)
-- **OMR Scanner AI Engine Enhancement**: Upgraded the OpenCV preprocessing logic in the backend `omr_scanner.py` to use `adaptiveThreshold` combined with morphological operations for 100% accuracy in bubble detection across varying lighting conditions. Completely overhauled the AI processed image output to strictly follow a "Black Vision" theme where the background is pure black, filled bubbles are solid white (with a faint green glow), and empty bubbles are gray outlines. Also updated the frontend `OMRScannerPage.tsx` to instantly display this AI-processed "Black Vision" result on the live preview screen and thumbnails immediately after scanning, rather than keeping the original uploaded image.
+## 2. Recent Updates & Progress
+- **OMR Scanner Full Integration**:
+  - `omr_scanner.py`: Reinstated strict geometric filters (circularity > 0.45, aspect ratio 0.6-1.6) to accurately detect bubbles and ignore random marks/lines. Implemented Y-coordinate splitting to separate Student ID bubbles from Questions grid.
+  - `omr_scanner.py`: Auto-parsed Student ID column bubbles and formatted as `JYXXXXXX` strings.
+  - `exams.controller.ts`: Appended database lookup for `student_name` based on the parsed `student_id` and added `real_student_id`.
+  - `OMRScannerPage.tsx`: Enhanced the results table to display Student Name, Student ID, marks per subject (Maths, Phy, Chem), and total marks.
+  - `OMRScannerPage.tsx`: Implemented "Save All" button invoking `/api/marks/bulk` to persist calculated marks directly into the database for the selected Exam and Class. to instantly display this AI-processed "Black Vision" result on the live preview screen and thumbnails immediately after scanning, rather than keeping the original uploaded image.
 
 ## Previous Updates (2026-09-16)
 - **Today's Absentees Page**: Modified the `getDashboardStats` backend API to include students marked as `ABSENT` (in addition to `EXCUSED`) in the `studentsOnLeave` payload. Created a new dedicated frontend page (`/attendance/absentees-today`) with a searchable data table to list all absent/on-leave students for the current day. Linked this new page to the "Leaves" shortcut on the Attendance Dashboard, and also ensured these absentees appear directly in the dashboard's "On Leave Today" widget.
