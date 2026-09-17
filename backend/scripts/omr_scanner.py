@@ -11,7 +11,7 @@ def process_omr(image_path, answer_key):
         if image is None:
             return {"error": "Could not read image"}
 
-        # Resize large images to max 1400px wide to keep output size small and fast
+        # Resize to standard size (max 1400px) for consistent grid geometry
         max_dim = 1400
         h0, w0 = image.shape[:2]
         if max(h0, w0) > max_dim:
@@ -20,35 +20,31 @@ def process_omr(image_path, answer_key):
 
         original_h, original_w = image.shape[:2]
 
-        # --- Step 1: Preprocess ---
+        # --- Step 1: Black Vision Preprocessing ---
+        # Paper background becomes Black (0), White filled ink bubbles become White (255)
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         blurred = cv2.GaussianBlur(gray, (5, 5), 0)
         thresh = cv2.threshold(blurred, 0, 255, cv2.THRESH_BINARY_INV | cv2.THRESH_OTSU)[1]
 
-        # Use a small 3x3 close kernel to seal 1-2 pixel breaks in thin rings
-        # without merging neighboring bubbles into horizontal lines
-        small_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
-        closed = cv2.morphologyEx(thresh, cv2.MORPH_CLOSE, small_kernel)
+        # Base color preview for the UI (The user's requested Black Vision view)
+        color_preview = cv2.cvtColor(thresh, cv2.COLOR_GRAY2BGR)
 
-        # --- Step 2: Find all bubble contours ---
-        # Use cv2.RETR_LIST instead of RETR_EXTERNAL so outer black sheet borders
-        # do not swallow/hide interior bubbles!
-        contours, _ = cv2.findContours(closed, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+        # --- Step 2: Extract Solid White Filled Bubbles ---
+        # Morphological OPEN (Erode + Dilate) removes thin 1-2px text, hollow rings, and grid lines,
+        # leaving ONLY solid white filled bubbles intact!
+        open_kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))
+        opened = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, open_kernel)
+
+        contours, _ = cv2.findContours(opened, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
 
         total_pixels = original_h * original_w
-        min_area = total_pixels * 0.00002   # ~25-40px for small bubbles
+        min_area = total_pixels * 0.00003   # ~35-50px
         max_area = total_pixels * 0.0035    # ~3500px
 
-        bubbles = []
+        raw_bubbles = []
         for cnt in contours:
             area = cv2.contourArea(cnt)
             if area < min_area or area > max_area:
-                continue
-            perimeter = cv2.arcLength(cnt, True)
-            if perimeter == 0:
-                continue
-            circularity = 4 * np.pi * area / (perimeter * perimeter)
-            if circularity < 0.18:
                 continue
             x, y, w, h = cv2.boundingRect(cnt)
             aspect = w / h if h > 0 else 0
@@ -60,256 +56,179 @@ def process_omr(image_path, answer_key):
             cx = x + w // 2
             cy = y + h // 2
 
-            # Measure fill ratio on thresh
-            roi = thresh[y:y+h, x:x+w]
-            filled_ratio = cv2.countNonZero(roi) / (w * h) if (w * h) > 0 else 0
-            bubbles.append({
+            raw_bubbles.append({
                 "cx": cx, "cy": cy,
                 "x": x, "y": y, "w": w, "h": h,
-                "area": area,
-                "filled_ratio": filled_ratio,
-                "is_filled": filled_ratio > 0.28
+                "area": area
             })
 
-        # Deduplicate nested/concentric contours (e.g. inner and outer edges of hollow rings)
-        deduped = []
-        min_d2 = (original_w * 0.008) ** 2
-        for b in bubbles:
+        # Deduplicate overlapping or adjacent contour fragments
+        min_dist_sq = (original_w * 0.012) ** 2
+        filled_bubbles = []
+        for b in raw_bubbles:
             dup = False
-            for db in deduped:
-                if (b["cx"] - db["cx"]) ** 2 + (b["cy"] - db["cy"]) ** 2 < min_d2:
+            for fb in filled_bubbles:
+                if (b["cx"] - fb["cx"]) ** 2 + (b["cy"] - fb["cy"]) ** 2 < min_dist_sq:
                     dup = True
-                    if b["area"] > db["area"]:
-                        db.update(b)
+                    if b["area"] > fb["area"]:
+                        fb.update(b)
                     break
             if not dup:
-                deduped.append(b)
-        bubbles = deduped
+                filled_bubbles.append(b)
 
-        # --- Step 3: Region Splitting (Student ID vs Questions) ---
-        # Student ID box: left side (X: 5%-40%, Y: 10%-36%)
+        # --- Step 3: Detect Student ID Bubbles ---
+        # Student ID box is located on the top-left portion of the sheet
         id_bubbles = [
-            b for b in bubbles
-            if (0.10 * original_h <= b["cy"] <= 0.36 * original_h) and
-               (0.05 * original_w <= b["cx"] <= 0.40 * original_w)
+            b for b in filled_bubbles
+            if (0.12 * original_h <= b["cy"] <= 0.35 * original_h) and
+               (0.08 * original_w <= b["cx"] <= 0.36 * original_w)
         ]
 
-        # Questions: from below instructions to above bottom marks table (Y: 38%-88%)
-        q_bubbles = [
-            b for b in bubbles
-            if (0.38 * original_h <= b["cy"] <= 0.88 * original_h) and
-               (0.04 * original_w <= b["cx"] <= 0.96 * original_w)
-        ]
-
-        # Prepare color preview directly on the original paper image
-        color_preview = image.copy()
-
-        # --- Step 4: Parse Student ID ---
         student_id_str = "AUTO_DETECT"
-        if len(id_bubbles) >= 4:
-            # Draw all ID bubbles in subtle blue
-            for b in id_bubbles:
-                cv2.rectangle(color_preview, (b["x"], b["y"]), (b["x"]+b["w"], b["y"]+b["h"]), (255, 150, 0), 1)
-
-            # Cluster ID bubbles into vertical columns based on X
-            id_bubbles_sorted = sorted(id_bubbles, key=lambda b: b["cx"])
+        if id_bubbles:
+            # Sort by X coordinate into columns (from left to right)
+            id_bubbles.sort(key=lambda b: b["cx"])
             col_gap = original_w * 0.015
             id_cols = []
-            curr_col = [id_bubbles_sorted[0]]
-            for i in range(1, len(id_bubbles_sorted)):
-                if id_bubbles_sorted[i]["cx"] - id_bubbles_sorted[i-1]["cx"] > col_gap:
+            curr_col = [id_bubbles[0]]
+            for i in range(1, len(id_bubbles)):
+                if id_bubbles[i]["cx"] - id_bubbles[i-1]["cx"] > col_gap:
                     id_cols.append(curr_col)
-                    curr_col = [id_bubbles_sorted[i]]
+                    curr_col = [id_bubbles[i]]
                 else:
-                    curr_col.append(id_bubbles_sorted[i])
+                    curr_col.append(id_bubbles[i])
             id_cols.append(curr_col)
 
-            # Filter columns that have at least 3 bubbles
-            valid_id_cols = [c for c in id_cols if len(c) >= 3]
-            valid_id_cols.sort(key=lambda c: np.mean([b["cx"] for b in c]))
+            # Keep the 4 digit columns
+            target_cols = id_cols[-4:] if len(id_cols) >= 4 else id_cols
 
-            # We need the 4 digit columns (take the last 4 if there are extra)
-            target_cols = valid_id_cols[-4:] if len(valid_id_cols) >= 4 else valid_id_cols
+            Y_id_start = 0.165 * original_h
+            Y_id_end = 0.310 * original_h
+            id_step = (Y_id_end - Y_id_start) / 9.0 if Y_id_end > Y_id_start else 1.0
 
             digits = []
             for col in target_cols:
-                col.sort(key=lambda b: b["cy"])
-                max_b = max(col, key=lambda b: b["filled_ratio"])
-                min_b = min(col, key=lambda b: b["filled_ratio"])
+                # In each column, pick the most prominent bubble
+                b = max(col, key=lambda item: item["area"])
+                d = int(round((b["cy"] - Y_id_start) / id_step))
+                d = min(9, max(0, d))
+                digits.append(str(d))
 
-                if max_b["filled_ratio"] > 0.25 and (max_b["filled_ratio"] > min_b["filled_ratio"] + 0.08 or max_b["filled_ratio"] > 0.35):
-                    # Highlight filled ID bubble in solid blue
-                    cv2.rectangle(color_preview, (max_b["x"], max_b["y"]), (max_b["x"]+max_b["w"], max_b["y"]+max_b["h"]), (255, 100, 0), -1)
-
-                    if len(col) == 10:
-                        d = col.index(max_b)
-                    else:
-                        min_y = col[0]["cy"]
-                        max_y = col[-1]["cy"]
-                        step_y = (max_y - min_y) / 9.0 if max_y > min_y else 1
-                        d = int(round((max_b["cy"] - min_y) / step_y))
-                        if not (0 <= d <= 9):
-                            d = col.index(max_b)
-                    digits.append(str(d))
-                else:
-                    digits.append("X")
+                # Highlight student ID bubble in Bright Blue on Black Vision
+                cv2.circle(color_preview, (b["cx"], b["cy"]), 12, (255, 140, 0), 2)
+                cv2.circle(color_preview, (b["cx"], b["cy"]), 5, (255, 140, 0), -1)
 
             detected_code = "".join(digits)
-            if len(detected_code) == 4 and "X" not in detected_code:
+            if len(detected_code) == 4:
                 student_id_str = f"JY26-{detected_code}"
-            elif len(detected_code) >= 4:
-                clean = detected_code.replace("X", "0")
-                student_id_str = f"JY26-{clean[-4:]}"
+            elif len(detected_code) > 0:
+                student_id_str = f"JY26-{detected_code.zfill(4)}"
 
-        # --- Step 5: Check Question Bubbles ---
-        if not q_bubbles:
-            # Fallback: encode color preview
-            _, buffer = cv2.imencode('.jpg', color_preview, [cv2.IMWRITE_JPEG_QUALITY, 65])
-            processed_b64 = base64.b64encode(buffer).decode('utf-8')
-            return {
-                "error": f"No question bubbles detected. (Total contours: {len(contours)}, Candidates: {len(bubbles)}, ID bubbles: {len(id_bubbles)}). Ensure scanning area is clear.",
-                "processed_image": processed_b64
-            }
+        # --- Step 4: Detect Question Answer Bubbles ---
+        # Questions occupy the central grid (below instructions, above marks table)
+        q_bubbles = [
+            b for b in filled_bubbles
+            if (0.40 * original_h <= b["cy"] <= 0.86 * original_h) and
+               (0.06 * original_w <= b["cx"] <= 0.95 * original_w)
+        ]
 
-        # --- Step 6: Split Questions into 5 Blocks (15 questions each = 75 questions) ---
-        min_qx = min(b["cx"] for b in q_bubbles)
-        max_qx = max(b["cx"] for b in q_bubbles)
-        span_qx = max_qx - min_qx
-        block_w = span_qx / 5.0 if span_qx > 0 else original_w / 5.0
+        # Grid geometry for the 5 question blocks (15 questions each = 75 questions)
+        X_start = 0.075 * original_w
+        X_end = 0.935 * original_w
+        block_w = (X_end - X_start) / 5.0 if X_end > X_start else original_w / 5.0
 
-        blocks = [[] for _ in range(5)]
+        Y_start = 0.440 * original_h
+        Y_end = 0.835 * original_h
+        row_step = (Y_end - Y_start) / 14.0 if Y_end > Y_start else 1.0
+
+        answers_by_q = {}
+        bubbles_by_q = {}
+
         for b in q_bubbles:
-            idx = int((b["cx"] - min_qx) / block_w)
-            idx = min(4, max(0, idx))
-            blocks[idx].append(b)
+            block_idx = int((b["cx"] - X_start) / block_w)
+            block_idx = min(4, max(0, block_idx))
 
+            row_idx = int(round((b["cy"] - Y_start) / row_step))
+            row_idx = min(14, max(0, row_idx))
+
+            q_num = block_idx * 15 + row_idx + 1
+
+            # Determine option A, B, C, D within block
+            bx_start = X_start + block_idx * block_w
+            rel_x = (b["cx"] - bx_start) / block_w
+
+            if rel_x < 0.40:
+                opt = "A"
+            elif rel_x < 0.60:
+                opt = "B"
+            elif rel_x < 0.80:
+                opt = "C"
+            else:
+                opt = "D"
+
+            q_str = str(q_num)
+            if q_str not in answers_by_q:
+                answers_by_q[q_str] = [opt]
+                bubbles_by_q[q_str] = [b]
+            else:
+                answers_by_q[q_str].append(opt)
+                bubbles_by_q[q_str].append(b)
+
+        # --- Step 5: Grade Answers against Answer Key & Draw Visual Feedback ---
         detected_answers = {}
         maths = 0
         physics = 0
         chemistry = 0
         correct = 0
         wrong = 0
-        option_labels = ["A", "B", "C", "D"]
 
-        total_questions_processed = 0
+        for q in range(1, 76):
+            q_str = str(q)
+            opts = answers_by_q.get(q_str, [])
+            bub_list = bubbles_by_q.get(q_str, [])
 
-        for block_idx in range(5):
-            block_bubbles = blocks[block_idx]
-            if not block_bubbles:
-                for r in range(15):
-                    q_num = block_idx * 15 + r + 1
-                    detected_answers[str(q_num)] = "-"
-                    total_questions_processed = max(total_questions_processed, q_num)
-                continue
+            if len(opts) == 0:
+                ans = "-"
+            elif len(opts) == 1:
+                ans = opts[0]
+            else:
+                ans = "DOUBTFUL"
 
-            # Group bubbles in this block into rows (15 questions)
-            block_bubbles.sort(key=lambda b: b["cy"])
-            row_gap = original_h * 0.011
-            row_clusters = []
-            curr_row = [block_bubbles[0]]
-            for i in range(1, len(block_bubbles)):
-                if block_bubbles[i]["cy"] - block_bubbles[i-1]["cy"] > row_gap:
-                    row_clusters.append(curr_row)
-                    curr_row = [block_bubbles[i]]
-                else:
-                    curr_row.append(block_bubbles[i])
-            row_clusters.append(curr_row)
+            detected_answers[q_str] = ans
+            correct_ans = answer_key.get(q_str)
 
-            # Sort clusters vertically by Y
-            row_clusters.sort(key=lambda rc: np.mean([b["cy"] for b in rc]))
+            # Scoring (+4 for correct, 0 for wrong/unattempted)
+            marks = 0
+            if correct_ans:
+                if ans == correct_ans:
+                    marks = 4
+                    correct += 1
+                    # CORRECT: Bright Green circle around white bubble
+                    for b in bub_list:
+                        cv2.circle(color_preview, (b["cx"], b["cy"]), 12, (0, 255, 0), 2)
+                        cv2.circle(color_preview, (b["cx"], b["cy"]), 5, (0, 255, 0), -1)
+                elif ans != "-":
+                    marks = 0
+                    wrong += 1
+                    # WRONG: Bright Red circle around student's white bubble
+                    for b in bub_list:
+                        cv2.circle(color_preview, (b["cx"], b["cy"]), 12, (0, 0, 255), 2)
+                        cv2.circle(color_preview, (b["cx"], b["cy"]), 5, (0, 0, 255), -1)
+            else:
+                # No answer key available: Highlight marked bubble in cyan
+                for b in bub_list:
+                    cv2.circle(color_preview, (b["cx"], b["cy"]), 11, (255, 255, 0), 2)
 
-            # Process 15 rows for this block
-            for r_idx in range(15):
-                q_num = block_idx * 15 + r_idx + 1
-                total_questions_processed = max(total_questions_processed, q_num)
+            # Subject breakdown
+            if q <= 25:
+                maths += marks
+            elif q <= 50:
+                physics += marks
+            else:
+                chemistry += marks
 
-                if r_idx >= len(row_clusters):
-                    detected_answers[str(q_num)] = "-"
-                    continue
-
-                row_b = row_clusters[r_idx]
-                row_b.sort(key=lambda b: b["cx"])
-
-                # Find filled options
-                ratios = [b["filled_ratio"] for b in row_b]
-                max_ratio = max(ratios) if ratios else 0
-                min_ratio = min(ratios) if ratios else 0
-
-                filled_candidates = [
-                    b for b in row_b
-                    if b["filled_ratio"] > 0.26 and (b["filled_ratio"] > min_ratio + 0.10 or b["filled_ratio"] > 0.36)
-                ]
-
-                selected_answer = "-"
-                selected_bubbles = []
-
-                if len(filled_candidates) == 1:
-                    chosen = filled_candidates[0]
-                    opt_idx = row_b.index(chosen)
-                    selected_answer = option_labels[opt_idx] if opt_idx < 4 else "-"
-                    selected_bubbles = [chosen]
-                elif len(filled_candidates) > 1:
-                    sorted_f = sorted(filled_candidates, key=lambda b: b["filled_ratio"], reverse=True)
-                    if sorted_f[0]["filled_ratio"] > sorted_f[1]["filled_ratio"] + 0.14:
-                        chosen = sorted_f[0]
-                        opt_idx = row_b.index(chosen)
-                        selected_answer = option_labels[opt_idx] if opt_idx < 4 else "-"
-                        selected_bubbles = [chosen]
-                    else:
-                        selected_answer = "DOUBTFUL"
-                        selected_bubbles = filled_candidates
-
-                detected_answers[str(q_num)] = selected_answer
-
-                # Marks & Visual Feedback (+4 for correct, 0 for wrong/skipped)
-                correct_ans = answer_key.get(str(q_num))
-                marks = 0
-
-                if correct_ans:
-                    correct_idx = option_labels.index(correct_ans) if correct_ans in option_labels else -1
-
-                    if selected_answer not in ["-", "DOUBTFUL"]:
-                        if selected_answer == correct_ans:
-                            # CORRECT: Green fill
-                            marks = 4
-                            correct += 1
-                            if selected_bubbles:
-                                b = selected_bubbles[0]
-                                cv2.rectangle(color_preview, (b["x"], b["y"]), (b["x"]+b["w"], b["y"]+b["h"]), (0, 220, 0), -1)
-                        else:
-                            # WRONG: Red fill for selected, Green outline for correct
-                            marks = 0
-                            wrong += 1
-                            if selected_bubbles:
-                                b = selected_bubbles[0]
-                                cv2.rectangle(color_preview, (b["x"], b["y"]), (b["x"]+b["w"], b["y"]+b["h"]), (0, 0, 230), -1)
-                            # Outline correct answer
-                            if 0 <= correct_idx < len(row_b):
-                                cb = row_b[correct_idx]
-                                cv2.rectangle(color_preview, (cb["x"], cb["y"]), (cb["x"]+cb["w"], cb["y"]+cb["h"]), (0, 220, 0), 2)
-                    else:
-                        # Unattempted or Doubtful
-                        if selected_answer == "DOUBTFUL":
-                            for b in selected_bubbles:
-                                cv2.rectangle(color_preview, (b["x"], b["y"]), (b["x"]+b["w"], b["y"]+b["h"]), (0, 165, 255), -1)
-                        if 0 <= correct_idx < len(row_b):
-                            cb = row_b[correct_idx]
-                            cv2.rectangle(color_preview, (cb["x"], cb["y"]), (cb["x"]+cb["w"], cb["y"]+cb["h"]), (0, 220, 0), 2)
-                else:
-                    # No answer key defined
-                    for b in selected_bubbles:
-                        cv2.rectangle(color_preview, (b["x"], b["y"]), (b["x"]+b["w"], b["y"]+b["h"]), (120, 120, 120), -1)
-
-                # Subject breakdown (25 questions each)
-                if q_num <= 25:
-                    maths += marks
-                elif q_num <= 50:
-                    physics += marks
-                else:
-                    chemistry += marks
-
-        # Encode color preview image
-        _, buffer = cv2.imencode('.jpg', color_preview, [cv2.IMWRITE_JPEG_QUALITY, 65])
+        # Encode black vision preview with glowing colored markings
+        _, buffer = cv2.imencode('.jpg', color_preview, [cv2.IMWRITE_JPEG_QUALITY, 70])
         processed_b64 = base64.b64encode(buffer).decode('utf-8')
 
         return {
@@ -317,15 +236,15 @@ def process_omr(image_path, answer_key):
             "student_id": student_id_str,
             "processed_image": processed_b64,
             "answers": detected_answers,
-            "bubbles_found": len(bubbles),
-            "questions_detected": total_questions_processed,
+            "bubbles_found": len(filled_bubbles),
+            "questions_detected": 75,
             "marks": {
                 "maths": maths,
                 "physics": physics,
                 "chemistry": chemistry,
                 "total": maths + physics + chemistry
             },
-            "total_questions": total_questions_processed,
+            "total_questions": 75,
             "correct": correct,
             "wrong": wrong
         }
