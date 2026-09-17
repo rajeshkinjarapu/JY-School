@@ -100,6 +100,19 @@ export const OMRScannerPage: React.FC = () => {
         });
 
         const data = res.data?.data || res.data;
+        
+        if (data.processed_image) {
+          const newPreview = `data:image/jpeg;base64,${data.processed_image}`;
+          setCurrentPreview(newPreview);
+          
+          // Also update the previewUrls array so when clicking thumbnails it shows the processed image
+          setPreviewUrls(prevUrls => {
+            const newUrls = [...prevUrls];
+            newUrls[i] = newPreview;
+            return newUrls;
+          });
+        }
+
         results.push({
           fileName: file.name,
           student_id: data.student_id || "UNKNOWN",
