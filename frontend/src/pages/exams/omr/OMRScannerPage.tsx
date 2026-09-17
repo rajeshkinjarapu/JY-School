@@ -104,7 +104,9 @@ export const OMRScannerPage: React.FC = () => {
         const data = res.data?.data || res.data;
         
         if (data.processed_image) {
-          const newPreview = `data:image/jpeg;base64,${data.processed_image}`;
+          const newPreview = data.processed_image.startsWith('data:') 
+            ? data.processed_image 
+            : `data:image/jpeg;base64,${data.processed_image}`;
           setCurrentPreview(newPreview);
           
           // Also update the previewUrls array so when clicking thumbnails it shows the processed image

@@ -159,7 +159,7 @@ class _OMRScannerScreenState extends State<OMRScannerScreen> {
                 ),
               ),
             ),
-            const SizedBox(height: 20),
+            SizedBox(height: MediaQuery.of(context).padding.bottom + 24),
           ],
         ),
       ),

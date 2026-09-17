@@ -767,7 +767,11 @@ export const scanOmr = async (req: AuthRequest, res: Response, next: NextFunctio
       }
 
       try {
-        const result = JSON.parse(stdout.trim());
+        const trimmed = stdout.trim();
+        const jsonStart = trimmed.indexOf('{');
+        const jsonEnd = trimmed.lastIndexOf('}');
+        const jsonStr = (jsonStart !== -1 && jsonEnd !== -1) ? trimmed.substring(jsonStart, jsonEnd + 1) : trimmed;
+        const result = JSON.parse(jsonStr);
         if (result.error) {
           return next(createError(result.error, 400));
         }

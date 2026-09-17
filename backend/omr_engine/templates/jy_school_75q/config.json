@@ -1,0 +1,23 @@
+{
+  "dimensions": {
+    "display_height": 1550,
+    "display_width": 1100,
+    "processing_height": 1550,
+    "processing_width": 1100
+  },
+  "alignment_params": {
+    "auto_align": false
+  },
+  "threshold_params": {
+    "GAMMA_LOW": 0.7,
+    "MIN_GAP": 25,
+    "MIN_JUMP": 20,
+    "PAGE_TYPE_FOR_THRESHOLD": "white"
+  },
+  "outputs": {
+    "show_image_level": 0,
+    "save_image_level": 0,
+    "save_detections": false,
+    "filter_out_multimarked_files": false
+  }
+}

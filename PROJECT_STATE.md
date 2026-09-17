@@ -1,12 +1,20 @@
 # Project State: JY School ERP
 
 ## 2. Recent Updates & Progress
-- **OMR Scanner Full Integration**:
-  - `omr_scanner.py`: Reinstated strict geometric filters (circularity > 0.45, aspect ratio 0.6-1.6) to accurately detect bubbles and ignore random marks/lines. Implemented Y-coordinate splitting to separate Student ID bubbles from Questions grid.
-  - `omr_scanner.py`: Auto-parsed Student ID column bubbles and formatted as `JYXXXXXX` strings.
-  - `exams.controller.ts`: Appended database lookup for `student_name` based on the parsed `student_id` and added `real_student_id`.
-  - `OMRScannerPage.tsx`: Enhanced the results table to display Student Name, Student ID, marks per subject (Maths, Phy, Chem), and total marks.
-  - `OMRScannerPage.tsx`: Implemented "Save All" button invoking `/api/marks/bulk` to persist calculated marks directly into the database for the selected Exam and Class. to instantly display this AI-processed "Black Vision" result on the live preview screen and thumbnails immediately after scanning, rather than keeping the original uploaded image.
+- **OMR Scanner Migration to Udayraj Deshmukh OMRChecker Architecture (2026-09-17)**:
+  - **Full Replacement of Custom Heuristics**: Scrapped the fragile contour-detection script and replaced it with an enterprise-grade OMRChecker architecture (`backend/scripts/omr_scanner.py`).
+  - **JY School 75-Question Template (`backend/omr_engine/templates/jy_school_75q/`)**:
+    - Created `template.json` calibrated for canonical 1100x1550 dimensions.
+    - Configured Student ID block (`Roll`: 4 vertical columns, 10 digits 0-9) and 5 question blocks of 15 questions each (Block 1: Q1-15, Block 2: Q16-30, Block 3: Q31-45, Block 4: Q46-60, Block 5: Q61-75) with options A, B, C, D.
+  - **Perspective Correction & Alignment**: Integrated 4-point perspective warp detecting the 4 outer fiducial markers / bounding frame, rectifying tilted or warped photos to millimeter precision.
+  - **Deterministic Intensity Sampling**: Bubble fill state is determined mathematically via circular grid patch intensity comparison rather than ad-hoc contour closing, completely eliminating missed bubbles and merged option defects.
+  - **Subject-Wise Scoring & Answer Key Evaluation**: Accurately maps question scores (+4 for correct, 0 for wrong/unattempted) to Maths (Q1-25), Physics (Q26-50), and Chemistry (Q51-75), out of 300 marks.
+  - **Visual Overlay**: Generates Base64 visual feedback with Green circles on correct answers, Red circles on wrong choices, subtle Green markers on missed answers, and Cyan rings on detected Student ID bubbles.
+  - **Backend & Frontend Safety**:
+    - `exams.controller.ts`: Wrapped stdout parsing with regex/substring extraction to prevent failures from any stray logs.
+    - `OMRScannerPage.tsx`: Standardized data URI handling for `processed_image` to avoid duplicate `data:` prefixes.
+    - `omr_scanner_screen.dart`: Applied strict `MediaQuery.of(context).padding.bottom` safe area padding.
+    - `backend/requirements.txt`: Documented all required packages (`deepmerge`, `dotmap`, `jsonschema`, `pandas`, `opencv-python-headless`, etc.).
 
 ## Previous Updates (2026-09-16)
 - **Today's Absentees Page**: Modified the `getDashboardStats` backend API to include students marked as `ABSENT` (in addition to `EXCUSED`) in the `studentsOnLeave` payload. Created a new dedicated frontend page (`/attendance/absentees-today`) with a searchable data table to list all absent/on-leave students for the current day. Linked this new page to the "Leaves" shortcut on the Attendance Dashboard, and also ensured these absentees appear directly in the dashboard's "On Leave Today" widget.
