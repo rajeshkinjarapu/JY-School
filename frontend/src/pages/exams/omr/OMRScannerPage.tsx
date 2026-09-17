@@ -1,342 +1,428 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Upload, CheckCircle, Save, Scan, Loader, AlertTriangle, Image as ImageIcon, FileText, Maximize, Minimize, Key } from "lucide-react";
+import {
+  Upload, CheckCircle, Save, Scan, Loader, AlertTriangle,
+  FileText, Maximize, Minimize, Key, Zap, BarChart3,
+  ChevronRight, ImagePlus, X, RefreshCw
+} from "lucide-react";
 import toast from "react-hot-toast";
 import api from "../../../api/axios";
 import { ManageAnswerKeyModal } from "./ManageAnswerKeyModal";
 
-// Helper for sending messages to worker
-const processImageWithWorker = (worker: Worker, file: File, id: string): Promise<any> => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        canvas.width = img.width;
-        canvas.height = img.height;
-        const ctx = canvas.getContext('2d');
-        if (!ctx) return reject("Canvas context error");
-        ctx.drawImage(img, 0, 0);
-        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        
-        const handler = (msg: MessageEvent) => {
-          if (msg.data.payload?.id === id) {
-            worker.removeEventListener('message', handler);
-            if (msg.data.type === 'PROCESS_SUCCESS') resolve(msg.data.payload.result);
-            else reject(msg.data.payload.error);
-          }
-        };
-        worker.addEventListener('message', handler);
-        worker.postMessage({ type: 'PROCESS_IMAGE', payload: { imageData, id } });
-      };
-      img.onerror = () => reject("Image load error");
-      img.src = e.target?.result as string;
-    };
-    reader.readAsDataURL(file);
-  });
-};
+interface ScanResult {
+  fileName: string;
+  student_id: string;
+  maths: number;
+  physics: number;
+  chemistry: number;
+  total: number;
+  correct: number;
+  wrong: number;
+  doubtful?: boolean;
+}
 
 export const OMRScannerPage: React.FC = () => {
   const [exams, setExams] = useState<any[]>([]);
   const [classes, setClasses] = useState<any[]>([]);
   const [selectedExamId, setSelectedExamId] = useState("");
   const [selectedClassId, setSelectedClassId] = useState("");
-  
-  const [worker, setWorker] = useState<Worker | null>(null);
-  const [workerReady, setWorkerReady] = useState(false);
-  const [isProcessing, setIsProcessing] = useState(false);
-  
   const [answerKey, setAnswerKey] = useState<Record<number, string>>({});
-  const [uploadedImages, setUploadedImages] = useState<File[]>([]);
-  const [processedResults, setProcessedResults] = useState<any[]>([]);
-  
-  // Modals & UI State
+
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+  const [previewUrls, setPreviewUrls] = useState<string[]>([]);
+  const [currentPreview, setCurrentPreview] = useState<string | null>(null);
+  const [currentFileName, setCurrentFileName] = useState<string | null>(null);
+
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [processedResults, setProcessedResults] = useState<ScanResult[]>([]);
+  const [progress, setProgress] = useState(0);
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isFullScreen, setIsFullScreen] = useState(false);
 
-  // Live Preview State
-  const [currentPreviewUrl, setCurrentPreviewUrl] = useState<string | null>(null);
-  const [currentScanningFile, setCurrentScanningFile] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    api.get("/api/exams").then((res: any) => setExams(res.data));
-    api.get("/api/classes").then((res: any) => setClasses(res.data));
-    
-    // Initialize Worker
-    const omrWorker = new Worker(new URL("../../../workers/omr.worker.ts", import.meta.url), { type: 'module' });
-    omrWorker.onmessage = (e) => {
-      if (e.data.type === 'INIT_SUCCESS') setWorkerReady(true);
-      if (e.data.type === 'INIT_ERROR') toast.error(e.data.payload);
-    };
-    omrWorker.postMessage({ type: 'INIT' });
-    setWorker(omrWorker);
-
-    return () => omrWorker.terminate();
+    api.get("/api/exams").then((res: any) => setExams(res.data)).catch(() => {});
+    api.get("/api/classes").then((res: any) => setClasses(res.data)).catch(() => {});
   }, []);
 
-  // Fetch Answer Key whenever Exam or Class changes (or modal closes)
+  // Fetch answer key from DB when exam/class selected
   const fetchAnswerKey = async () => {
-    if (!selectedExamId || !selectedClassId) {
-      setAnswerKey({});
-      return;
-    }
+    if (!selectedExamId || !selectedClassId) { setAnswerKey({}); return; }
     try {
       const res = await api.get(`/api/exams/answer-key?examId=${selectedExamId}&classId=${selectedClassId}`);
       setAnswerKey(res.data || {});
-    } catch (err) {
-      console.error(err);
-    }
+    } catch { setAnswerKey({}); }
   };
 
-  useEffect(() => {
-    fetchAnswerKey();
-  }, [selectedExamId, selectedClassId, isModalOpen]); // Refresh on modal close
+  useEffect(() => { fetchAnswerKey(); }, [selectedExamId, selectedClassId, isModalOpen]);
 
-  // Toggle Full Screen (Hides Sidebar via CSS classes dynamically)
   const toggleFullScreen = () => {
-    setIsFullScreen(!isFullScreen);
-    if (!isFullScreen) {
-      document.body.classList.add('omr-fullscreen');
-    } else {
-      document.body.classList.remove('omr-fullscreen');
-    }
+    setIsFullScreen(prev => {
+      if (!prev) { document.body.classList.add('omr-fullscreen'); }
+      else { document.body.classList.remove('omr-fullscreen'); }
+      return !prev;
+    });
+  };
+
+  const handleFilesSelected = (files: FileList | null) => {
+    if (!files) return;
+    const arr = Array.from(files);
+    setUploadedFiles(arr);
+    setPreviewUrls(arr.map(f => URL.createObjectURL(f)));
+    setProcessedResults([]);
+    if (arr.length > 0) setCurrentPreview(URL.createObjectURL(arr[0]));
   };
 
   const processImages = async () => {
-    if (!worker || !workerReady) return toast.error("Scanner engine is not ready.");
-    if (Object.keys(answerKey).length === 0) return toast.error("Master Answer Key is missing. Please manage answer key first.");
-    if (uploadedImages.length === 0) return toast.error("Please select images to process.");
+    if (!selectedExamId) return toast.error("Exam select చేయండి");
+    if (Object.keys(answerKey).length === 0) return toast.error("Master Answer Key missing! Manage Key లో ముందు save చేయండి.");
+    if (uploadedFiles.length === 0) return toast.error("OMR images select చేయండి");
 
     setIsProcessing(true);
-    const results = [];
+    setProcessedResults([]);
+    const results: ScanResult[] = [];
 
-    for (let i = 0; i < uploadedImages.length; i++) {
-      const file = uploadedImages[i];
-      const fileId = `img_${i}`;
-      
-      setCurrentScanningFile(file.name);
-      const objectUrl = URL.createObjectURL(file);
-      setCurrentPreviewUrl(objectUrl);
+    for (let i = 0; i < uploadedFiles.length; i++) {
+      const file = uploadedFiles[i];
+      setCurrentFileName(file.name);
+      setCurrentPreview(previewUrls[i]);
+      setProgress(Math.round(((i) / uploadedFiles.length) * 100));
 
       try {
-        const result = await processImageWithWorker(worker, file, fileId);
-        
-        let maths = 0, physics = 0, chemistry = 0;
-        let doubtful = false;
-        
-        for (let q = 1; q <= 75; q++) {
-           const studentAns = result.answers[q];
-           if (studentAns === "DOUBTFUL") doubtful = true;
-           else if (studentAns === answerKey[q]) {
-             if (q <= 25) maths += 4; 
-             else if (q <= 50) physics += 4;
-             else chemistry += 4;
-           } else if (studentAns !== "-" && studentAns !== undefined) {
-             if (q <= 25) maths -= 1;
-             else if (q <= 50) physics -= 1;
-             else chemistry -= 1;
-           }
-        }
+        const formData = new FormData();
+        formData.append("image", file);
+        formData.append("examId", selectedExamId);
+        formData.append("answerKey", JSON.stringify(answerKey));
 
+        const res = await api.post("/api/exams/scan-omr", formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+
+        const data = res.data?.data || res.data;
         results.push({
           fileName: file.name,
-          studentId: result.studentId,
-          maths,
-          physics,
-          chemistry,
-          total: maths + physics + chemistry,
-          doubtful,
-          rawAnswers: result.answers
+          student_id: data.student_id || "UNKNOWN",
+          maths: data.marks?.maths || 0,
+          physics: data.marks?.physics || 0,
+          chemistry: data.marks?.chemistry || 0,
+          total: data.marks?.total || 0,
+          correct: data.correct || 0,
+          wrong: data.wrong || 0,
+          doubtful: false,
         });
       } catch (err: any) {
-        toast.error(`Error processing ${file.name}: ${err}`);
+        toast.error(`${file.name} process failed: ${err?.response?.data?.message || err.message}`);
       }
-      
-      URL.revokeObjectURL(objectUrl);
     }
-    
+
+    setProgress(100);
     setProcessedResults(results);
-    setCurrentPreviewUrl(null);
-    setCurrentScanningFile(null);
+    setCurrentFileName(null);
     setIsProcessing(false);
-    toast.success("Processing complete!");
+    if (results.length > 0) toast.success(`${results.length} sheets processed successfully!`);
   };
 
+  const totalCorrect = processedResults.reduce((a, b) => a + b.correct, 0);
+  const avgTotal = processedResults.length > 0
+    ? Math.round(processedResults.reduce((a, b) => a + b.total, 0) / processedResults.length)
+    : 0;
+
   return (
-    <div className={`flex flex-col bg-gray-50 dark:bg-gray-950 overflow-hidden ${isFullScreen ? 'fixed inset-0 z-50 bg-white dark:bg-gray-950' : 'h-[calc(100vh-6rem)]'}`}>
-      
+    <div className={`bg-gray-50 dark:bg-[#0f0f1a] overflow-hidden ${isFullScreen ? 'fixed inset-0 z-50' : 'flex flex-col'}`} style={{ height: isFullScreen ? '100vh' : 'calc(100vh - 4rem)' }}>
+
       {/* Header */}
-      <div className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 px-6 py-4 flex justify-between items-center z-10 shrink-0 shadow-sm">
+      <div className="shrink-0 bg-white dark:bg-[#16162a] border-b border-gray-200 dark:border-gray-800 px-6 py-3 flex items-center justify-between shadow-sm z-10">
         <div className="flex items-center gap-3">
-          <div className="bg-indigo-100 dark:bg-indigo-900/40 p-2 rounded-lg">
-            <Scan className="text-indigo-600 dark:text-indigo-400 w-6 h-6" />
+          <div className="bg-gradient-to-br from-indigo-500 to-purple-600 p-2 rounded-xl shadow-lg">
+            <Scan className="text-white w-5 h-5" />
           </div>
           <div>
-            <h2 className="text-xl font-black text-gray-800 dark:text-gray-100 tracking-tight">OMR Scanner Pro</h2>
-            <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">Dual Vision Layout</p>
+            <h1 className="text-lg font-black text-gray-900 dark:text-white leading-none">OMR Scanner Pro</h1>
+            <p className="text-[10px] text-indigo-500 font-bold uppercase tracking-widest">Backend AI Processing Engine</p>
           </div>
         </div>
-        
-        <div className="flex items-center gap-4">
-          <button onClick={toggleFullScreen} className="text-gray-500 hover:text-indigo-600 dark:text-gray-400 dark:hover:text-indigo-400 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors" title={isFullScreen ? "Exit Focus Mode" : "Focus Mode (Hide Sidebar)"}>
-            {isFullScreen ? <Minimize size={20} /> : <Maximize size={20} />}
-          </button>
 
-          {!workerReady ? (
-             <span className="text-amber-500 text-sm font-semibold flex items-center gap-2 bg-amber-50 dark:bg-amber-900/20 px-3 py-1.5 rounded-full border border-amber-200 dark:border-amber-800/50">
-               <Loader className="animate-spin w-4 h-4"/> Engine Initializing...
-             </span>
-          ) : (
-             <span className="text-emerald-500 text-sm font-semibold flex items-center gap-2 bg-emerald-50 dark:bg-emerald-900/20 px-3 py-1.5 rounded-full border border-emerald-200 dark:border-emerald-800/50">
-               <CheckCircle className="w-4 h-4"/> Engine Ready
-             </span>
-          )}
+        <div className="flex items-center gap-3">
+          <span className="text-xs font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20 px-3 py-1.5 rounded-full border border-emerald-200 dark:border-emerald-800 flex items-center gap-1.5">
+            <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
+            AI Engine Ready
+          </span>
+          <button onClick={toggleFullScreen} className="p-2 text-gray-400 hover:text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-lg transition-colors" title="Focus Mode">
+            {isFullScreen ? <Minimize size={18} /> : <Maximize size={18} />}
+          </button>
         </div>
       </div>
 
-      {/* Main Dual Screen Layout */}
-      <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-0 overflow-hidden">
-        
-        {/* LEFT PANEL: Live Preview / Scanner Area */}
-        <div className="bg-gray-900 flex flex-col relative overflow-hidden border-r border-gray-800">
-          <div className="absolute top-0 left-0 w-full p-4 flex justify-between items-center bg-gradient-to-b from-black/80 to-transparent z-10">
-            <h3 className="text-white/90 font-semibold flex items-center gap-2 text-sm tracking-wide">
-              <Scan className="w-4 h-4 text-emerald-400" /> LIVE SCANNER VIEW
-            </h3>
-            {isProcessing && <span className="flex h-3 w-3 relative"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span><span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span></span>}
-          </div>
-          
-          <div className="flex-1 flex items-center justify-center p-8 relative">
-            {isProcessing && currentPreviewUrl && (
-              <div className="absolute inset-0 pointer-events-none z-20 flex justify-center">
-                 <div className="w-[80%] h-1 bg-emerald-400 shadow-[0_0_15px_#34d399] animate-[scan_2s_ease-in-out_infinite] opacity-70"></div>
-                 <style>{`@keyframes scan { 0% { transform: translateY(50px); } 100% { transform: translateY(600px); } }`}</style>
-              </div>
-            )}
+      {/* Main Layout */}
+      <div className="flex-1 grid grid-cols-1 lg:grid-cols-5 overflow-hidden">
 
-            {currentPreviewUrl ? (
-              <img src={currentPreviewUrl} className="max-h-[85vh] max-w-full object-contain shadow-2xl rounded-sm border border-gray-700 transition-opacity duration-300" alt="Scanning Preview" />
-            ) : (
-              <div className="text-center text-gray-500 flex flex-col items-center">
-                <div className="w-24 h-24 rounded-full border-2 border-dashed border-gray-700 flex items-center justify-center mb-4">
-                  <ImageIcon className="w-10 h-10 text-gray-600" />
-                </div>
-                <p className="font-medium text-gray-400">Scanner is Idle</p>
-                <p className="text-xs mt-2 text-gray-600 max-w-xs">Upload your OMR sheets on the right panel to begin the scanning process. Live preview will appear here.</p>
-              </div>
-            )}
-          </div>
-          
-          {currentScanningFile && (
-            <div className="absolute bottom-0 left-0 w-full p-3 bg-black/60 text-white text-xs backdrop-blur-md border-t border-gray-800 flex items-center justify-between">
-              <span className="flex items-center gap-2"><FileText className="w-4 h-4 text-indigo-400"/> Processing: <span className="font-mono text-gray-300">{currentScanningFile}</span></span>
-              <span className="text-emerald-400 font-semibold animate-pulse">Extracting Data...</span>
+        {/* LEFT: Live Preview */}
+        <div className="lg:col-span-2 bg-gray-900 dark:bg-[#0a0a14] flex flex-col overflow-hidden relative border-r border-gray-800">
+          {/* Scanner overlay line animation */}
+          {isProcessing && (
+            <div className="absolute inset-0 z-20 pointer-events-none overflow-hidden">
+              <div className="scanner-line"></div>
+              <div className="absolute inset-0 bg-gradient-to-b from-emerald-500/5 to-transparent"></div>
             </div>
           )}
+
+          <div className="absolute top-0 left-0 right-0 p-4 flex justify-between items-center z-10 bg-gradient-to-b from-black/80 to-transparent">
+            <div className="flex items-center gap-2">
+              <div className={`w-2 h-2 rounded-full ${isProcessing ? 'bg-red-500 animate-pulse' : 'bg-gray-600'}`}></div>
+              <span className="text-white/80 text-xs font-bold uppercase tracking-widest">Live Preview</span>
+            </div>
+            {isProcessing && (
+              <span className="text-emerald-400 text-xs font-bold animate-pulse">{progress}% Complete</span>
+            )}
+          </div>
+
+          <div className="flex-1 flex items-center justify-center p-6">
+            {currentPreview ? (
+              <div className="relative w-full h-full flex items-center justify-center">
+                <img
+                  src={currentPreview}
+                  className="max-h-full max-w-full object-contain rounded-lg shadow-2xl border border-gray-700"
+                  alt="Scanning"
+                />
+                {isProcessing && (
+                  <div className="absolute inset-0 flex items-center justify-center rounded-lg">
+                    <div className="bg-black/60 backdrop-blur-sm rounded-xl px-6 py-4 flex flex-col items-center gap-2">
+                      <Loader className="animate-spin text-indigo-400 w-8 h-8" />
+                      <p className="text-white text-sm font-bold">Processing...</p>
+                      <p className="text-gray-400 text-xs">{currentFileName}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div
+                className="flex flex-col items-center gap-4 cursor-pointer group"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <div className="w-28 h-28 rounded-2xl border-2 border-dashed border-gray-700 group-hover:border-indigo-500 flex items-center justify-center transition-all duration-300">
+                  <ImagePlus className="w-12 h-12 text-gray-600 group-hover:text-indigo-400 transition-colors" />
+                </div>
+                <div className="text-center">
+                  <p className="text-gray-400 font-bold text-sm">Scanner Idle</p>
+                  <p className="text-gray-600 text-xs mt-1 max-w-xs">Click here or use "Upload Images" button to load OMR sheets</p>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Image Strip */}
+          {previewUrls.length > 1 && (
+            <div className="shrink-0 p-3 bg-black/40 border-t border-gray-800 flex gap-2 overflow-x-auto">
+              {previewUrls.map((url, i) => (
+                <img
+                  key={i}
+                  src={url}
+                  onClick={() => setCurrentPreview(url)}
+                  className={`h-14 w-10 object-cover rounded cursor-pointer border-2 transition-all ${currentPreview === url ? 'border-indigo-500 scale-105' : 'border-gray-700 opacity-60'}`}
+                  alt={`Sheet ${i + 1}`}
+                />
+              ))}
+            </div>
+          )}
+
+          {/* Status bar */}
+          {currentFileName && (
+            <div className="shrink-0 px-4 py-2.5 bg-indigo-900/40 border-t border-indigo-800/50 flex items-center gap-2">
+              <FileText className="text-indigo-400 w-4 h-4 shrink-0" />
+              <span className="text-indigo-200 text-xs truncate font-mono">{currentFileName}</span>
+              <Loader className="animate-spin ml-auto text-indigo-400 w-3 h-3 shrink-0" />
+            </div>
+          )}
+
+          <style>{`
+            .scanner-line {
+              position: absolute; left: 0; right: 0; height: 3px;
+              background: linear-gradient(to right, transparent, #34d399, transparent);
+              box-shadow: 0 0 20px #34d399;
+              animation: scanDown 2s ease-in-out infinite;
+            }
+            @keyframes scanDown {
+              0% { top: 10%; } 100% { top: 90%; }
+            }
+          `}</style>
         </div>
 
-        {/* RIGHT PANEL: Controls, Uploads, Results */}
-        <div className="flex flex-col bg-gray-50 dark:bg-gray-950 overflow-y-auto custom-scrollbar">
-          
-          <div className="p-6 space-y-6">
-            
-            {/* Top Setup Card */}
-            <div className="bg-white dark:bg-gray-900 rounded-2xl p-5 shadow-sm border border-gray-200 dark:border-gray-800">
-              <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4 border-b border-gray-100 dark:border-gray-800 pb-2">1. Exam Context</h4>
-              <div className="grid grid-cols-2 gap-4 mb-4">
-                <div>
-                  <label className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1 block">Target Exam</label>
-                  <select className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 transition-shadow outline-none" value={selectedExamId} onChange={e => setSelectedExamId(e.target.value)}>
-                    <option value="">Select Exam</option>
-                    {exams.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1 block">Target Class</label>
-                  <select className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 transition-shadow outline-none" value={selectedClassId} onChange={e => setSelectedClassId(e.target.value)}>
-                    <option value="">Select Class</option>
-                    {classes.map(c => <option key={c.id} value={c.id}>{c.name} - {c.section}</option>)}
-                  </select>
-                </div>
-              </div>
+        {/* RIGHT: Controls + Results */}
+        <div className="lg:col-span-3 flex flex-col overflow-y-auto custom-scrollbar bg-gray-50 dark:bg-[#0f0f1a]">
+          <div className="p-5 space-y-5">
 
-              {/* Answer Key State */}
-              <div className="flex items-center justify-between bg-indigo-50 dark:bg-indigo-900/10 p-3 rounded-xl border border-indigo-100 dark:border-indigo-800/30">
-                <div className="flex items-center gap-2">
-                  <Key size={18} className="text-indigo-600 dark:text-indigo-400" />
-                  <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">Master Answer Key</span>
-                </div>
-                {Object.keys(answerKey).length > 0 ? (
-                  <span className="text-xs font-bold text-emerald-600 bg-emerald-100 px-2 py-1 rounded">Ready ({Object.keys(answerKey).length} Ans)</span>
-                ) : (
-                  <span className="text-xs font-bold text-red-600 bg-red-100 px-2 py-1 rounded">Missing</span>
-                )}
-                
-                <button 
-                  onClick={() => setIsModalOpen(true)}
-                  disabled={!selectedExamId || !selectedClassId}
-                  className="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-xs px-4 py-1.5 rounded-lg font-bold transition-colors">
-                  Manage Key
-                </button>
+            {/* Setup Card */}
+            <div className="bg-white dark:bg-[#16162a] rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm overflow-hidden">
+              <div className="px-5 py-3 border-b border-gray-100 dark:border-gray-800 flex items-center gap-2">
+                <div className="w-1.5 h-4 bg-indigo-500 rounded-full"></div>
+                <h3 className="text-xs font-black text-gray-600 dark:text-gray-400 uppercase tracking-widest">Exam Setup</h3>
               </div>
-            </div>
-
-            {/* Uploader Card */}
-            <div className="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl p-6 text-white shadow-lg relative overflow-hidden group">
-              <div className="absolute top-0 right-0 -mt-10 -mr-10 w-40 h-40 bg-white opacity-10 rounded-full blur-2xl group-hover:scale-110 transition-transform duration-700"></div>
-              
-              <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
-                <div>
-                  <h4 className="text-sm font-bold uppercase tracking-wider mb-1 text-indigo-100">3. Process Sheets</h4>
-                  <p className="text-2xl font-black mb-2">Ready to Scan?</p>
-                  <p className="text-indigo-100 text-sm">{uploadedImages.length} images selected in queue.</p>
+              <div className="p-5 space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-xs font-bold text-gray-500 dark:text-gray-400 mb-1.5 block">Target Exam</label>
+                    <select
+                      className="w-full bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2.5 text-sm font-medium focus:ring-2 focus:ring-indigo-500 outline-none transition-shadow dark:text-gray-200"
+                      value={selectedExamId}
+                      onChange={e => { setSelectedExamId(e.target.value); setProcessedResults([]); }}
+                    >
+                      <option value="">Select Exam...</option>
+                      {exams.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold text-gray-500 dark:text-gray-400 mb-1.5 block">Target Class</label>
+                    <select
+                      className="w-full bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2.5 text-sm font-medium focus:ring-2 focus:ring-indigo-500 outline-none transition-shadow dark:text-gray-200"
+                      value={selectedClassId}
+                      onChange={e => { setSelectedClassId(e.target.value); setProcessedResults([]); }}
+                    >
+                      <option value="">Select Class...</option>
+                      {classes.map(c => <option key={c.id} value={c.id}>{c.name} - {c.section}</option>)}
+                    </select>
+                  </div>
                 </div>
-                
-                <div className="flex flex-col gap-2 w-full md:w-auto">
-                  <label className="bg-white/20 hover:bg-white/30 border border-white/30 backdrop-blur-sm text-white px-6 py-2.5 rounded-xl text-sm font-bold cursor-pointer transition-all flex items-center justify-center gap-2">
-                    <Upload size={16} /> Add Images
-                    <input type="file" multiple accept="image/*" className="hidden" onChange={(e) => setUploadedImages(Array.from(e.target.files || []))} />
-                  </label>
-                  <button onClick={processImages} disabled={isProcessing || uploadedImages.length === 0} className="bg-white text-indigo-700 hover:bg-gray-50 px-6 py-2.5 rounded-xl text-sm font-black transition-all flex items-center justify-center gap-2 shadow-xl disabled:opacity-50 disabled:cursor-not-allowed transform hover:-translate-y-0.5">
-                    {isProcessing ? <><Loader className="animate-spin" size={16}/> Processing...</> : <><Scan size={16}/> Start Scanner</>}
+
+                {/* Answer Key Status */}
+                <div className={`flex items-center gap-3 p-3.5 rounded-xl border ${Object.keys(answerKey).length > 0 ? 'bg-emerald-50 dark:bg-emerald-900/10 border-emerald-200 dark:border-emerald-800/40' : 'bg-amber-50 dark:bg-amber-900/10 border-amber-200 dark:border-amber-800/40'}`}>
+                  <Key size={18} className={Object.keys(answerKey).length > 0 ? 'text-emerald-600' : 'text-amber-500'} />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-bold text-gray-700 dark:text-gray-200">Master Answer Key</p>
+                    <p className={`text-xs ${Object.keys(answerKey).length > 0 ? 'text-emerald-600' : 'text-amber-500'}`}>
+                      {Object.keys(answerKey).length > 0
+                        ? `✓ Ready — ${Object.keys(answerKey).length} answers saved in database`
+                        : '⚠ Not set — Click "Manage Key" to add answers'
+                      }
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setIsModalOpen(true)}
+                    disabled={!selectedExamId || !selectedClassId}
+                    className="shrink-0 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs px-4 py-2 rounded-lg font-bold transition-colors"
+                  >
+                    Manage Key
                   </button>
                 </div>
               </div>
             </div>
 
-            {/* Results Table */}
-            {processedResults.length > 0 && (
-              <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-800 overflow-hidden flex flex-col">
-                <div className="p-4 bg-gray-50 dark:bg-gray-900/50 border-b border-gray-200 dark:border-gray-800 flex justify-between items-center">
-                  <h3 className="text-sm font-bold text-gray-800 dark:text-gray-200 flex items-center gap-2">Scan Results ({processedResults.length})</h3>
-                  <button className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-1.5 rounded-lg text-xs font-bold transition-colors shadow-sm flex items-center gap-1.5"><Save size={14}/> Save to DB</button>
+            {/* Upload & Scan Card */}
+            <div className="bg-gradient-to-br from-indigo-600 via-indigo-700 to-purple-700 rounded-2xl overflow-hidden shadow-xl relative">
+              <div className="absolute top-0 right-0 w-48 h-48 bg-white/5 rounded-full -mr-12 -mt-12 blur-2xl"></div>
+              <div className="absolute bottom-0 left-0 w-32 h-32 bg-purple-500/20 rounded-full -ml-8 -mb-8 blur-xl"></div>
+
+              <div className="relative p-5">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="text-indigo-200 text-xs font-bold uppercase tracking-widest mb-1">Upload & Process</p>
+                    <h3 className="text-white text-2xl font-black leading-none">
+                      {uploadedFiles.length === 0 ? "Ready to Scan?" : `${uploadedFiles.length} Sheet${uploadedFiles.length > 1 ? 's' : ''} Loaded`}
+                    </h3>
+                    {uploadedFiles.length > 0 && (
+                      <p className="text-indigo-200 text-xs mt-1">Select "Start Scanner" to begin AI processing</p>
+                    )}
+                  </div>
+                  <Zap className="text-indigo-300 w-8 h-8 shrink-0 mt-1" />
                 </div>
-                
+
+                <div className="flex gap-3 mt-4">
+                  <label className="flex-1 bg-white/15 hover:bg-white/25 border border-white/20 text-white py-2.5 rounded-xl text-sm font-bold cursor-pointer transition-all flex items-center justify-center gap-2">
+                    <Upload size={15} /> Upload Images
+                    <input ref={fileInputRef} type="file" multiple accept="image/*" className="hidden" onChange={e => handleFilesSelected(e.target.files)} />
+                  </label>
+
+                  <button
+                    onClick={processImages}
+                    disabled={isProcessing || uploadedFiles.length === 0}
+                    className="flex-1 bg-white text-indigo-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed py-2.5 rounded-xl text-sm font-black transition-all flex items-center justify-center gap-2 shadow-lg"
+                  >
+                    {isProcessing
+                      ? <><Loader className="animate-spin" size={15} /> Processing...</>
+                      : <><Scan size={15} /> Start Scanner</>
+                    }
+                  </button>
+                </div>
+
+                {/* Progress */}
+                {isProcessing && (
+                  <div className="mt-3">
+                    <div className="flex justify-between text-white/70 text-xs mb-1">
+                      <span>Processing sheets...</span>
+                      <span>{progress}%</span>
+                    </div>
+                    <div className="bg-white/20 rounded-full h-1.5">
+                      <div className="bg-white h-1.5 rounded-full transition-all duration-300" style={{ width: `${progress}%` }}></div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Results */}
+            {processedResults.length > 0 && (
+              <div className="bg-white dark:bg-[#16162a] rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm overflow-hidden">
+                {/* Summary Stats */}
+                <div className="grid grid-cols-3 divide-x divide-gray-100 dark:divide-gray-800 border-b border-gray-100 dark:border-gray-800">
+                  <div className="p-4 text-center">
+                    <p className="text-2xl font-black text-indigo-600">{processedResults.length}</p>
+                    <p className="text-xs text-gray-500 mt-0.5">Sheets Scanned</p>
+                  </div>
+                  <div className="p-4 text-center">
+                    <p className="text-2xl font-black text-emerald-600">{avgTotal}</p>
+                    <p className="text-xs text-gray-500 mt-0.5">Avg Total /300</p>
+                  </div>
+                  <div className="p-4 text-center">
+                    <p className="text-2xl font-black text-amber-600">{totalCorrect}</p>
+                    <p className="text-xs text-gray-500 mt-0.5">Total Correct Ans</p>
+                  </div>
+                </div>
+
+                <div className="p-4 flex justify-between items-center border-b border-gray-100 dark:border-gray-800">
+                  <div className="flex items-center gap-2">
+                    <BarChart3 size={16} className="text-indigo-500" />
+                    <span className="text-sm font-bold text-gray-700 dark:text-gray-200">Scan Results</span>
+                  </div>
+                  <div className="flex gap-2">
+                    <button onClick={() => { setProcessedResults([]); setUploadedFiles([]); setPreviewUrls([]); setCurrentPreview(null); }} className="text-xs text-gray-400 hover:text-red-500 flex items-center gap-1 transition-colors">
+                      <RefreshCw size={12} /> Reset
+                    </button>
+                    <button className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-4 py-1.5 rounded-lg font-bold transition-colors flex items-center gap-1.5">
+                      <Save size={12} /> Save All
+                    </button>
+                  </div>
+                </div>
+
                 <div className="overflow-x-auto">
-                  <table className="w-full text-left text-sm text-gray-600 dark:text-gray-300">
-                    <thead className="text-xs uppercase bg-gray-100 dark:bg-gray-800/80 text-gray-500 dark:text-gray-400 font-bold">
-                      <tr>
-                        <th className="px-4 py-3">Student ID</th>
-                        <th className="px-4 py-3">Maths</th>
-                        <th className="px-4 py-3">Phy</th>
-                        <th className="px-4 py-3">Chem</th>
-                        <th className="px-4 py-3 text-indigo-600 dark:text-indigo-400">Total</th>
-                        <th className="px-4 py-3 text-right">Status</th>
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="bg-gray-50 dark:bg-gray-800/50 text-xs text-gray-500 dark:text-gray-400 font-bold uppercase">
+                        <th className="px-4 py-3 text-left">File / Student</th>
+                        <th className="px-3 py-3 text-center text-indigo-500">Maths</th>
+                        <th className="px-3 py-3 text-center text-teal-500">Phy</th>
+                        <th className="px-3 py-3 text-center text-amber-500">Chem</th>
+                        <th className="px-3 py-3 text-center text-purple-600 font-black">Total</th>
+                        <th className="px-4 py-3 text-center">C/W</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
                       {processedResults.map((res, i) => (
-                        <tr key={i} className={`hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors ${res.doubtful ? "bg-amber-50/30 dark:bg-amber-900/10" : ""}`}>
-                          <td className="px-4 py-3 font-mono font-bold text-gray-800 dark:text-gray-200">{res.studentId}</td>
-                          <td className="px-4 py-3 text-emerald-600 font-semibold">{res.maths}</td>
-                          <td className="px-4 py-3 text-teal-600 font-semibold">{res.physics}</td>
-                          <td className="px-4 py-3 text-amber-600 font-semibold">{res.chemistry}</td>
-                          <td className="px-4 py-3 text-indigo-700 dark:text-indigo-400 font-black text-base">{res.total}</td>
-                          <td className="px-4 py-3 flex justify-end">
-                            {res.doubtful ? 
-                              <span className="inline-flex items-center gap-1 bg-amber-100 text-amber-700 px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider"><AlertTriangle size={12}/> Review</span> : 
-                              <span className="inline-flex items-center gap-1 bg-emerald-100 text-emerald-700 px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider"><CheckCircle size={12}/> Clear</span>
-                            }
+                        <tr key={i} className="hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-colors">
+                          <td className="px-4 py-3">
+                            <p className="font-bold text-gray-800 dark:text-gray-200 text-xs truncate max-w-[120px]" title={res.fileName}>{res.fileName}</p>
+                            <p className="text-gray-400 text-xs font-mono">{res.student_id}</p>
+                          </td>
+                          <td className="px-3 py-3 text-center font-bold text-indigo-600">{res.maths}</td>
+                          <td className="px-3 py-3 text-center font-bold text-teal-600">{res.physics}</td>
+                          <td className="px-3 py-3 text-center font-bold text-amber-600">{res.chemistry}</td>
+                          <td className="px-3 py-3 text-center">
+                            <span className="font-black text-purple-700 dark:text-purple-400 text-base">{res.total}</span>
+                            <p className="text-gray-400 text-[10px]">/300</p>
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            <span className="text-emerald-600 font-bold text-xs">{res.correct}✓</span>
+                            <span className="text-gray-400 text-xs"> / </span>
+                            <span className="text-red-500 font-bold text-xs">{res.wrong}✗</span>
                           </td>
                         </tr>
                       ))}
@@ -345,14 +431,15 @@ export const OMRScannerPage: React.FC = () => {
                 </div>
               </div>
             )}
-            <div className="h-10"></div>
+
+            <div className="h-6"></div>
           </div>
         </div>
       </div>
 
-      <ManageAnswerKeyModal 
-        isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)} 
+      <ManageAnswerKeyModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
         examId={selectedExamId}
         classId={selectedClassId}
       />

@@ -2,83 +2,127 @@ import cv2
 import numpy as np
 import sys
 import json
-import imutils
-from imutils.perspective import four_point_transform
 
-def process_omr(image_path, answer_key_json):
+def process_omr(image_path, answer_key):
     try:
-        # Load the image
         image = cv2.imread(image_path)
         if image is None:
             return {"error": "Could not read image"}
 
-        # Basic preprocessing
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         blurred = cv2.GaussianBlur(gray, (5, 5), 0)
-        edged = cv2.Canny(blurred, 75, 200)
+        thresh = cv2.threshold(blurred, 0, 255, cv2.THRESH_BINARY_INV | cv2.THRESH_OTSU)[1]
 
-        # Find contours (document outline)
-        cnts = cv2.findContours(edged.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-        cnts = imutils.grab_contours(cnts)
-        docCnt = None
+        h, w = thresh.shape
 
-        if len(cnts) > 0:
-            cnts = sorted(cnts, key=cv2.contourArea, reverse=True)
-            for c in cnts:
-                peri = cv2.arcLength(c, True)
-                approx = cv2.approxPolyDP(c, 0.02 * peri, True)
-                if len(approx) == 4:
-                    docCnt = approx
-                    break
+        # --- OMR Layout Config ---
+        # 75 questions in 3 columns of 25 (Maths, Physics, Chemistry)
+        # 4 options per question (A, B, C, D)
+        NUM_QUESTIONS = 75
+        NUM_OPTIONS = 4
+        QUESTIONS_PER_COL = 25
+        NUM_COLS = 3
 
-        if docCnt is None:
-            # Fallback: Just use the whole image if no outline found
-            h, w = image.shape[:2]
-            docCnt = np.array([[[0, 0]], [[w, 0]], [[w, h]], [[0, h]]])
+        # Approximate bubble region (tune these for your specific OMR sheet)
+        # These are fractions of the image dimensions
+        bubble_area_top = int(h * 0.18)
+        bubble_area_bottom = int(h * 0.95)
+        bubble_area_left = int(w * 0.05)
+        bubble_area_right = int(w * 0.95)
 
-        # Apply perspective transform to get a top-down bird's-eye view
-        paper = four_point_transform(image, docCnt.reshape(4, 2))
-        warped = four_point_transform(gray, docCnt.reshape(4, 2))
+        bubble_h = bubble_area_bottom - bubble_area_top
+        bubble_w = bubble_area_right - bubble_area_left
 
-        # Threshold the warped image
-        thresh = cv2.threshold(warped, 0, 255, cv2.THRESH_BINARY_INV | cv2.THRESH_OTSU)[1]
+        col_width = bubble_w // NUM_COLS
+        row_height = bubble_h // QUESTIONS_PER_COL
+        option_width = col_width // NUM_OPTIONS
 
-        # In a real scenario, we use precise coordinates (Bounding Boxes) based on the specific template.
-        # Here we mock the result for the demonstration as we need to tune the coordinates using a real scan.
-        # Return mock parsed data for now to connect the Flutter UI to the Backend successfully.
-        
-        # Logic: 75 questions * 4 marks = 300 marks
-        # Breakdown: 25 Maths (100), 25 Physics (100), 25 Chemistry (100)
-        result = {
+        answers = {}
+        correct = 0
+        wrong = 0
+        maths = 0
+        physics = 0
+        chemistry = 0
+
+        option_labels = ['A', 'B', 'C', 'D']
+
+        for col_idx in range(NUM_COLS):
+            for row_idx in range(QUESTIONS_PER_COL):
+                q_num = col_idx * QUESTIONS_PER_COL + row_idx + 1
+
+                col_start = bubble_area_left + col_idx * col_width
+                row_start = bubble_area_top + row_idx * row_height
+                row_end = row_start + row_height
+
+                bubble_counts = []
+                for opt_idx in range(NUM_OPTIONS):
+                    opt_start = col_start + opt_idx * option_width
+                    opt_end = opt_start + option_width
+
+                    roi = thresh[row_start:row_end, opt_start:opt_end]
+                    filled = cv2.countNonZero(roi)
+                    bubble_counts.append(filled)
+
+                max_filled = max(bubble_counts)
+                selected_count = sum(1 for b in bubble_counts if b > max_filled * 0.6)
+
+                if max_filled < 400:
+                    selected_answer = "-"  # Unanswered
+                elif selected_count > 1:
+                    selected_answer = "DOUBTFUL"  # Multiple bubbles filled
+                else:
+                    selected_answer = option_labels[bubble_counts.index(max_filled)]
+
+                answers[str(q_num)] = selected_answer
+
+                correct_ans = answer_key.get(str(q_num))
+                if selected_answer not in ["-", "DOUBTFUL"] and correct_ans:
+                    if selected_answer == correct_ans:
+                        marks = 4
+                        correct += 1
+                    else:
+                        marks = -1
+                        wrong += 1
+                else:
+                    marks = 0
+
+                if q_num <= 25:
+                    maths += marks
+                elif q_num <= 50:
+                    physics += marks
+                else:
+                    chemistry += marks
+
+        return {
             "success": True,
-            "student_id": "SVJ12345",
+            "student_id": "AUTO_DETECT",
+            "answers": answers,
             "marks": {
-                "maths": 80,       # e.g., 20 correct * 4
-                "physics": 76,     # e.g., 19 correct * 4
-                "chemistry": 92,   # e.g., 23 correct * 4
-                "total": 248       # 80 + 76 + 92
+                "maths": maths,
+                "physics": physics,
+                "chemistry": chemistry,
+                "total": maths + physics + chemistry
             },
-            "total_questions": 75,
-            "correct": 62,         # 62 * 4 = 248
-            "wrong": 13
+            "total_questions": NUM_QUESTIONS,
+            "correct": correct,
+            "wrong": wrong
         }
-
-        return result
 
     except Exception as e:
         return {"error": str(e)}
 
+
 if __name__ == "__main__":
     if len(sys.argv) < 3:
-        print(json.dumps({"error": "Missing arguments"}))
+        print(json.dumps({"error": "Missing arguments: image_path and answer_key required"}))
         sys.exit(1)
 
     img_path = sys.argv[1]
     ans_key_raw = sys.argv[2]
-    
+
     try:
         ans_key = json.loads(ans_key_raw)
-    except:
+    except Exception:
         ans_key = {}
 
     output = process_omr(img_path, ans_key)
