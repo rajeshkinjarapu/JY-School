@@ -194,6 +194,15 @@ def process_omr(image_path, answer_key):
         wrong = 0
         option_labels = ["A", "B", "C", "D"]
 
+        # Create a color preview image (Black background, white bubbles originally)
+        color_preview = cv2.cvtColor(thresh, cv2.COLOR_GRAY2BGR)
+
+        # Draw ID bubbles in blue
+        for b in id_bubbles:
+            cv2.rectangle(color_preview, (b["x"], b["y"]), (b["x"]+b["w"], b["y"]+b["h"]), (255, 150, 0), 2)
+            if b["is_filled"]:
+                cv2.rectangle(color_preview, (b["x"], b["y"]), (b["x"]+b["w"], b["y"]+b["h"]), (255, 100, 0), -1)
+
         q_num = 0
         for group_idx in range(question_col_groups):
             base_col = group_idx * options_per_q
@@ -211,34 +220,70 @@ def process_omr(image_path, answer_key):
                 row_group_bubbles.sort(key=lambda b: b["cx"])
                 filled_bubbles = [b for b in row_group_bubbles if b["is_filled"]]
                 
-                if len(filled_bubbles) == 0:
-                    selected_answer = "-"
+                selected_answer = "-"
+                selected_bubbles = []
+
+                if len(filled_bubbles) == 1:
+                    opt_idx = row_group_bubbles.index(filled_bubbles[0])
+                    selected_answer = option_labels[opt_idx] if opt_idx < options_per_q else "-"
+                    selected_bubbles = [filled_bubbles[0]]
                 elif len(filled_bubbles) > 1:
                     ratios = [b["filled_ratio"] for b in row_group_bubbles]
                     max_ratio = max(ratios)
                     really_filled = [b for b in row_group_bubbles if b["filled_ratio"] > max_ratio * 0.7]
                     if len(really_filled) > 1:
                         selected_answer = "DOUBTFUL"
+                        selected_bubbles = really_filled
                     else:
                         opt_idx = row_group_bubbles.index(really_filled[0]) if really_filled else -1
                         selected_answer = option_labels[opt_idx] if 0 <= opt_idx < options_per_q else "-"
-                else:
-                    opt_idx = row_group_bubbles.index(filled_bubbles[0])
-                    selected_answer = option_labels[opt_idx] if opt_idx < options_per_q else "-"
+                        selected_bubbles = [really_filled[0]] if really_filled else []
 
                 detected_answers[str(q_num)] = selected_answer
 
                 # Score calculation (No negative marks: +4 correct, 0 wrong)
                 correct_ans = answer_key.get(str(q_num))
-                if selected_answer not in ["-", "DOUBTFUL"] and correct_ans:
-                    if selected_answer == correct_ans:
-                        marks = 4
-                        correct += 1
+                
+                # Visual Feedback Logic
+                # If there's a correct answer defined for this question
+                if correct_ans:
+                    correct_idx = option_labels.index(correct_ans) if correct_ans in option_labels else -1
+                    
+                    if selected_answer not in ["-", "DOUBTFUL"]:
+                        if selected_answer == correct_ans:
+                            # CORRECT: Green fill
+                            marks = 4
+                            correct += 1
+                            if selected_bubbles:
+                                b = selected_bubbles[0]
+                                cv2.rectangle(color_preview, (b["x"], b["y"]), (b["x"]+b["w"], b["y"]+b["h"]), (0, 255, 0), -1)
+                        else:
+                            # WRONG: Red fill for selected, Green outline for actual correct
+                            marks = 0
+                            wrong += 1
+                            if selected_bubbles:
+                                b = selected_bubbles[0]
+                                cv2.rectangle(color_preview, (b["x"], b["y"]), (b["x"]+b["w"], b["y"]+b["h"]), (0, 0, 255), -1)
+                            # Outline actual correct
+                            if 0 <= correct_idx < len(row_group_bubbles):
+                                cb = row_group_bubbles[correct_idx]
+                                cv2.rectangle(color_preview, (cb["x"], cb["y"]), (cb["x"]+cb["w"], cb["y"]+cb["h"]), (0, 255, 0), 3)
                     else:
-                        marks = 0  # No negative marks
-                        wrong += 1
+                        # Unattempted or Doubtful
+                        marks = 0
+                        if selected_answer == "DOUBTFUL":
+                            # Fill multiple selections in Orange
+                            for b in selected_bubbles:
+                                cv2.rectangle(color_preview, (b["x"], b["y"]), (b["x"]+b["w"], b["y"]+b["h"]), (0, 165, 255), -1)
+                        # Outline actual correct
+                        if 0 <= correct_idx < len(row_group_bubbles):
+                            cb = row_group_bubbles[correct_idx]
+                            cv2.rectangle(color_preview, (cb["x"], cb["y"]), (cb["x"]+cb["w"], cb["y"]+cb["h"]), (0, 255, 0), 3)
                 else:
                     marks = 0
+                    # No answer key available for this question, just draw gray fill if attempted
+                    for b in selected_bubbles:
+                        cv2.rectangle(color_preview, (b["x"], b["y"]), (b["x"]+b["w"], b["y"]+b["h"]), (128, 128, 128), -1)
 
                 if q_num <= 25:
                     maths += marks
@@ -246,6 +291,10 @@ def process_omr(image_path, answer_key):
                     physics += marks
                 else:
                     chemistry += marks
+
+        # Encode color preview to base64
+        _, buffer = cv2.imencode('.jpg', color_preview)
+        processed_b64 = base64.b64encode(buffer).decode('utf-8')
 
         return {
             "success": True,
