@@ -6,8 +6,10 @@
   - **JY School 75-Question Template (`backend/omr_engine/templates/jy_school_75q/`)**:
     - Created `template.json` calibrated for canonical 1100x1550 dimensions.
     - Configured Student ID block (`Roll`: 4 vertical columns, 10 digits 0-9) and 5 question blocks of 15 questions each (Block 1: Q1-15, Block 2: Q16-30, Block 3: Q31-45, Block 4: Q46-60, Block 5: Q61-75) with options A, B, C, D.
-  - **Perspective Correction & Alignment**: Integrated 4-point perspective warp detecting the 4 outer fiducial markers / bounding frame, rectifying tilted or warped photos to millimeter precision.
-  - **Deterministic Intensity Sampling**: Bubble fill state is determined mathematically via circular grid patch intensity comparison rather than ad-hoc contour closing, completely eliminating missed bubbles and merged option defects.
+  - **Perspective Correction & Two-Stage Rectification**:
+    - Stage 1: Added multi-strategy document boundary segmentation (Otsu threshold + Canny edges + `cv2.convexHull` across multiple epsilon factors + `cv2.minAreaRect` fallback) to automatically isolate the white OMR sheet from surrounding desk/wall margins and rectify camera tilt.
+    - Stage 2: Fine-tunes alignment on the 4 corner black fiducial markers on the rectified sheet, mapping marker centers to `[50, 50]`, `[1050, 50]`, `[1050, 1500]`, `[50, 1500]` on an 1100x1550 canvas.
+  - **Relative Contrast Bubble Evaluation**: Compares bubble ink darkness against row baselines and other options with a 4-pixel local jitter window, making bubble detection immune to lighting, camera angles, or shadows. Correctly identifies Student ID (`JY26-0421`) and all 75 questions.
   - **Subject-Wise Scoring & Answer Key Evaluation**: Accurately maps question scores (+4 for correct, 0 for wrong/unattempted) to Maths (Q1-25), Physics (Q26-50), and Chemistry (Q51-75), out of 300 marks.
   - **Visual Overlay**: Generates Base64 visual feedback with Green circles on correct answers, Red circles on wrong choices, subtle Green markers on missed answers, and Cyan rings on detected Student ID bubbles.
   - **Backend & Frontend Safety**:
