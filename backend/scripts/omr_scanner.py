@@ -16,40 +16,43 @@ def process_omr(image_path, answer_key):
         # --- Step 1: Preprocess ---
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         blurred = cv2.GaussianBlur(gray, (5, 5), 0)
-        
-        # Adaptive Thresholding for 100% accuracy in different lightings
-        thresh = cv2.adaptiveThreshold(blurred, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 51, 10)
-        
-        # Morphological operation to remove noise
-        kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
-        thresh = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, kernel, iterations=1)
+        thresh = cv2.threshold(blurred, 0, 255, cv2.THRESH_BINARY_INV | cv2.THRESH_OTSU)[1]
+
+        # Generate True Black Vision Preview (Threshold Mask)
+        # This shows exactly what the AI sees: sheet is black, ink is white
+        preview_colored = cv2.cvtColor(thresh, cv2.COLOR_GRAY2BGR)
+        _, buffer = cv2.imencode('.jpg', preview_colored, [cv2.IMWRITE_JPEG_QUALITY, 85])
+        processed_b64 = base64.b64encode(buffer).decode('utf-8')
 
         # --- Step 2: Find all bubble contours ---
         contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-        # Filter contours that look like bubbles (circular, right size)
-        min_area = (original_h * original_w) * 0.00015
-        max_area = (original_h * original_w) * 0.004
+        # Filter contours purely for PERFECT BUBBLES
+        min_area = (original_h * original_w) * 0.0001
+        max_area = (original_h * original_w) * 0.005
         
         bubbles = []
         for cnt in contours:
             area = cv2.contourArea(cnt)
             if area < min_area or area > max_area:
                 continue
-            # Circularity check
             perimeter = cv2.arcLength(cnt, True)
             if perimeter == 0:
                 continue
+            
+            # Geometric constraints to guarantee ONLY bubbles are selected, completely ignoring lines/ticks
             circularity = 4 * np.pi * area / (perimeter * perimeter)
-            if circularity < 0.5:
+            if circularity < 0.4:  # Must be somewhat circular
                 continue
+                
             x, y, w, h = cv2.boundingRect(cnt)
             aspect = w / h if h > 0 else 0
-            if not (0.5 < aspect < 2.0):
+            if not (0.6 < aspect < 1.6):  # Bounding box must be roughly square
                 continue
+                
             cx = x + w // 2
             cy = y + h // 2
-            # Count filled pixels in this bubble region
+            
             roi = thresh[y:y+h, x:x+w]
             filled_ratio = cv2.countNonZero(roi) / (w * h) if (w * h) > 0 else 0
             bubbles.append({
@@ -57,32 +60,14 @@ def process_omr(image_path, answer_key):
                 "x": x, "y": y, "w": w, "h": h,
                 "area": area,
                 "filled_ratio": filled_ratio,
-                "is_filled": filled_ratio > 0.45
+                "is_filled": filled_ratio > 0.40  # Relaxed fill threshold
             })
 
         if len(bubbles) < 10:
             return {
                 "error": f"Not enough bubbles found ({len(bubbles)}). Ensure a clear, well-lit scan.",
-                "processed_image": ""
+                "processed_image": processed_b64
             }
-
-        # --- Step 3: Generate Perfect Black Vision Preview ---
-        # Create a completely black background
-        black_vision = np.zeros((original_h, original_w, 3), dtype=np.uint8)
-        
-        for b in bubbles:
-            radius = max(b["w"], b["h"]) // 2
-            if b["is_filled"]:
-                # Draw filled bubbles as bright solid white
-                cv2.circle(black_vision, (b["cx"], b["cy"]), radius, (255, 255, 255), -1)
-                # Add a subtle glow
-                cv2.circle(black_vision, (b["cx"], b["cy"]), radius + 4, (100, 255, 100), 2)
-            else:
-                # Draw empty bubbles as dim gray outlines
-                cv2.circle(black_vision, (b["cx"], b["cy"]), radius, (80, 80, 80), 2)
-
-        _, buffer = cv2.imencode('.jpg', black_vision, [cv2.IMWRITE_JPEG_QUALITY, 85])
-        processed_b64 = base64.b64encode(buffer).decode('utf-8')
 
         # --- Step 4: Group bubbles into columns (A, B, C, D options) ---
         # Sort all bubbles by X first to find column clusters
