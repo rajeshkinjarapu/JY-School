@@ -1,22 +1,12 @@
 # Project State: JY School ERP
 
 ## 2. Recent Updates & Progress
-- **OMR Scanner Migration to Udayraj Deshmukh OMRChecker Architecture (2026-09-17)**:
-  - **Full Replacement of Custom Heuristics**: Scrapped the fragile contour-detection script and replaced it with an enterprise-grade OMRChecker architecture (`backend/scripts/omr_scanner.py`).
-  - **JY School 75-Question Template (`backend/omr_engine/templates/jy_school_75q/`)**:
-    - Created `template.json` calibrated for canonical 1100x1550 dimensions.
-    - Configured Student ID block (`Roll`: 4 vertical columns, 10 digits 0-9) and 5 question blocks of 15 questions each (Block 1: Q1-15, Block 2: Q16-30, Block 3: Q31-45, Block 4: Q46-60, Block 5: Q61-75) with options A, B, C, D.
-  - **Perspective Correction & Two-Stage Rectification**:
-    - Stage 1: Added multi-strategy document boundary segmentation (Otsu threshold + Canny edges + `cv2.convexHull` across multiple epsilon factors + `cv2.minAreaRect` fallback) to automatically isolate the white OMR sheet from surrounding desk/wall margins and rectify camera tilt.
-    - Stage 2: Fine-tunes alignment on the 4 corner black fiducial markers on the rectified sheet, mapping marker centers to `[50, 50]`, `[1050, 50]`, `[1050, 1500]`, `[50, 1500]` on an 1100x1550 canvas.
-  - **Relative Contrast Bubble Evaluation**: Compares bubble ink darkness against row baselines and other options with a 4-pixel local jitter window, making bubble detection immune to lighting, camera angles, or shadows. Correctly identifies Student ID (`JY26-0421`) and all 75 questions.
-  - **Subject-Wise Scoring & Answer Key Evaluation**: Accurately maps question scores (+4 for correct, 0 for wrong/unattempted) to Maths (Q1-25), Physics (Q26-50), and Chemistry (Q51-75), out of 300 marks.
-  - **Visual Overlay**: Generates Base64 visual feedback with Green circles on correct answers, Red circles on wrong choices, subtle Green markers on missed answers, and Cyan rings on detected Student ID bubbles.
-  - **Backend & Frontend Safety**:
-    - `exams.controller.ts`: Wrapped stdout parsing with regex/substring extraction to prevent failures from any stray logs.
-    - `OMRScannerPage.tsx`: Standardized data URI handling for `processed_image` to avoid duplicate `data:` prefixes.
-    - `omr_scanner_screen.dart`: Applied strict `MediaQuery.of(context).padding.bottom` safe area padding.
-    - `backend/requirements.txt`: Documented all required packages (`deepmerge`, `dotmap`, `jsonschema`, `pandas`, `opencv-python-headless`, etc.).
+- **OMR Scanner Alignment & Black Vision Fixes (2026-09-17)**:
+  - **Udayraj OMR Checker Architecture Analysis**: Clarified that Udayraj Deshmukh's `OMRChecker` is a CLI tool designed specifically for custom sheets with concentric circle bullseye markers (`omr_marker.jpg`), and its official repo states `--autoAlign flag is deprecated due to low performance on generic OMR sheets`. Because standard school OMR sheets lack these bullseye markers, a direct standalone Black Vision engine was implemented.
+  - **Zero-Distortion Paper Alignment (`align_omr_sheet`)**: Replaced the previous 4-point quadrilateral perspective warp (which was picking internal lines and falsely slanting straight flatbed scans by ~15 degrees) with strict upright corner marker verification and an axis-aligned outer bounding box crop (`image[y:y+h, x:x+w]`). Guaranteed 0% tilt/slant.
+  - **Expanded Student ID Detection to 6 Digits**: The Student ID section contains 6 boxes and 6 vertical bubble columns (`269657`). Expanded detection from 4 to 6 columns.
+  - **Flexible Student Roll Number DB Query**: Updated `exams.controller.ts` to search for student roll numbers using the exact string, the numeric string (`269657`), and the last 4 digits (`0421` or `9657`) to ensure automatic student identification and name population.
+  - **Black Vision Live Overlay**: Generates an inverted high-contrast preview with glowing green rings (correct answers), red rings (incorrect answers), and cyan rings (Student ID).
 
 ## Previous Updates (2026-09-16)
 - **Today's Absentees Page**: Modified the `getDashboardStats` backend API to include students marked as `ABSENT` (in addition to `EXCUSED`) in the `studentsOnLeave` payload. Created a new dedicated frontend page (`/attendance/absentees-today`) with a searchable data table to list all absent/on-leave students for the current day. Linked this new page to the "Leaves" shortcut on the Attendance Dashboard, and also ensured these absentees appear directly in the dashboard's "On Leave Today" widget.

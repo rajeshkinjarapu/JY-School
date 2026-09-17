@@ -780,12 +780,19 @@ export const scanOmr = async (req: AuthRequest, res: Response, next: NextFunctio
         if (result.student_id && result.student_id !== "AUTO_DETECT") {
           const rawId = String(result.student_id);
           const cleanDigits = rawId.replace(/[^0-9]/g, '');
+          const last4Digits = cleanDigits.length >= 4 ? cleanDigits.slice(-4) : cleanDigits;
           const searchConditions: any[] = [
             { rollNo: { equals: rawId, mode: 'insensitive' as const } },
             { rollNo: { contains: rawId, mode: 'insensitive' as const } },
           ];
           if (cleanDigits.length >= 3) {
             searchConditions.push({ rollNo: { contains: cleanDigits, mode: 'insensitive' as const } });
+          }
+          if (last4Digits.length >= 3 && last4Digits !== cleanDigits) {
+            searchConditions.push(
+              { rollNo: { equals: last4Digits, mode: 'insensitive' as const } },
+              { rollNo: { contains: last4Digits, mode: 'insensitive' as const } }
+            );
           }
 
           const student: any = await (prisma.student as any).findFirst({
