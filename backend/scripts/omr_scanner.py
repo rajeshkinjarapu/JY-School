@@ -27,32 +27,29 @@ def process_omr(image_path, answer_key):
         # --- Step 2: Find all bubble contours ---
         contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-        # Filter contours purely for PERFECT BUBBLES
-        min_area = (original_h * original_w) * 0.0001
-        max_area = (original_h * original_w) * 0.005
+        # Filter contours that look like bubbles (circular, right size)
+        min_area = (original_h * original_w) * 0.00015
+        max_area = (original_h * original_w) * 0.004
         
         bubbles = []
         for cnt in contours:
             area = cv2.contourArea(cnt)
             if area < min_area or area > max_area:
                 continue
+            # Circularity check
             perimeter = cv2.arcLength(cnt, True)
             if perimeter == 0:
                 continue
-            
-            # Geometric constraints to guarantee ONLY bubbles are selected, completely ignoring lines/ticks
             circularity = 4 * np.pi * area / (perimeter * perimeter)
-            if circularity < 0.4:  # Must be somewhat circular
+            if circularity < 0.5:
                 continue
-                
             x, y, w, h = cv2.boundingRect(cnt)
             aspect = w / h if h > 0 else 0
-            if not (0.6 < aspect < 1.6):  # Bounding box must be roughly square
+            if not (0.5 < aspect < 2.0):
                 continue
-                
             cx = x + w // 2
             cy = y + h // 2
-            
+            # Count filled pixels in this bubble region
             roi = thresh[y:y+h, x:x+w]
             filled_ratio = cv2.countNonZero(roi) / (w * h) if (w * h) > 0 else 0
             bubbles.append({
@@ -60,7 +57,7 @@ def process_omr(image_path, answer_key):
                 "x": x, "y": y, "w": w, "h": h,
                 "area": area,
                 "filled_ratio": filled_ratio,
-                "is_filled": filled_ratio > 0.40  # Relaxed fill threshold
+                "is_filled": filled_ratio > 0.25  # Lowered from 0.45 to catch lightly filled bubbles
             })
 
         if len(bubbles) < 10:
