@@ -116,6 +116,7 @@ const IdCardGeneratorPage = lazy(() => import('../pages/idcards/IdCardGeneratorP
 const PendingFeeApprovalsPage = lazy(() => import('../pages/fees/PendingFeeApprovals').then(m => ({ default: m.PendingFeeApprovals })));
 const OnlineExamsPage = lazy(() => import('../pages/exams/OnlineExamsPage'));
 const ManageExamQuestions = lazy(() => import('../pages/exams/ManageExamQuestions'));
+const OMRScannerPage = lazy(() => import('../pages/exams/omr/OMRScannerPage').then(m => ({ default: m.OMRScannerPage })));
 const CompetitiveExamsPage = lazy(() => import('../pages/exams/CompetitiveExamsPage'));
 const TakeCompetitiveExamPage = lazy(() => import('../pages/exams/TakeCompetitiveExamPage'));
 const AttendanceWrapper = () => {
@@ -335,6 +336,14 @@ export const router = createBrowserRouter([
         element: withSuspense(
           <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN', 'TEACHER']}>
             <MarksEntryPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'exams/omr-scanner',
+        element: withSuspense(
+          <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN', 'TEACHER']}>
+            <OMRScannerPage />
           </ProtectedRoute>
         ),
       },
