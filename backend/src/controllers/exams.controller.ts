@@ -756,7 +756,7 @@ export const scanOmr = async (req: AuthRequest, res: Response, next: NextFunctio
 
     const pythonCmd = process.platform === 'win32' ? 'python' : 'python3';
 
-    exec(`${pythonCmd} "${scriptPath}" "${imagePath}" "${answerKeyPath}"`, (error, stdout, stderr) => {
+    exec(`${pythonCmd} "${scriptPath}" "${imagePath}" "${answerKeyPath}"`, { maxBuffer: 1024 * 1024 * 50 }, (error, stdout, stderr) => {
       // Clean up temp files
       fs.unlink(imagePath, () => {});
       fs.unlink(answerKeyPath, () => {});
