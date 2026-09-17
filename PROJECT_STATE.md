@@ -4,14 +4,11 @@
 - **OMR Scanner Alignment & Black Vision Fixes (2026-09-17)**:
   - **Udayraj OMR Checker Architecture Analysis**: Clarified that Udayraj Deshmukh's `OMRChecker` is a CLI tool designed specifically for custom sheets with concentric circle bullseye markers (`omr_marker.jpg`), and its official repo states `--autoAlign flag is deprecated due to low performance on generic OMR sheets`.
   - **Zero-Distortion Paper Alignment (`align_omr_sheet`)**: Replaced the previous 4-point quadrilateral perspective warp with strict upright corner marker verification and an axis-aligned outer bounding box crop (`image[y:y+h, x:x+w]`). Guaranteed 0% tilt/slant.
-  - **Automatic Scanner Bed Cropping & Adaptive Bubble Snapping (2026-09-17)**:
-    - **Scanner Bed Margin Removal**: Added bright paper contour segmentation (`gray > 120`) to crop off surrounding black flatbed scanner borders, preventing the paper from shrinking and shifting offsets.
-    - **Adaptive Bubble Snapping (`snap_to_bubble_center`)**: Implemented local ±4px peak-detection window to magnetically lock onto physical bubble centers.
-    - **Calibrated Grid Geometry**:
-      - Student ID: `x=150, col_gap=32, y=342, row_gap=17.8` (confined strictly inside the Student ID box, completely eliminating spillover into Instructions).
-      - Question Blocks: 5 blocks `[115, 315, 515, 715, 915]`, row start `y=760` (gap=34.5), bubble gap `24.0px`.
-      - Probe radius 6px to stay strictly inside bubble interior.
-    - **Flexible Student Roll Number DB Query**: Searches exact string, numeric digits, and last 4 digits in `exams.controller.ts`.
+  - **Answer Key File Loading & Bubble Geometry Optimization (2026-09-17)**:
+    - **Answer Key File Loader Fix**: Resolved a critical issue where `omr_scanner.py` treated the passed answer key argument as raw JSON instead of reading from the temporary file created by `exams.controller.ts`, causing answer key evaluation to default to empty `{}` and yielding 0 marks.
+    - **False-Snap Removal**: Removed circumference ring snapping that caused empty bubbles to register false positive ink. Switched to direct interior probe (`radius=5`) strictly inside bubble margins.
+    - **Calibrated Student ID Grid**: Configured Column 0 at `x=135.0` (gap `34.6px`) and Digit 0 at `y=345.0` (gap `21.1px`) to precisely lock onto all 6 digits of `269657`.
+    - **Questions Evaluation**: Evaluates all 75 questions against the master key (+4 for correct with Green overlay, 0 for wrong with Red overlay, subtle Green hint for missed).
   - **Flexible Student Roll Number DB Query**: Searches exact string, numeric digits, and last 4 digits in `exams.controller.ts`.
   - **Black Vision Live Overlay**: Generates an inverted high-contrast preview with glowing green rings (correct answers), red rings (incorrect answers), and cyan rings (Student ID).
 
