@@ -1,1 +1,4 @@
 - [x] Built OMR Scanner & Uploader UI
+- [x] Fixed Duplicate Classes Dropdown
+- [x] Implemented Dual Screen Layout with Live Preview
+- [x] Applied Premium UI Refinements
