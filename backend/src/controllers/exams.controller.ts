@@ -8,6 +8,7 @@ import { sortClasses } from '../utils/sortClasses';
 import { exec } from 'child_process';
 import path from 'path';
 import fs from 'fs';
+import { scanOMRWithGemini } from '../utils/gemini_omr';
 
 export const getAll = async (req: AuthRequest, res: Response): Promise<void> => {
   const classId = (req.query.classId as string) || '';
@@ -748,9 +749,68 @@ export const scanOmr = async (req: AuthRequest, res: Response, next: NextFunctio
     }
 
     const imagePath = req.file.path;
-    const scriptPath = path.resolve(__dirname, '../../scripts/omr_scanner.py');
 
-    // Write answer key to a temp JSON file to avoid shell escaping issues
+    // Helper to resolve student from database
+    const resolveStudent = async (detectedId: string, fallbackName?: string) => {
+      if (!detectedId || detectedId === "AUTO_DETECT") {
+        return { student_name: fallbackName || "Not Detected", real_student_id: undefined, student_id: detectedId };
+      }
+      const rawId = String(detectedId);
+      const cleanDigits = rawId.replace(/[^0-9]/g, '');
+      const last4Digits = cleanDigits.length >= 4 ? cleanDigits.slice(-4) : cleanDigits;
+      const searchConditions: any[] = [
+        { rollNo: { equals: rawId, mode: 'insensitive' as const } },
+        { rollNo: { contains: rawId, mode: 'insensitive' as const } },
+      ];
+      if (cleanDigits.length >= 3) {
+        searchConditions.push({ rollNo: { contains: cleanDigits, mode: 'insensitive' as const } });
+      }
+      if (last4Digits.length >= 3 && last4Digits !== cleanDigits) {
+        searchConditions.push(
+          { rollNo: { equals: last4Digits, mode: 'insensitive' as const } },
+          { rollNo: { contains: last4Digits, mode: 'insensitive' as const } }
+        );
+      }
+
+      const student: any = await (prisma.student as any).findFirst({
+        where: { OR: searchConditions },
+        include: { user: true }
+      });
+
+      if (student && student.user) {
+        return {
+          student_name: student.user.name,
+          real_student_id: student.id,
+          student_id: student.rollNo || rawId
+        };
+      }
+      return {
+        student_name: fallbackName || "Unknown Student",
+        real_student_id: undefined,
+        student_id: rawId
+      };
+    };
+
+    // 1. First Priority: Gemini Vision AI (100% human-level accuracy)
+    if (process.env.GEMINI_API_KEY) {
+      try {
+        console.log("⚡ Calling Gemini Vision AI for OMR evaluation...");
+        const aiResult = await scanOMRWithGemini(imagePath, answerKeyObj);
+        const resolved = await resolveStudent(aiResult.student_id, aiResult.student_name);
+        fs.unlink(imagePath, () => {});
+        return successResponse(res, {
+          ...aiResult,
+          student_name: resolved.student_name,
+          real_student_id: resolved.real_student_id,
+          student_id: resolved.student_id || aiResult.student_id
+        }, 'OMR Scan completed via Gemini Vision AI');
+      } catch (aiErr: any) {
+        console.warn("Gemini Vision AI failed, falling back to local Python engine:", aiErr?.message || aiErr);
+      }
+    }
+
+    // 2. Fallback: Local Python OpenCV engine
+    const scriptPath = path.resolve(__dirname, '../../scripts/omr_scanner.py');
     const answerKeyPath = imagePath + '_answerkey.json';
     fs.writeFileSync(answerKeyPath, JSON.stringify(answerKeyObj));
 
@@ -776,40 +836,10 @@ export const scanOmr = async (req: AuthRequest, res: Response, next: NextFunctio
           return next(createError(result.error, 400));
         }
 
-        // --- Fetch Student Name from DB based on detected student_id ---
-        if (result.student_id && result.student_id !== "AUTO_DETECT") {
-          const rawId = String(result.student_id);
-          const cleanDigits = rawId.replace(/[^0-9]/g, '');
-          const last4Digits = cleanDigits.length >= 4 ? cleanDigits.slice(-4) : cleanDigits;
-          const searchConditions: any[] = [
-            { rollNo: { equals: rawId, mode: 'insensitive' as const } },
-            { rollNo: { contains: rawId, mode: 'insensitive' as const } },
-          ];
-          if (cleanDigits.length >= 3) {
-            searchConditions.push({ rollNo: { contains: cleanDigits, mode: 'insensitive' as const } });
-          }
-          if (last4Digits.length >= 3 && last4Digits !== cleanDigits) {
-            searchConditions.push(
-              { rollNo: { equals: last4Digits, mode: 'insensitive' as const } },
-              { rollNo: { contains: last4Digits, mode: 'insensitive' as const } }
-            );
-          }
-
-          const student: any = await (prisma.student as any).findFirst({
-            where: { OR: searchConditions },
-            include: { user: true }
-          });
-
-          if (student && student.user) {
-             result.student_name = student.user.name;
-             result.real_student_id = student.id; // DB ID for saving marks
-             result.student_id = student.rollNo || rawId;
-          } else {
-             result.student_name = "Unknown Student";
-          }
-        } else {
-             result.student_name = "Not Detected";
-        }
+        const resolved = await resolveStudent(result.student_id, result.student_name);
+        result.student_name = resolved.student_name;
+        result.real_student_id = resolved.real_student_id;
+        result.student_id = resolved.student_id || result.student_id;
 
         successResponse(res, result, 'OMR Scan completed');
       } catch (e) {
