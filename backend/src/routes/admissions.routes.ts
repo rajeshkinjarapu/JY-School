@@ -37,6 +37,9 @@ async function ensureAdmissionsTable() {
     await prisma.$executeRawUnsafe(`ALTER TABLE "AdmissionInquiry" ADD COLUMN IF NOT EXISTS "paymentMethod" TEXT;`);
     await prisma.$executeRawUnsafe(`ALTER TABLE "AdmissionInquiry" ADD COLUMN IF NOT EXISTS "paymentReceipt" TEXT;`);
     await prisma.$executeRawUnsafe(`ALTER TABLE "AdmissionInquiry" ADD COLUMN IF NOT EXISTS "paymentStatus" TEXT DEFAULT 'PENDING';`);
+    await prisma.$executeRawUnsafe(`ALTER TABLE "AdmissionInquiry" ADD COLUMN IF NOT EXISTS "academicYear" TEXT;`);
+    await prisma.$executeRawUnsafe(`ALTER TABLE "AdmissionInquiry" ADD COLUMN IF NOT EXISTS "registeredByName" TEXT;`);
+    await prisma.$executeRawUnsafe(`ALTER TABLE "AdmissionInquiry" ADD COLUMN IF NOT EXISTS "registeredById" TEXT;`);
     tableChecked = true;
   } catch (err: any) {
     console.warn('Admission table check notice:', err?.message || err);
@@ -49,7 +52,12 @@ router.get('/config', async (req, res) => {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     const settings = await prisma.settings.findFirst();
-    res.json({ success: true, qrCodeUrl: settings?.qrCodeUrl, upiId: settings?.upiId });
+    res.json({ 
+      success: true, 
+      schoolName: settings?.schoolName,
+      qrCodeUrl: settings?.qrCodeUrl, 
+      upiId: settings?.upiId 
+    });
   } catch (error) {
     res.status(500).json({ success: false });
   }
@@ -63,7 +71,8 @@ const handleCreateAdmission = async (req: express.Request, res: express.Response
     const { 
       studentName, fatherName, motherName, phone, 
       aadharNo, dob, gender, classApplied, address,
-      studentImage, admissionFee, paymentMethod, paymentReceipt, paymentStatus
+      studentImage, admissionFee, paymentMethod, paymentReceipt, paymentStatus,
+      academicYear, registeredByName, registeredById
     } = req.body;
 
     if (!studentName || !phone) {
@@ -90,7 +99,10 @@ const handleCreateAdmission = async (req: express.Request, res: express.Response
         admissionFee: admissionFee ? String(admissionFee).trim() : null,
         paymentMethod: paymentMethod || 'CASH',
         paymentReceipt: paymentReceipt || null,
-        paymentStatus: finalPaymentStatus
+        paymentStatus: finalPaymentStatus,
+        academicYear: academicYear ? String(academicYear).trim() : null,
+        registeredByName: registeredByName ? String(registeredByName).trim() : null,
+        registeredById: registeredById ? String(registeredById).trim() : null
       }
     });
 

@@ -1129,6 +1129,10 @@ model AdmissionInquiry {
   paymentReceipt String?
   paymentStatus  String   @default("PENDING") // PENDING, COMPLETED
   
+  academicYear     String?
+  registeredByName String?
+  registeredById   String?
+  
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 }

@@ -20,11 +20,15 @@
   - **Backend API (`/api/admissions`)**:
     - Enhanced `GET /` to authorize `TEACHER`, `ADMIN`, and `SUPER_ADMIN`.
     - Added alias `POST /register` and expanded `POST /apply` to accept student photos and complete application parameters.
-  - **Submit Error Fix & DB Auto-Healing**: Fixed the submission error caused by Axios unwrapped response inspection and added a PostgreSQL schema guard function (`ensureAdmissionsTable`) that auto-verifies and creates table/columns (`studentImage`, `admissionFee`, `paymentMethod`, `paymentReceipt`, `paymentStatus`) to guarantee zero database exceptions.
-  - **Sleek Width & Compact Padding**: Optimized the registration page width to `max-w-4xl` with small, balanced padding (`px-3 sm:px-5 py-4` container, `p-4 sm:p-5` card body), modern inputs, and clean visual hierarchy.
-  - **Clean English ERP Labels**: Removed all Telugu labels and subtitles across the Registration Page, Print Modal, and PDF service in favor of standardized English School ERP labels.
+  - **Submit Error Fix & DB Auto-Healing**: Fixed the submission error caused by Axios unwrapped response inspection and added a PostgreSQL schema guard function (`ensureAdmissionsTable`) that auto-verifies and creates table/columns (`studentImage`, `admissionFee`, `paymentMethod`, `paymentReceipt`, `paymentStatus`, `academicYear`, `registeredByName`, `registeredById`) to guarantee zero database exceptions.
+  - **Print Modal ReferenceError Resolution**: Fixed `ReferenceError: currentYear is not defined` in `AdmissionPrintModal.tsx` by declaring current year and academic year safely in scope.
+  - **Registered By Column**: Added a "Registered By" column in `AdmissionsManagementPage.tsx` table and print modal, automatically capturing and displaying the logged-in teacher's name and ID who created the admission inquiry.
+  - **School UPI Payment QR Code**: Added a dedicated UPI payment card in Section 3 of the registration form displaying the School QR Code, school UPI ID (`jyschool@upi`), dynamic amount QR generator, and 1-click copy button.
+  - **Academic Year Selection**: Added an `Academic Year` selector (`2026-2027`, `2025-2026`, `2027-2028`) in the registration form, persisted to DB, and rendered on the official A4 printout.
+  - **Clean Placeholders**: Removed specific example placeholders (`Kinjarapu Sai Charan`, etc.) in favor of generic input placeholders (`Enter student full name`, `Enter father full name`, etc.).
+  - **Full-Width Responsive Fit**: Enhanced form layout from fixed narrow width to full-width responsive grid (`w-full px-4 sm:px-6 lg:px-8 py-5`) with clean card styling.
   - **Shorebird Patch Ready**:
-    - All Flutter dependencies (`image_picker`, `pdf`, `printing`, `intl`, `share_plus`) are existing packages. Zero native Android changes required, allowing 100% over-the-air deployment via Shorebird Patch without rebuilding APKs.
+    - All Flutter dependencies are existing packages. Zero native Android changes required, allowing 100% over-the-air deployment via Shorebird Patch.
 
 - **Student List PDF Row Height & Saved Template Presets (2026-09-18)**:
   - **Adjustable Row Height**: Added an interactive stepper (`[-] [XX mm] [+]`, 6mm to 35mm) and 4 quick presets: *Compact (6mm)*, *Normal (9mm)*, *Spacious (14mm)*, and *Signature Box (18mm)*. Dynamically adjusts `minCellHeight` and vertical `cellPadding` in `jspdf-autotable`, providing ample physical space for handwritten remarks, teacher notes, and parent signatures, or compact density to maximize students per A4 page.

@@ -28,6 +28,8 @@ class _AdmissionRegistrationScreenState extends State<AdmissionRegistrationScree
 
   String _gender = 'Male';
   String _classApplied = 'Class 1';
+  String _academicYear = '${DateTime.now().year}-${DateTime.now().year + 1}';
+  final List<String> _academicYears = ['2026-2027', '2025-2026', '2027-2028'];
   String _paymentMethod = 'CASH';
   DateTime? _dob;
 
@@ -203,6 +205,7 @@ class _AdmissionRegistrationScreenState extends State<AdmissionRegistrationScree
       'dob': _dob?.toIso8601String(),
       'gender': _gender,
       'classApplied': _classApplied,
+      'academicYear': _academicYear,
       'address': _addressCtrl.text.trim().isEmpty ? null : _addressCtrl.text.trim(),
       'studentImage': _uploadedPhotoUrl,
       'admissionFee': _feeCtrl.text.trim().isEmpty ? null : _feeCtrl.text.trim(),
@@ -405,7 +408,7 @@ class _AdmissionRegistrationScreenState extends State<AdmissionRegistrationScree
                 _buildTextField(
                   controller: _nameCtrl,
                   label: 'Student Full Name *',
-                  hint: 'e.g. Kinjarapu Sai Charan',
+                  hint: 'Enter student full name',
                   validator: (v) => v == null || v.trim().isEmpty ? 'Student Name is required' : null,
                 ),
                 const SizedBox(height: 12),
@@ -421,10 +424,17 @@ class _AdmissionRegistrationScreenState extends State<AdmissionRegistrationScree
                     ),
                     const SizedBox(width: 12),
                     Expanded(
-                      child: _buildGenderSelector(),
+                      child: _buildDropdown(
+                        label: 'Academic Year *',
+                        value: _academicYear,
+                        items: _academicYears,
+                        onChanged: (v) => setState(() => _academicYear = v!),
+                      ),
                     ),
                   ],
                 ),
+                const SizedBox(height: 12),
+                _buildGenderSelector(),
                 const SizedBox(height: 12),
                 Row(
                   children: [
@@ -450,7 +460,7 @@ class _AdmissionRegistrationScreenState extends State<AdmissionRegistrationScree
                     Expanded(
                       child: _buildTextField(
                         controller: _aadharCtrl,
-                        label: 'Aadhar Number',
+                        label: 'Aadhaar Number',
                         hint: '12-digit number',
                         keyboardType: TextInputType.number,
                       ),
@@ -470,13 +480,13 @@ class _AdmissionRegistrationScreenState extends State<AdmissionRegistrationScree
                 _buildTextField(
                   controller: _fatherCtrl,
                   label: "Father's Name",
-                  hint: 'e.g. Kinjarapu Appalaraju',
+                  hint: 'Enter father full name',
                 ),
                 const SizedBox(height: 12),
                 _buildTextField(
                   controller: _motherCtrl,
                   label: "Mother's Name",
-                  hint: 'e.g. Kinjarapu Lakshmi',
+                  hint: 'Enter mother full name',
                 ),
                 const SizedBox(height: 12),
                 _buildTextField(
@@ -495,7 +505,7 @@ class _AdmissionRegistrationScreenState extends State<AdmissionRegistrationScree
                 _buildTextField(
                   controller: _addressCtrl,
                   label: 'Residential Address',
-                  hint: 'Village / Town, Mandal',
+                  hint: 'Enter residential address',
                   maxLines: 2,
                 ),
               ],
@@ -514,7 +524,7 @@ class _AdmissionRegistrationScreenState extends State<AdmissionRegistrationScree
                       child: _buildTextField(
                         controller: _feeCtrl,
                         label: 'Fee Amount (₹)',
-                        hint: 'e.g. 5000',
+                        hint: 'Enter fee amount',
                         keyboardType: TextInputType.number,
                       ),
                     ),

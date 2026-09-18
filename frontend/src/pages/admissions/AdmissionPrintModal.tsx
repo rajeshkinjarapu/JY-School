@@ -31,6 +31,8 @@ export const AdmissionPrintModal: React.FC<AdmissionPrintModalProps> = ({
   const schoolEmail = schoolSettings?.email || 'info@jyschool.edu.in';
   const schoolLogo = schoolSettings?.logoUrl || '/logo.png';
 
+  const currentYear = new Date().getFullYear();
+  const academicYear = admission.academicYear || `${currentYear} - ${currentYear + 1}`;
   const regNo = `ADM-${new Date(admission.createdAt || Date.now()).getFullYear()}-${admission.id?.slice(0, 6).toUpperCase() || '001'}`;
   const regDate = admission.createdAt 
     ? new Date(admission.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
@@ -176,7 +178,7 @@ export const AdmissionPrintModal: React.FC<AdmissionPrintModalProps> = ({
                       </td>
                       <td className="w-1/4 p-2 bg-slate-50 font-bold text-slate-700 border-r border-slate-200">Academic Year</td>
                       <td className="w-1/4 p-2 font-bold text-slate-800">
-                        {currentYear} - {currentYear + 1}
+                        {academicYear}
                       </td>
                     </tr>
                     <tr>
@@ -277,6 +279,9 @@ export const AdmissionPrintModal: React.FC<AdmissionPrintModalProps> = ({
                   <div className="flex flex-col justify-end h-20">
                     <div className="border-t border-slate-800 mx-3 pt-1">
                       <p className="font-bold text-[11px] text-slate-900">Verified by (Teacher / Staff)</p>
+                      {admission.registeredByName && (
+                        <p className="text-[10px] text-indigo-900 font-semibold mt-0.5">{admission.registeredByName}</p>
+                      )}
                     </div>
                   </div>
 
@@ -484,6 +489,9 @@ export const AdmissionPrintModal: React.FC<AdmissionPrintModalProps> = ({
               <div className="flex flex-col justify-end h-14">
                 <div className="border-t border-slate-800 mx-2 pt-1">
                   <p className="font-bold text-[10px]">Teacher / Verifier</p>
+                  {admission.registeredByName && (
+                    <p className="text-[9px] text-indigo-950 font-bold">{admission.registeredByName}</p>
+                  )}
                 </div>
               </div>
               <div className="flex flex-col justify-end h-14">

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   UserPlus, Search, Filter, Phone, Calendar, User, 
   Trash2, Printer, CheckCircle, Clock, XCircle, 
-  RefreshCw, BookOpen, CreditCard, ChevronRight, Eye
+  RefreshCw, BookOpen, CreditCard, ChevronRight, Eye, UserCheck
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../api/axios';
@@ -60,21 +60,22 @@ export const AdmissionsManagementPage: React.FC = () => {
     if (!window.confirm(`Are you sure you want to delete the admission application for "${name}"?`)) return;
     try {
       await api.delete(`/api/admissions/${id}`);
-      toast.success('Application deleted');
+      toast.success('Admission application deleted');
       setAdmissions(prev => prev.filter(a => a.id !== id));
     } catch (error) {
-      toast.error('Failed to delete application');
+      toast.error('Failed to delete admission');
     }
   };
 
-  // Filters calculation
+  // Filtered List
   const filteredList = admissions.filter(item => {
-    const matchesSearch = 
-      !search.trim() ||
+    const matchesSearch = !search ||
       item.studentName?.toLowerCase().includes(search.toLowerCase()) ||
       item.phone?.includes(search) ||
       item.aadharNo?.includes(search) ||
-      item.fatherName?.toLowerCase().includes(search.toLowerCase());
+      item.fatherName?.toLowerCase().includes(search.toLowerCase()) ||
+      item.registeredByName?.toLowerCase().includes(search.toLowerCase()) ||
+      item.academicYear?.toLowerCase().includes(search.toLowerCase());
 
     const matchesStatus = statusFilter === 'ALL' || item.status === statusFilter;
     const matchesClass = classFilter === 'ALL' || item.classApplied === classFilter;
@@ -236,6 +237,7 @@ export const AdmissionsManagementPage: React.FC = () => {
                     <th className="p-4">Student & Details</th>
                     <th className="p-4">Class Applied</th>
                     <th className="p-4">Parents & Contact</th>
+                    <th className="p-4">Registered By</th>
                     <th className="p-4">Fee / Mode</th>
                     <th className="p-4">Status</th>
                     <th className="p-4 text-right">Actions</th>
@@ -301,6 +303,19 @@ export const AdmissionsManagementPage: React.FC = () => {
                           {adm.address && (
                             <div className="text-[10px] text-slate-400 truncate max-w-[180px] mt-0.5" title={adm.address}>
                               {adm.address}
+                            </div>
+                          )}
+                        </td>
+
+                        {/* Registered By */}
+                        <td className="p-4">
+                          <div className="font-bold text-slate-800 flex items-center gap-1.5">
+                            <UserCheck className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+                            <span className="truncate max-w-[130px] font-bold text-slate-800">{adm.registeredByName || 'Direct / Online'}</span>
+                          </div>
+                          {adm.academicYear && (
+                            <div className="text-[10px] text-slate-500 mt-0.5 font-medium">
+                              AY: <span className="font-bold text-indigo-600">{adm.academicYear}</span>
                             </div>
                           )}
                         </td>

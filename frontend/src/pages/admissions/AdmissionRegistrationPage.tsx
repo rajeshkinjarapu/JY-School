@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { 
   UserPlus, Camera, Trash2, CheckCircle2, 
   Printer, Phone, User, 
-  CreditCard, RefreshCw
+  CreditCard, RefreshCw, QrCode, Copy, Check, UserCheck, Calendar
 } from 'lucide-react';
 import api from '../../api/axios';
 import toast from 'react-hot-toast';
@@ -18,6 +18,11 @@ const DEFAULT_CLASSES = [
 export const AdmissionRegistrationPage: React.FC = () => {
   const [classesList, setClassesList] = useState<string[]>(DEFAULT_CLASSES);
   const [schoolSettings, setSchoolSettings] = useState<any>(null);
+  const [qrConfig, setQrConfig] = useState<any>(null);
+  const [copiedUpi, setCopiedUpi] = useState(false);
+
+  // Logged in user info (Teacher / Admin)
+  const [currentUser, setCurrentUser] = useState<{ id?: string; name?: string; role?: string }>({});
 
   // Form State
   const [studentName, setStudentName] = useState('');
@@ -28,6 +33,10 @@ export const AdmissionRegistrationPage: React.FC = () => {
   const [dob, setDob] = useState('');
   const [gender, setGender] = useState('Male');
   const [classApplied, setClassApplied] = useState('Class 1');
+  const [academicYear, setAcademicYear] = useState(() => {
+    const y = new Date().getFullYear();
+    return `${y}-${y + 1}`;
+  });
   const [address, setAddress] = useState('');
   const [admissionFee, setAdmissionFee] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('CASH');
@@ -42,8 +51,21 @@ export const AdmissionRegistrationPage: React.FC = () => {
   const [submittedAdmission, setSubmittedAdmission] = useState<any>(null);
   const [showPrintModal, setShowPrintModal] = useState(false);
 
-  // Fetch school classes and settings
+  // Fetch initial data: classes, settings, config, current user
   useEffect(() => {
+    // Current user from localStorage
+    try {
+      const userStr = localStorage.getItem('user');
+      if (userStr) {
+        const u = JSON.parse(userStr);
+        setCurrentUser({
+          id: u.id,
+          name: u.name || `${u.firstName || ''} ${u.lastName || ''}`.trim() || u.email || 'Teacher',
+          role: u.role || 'TEACHER'
+        });
+      }
+    } catch (e) {}
+
     api.get('/api/classes').then(res => {
       if (res.data?.data && Array.isArray(res.data.data)) {
         const names = res.data.data.map((c: any) => c.name);
@@ -56,6 +78,10 @@ export const AdmissionRegistrationPage: React.FC = () => {
 
     api.get('/api/settings').then(res => {
       if (res.data) setSchoolSettings(res.data);
+    }).catch(() => {});
+
+    api.get('/api/admissions/config').then(res => {
+      if (res.data) setQrConfig(res.data);
     }).catch(() => {});
   }, []);
 
@@ -101,6 +127,14 @@ export const AdmissionRegistrationPage: React.FC = () => {
     }
   };
 
+  // Copy UPI ID
+  const handleCopyUpi = (upi: string) => {
+    navigator.clipboard.writeText(upi);
+    setCopiedUpi(true);
+    toast.success('UPI ID copied to clipboard!');
+    setTimeout(() => setCopiedUpi(false), 2000);
+  };
+
   // Submit Admission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -131,11 +165,14 @@ export const AdmissionRegistrationPage: React.FC = () => {
         dob: dob || undefined,
         gender,
         classApplied,
+        academicYear,
         address: address.trim() || undefined,
         studentImage: studentImage || undefined,
         admissionFee: admissionFee.trim() || undefined,
         paymentMethod,
-        paymentStatus: paymentMethod === 'CASH' && admissionFee ? 'COMPLETED' : 'PENDING'
+        paymentStatus: (paymentMethod === 'CASH' || paymentMethod === 'UPI') && admissionFee ? 'COMPLETED' : 'PENDING',
+        registeredByName: currentUser.name || undefined,
+        registeredById: currentUser.id || undefined
       };
 
       const res: any = await api.post('/api/admissions/apply', payload);
@@ -173,6 +210,14 @@ export const AdmissionRegistrationPage: React.FC = () => {
     setSubmittedAdmission(null);
   };
 
+  // UPI Info
+  const activeUpiId = qrConfig?.upiId || schoolSettings?.upiId || 'jyschool@upi';
+  const schoolName = schoolSettings?.schoolName || qrConfig?.schoolName || 'JY School';
+  const directQrUrl = qrConfig?.qrCodeUrl || schoolSettings?.qrCodeUrl;
+  const dynamicQrCodeUrl = activeUpiId 
+    ? `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(`upi://pay?pa=${activeUpiId}&pn=${schoolName}&am=${admissionFee || ''}&cu=INR`)}`
+    : null;
+
   return (
     <div className="flex-1 overflow-auto bg-slate-50/70" style={{ minHeight: 'calc(100vh - 64px)' }}>
       <PageHeader 
@@ -180,30 +225,36 @@ export const AdmissionRegistrationPage: React.FC = () => {
         icon={<UserPlus className="w-6 h-6 text-indigo-600" />}
       />
 
-      {/* Main Container - Optimized Width & Sleek Padding */}
-      <div className="w-full max-w-4xl mx-auto px-3 sm:px-5 py-4">
+      {/* Main Full-Width Container */}
+      <div className="w-full px-4 sm:px-6 lg:px-8 py-5">
 
         {/* SUCCESS CARD AFTER REGISTRATION */}
         {submittedAdmission ? (
-          <div className="bg-white rounded-2xl shadow-lg border border-emerald-100 overflow-hidden p-6 sm:p-8 text-center max-w-xl mx-auto animate-in fade-in zoom-in duration-300">
-            <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-3 shadow-inner">
+          <div className="bg-white rounded-2xl shadow-xl border border-emerald-100 overflow-hidden p-6 sm:p-10 text-center max-w-2xl mx-auto animate-in fade-in zoom-in duration-300">
+            <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-inner">
               <CheckCircle2 className="w-9 h-9" />
             </div>
 
-            <span className="px-3 py-1 bg-emerald-50 text-emerald-700 text-xs font-black rounded-full border border-emerald-200 uppercase tracking-wide">
+            <span className="px-3.5 py-1 bg-emerald-50 text-emerald-700 text-xs font-black rounded-full border border-emerald-200 uppercase tracking-wider">
               Registration Successful
             </span>
 
-            <h2 className="text-xl sm:text-2xl font-black text-slate-900 mt-3">
+            <h2 className="text-2xl sm:text-3xl font-black text-slate-900 mt-3">
               {submittedAdmission.studentName}
             </h2>
-            <p className="text-xs sm:text-sm font-semibold text-slate-500 mt-1">
-              Class Applied: <span className="text-indigo-600 font-bold">{submittedAdmission.classApplied}</span> • App No: <span className="font-mono font-bold text-slate-800">ADM-{submittedAdmission.id?.slice(0, 6).toUpperCase()}</span>
+            <p className="text-sm font-semibold text-slate-500 mt-1">
+              Class Applied: <span className="text-indigo-600 font-bold">{submittedAdmission.classApplied}</span> • AY: <span className="font-bold text-slate-700">{submittedAdmission.academicYear || academicYear}</span> • App No: <span className="font-mono font-bold text-slate-800">ADM-{submittedAdmission.id?.slice(0, 6).toUpperCase()}</span>
             </p>
+
+            {submittedAdmission.registeredByName && (
+              <p className="text-xs font-semibold text-slate-400 mt-1">
+                Registered by: <span className="font-bold text-slate-700">{submittedAdmission.registeredByName}</span>
+              </p>
+            )}
 
             {/* Student Photo Preview */}
             {submittedAdmission.studentImage && (
-              <div className="mt-4 flex justify-center">
+              <div className="mt-5 flex justify-center">
                 <img 
                   src={submittedAdmission.studentImage} 
                   alt="Student" 
@@ -212,11 +263,11 @@ export const AdmissionRegistrationPage: React.FC = () => {
               </div>
             )}
 
-            <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center">
+            <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
               <button
                 type="button"
                 onClick={() => setShowPrintModal(true)}
-                className="px-5 py-3 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white font-bold text-xs sm:text-sm rounded-xl shadow-md shadow-indigo-200 flex items-center justify-center gap-2 transition-all cursor-pointer"
+                className="px-6 py-3.5 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white font-bold text-sm rounded-xl shadow-lg shadow-indigo-200 flex items-center justify-center gap-2 transition-all cursor-pointer"
               >
                 <Printer className="w-4 h-4" /> Print Admission Form (PDF)
               </button>
@@ -224,7 +275,7 @@ export const AdmissionRegistrationPage: React.FC = () => {
               <button
                 type="button"
                 onClick={handleResetForm}
-                className="px-5 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs sm:text-sm rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer"
+                className="px-6 py-3.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-sm rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer"
               >
                 <UserPlus className="w-4 h-4" /> Register Another Student
               </button>
@@ -232,48 +283,61 @@ export const AdmissionRegistrationPage: React.FC = () => {
           </div>
         ) : (
 
-          /* ADMISSION REGISTRATION FORM */
-          <form onSubmit={handleSubmit} className="space-y-4">
+          /* ADMISSION REGISTRATION FORM - FULL WIDTH */
+          <form onSubmit={handleSubmit} className="w-full space-y-5">
             
+            {/* REGISTERED BY TEACHER BANNER */}
+            {currentUser.name && (
+              <div className="bg-indigo-50/80 border border-indigo-100 rounded-xl px-4 py-2.5 flex items-center justify-between">
+                <div className="flex items-center gap-2 text-xs font-bold text-indigo-900">
+                  <UserCheck className="w-4 h-4 text-indigo-600" />
+                  <span>Registering As: <span className="font-black text-indigo-950">{currentUser.name}</span> ({currentUser.role || 'Staff'})</span>
+                </div>
+                <div className="text-[11px] font-bold text-indigo-600 bg-white px-2.5 py-1 rounded-md border border-indigo-200">
+                  AY: {academicYear}
+                </div>
+              </div>
+            )}
+
             {/* CARD 1: STUDENT PHOTO & BASIC INFO */}
             <div className="bg-white rounded-2xl shadow-xs border border-slate-200/90 overflow-hidden">
-              <div className="px-5 py-3 bg-gradient-to-r from-slate-900 via-indigo-950 to-indigo-900 text-white flex items-center justify-between">
+              <div className="px-5 py-3.5 bg-gradient-to-r from-slate-900 via-indigo-950 to-indigo-900 text-white flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <User className="w-4 h-4 text-indigo-300" />
-                  <h3 className="font-black text-xs sm:text-sm tracking-wide uppercase">1. Student Details</h3>
+                  <h3 className="font-black text-sm tracking-wide uppercase">1. Student Details</h3>
                 </div>
-                <span className="text-[11px] bg-white/15 font-semibold px-2.5 py-0.5 rounded-full text-indigo-100">
+                <span className="text-xs bg-white/15 font-semibold px-2.5 py-0.5 rounded-full text-indigo-100">
                   Passport Photo & Particulars
                 </span>
               </div>
 
-              <div className="p-4 sm:p-5">
-                <div className="flex flex-col sm:flex-row gap-5 items-start">
+              <div className="p-5 sm:p-6">
+                <div className="flex flex-col md:flex-row gap-6 items-start">
                   
                   {/* Student Photo Picker */}
-                  <div className="flex flex-col items-center mx-auto sm:mx-0 shrink-0">
+                  <div className="flex flex-col items-center mx-auto md:mx-0 shrink-0">
                     <div 
                       onClick={() => fileInputRef.current?.click()}
-                      className="group relative w-28 h-36 rounded-xl border-2 border-dashed border-indigo-300 hover:border-indigo-600 bg-indigo-50/40 hover:bg-indigo-50/80 transition-all flex flex-col items-center justify-center cursor-pointer overflow-hidden shadow-xs"
+                      className="group relative w-32 h-40 rounded-xl border-2 border-dashed border-indigo-300 hover:border-indigo-600 bg-indigo-50/40 hover:bg-indigo-50/80 transition-all flex flex-col items-center justify-center cursor-pointer overflow-hidden shadow-xs"
                     >
                       {studentImage ? (
                         <>
                           <img src={studentImage} alt="Student Preview" className="w-full h-full object-cover" />
                           <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                            <span className="text-white text-[11px] font-bold flex items-center gap-1 bg-black/60 px-2 py-1 rounded-lg">
-                              <Camera className="w-3 h-3" /> Change
+                            <span className="text-white text-xs font-bold flex items-center gap-1 bg-black/60 px-2.5 py-1 rounded-lg">
+                              <Camera className="w-3.5 h-3.5" /> Change
                             </span>
                           </div>
                         </>
                       ) : (
-                        <div className="text-center p-2">
+                        <div className="text-center p-3">
                           {isUploadingPhoto ? (
-                            <RefreshCw className="w-6 h-6 text-indigo-600 animate-spin mx-auto mb-1.5" />
+                            <RefreshCw className="w-7 h-7 text-indigo-600 animate-spin mx-auto mb-2" />
                           ) : (
-                            <Camera className="w-6 h-6 text-indigo-500 mx-auto mb-1.5 group-hover:scale-110 transition-transform" />
+                            <Camera className="w-7 h-7 text-indigo-500 mx-auto mb-2 group-hover:scale-110 transition-transform" />
                           )}
-                          <p className="text-[11px] font-black text-indigo-900">Upload Photo</p>
-                          <p className="text-[9px] text-slate-400 mt-0.5">JPG / PNG</p>
+                          <p className="text-xs font-black text-indigo-900">Upload Photo</p>
+                          <p className="text-[10px] text-slate-400 mt-0.5">JPG / PNG / WEBP</p>
                         </div>
                       )}
                     </div>
@@ -290,19 +354,19 @@ export const AdmissionRegistrationPage: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => setStudentImage('')}
-                        className="mt-1.5 text-[11px] font-bold text-red-500 hover:text-red-700 flex items-center gap-1 cursor-pointer"
+                        className="mt-2 text-xs font-bold text-red-500 hover:text-red-700 flex items-center gap-1 cursor-pointer"
                       >
-                        <Trash2 className="w-3 h-3" /> Remove Photo
+                        <Trash2 className="w-3.5 h-3.5" /> Remove Photo
                       </button>
                     )}
                   </div>
 
-                  {/* Fields Grid */}
-                  <div className="flex-1 w-full grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                  {/* Fields Grid - Multi Column */}
+                  <div className="flex-1 w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     
                     {/* Student Name */}
-                    <div className="sm:col-span-2">
-                      <label className="block text-[11px] font-black text-slate-700 uppercase tracking-wider mb-1">
+                    <div className="sm:col-span-2 lg:col-span-3">
+                      <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-1.5">
                         Student Full Name <span className="text-red-500">*</span>
                       </label>
                       <input 
@@ -310,20 +374,20 @@ export const AdmissionRegistrationPage: React.FC = () => {
                         required
                         value={studentName}
                         onChange={e => setStudentName(e.target.value)}
-                        placeholder="e.g. Kinjarapu Sai Charan"
-                        className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-xs"
+                        placeholder="Enter student full name"
+                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-xs"
                       />
                     </div>
 
                     {/* Class Applied For */}
                     <div>
-                      <label className="block text-[11px] font-black text-slate-700 uppercase tracking-wider mb-1">
+                      <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-1.5">
                         Class Applied For <span className="text-red-500">*</span>
                       </label>
                       <select
                         value={classApplied}
                         onChange={e => setClassApplied(e.target.value)}
-                        className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-xs"
+                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-xs"
                       >
                         {classesList.map(c => (
                           <option key={c} value={c}>{c}</option>
@@ -331,9 +395,25 @@ export const AdmissionRegistrationPage: React.FC = () => {
                       </select>
                     </div>
 
+                    {/* Academic Year */}
+                    <div>
+                      <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-1.5">
+                        Academic Year <span className="text-red-500">*</span>
+                      </label>
+                      <select
+                        value={academicYear}
+                        onChange={e => setAcademicYear(e.target.value)}
+                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-xs"
+                      >
+                        <option value="2026-2027">2026-2027</option>
+                        <option value="2025-2026">2025-2026</option>
+                        <option value="2027-2028">2027-2028</option>
+                      </select>
+                    </div>
+
                     {/* Gender */}
                     <div>
-                      <label className="block text-[11px] font-black text-slate-700 uppercase tracking-wider mb-1">
+                      <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-1.5">
                         Gender <span className="text-red-500">*</span>
                       </label>
                       <div className="grid grid-cols-2 gap-2">
@@ -356,20 +436,20 @@ export const AdmissionRegistrationPage: React.FC = () => {
 
                     {/* Date of Birth */}
                     <div>
-                      <label className="block text-[11px] font-black text-slate-700 uppercase tracking-wider mb-1">
+                      <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-1.5">
                         Date of Birth
                       </label>
                       <input 
                         type="date"
                         value={dob}
                         onChange={e => setDob(e.target.value)}
-                        className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-xs"
+                        className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-xs"
                       />
                     </div>
 
                     {/* Aadhaar Number */}
                     <div>
-                      <label className="block text-[11px] font-black text-slate-700 uppercase tracking-wider mb-1">
+                      <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-1.5">
                         Aadhaar Number
                       </label>
                       <input 
@@ -378,7 +458,7 @@ export const AdmissionRegistrationPage: React.FC = () => {
                         value={aadharNo}
                         onChange={e => setAadharNo(e.target.value.replace(/\D/g, ''))}
                         placeholder="12-digit Aadhaar number"
-                        className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-mono font-semibold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-xs"
+                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-mono font-semibold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-xs"
                       />
                     </div>
 
@@ -389,49 +469,49 @@ export const AdmissionRegistrationPage: React.FC = () => {
 
             {/* CARD 2: PARENT & CONTACT DETAILS */}
             <div className="bg-white rounded-2xl shadow-xs border border-slate-200/90 overflow-hidden">
-              <div className="px-5 py-3 bg-gradient-to-r from-slate-900 via-emerald-950 to-teal-900 text-white flex items-center justify-between">
+              <div className="px-5 py-3.5 bg-gradient-to-r from-slate-900 via-emerald-950 to-teal-900 text-white flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Phone className="w-4 h-4 text-emerald-300" />
-                  <h3 className="font-black text-xs sm:text-sm tracking-wide uppercase">2. Parent & Contact Details</h3>
+                  <h3 className="font-black text-sm tracking-wide uppercase">2. Parent & Contact Details</h3>
                 </div>
-                <span className="text-[11px] bg-white/15 font-semibold px-2.5 py-0.5 rounded-full text-emerald-100">
+                <span className="text-xs bg-white/15 font-semibold px-2.5 py-0.5 rounded-full text-emerald-100">
                   Primary Contact Info
                 </span>
               </div>
 
-              <div className="p-4 sm:p-5 grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+              <div className="p-5 sm:p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 
                 {/* Father Name */}
                 <div>
-                  <label className="block text-[11px] font-black text-slate-700 uppercase tracking-wider mb-1">
+                  <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-1.5">
                     Father Name
                   </label>
                   <input 
                     type="text"
                     value={fatherName}
                     onChange={e => setFatherName(e.target.value)}
-                    placeholder="e.g. Kinjarapu Appalaraju"
-                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all shadow-xs"
+                    placeholder="Enter father full name"
+                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all shadow-xs"
                   />
                 </div>
 
                 {/* Mother Name */}
                 <div>
-                  <label className="block text-[11px] font-black text-slate-700 uppercase tracking-wider mb-1">
+                  <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-1.5">
                     Mother Name
                   </label>
                   <input 
                     type="text"
                     value={motherName}
                     onChange={e => setMotherName(e.target.value)}
-                    placeholder="e.g. Kinjarapu Lakshmi"
-                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all shadow-xs"
+                    placeholder="Enter mother full name"
+                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all shadow-xs"
                   />
                 </div>
 
                 {/* Primary Mobile Phone */}
                 <div>
-                  <label className="block text-[11px] font-black text-slate-700 uppercase tracking-wider mb-1">
+                  <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-1.5">
                     Primary Contact Mobile <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
@@ -442,71 +522,125 @@ export const AdmissionRegistrationPage: React.FC = () => {
                       maxLength={10}
                       value={phone}
                       onChange={e => setPhone(e.target.value.replace(/\D/g, ''))}
-                      placeholder="9876543210"
-                      className="w-full pl-11 pr-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-mono font-semibold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all shadow-xs"
+                      placeholder="10-digit mobile number"
+                      className="w-full pl-11 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-mono font-semibold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all shadow-xs"
                     />
                   </div>
                 </div>
 
                 {/* Residential Address */}
-                <div className="sm:col-span-2">
-                  <label className="block text-[11px] font-black text-slate-700 uppercase tracking-wider mb-1">
+                <div className="sm:col-span-2 lg:col-span-3">
+                  <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-1.5">
                     Residential Address
                   </label>
                   <textarea 
                     rows={2}
                     value={address}
                     onChange={e => setAddress(e.target.value)}
-                    placeholder="Door No, Street, Village/Town, Mandal, District"
-                    className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-medium text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all shadow-xs"
+                    placeholder="Enter full residential address (Door No, Street, Village/Town, Mandal, District)"
+                    className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all shadow-xs"
                   />
                 </div>
 
               </div>
             </div>
 
-            {/* CARD 3: ADMISSION FEE & PAYMENT */}
+            {/* CARD 3: ADMISSION FEE & PAYMENT WITH QR CODE */}
             <div className="bg-white rounded-2xl shadow-xs border border-slate-200/90 overflow-hidden">
-              <div className="px-5 py-3 bg-gradient-to-r from-slate-900 via-purple-950 to-purple-900 text-white flex items-center justify-between">
+              <div className="px-5 py-3.5 bg-gradient-to-r from-slate-900 via-purple-950 to-purple-900 text-white flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <CreditCard className="w-4 h-4 text-purple-300" />
-                  <h3 className="font-black text-xs sm:text-sm tracking-wide uppercase">3. Admission Fee & Payment</h3>
+                  <h3 className="font-black text-sm tracking-wide uppercase">3. Admission Fee & Payment Mode</h3>
                 </div>
-                <span className="text-[11px] bg-white/15 font-semibold px-2.5 py-0.5 rounded-full text-purple-100">
-                  Fee Collection Mode
+                <span className="text-xs bg-white/15 font-semibold px-2.5 py-0.5 rounded-full text-purple-100">
+                  Fee Collection & UPI Scan
                 </span>
               </div>
 
-              <div className="p-4 sm:p-5 grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                {/* Fee Amount */}
-                <div>
-                  <label className="block text-[11px] font-black text-slate-700 uppercase tracking-wider mb-1">
-                    Admission Fee Amount (₹)
-                  </label>
-                  <input 
-                    type="number"
-                    value={admissionFee}
-                    onChange={e => setAdmissionFee(e.target.value)}
-                    placeholder="e.g. 5000"
-                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all shadow-xs"
-                  />
+              <div className="p-5 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                
+                {/* Fee Controls (Left Column) */}
+                <div className="lg:col-span-7 space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {/* Fee Amount */}
+                    <div>
+                      <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-1.5">
+                        Admission Fee Amount (₹)
+                      </label>
+                      <input 
+                        type="number"
+                        value={admissionFee}
+                        onChange={e => setAdmissionFee(e.target.value)}
+                        placeholder="Enter fee amount (₹)"
+                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all shadow-xs"
+                      />
+                    </div>
+
+                    {/* Payment Method */}
+                    <div>
+                      <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-1.5">
+                        Payment Method
+                      </label>
+                      <select
+                        value={paymentMethod}
+                        onChange={e => setPaymentMethod(e.target.value)}
+                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all shadow-xs"
+                      >
+                        <option value="CASH">Cash Payment</option>
+                        <option value="UPI">UPI / Online QR Payment</option>
+                        <option value="LATER">Pay Later at School Office</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="bg-purple-50/70 border border-purple-100 rounded-xl p-3 text-xs text-purple-900">
+                    <p className="font-bold">Fee Collection Policy:</p>
+                    <p className="text-purple-700 text-[11px] mt-0.5">
+                      Admission fee collected via Cash or UPI QR Code will be recorded directly into student admission inquiry records and reflected on the official admission receipt.
+                    </p>
+                  </div>
                 </div>
 
-                {/* Payment Method */}
-                <div>
-                  <label className="block text-[11px] font-black text-slate-700 uppercase tracking-wider mb-1">
-                    Payment Method
-                  </label>
-                  <select
-                    value={paymentMethod}
-                    onChange={e => setPaymentMethod(e.target.value)}
-                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all shadow-xs"
-                  >
-                    <option value="CASH">Cash Payment</option>
-                    <option value="UPI">UPI / Online Payment</option>
-                    <option value="LATER">Pay Later at School Office</option>
-                  </select>
+                {/* School UPI QR Code Card (Right Column) */}
+                <div className="lg:col-span-5 bg-gradient-to-br from-slate-50 to-indigo-50/50 border border-indigo-100 rounded-2xl p-4 flex flex-col items-center text-center shadow-xs">
+                  <div className="flex items-center gap-1.5 text-xs font-black text-indigo-900 mb-2">
+                    <QrCode className="w-4 h-4 text-indigo-600" />
+                    <span>School UPI Payment QR Code</span>
+                  </div>
+
+                  {/* QR Code Display */}
+                  <div className="p-3 bg-white rounded-xl border border-indigo-200 shadow-sm">
+                    {directQrUrl ? (
+                      <img src={directQrUrl} alt="School UPI QR" className="w-36 h-36 object-contain" />
+                    ) : dynamicQrCodeUrl ? (
+                      <img src={dynamicQrCodeUrl} alt="School UPI QR" className="w-36 h-36 object-contain" />
+                    ) : (
+                      <div className="w-36 h-36 flex items-center justify-center text-slate-400 text-xs">
+                        QR Code Available
+                      </div>
+                    )}
+                  </div>
+
+                  {/* UPI ID Pill */}
+                  {activeUpiId && (
+                    <div className="mt-3 flex items-center gap-2 bg-white px-3 py-1.5 rounded-lg border border-indigo-200 shadow-2xs">
+                      <span className="text-xs font-mono font-bold text-slate-800">{activeUpiId}</span>
+                      <button
+                        type="button"
+                        onClick={() => handleCopyUpi(activeUpiId)}
+                        title="Copy UPI ID"
+                        className="text-indigo-600 hover:text-indigo-800 p-1 rounded hover:bg-indigo-50 cursor-pointer transition-colors"
+                      >
+                        {copiedUpi ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                      </button>
+                    </div>
+                  )}
+
+                  <p className="text-[10px] font-semibold text-slate-500 mt-2">
+                    Scan with PhonePe, Google Pay, Paytm or BHIM
+                  </p>
                 </div>
+
               </div>
             </div>
 
@@ -515,7 +649,7 @@ export const AdmissionRegistrationPage: React.FC = () => {
               <button
                 type="button"
                 onClick={handleResetForm}
-                className="px-5 py-2.5 bg-white border border-slate-200 text-slate-700 font-bold text-xs sm:text-sm rounded-xl hover:bg-slate-50 transition-colors cursor-pointer"
+                className="px-6 py-3 bg-white border border-slate-200 text-slate-700 font-bold text-sm rounded-xl hover:bg-slate-50 transition-colors cursor-pointer"
               >
                 Clear Form
               </button>
@@ -523,7 +657,7 @@ export const AdmissionRegistrationPage: React.FC = () => {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="px-6 py-2.5 bg-gradient-to-r from-indigo-600 via-indigo-700 to-purple-700 hover:from-indigo-700 hover:to-purple-800 text-white font-black text-xs sm:text-sm rounded-xl shadow-md shadow-indigo-200 flex items-center gap-2 transition-all transform active:scale-98 disabled:opacity-50 cursor-pointer"
+                className="px-8 py-3 bg-gradient-to-r from-indigo-600 via-indigo-700 to-purple-700 hover:from-indigo-700 hover:to-purple-800 text-white font-black text-sm rounded-xl shadow-md shadow-indigo-200 flex items-center gap-2.5 transition-all transform active:scale-98 disabled:opacity-50 cursor-pointer"
               >
                 {isSubmitting ? (
                   <RefreshCw className="w-4 h-4 animate-spin" />
