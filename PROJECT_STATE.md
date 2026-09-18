@@ -10,6 +10,14 @@
   - **Universal & Flavor App Sync**: Initialized across all 4 entrypoints (`main.dart`, `main_admin.dart`, `main_teacher.dart`, `main_student.dart`).
   - **Shorebird Compatible**: Fully patchable via Shorebird without requiring a new APK release.
 
+- **Student List Full Export Fix (Excel & PDF) (2026-09-18)**:
+  - **Problem**: When exporting students to Excel or PDF from `/students`, only the currently visible paginated page (50 students) was exported rather than the entire student body (533+ students).
+  - **Root Cause**: `StudentListPage.tsx` passed only its local `students` page state (length 50) into `StudentListExportModal.tsx`.
+  - **Fix**:
+    - Updated `StudentListPage.tsx` to pass active `classId` and `search` filter props to `StudentListExportModal`.
+    - Enhanced `handleExport` in `StudentListExportModal.tsx` to fetch the complete student dataset from `/api/students` with `limit: 10000` matching the active filters, before applying modal filters (gender, active status).
+    - Added toast progress indicators and ensured both PDF (multi-page autoTable) and Excel (full XLSX sheet) export all 533+ students seamlessly.
+
 - **MCQ Paper Generator - Smart Fraction & Layout Calibration (2026-09-18)**:
   - **Fractions Visual Length Fix**: Refactored `estimateVisualLength` in `frontend/src/components/QuestionBank/LiveLatexPreview.tsx` to normalize superscripts/subscripts before fraction regex, preventing `{2}` from breaking fraction parsing. Evaluated fractions horizontally using exact `Math.max(lenN, lenD)`.
   - **Division & Operator Spacing Correction**: Stopped expanding division slashes (`/`) in expressions like `(A/2)` or `1/2`, preventing artificial length inflation that forced formulas into One-by-One.

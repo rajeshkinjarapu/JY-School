@@ -607,6 +607,8 @@ export const StudentListPage: React.FC = () => {
         exportType={exportDialog.type}
         students={students}
         totalStudents={total}
+        classId={classId}
+        search={search}
       />
     </div>
   );

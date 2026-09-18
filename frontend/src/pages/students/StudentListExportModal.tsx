@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, FileText, FileSpreadsheet, Download, Plus, Trash2, Filter } from 'lucide-react';
+import api from '../../api/axios';
+import toast from 'react-hot-toast';
 
 interface ExportDialogProps {
   isOpen: boolean;
@@ -7,6 +9,8 @@ interface ExportDialogProps {
   exportType: 'pdf' | 'excel';
   students: any[];
   totalStudents: number;
+  classId?: string;
+  search?: string;
 }
 
 const FILTER_OPTIONS = [
@@ -17,7 +21,15 @@ const FILTER_OPTIONS = [
   { value: 'inactive', label: 'Inactive Students', desc: 'Left the school',             icon: '🔴' },
 ] as const;
 
-export const StudentListExportModal: React.FC<ExportDialogProps> = ({ isOpen, onClose, exportType, students, totalStudents }) => {
+export const StudentListExportModal: React.FC<ExportDialogProps> = ({ 
+  isOpen, 
+  onClose, 
+  exportType, 
+  students, 
+  totalStudents,
+  classId,
+  search
+}) => {
   const [filter, setFilter] = useState<string>('all');
   const [isGenerating, setIsGenerating] = useState(false);
   
@@ -60,13 +72,38 @@ export const StudentListExportModal: React.FC<ExportDialogProps> = ({ isOpen, on
 
   const handleExport = async () => {
     setIsGenerating(true);
+    const toastId = toast.loading(`Preparing ${exportType.toUpperCase()} export for all students...`);
     try {
-      // 1. Filter students
-      let exportRows = [...students];
+      // 1. Fetch ALL matching students from server (bypasses 50-item page limit)
+      let allStudents = students;
+      try {
+        const res: any = await api.get('/api/students', {
+          params: {
+            search: search || undefined,
+            classId: classId || undefined,
+            limit: 10000,
+            page: 1,
+          }
+        });
+        if (res.data?.data && Array.isArray(res.data.data)) {
+          allStudents = res.data.data;
+        }
+      } catch (fetchErr) {
+        console.warn("Failed to fetch all students for export, falling back to current page:", fetchErr);
+      }
+
+      // 2. Filter students
+      let exportRows = [...allStudents];
       if (filter === 'boys') exportRows = exportRows.filter(s => s.gender === 'Male');
       if (filter === 'girls') exportRows = exportRows.filter(s => s.gender === 'Female');
-      if (filter === 'active') exportRows = exportRows.filter(s => s.user?.isActive);
-      if (filter === 'inactive') exportRows = exportRows.filter(s => !s.user?.isActive);
+      if (filter === 'active') exportRows = exportRows.filter(s => s.user?.isActive !== false);
+      if (filter === 'inactive') exportRows = exportRows.filter(s => s.user?.isActive === false);
+
+      if (exportRows.length === 0) {
+        toast.error('No students found to export with the selected filter.', { id: toastId });
+        setIsGenerating(false);
+        return;
+      }
 
       // Extract raw data
       const dataRows = exportRows.map((s: any, i: number) => ({
@@ -77,7 +114,7 @@ export const StudentListExportModal: React.FC<ExportDialogProps> = ({ isOpen, on
         gender: s.gender || '-',
         phone: s.user?.phone || s.phone || '-',
         fatherName: s.fatherName || '-',
-        status: s.user?.isActive ? 'Active' : 'Inactive',
+        status: s.user?.isActive !== false ? 'Active' : 'Inactive',
       }));
 
       const numCols = Object.values(cols).filter(Boolean).length + customColumns.length;
@@ -203,9 +240,11 @@ export const StudentListExportModal: React.FC<ExportDialogProps> = ({ isOpen, on
         XLSX.utils.book_append_sheet(wb, ws, 'Students');
         XLSX.writeFile(wb, `Student_List_${new Date().getTime()}.xlsx`);
       }
+      toast.success(`Exported ${exportRows.length} students to ${exportType.toUpperCase()}!`, { id: toastId });
       onClose();
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
+      toast.error(`Export failed: ${e?.message || 'Unknown error'}`, { id: toastId });
     } finally {
       setIsGenerating(false);
     }
