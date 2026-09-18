@@ -244,7 +244,9 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
               let s = text.replace(/\\\(|\\\)|\\\[|\\\]|\$/g, ''); // Remove math delimiters
               s = s.replace(/\\mathbb|\\mathbf|\\text|\\mathrm/g, ''); // Remove formatting commands
               s = s.replace(/\\[a-zA-Z]+/g, 'X'); // Replace math commands with 'X'
-              s = s.replace(/[{}_^]/g, ''); // Remove brackets and sub/superscripts
+              s = s.replace(/[{}]/g, ''); // Remove braces
+              // Math binary operators like +, -, =, / have visual spacing around them in KaTeX
+              s = s.replace(/([+\-=/])/g, ' $1 ');
               return s.replace(/\s+/g, ' ').trim().length;
             };
 
@@ -256,7 +258,7 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
             );
             
             const singleLineLimit = isDoubleColumn ? 6 : 12;
-            const twoByTwoLimit = isDoubleColumn ? 16 : 30;
+            const twoByTwoLimit = isDoubleColumn ? 16 : 26;
 
             let optionsLayout = '';
             if (maxLen <= singleLineLimit) {
