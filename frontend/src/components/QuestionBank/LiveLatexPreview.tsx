@@ -245,7 +245,7 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
             const estimateVisualLength = (text: string) => {
               let s = text.replace(/\\\(|\\\)|\\\[|\\\]|\$/g, ''); // Remove math delimiters
               s = s.replace(/\\mathbb|\\mathbf|\\text|\\mathrm/g, ''); // Remove formatting commands
-              s = s.replace(/\\[a-zA-Z]+/g, 'XX'); // Math commands take horizontal space
+              s = s.replace(/\\[a-zA-Z]+/g, 'X'); // Math command placeholder
               s = s.replace(/[{}]/g, ''); // Remove formatting brackets
               return s.replace(/\s+/g, ' ').trim().length;
             };
@@ -287,17 +287,20 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
               }
             } else {
               // 'auto' mode: Dynamically evaluated for EVERY question across the entire paper
-              // In A4 printable paper, 2-column layout can only fit up to ~22-24 characters
+              // In standard A4 paper:
+              // - Short options (<= 11 chars on 1 line): 4 Columns
+              // - Medium options (<= 38 chars): 2*2 (2 Columns) - Fits Q9, Q10, Q11, Q12, Q13, Q18, Q20, Q22 with plenty of room
+              // - Truly long options (> 38 chars, e.g. Q21 with 53+ chars): One by One (1 Column)
               const col4Limit = isDoubleColumn ? 6 : 11;
-              const col2Limit = isDoubleColumn ? 14 : 24;
+              const col2Limit = isDoubleColumn ? 18 : 38;
 
               if (maxLen <= col4Limit && !hasNewlineB && !hasNewlineC && !hasNewlineD) {
                 optionsLayout = 'grid grid-cols-4 w-full gap-x-2 gap-y-1';
-              } else if (maxLen <= col2Limit && !(hasNewlineB && hasNewlineC && hasNewlineD && maxLen > 18)) {
+              } else if (maxLen <= col2Limit) {
                 optionsLayout = 'grid grid-cols-2 w-full gap-x-4 gap-y-1';
               } else {
-                // For ANY question whose options are long (> 24 chars, or typed with Enters),
-                // automatically render vertically one by one (1 Column)
+                // Only questions whose options are genuinely long (> 38 chars, like Q21)
+                // render vertically one by one (1 Column)
                 optionsLayout = 'flex flex-col w-full gap-1';
               }
             }

@@ -2,7 +2,7 @@
 
 ## 2. Recent Updates & Progress
 - **MCQ Paper Generator - Question 21 Long Options & MS Word Formatting Fixes (2026-09-18)**:
-  - **Universal Dynamic Layout (All Questions)**: Evaluates EVERY question dynamically in a loop. Fixed the issue where long polynomial/equation options were squished into 2 columns because of an excessively high visual length threshold (`maxLen < 85`). Lowered the threshold to 24 characters (`maxLen > 24` or user Enters with `> 18` automatically stacks vertically one by one / 1 Column across the entire paper), preventing awkward wrapping on A4 pages for all questions.
+  - **Universal Dynamic Layout (Calibrated 2*2 vs One-by-One)**: Evaluates EVERY question dynamically in a loop. Calibrated the 2-column threshold to 38 characters: questions with normal/medium options (like Q.9, Q.18, Q.22 with 20-26 chars) neatly fit in 2*2 (2 Columns) without wasting whitespace; only genuinely oversized questions (> 38 chars, like Q.21 polynomial with 53+ chars) render One by One (1 Column).
   - **MS Word-like Space & Enter Behavior**:
     - **Space Preservation**: Replaced consecutive whitespace characters with non-breaking spaces (`&nbsp;`) and enforced `whitespace-pre-wrap` across all question and option rendering containers so that typing spaces creates visible spacing in the preview.
     - **Enter (One Step Down)**: Supported MS Word-style newline detection where pressing Enter between options in the editor renders each option on its own line ("one step down").
