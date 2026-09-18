@@ -1,6 +1,18 @@
 # Project State: JY School ERP
 
 ## 2. Recent Updates & Progress
+- **Student List PDF Row Height & Saved Template Presets (2026-09-18)**:
+  - **Adjustable Row Height**: Added an interactive stepper (`[-] [XX mm] [+]`, 6mm to 35mm) and 4 quick presets: *Compact (6mm)*, *Normal (9mm)*, *Spacious (14mm)*, and *Signature Box (18mm)*. Dynamically adjusts `minCellHeight` and vertical `cellPadding` in `jspdf-autotable`, providing ample physical space for handwritten remarks, teacher notes, and parent signatures, or compact density to maximize students per A4 page.
+  - **Saved Template Presets System**: Implemented a comprehensive template preset system stored in `localStorage` (`jy_school_export_presets`) so users don't need to reconfigure columns, headings, custom fields, and widths every time.
+  - **4 Built-in One-Click Templates**:
+    1. *📄 General Student List*: Standard clean layout (S.No, ID, Name, Class, Phone, Status).
+    2. *✍️ Parent Signature Sheet*: Landscape, with wide `PARENT SIGNATURE` (55mm) & `FEEDBACK / REMARKS` (45mm) columns and 14mm row height.
+    3. *🚌 Bus Transport Attendance*: Landscape, with `PICKUP (MORNING)` (38mm), `DROP (EVENING)` (38mm), and `DRIVER INITIALS` (32mm).
+    4. *💰 Fee Verification & Collection*: Landscape, with `FEE DUE` (28mm), `PAID AMOUNT` (32mm), `RECEIPT NO` (30mm), and `SIGNATURE` (35mm).
+  - **Custom Template Creation & Management**: Allows typing a custom template name and saving all current settings (orientation, heading, active columns, custom columns, column widths, row height, and filter) into persistent storage. Each custom template appears as an interactive chip with 1-click loading and a quick delete option.
+  - **Excel Row Height Sync**: Synchronizes row heights into Excel exports via `ws['!rows']` with height proportional to `rowHeight * 2.83 pt`.
+  - **Admissions Module Architecture Prepared**: Full cross-platform implementation plan prepared in `implementation_plan.md` covering teacher registration, admin admissions management, and A4 official admission PDF printing, confirmed Shorebird patchable.
+
 - **Flutter Automatic Cache Management & Storage Control (2026-09-18)**:
   - **Auto Background Cache Cleaner (`CacheManagerService`)**: Created `flutter_mobile/lib/services/cache_manager_service.dart` to automatically prune app cache on launch without blocking the UI.
   - **3-Day Expiry Rule**: Automatically purges `SharedPreferences` API response caches older than 3 days using explicit `cache_time_$endpoint` timestamps.
