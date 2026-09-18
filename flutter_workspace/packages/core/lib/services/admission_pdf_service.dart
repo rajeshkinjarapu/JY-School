@@ -285,9 +285,9 @@ class AdmissionPdfService {
                 child: pw.Row(
                   mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                   children: [
-                    _buildSignatureBox('Signature of Parent / Guardian', 'తల్లి / తండ్రి సంతకం'),
-                    _buildSignatureBox('Verified by (Teacher / Staff)', 'పరిశీలించిన ఉపాధ్యాయుడు'),
-                    _buildSignatureBox('Principal / School Seal', 'ప్రిన్సిపాల్ సంతకం & సీల్'),
+                    _buildSignatureBox('Signature of Parent / Guardian'),
+                    _buildSignatureBox('Verified by (Teacher / Staff)'),
+                    _buildSignatureBox('Principal / School Seal'),
                   ],
                 ),
               ),
@@ -343,7 +343,7 @@ class AdmissionPdfService {
     );
   }
 
-  static pw.Widget _buildSignatureBox(String title, String subtitle) {
+  static pw.Widget _buildSignatureBox(String title) {
     return pw.Container(
       width: 150,
       child: pw.Column(
@@ -352,7 +352,6 @@ class AdmissionPdfService {
           pw.Container(height: 1, color: PdfColors.black),
           pw.SizedBox(height: 2),
           pw.Text(title, style: pw.TextStyle(fontSize: 7.5, fontWeight: pw.FontWeight.bold)),
-          pw.Text(subtitle, style: const pw.TextStyle(fontSize: 6.5, color: PdfColors.grey600)),
         ],
       ),
     );

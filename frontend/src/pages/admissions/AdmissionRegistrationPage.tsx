@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
-  UserPlus, Camera, Upload, Trash2, CheckCircle2, 
-  Printer, ArrowRight, Phone, Calendar, User, 
-  BookOpen, CreditCard, MapPin, Sparkles, RefreshCw
+  UserPlus, Camera, Trash2, CheckCircle2, 
+  Printer, Phone, User, 
+  CreditCard, RefreshCw
 } from 'lucide-react';
 import api from '../../api/axios';
 import toast from 'react-hot-toast';
@@ -85,15 +85,16 @@ export const AdmissionRegistrationPage: React.FC = () => {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
 
-      if (res.data?.url) {
-        setStudentImage(res.data.url);
+      const uploadedUrl = res.data?.url || res.url;
+      if (uploadedUrl) {
+        setStudentImage(uploadedUrl);
         toast.success('Photo uploaded successfully!', { id: toastId });
       } else {
         throw new Error('No URL returned from server');
       }
     } catch (err: any) {
       console.error('Photo upload failed:', err);
-      toast.error(err.response?.data?.message || 'Failed to upload photo', { id: toastId });
+      toast.error(err.response?.data?.message || err.message || 'Failed to upload photo', { id: toastId });
     } finally {
       setIsUploadingPhoto(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
@@ -105,11 +106,11 @@ export const AdmissionRegistrationPage: React.FC = () => {
     e.preventDefault();
 
     if (!studentName.trim()) {
-      toast.error('Student Name is required');
+      toast.error('Student Full Name is required');
       return;
     }
     if (!phone.trim()) {
-      toast.error('Parent Phone number is required');
+      toast.error('Parent Mobile Number is required');
       return;
     }
     if (phone.replace(/\D/g, '').length < 10) {
@@ -118,7 +119,7 @@ export const AdmissionRegistrationPage: React.FC = () => {
     }
 
     setIsSubmitting(true);
-    const toastId = toast.loading('Registering new admission...');
+    const toastId = toast.loading('Submitting student registration...');
 
     try {
       const payload = {
@@ -138,16 +139,18 @@ export const AdmissionRegistrationPage: React.FC = () => {
       };
 
       const res: any = await api.post('/api/admissions/apply', payload);
+      const admissionData = res.data?.data || res.data || res;
 
-      if (res.data?.success && res.data?.data) {
+      if (admissionData && (admissionData.id || admissionData.studentName)) {
         toast.success('Student Registered Successfully!', { id: toastId });
-        setSubmittedAdmission(res.data.data);
+        setSubmittedAdmission(admissionData);
       } else {
-        throw new Error(res.data?.message || 'Registration failed');
+        throw new Error(res.data?.message || res.message || 'Registration failed');
       }
     } catch (err: any) {
-      console.error(err);
-      toast.error(err.response?.data?.message || 'Failed to submit admission', { id: toastId });
+      console.error('Submit Admission Error:', err);
+      const msg = err.response?.data?.message || err.message || 'Failed to submit admission';
+      toast.error(msg, { id: toastId });
     } finally {
       setIsSubmitting(false);
     }
@@ -177,27 +180,28 @@ export const AdmissionRegistrationPage: React.FC = () => {
         icon={<UserPlus className="w-6 h-6 text-indigo-600" />}
       />
 
-      <div className="p-4 md:p-6 lg:p-8 max-w-5xl mx-auto">
+      {/* Main Container - Optimized Width & Sleek Padding */}
+      <div className="w-full max-w-4xl mx-auto px-3 sm:px-5 py-4">
 
         {/* SUCCESS CARD AFTER REGISTRATION */}
         {submittedAdmission ? (
-          <div className="bg-white rounded-3xl shadow-xl border border-emerald-100 overflow-hidden p-8 text-center max-w-2xl mx-auto animate-in fade-in zoom-in duration-300">
-            <div className="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-inner">
-              <CheckCircle2 className="w-10 h-10" />
+          <div className="bg-white rounded-2xl shadow-lg border border-emerald-100 overflow-hidden p-6 sm:p-8 text-center max-w-xl mx-auto animate-in fade-in zoom-in duration-300">
+            <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-3 shadow-inner">
+              <CheckCircle2 className="w-9 h-9" />
             </div>
 
-            <span className="px-3 py-1 bg-emerald-50 text-emerald-700 text-xs font-black rounded-full border border-emerald-200">
-              REGISTRATION SUCCESSFUL • అడ్మిషన్ నమోదు పూర్తయింది
+            <span className="px-3 py-1 bg-emerald-50 text-emerald-700 text-xs font-black rounded-full border border-emerald-200 uppercase tracking-wide">
+              Registration Successful
             </span>
 
-            <h2 className="text-2xl font-black text-slate-900 mt-3">
+            <h2 className="text-xl sm:text-2xl font-black text-slate-900 mt-3">
               {submittedAdmission.studentName}
             </h2>
-            <p className="text-sm font-semibold text-slate-500 mt-1">
+            <p className="text-xs sm:text-sm font-semibold text-slate-500 mt-1">
               Class Applied: <span className="text-indigo-600 font-bold">{submittedAdmission.classApplied}</span> • App No: <span className="font-mono font-bold text-slate-800">ADM-{submittedAdmission.id?.slice(0, 6).toUpperCase()}</span>
             </p>
 
-            {/* Student Photo Preview in Success Card */}
+            {/* Student Photo Preview */}
             {submittedAdmission.studentImage && (
               <div className="mt-4 flex justify-center">
                 <img 
@@ -208,19 +212,19 @@ export const AdmissionRegistrationPage: React.FC = () => {
               </div>
             )}
 
-            <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
+            <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center">
               <button
                 type="button"
                 onClick={() => setShowPrintModal(true)}
-                className="px-6 py-3.5 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white font-black text-sm rounded-2xl shadow-lg shadow-indigo-200 flex items-center justify-center gap-2 transition-all cursor-pointer"
+                className="px-5 py-3 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white font-bold text-xs sm:text-sm rounded-xl shadow-md shadow-indigo-200 flex items-center justify-center gap-2 transition-all cursor-pointer"
               >
-                <Printer className="w-5 h-5" /> Print Admission Form (PDF)
+                <Printer className="w-4 h-4" /> Print Admission Form (PDF)
               </button>
 
               <button
                 type="button"
                 onClick={handleResetForm}
-                className="px-6 py-3.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-sm rounded-2xl transition-all flex items-center justify-center gap-2 cursor-pointer"
+                className="px-5 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs sm:text-sm rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer"
               >
                 <UserPlus className="w-4 h-4" /> Register Another Student
               </button>
@@ -229,47 +233,47 @@ export const AdmissionRegistrationPage: React.FC = () => {
         ) : (
 
           /* ADMISSION REGISTRATION FORM */
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-4">
             
             {/* CARD 1: STUDENT PHOTO & BASIC INFO */}
-            <div className="bg-white rounded-3xl shadow-sm border border-slate-200/80 overflow-hidden">
-              <div className="px-6 py-4 bg-gradient-to-r from-indigo-600 via-indigo-700 to-purple-700 text-white flex items-center justify-between">
-                <div className="flex items-center gap-2.5">
-                  <User className="w-5 h-5 text-indigo-200" />
-                  <h3 className="font-black text-sm tracking-wide uppercase">1. Student Details (విద్యార్థి వివరాలు)</h3>
+            <div className="bg-white rounded-2xl shadow-xs border border-slate-200/90 overflow-hidden">
+              <div className="px-5 py-3 bg-gradient-to-r from-slate-900 via-indigo-950 to-indigo-900 text-white flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <User className="w-4 h-4 text-indigo-300" />
+                  <h3 className="font-black text-xs sm:text-sm tracking-wide uppercase">1. Student Details</h3>
                 </div>
-                <span className="text-xs bg-white/20 font-bold px-2.5 py-0.5 rounded-full text-white">
-                  Passport Photo & Personal Info
+                <span className="text-[11px] bg-white/15 font-semibold px-2.5 py-0.5 rounded-full text-indigo-100">
+                  Passport Photo & Particulars
                 </span>
               </div>
 
-              <div className="p-6 md:p-8">
-                <div className="flex flex-col md:flex-row gap-8 items-start">
+              <div className="p-4 sm:p-5">
+                <div className="flex flex-col sm:flex-row gap-5 items-start">
                   
                   {/* Student Photo Picker */}
-                  <div className="flex flex-col items-center mx-auto md:mx-0">
+                  <div className="flex flex-col items-center mx-auto sm:mx-0 shrink-0">
                     <div 
                       onClick={() => fileInputRef.current?.click()}
-                      className="group relative w-36 h-44 rounded-2xl border-2 border-dashed border-indigo-300 hover:border-indigo-600 bg-indigo-50/40 hover:bg-indigo-50/80 transition-all flex flex-col items-center justify-center cursor-pointer overflow-hidden shadow-inner"
+                      className="group relative w-28 h-36 rounded-xl border-2 border-dashed border-indigo-300 hover:border-indigo-600 bg-indigo-50/40 hover:bg-indigo-50/80 transition-all flex flex-col items-center justify-center cursor-pointer overflow-hidden shadow-xs"
                     >
                       {studentImage ? (
                         <>
                           <img src={studentImage} alt="Student Preview" className="w-full h-full object-cover" />
                           <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                            <span className="text-white text-xs font-bold flex items-center gap-1 bg-black/50 px-2 py-1 rounded-lg">
-                              <Camera className="w-3.5 h-3.5" /> Change Photo
+                            <span className="text-white text-[11px] font-bold flex items-center gap-1 bg-black/60 px-2 py-1 rounded-lg">
+                              <Camera className="w-3 h-3" /> Change
                             </span>
                           </div>
                         </>
                       ) : (
-                        <div className="text-center p-3">
+                        <div className="text-center p-2">
                           {isUploadingPhoto ? (
-                            <RefreshCw className="w-8 h-8 text-indigo-600 animate-spin mx-auto mb-2" />
+                            <RefreshCw className="w-6 h-6 text-indigo-600 animate-spin mx-auto mb-1.5" />
                           ) : (
-                            <Camera className="w-8 h-8 text-indigo-500 mx-auto mb-2 group-hover:scale-110 transition-transform" />
+                            <Camera className="w-6 h-6 text-indigo-500 mx-auto mb-1.5 group-hover:scale-110 transition-transform" />
                           )}
-                          <p className="text-xs font-black text-indigo-900">Upload Photo</p>
-                          <p className="text-[10px] text-slate-400 mt-1">Click to select (JPG/PNG)</p>
+                          <p className="text-[11px] font-black text-indigo-900">Upload Photo</p>
+                          <p className="text-[9px] text-slate-400 mt-0.5">JPG / PNG</p>
                         </div>
                       )}
                     </div>
@@ -286,20 +290,20 @@ export const AdmissionRegistrationPage: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => setStudentImage('')}
-                        className="mt-2 text-xs font-bold text-red-500 hover:text-red-700 flex items-center gap-1 cursor-pointer"
+                        className="mt-1.5 text-[11px] font-bold text-red-500 hover:text-red-700 flex items-center gap-1 cursor-pointer"
                       >
-                        <Trash2 className="w-3.5 h-3.5" /> Remove Photo
+                        <Trash2 className="w-3 h-3" /> Remove Photo
                       </button>
                     )}
                   </div>
 
                   {/* Fields Grid */}
-                  <div className="flex-1 w-full grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="flex-1 w-full grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                     
                     {/* Student Name */}
                     <div className="sm:col-span-2">
-                      <label className="block text-xs font-black text-slate-800 uppercase tracking-wider mb-1.5">
-                        Student Full Name (విద్యార్థి పూర్తి పేరు) <span className="text-red-500">*</span>
+                      <label className="block text-[11px] font-black text-slate-700 uppercase tracking-wider mb-1">
+                        Student Full Name <span className="text-red-500">*</span>
                       </label>
                       <input 
                         type="text"
@@ -307,19 +311,19 @@ export const AdmissionRegistrationPage: React.FC = () => {
                         value={studentName}
                         onChange={e => setStudentName(e.target.value)}
                         placeholder="e.g. Kinjarapu Sai Charan"
-                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-xs"
+                        className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-xs"
                       />
                     </div>
 
                     {/* Class Applied For */}
                     <div>
-                      <label className="block text-xs font-black text-slate-800 uppercase tracking-wider mb-1.5">
-                        Class Applied For (చేరే తరగతి) <span className="text-red-500">*</span>
+                      <label className="block text-[11px] font-black text-slate-700 uppercase tracking-wider mb-1">
+                        Class Applied For <span className="text-red-500">*</span>
                       </label>
                       <select
                         value={classApplied}
                         onChange={e => setClassApplied(e.target.value)}
-                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-xs"
+                        className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-xs"
                       >
                         {classesList.map(c => (
                           <option key={c} value={c}>{c}</option>
@@ -329,8 +333,8 @@ export const AdmissionRegistrationPage: React.FC = () => {
 
                     {/* Gender */}
                     <div>
-                      <label className="block text-xs font-black text-slate-800 uppercase tracking-wider mb-1.5">
-                        Gender (లింగం) <span className="text-red-500">*</span>
+                      <label className="block text-[11px] font-black text-slate-700 uppercase tracking-wider mb-1">
+                        Gender <span className="text-red-500">*</span>
                       </label>
                       <div className="grid grid-cols-2 gap-2">
                         {['Male', 'Female'].map(g => (
@@ -338,13 +342,13 @@ export const AdmissionRegistrationPage: React.FC = () => {
                             key={g}
                             type="button"
                             onClick={() => setGender(g)}
-                            className={`py-2.5 rounded-xl text-xs font-black border transition-all cursor-pointer ${
+                            className={`py-2 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
                               gender === g
-                                ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm'
+                                ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs'
                                 : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
                             }`}
                           >
-                            {g === 'Male' ? '👦 Boy (Male)' : '👧 Girl (Female)'}
+                            {g === 'Male' ? '👦 Boy' : '👧 Girl'}
                           </button>
                         ))}
                       </div>
@@ -352,29 +356,29 @@ export const AdmissionRegistrationPage: React.FC = () => {
 
                     {/* Date of Birth */}
                     <div>
-                      <label className="block text-xs font-black text-slate-800 uppercase tracking-wider mb-1.5">
-                        Date of Birth (పుట్టిన తేదీ)
+                      <label className="block text-[11px] font-black text-slate-700 uppercase tracking-wider mb-1">
+                        Date of Birth
                       </label>
                       <input 
                         type="date"
                         value={dob}
                         onChange={e => setDob(e.target.value)}
-                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-xs"
+                        className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-xs"
                       />
                     </div>
 
-                    {/* Aadhar Number */}
+                    {/* Aadhaar Number */}
                     <div>
-                      <label className="block text-xs font-black text-slate-800 uppercase tracking-wider mb-1.5">
-                        Aadhar Number (ఆధార్ సంఖ్య)
+                      <label className="block text-[11px] font-black text-slate-700 uppercase tracking-wider mb-1">
+                        Aadhaar Number
                       </label>
                       <input 
                         type="text"
                         maxLength={12}
                         value={aadharNo}
                         onChange={e => setAadharNo(e.target.value.replace(/\D/g, ''))}
-                        placeholder="12-digit Aadhar number"
-                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-mono font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-xs"
+                        placeholder="12-digit Aadhaar number"
+                        className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-mono font-semibold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-xs"
                       />
                     </div>
 
@@ -384,51 +388,54 @@ export const AdmissionRegistrationPage: React.FC = () => {
             </div>
 
             {/* CARD 2: PARENT & CONTACT DETAILS */}
-            <div className="bg-white rounded-3xl shadow-sm border border-slate-200/80 overflow-hidden">
-              <div className="px-6 py-4 bg-gradient-to-r from-emerald-600 to-teal-700 text-white flex items-center justify-between">
-                <div className="flex items-center gap-2.5">
-                  <Phone className="w-5 h-5 text-emerald-200" />
-                  <h3 className="font-black text-sm tracking-wide uppercase">2. Parent & Contact Details (తల్లిదండ్రుల వివరాలు)</h3>
+            <div className="bg-white rounded-2xl shadow-xs border border-slate-200/90 overflow-hidden">
+              <div className="px-5 py-3 bg-gradient-to-r from-slate-900 via-emerald-950 to-teal-900 text-white flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Phone className="w-4 h-4 text-emerald-300" />
+                  <h3 className="font-black text-xs sm:text-sm tracking-wide uppercase">2. Parent & Contact Details</h3>
                 </div>
+                <span className="text-[11px] bg-white/15 font-semibold px-2.5 py-0.5 rounded-full text-emerald-100">
+                  Primary Contact Info
+                </span>
               </div>
 
-              <div className="p-6 md:p-8 grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="p-4 sm:p-5 grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 
                 {/* Father Name */}
                 <div>
-                  <label className="block text-xs font-black text-slate-800 uppercase tracking-wider mb-1.5">
-                    Father Name (తండ్రి పేరు)
+                  <label className="block text-[11px] font-black text-slate-700 uppercase tracking-wider mb-1">
+                    Father Name
                   </label>
                   <input 
                     type="text"
                     value={fatherName}
                     onChange={e => setFatherName(e.target.value)}
                     placeholder="e.g. Kinjarapu Appalaraju"
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all shadow-xs"
+                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all shadow-xs"
                   />
                 </div>
 
                 {/* Mother Name */}
                 <div>
-                  <label className="block text-xs font-black text-slate-800 uppercase tracking-wider mb-1.5">
-                    Mother Name (తల్లి పేరు)
+                  <label className="block text-[11px] font-black text-slate-700 uppercase tracking-wider mb-1">
+                    Mother Name
                   </label>
                   <input 
                     type="text"
                     value={motherName}
                     onChange={e => setMotherName(e.target.value)}
                     placeholder="e.g. Kinjarapu Lakshmi"
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all shadow-xs"
+                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all shadow-xs"
                   />
                 </div>
 
                 {/* Primary Mobile Phone */}
                 <div>
-                  <label className="block text-xs font-black text-slate-800 uppercase tracking-wider mb-1.5">
-                    Primary Contact Mobile (మొబైల్ సంఖ్య) <span className="text-red-500">*</span>
+                  <label className="block text-[11px] font-black text-slate-700 uppercase tracking-wider mb-1">
+                    Primary Contact Mobile <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
-                    <span className="absolute left-4 top-3.5 text-xs font-bold text-slate-400">+91</span>
+                    <span className="absolute left-3.5 top-2.5 text-xs font-bold text-slate-400">+91</span>
                     <input 
                       type="tel"
                       required
@@ -436,76 +443,79 @@ export const AdmissionRegistrationPage: React.FC = () => {
                       value={phone}
                       onChange={e => setPhone(e.target.value.replace(/\D/g, ''))}
                       placeholder="9876543210"
-                      className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-mono font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all shadow-xs"
+                      className="w-full pl-11 pr-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-mono font-semibold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all shadow-xs"
                     />
                   </div>
                 </div>
 
                 {/* Residential Address */}
                 <div className="sm:col-span-2">
-                  <label className="block text-xs font-black text-slate-800 uppercase tracking-wider mb-1.5">
-                    Residential Address (నివాస చిరునామా)
+                  <label className="block text-[11px] font-black text-slate-700 uppercase tracking-wider mb-1">
+                    Residential Address
                   </label>
                   <textarea 
                     rows={2}
                     value={address}
                     onChange={e => setAddress(e.target.value)}
-                    placeholder="Village / Town, Mandal, District (e.g. SVL Paradise Campus, Narasannapeta)"
-                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all shadow-xs"
+                    placeholder="Door No, Street, Village/Town, Mandal, District"
+                    className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-medium text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all shadow-xs"
                   />
                 </div>
 
               </div>
             </div>
 
-            {/* CARD 3: ADMISSION FEE & PAYMENT PARTICULARS */}
-            <div className="bg-white rounded-3xl shadow-sm border border-slate-200/80 overflow-hidden">
-              <div className="px-6 py-4 bg-gradient-to-r from-purple-700 to-indigo-800 text-white flex items-center justify-between">
-                <div className="flex items-center gap-2.5">
-                  <CreditCard className="w-5 h-5 text-purple-200" />
-                  <h3 className="font-black text-sm tracking-wide uppercase">3. Admission Fee & Mode (ఫీజు వివరాలు)</h3>
+            {/* CARD 3: ADMISSION FEE & PAYMENT */}
+            <div className="bg-white rounded-2xl shadow-xs border border-slate-200/90 overflow-hidden">
+              <div className="px-5 py-3 bg-gradient-to-r from-slate-900 via-purple-950 to-purple-900 text-white flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <CreditCard className="w-4 h-4 text-purple-300" />
+                  <h3 className="font-black text-xs sm:text-sm tracking-wide uppercase">3. Admission Fee & Payment</h3>
                 </div>
+                <span className="text-[11px] bg-white/15 font-semibold px-2.5 py-0.5 rounded-full text-purple-100">
+                  Fee Collection Mode
+                </span>
               </div>
 
-              <div className="p-6 md:p-8 grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="p-4 sm:p-5 grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 {/* Fee Amount */}
                 <div>
-                  <label className="block text-xs font-black text-slate-800 uppercase tracking-wider mb-1.5">
-                    Admission Fee Amount (ఫీజు మొత్తం ₹)
+                  <label className="block text-[11px] font-black text-slate-700 uppercase tracking-wider mb-1">
+                    Admission Fee Amount (₹)
                   </label>
                   <input 
                     type="number"
                     value={admissionFee}
                     onChange={e => setAdmissionFee(e.target.value)}
                     placeholder="e.g. 5000"
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all shadow-xs"
+                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all shadow-xs"
                   />
                 </div>
 
                 {/* Payment Method */}
                 <div>
-                  <label className="block text-xs font-black text-slate-800 uppercase tracking-wider mb-1.5">
-                    Payment Method (చెల్లింపు విధానం)
+                  <label className="block text-[11px] font-black text-slate-700 uppercase tracking-wider mb-1">
+                    Payment Method
                   </label>
                   <select
                     value={paymentMethod}
                     onChange={e => setPaymentMethod(e.target.value)}
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all shadow-xs"
+                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all shadow-xs"
                   >
-                    <option value="CASH">Cash Payment (నగదు)</option>
-                    <option value="UPI">UPI / Online Transfer</option>
+                    <option value="CASH">Cash Payment</option>
+                    <option value="UPI">UPI / Online Payment</option>
                     <option value="LATER">Pay Later at School Office</option>
                   </select>
                 </div>
               </div>
             </div>
 
-            {/* SUBMIT BUTTON */}
+            {/* ACTION FOOTER */}
             <div className="flex items-center justify-end gap-3 pt-2">
               <button
                 type="button"
                 onClick={handleResetForm}
-                className="px-6 py-3.5 bg-white border border-slate-200 text-slate-700 font-bold text-sm rounded-2xl hover:bg-slate-50 transition-colors cursor-pointer"
+                className="px-5 py-2.5 bg-white border border-slate-200 text-slate-700 font-bold text-xs sm:text-sm rounded-xl hover:bg-slate-50 transition-colors cursor-pointer"
               >
                 Clear Form
               </button>
@@ -513,13 +523,13 @@ export const AdmissionRegistrationPage: React.FC = () => {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="px-8 py-3.5 bg-gradient-to-r from-indigo-600 via-indigo-700 to-purple-700 hover:from-indigo-700 hover:to-purple-800 text-white font-black text-sm rounded-2xl shadow-xl shadow-indigo-200 flex items-center gap-2.5 transition-all transform active:scale-98 disabled:opacity-50 cursor-pointer"
+                className="px-6 py-2.5 bg-gradient-to-r from-indigo-600 via-indigo-700 to-purple-700 hover:from-indigo-700 hover:to-purple-800 text-white font-black text-xs sm:text-sm rounded-xl shadow-md shadow-indigo-200 flex items-center gap-2 transition-all transform active:scale-98 disabled:opacity-50 cursor-pointer"
               >
                 {isSubmitting ? (
-                  <RefreshCw className="w-5 h-5 animate-spin" />
+                  <RefreshCw className="w-4 h-4 animate-spin" />
                 ) : (
                   <>
-                    <UserPlus className="w-5 h-5" /> Submit Student Registration
+                    <UserPlus className="w-4 h-4" /> Submit Student Registration
                   </>
                 )}
               </button>

@@ -129,7 +129,7 @@ export const AdmissionPrintModal: React.FC<AdmissionPrintModalProps> = ({
 
                 {/* Form Title Ribbon */}
                 <div className="mt-3 bg-indigo-950 text-white text-center py-1.5 px-4 rounded font-black text-sm tracking-widest uppercase shadow-sm">
-                  APPLICATION FOR ADMISSION / విద్యార్థి ప్రవేశ దరఖాస్తు
+                  APPLICATION FOR ADMISSION
                 </div>
 
                 {/* Application Meta Bar */}
@@ -149,7 +149,7 @@ export const AdmissionPrintModal: React.FC<AdmissionPrintModalProps> = ({
               {/* 1. STUDENT PERSONAL INFORMATION */}
               <div className="mb-3.5">
                 <div className="bg-slate-100 border border-slate-300 px-2 py-1 font-black text-xs text-indigo-950 uppercase tracking-wide flex items-center justify-between rounded-t">
-                  <span>1. STUDENT PERSONAL INFORMATION (విద్యార్థి వివరాలు)</span>
+                  <span>1. STUDENT PERSONAL INFORMATION</span>
                 </div>
                 <table className="w-full border-collapse border border-slate-300 text-xs">
                   <tbody>
@@ -160,23 +160,23 @@ export const AdmissionPrintModal: React.FC<AdmissionPrintModalProps> = ({
                       </td>
                     </tr>
                     <tr className="border-b border-slate-200">
-                      <td className="w-1/4 p-2 bg-slate-50 font-bold text-slate-700 border-r border-slate-200">Gender (లింగం)</td>
+                      <td className="w-1/4 p-2 bg-slate-50 font-bold text-slate-700 border-r border-slate-200">Gender</td>
                       <td className="w-1/4 p-2 font-bold text-slate-800 border-r border-slate-200 uppercase">
                         {admission.gender || '-'}
                       </td>
-                      <td className="w-1/4 p-2 bg-slate-50 font-bold text-slate-700 border-r border-slate-200">Date of Birth (పుట్టిన తేదీ)</td>
+                      <td className="w-1/4 p-2 bg-slate-50 font-bold text-slate-700 border-r border-slate-200">Date of Birth</td>
                       <td className="w-1/4 p-2 font-bold text-slate-800">
                         {admission.dob ? new Date(admission.dob).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '-'}
                       </td>
                     </tr>
                     <tr className="border-b border-slate-200">
-                      <td className="w-1/4 p-2 bg-slate-50 font-bold text-slate-700 border-r border-slate-200">Aadhar Card No.</td>
+                      <td className="w-1/4 p-2 bg-slate-50 font-bold text-slate-700 border-r border-slate-200">Aadhaar Card No.</td>
                       <td className="w-1/4 p-2 font-mono font-bold text-slate-900 border-r border-slate-200 tracking-wider">
                         {admission.aadharNo || '-'}
                       </td>
-                      <td className="w-1/4 p-2 bg-slate-50 font-bold text-slate-700 border-r border-slate-200">Class Admitted To</td>
-                      <td className="w-1/4 p-2 font-bold text-indigo-900 uppercase">
-                        {admission.classApplied || '-'}
+                      <td className="w-1/4 p-2 bg-slate-50 font-bold text-slate-700 border-r border-slate-200">Academic Year</td>
+                      <td className="w-1/4 p-2 font-bold text-slate-800">
+                        {currentYear} - {currentYear + 1}
                       </td>
                     </tr>
                     <tr>
@@ -192,12 +192,12 @@ export const AdmissionPrintModal: React.FC<AdmissionPrintModalProps> = ({
               {/* 2. PARENT & GUARDIAN DETAILS */}
               <div className="mb-3.5">
                 <div className="bg-slate-100 border border-slate-300 px-2 py-1 font-black text-xs text-indigo-950 uppercase tracking-wide rounded-t">
-                  2. PARENT & GUARDIAN DETAILS (తల్లిదండ్రుల వివరాలు)
+                  2. PARENT & GUARDIAN DETAILS
                 </div>
                 <table className="w-full border-collapse border border-slate-300 text-xs">
                   <tbody>
                     <tr className="border-b border-slate-200">
-                      <td className="w-1/4 p-2 bg-slate-50 font-bold text-slate-700 border-r border-slate-200">Father's Name (తండ్రి పేరు)</td>
+                      <td className="w-1/4 p-2 bg-slate-50 font-bold text-slate-700 border-r border-slate-200">Father's Name</td>
                       <td className="w-1/4 p-2 font-bold text-slate-900 border-r border-slate-200 uppercase">
                         {admission.fatherName || '-'}
                       </td>
@@ -207,7 +207,7 @@ export const AdmissionPrintModal: React.FC<AdmissionPrintModalProps> = ({
                       </td>
                     </tr>
                     <tr>
-                      <td className="w-1/4 p-2 bg-slate-50 font-bold text-slate-700 border-r border-slate-200">Mother's Name (తల్లి పేరు)</td>
+                      <td className="w-1/4 p-2 bg-slate-50 font-bold text-slate-700 border-r border-slate-200">Mother's Name</td>
                       <td className="w-1/4 p-2 font-bold text-slate-900 border-r border-slate-200 uppercase">
                         {admission.motherName || '-'}
                       </td>
@@ -223,7 +223,7 @@ export const AdmissionPrintModal: React.FC<AdmissionPrintModalProps> = ({
               {/* 3. FEE & REGISTRATION PARTICULARS */}
               <div className="mb-3.5">
                 <div className="bg-slate-100 border border-slate-300 px-2 py-1 font-black text-xs text-indigo-950 uppercase tracking-wide rounded-t">
-                  3. ADMISSION & FEE PARTICULARS (ఫీజు & అడ్మిషన్ వివరాలు)
+                  3. ADMISSION & FEE PARTICULARS
                 </div>
                 <table className="w-full border-collapse border border-slate-300 text-xs">
                   <tbody>
@@ -258,7 +258,7 @@ export const AdmissionPrintModal: React.FC<AdmissionPrintModalProps> = ({
               {/* 4. DECLARATION BY PARENT */}
               <div className="mb-4 border border-slate-300 rounded p-2.5 bg-slate-50/60">
                 <h4 className="font-black text-[11px] text-slate-900 uppercase mb-1">
-                  Declaration by Parent / Guardian (తల్లిదండ్రుల డిక్లరేషన్):
+                  Declaration by Parent / Guardian:
                 </h4>
                 <p className="text-[10px] text-slate-600 leading-relaxed text-justify">
                   I hereby declare that the particulars furnished above are true and correct to the best of my knowledge and belief. I agree to abide by the rules, regulations, and discipline of the school. I also understand that timely payment of school fees and regular attendance of my ward are mandatory.
@@ -271,21 +271,18 @@ export const AdmissionPrintModal: React.FC<AdmissionPrintModalProps> = ({
                   <div className="flex flex-col justify-end h-20">
                     <div className="border-t border-slate-800 mx-3 pt-1">
                       <p className="font-bold text-[11px] text-slate-900">Signature of Parent / Guardian</p>
-                      <p className="text-[9px] text-slate-500">తల్లి / తండ్రి సంతకం</p>
                     </div>
                   </div>
 
                   <div className="flex flex-col justify-end h-20">
                     <div className="border-t border-slate-800 mx-3 pt-1">
                       <p className="font-bold text-[11px] text-slate-900">Verified by (Teacher / Staff)</p>
-                      <p className="text-[9px] text-slate-500">పరిశీలించిన ఉపాధ్యాయుడు</p>
                     </div>
                   </div>
 
                   <div className="flex flex-col justify-end h-20 relative">
                     <div className="border-t border-slate-800 mx-3 pt-1">
                       <p className="font-black text-[11px] text-slate-950">Principal / Correspondent</p>
-                      <p className="text-[9px] text-slate-500">ప్రిన్సిపాల్ సంతకం & సీల్</p>
                     </div>
                   </div>
                 </div>
@@ -379,7 +376,7 @@ export const AdmissionPrintModal: React.FC<AdmissionPrintModalProps> = ({
             </div>
 
             <div className="mt-2 bg-indigo-950 text-white text-center py-1 rounded font-black text-xs tracking-widest uppercase">
-              APPLICATION FOR ADMISSION / విద్యార్థి ప్రవేశ దరఖాస్తు
+              APPLICATION FOR ADMISSION
             </div>
 
             <div className="flex items-center justify-between text-[10px] font-bold text-slate-800 mt-1.5 px-1">
@@ -482,19 +479,16 @@ export const AdmissionPrintModal: React.FC<AdmissionPrintModalProps> = ({
               <div className="flex flex-col justify-end h-14">
                 <div className="border-t border-slate-800 mx-2 pt-1">
                   <p className="font-bold text-[10px]">Parent Signature</p>
-                  <p className="text-[8px] text-slate-500">తల్లి / తండ్రి సంతకం</p>
                 </div>
               </div>
               <div className="flex flex-col justify-end h-14">
                 <div className="border-t border-slate-800 mx-2 pt-1">
                   <p className="font-bold text-[10px]">Teacher / Verifier</p>
-                  <p className="text-[8px] text-slate-500">ఉపాధ్యాయుని సంతకం</p>
                 </div>
               </div>
               <div className="flex flex-col justify-end h-14">
                 <div className="border-t border-slate-800 mx-2 pt-1">
                   <p className="font-black text-[10px]">Principal / Seal</p>
-                  <p className="text-[8px] text-slate-500">ప్రిన్సిపాల్ సంతకం & ముద్ర</p>
                 </div>
               </div>
             </div>

@@ -20,6 +20,9 @@
   - **Backend API (`/api/admissions`)**:
     - Enhanced `GET /` to authorize `TEACHER`, `ADMIN`, and `SUPER_ADMIN`.
     - Added alias `POST /register` and expanded `POST /apply` to accept student photos and complete application parameters.
+  - **Submit Error Fix & DB Auto-Healing**: Fixed the submission error caused by Axios unwrapped response inspection and added a PostgreSQL schema guard function (`ensureAdmissionsTable`) that auto-verifies and creates table/columns (`studentImage`, `admissionFee`, `paymentMethod`, `paymentReceipt`, `paymentStatus`) to guarantee zero database exceptions.
+  - **Sleek Width & Compact Padding**: Optimized the registration page width to `max-w-4xl` with small, balanced padding (`px-3 sm:px-5 py-4` container, `p-4 sm:p-5` card body), modern inputs, and clean visual hierarchy.
+  - **Clean English ERP Labels**: Removed all Telugu labels and subtitles across the Registration Page, Print Modal, and PDF service in favor of standardized English School ERP labels.
   - **Shorebird Patch Ready**:
     - All Flutter dependencies (`image_picker`, `pdf`, `printing`, `intl`, `share_plus`) are existing packages. Zero native Android changes required, allowing 100% over-the-air deployment via Shorebird Patch without rebuilding APKs.
 
