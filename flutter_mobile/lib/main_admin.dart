@@ -6,6 +6,7 @@ import 'config/app_config.dart';
 import 'main.dart';
 import 'services/notification_service.dart';
 import 'services/offline_sync_service.dart';
+import 'services/cache_manager_service.dart';
 
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
@@ -30,6 +31,7 @@ void main() async {
   if (!kIsWeb) {
     NotificationService().initialize(navigatorKey);
     OfflineSyncService.initialize();
+    CacheManagerService.initialize();
   }
 
   runApp(const MyApp());

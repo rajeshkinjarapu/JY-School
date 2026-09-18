@@ -13,6 +13,7 @@ import 'screens/main_layout.dart';
 import 'services/api_service.dart';
 import 'services/notification_service.dart';
 import 'services/offline_sync_service.dart';
+import 'services/cache_manager_service.dart';
 import 'widgets/offline_banner.dart';
 import 'config/app_config.dart';
 import 'services/update_service.dart';
@@ -67,9 +68,10 @@ void main() async {
   if (!kIsWeb) {
     NotificationService().initialize(navigatorKey);
   }
-  // Initialize Offline Sync Service
+  // Initialize Offline Sync and Cache Manager Services
   if (!kIsWeb) {
     OfflineSyncService.initialize();
+    CacheManagerService.initialize();
   }
 
   runApp(const MyApp());

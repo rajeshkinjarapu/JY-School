@@ -772,6 +772,7 @@ class ApiService {
         if (response.statusCode == 200 || response.statusCode == 201) {
           final prefs = await SharedPreferences.getInstance();
           await prefs.setString('cache_$endpoint', response.body);
+          await prefs.setInt('cache_time_$endpoint', DateTime.now().millisecondsSinceEpoch);
           
           return {'success': true, 'data': decoded is Map && decoded.containsKey('data') ? decoded['data'] : decoded};
         }

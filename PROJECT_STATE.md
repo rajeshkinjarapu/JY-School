@@ -1,6 +1,15 @@
 # Project State: JY School ERP
 
 ## 2. Recent Updates & Progress
+- **Flutter Automatic Cache Management & Storage Control (2026-09-18)**:
+  - **Auto Background Cache Cleaner (`CacheManagerService`)**: Created `flutter_mobile/lib/services/cache_manager_service.dart` to automatically prune app cache on launch without blocking the UI.
+  - **3-Day Expiry Rule**: Automatically purges `SharedPreferences` API response caches older than 3 days using explicit `cache_time_$endpoint` timestamps.
+  - **50MB Threshold Auto-Pruning**: Scans the temporary cache directory (`getTemporaryDirectory`) and application documents directory (`getApplicationDocumentsDirectory`) for old temp files, PDFs, receipts, images, and downloaded APK updates. If total cache exceeds 50MB, it sorts files by last modified date and prunes the oldest files down to 30MB.
+  - **Security & Session Preservation**: Guaranteed zero deletion of authentication tokens, user profile settings, or pending offline sync queue operations (`offline_sync_queue`).
+  - **Interactive Profile Cache Cleaner**: Added a "Clear App Cache" tile in `ProfileScreen` showing live cache size with a confirmation dialog and visual feedback.
+  - **Universal & Flavor App Sync**: Initialized across all 4 entrypoints (`main.dart`, `main_admin.dart`, `main_teacher.dart`, `main_student.dart`).
+  - **Shorebird Compatible**: Fully patchable via Shorebird without requiring a new APK release.
+
 - **MCQ Paper Generator - 3-Tier Layout & Space/Enter Support (2026-09-18)**:
   - **Removed Unwanted Layout Dropdowns**: Cleaned up the UI by completely removing toolbar/settings layout selectors.
   - **Implemented Exact 3-Tier Layout Rule**:
