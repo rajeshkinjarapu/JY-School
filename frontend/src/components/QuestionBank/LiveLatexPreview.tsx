@@ -47,7 +47,6 @@ export interface LiveLatexPreviewProps {
   pageBorderPadding?: string;
   pageBorderThickness?: string;
   pageBorderStyle?: string;
-  optionsLayoutMode?: 'auto' | 'as_typed' | 'one_col' | 'two_col' | 'four_col';
 }
 
 
@@ -76,8 +75,7 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
   showPageBorder = false,
   pageBorderPadding = 'medium',
   pageBorderThickness = 'medium',
-  pageBorderStyle = 'solid',
-  optionsLayoutMode = 'auto'
+  pageBorderStyle = 'solid'
 }) => {
   // Helper to balance braces in math strings so KaTeX doesn't crash on bad AI output
   const balanceMath = (math: string) => {
@@ -245,8 +243,8 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
             const estimateVisualLength = (text: string) => {
               let s = text.replace(/\\\(|\\\)|\\\[|\\\]|\$/g, ''); // Remove math delimiters
               s = s.replace(/\\mathbb|\\mathbf|\\text|\\mathrm/g, ''); // Remove formatting commands
-              s = s.replace(/\\[a-zA-Z]+/g, 'X'); // Math command placeholder
-              s = s.replace(/[{}]/g, ''); // Remove formatting brackets
+              s = s.replace(/\\[a-zA-Z]+/g, 'X'); // Replace math commands with 'X'
+              s = s.replace(/[{}_^]/g, ''); // Remove brackets and sub/superscripts
               return s.replace(/\s+/g, ' ').trim().length;
             };
 
@@ -257,52 +255,19 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
               estimateVisualLength(optD)
             );
             
-            const hasNewlineB = /\n\s*\(B\)/i.test(optionsText);
-            const hasNewlineC = /\n\s*\(C\)/i.test(optionsText);
-            const hasNewlineD = /\n\s*\(D\)/i.test(optionsText);
+            const singleLineLimit = isDoubleColumn ? 6 : 12;
+            const twoByTwoLimit = isDoubleColumn ? 22 : 42;
 
             let optionsLayout = '';
-            if (optionsLayoutMode === 'one_col') {
-              // Forced 1 Column (One by one) for all questions
-              optionsLayout = 'flex flex-col w-full gap-1';
-            } else if (optionsLayoutMode === 'two_col') {
-              // Forced 2 Columns for all questions
-              optionsLayout = 'grid grid-cols-2 w-full gap-x-4 gap-y-1';
-            } else if (optionsLayoutMode === 'four_col') {
-              // Forced 4 Columns for all questions
-              optionsLayout = 'grid grid-cols-4 w-full gap-x-2 gap-y-1';
-            } else if (optionsLayoutMode === 'as_typed') {
-              // MS Word Style: Follows enters and spaces exactly as typed in editor
-              if (hasNewlineB && hasNewlineC && hasNewlineD) {
-                // User pressed Enter after each option -> One step down (One by One)
-                optionsLayout = 'flex flex-col w-full gap-1';
-              } else if (!hasNewlineB && hasNewlineC && !hasNewlineD) {
-                // (A) (B) on row 1, (C) (D) on row 2
-                optionsLayout = 'grid grid-cols-2 w-full gap-x-4 gap-y-1';
-              } else if (!hasNewlineB && !hasNewlineC && !hasNewlineD) {
-                // All 4 on 1 line separated by spaces
-                optionsLayout = 'grid grid-cols-4 w-full gap-x-2 gap-y-1';
-              } else {
-                optionsLayout = 'flex flex-col w-full gap-1';
-              }
+            if (maxLen <= singleLineLimit) {
+              // 1. Options chinnavi ayite: Single line lo ravali (4 columns)
+              optionsLayout = 'grid grid-cols-4 w-full gap-x-2 gap-y-0.5';
+            } else if (maxLen <= twoByTwoLimit) {
+              // 2. Options length ekkuva ayite: 2*2 ravali (2 columns)
+              optionsLayout = 'grid grid-cols-2 w-full gap-x-2 gap-y-0.5';
             } else {
-              // 'auto' mode: Dynamically evaluated for EVERY question across the entire paper
-              // In standard A4 paper:
-              // - Short options (<= 11 chars on 1 line): 4 Columns
-              // - Medium options (<= 38 chars): 2*2 (2 Columns) - Fits Q9, Q10, Q11, Q12, Q13, Q18, Q20, Q22 with plenty of room
-              // - Truly long options (> 38 chars, e.g. Q21 with 53+ chars): One by One (1 Column)
-              const col4Limit = isDoubleColumn ? 6 : 11;
-              const col2Limit = isDoubleColumn ? 18 : 38;
-
-              if (maxLen <= col4Limit && !hasNewlineB && !hasNewlineC && !hasNewlineD) {
-                optionsLayout = 'grid grid-cols-4 w-full gap-x-2 gap-y-1';
-              } else if (maxLen <= col2Limit) {
-                optionsLayout = 'grid grid-cols-2 w-full gap-x-4 gap-y-1';
-              } else {
-                // Only questions whose options are genuinely long (> 38 chars, like Q21)
-                // render vertically one by one (1 Column)
-                optionsLayout = 'flex flex-col w-full gap-1';
-              }
+              // 3. Appatiki length ekkuva aytite: One by One ravali (1 column)
+              optionsLayout = 'flex flex-col w-full gap-0.5';
             }
 
             // Extract question number for hanging indent

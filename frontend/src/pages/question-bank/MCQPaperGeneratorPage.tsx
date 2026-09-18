@@ -41,7 +41,6 @@ export const MCQPaperGeneratorPage = () => {
   const [fontSize, setFontSize] = useState<string>(() => localStorage.getItem('mcq_exam_font_size') || 'medium');
   const [questionSpacing, setQuestionSpacing] = useState<string>(() => localStorage.getItem('mcq_exam_spacing') || 'normal');
   const [showPaperHeader, setShowPaperHeader] = useState<boolean>(() => localStorage.getItem('mcq_exam_show_header') !== 'false');
-  const [optionsLayout, setOptionsLayout] = useState<string>(() => localStorage.getItem('mcq_exam_options_layout') || 'auto');
   
   // Logo is hardcoded from local storage or empty, no upload option in settings
   const [logoBase64] = useState<string>(() => {
@@ -297,8 +296,7 @@ export const MCQPaperGeneratorPage = () => {
       settings: {
         fontSize,
         questionSpacing,
-        showPaperHeader,
-        optionsLayout
+        showPaperHeader
       }
     };
     return "<!--MCQ_DATA_V2-->\n" + JSON.stringify(data);
@@ -749,7 +747,6 @@ export const MCQPaperGeneratorPage = () => {
       setFontSize(localStorage.getItem('mcq_exam_font_size') || 'medium');
       setQuestionSpacing(localStorage.getItem('mcq_exam_spacing') || 'normal');
       setShowPaperHeader(localStorage.getItem('mcq_exam_show_header') !== 'false');
-      setOptionsLayout(localStorage.getItem('mcq_exam_options_layout') || 'auto');
       setSubjectContents({
         'Telugu': '1. What is 25% of 200?\n(A) 25\n(B) 50\n(C) 75\n(D) 100\n\n2. Solve for x: $2x + 5 = 15$\n(A) 2\n(B) 4\n(C) 5\n(D) 10\n\n3. The perimeter of a rectangle is 40 cm. If its length is 12 cm, what is its breadth?\n(A) 8 cm\n(B) 10 cm\n(C) 12 cm\n(D) 16 cm'
       });
@@ -779,7 +776,6 @@ export const MCQPaperGeneratorPage = () => {
           if (settings.fontSize) setFontSize(settings.fontSize);
           if (settings.questionSpacing) setQuestionSpacing(settings.questionSpacing);
           if (settings.showPaperHeader !== undefined) setShowPaperHeader(settings.showPaperHeader);
-          if (settings.optionsLayout) setOptionsLayout(settings.optionsLayout);
         } else {
           // Legacy papers explicitly had the header ON, normal spacing, medium font.
           setFontSize('medium');
@@ -996,25 +992,6 @@ export const MCQPaperGeneratorPage = () => {
                 >
                   <Wand2 className="w-3.5 h-3.5" /> Auto-Align Format
                 </button>
-                <div className="flex items-center gap-1 bg-slate-50 px-2 py-1 rounded-lg border border-slate-200 shadow-sm text-xs">
-                  <span className="text-[11px] text-slate-500 font-semibold hidden xl:inline">Layout:</span>
-                  <select
-                    value={optionsLayout}
-                    onChange={(e) => {
-                      setOptionsLayout(e.target.value);
-                      localStorage.setItem('mcq_exam_options_layout', e.target.value);
-                      toast.success(`Layout: ${e.target.options[e.target.selectedIndex].text}`);
-                    }}
-                    className="bg-transparent text-xs font-bold text-slate-700 outline-none cursor-pointer"
-                    title="Options Layout Mode"
-                  >
-                    <option value="auto">Auto (Smart)</option>
-                    <option value="as_typed">MS Word (As Typed)</option>
-                    <option value="one_col">One by One (1 Col)</option>
-                    <option value="two_col">2 Columns</option>
-                    <option value="four_col">4 Columns</option>
-                  </select>
-                </div>
                 <button 
                   onClick={() => setIsLatexHelpOpen(true)}
                   className="px-3 py-1.5 bg-amber-50 text-amber-700 text-xs font-bold rounded-lg hover:bg-amber-100 transition-colors flex items-center gap-1.5 border border-amber-200 shadow-sm ml-1"
@@ -1133,7 +1110,6 @@ export const MCQPaperGeneratorPage = () => {
               fontSize={fontSize}
               questionSpacing={questionSpacing}
               showHeader={showPaperHeader}
-              optionsLayoutMode={optionsLayout as any}
             />
           </div>
           </div>
@@ -1394,27 +1370,6 @@ export const MCQPaperGeneratorPage = () => {
                     <option value="relaxed">Relaxed</option>
                   </select>
                 </div>
-              </div>
-
-              <div className="pt-4 border-t border-slate-100">
-                <label className="block text-sm font-medium text-slate-700 mb-1">Options Layout (ఆప్షన్ల లేఅవుట్)</label>
-                <select
-                  value={optionsLayout}
-                  onChange={(e) => {
-                    setOptionsLayout(e.target.value);
-                    localStorage.setItem('mcq_exam_options_layout', e.target.value);
-                  }}
-                  className="w-full rounded-lg border-slate-200 bg-white border p-2.5 text-sm focus:ring-2 focus:ring-blue-500/20 outline-none transition-all font-medium"
-                >
-                  <option value="auto">Smart Auto (పొడవును బట్టి ఆటోమేటిక్ - పెద్ద లెంగ్త్ ఉన్నవి నిలువుగా ఒక్కొక్కటి)</option>
-                  <option value="as_typed">MS Word Style (ఎడిటర్‌లో టైప్ చేసినట్లు - స్పేస్ & ఎంటర్ ప్రకారం)</option>
-                  <option value="one_col">One by One (నిలువుగా ఒక్కొక్కటి - 1 Column)</option>
-                  <option value="two_col">2 Columns (రెండు కాలమ్స్ - 2x2)</option>
-                  <option value="four_col">4 Columns (ఒకే లైన్‌లో 4 ఆప్షన్లు)</option>
-                </select>
-                <p className="text-xs text-slate-500 mt-1.5">
-                  Q.21 లాంటి పెద్ద సమీకరణాలు/ఫార్ములాల ఆప్షన్లు ఆటోమేటిక్‌గా ఒకదాని కింద ఒకటి (One by One) అమర్చబడతాయి.
-                </p>
               </div>
               
               <div className="pt-4 mt-2 border-t border-slate-100 flex items-center justify-between">

@@ -1,19 +1,13 @@
 # Project State: JY School ERP
 
 ## 2. Recent Updates & Progress
-- **MCQ Paper Generator - Question 21 Long Options & MS Word Formatting Fixes (2026-09-18)**:
-  - **Universal Dynamic Layout (Calibrated 2*2 vs One-by-One)**: Evaluates EVERY question dynamically in a loop. Calibrated the 2-column threshold to 38 characters: questions with normal/medium options (like Q.9, Q.18, Q.22 with 20-26 chars) neatly fit in 2*2 (2 Columns) without wasting whitespace; only genuinely oversized questions (> 38 chars, like Q.21 polynomial with 53+ chars) render One by One (1 Column).
-  - **MS Word-like Space & Enter Behavior**:
-    - **Space Preservation**: Replaced consecutive whitespace characters with non-breaking spaces (`&nbsp;`) and enforced `whitespace-pre-wrap` across all question and option rendering containers so that typing spaces creates visible spacing in the preview.
-    - **Enter (One Step Down)**: Supported MS Word-style newline detection where pressing Enter between options in the editor renders each option on its own line ("one step down").
-    - **Question & Options Block Normalization**: Fixed block splitting regex so that blank lines between question text and `(A)` do not detach the options from the question.
-  - **Configurable Options Layout Modes**: Added an "Options Layout" (ఆప్షన్ల లేఅవుట్) dropdown in both Paper Settings and the Editor Header Toolbar with 5 options:
-    1. *Smart Auto (Default)*: Intelligently chooses 4-col, 2-col, or 1-col (one by one) based on formula/text length.
-    2. *MS Word Style (As Typed)*: Strictly respects the spaces and Enters typed in the editor.
-    3. *One by One (1 Column)*: Forces all options to be vertically stacked.
-    4. *2 Columns (2x2)*.
-    5. *4 Columns (Single Line)*.
-    Saved to `localStorage` and serialized with paper data.
+- **MCQ Paper Generator - 3-Tier Layout & Space/Enter Support (2026-09-18)**:
+  - **Removed Unwanted Layout Dropdowns**: Cleaned up the UI by completely removing toolbar/settings layout selectors.
+  - **Implemented Exact 3-Tier Layout Rule**:
+    1. *Options chinnavi ayite (Short options, <= 12 chars)*: Render in a **Single line** (4 Columns, e.g. Q.23, Q.24).
+    2. *Options length ekkuva ayite (Medium options, 13 to 42 chars)*: Render in **2*2** (2 Columns, e.g. Q.9, Q.10, Q.11, Q.12, Q.13, Q.18, Q.20, Q.22).
+    3. *Appatiki length ekkuva aytite (Very long options, > 42 chars)*: Render **One by One** (1 Column, e.g. Q.21, Q.8 with 50+ chars).
+  - **Space & Enter Preservation (MS Word Behavior)**: Preserved non-breaking spaces for multiple spaces typed in the editor, and line breaks on Enter.
   - **Udayraj OMR Checker Architecture Analysis**: Clarified that Udayraj Deshmukh's `OMRChecker` is a CLI tool designed specifically for custom sheets with concentric circle bullseye markers (`omr_marker.jpg`), and its official repo states `--autoAlign flag is deprecated due to low performance on generic OMR sheets`.
   - **Zero-Distortion Paper Alignment (`align_omr_sheet`)**: Replaced the previous 4-point quadrilateral perspective warp with strict upright corner marker verification and an axis-aligned outer bounding box crop (`image[y:y+h, x:x+w]`). Guaranteed 0% tilt/slant.
   - **Gemini Multimodal Vision AI OMR Engine (2026-09-17)**:
