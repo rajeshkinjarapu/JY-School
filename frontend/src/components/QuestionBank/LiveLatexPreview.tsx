@@ -47,6 +47,7 @@ export interface LiveLatexPreviewProps {
   pageBorderPadding?: string;
   pageBorderThickness?: string;
   pageBorderStyle?: string;
+  optionsLayoutMode?: 'auto' | 'as_typed' | 'one_col' | 'two_col' | 'four_col';
 }
 
 
@@ -75,7 +76,8 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
   showPageBorder = false,
   pageBorderPadding = 'medium',
   pageBorderThickness = 'medium',
-  pageBorderStyle = 'solid'
+  pageBorderStyle = 'solid',
+  optionsLayoutMode = 'auto'
 }) => {
   // Helper to balance braces in math strings so KaTeX doesn't crash on bad AI output
   const balanceMath = (math: string) => {
@@ -170,6 +172,8 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
             textPart = textPart.replace(/\\newpage/g, '<div style="page-break-after: always" class="w-full h-8 border-b-2 border-dashed border-slate-300 my-4 print:border-0 print:h-0"></div>');
           }
           
+          // Preserve spaces if user typed multiple spaces (e.g. Tab or multiple Space presses)
+          textPart = textPart.replace(/ {2,}/g, (match) => ' ' + '&nbsp;'.repeat(match.length - 1));
           return textPart.replace(/\n/g, '<br/>');
         }).join('');
       }).join('');
@@ -181,7 +185,9 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
 
   const parseTextToBlocks = (text: string, subject: string, elements: JSX.Element[]) => {
     if (!text || text.trim() === '') return;
-    const rawBlocks = text.split(/(\n\n+)/);
+    // Normalize text blocks so that empty lines between a question and its options don't detach the options
+    const normalizedText = text.replace(/(\n\s*)\n+(\s*\(A\))/g, '$1$2');
+    const rawBlocks = normalizedText.split(/(\n\n+)/);
     
     for (let i = 0; i < rawBlocks.length; i += 2) {
       const block = rawBlocks[i];
@@ -204,13 +210,13 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
               return (
                 <div className={`break-inside-avoid flex whitespace-pre-wrap ${getFontSizeClass()} ${getSpacingClasses()}`}>
                   <strong className="flex-shrink-0 w-10 text-left">{numStr}.</strong>
-                  <div className="flex-1" dangerouslySetInnerHTML={{ __html: renderLatex(restText) }} />
+                  <div className="flex-1 whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: renderLatex(restText) }} />
                 </div>
               );
             }
             return (
               <div 
-                className={`break-inside-avoid ${getFontSizeClass()} ${getSpacingClasses()}`}
+                className={`break-inside-avoid whitespace-pre-wrap ${getFontSizeClass()} ${getSpacingClasses()}`}
                 dangerouslySetInnerHTML={{ __html: renderLatex(block) }} 
               />
             );
@@ -251,13 +257,49 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
               estimateVisualLength(optD)
             );
             
+            const hasNewlineB = /\n\s*\(B\)/i.test(optionsText);
+            const hasNewlineC = /\n\s*\(C\)/i.test(optionsText);
+            const hasNewlineD = /\n\s*\(D\)/i.test(optionsText);
+
             let optionsLayout = '';
-            if (maxLen < 10) {
-              optionsLayout = 'grid grid-cols-4 w-full gap-x-2 gap-y-0.5';
-            } else if (maxLen < 85) {
-              optionsLayout = 'grid grid-cols-2 w-full gap-x-2 gap-y-0.5';
+            if (optionsLayoutMode === 'one_col') {
+              // Forced 1 Column (One by one)
+              optionsLayout = 'flex flex-col w-full gap-1';
+            } else if (optionsLayoutMode === 'two_col') {
+              // Forced 2 Columns
+              optionsLayout = 'grid grid-cols-2 w-full gap-x-4 gap-y-1';
+            } else if (optionsLayoutMode === 'four_col') {
+              // Forced 4 Columns
+              optionsLayout = 'grid grid-cols-4 w-full gap-x-2 gap-y-1';
+            } else if (optionsLayoutMode === 'as_typed') {
+              // MS Word Style: Follows enters and spaces exactly as typed in editor
+              if (hasNewlineB && hasNewlineC && hasNewlineD) {
+                // User pressed Enter after each option -> One step down (One by One)
+                optionsLayout = 'flex flex-col w-full gap-1';
+              } else if (!hasNewlineB && hasNewlineC && !hasNewlineD) {
+                // (A) (B) on row 1, (C) (D) on row 2
+                optionsLayout = 'grid grid-cols-2 w-full gap-x-4 gap-y-1';
+              } else if (!hasNewlineB && !hasNewlineC && !hasNewlineD) {
+                // All 4 on 1 line separated by spaces
+                optionsLayout = 'grid grid-cols-4 w-full gap-x-2 gap-y-1';
+              } else {
+                optionsLayout = 'flex flex-col w-full gap-1';
+              }
             } else {
-              optionsLayout = 'flex flex-col w-full gap-0.5';
+              // 'auto' mode: Smart intelligent layout based on option length
+              // In A4 paper, half column cannot fit more than ~30-32 visual chars
+              const col4Limit = isDoubleColumn ? 6 : 11;
+              const col2Limit = isDoubleColumn ? 16 : 30;
+
+              if (maxLen <= col4Limit && !hasNewlineB && !hasNewlineC && !hasNewlineD) {
+                optionsLayout = 'grid grid-cols-4 w-full gap-x-2 gap-y-1';
+              } else if (maxLen <= col2Limit) {
+                optionsLayout = 'grid grid-cols-2 w-full gap-x-4 gap-y-1';
+              } else {
+                // When option text/equations are long (> 30 visual chars, like Question 21),
+                // stack them vertically one by one (1 Column) to prevent squished wrapping
+                optionsLayout = 'flex flex-col w-full gap-1';
+              }
             }
 
             // Extract question number for hanging indent
@@ -273,13 +315,13 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
                   ) : (
                     <div className="flex-shrink-0 w-10"></div>
                   )}
-                  <div className="flex-1" dangerouslySetInnerHTML={{ __html: renderLatex(qRest) }} />
+                  <div className="flex-1 whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: renderLatex(qRest) }} />
                 </div>
                 <div className={`ml-10 pr-4 ${optionsLayout}`}>
-                  <div className="flex"><span className="mr-1.5 font-medium">(A)</span> <span dangerouslySetInnerHTML={{ __html: renderLatex(optA) }} /></div>
-                  <div className="flex"><span className="mr-1.5 font-medium">(B)</span> <span dangerouslySetInnerHTML={{ __html: renderLatex(optB) }} /></div>
-                  <div className="flex"><span className="mr-1.5 font-medium">(C)</span> <span dangerouslySetInnerHTML={{ __html: renderLatex(optC) }} /></div>
-                  <div className="flex"><span className="mr-1.5 font-medium">(D)</span> <span dangerouslySetInnerHTML={{ __html: renderLatex(optD) }} /></div>
+                  <div className="flex items-start whitespace-pre-wrap"><span className="mr-1.5 font-medium flex-shrink-0">(A)</span> <span className="flex-1 whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: renderLatex(optA) }} /></div>
+                  <div className="flex items-start whitespace-pre-wrap"><span className="mr-1.5 font-medium flex-shrink-0">(B)</span> <span className="flex-1 whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: renderLatex(optB) }} /></div>
+                  <div className="flex items-start whitespace-pre-wrap"><span className="mr-1.5 font-medium flex-shrink-0">(C)</span> <span className="flex-1 whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: renderLatex(optC) }} /></div>
+                  <div className="flex items-start whitespace-pre-wrap"><span className="mr-1.5 font-medium flex-shrink-0">(D)</span> <span className="flex-1 whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: renderLatex(optD) }} /></div>
                 </div>
               </div>
             );

@@ -1,7 +1,19 @@
 # Project State: JY School ERP
 
 ## 2. Recent Updates & Progress
-- **OMR Scanner Alignment & Black Vision Fixes (2026-09-17)**:
+- **MCQ Paper Generator - Question 21 Long Options & MS Word Formatting Fixes (2026-09-18)**:
+  - **Q.21 Long Options Fix (One by One)**: Fixed the issue where long polynomial/equation options in Question 21 were squished into 2 columns because of an excessively high visual length threshold (`maxLen < 85`). Lowered the threshold to 30 characters (`maxLen > 30` automatically stacks vertically one by one / 1 Column), preventing awkward wrapping on A4 pages.
+  - **MS Word-like Space & Enter Behavior**:
+    - **Space Preservation**: Replaced consecutive whitespace characters with non-breaking spaces (`&nbsp;`) and enforced `whitespace-pre-wrap` across all question and option rendering containers so that typing spaces creates visible spacing in the preview.
+    - **Enter (One Step Down)**: Supported MS Word-style newline detection where pressing Enter between options in the editor renders each option on its own line ("one step down").
+    - **Question & Options Block Normalization**: Fixed block splitting regex so that blank lines between question text and `(A)` do not detach the options from the question.
+  - **Configurable Options Layout Modes**: Added an "Options Layout" (ఆప్షన్ల లేఅవుట్) dropdown in both Paper Settings and the Editor Header Toolbar with 5 options:
+    1. *Smart Auto (Default)*: Intelligently chooses 4-col, 2-col, or 1-col (one by one) based on formula/text length.
+    2. *MS Word Style (As Typed)*: Strictly respects the spaces and Enters typed in the editor.
+    3. *One by One (1 Column)*: Forces all options to be vertically stacked.
+    4. *2 Columns (2x2)*.
+    5. *4 Columns (Single Line)*.
+    Saved to `localStorage` and serialized with paper data.
   - **Udayraj OMR Checker Architecture Analysis**: Clarified that Udayraj Deshmukh's `OMRChecker` is a CLI tool designed specifically for custom sheets with concentric circle bullseye markers (`omr_marker.jpg`), and its official repo states `--autoAlign flag is deprecated due to low performance on generic OMR sheets`.
   - **Zero-Distortion Paper Alignment (`align_omr_sheet`)**: Replaced the previous 4-point quadrilateral perspective warp with strict upright corner marker verification and an axis-aligned outer bounding box crop (`image[y:y+h, x:x+w]`). Guaranteed 0% tilt/slant.
   - **Gemini Multimodal Vision AI OMR Engine (2026-09-17)**:
