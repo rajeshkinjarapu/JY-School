@@ -245,8 +245,8 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
             const estimateVisualLength = (text: string) => {
               let s = text.replace(/\\\(|\\\)|\\\[|\\\]|\$/g, ''); // Remove math delimiters
               s = s.replace(/\\mathbb|\\mathbf|\\text|\\mathrm/g, ''); // Remove formatting commands
-              s = s.replace(/\\[a-zA-Z]+/g, 'X'); // Replace math commands (\subset, \cup, etc) with a single character 'X'
-              s = s.replace(/[{}_^]/g, ''); // Remove brackets and sub/superscripts
+              s = s.replace(/\\[a-zA-Z]+/g, 'XX'); // Math commands take horizontal space
+              s = s.replace(/[{}]/g, ''); // Remove formatting brackets
               return s.replace(/\s+/g, ' ').trim().length;
             };
 
@@ -263,13 +263,13 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
 
             let optionsLayout = '';
             if (optionsLayoutMode === 'one_col') {
-              // Forced 1 Column (One by one)
+              // Forced 1 Column (One by one) for all questions
               optionsLayout = 'flex flex-col w-full gap-1';
             } else if (optionsLayoutMode === 'two_col') {
-              // Forced 2 Columns
+              // Forced 2 Columns for all questions
               optionsLayout = 'grid grid-cols-2 w-full gap-x-4 gap-y-1';
             } else if (optionsLayoutMode === 'four_col') {
-              // Forced 4 Columns
+              // Forced 4 Columns for all questions
               optionsLayout = 'grid grid-cols-4 w-full gap-x-2 gap-y-1';
             } else if (optionsLayoutMode === 'as_typed') {
               // MS Word Style: Follows enters and spaces exactly as typed in editor
@@ -286,18 +286,18 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
                 optionsLayout = 'flex flex-col w-full gap-1';
               }
             } else {
-              // 'auto' mode: Smart intelligent layout based on option length
-              // In A4 paper, half column cannot fit more than ~30-32 visual chars
+              // 'auto' mode: Dynamically evaluated for EVERY question across the entire paper
+              // In A4 printable paper, 2-column layout can only fit up to ~22-24 characters
               const col4Limit = isDoubleColumn ? 6 : 11;
-              const col2Limit = isDoubleColumn ? 16 : 30;
+              const col2Limit = isDoubleColumn ? 14 : 24;
 
               if (maxLen <= col4Limit && !hasNewlineB && !hasNewlineC && !hasNewlineD) {
                 optionsLayout = 'grid grid-cols-4 w-full gap-x-2 gap-y-1';
-              } else if (maxLen <= col2Limit) {
+              } else if (maxLen <= col2Limit && !(hasNewlineB && hasNewlineC && hasNewlineD && maxLen > 18)) {
                 optionsLayout = 'grid grid-cols-2 w-full gap-x-4 gap-y-1';
               } else {
-                // When option text/equations are long (> 30 visual chars, like Question 21),
-                // stack them vertically one by one (1 Column) to prevent squished wrapping
+                // For ANY question whose options are long (> 24 chars, or typed with Enters),
+                // automatically render vertically one by one (1 Column)
                 optionsLayout = 'flex flex-col w-full gap-1';
               }
             }
