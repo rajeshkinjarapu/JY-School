@@ -59,7 +59,7 @@ router.post('/apply', async (req, res) => {
 });
 
 // Protected route: Get all admission inquiries
-router.get('/', authenticate, authorize('SUPER_ADMIN', 'ADMIN'), async (req, res) => {
+router.get('/', authenticate, authorize('SUPER_ADMIN', 'ADMIN', 'TEACHER'), async (req, res) => {
   try {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
@@ -69,6 +69,47 @@ router.get('/', authenticate, authorize('SUPER_ADMIN', 'ADMIN'), async (req, res
     res.json({ success: true, data: admissions });
   } catch (error: any) {
     res.status(500).json({ success: false, message: 'Failed to fetch admissions' });
+  }
+});
+
+// Alias for registration
+router.post('/register', async (req, res) => {
+  try {
+    const { 
+      studentName, fatherName, motherName, phone, 
+      aadharNo, dob, gender, classApplied, address,
+      studentImage, admissionFee, paymentMethod, paymentReceipt
+    } = req.body;
+
+    if (!studentName || !phone) {
+      return res.status(400).json({ success: false, message: 'Student Name and Phone are required' });
+    }
+
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    const application = await prisma.admissionInquiry.create({
+      data: {
+        studentName,
+        fatherName,
+        motherName,
+        phone,
+        aadharNo,
+        dob: dob ? new Date(dob) : null,
+        gender,
+        classApplied,
+        address,
+        studentImage,
+        admissionFee,
+        paymentMethod,
+        paymentReceipt,
+        paymentStatus: paymentReceipt || paymentMethod === 'CASH' ? 'COMPLETED' : 'PENDING'
+      }
+    });
+
+    res.status(201).json({ success: true, data: application, message: 'Application submitted successfully' });
+  } catch (error: any) {
+    console.error('Admission Submit Error:', error);
+    res.status(500).json({ success: false, message: 'Server error while submitting application' });
   }
 });
 

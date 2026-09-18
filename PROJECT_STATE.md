@@ -1,6 +1,28 @@
 # Project State: JY School ERP
 
 ## 2. Recent Updates & Progress
+- **Admissions Module (Web & Flutter Mobile App) (2026-09-18)**:
+  - **Overview**: Designed and built an end-to-end "Admissions" module across both the Web Application and Flutter Mobile App (Universal & all flavors).
+  - **Teacher Student Registration Flow**:
+    - Teachers can easily access "Admissions" from the sidebar/drawer.
+    - Captures student passport photo (live camera or gallery / file upload to `/api/uploads/image`), basic demographics (Full Name, Gender, DOB, Aadhaar, Blood Group), parent particulars (Father Name, Mother Name, Phone, Email, Address, Occupation), admission details (Class Applied, Academic Year, Previous School), and fee/payment info.
+    - Submitting seamlessly records the application and provides immediate feedback with one-click official A4 registration form printing.
+  - **Admin Admissions Management Dashboard**:
+    - Added as a top-level sidebar module with KPI summary cards (Total Applications, Pending Review, Enrolled, Rejected).
+    - Comprehensive data table / list with student passport photo avatar (clickable for full-size high-res preview modal), applicant name, applied class, parent contact, submission date, and status badges.
+    - Inline status updater: Allows admins to smoothly transition applicants between `Pending`, `Enrolled` (officially admitted), and `Rejected`.
+    - Integrated direct phone call launcher (`tel:`) and instant "Print PDF" action.
+  - **Official A4 Student Admission Form (PDF)**:
+    - Built a government/board-compliant official A4 Admission Application Form generator.
+    - Includes school header/crest, passport photo box (top-right), application reference number & date, student demographics table, parent contact & address details, fee payment ledger, declaration of parent/guardian, and 3 official signature blocks (Applicant, Parent/Guardian, Principal/Office Seal).
+    - Web: Portaled to `document.body` with `@media print` zero-offset CSS rules ensuring 100% crisp single-page print without white screen or layout clipping.
+    - Mobile: Generated via `admission_pdf_service.dart` using native `pdf` and `printing` packages (`Printing.layoutPdf` and `Printing.sharePdf`).
+  - **Backend API (`/api/admissions`)**:
+    - Enhanced `GET /` to authorize `TEACHER`, `ADMIN`, and `SUPER_ADMIN`.
+    - Added alias `POST /register` and expanded `POST /apply` to accept student photos and complete application parameters.
+  - **Shorebird Patch Ready**:
+    - All Flutter dependencies (`image_picker`, `pdf`, `printing`, `intl`, `share_plus`) are existing packages. Zero native Android changes required, allowing 100% over-the-air deployment via Shorebird Patch without rebuilding APKs.
+
 - **Student List PDF Row Height & Saved Template Presets (2026-09-18)**:
   - **Adjustable Row Height**: Added an interactive stepper (`[-] [XX mm] [+]`, 6mm to 35mm) and 4 quick presets: *Compact (6mm)*, *Normal (9mm)*, *Spacious (14mm)*, and *Signature Box (18mm)*. Dynamically adjusts `minCellHeight` and vertical `cellPadding` in `jspdf-autotable`, providing ample physical space for handwritten remarks, teacher notes, and parent signatures, or compact density to maximize students per A4 page.
   - **Saved Template Presets System**: Implemented a comprehensive template preset system stored in `localStorage` (`jy_school_export_presets`) so users don't need to reconfigure columns, headings, custom fields, and widths every time.
