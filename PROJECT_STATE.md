@@ -4,9 +4,9 @@
 - **MCQ Paper Generator - 3-Tier Layout & Space/Enter Support (2026-09-18)**:
   - **Removed Unwanted Layout Dropdowns**: Cleaned up the UI by completely removing toolbar/settings layout selectors.
   - **Implemented Exact 3-Tier Layout Rule**:
-    1. *Options chinnavi ayite (Short options, <= 12 chars)*: Render in a **Single line** (4 Columns, e.g. Q.23, Q.24).
-    2. *Options length ekkuva ayite (Medium options, 13 to 42 chars)*: Render in **2*2** (2 Columns, e.g. Q.9, Q.10, Q.11, Q.12, Q.13, Q.18, Q.20, Q.22).
-    3. *Appatiki length ekkuva aytite (Very long options, > 42 chars)*: Render **One by One** (1 Column, e.g. Q.21, Q.8 with 50+ chars).
+    1. *Options chinnavi ayite (Short options, <= 12 chars)*: Render in a **Single line** (4 Columns, e.g. Q.7, Q.23, Q.24).
+    2. *Options length ekkuva ayite (Medium options, 13 to 30 chars)*: Render in **2*2** (2 Columns, e.g. Q.9, Q.10, Q.11, Q.12, Q.13, Q.18, Q.20, Q.22).
+    3. *Appatiki length ekkuva aytite (Very long options, > 30 chars)*: Render **One by One** (1 Column, e.g. Q.8 with 38 chars, Q.21 with 53 chars).
   - **Space & Enter Preservation (MS Word Behavior)**: Preserved non-breaking spaces for multiple spaces typed in the editor, and line breaks on Enter.
   - **Udayraj OMR Checker Architecture Analysis**: Clarified that Udayraj Deshmukh's `OMRChecker` is a CLI tool designed specifically for custom sheets with concentric circle bullseye markers (`omr_marker.jpg`), and its official repo states `--autoAlign flag is deprecated due to low performance on generic OMR sheets`.
   - **Zero-Distortion Paper Alignment (`align_omr_sheet`)**: Replaced the previous 4-point quadrilateral perspective warp with strict upright corner marker verification and an axis-aligned outer bounding box crop (`image[y:y+h, x:x+w]`). Guaranteed 0% tilt/slant.

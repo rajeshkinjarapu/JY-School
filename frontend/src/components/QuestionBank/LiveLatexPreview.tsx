@@ -256,7 +256,7 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
             );
             
             const singleLineLimit = isDoubleColumn ? 6 : 12;
-            const twoByTwoLimit = isDoubleColumn ? 22 : 42;
+            const twoByTwoLimit = isDoubleColumn ? 16 : 30;
 
             let optionsLayout = '';
             if (maxLen <= singleLineLimit) {
