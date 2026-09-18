@@ -249,30 +249,28 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
               // Remove non-rendering LaTeX formatting macros
               s = s.replace(/\\(?:mathbb|mathbf|mathrm|text|displaystyle|textstyle|limits|nolimits|left|right)\b/g, '');
 
+              // CRITICAL: Normalize superscripts and subscripts FIRST so braces inside exponents like ^{2} or _{1} don't break fraction regex!
+              s = s.replace(/[\^_]\{([^{}]+)\}/g, '$1');
+              s = s.replace(/[\^_]([a-zA-Z0-9])/g, '$1');
+
               // Smart fraction resolution: \frac{num}{den} and \dfrac{num}{den}
               // In visual rendering, a fraction is stacked vertically.
-              // Its horizontal width is Math.max(width(num), width(den)) + a small density adjustment.
+              // Its horizontal width is simply Math.max(width(num), width(den)).
               const fracRegex = /\\d?frac\{([^{}]+)\}\{([^{}]+)\}/;
               let iterations = 0;
               while (fracRegex.test(s) && iterations < 5) {
                 s = s.replace(fracRegex, (_, num, den) => {
                   const lenN = estimateVisualLength(num);
                   const lenD = estimateVisualLength(den);
-                  const isCompound = /[+\-=]/.test(num) || /[+\-=]/.test(den);
-                  const effectiveLen = Math.max(lenN, lenD) + (isCompound ? 3 : 0);
-                  return 'X'.repeat(effectiveLen);
+                  return 'X'.repeat(Math.max(lenN, lenD));
                 });
                 iterations++;
               }
 
-              // Subscripts and superscripts (^2, _1) sit vertically adjacent
-              s = s.replace(/[\^_]\{([^{}]+)\}/g, '$1');
-              s = s.replace(/[\^_]([a-zA-Z0-9])/g, '$1');
-
               // \sqrt{x} is visually roughly width of x + 1 (radical sign)
               s = s.replace(/\\sqrt\{([^{}]+)\}/g, 'X$1');
 
-              // Replace other LaTeX commands (\sin, \cos, \tan, \pm, \circ, etc.) with a single character 'X'
+              // Replace other LaTeX commands (\sin, \cos, \tan, \cot, \sec, \csc, \pm, \circ, etc.) with a single character 'X'
               s = s.replace(/\\[a-zA-Z]+/g, 'X');
 
               // Remove remaining braces
@@ -293,10 +291,10 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
             );
             
             // Calibrated thresholds for A4 layout:
-            // Single line (4 columns): simple numbers, values, short fractions up to 13 chars.
-            // 2*2 (2 columns): medium formulas, compound fractions, phrases up to 38 chars.
+            // Single line (4 columns): simple numbers, values, short/medium fractions up to 17 chars (fits Q1-Q5).
+            // 2*2 (2 columns): wide formulas, expressions, phrases 18 to 38 chars.
             // One by one (1 column): long polynomials, wide sentences > 38 chars.
-            const singleLineLimit = isDoubleColumn ? 6 : 13;
+            const singleLineLimit = isDoubleColumn ? 8 : 17;
             const twoByTwoLimit = isDoubleColumn ? 18 : 38;
 
             let optionsLayout = '';

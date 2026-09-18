@@ -11,13 +11,13 @@
   - **Shorebird Compatible**: Fully patchable via Shorebird without requiring a new APK release.
 
 - **MCQ Paper Generator - Smart Fraction & Layout Calibration (2026-09-18)**:
-  - **Fractions Visual Length Fix**: Refactored `estimateVisualLength` in `frontend/src/components/QuestionBank/LiveLatexPreview.tsx` to handle `\frac{num}{den}` and `\dfrac{num}{den}` as vertical stacks using `Math.max(lenN, lenD) + compoundPadding` rather than string concatenation.
+  - **Fractions Visual Length Fix**: Refactored `estimateVisualLength` in `frontend/src/components/QuestionBank/LiveLatexPreview.tsx` to normalize superscripts/subscripts before fraction regex, preventing `{2}` from breaking fraction parsing. Evaluated fractions horizontally using exact `Math.max(lenN, lenD)`.
   - **Division & Operator Spacing Correction**: Stopped expanding division slashes (`/`) in expressions like `(A/2)` or `1/2`, preventing artificial length inflation that forced formulas into One-by-One.
   - **A4 Layout Calibration**:
-    - *Single Line (4 Columns)*: Set threshold `<= 13` (numbers, roots, short fractions, simple values).
-    - *2*2 Grid (2 Columns)*: Set threshold `<= 38` (compound fractions like Q.1 to Q.6, medium formulas, expressions).
+    - *Single Line (4 Columns)*: Set threshold `<= 17` (covers numbers, roots, short/medium fractions like Q.1, Q.2, Q.3, Q.4, Q.5).
+    - *2*2 Grid (2 Columns)*: Set threshold `<= 38` (wide formulas, algebraic expressions, phrases).
     - *One by One (1 Column)*: Set threshold `> 38` (long multi-term polynomials, descriptive sentences).
-  - **Result**: Fixed Q4 incorrectly jumping to One-by-One, and ensured short options stay on 1 line rather than prematurely breaking into 2*2.
+  - **Result**: Q.1, Q.2, Q.3, Q.4, Q.5 now consistently fit into a Single Line (4 Columns) matching user preference.
 
 - **MCQ Paper Generator - 3-Tier Layout & Space/Enter Support (2026-09-18)**:
   - **Removed Unwanted Layout Dropdowns**: Cleaned up the UI by completely removing toolbar/settings layout selectors.
