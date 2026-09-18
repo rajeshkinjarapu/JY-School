@@ -10,6 +10,15 @@
   - **Universal & Flavor App Sync**: Initialized across all 4 entrypoints (`main.dart`, `main_admin.dart`, `main_teacher.dart`, `main_student.dart`).
   - **Shorebird Compatible**: Fully patchable via Shorebird without requiring a new APK release.
 
+- **MCQ Paper Generator - Smart Fraction & Layout Calibration (2026-09-18)**:
+  - **Fractions Visual Length Fix**: Refactored `estimateVisualLength` in `frontend/src/components/QuestionBank/LiveLatexPreview.tsx` to handle `\frac{num}{den}` and `\dfrac{num}{den}` as vertical stacks using `Math.max(lenN, lenD) + compoundPadding` rather than string concatenation.
+  - **Division & Operator Spacing Correction**: Stopped expanding division slashes (`/`) in expressions like `(A/2)` or `1/2`, preventing artificial length inflation that forced formulas into One-by-One.
+  - **A4 Layout Calibration**:
+    - *Single Line (4 Columns)*: Set threshold `<= 13` (numbers, roots, short fractions, simple values).
+    - *2*2 Grid (2 Columns)*: Set threshold `<= 38` (compound fractions like Q.1 to Q.6, medium formulas, expressions).
+    - *One by One (1 Column)*: Set threshold `> 38` (long multi-term polynomials, descriptive sentences).
+  - **Result**: Fixed Q4 incorrectly jumping to One-by-One, and ensured short options stay on 1 line rather than prematurely breaking into 2*2.
+
 - **MCQ Paper Generator - 3-Tier Layout & Space/Enter Support (2026-09-18)**:
   - **Removed Unwanted Layout Dropdowns**: Cleaned up the UI by completely removing toolbar/settings layout selectors.
   - **Implemented Exact 3-Tier Layout Rule**:

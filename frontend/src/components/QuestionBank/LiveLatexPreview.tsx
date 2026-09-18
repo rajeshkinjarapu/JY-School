@@ -240,13 +240,48 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
             const optB = matchB ? matchB[1].trim() : '';
             const optC = matchC ? matchC[1].trim() : '';
             const optD = matchD ? matchD[1].trim() : '';
-            const estimateVisualLength = (text: string) => {
-              let s = text.replace(/\\\(|\\\)|\\\[|\\\]|\$/g, ''); // Remove math delimiters
-              s = s.replace(/\\mathbb|\\mathbf|\\text|\\mathrm/g, ''); // Remove formatting commands
-              s = s.replace(/\\[a-zA-Z]+/g, 'X'); // Replace math commands with 'X'
-              s = s.replace(/[{}]/g, ''); // Remove braces
-              // Math binary operators like +, -, =, / have visual spacing around them in KaTeX
-              s = s.replace(/([+\-=/])/g, ' $1 ');
+            const estimateVisualLength = (text: string): number => {
+              if (!text) return 0;
+              let s = text.trim();
+              // Remove math delimiters \(, \), \[, \], $
+              s = s.replace(/\\\(|\\\)|\\\[|\\\]|\$/g, '');
+              
+              // Remove non-rendering LaTeX formatting macros
+              s = s.replace(/\\(?:mathbb|mathbf|mathrm|text|displaystyle|textstyle|limits|nolimits|left|right)\b/g, '');
+
+              // Smart fraction resolution: \frac{num}{den} and \dfrac{num}{den}
+              // In visual rendering, a fraction is stacked vertically.
+              // Its horizontal width is Math.max(width(num), width(den)) + a small density adjustment.
+              const fracRegex = /\\d?frac\{([^{}]+)\}\{([^{}]+)\}/;
+              let iterations = 0;
+              while (fracRegex.test(s) && iterations < 5) {
+                s = s.replace(fracRegex, (_, num, den) => {
+                  const lenN = estimateVisualLength(num);
+                  const lenD = estimateVisualLength(den);
+                  const isCompound = /[+\-=]/.test(num) || /[+\-=]/.test(den);
+                  const effectiveLen = Math.max(lenN, lenD) + (isCompound ? 3 : 0);
+                  return 'X'.repeat(effectiveLen);
+                });
+                iterations++;
+              }
+
+              // Subscripts and superscripts (^2, _1) sit vertically adjacent
+              s = s.replace(/[\^_]\{([^{}]+)\}/g, '$1');
+              s = s.replace(/[\^_]([a-zA-Z0-9])/g, '$1');
+
+              // \sqrt{x} is visually roughly width of x + 1 (radical sign)
+              s = s.replace(/\\sqrt\{([^{}]+)\}/g, 'X$1');
+
+              // Replace other LaTeX commands (\sin, \cos, \tan, \pm, \circ, etc.) with a single character 'X'
+              s = s.replace(/\\[a-zA-Z]+/g, 'X');
+
+              // Remove remaining braces
+              s = s.replace(/[{}]/g, '');
+
+              // Math binary operators like +, -, = have standard visual padding around them
+              // Note: Do NOT expand '/' as that artificially bloats simple divisions like (A/2) or 1/2
+              s = s.replace(/([+\-=])/g, ' $1 ');
+
               return s.replace(/\s+/g, ' ').trim().length;
             };
 
@@ -257,8 +292,12 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
               estimateVisualLength(optD)
             );
             
-            const singleLineLimit = isDoubleColumn ? 6 : 12;
-            const twoByTwoLimit = isDoubleColumn ? 16 : 26;
+            // Calibrated thresholds for A4 layout:
+            // Single line (4 columns): simple numbers, values, short fractions up to 13 chars.
+            // 2*2 (2 columns): medium formulas, compound fractions, phrases up to 38 chars.
+            // One by one (1 column): long polynomials, wide sentences > 38 chars.
+            const singleLineLimit = isDoubleColumn ? 6 : 13;
+            const twoByTwoLimit = isDoubleColumn ? 18 : 38;
 
             let optionsLayout = '';
             if (maxLen <= singleLineLimit) {
