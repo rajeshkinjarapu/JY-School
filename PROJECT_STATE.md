@@ -10,6 +10,13 @@
   - **Universal & Flavor App Sync**: Initialized across all 4 entrypoints (`main.dart`, `main_admin.dart`, `main_teacher.dart`, `main_student.dart`).
   - **Shorebird Compatible**: Fully patchable via Shorebird without requiring a new APK release.
 
+- **Student List PDF & Excel Export Customizations (2026-09-18)**:
+  - **Full Dataset Export**: Fetches all 533+ students via `/api/students?limit=10000` (respecting class/search filters) instead of only the 50 students from the current paginated view.
+  - **Portrait vs Landscape Toggle**: Added UI buttons in `StudentListExportModal.tsx` allowing users to choose either Portrait (210mm) or Landscape (297mm) PDF page layout.
+  - **Custom Report Heading**: Added a dynamic text input allowing users to set a custom title (e.g., "10TH CLASS FEE SIGNATURE SHEET", "STUDENT LIST REPORT"), printed bold centered at the top of the PDF.
+  - **Column Width Adjusters**: Added an interactive width customization panel with `[-] [XX mm] [+]` stepper controls and a Reset button for standard columns and user-added custom columns (e.g. Signatures, Remarks, Fees).
+  - **Single-Line S.No Fix**: Set the minimum width of S.No to `15mm` and adjusted table cell padding (`left: 1.5mm`, `right: 1.5mm`) so that `S.No` never wraps across two lines in the PDF table.
+
 - **Student List Full Export Fix (Excel & PDF) (2026-09-18)**:
   - **Problem**: When exporting students to Excel or PDF from `/students`, only the currently visible paginated page (50 students) was exported rather than the entire student body (533+ students).
   - **Root Cause**: `StudentListPage.tsx` passed only its local `students` page state (length 50) into `StudentListExportModal.tsx`.

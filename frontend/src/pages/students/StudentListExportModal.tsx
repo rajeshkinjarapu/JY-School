@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, FileText, FileSpreadsheet, Download, Plus, Trash2, Filter } from 'lucide-react';
+import { X, FileText, FileSpreadsheet, Download, Plus, Minus, Trash2, Filter, SlidersHorizontal, RotateCcw } from 'lucide-react';
 import api from '../../api/axios';
 import toast from 'react-hot-toast';
 
@@ -32,7 +32,9 @@ export const StudentListExportModal: React.FC<ExportDialogProps> = ({
 }) => {
   const [filter, setFilter] = useState<string>('all');
   const [isGenerating, setIsGenerating] = useState(false);
-  
+  const [orientation, setOrientation] = useState<'portrait' | 'landscape'>('portrait');
+  const [customHeading, setCustomHeading] = useState<string>('STUDENT LIST REPORT');
+
   const [cols, setCols] = useState({
     sno: true,
     studentId: true,
@@ -44,7 +46,19 @@ export const StudentListExportModal: React.FC<ExportDialogProps> = ({
     status: false,
   });
 
+  const [colWidths, setColWidths] = useState<Record<string, number>>({
+    sno: 15,          // 15mm ensures S.No NEVER wraps into two lines!
+    studentId: 26,
+    name: 38,
+    className: 22,
+    gender: 18,
+    phone: 26,
+    fatherName: 32,
+    status: 20,
+  });
+
   const [customColumns, setCustomColumns] = useState<string[]>([]);
+  const [customColWidths, setCustomColWidths] = useState<Record<string, number>>({});
   const [newCustomCol, setNewCustomCol] = useState('');
 
   const [isReady, setIsReady] = useState(false);
@@ -60,14 +74,21 @@ export const StudentListExportModal: React.FC<ExportDialogProps> = ({
 
   const handleAddCustomCol = (e?: React.FormEvent) => {
     e?.preventDefault();
-    if (newCustomCol.trim() && !customColumns.includes(newCustomCol.trim())) {
-      setCustomColumns([...customColumns, newCustomCol.trim()]);
+    const trimmed = newCustomCol.trim();
+    if (trimmed && !customColumns.includes(trimmed)) {
+      setCustomColumns([...customColumns, trimmed]);
+      setCustomColWidths(prev => ({ ...prev, [trimmed]: 40 }));
       setNewCustomCol('');
     }
   };
 
   const handleRemoveCustomCol = (colName: string) => {
     setCustomColumns(customColumns.filter(c => c !== colName));
+    setCustomColWidths(prev => {
+      const copy = { ...prev };
+      delete copy[colName];
+      return copy;
+    });
   };
 
   const handleExport = async () => {
@@ -117,9 +138,6 @@ export const StudentListExportModal: React.FC<ExportDialogProps> = ({
         status: s.user?.isActive !== false ? 'Active' : 'Inactive',
       }));
 
-      const numCols = Object.values(cols).filter(Boolean).length + customColumns.length;
-      const orientation = numCols > 7 ? 'landscape' : 'portrait';
-
       if (exportType === 'pdf') {
         const { default: jsPDF } = await import('jspdf');
         const autoTableModule: any = await import('jspdf-autotable');
@@ -138,10 +156,12 @@ export const StudentListExportModal: React.FC<ExportDialogProps> = ({
         doc.setTextColor(80, 80, 80);
         doc.text('Opp. Hero Showroom, SVL Paradise Campus, Narasannapeta', pageWidth / 2, 20, { align: 'center' });
 
+        // Custom Report Title
         doc.setFontSize(12);
         doc.setFont('helvetica', 'bold');
         doc.setTextColor(79, 70, 229);
-        doc.text('STUDENT LIST REPORT', pageWidth / 2, 28, { align: 'center' });
+        const headingText = (customHeading.trim() || 'STUDENT LIST REPORT').toUpperCase();
+        doc.text(headingText, pageWidth / 2, 28, { align: 'center' });
 
         doc.setDrawColor(220, 220, 220);
         doc.line(14, 33, pageWidth - 14, 33);
@@ -160,18 +180,43 @@ export const StudentListExportModal: React.FC<ExportDialogProps> = ({
         const colStyles: any = {};
         let ci = 0;
         
-        if (cols.sno) { headerRow.push('S.No'); colStyles[ci++] = { halign: 'center', cellWidth: 12 }; }
-        if (cols.studentId) { headerRow.push('Student ID'); colStyles[ci++] = { cellWidth: 26, fontStyle: 'bold', textColor: [100, 116, 139] }; }
-        if (cols.name) { headerRow.push('Student Name'); colStyles[ci++] = { cellWidth: 'auto', fontStyle: 'bold' }; }
-        if (cols.className) { headerRow.push('Class'); colStyles[ci++] = { cellWidth: 20 }; }
-        if (cols.gender) { headerRow.push('Gender'); colStyles[ci++] = { cellWidth: 16 }; }
-        if (cols.phone) { headerRow.push('Phone'); colStyles[ci++] = { cellWidth: 24 }; }
-        if (cols.fatherName) { headerRow.push('Father Name'); colStyles[ci++] = { cellWidth: 30 }; }
-        if (cols.status) { headerRow.push('Status'); colStyles[ci++] = { cellWidth: 18 }; }
+        // Single line S.No guaranteed with cellWidth: colWidths.sno || 15
+        if (cols.sno) { 
+          headerRow.push('S.No'); 
+          colStyles[ci++] = { halign: 'center', cellWidth: colWidths.sno || 15 }; 
+        }
+        if (cols.studentId) { 
+          headerRow.push('Student ID'); 
+          colStyles[ci++] = { cellWidth: colWidths.studentId || 26, fontStyle: 'bold', textColor: [100, 116, 139] }; 
+        }
+        if (cols.name) { 
+          headerRow.push('Student Name'); 
+          colStyles[ci++] = { cellWidth: colWidths.name || 38, fontStyle: 'bold' }; 
+        }
+        if (cols.className) { 
+          headerRow.push('Class'); 
+          colStyles[ci++] = { cellWidth: colWidths.className || 22, halign: 'center' }; 
+        }
+        if (cols.gender) { 
+          headerRow.push('Gender'); 
+          colStyles[ci++] = { cellWidth: colWidths.gender || 18, halign: 'center' }; 
+        }
+        if (cols.phone) { 
+          headerRow.push('Phone'); 
+          colStyles[ci++] = { cellWidth: colWidths.phone || 26, halign: 'center' }; 
+        }
+        if (cols.fatherName) { 
+          headerRow.push('Father Name'); 
+          colStyles[ci++] = { cellWidth: colWidths.fatherName || 32 }; 
+        }
+        if (cols.status) { 
+          headerRow.push('Status'); 
+          colStyles[ci++] = { cellWidth: colWidths.status || 20, halign: 'center' }; 
+        }
 
         customColumns.forEach(cc => {
           headerRow.push(cc);
-          colStyles[ci++] = { cellWidth: 'auto' };
+          colStyles[ci++] = { cellWidth: customColWidths[cc] || 40 };
         });
 
         const exportTableRows = dataRows.map((r, i) => {
@@ -193,8 +238,23 @@ export const StudentListExportModal: React.FC<ExportDialogProps> = ({
           body: exportTableRows,
           startY: 46,
           theme: 'grid',
-          styles: { fontSize: 8, cellPadding: 3, valign: 'middle', lineColor: [200, 200, 200], lineWidth: 0.1 },
-          headStyles: { fillColor: [240, 245, 250], textColor: [20, 20, 20], fontStyle: 'bold', fontSize: 9, halign: 'center' },
+          styles: { 
+            fontSize: 8, 
+            cellPadding: { top: 2.5, bottom: 2.5, left: 1.5, right: 1.5 }, 
+            valign: 'middle', 
+            lineColor: [200, 200, 200], 
+            lineWidth: 0.1,
+            overflow: 'linebreak'
+          },
+          headStyles: { 
+            fillColor: [240, 245, 250], 
+            textColor: [20, 20, 20], 
+            fontStyle: 'bold', 
+            fontSize: 8.5, 
+            halign: 'center',
+            valign: 'middle',
+            cellPadding: { top: 3, bottom: 3, left: 1, right: 1 } 
+          },
           columnStyles: colStyles,
           alternateRowStyles: { fillColor: [250, 250, 250] },
           didDrawPage: (data: any) => {
@@ -273,9 +333,63 @@ export const StudentListExportModal: React.FC<ExportDialogProps> = ({
           </button>
         </div>
 
-        <div className="p-6 max-h-[70vh] overflow-y-auto custom-scrollbar">
+        <div className="p-6 max-h-[70vh] overflow-y-auto custom-scrollbar space-y-6">
+          {/* PDF Specific: Orientation & Custom Heading */}
+          {exportType === 'pdf' && (
+            <div className="p-4 bg-indigo-50/70 rounded-2xl border border-indigo-100/80 space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* Page Orientation */}
+                <div>
+                  <label className="text-xs font-black text-indigo-950 uppercase tracking-wider block mb-2">
+                    Page Orientation (పేజీ అమరిక)
+                  </label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setOrientation('portrait')}
+                      className={`px-3 py-2.5 rounded-xl text-xs font-black flex items-center justify-center gap-2 border transition-all cursor-pointer ${
+                        orientation === 'portrait'
+                          ? 'bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-200 scale-105'
+                          : 'bg-white text-gray-700 border-gray-200 hover:bg-white/80'
+                      }`}
+                    >
+                      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect width="12" height="18" x="6" y="3" rx="2"/></svg>
+                      Portrait (నిలువు)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setOrientation('landscape')}
+                      className={`px-3 py-2.5 rounded-xl text-xs font-black flex items-center justify-center gap-2 border transition-all cursor-pointer ${
+                        orientation === 'landscape'
+                          ? 'bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-200 scale-105'
+                          : 'bg-white text-gray-700 border-gray-200 hover:bg-white/80'
+                      }`}
+                    >
+                      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect width="18" height="12" x="3" y="6" rx="2"/></svg>
+                      Landscape (అడ్డంగా)
+                    </button>
+                  </div>
+                </div>
+
+                {/* Custom Heading Input */}
+                <div>
+                  <label className="text-xs font-black text-indigo-950 uppercase tracking-wider block mb-2">
+                    Report Heading (రిపోర్ట్ శీర్షిక)
+                  </label>
+                  <input
+                    type="text"
+                    value={customHeading}
+                    onChange={(e) => setCustomHeading(e.target.value)}
+                    placeholder="e.g. STUDENT LIST REPORT, 10TH FEE SHEET"
+                    className="w-full px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl text-xs font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-sm"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Filters */}
-          <div className="mb-8">
+          <div>
             <div className="flex items-center gap-2 mb-4">
               <Filter className={`w-4 h-4 ${exportType === 'pdf' ? 'text-indigo-600' : 'text-emerald-600'}`} />
               <h3 className="text-sm font-black text-gray-900">Filter Students</h3>
@@ -390,6 +504,139 @@ export const StudentListExportModal: React.FC<ExportDialogProps> = ({
             )}
 
           </div>
+
+          {/* Column Width Adjustments (PDF only) */}
+          {exportType === 'pdf' && selectedCount > 0 && (
+            <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200/80">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <SlidersHorizontal className="w-4 h-4 text-indigo-600" />
+                  <h3 className="text-xs font-black text-gray-900 uppercase tracking-wider">
+                    Adjust Column Sizes (కాలమ్ వెడల్పులు mm లో)
+                  </h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setColWidths({
+                      sno: 15,
+                      studentId: 26,
+                      name: 38,
+                      className: 22,
+                      gender: 18,
+                      phone: 26,
+                      fatherName: 32,
+                      status: 20,
+                    });
+                    const resetted: Record<string, number> = {};
+                    customColumns.forEach(c => { resetted[c] = 40; });
+                    setCustomColWidths(resetted);
+                  }}
+                  className="text-[11px] font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1 cursor-pointer"
+                >
+                  <RotateCcw className="w-3 h-3" /> Reset
+                </button>
+              </div>
+              <p className="text-[11px] text-slate-500 font-medium mb-3">
+                S.No is locked to single-line (15mm+). Increase widths for signatures, feedback, or names as needed.
+              </p>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-52 overflow-y-auto custom-scrollbar pr-1">
+                {cols.sno && (
+                  <div className="flex items-center justify-between bg-white p-2.5 rounded-xl border border-slate-200 shadow-sm text-xs font-bold">
+                    <span className="text-gray-700">S.No (Single Line)</span>
+                    <div className="flex items-center gap-1.5">
+                      <button type="button" onClick={() => setColWidths(w => ({ ...w, sno: Math.max(14, (w.sno || 15) - 2) }))} className="w-6 h-6 rounded bg-slate-100 hover:bg-slate-200 flex items-center justify-center font-black">-</button>
+                      <span className="w-12 text-center text-indigo-600 font-mono font-black">{colWidths.sno || 15} mm</span>
+                      <button type="button" onClick={() => setColWidths(w => ({ ...w, sno: (w.sno || 15) + 2 }))} className="w-6 h-6 rounded bg-slate-100 hover:bg-slate-200 flex items-center justify-center font-black">+</button>
+                    </div>
+                  </div>
+                )}
+                {cols.studentId && (
+                  <div className="flex items-center justify-between bg-white p-2.5 rounded-xl border border-slate-200 shadow-sm text-xs font-bold">
+                    <span className="text-gray-700">Student ID</span>
+                    <div className="flex items-center gap-1.5">
+                      <button type="button" onClick={() => setColWidths(w => ({ ...w, studentId: Math.max(16, (w.studentId || 26) - 2) }))} className="w-6 h-6 rounded bg-slate-100 hover:bg-slate-200 flex items-center justify-center font-black">-</button>
+                      <span className="w-12 text-center text-indigo-600 font-mono font-black">{colWidths.studentId || 26} mm</span>
+                      <button type="button" onClick={() => setColWidths(w => ({ ...w, studentId: (w.studentId || 26) + 2 }))} className="w-6 h-6 rounded bg-slate-100 hover:bg-slate-200 flex items-center justify-center font-black">+</button>
+                    </div>
+                  </div>
+                )}
+                {cols.name && (
+                  <div className="flex items-center justify-between bg-white p-2.5 rounded-xl border border-slate-200 shadow-sm text-xs font-bold">
+                    <span className="text-gray-700">Student Name</span>
+                    <div className="flex items-center gap-1.5">
+                      <button type="button" onClick={() => setColWidths(w => ({ ...w, name: Math.max(20, (w.name || 38) - 2) }))} className="w-6 h-6 rounded bg-slate-100 hover:bg-slate-200 flex items-center justify-center font-black">-</button>
+                      <span className="w-12 text-center text-indigo-600 font-mono font-black">{colWidths.name || 38} mm</span>
+                      <button type="button" onClick={() => setColWidths(w => ({ ...w, name: (w.name || 38) + 2 }))} className="w-6 h-6 rounded bg-slate-100 hover:bg-slate-200 flex items-center justify-center font-black">+</button>
+                    </div>
+                  </div>
+                )}
+                {cols.className && (
+                  <div className="flex items-center justify-between bg-white p-2.5 rounded-xl border border-slate-200 shadow-sm text-xs font-bold">
+                    <span className="text-gray-700">Class</span>
+                    <div className="flex items-center gap-1.5">
+                      <button type="button" onClick={() => setColWidths(w => ({ ...w, className: Math.max(14, (w.className || 22) - 2) }))} className="w-6 h-6 rounded bg-slate-100 hover:bg-slate-200 flex items-center justify-center font-black">-</button>
+                      <span className="w-12 text-center text-indigo-600 font-mono font-black">{colWidths.className || 22} mm</span>
+                      <button type="button" onClick={() => setColWidths(w => ({ ...w, className: (w.className || 22) + 2 }))} className="w-6 h-6 rounded bg-slate-100 hover:bg-slate-200 flex items-center justify-center font-black">+</button>
+                    </div>
+                  </div>
+                )}
+                {cols.gender && (
+                  <div className="flex items-center justify-between bg-white p-2.5 rounded-xl border border-slate-200 shadow-sm text-xs font-bold">
+                    <span className="text-gray-700">Gender</span>
+                    <div className="flex items-center gap-1.5">
+                      <button type="button" onClick={() => setColWidths(w => ({ ...w, gender: Math.max(12, (w.gender || 18) - 2) }))} className="w-6 h-6 rounded bg-slate-100 hover:bg-slate-200 flex items-center justify-center font-black">-</button>
+                      <span className="w-12 text-center text-indigo-600 font-mono font-black">{colWidths.gender || 18} mm</span>
+                      <button type="button" onClick={() => setColWidths(w => ({ ...w, gender: (w.gender || 18) + 2 }))} className="w-6 h-6 rounded bg-slate-100 hover:bg-slate-200 flex items-center justify-center font-black">+</button>
+                    </div>
+                  </div>
+                )}
+                {cols.phone && (
+                  <div className="flex items-center justify-between bg-white p-2.5 rounded-xl border border-slate-200 shadow-sm text-xs font-bold">
+                    <span className="text-gray-700">Phone</span>
+                    <div className="flex items-center gap-1.5">
+                      <button type="button" onClick={() => setColWidths(w => ({ ...w, phone: Math.max(18, (w.phone || 26) - 2) }))} className="w-6 h-6 rounded bg-slate-100 hover:bg-slate-200 flex items-center justify-center font-black">-</button>
+                      <span className="w-12 text-center text-indigo-600 font-mono font-black">{colWidths.phone || 26} mm</span>
+                      <button type="button" onClick={() => setColWidths(w => ({ ...w, phone: (w.phone || 26) + 2 }))} className="w-6 h-6 rounded bg-slate-100 hover:bg-slate-200 flex items-center justify-center font-black">+</button>
+                    </div>
+                  </div>
+                )}
+                {cols.fatherName && (
+                  <div className="flex items-center justify-between bg-white p-2.5 rounded-xl border border-slate-200 shadow-sm text-xs font-bold">
+                    <span className="text-gray-700">Father Name</span>
+                    <div className="flex items-center gap-1.5">
+                      <button type="button" onClick={() => setColWidths(w => ({ ...w, fatherName: Math.max(20, (w.fatherName || 32) - 2) }))} className="w-6 h-6 rounded bg-slate-100 hover:bg-slate-200 flex items-center justify-center font-black">-</button>
+                      <span className="w-12 text-center text-indigo-600 font-mono font-black">{colWidths.fatherName || 32} mm</span>
+                      <button type="button" onClick={() => setColWidths(w => ({ ...w, fatherName: (w.fatherName || 32) + 2 }))} className="w-6 h-6 rounded bg-slate-100 hover:bg-slate-200 flex items-center justify-center font-black">+</button>
+                    </div>
+                  </div>
+                )}
+                {cols.status && (
+                  <div className="flex items-center justify-between bg-white p-2.5 rounded-xl border border-slate-200 shadow-sm text-xs font-bold">
+                    <span className="text-gray-700">Status</span>
+                    <div className="flex items-center gap-1.5">
+                      <button type="button" onClick={() => setColWidths(w => ({ ...w, status: Math.max(14, (w.status || 20) - 2) }))} className="w-6 h-6 rounded bg-slate-100 hover:bg-slate-200 flex items-center justify-center font-black">-</button>
+                      <span className="w-12 text-center text-indigo-600 font-mono font-black">{colWidths.status || 20} mm</span>
+                      <button type="button" onClick={() => setColWidths(w => ({ ...w, status: (w.status || 20) + 2 }))} className="w-6 h-6 rounded bg-slate-100 hover:bg-slate-200 flex items-center justify-center font-black">+</button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Custom Columns */}
+                {customColumns.map(col => (
+                  <div key={col} className="flex items-center justify-between bg-white p-2.5 rounded-xl border border-indigo-200 shadow-sm text-xs font-bold">
+                    <span className="text-indigo-950 truncate max-w-[120px]" title={col}>{col}</span>
+                    <div className="flex items-center gap-1.5">
+                      <button type="button" onClick={() => setCustomColWidths(w => ({ ...w, [col]: Math.max(20, (w[col] || 40) - 4) }))} className="w-6 h-6 rounded bg-slate-100 hover:bg-slate-200 flex items-center justify-center font-black">-</button>
+                      <span className="w-12 text-center text-indigo-600 font-mono font-black">{customColWidths[col] || 40} mm</span>
+                      <button type="button" onClick={() => setCustomColWidths(w => ({ ...w, [col]: (w[col] || 40) + 4 }))} className="w-6 h-6 rounded bg-slate-100 hover:bg-slate-200 flex items-center justify-center font-black">+</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Footer */}
