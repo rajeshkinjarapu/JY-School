@@ -266,13 +266,21 @@ export const StudentProfilePage: React.FC = () => {
 
   useEffect(() => {
     fetchStudentProfile();
+
+    const handleAfterPrint = () => {
+      setPrintPayment(null);
+    };
+    window.addEventListener('afterprint', handleAfterPrint);
+    return () => {
+      window.removeEventListener('afterprint', handleAfterPrint);
+    };
   }, [id]);
 
   if (loading) return <LoadingSpinner size="lg" className="h-[50vh]" />;
   if (!student) return <div className="text-center py-12">Student profile not found.</div>;
 
   return (
-    <div className="flex flex-col h-full bg-gray-50/50 w-full" style={{ minHeight: 'calc(100vh - 64px)' }}>
+    <div className="flex flex-col h-full bg-gray-50/50 w-full print:hidden" style={{ minHeight: 'calc(100vh - 64px)' }}>
       <div className="print:hidden">
         <PageHeader 
           title={`${student.user.name}'s Profile`}
@@ -284,7 +292,7 @@ export const StudentProfilePage: React.FC = () => {
         />
       </div>
       
-      <div className="flex-1 overflow-y-auto p-2.5 sm:p-6 lg:p-8 pt-2">
+      <div className="flex-1 overflow-y-auto p-2.5 sm:p-6 lg:p-8 pt-2 print:hidden">
         <div className="w-full space-y-4 print:hidden">
           
           {/* Simple Profile Header */}
@@ -406,11 +414,16 @@ export const StudentProfilePage: React.FC = () => {
                       </Link>
                     )}
                     <button
-                      onClick={() => window.print()}
-                      className="hidden md:flex bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300 items-center justify-center w-10 h-10 rounded-lg transition-all hover:bg-gray-200"
-                      title="Print Profile"
+                      type="button"
+                      onClick={() => {
+                        setPrintPayment(null);
+                        setTimeout(() => window.print(), 100);
+                      }}
+                      className="bg-white dark:bg-gray-800 text-slate-700 dark:text-gray-200 border border-gray-200 dark:border-gray-700 flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-bold shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-all cursor-pointer"
+                      title="Print Student Profile Record"
                     >
-                      <Printer className="w-4 h-4" />
+                      <Printer className="w-3.5 h-3.5 text-indigo-600" />
+                      <span className="hidden sm:inline">Print Profile</span>
                     </button>
                   </div>
                 </div>
@@ -715,166 +728,6 @@ export const StudentProfilePage: React.FC = () => {
           </div>
         </div>
       )}
-
-      {/* ============================================================
-             ================= PRINT-ONLY DOSSIER VIEW =================
-             ============================================================ */}
-      <style type="text/css" media="print">
-        {`
-          @page { size: A4 portrait; margin: 0; }
-          body { margin: 0; padding: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; background: white; }
-          .print\\:hidden { display: none !important; }
-        `}
-      </style>
-      <div className={`hidden ${printPayment ? '' : 'print:flex'} print:w-[210mm] print:h-screen print:max-h-[297mm] bg-white text-black font-sans relative flex-col mx-auto box-border overflow-hidden`}>
-        
-        {/* Background Watermark */}
-        <div className="absolute inset-0 flex items-center justify-center opacity-[0.03] pointer-events-none">
-          <div className="w-[150mm] h-[150mm] rounded-full border-[20px] border-gray-900 flex items-center justify-center">
-             <span className="text-9xl font-black tracking-tighter">JY</span>
-          </div>
-        </div>
-
-        {/* Decorative Border */}
-        <div className="absolute inset-[10mm] border-[4px] border-double border-gray-800 pointer-events-none opacity-90" />
-        <div className="absolute inset-[11.5mm] border border-gray-400 pointer-events-none" />
-        
-        <div className="p-[20mm] h-full flex flex-col relative z-10 w-full">
-          
-          {/* Header */}
-          <div className="text-center mb-8 border-b-[3px] border-gray-900 pb-6 relative">
-            <h1 className="text-5xl font-black tracking-[0.2em] uppercase text-gray-900 mb-4" style={{ fontFamily: 'Georgia, serif' }}>
-              JY SCHOOL
-            </h1>
-            <p className="text-[13px] font-bold uppercase tracking-widest text-gray-700">
-              Opp. Hero Showroom, SVL Paradise Campus, Narasannapeta
-            </p>
-            <div className="mt-6 inline-flex px-12 py-2.5 bg-gray-900 rounded-sm">
-              <span className="text-sm font-black uppercase tracking-[0.3em] text-white">
-                Official Student Record
-              </span>
-            </div>
-          </div>
-
-          {/* Student ID block */}
-          <div className="flex justify-between items-center mb-10 bg-gray-50 p-6 rounded-xl border border-gray-200">
-            <div>
-              <h2 className="text-4xl font-black text-gray-900 leading-none mb-4">{student.user.name}</h2>
-              <div className="flex gap-6 text-sm font-bold text-gray-700 inline-flex">
-                <span className="uppercase tracking-wider">Roll No: <span className="text-black font-black text-lg">{student.rollNo}</span></span>
-                <span className="text-gray-400">•</span>
-                <span className="uppercase tracking-wider">Class: <span className="text-black font-black text-lg">{student.class ? `${student.class.name} - ${student.class.section}` : 'N/A'}</span></span>
-              </div>
-            </div>
-            
-            <div className="w-36 h-44 border-4 border-white rounded-lg overflow-hidden flex-shrink-0 bg-white flex items-center justify-center shadow-md">
-              <Avatar 
-                src={getPhotoUrl(student.user.photoUrl)} 
-                name={student.user.name} 
-                size="lg" 
-                variant="rectangular" 
-                className="w-full h-full object-cover" 
-              />
-            </div>
-          </div>
-
-          {/* Details Grid */}
-          <div className="grid grid-cols-2 gap-x-12 gap-y-10 flex-grow text-[13px]">
-            <div className="space-y-7">
-              <h3 className="text-sm font-black text-gray-500 uppercase tracking-widest mb-6 border-b-2 border-gray-200 pb-2">Personal Details</h3>
-              
-              <div className="grid grid-cols-3 items-end border-b border-dotted border-gray-300 pb-1.5">
-                <span className="col-span-1 text-[11px] text-gray-500 font-extrabold uppercase tracking-wider">Gender</span>
-                <span className="col-span-2 font-bold text-black text-right">{student.gender || 'N/A'}</span>
-              </div>
-              <div className="grid grid-cols-3 items-end border-b border-dotted border-gray-300 pb-1.5">
-                <span className="col-span-1 text-[11px] text-gray-500 font-extrabold uppercase tracking-wider">Date of Birth</span>
-                <span className="col-span-2 font-bold text-black text-right">
-                  {student.dob ? new Date(student.dob).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A'}
-                </span>
-              </div>
-              <div className="grid grid-cols-3 items-end border-b border-dotted border-gray-300 pb-1.5">
-                <span className="col-span-1 text-[11px] text-gray-500 font-extrabold uppercase tracking-wider">Blood Group</span>
-                <span className="col-span-2 font-bold text-black text-right">{student.bloodGroup || 'N/A'}</span>
-              </div>
-              <div className="grid grid-cols-3 items-end border-b border-dotted border-gray-300 pb-1.5">
-                <span className="col-span-1 text-[11px] text-gray-500 font-extrabold uppercase tracking-wider">Admission</span>
-                <span className="col-span-2 font-bold text-black text-right">
-                  {new Date(student.admissionDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
-                </span>
-              </div>
-              <div className="grid grid-cols-3 items-end border-b border-dotted border-gray-300 pb-1.5 mt-8">
-                <span className="col-span-1 text-[11px] text-gray-500 font-extrabold uppercase tracking-wider">Aadhar No</span>
-                <span className="col-span-2 font-bold text-black text-right">{student.aadharNo || 'N/A'}</span>
-              </div>
-              <div className="grid grid-cols-3 items-end border-b border-dotted border-gray-300 pb-1.5">
-                <span className="col-span-1 text-[11px] text-gray-500 font-extrabold uppercase tracking-wider">PEN No</span>
-                <span className="col-span-2 font-bold text-black text-right">{student.penNumber || 'N/A'}</span>
-              </div>
-            </div>
-
-            <div className="space-y-7">
-              <h3 className="text-sm font-black text-gray-500 uppercase tracking-widest mb-6 border-b-2 border-gray-200 pb-2">Family & Contact</h3>
-              
-              <div className="grid grid-cols-3 items-end border-b border-dotted border-gray-300 pb-1.5">
-                <span className="col-span-1 text-[11px] text-gray-500 font-extrabold uppercase tracking-wider">Father Name</span>
-                <span className="col-span-2 font-bold text-black text-right">{student.fatherName || 'N/A'}</span>
-              </div>
-              <div className="grid grid-cols-3 items-end border-b border-dotted border-gray-300 pb-1.5">
-                <span className="col-span-1 text-[11px] text-gray-500 font-extrabold uppercase tracking-wider">Mother Name</span>
-                <span className="col-span-2 font-bold text-black text-right">{student.motherName || 'N/A'}</span>
-              </div>
-              
-              {student.parent && (
-                <>
-                  <div className="grid grid-cols-3 items-end border-b border-dotted border-gray-300 pb-1.5 mt-4">
-                    <span className="col-span-1 text-[11px] text-gray-500 font-extrabold uppercase tracking-wider">Guardian</span>
-                    <span className="col-span-2 font-bold text-black text-right">{student.parent.user.name}</span>
-                  </div>
-                  <div className="grid grid-cols-3 items-end border-b border-dotted border-gray-300 pb-1.5">
-                    <span className="col-span-1 text-[11px] text-gray-500 font-extrabold uppercase tracking-wider">Contact</span>
-                    <span className="col-span-2 font-bold text-black text-right">{student.parent.user.phone || 'N/A'}</span>
-                  </div>
-                </>
-              )}
-              
-              <div className="flex flex-col gap-1.5 pt-6">
-                <span className="text-[11px] text-gray-500 font-extrabold uppercase tracking-wider">Residential Address</span>
-                <span className="text-sm font-bold text-black leading-relaxed p-4 bg-gray-50 rounded-lg border border-gray-200 min-h-[72px]">
-                  {student.address || 'No address provided'}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Footer Signatures */}
-          <div className="mt-auto mb-6 flex justify-between items-end px-6">
-            <div className="text-center w-56">
-              <div className="h-0 border-b-2 border-gray-800 w-full mb-3"></div>
-              <span className="text-[10px] font-black text-gray-600 uppercase tracking-widest">
-                Class Teacher
-              </span>
-            </div>
-            
-            <div className="w-32 h-32 rounded-full border-[3px] border-double border-gray-300 flex items-center justify-center bg-gray-50 -my-4 relative z-0" />
-
-            <div className="text-center w-56">
-              <div className="h-0 border-b-2 border-gray-800 w-full mb-3"></div>
-              <span className="text-[10px] font-black text-gray-600 uppercase tracking-widest">
-                Principal / Registrar
-              </span>
-            </div>
-          </div>
-
-          {/* System generated stamp */}
-          <div className="text-center pt-4 border-t border-gray-300">
-             <span className="text-[9px] text-gray-400 font-bold uppercase tracking-[0.2em]">
-                System Generated • Date: {new Date().toLocaleDateString('en-IN')} • JY SCHOOL Student Database
-             </span>
-          </div>
-
-        </div>
-      </div>
       </div>
 
 
@@ -1183,8 +1036,310 @@ export const StudentProfilePage: React.FC = () => {
         document.body
       )}
 
-      {/* Hidden Print Component */}
-      <FeeReceiptPrint payment={printPayment} />
+      {/* ============================================================
+             ================= PRINT-ONLY DOSSIER VIEW =================
+             ============================================================ */}
+      {!printPayment && createPortal(
+        <div id="student-profile-print-root" className="hidden print:flex">
+          <style type="text/css" media="print">
+            {`
+              @page {
+                size: A4 portrait;
+                margin: 0 !important;
+              }
+              body * {
+                visibility: hidden !important;
+              }
+              #student-profile-print-root,
+              #student-profile-print-root * {
+                visibility: visible !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+              }
+              #student-profile-print-root {
+                position: fixed !important;
+                left: 0 !important;
+                top: 0 !important;
+                width: 210mm !important;
+                height: 297mm !important;
+                max-height: 297mm !important;
+                margin: 0 !important;
+                padding: 10mm 12mm !important;
+                box-sizing: border-box !important;
+                background: #ffffff !important;
+                background-color: #ffffff !important;
+                display: flex !important;
+                flex-direction: column !important;
+                justify-content: space-between !important;
+                z-index: 99999999 !important;
+                overflow: hidden !important;
+              }
+            `}
+          </style>
+
+          <div className="w-full h-full border-2 border-slate-900 rounded-2xl p-5 flex flex-col justify-between relative bg-white box-border text-slate-900 overflow-hidden">
+            {/* Watermark */}
+            <div className="absolute inset-0 flex items-center justify-center opacity-[0.035] pointer-events-none">
+              <img src="/logo.png" alt="" className="w-64 h-64 object-contain grayscale" />
+            </div>
+
+            {/* Top Header */}
+            <div className="border-b-2 border-slate-900 pb-3 relative z-10">
+              <div className="flex items-center justify-between gap-4">
+                <div className="w-16 h-16 rounded-xl bg-white p-1 border border-slate-300 shrink-0 shadow-sm flex items-center justify-center">
+                  <img src="/logo.png" alt="Logo" className="w-full h-full object-contain" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                </div>
+                <div className="flex-1 text-center">
+                  <h1 className="text-2xl font-black tracking-wider uppercase text-slate-950 font-serif">
+                    SRI VENKATESWARA JY SCHOOL
+                  </h1>
+                  <p className="text-[11px] font-bold text-slate-600 mt-0.5">
+                    Opp. Hero Showroom, SVL Paradise Campus, Narasannapeta, Srikakulam Dist.
+                  </p>
+                  <p className="text-[9.5px] font-semibold text-slate-500 mt-0.5">
+                    Recognized by Govt. of Andhra Pradesh • Regd. School Code: JY-NPT
+                  </p>
+                </div>
+                <div className="text-right shrink-0">
+                  <div className="border border-slate-300 rounded-lg px-2.5 py-1 bg-slate-50 text-[10px] font-bold text-slate-700">
+                    <div>Date: <span className="font-black text-slate-900">{new Date().toLocaleDateString('en-IN')}</span></div>
+                    <div>Roll: <span className="font-black text-slate-900">{student.rollNo || '-'}</span></div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Banner Title */}
+              <div className="mt-2.5 bg-slate-900 text-white text-center py-1 rounded-md uppercase tracking-[0.25em] text-[11px] font-black">
+                OFFICIAL STUDENT RECORD DOSSIER
+              </div>
+            </div>
+
+            {/* Student ID & Profile Banner */}
+            <div className="flex items-stretch justify-between gap-4 bg-slate-50 p-3.5 rounded-xl border border-slate-300 relative z-10">
+              <div className="flex-1 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center gap-3">
+                    <h2 className="text-2xl font-black text-slate-950 tracking-tight">{student.user?.name}</h2>
+                    <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider ${student.user?.isActive !== false ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}`}>
+                      {student.user?.isActive !== false ? 'Active Student' : 'Inactive'}
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-3 text-xs font-bold text-slate-700 mt-2">
+                    <span className="bg-white px-2.5 py-1 rounded border border-slate-300">
+                      Roll No: <span className="font-black text-slate-900 text-sm">{student.rollNo}</span>
+                    </span>
+                    <span className="bg-white px-2.5 py-1 rounded border border-slate-300">
+                      Class: <span className="font-black text-indigo-900 text-sm">{student.class ? `${student.class.name} - ${student.class.section}` : 'N/A'}</span>
+                    </span>
+                    <span className="bg-white px-2.5 py-1 rounded border border-slate-300">
+                      Gender: <span className="font-black text-slate-900">{student.gender || 'N/A'}</span>
+                    </span>
+                  </div>
+                </div>
+                <div className="text-[11px] text-slate-500 font-medium mt-1">
+                  Admission Date: <strong className="text-slate-800 font-bold">{student.admissionDate ? new Date(student.admissionDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A'}</strong>
+                </div>
+              </div>
+
+              {/* Student Photo */}
+              <div className="w-24 h-28 border-2 border-slate-400 rounded-lg overflow-hidden shrink-0 bg-white flex items-center justify-center shadow-sm">
+                {getPhotoUrl(student.user?.photoUrl) ? (
+                  <img src={getPhotoUrl(student.user.photoUrl)} alt={student.user.name} className="w-full h-full object-cover" />
+                ) : (
+                  <div className="text-center p-2">
+                    <User2 className="w-8 h-8 text-slate-300 mx-auto mb-1" />
+                    <span className="text-[8px] font-bold text-slate-400 uppercase tracking-wider">No Photo</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Two-Column Structured Details Grid */}
+            <div className="grid grid-cols-2 gap-4 relative z-10 text-xs">
+              {/* Column 1: Personal & Identification */}
+              <div className="border border-slate-300 rounded-xl overflow-hidden bg-white">
+                <div className="bg-slate-100 px-3 py-1.5 border-b border-slate-300 font-black text-slate-800 uppercase tracking-wider text-[10px] flex items-center gap-1.5">
+                  <User2 className="w-3.5 h-3.5 text-indigo-700" />
+                  Personal & Academic Details
+                </div>
+                <table className="w-full text-left">
+                  <tbody className="divide-y divide-slate-200">
+                    <tr>
+                      <th className="px-3 py-1.5 font-bold text-slate-500 bg-slate-50/50 w-2/5">Date of Birth</th>
+                      <td className="px-3 py-1.5 font-semibold text-slate-900">
+                        {student.dob ? new Date(student.dob).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A'}
+                      </td>
+                    </tr>
+                    <tr>
+                      <th className="px-3 py-1.5 font-bold text-slate-500 bg-slate-50/50">Blood Group</th>
+                      <td className="px-3 py-1.5 font-bold text-rose-700">{student.bloodGroup || 'N/A'}</td>
+                    </tr>
+                    <tr>
+                      <th className="px-3 py-1.5 font-bold text-slate-500 bg-slate-50/50">Aadhar No (UID)</th>
+                      <td className="px-3 py-1.5 font-semibold font-mono text-slate-900">{student.aadharNo || 'N/A'}</td>
+                    </tr>
+                    <tr>
+                      <th className="px-3 py-1.5 font-bold text-slate-500 bg-slate-50/50">PEN Number</th>
+                      <td className="px-3 py-1.5 font-semibold font-mono text-slate-900">{student.penNumber || 'N/A'}</td>
+                    </tr>
+                    <tr>
+                      <th className="px-3 py-1.5 font-bold text-slate-500 bg-slate-50/50">Academic Year</th>
+                      <td className="px-3 py-1.5 font-semibold text-slate-900">{student.class?.academicYear || '2025-2026'}</td>
+                    </tr>
+                    <tr>
+                      <th className="px-3 py-1.5 font-bold text-slate-500 bg-slate-50/50">Admission No</th>
+                      <td className="px-3 py-1.5 font-semibold text-slate-900">{student.admissionNo || student.rollNo || 'N/A'}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Column 2: Parent & Communication */}
+              <div className="border border-slate-300 rounded-xl overflow-hidden bg-white flex flex-col justify-between">
+                <div>
+                  <div className="bg-slate-100 px-3 py-1.5 border-b border-slate-300 font-black text-slate-800 uppercase tracking-wider text-[10px] flex items-center gap-1.5">
+                    <Users className="w-3.5 h-3.5 text-indigo-700" />
+                    Parent & Contact Information
+                  </div>
+                  <table className="w-full text-left">
+                    <tbody className="divide-y divide-slate-200">
+                      <tr>
+                        <th className="px-3 py-1.5 font-bold text-slate-500 bg-slate-50/50 w-2/5">Father's Name</th>
+                        <td className="px-3 py-1.5 font-semibold text-slate-900">{student.fatherName || 'N/A'}</td>
+                      </tr>
+                      <tr>
+                        <th className="px-3 py-1.5 font-bold text-slate-500 bg-slate-50/50">Mother's Name</th>
+                        <td className="px-3 py-1.5 font-semibold text-slate-900">{student.motherName || 'N/A'}</td>
+                      </tr>
+                      <tr>
+                        <th className="px-3 py-1.5 font-bold text-slate-500 bg-slate-50/50">Guardian Name</th>
+                        <td className="px-3 py-1.5 font-semibold text-slate-900">{student.parent?.user?.name || student.guardianName || 'N/A'}</td>
+                      </tr>
+                      <tr>
+                        <th className="px-3 py-1.5 font-bold text-slate-500 bg-slate-50/50">Primary Contact</th>
+                        <td className="px-3 py-1.5 font-semibold font-mono text-slate-900">
+                          {student.parent?.user?.phone || student.mobileNumber || student.user?.phone || 'N/A'}
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+
+                <div className="p-2.5 bg-slate-50 border-t border-slate-200">
+                  <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider block mb-1">Residential Address</span>
+                  <p className="text-[11px] font-semibold text-slate-800 leading-tight">
+                    {student.address || 'Opp. Hero Showroom, SVL Paradise Campus, Narasannapeta, Srikakulam Dist., Andhra Pradesh'}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Fee & Financial Overview Summary Bar */}
+            <div className="border border-slate-300 rounded-xl p-3 bg-slate-50/70 relative z-10">
+              <div className="text-[10px] font-black text-slate-700 uppercase tracking-wider mb-1.5 flex items-center justify-between">
+                <span>Fee Ledger Status</span>
+                <span className="text-[9px] text-slate-500 font-bold">Academic Session {student.class?.academicYear || '2025-2026'}</span>
+              </div>
+              <div className="grid grid-cols-3 gap-3 text-center">
+                {(() => {
+                  const studentStructures = feeStructures.filter((s) => s.studentId === student.id || s.classId === student.classId);
+                  const totalFee = studentStructures.reduce((sum, s) => sum + s.amount, 0);
+                  const totalPaid = student.feePayments?.reduce((sum: number, p: any) => sum + p.amountPaid, 0) || 0;
+                  const totalDue = Math.max(0, totalFee - totalPaid);
+
+                  return (
+                    <>
+                      <div className="bg-white p-1.5 rounded-lg border border-slate-200">
+                        <div className="text-[9px] font-bold text-slate-500 uppercase">Total Applicable Fee</div>
+                        <div className="text-sm font-black text-slate-900">₹{totalFee.toLocaleString('en-IN')}</div>
+                      </div>
+                      <div className="bg-white p-1.5 rounded-lg border border-slate-200">
+                        <div className="text-[9px] font-bold text-emerald-600 uppercase">Total Amount Paid</div>
+                        <div className="text-sm font-black text-emerald-700">₹{totalPaid.toLocaleString('en-IN')}</div>
+                      </div>
+                      <div className="bg-white p-1.5 rounded-lg border border-slate-200">
+                        <div className="text-[9px] font-bold text-rose-600 uppercase">Pending Balance</div>
+                        <div className="text-sm font-black text-rose-700">₹{totalDue.toLocaleString('en-IN')}</div>
+                      </div>
+                    </>
+                  );
+                })()}
+              </div>
+            </div>
+
+            {/* Official Signatures Row */}
+            <div className="flex items-end justify-between px-6 pt-2 relative z-10">
+              <div className="text-center w-48">
+                <div className="border-b-2 border-slate-800 h-10 mb-1.5"></div>
+                <span className="text-[10.5px] font-black text-slate-800 uppercase tracking-wider block">
+                  Class Teacher Signature
+                </span>
+                <span className="text-[8.5px] text-slate-500 font-bold">Verified & Endorsed</span>
+              </div>
+
+              {/* Seal Stamp */}
+              <div className="w-20 h-20 rounded-full border-2 border-dashed border-slate-400 flex flex-col items-center justify-center text-slate-400 text-center shrink-0">
+                <span className="text-[8px] font-black uppercase tracking-widest leading-tight">AFFIX</span>
+                <span className="text-[9px] font-black uppercase tracking-widest text-slate-500 leading-tight">OFFICIAL</span>
+                <span className="text-[8px] font-black uppercase tracking-widest leading-tight">SEAL</span>
+              </div>
+
+              <div className="text-center w-48">
+                <div className="border-b-2 border-slate-800 h-10 mb-1.5"></div>
+                <span className="text-[10.5px] font-black text-slate-800 uppercase tracking-wider block">
+                  Principal / Headmaster
+                </span>
+                <span className="text-[8.5px] text-slate-500 font-bold">Authorized Signatory</span>
+              </div>
+            </div>
+
+            {/* System Footer Stamp */}
+            <div className="text-center pt-2 border-t border-slate-300 relative z-10">
+              <p className="text-[8.5px] text-slate-500 font-bold uppercase tracking-[0.15em]">
+                This is an official computer-generated student dossier issued by JY SCHOOL ERP • Narasannapeta
+              </p>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* Hidden Print Component for Fee Receipts */}
+      {printPayment && createPortal(
+        <div id="student-fee-receipt-print-root" className="hidden print:block">
+          <style type="text/css" media="print">
+            {`
+              @page {
+                size: A4 portrait;
+                margin: 0 !important;
+              }
+              body * {
+                visibility: hidden !important;
+              }
+              #student-fee-receipt-print-root,
+              #student-fee-receipt-print-root * {
+                visibility: visible !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+              }
+              #student-fee-receipt-print-root {
+                position: fixed !important;
+                left: 0 !important;
+                top: 0 !important;
+                width: 210mm !important;
+                height: 297mm !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                background-color: #ffffff !important;
+                display: block !important;
+                z-index: 99999999 !important;
+              }
+            `}
+          </style>
+          <FeeReceiptPrint payment={printPayment} />
+        </div>,
+        document.body
+      )}
     </div>
   );
 };

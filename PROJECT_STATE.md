@@ -10,6 +10,15 @@
   - **Universal & Flavor App Sync**: Initialized across all 4 entrypoints (`main.dart`, `main_admin.dart`, `main_teacher.dart`, `main_student.dart`).
   - **Shorebird Compatible**: Fully patchable via Shorebird without requiring a new APK release.
 
+- **Student Profile Print Blank Page Fix (2026-09-18)**:
+  - **Problem**: When printing the student profile page (`/students/:id`) via browser or the "Print Profile" button, the resulting print preview was completely blank/white, with content pushed off the right edge.
+  - **Root Cause**: The print dossier was nested inside desktop scrollable flex containers (`flex-1 overflow-y-auto lg:p-8`) which caused `mx-auto` to center against the full desktop viewport width (1600px+), pushing the 210mm dossier 400px off-screen to the right. Additionally, `h-screen` and `overflow-hidden` caused Chromium to clip the view to 0 height.
+  - **Fix**:
+    - Portaled the official Student Record Dossier (`#student-profile-print-root`) directly to `document.body` using React's `createPortal`.
+    - Added dedicated `@media print` CSS enforcing `position: fixed !important; left: 0; top: 0; width: 210mm; height: 297mm;` and `body * { visibility: hidden !important; }` while keeping `#student-profile-print-root` fully visible.
+    - Designed a single-page official A4 Student Dossier complete with school crest, student photo, demographics, admission, parent contact, fee ledger summary, signature lines for Class Teacher & Principal, and official seal placeholder.
+    - Added `afterprint` listener to cleanly reset `printPayment` state and portaled fee receipts so profile and receipt printing operate completely independently.
+
 - **Student List PDF & Excel Export Customizations (2026-09-18)**:
   - **Full Dataset Export**: Fetches all 533+ students via `/api/students?limit=10000` (respecting class/search filters) instead of only the 50 students from the current paginated view.
   - **Portrait vs Landscape Toggle**: Added UI buttons in `StudentListExportModal.tsx` allowing users to choose either Portrait (210mm) or Landscape (297mm) PDF page layout.
