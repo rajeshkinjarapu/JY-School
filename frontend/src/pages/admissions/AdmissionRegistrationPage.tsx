@@ -11,6 +11,7 @@ import toast from 'react-hot-toast';
 import { PageHeader } from '../../components/UI/PageHeader';
 import { AdmissionPrintModal } from './AdmissionPrintModal';
 import { AP_LOCATIONS } from '../../utils/apLocations';
+import { AP_CASTES } from '../../utils/apCastes';
 
 const STANDARD_CLASSES = [
   'Nursery', 'LKG', 'UKG',
@@ -65,7 +66,8 @@ export const AdmissionRegistrationPage: React.FC = () => {
   const [nationality, setNationality] = useState('Indian');
   const [religion, setReligion] = useState('Hindu');
   const [caste, setCaste] = useState('BC-A');
-  const [subCaste, setSubCaste] = useState('');
+  const [subCaste, setSubCaste] = useState(AP_CASTES.subCastes['BC-A']?.[0] || '');
+  const [customSubCaste, setCustomSubCaste] = useState('');
   const [previousSchool, setPreviousSchool] = useState('');
 
   // 4. Residential Address Cascading Dropdowns
@@ -132,6 +134,16 @@ export const AdmissionRegistrationPage: React.FC = () => {
       if (res.data) setQrConfig(res.data);
     }).catch(() => {});
   }, []);
+
+  // Cascading Caste Handlers
+  const availableSubCastes = AP_CASTES.subCastes[caste] || ['Other Sub-Caste'];
+
+  const handleCasteChange = (cat: string) => {
+    setCaste(cat);
+    const subs = AP_CASTES.subCastes[cat] || ['Other Sub-Caste'];
+    setSubCaste(subs[0] || '');
+    setCustomSubCaste('');
+  };
 
   // Cascading Address Handlers
   const availableDistricts = AP_LOCATIONS.districts[selectedState] || ['Other District'];
@@ -319,6 +331,7 @@ export const AdmissionRegistrationPage: React.FC = () => {
 
     // Build consolidated residence address
     const finalVillage = selectedVillage === 'Other Village/Sachivalayam' ? customVillage : selectedVillage;
+    const finalSubCaste = subCaste === 'Other Sub-Caste' ? customSubCaste : subCaste;
     const addressParts = [
       doorNo.trim(),
       finalVillage.trim(),
@@ -365,7 +378,7 @@ export const AdmissionRegistrationPage: React.FC = () => {
         nationality: nationality.trim() || 'Indian',
         religion: religion.trim() || undefined,
         caste: caste.trim() || undefined,
-        subCaste: subCaste.trim() || undefined,
+        subCaste: finalSubCaste.trim() || undefined,
         previousSchool: previousSchool.trim() || undefined,
 
         // Residence
@@ -914,40 +927,53 @@ export const AdmissionRegistrationPage: React.FC = () => {
                 </div>
 
                 {/* Caste */}
+                {/* Caste Category */}
                 <div>
                   <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-1.5">
-                    Caste Category
+                    Caste Category <span className="text-red-500">*</span>
                   </label>
                   <select
                     value={caste}
-                    onChange={e => setCaste(e.target.value)}
+                    onChange={e => handleCasteChange(e.target.value)}
                     className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all shadow-xs"
                   >
-                    <option value="OC">OC (General)</option>
-                    <option value="BC-A">BC-A</option>
-                    <option value="BC-B">BC-B</option>
-                    <option value="BC-C">BC-C</option>
-                    <option value="BC-D">BC-D</option>
-                    <option value="BC-E">BC-E</option>
-                    <option value="SC">SC</option>
-                    <option value="ST">ST</option>
-                    <option value="Other">Other</option>
+                    {AP_CASTES.categories.map(cat => (
+                      <option key={cat} value={cat}>{cat}</option>
+                    ))}
                   </select>
                 </div>
 
-                {/* Sub-Caste */}
+                {/* Sub-Caste Dropdown */}
                 <div>
                   <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-1.5">
-                    Sub-Caste
+                    Sub-Caste (కులం) <span className="text-red-500">*</span>
                   </label>
-                  <input 
-                    type="text"
+                  <select
                     value={subCaste}
                     onChange={e => setSubCaste(e.target.value)}
-                    placeholder="Enter sub-caste"
                     className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all shadow-xs"
-                  />
+                  >
+                    {availableSubCastes.map(sub => (
+                      <option key={sub} value={sub}>{sub}</option>
+                    ))}
+                  </select>
                 </div>
+
+                {/* Custom Sub-Caste Input if 'Other Sub-Caste' selected */}
+                {subCaste === 'Other Sub-Caste' && (
+                  <div className="sm:col-span-2">
+                    <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-1.5">
+                      Specify Sub-Caste Name <span className="text-red-500">*</span>
+                    </label>
+                    <input 
+                      type="text"
+                      value={customSubCaste}
+                      onChange={e => setCustomSubCaste(e.target.value)}
+                      placeholder="Enter specific sub-caste name"
+                      className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all shadow-xs"
+                    />
+                  </div>
+                )}
 
                 {/* Name of the School Previously Studying / Studied */}
                 <div className="sm:col-span-2">

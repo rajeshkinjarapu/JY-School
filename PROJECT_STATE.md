@@ -1,5 +1,11 @@
 # Project State: JY School ERP
 
+- **Dynamic Cascading Caste & Sub-Caste Master System (2026-09-19)**:
+  - **Comprehensive Gazette Mapping**: Created `frontend/src/utils/apCastes.ts` with 100% official AP classification across all 9 categories: OC, BC-A, BC-B, BC-C, BC-D, BC-E, SC, ST, and Other.
+  - **North Andhra / Srikakulam Real Communities**: Fully covers prominent local groups including Turpu Kapu, Kalinga, Koppula Velama, Polinati Velama, Yadava, Pondara, Gavara, Sondi, Nagavamsam, Padmashali, Devanga, Nayee Brahmin, Rajaka, Agnikula Kshatriya, Relli, Bariki, Bavuri, Dandasi, Paidi, Savara, Jatapu, etc.
+  - **Interactive Dynamic Selection**: When Caste Category is selected, the Sub-Caste dropdown instantly populates with authentic community names. Includes `'Other Sub-Caste'` option allowing parents to type specific custom names if needed.
+  - **Form and Print Sync**: `subCaste` is cleanly saved to the database and printed on the official 2-page A4 Admission Dossier.
+
 - **Admissions Image Upload & Display Bug Fix (2026-09-19)**:
   - **Root Cause of "Unexpected field"**: The frontend `AdmissionRegistrationPage.tsx` was sending `formData.append('image', file)` while Multer in `backend/src/routes/uploads.ts` was strictly expecting `upload.single('file')`. Furthermore, `resolveFileUrl` only checked for `http` URLs, failing on base64 data URLs and blob preview URLs by improperly prefixing them with the API base URL.
   - **Backend Solution**: Updated `backend/src/routes/uploads.ts` to use `upload.any()` so that regardless of whether the client sends `file`, `image`, `photo`, or other field names, the upload succeeds with 100% resilience.
