@@ -145,6 +145,14 @@ export const router = createBrowserRouter([
     element: withSuspense(<ResetPasswordPage />),
   },
   {
+    path: '/apply',
+    element: withSuspense(<AdmissionRegistrationPage />),
+  },
+  {
+    path: '/admissions/apply',
+    element: withSuspense(<AdmissionRegistrationPage />),
+  },
+  {
     path: '/app/progress-card/:examId/:studentId',
     element: withSuspense(<AppProgressCardView />),
   },

@@ -257,6 +257,34 @@ export const getSubjectsForClassHelper = (subjectsConfig: any, classId?: string)
   return [];
 };
 
+export const areSubjectsMatching = (a: string, b: string): boolean => {
+  if (!a || !b) return false;
+  const normA = a.toUpperCase().trim().replace(/[^A-Z0-9]/g, '');
+  const normB = b.toUpperCase().trim().replace(/[^A-Z0-9]/g, '');
+  if (normA === normB) return true;
+
+  const aliases: [string, string][] = [
+    ['MATHS', 'MATHEMATICS'],
+    ['MATH', 'MATHEMATICS'],
+    ['MATH', 'MATHS'],
+    ['EVS', 'ENVIRONMENTALSTUDIES'],
+    ['EVS', 'ENVIRONMENTALSCIENCE'],
+    ['EVS', 'ENVIRONMENTSCIENCE'],
+    ['SCIENCE', 'GENERALSCIENCE'],
+    ['SOC', 'SOCIAL'],
+    ['SOC', 'SOCIALSTUDIES'],
+    ['SOCIAL', 'SOCIALSTUDIES'],
+    ['COMP', 'COMPUTER'],
+    ['COMP', 'COMPUTERSCIENCE'],
+    ['COMPUTERS', 'COMPUTER'],
+    ['TEL', 'TELUGU'],
+    ['HIN', 'HINDI'],
+    ['ENG', 'ENGLISH'],
+  ];
+
+  return aliases.some(([x, y]) => (normA === x && normB === y) || (normA === y && normB === x));
+};
+
 export const getResults = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   const id = req.params.id as string;
   const classId = req.query.classId as string;
@@ -341,7 +369,8 @@ export const getResults = async (req: AuthRequest, res: Response, next: NextFunc
       });
     }
     const entry = studentMap.get(key)!;
-    const existingMarkIndex = entry.marks.findIndex(m => m.subject.trim().toUpperCase() === mark.subject.name.trim().toUpperCase());
+    // Check if a mark for this subject (or alias like MATHS vs MATHEMATICS) already exists
+    const existingMarkIndex = entry.marks.findIndex(m => areSubjectsMatching(m.subject, mark.subject.name));
     
     const subKey = mark.subject.name.toUpperCase().trim();
     const studentClassId = mark.student.classId || (classId as string);
@@ -352,14 +381,17 @@ export const getResults = async (req: AuthRequest, res: Response, next: NextFunc
     if (mark.maxMarks && Number(mark.maxMarks) > 0 && Number(mark.maxMarks) <= 200) {
       actualMax = Number(mark.maxMarks);
     } else {
-      // 2. Secondary fallback: classSpecific subjects config or exam subjects
-      const foundSub = studentClassSubjects.find((s: any) => s.name?.toUpperCase().trim() === subKey);
+      // 2. Secondary fallback: classSpecific subjects config or exam subjects with alias matching
+      const foundSub = studentClassSubjects.find((s: any) => areSubjectsMatching(s.name, subKey));
       if (foundSub && Number(foundSub.maxMarks) > 0) {
         actualMax = Number(foundSub.maxMarks);
-      } else if (subjectMaxMap.has(subKey) && subjectMaxMap.get(subKey)! > 0) {
-        actualMax = subjectMaxMap.get(subKey)!;
       } else {
-        actualMax = 50;
+        const matchingGlobalMax = Array.from(subjectMaxMap.entries()).find(([k]) => areSubjectsMatching(k, subKey));
+        if (matchingGlobalMax && matchingGlobalMax[1] > 0) {
+          actualMax = matchingGlobalMax[1];
+        } else {
+          actualMax = 50;
+        }
       }
     }
     if (actualMax <= 0) actualMax = 50;
@@ -374,20 +406,47 @@ export const getResults = async (req: AuthRequest, res: Response, next: NextFunc
     }
   }
 
+  // Pre-calculate the set of all subjects actually taken by at least one student in each class
+  const classTakenSubjectsMap = new Map<string, Set<string>>();
+  exam.marks.forEach((m: any) => {
+    const cId = m.student?.classId || (classId as string);
+    if (!cId || !m.subject?.name) return;
+    if (!classTakenSubjectsMap.has(cId)) {
+      classTakenSubjectsMap.set(cId, new Set<string>());
+    }
+    classTakenSubjectsMap.get(cId)!.add(m.subject.name.toUpperCase().trim());
+  });
+
   const results = Array.from(studentMap.values()).map((s) => {
-    // Populate missing subjects with AB if they have no marks entered for them
-    const studentClassSubjects = getSubjectsForClassHelper(exam.subjects, s.classId || (classId as string));
+    const targetClassId = s.classId || (classId as string);
+    const takenInThisClass = classTakenSubjectsMap.get(targetClassId) || new Set<string>();
+
+    // Populate missing subjects with AB only if the subject was ACTUALLY taken by this class!
+    const studentClassSubjects = getSubjectsForClassHelper(exam.subjects, targetClassId);
     if (studentClassSubjects && studentClassSubjects.length > 0) {
       studentClassSubjects.forEach((sub: any) => {
         const subName = sub.name?.trim();
-        if (subName && !s.marks.find(m => m.subject.toUpperCase() === subName.toUpperCase())) {
-           s.marks.push({
-              subject: subName,
-              obtained: 'AB',
-              max: Number(sub.maxMarks) || 50,
-              grade: 'F',
-              remarks: 'AB'
-           });
+        if (!subName) return;
+
+        // If this class has taken any exams, verify this subject was taken by someone in this class
+        if (takenInThisClass.size > 0) {
+          const isTaken = Array.from(takenInThisClass).some(taken => areSubjectsMatching(taken, subName));
+          if (!isTaken) {
+            // Phantom subject for this class (e.g. SCIENCE in primary class that took EVS). Skip!
+            return;
+          }
+        }
+
+        // Check if student already has marks for this subject (considering aliases)
+        const hasMark = s.marks.some(m => areSubjectsMatching(m.subject, subName));
+        if (!hasMark) {
+          s.marks.push({
+            subject: subName,
+            obtained: 'AB',
+            max: Number(sub.maxMarks) || 50,
+            grade: 'F',
+            remarks: 'AB'
+          });
         }
       });
     }
@@ -411,6 +470,92 @@ export const getResults = async (req: AuthRequest, res: Response, next: NextFunc
   const ranked = results.map((r, i) => ({ ...r, rank: i + 1 }));
 
   successResponse(res, ranked, 'Exam results fetched');
+};
+
+export const syncSubjectsFromMarks = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const exam = await prisma.exam.findUnique({
+      where: { id },
+      include: {
+        classes: { select: { id: true, name: true, section: true } },
+        marks: {
+          include: {
+            student: { select: { id: true, classId: true } },
+            subject: { select: { id: true, name: true, code: true } }
+          }
+        }
+      }
+    });
+    if (!exam) return next(createError('Exam not found', 404));
+
+    // Group marks by class
+    const classConfigsMap: { [classId: string]: any } = {};
+    for (const cls of exam.classes) {
+      classConfigsMap[cls.id] = {
+        classId: cls.id,
+        className: `${cls.name} - ${cls.section}`,
+        subjects: []
+      };
+    }
+
+    const subjectsPerClass: { [classId: string]: Map<string, any> } = {};
+    for (const m of exam.marks) {
+      const cId = m.student.classId;
+      if (!cId || !m.subject?.name) continue;
+      if (!subjectsPerClass[cId]) subjectsPerClass[cId] = new Map();
+      const sName = m.subject.name.trim();
+      const sKey = sName.toUpperCase();
+      if (!subjectsPerClass[cId].has(sKey)) {
+        subjectsPerClass[cId].set(sKey, {
+          id: m.subject.id,
+          name: sName,
+          maxMarks: (m as any).maxMarks || (exam.maxMarks > 0 ? exam.maxMarks : 50),
+          date: exam.examDate ? new Date(exam.examDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]
+        });
+      }
+    }
+
+    for (const cId of Object.keys(classConfigsMap)) {
+      if (subjectsPerClass[cId] && subjectsPerClass[cId].size > 0) {
+        classConfigsMap[cId].subjects = Array.from(subjectsPerClass[cId].values());
+      } else {
+        const dbSubs = await prisma.subject.findMany({ where: { classId: cId }, orderBy: { name: 'asc' } });
+        if (dbSubs.length > 0) {
+          classConfigsMap[cId].subjects = dbSubs.map(s => ({
+            id: s.id,
+            name: s.name,
+            maxMarks: exam.maxMarks > 0 ? exam.maxMarks : 50,
+            date: exam.examDate ? new Date(exam.examDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]
+          }));
+        }
+      }
+    }
+
+    const classConfigsList = Object.values(classConfigsMap);
+    const globalSubjectsMap = new Map<string, any>();
+    classConfigsList.forEach(cfg => {
+      cfg.subjects.forEach((s: any) => {
+        const k = s.name.toUpperCase().trim();
+        if (!globalSubjectsMap.has(k)) globalSubjectsMap.set(k, s);
+      });
+    });
+
+    const newSubjectsPayload = {
+      classConfigs: classConfigsList,
+      globalSubjects: Array.from(globalSubjectsMap.values())
+    };
+
+    const updated = await prisma.exam.update({
+      where: { id },
+      data: { subjects: newSubjectsPayload },
+      include: { classes: true }
+    });
+
+    successResponse(res, updated, 'Exam subjects synchronized from real marks');
+  } catch (err) {
+    next(err);
+  }
 };
 
 export const updateAdmitCardSettings = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {

@@ -6,8 +6,7 @@ import { successResponse } from '../utils/response';
 
 const router = Router();
 
-router.use(authenticate);
-
+// Public / Admission Image Upload (accepts student photos & receipts with or without auth)
 router.post('/image', (req, res) => {
   upload.any()(req, res, (err) => {
     if (err) {
@@ -39,6 +38,9 @@ router.post('/image', (req, res) => {
     }
   });
 });
+
+// Protect remaining routes with authentication
+router.use(authenticate);
 
 // /share: saves file to disk and returns a public URL (used for WhatsApp sharing on HTTP origins)
 router.post('/share', upload.single('file'), (req, res) => {

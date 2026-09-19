@@ -1,5 +1,24 @@
 # Project State: JY School ERP
 
+- **Exam Subjects Discrepancy & Marks Calculation Permanent Resolution (2026-09-19)**:
+  - **Root Cause 1 (Frontend Subjects Overwrite in `CreateExamPage.tsx`)**:
+    - When editing an exam (`/exams/create`), the secondary `useEffect` at lines 128-192 ran immediately upon `classes` loading. Because `classConfigs` was initially empty (`{}`), it blindly initialized every assigned class with 4 hardcoded dummy subjects: `ENGLISH`, `MATHEMATICS`, `SCIENCE`, `SOCIAL` (100 Max Marks).
+    - When the user clicked "Save Changes", it overwrote the database record in PostgreSQL with these 4 dummy subjects, erasing the true subjects for all primary, pre-primary, and high school classes.
+  - **Root Cause 2 (Marks Discrepancy & Grade F for Top Students in `exams.controller.ts:getResults`)**:
+    - In `getResults`, the backend blindly iterated over `exam.subjects`. Because `MATHS` != `MATHEMATICS`, it treated `MATHEMATICS` as missing and injected `MATHEMATICS: AB`.
+    - For 3rd Class students who took `EVS`, because `exam.subjects` had `SCIENCE`, it injected `SCIENCE: AB` for the entire class.
+    - Result: 6 real subjects + 2 phantom subjects = 8 subjects * 40 max = 320 max marks. A top student with 108.5 marks got `108.5 / 320 = 33.91%` and Grade F!
+  - **Implemented Solution**:
+    - **Frontend (`CreateExamPage.tsx`)**:
+      - Rebuilt `useEffect([editExam])` to query `/api/exams/${editExam.id}` with `marks` and master subjects. If existing marks exist in `fullExam.marks`, it dynamically reconstructs the real examined subjects directly from the `Mark` records (ground truth).
+      - Added `if (editExam) return;` guard to prevent fallback generator from ever overriding existing exam configurations with default subjects.
+      - Added interactive buttons on the class tabs: `🔄 స్కూల్ సబ్జెక్టులు (DB)` (loads Master Database subjects) and `📋 మార్కుల నుండి రికవర్` (restores from student marks).
+    - **Backend (`exams.controller.ts` & `routes/exams.ts`)**:
+      - Added `areSubjectsMatching` helper handling synonyms (`MATHS` == `MATHEMATICS`, `EVS` == `ENVIRONMENTAL STUDIES`).
+      - In `getResults`, checked `classTakenSubjectsMap`. If no student in that class ever took a subject (phantom subjects like `SCIENCE` in a class taking `EVS`), it is skipped and never injected as `AB`, and never inflates `totalMax`.
+      - Added `POST /api/exams/:id/sync-from-marks` API and UI button on Exam card to permanently resync `exam.subjects` in PostgreSQL from real marks.
+  - **Student Marks Safety**: Verified that 100% of student marks in `Mark` table are intact with real scores and subject names.
+
 - **Dynamic Cascading Caste & Sub-Caste Master System (2026-09-19)**:
   - **Comprehensive Gazette Mapping**: Created `frontend/src/utils/apCastes.ts` with 100% official AP classification across all 9 categories: OC, BC-A, BC-B, BC-C, BC-D, BC-E, SC, ST, and Other.
   - **North Andhra / Srikakulam Real Communities**: Fully covers prominent local groups including Turpu Kapu, Kalinga, Koppula Velama, Polinati Velama, Yadava, Pondara, Gavara, Sondi, Nagavamsam, Padmashali, Devanga, Nayee Brahmin, Rajaka, Agnikula Kshatriya, Relli, Bariki, Bavuri, Dandasi, Paidi, Savara, Jatapu, etc.
@@ -303,3 +322,14 @@
   - Implemented direct Black Vision White Bubble Detection: uses morphological opening to cleanly isolate solid white filled marks from black thresholded image, maps them directly to 75 questions & student ID, compares with answer key and overlays green (correct) / red (wrong) circles on Black Vision preview.
   - Enhanced backend controller (`exams.controller.ts`) student lookup with flexible roll number matching (`JY26-XXXX` or numeric `XXXX`), fixed async exec callback and typed query for clean build.
 
+### Modern Online Admission Registration & Website Integration
+- **New Comprehensive Registration Form (`AdmissionRegistrationPage.tsx`)**:
+  - Created complete multi-step / multi-tab registration form with photo upload, sibling details, previous school info, father & mother details (Aadhar, Mobile, Occupation), and strictly formatted 2-page A4 print layout (`AdmissionPrintModal.tsx`).
+  - Integrated official 100% Sachivalayams and Villages dataset for all Mandals in Andhra Pradesh.
+  - Integrated comprehensive Andhra Pradesh Caste & Sub-Caste cascade list (`apCastes.ts`) covering OC, BC-A, BC-B, BC-C, BC-D, BC-E, SC, ST and all North Andhra / Srikakulam specific communities.
+- **Public Accessibility & Security**:
+  - Added open public routes (`/apply` and `/admissions/apply`) in React router (`router/index.tsx`) and unauthenticated redirect in `ProtectedRoute.tsx`.
+  - Permitted public image uploads for student photos and UPI payment receipts in `backend/src/routes/uploads.ts`.
+- **School Website Integration (`Website/index.html`, `Website/header_tmp.html`, `Website/apply.html`)**:
+  - Updated all "Apply Now", "Admissions", and "Enroll Today" buttons across header, mobile menu, hero section, CTA section, and footer to point directly to `http://66.116.252.191:19999/apply`.
+  - Added immediate JavaScript and Meta refresh redirect in `Website/apply.html` so legacy visitors are instantly redirected to the new registration form.

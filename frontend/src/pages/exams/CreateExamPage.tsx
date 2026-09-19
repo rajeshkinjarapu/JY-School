@@ -40,17 +40,20 @@ export const CreateExamPage: React.FC = () => {
   const [signatureUrl, setSignatureUrl] = useState('');
   const [teacherSignatureUrl, setTeacherSignatureUrl] = useState('');
   const [fullExamSettings, setFullExamSettings] = useState<any>({});
+  const [fullExamMarks, setFullExamMarks] = useState<any[]>([]);
 
   useEffect(() => {
     fetchInitialData();
     if (editExam) {
-      // Fetch full exam details and global settings together
+      // Fetch full exam details, global settings, and master subjects together
       Promise.all([
         api.get(`/api/exams/${editExam.id}`),
-        api.get('/api/settings').catch(() => ({ data: {} }))
-      ]).then(([res, settingsRes]: any) => {
+        api.get('/api/settings').catch(() => ({ data: {} })),
+        api.get('/api/subjects?limit=5000').catch(() => ({ data: [] }))
+      ]).then(([res, settingsRes, dbSubRes]: any) => {
         const fullExam = res.data;
         const globalSettings = settingsRes.data?.data || settingsRes.data || {};
+        const masterDbSubjects = dbSubRes.data?.data || dbSubRes.data || [];
         
         if (fullExam?.admitCardSettings) {
           setFullExamSettings(fullExam.admitCardSettings);
@@ -58,43 +61,117 @@ export const CreateExamPage: React.FC = () => {
           setSignatureUrl(fullExam.admitCardSettings.signatureUrl || fullExam.admitCardSettings.principalSignatureUrl || globalSettings.principalSignatureUrl || globalSettings.signatureUrl || '');
           setTeacherSignatureUrl(fullExam.admitCardSettings.teacherSignatureUrl || globalSettings.teacherSignatureUrl || '');
         } else {
-          // If no admit card settings exist for the exam, use global
           setLogoUrl(globalSettings.logoUrl || '');
           setSignatureUrl(globalSettings.principalSignatureUrl || globalSettings.signatureUrl || '');
           setTeacherSignatureUrl(globalSettings.teacherSignatureUrl || '');
         }
+
+        if (Array.isArray(fullExam?.marks)) {
+          setFullExamMarks(fullExam.marks);
+        }
+
+        // Group existing marks by student's classId (Ground truth of what was actually examined!)
+        const marksByClass: { [classId: string]: Map<string, { id: string; name: string; maxMarks: number; date?: string }> } = {};
+        if (Array.isArray(fullExam?.marks) && fullExam.marks.length > 0) {
+          fullExam.marks.forEach((m: any) => {
+            const cId = m.student?.classId;
+            if (!cId || !m.subject?.name) return;
+            if (!marksByClass[cId]) marksByClass[cId] = new Map();
+            const sName = m.subject.name.trim();
+            const sKey = sName.toUpperCase();
+            if (!marksByClass[cId].has(sKey)) {
+              marksByClass[cId].set(sKey, {
+                id: m.subject.id || m.subjectId,
+                name: sName,
+                maxMarks: Number(m.maxMarks) || Number(fullExam.maxMarks) || 50,
+                date: fullExam.examDate ? new Date(fullExam.examDate).toISOString().split('T')[0] : examDate
+              });
+            }
+          });
+        }
+
+        // Parse saved subjects
+        let parsedSubjects: any = fullExam?.subjects || editExam.subjects;
+        if (typeof parsedSubjects === 'string') {
+          try { parsedSubjects = JSON.parse(parsedSubjects); } catch (e) {}
+        }
+
+        const cfgMap: any = {};
+        const examClasses = fullExam?.classes || editExam.classes || [];
+        
+        examClasses.forEach((cls: any) => {
+          const cId = cls.id;
+          const clsName = `${cls.name} - ${cls.section}`;
+          
+          // 1. If marks exist for this class, that is 100% verified ground truth!
+          if (marksByClass[cId] && marksByClass[cId].size > 0) {
+            cfgMap[cId] = {
+              classId: cId,
+              className: clsName,
+              subjects: Array.from(marksByClass[cId].values())
+            };
+            return;
+          }
+
+          // 2. If saved classConfigs exists
+          if (parsedSubjects?.classConfigs && Array.isArray(parsedSubjects.classConfigs)) {
+            const savedCfg = parsedSubjects.classConfigs.find((c: any) => c.classId === cId);
+            if (savedCfg && Array.isArray(savedCfg.subjects) && savedCfg.subjects.length > 0) {
+              const masterClassSubs = masterDbSubjects.filter((s: any) => s.classId === cId);
+              const isCorruptedDefaultFour = savedCfg.subjects.length === 4 && 
+                savedCfg.subjects.some((s: any) => s.name === 'ENGLISH') &&
+                savedCfg.subjects.some((s: any) => s.name === 'MATHEMATICS') &&
+                savedCfg.subjects.some((s: any) => s.name === 'SCIENCE') &&
+                savedCfg.subjects.some((s: any) => s.name === 'SOCIAL');
+
+              // If it's not the generic 4 defaults, or if master db has no subjects, trust it
+              if (!isCorruptedDefaultFour || masterClassSubs.length === 0) {
+                cfgMap[cId] = savedCfg;
+                return;
+              }
+            }
+          }
+
+          // 3. Fallback: Load real school master subjects configured for this class!
+          const dbSubsForClass = masterDbSubjects.filter((s: any) => s.classId === cId);
+          if (dbSubsForClass.length > 0) {
+            cfgMap[cId] = {
+              classId: cId,
+              className: clsName,
+              subjects: dbSubsForClass.map((s: any) => ({
+                id: s.id,
+                name: s.name,
+                maxMarks: Number(fullExam?.maxMarks) || 50,
+                date: fullExam?.examDate ? new Date(fullExam.examDate).toISOString().split('T')[0] : examDate
+              }))
+            };
+            return;
+          }
+
+          // 4. If old exam had flat array of subjects
+          if (Array.isArray(parsedSubjects) && parsedSubjects.length > 0) {
+            cfgMap[cId] = {
+              classId: cId,
+              className: clsName,
+              subjects: parsedSubjects.map((s: any) => ({
+                id: s.id || Date.now().toString() + Math.random(),
+                name: s.name,
+                maxMarks: s.maxMarks || 50,
+                date: s.date || examDate
+              }))
+            };
+            return;
+          }
+        });
+
+        if (Object.keys(cfgMap).length > 0) {
+          setClassConfigs(cfgMap);
+        }
       }).catch(err => console.error('Failed to load full exam', err));
 
-      if (editExam.name.includes('JEE')) setExamCategory('JEE');
-      else if (['FA-1', 'FA-2', 'FA-3', 'FA-4', 'SA-1', 'SA-2', 'Pre-Final'].some(t => editExam.name.includes(t))) setExamCategory('BOARD');
+      if (editExam.name?.includes('JEE')) setExamCategory('JEE');
+      else if (['FA-1', 'FA-2', 'FA-3', 'FA-4', 'SA-1', 'SA-2', 'Pre-Final'].some(t => editExam.name?.includes(t))) setExamCategory('BOARD');
       else setExamCategory('');
-
-      // Check if editExam has classConfigs inside subjects
-      if (editExam.subjects && typeof editExam.subjects === 'object' && !Array.isArray(editExam.subjects) && editExam.subjects.classConfigs) {
-        const cfgMap: any = {};
-        editExam.subjects.classConfigs.forEach((cfg: any) => {
-          cfgMap[cfg.classId] = cfg;
-        });
-        setClassConfigs(cfgMap);
-      } else if (Array.isArray(editExam.subjects) && editExam.subjects.length > 0) {
-        // Old exam saved with array of subjects - populate into classConfigs for each class
-        const initialSubs = editExam.subjects.map((s: any) => ({
-          id: s.id || Date.now().toString() + Math.random(),
-          name: s.name,
-          maxMarks: s.maxMarks || 100,
-          date: s.date || (editExam.examDate ? new Date(editExam.examDate).toISOString().split('T')[0] : examDate)
-        }));
-
-        const cfgMap: any = {};
-        (editExam.classes || []).forEach((cls: any) => {
-          cfgMap[cls.id] = {
-            classId: cls.id,
-            className: `${cls.name} - ${cls.section}`,
-            subjects: initialSubs
-          };
-        });
-        setClassConfigs(cfgMap);
-      }
     }
   }, [editExam]);
 
@@ -127,6 +204,7 @@ export const CreateExamPage: React.FC = () => {
   // Initialize class configs when class list or examClassIds change (MANUAL ENTRY ONLY)
   useEffect(() => {
     if (classes.length === 0) return;
+    if (editExam) return; // CRITICAL: Never overwrite existing exam subjects with defaults!
 
     setClassConfigs((prev) => {
       const updated = { ...prev };
@@ -323,6 +401,65 @@ export const CreateExamPage: React.FC = () => {
       return updated;
     });
     toast.success(`Applied ${bulkMarksInput} Max Marks to ALL assigned classes!`);
+  };
+
+  const handleLoadSchoolSubjectsForClass = async (classId: string) => {
+    try {
+      const res = await api.get(`/api/subjects?classId=${classId}&limit=500`);
+      const subs = res.data?.data || res.data || [];
+      if (!subs || subs.length === 0) {
+        toast.error('ఈ తరగతికి స్కూల్ డేటాబేస్ లో సబ్జెక్టులు లేవు (No subjects found in Master Database)');
+        return;
+      }
+      setClassConfigs(prev => ({
+        ...prev,
+        [classId]: {
+          ...prev[classId],
+          subjects: subs.map((s: any) => ({
+            id: s.id,
+            name: s.name,
+            maxMarks: bulkMarksInput || 50,
+            date: examDate
+          }))
+        }
+      }));
+      toast.success(`${subs.length} స్కూల్ సబ్జెక్టులు లోడ్ చేయబడ్డాయి!`);
+    } catch {
+      toast.error('సబ్జెక్టులు లోడ్ చేయడం విఫలమైంది');
+    }
+  };
+
+  const handleRestoreFromMarksForClass = (classId: string) => {
+    if (!fullExamMarks || fullExamMarks.length === 0) {
+      toast.error('ఈ ఎగ్జామ్ కి ఇంకా మార్కులు ఎంటర్ చేయలేదు (No marks entered yet)');
+      return;
+    }
+    const marksForClass = fullExamMarks.filter((m: any) => m.student?.classId === classId);
+    if (marksForClass.length === 0) {
+      toast.error('ఈ తరగతి విద్యార్థులకు మార్కులు కనిపించలేదు');
+      return;
+    }
+    const distinctSubs = new Map<string, any>();
+    marksForClass.forEach((m: any) => {
+      if (!m.subject?.name) return;
+      const k = m.subject.name.toUpperCase().trim();
+      if (!distinctSubs.has(k)) {
+        distinctSubs.set(k, {
+          id: m.subject.id || m.subjectId,
+          name: m.subject.name,
+          maxMarks: Number(m.maxMarks) || 50,
+          date: examDate
+        });
+      }
+    });
+    setClassConfigs(prev => ({
+      ...prev,
+      [classId]: {
+        ...prev[classId],
+        subjects: Array.from(distinctSubs.values())
+      }
+    }));
+    toast.success(`${distinctSubs.size} అసలైన సబ్జెక్టులు మార్కుల నుండి రికవర్ చేయబడ్డాయి!`);
   };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'signature' | 'teacherSignature' | 'logo') => {
@@ -673,6 +810,24 @@ export const CreateExamPage: React.FC = () => {
                             </p>
                           </div>
                           <div className="flex flex-wrap items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => handleLoadSchoolSubjectsForClass(activeClassTab)}
+                              className="bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 px-2.5 py-1.5 rounded-lg text-[11px] font-black shadow-sm flex items-center gap-1"
+                              title="స్కూల్ మాస్టర్ డేటాబేస్ నుండి ఈ తరగతి అసలైన సబ్జెక్టులను లోడ్ చేయండి"
+                            >
+                              <RefreshCw className="w-3.5 h-3.5" /> స్కూల్ సబ్జెక్టులు (DB)
+                            </button>
+                            {fullExamMarks && fullExamMarks.length > 0 && (
+                              <button
+                                type="button"
+                                onClick={() => handleRestoreFromMarksForClass(activeClassTab)}
+                                className="bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 px-2.5 py-1.5 rounded-lg text-[11px] font-black shadow-sm flex items-center gap-1"
+                                title="విద్యార్థుల మార్కుల నుండి అసలైన సబ్జెక్టులను రికవర్ చేయండి"
+                              >
+                                <FileText className="w-3.5 h-3.5" /> మార్కుల నుండి రికవర్
+                              </button>
+                            )}
                             <button
                               type="button"
                               onClick={() => handleCopyClassConfigToAll(activeClassTab)}

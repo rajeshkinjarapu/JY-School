@@ -7,7 +7,7 @@ import { useAuth } from '../../hooks/useAuth';
 import {
   Plus, Edit3, Trash2, ClipboardList, BookOpen, Layers, CheckSquare,
   Clock, Award, FileText, Settings, Play, ShieldAlert, HelpCircle, Save, X, Calendar, ExternalLink,
-  MapPin, FileSpreadsheet, Download, Printer, CheckCircle, MessageSquare, ChevronDown, Key, Upload, Link as LinkIcon, Scan
+  MapPin, FileSpreadsheet, Download, Printer, CheckCircle, MessageSquare, ChevronDown, Key, Upload, Link as LinkIcon, Scan, RefreshCw
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { Link, useSearchParams, useOutletContext, useNavigate } from 'react-router-dom';
@@ -2463,9 +2463,26 @@ export const ExamListPage: React.FC = () => {
                   {isExpanded && (
                     <div className="z-10 relative pt-4 border-t border-gray-100 dark:border-gray-800 mt-2 flex flex-wrap gap-2 animate-fade-in" onClick={ev => ev.stopPropagation()}>
                       {isAdmin && (
-                        <button onClick={() => openEditModal(e)} className="flex-1 bg-white hover:bg-slate-50 text-indigo-600 border-2 border-indigo-50 text-xs font-bold px-4 py-2 flex justify-center items-center gap-1.5 rounded-xl transition-all">
-                          <Edit3 className="w-4 h-4" /> Edit
-                        </button>
+                        <>
+                          <button onClick={() => openEditModal(e)} className="flex-1 bg-white hover:bg-slate-50 text-indigo-600 border-2 border-indigo-50 text-xs font-bold px-4 py-2 flex justify-center items-center gap-1.5 rounded-xl transition-all">
+                            <Edit3 className="w-4 h-4" /> Edit
+                          </button>
+                          <button 
+                            onClick={async () => {
+                              try {
+                                await api.post(`/api/exams/${e.id}/sync-from-marks`);
+                                toast.success('మార్కుల ఆధారంగా సబ్జెక్టులు సింక్ అయ్యాయి!');
+                                fetchExams(true);
+                              } catch (err: any) {
+                                toast.error(err.response?.data?.message || 'Sync failed');
+                              }
+                            }} 
+                            className="bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 text-xs font-bold px-3 py-2 flex justify-center items-center gap-1.5 rounded-xl transition-all"
+                            title="మార్కుల ఆధారంగా సబ్జెక్టులను శాశ్వతంగా రీస్టోర్ చేయండి"
+                          >
+                            <RefreshCw className="w-3.5 h-3.5" /> సబ్జెక్ట్స్ రీస్టోర్
+                          </button>
+                        </>
                       )}
                       {user?.role === 'SUPER_ADMIN' && (
                         <button onClick={() => handleDeleteExam(e.id)} className="bg-red-50 hover:bg-red-100 text-red-600 border border-red-100 text-xs font-bold px-3 py-2 flex justify-center items-center gap-1.5 rounded-xl transition-all">

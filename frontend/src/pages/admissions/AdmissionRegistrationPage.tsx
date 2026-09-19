@@ -185,7 +185,7 @@ export const AdmissionRegistrationPage: React.FC = () => {
 
   const handleSiblingChange = (index: number, field: keyof SiblingItem, value: string) => {
     const updated = [...siblings];
-    updated[index][field] = value;
+    updated[index][field] = field === 'className' ? value : value.toUpperCase();
     setSiblings(updated);
   };
 
@@ -478,9 +478,11 @@ export const AdmissionRegistrationPage: React.FC = () => {
       {/* Top Header */}
       <PageHeader 
         title="Student Admission Registration"
-        breadcrumbs={[
+        breadcrumbs={currentUser.role ? [
           { label: 'Admissions', href: '/admissions' },
           { label: 'Register Student' }
+        ] : [
+          { label: 'JY School Online Admissions' }
         ]}
       />
 
@@ -493,11 +495,13 @@ export const AdmissionRegistrationPage: React.FC = () => {
               <UserCheck className="w-5 h-5" />
             </div>
             <div>
-              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Registering Desk / Operator</p>
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                {currentUser.role ? 'Registering Desk / Operator' : 'Official Portal'}
+              </p>
               <p className="text-sm font-black text-slate-800">
-                {currentUser.name || 'School Accounts / Admission Desk'} 
+                {currentUser.name || 'Student Admission Registration Desk'} 
                 <span className="ml-2 text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-100">
-                  {currentUser.role || 'STAFF'}
+                  {currentUser.role || 'ONLINE APPLICANT'}
                 </span>
               </p>
             </div>
@@ -645,9 +649,9 @@ export const AdmissionRegistrationPage: React.FC = () => {
                         type="text"
                         required
                         value={studentName}
-                        onChange={e => setStudentName(e.target.value)}
-                        placeholder="Enter student full name"
-                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-xs"
+                        onChange={e => setStudentName(e.target.value.toUpperCase())}
+                        placeholder="ENTER STUDENT FULL NAME"
+                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-xs uppercase tracking-wide"
                       />
                     </div>
 
@@ -781,9 +785,9 @@ export const AdmissionRegistrationPage: React.FC = () => {
                       <input 
                         type="text"
                         value={fatherName}
-                        onChange={e => setFatherName(e.target.value)}
-                        placeholder="Enter father name"
-                        className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all shadow-2xs"
+                        onChange={e => setFatherName(e.target.value.toUpperCase())}
+                        placeholder="ENTER FATHER NAME"
+                        className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all shadow-2xs uppercase tracking-wide"
                       />
                     </div>
                     <div>
@@ -791,9 +795,9 @@ export const AdmissionRegistrationPage: React.FC = () => {
                       <input 
                         type="text"
                         value={fatherOccupation}
-                        onChange={e => setFatherOccupation(e.target.value)}
-                        placeholder="e.g. Business / Agriculture / Govt"
-                        className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all shadow-2xs"
+                        onChange={e => setFatherOccupation(e.target.value.toUpperCase())}
+                        placeholder="E.G. BUSINESS / AGRICULTURE / EMPLOYEE"
+                        className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all shadow-2xs uppercase tracking-wide"
                       />
                     </div>
                     <div>
@@ -836,9 +840,9 @@ export const AdmissionRegistrationPage: React.FC = () => {
                       <input 
                         type="text"
                         value={motherName}
-                        onChange={e => setMotherName(e.target.value)}
-                        placeholder="Enter mother name"
-                        className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all shadow-2xs"
+                        onChange={e => setMotherName(e.target.value.toUpperCase())}
+                        placeholder="ENTER MOTHER NAME"
+                        className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all shadow-2xs uppercase tracking-wide"
                       />
                     </div>
                     <div>
@@ -846,9 +850,9 @@ export const AdmissionRegistrationPage: React.FC = () => {
                       <input 
                         type="text"
                         value={motherOccupation}
-                        onChange={e => setMotherOccupation(e.target.value)}
-                        placeholder="e.g. Homemaker / Employee"
-                        className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all shadow-2xs"
+                        onChange={e => setMotherOccupation(e.target.value.toUpperCase())}
+                        placeholder="E.G. HOMEMAKER / EMPLOYEE"
+                        className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all shadow-2xs uppercase tracking-wide"
                       />
                     </div>
                     <div>
@@ -902,8 +906,8 @@ export const AdmissionRegistrationPage: React.FC = () => {
                   <input 
                     type="text"
                     value={nationality}
-                    onChange={e => setNationality(e.target.value)}
-                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all shadow-xs"
+                    onChange={e => setNationality(e.target.value.toUpperCase())}
+                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all shadow-xs uppercase tracking-wide"
                   />
                 </div>
 
@@ -968,9 +972,9 @@ export const AdmissionRegistrationPage: React.FC = () => {
                     <input 
                       type="text"
                       value={customSubCaste}
-                      onChange={e => setCustomSubCaste(e.target.value)}
-                      placeholder="Enter specific sub-caste name"
-                      className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all shadow-xs"
+                      onChange={e => setCustomSubCaste(e.target.value.toUpperCase())}
+                      placeholder="ENTER SPECIFIC SUB-CASTE NAME"
+                      className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all shadow-xs uppercase tracking-wide"
                     />
                   </div>
                 )}
@@ -983,9 +987,9 @@ export const AdmissionRegistrationPage: React.FC = () => {
                   <input 
                     type="text"
                     value={previousSchool}
-                    onChange={e => setPreviousSchool(e.target.value)}
-                    placeholder="Enter previous school name and location (or NA if fresher)"
-                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all shadow-xs"
+                    onChange={e => setPreviousSchool(e.target.value.toUpperCase())}
+                    placeholder="ENTER PREVIOUS SCHOOL NAME AND LOCATION (OR NA IF FRESHER)"
+                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all shadow-xs uppercase tracking-wide"
                   />
                 </div>
               </div>
@@ -1079,9 +1083,9 @@ export const AdmissionRegistrationPage: React.FC = () => {
                       type="text"
                       required
                       value={customVillage}
-                      onChange={e => setCustomVillage(e.target.value)}
-                      placeholder="Type village or ward name"
-                      className="w-full px-4 py-2.5 bg-teal-50/50 border border-teal-200 rounded-xl text-sm font-semibold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all shadow-xs"
+                      onChange={e => setCustomVillage(e.target.value.toUpperCase())}
+                      placeholder="TYPE VILLAGE OR WARD NAME"
+                      className="w-full px-4 py-2.5 bg-teal-50/50 border border-teal-200 rounded-xl text-sm font-bold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all shadow-xs uppercase tracking-wide"
                     />
                   </div>
                 )}
@@ -1094,9 +1098,9 @@ export const AdmissionRegistrationPage: React.FC = () => {
                   <input 
                     type="text"
                     value={doorNo}
-                    onChange={e => setDoorNo(e.target.value)}
-                    placeholder="e.g. D.No 4-12, Main Street, Near Sai Baba Temple"
-                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all shadow-xs"
+                    onChange={e => setDoorNo(e.target.value.toUpperCase())}
+                    placeholder="E.G. D.NO 4-12, MAIN STREET, NEAR SAI BABA TEMPLE"
+                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all shadow-xs uppercase tracking-wide"
                   />
                 </div>
 
@@ -1153,8 +1157,8 @@ export const AdmissionRegistrationPage: React.FC = () => {
                                   type="text"
                                   value={sib.name}
                                   onChange={e => handleSiblingChange(idx, 'name', e.target.value)}
-                                  placeholder="Enter sibling full name"
-                                  className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-amber-500 focus:border-amber-500"
+                                  placeholder="ENTER SIBLING FULL NAME"
+                                  className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold focus:outline-none focus:ring-1 focus:ring-amber-500 focus:border-amber-500 uppercase tracking-wide"
                                 />
                               </td>
                               <td className="p-2.5">
@@ -1175,8 +1179,8 @@ export const AdmissionRegistrationPage: React.FC = () => {
                                   type="text"
                                   value={sib.schoolName}
                                   onChange={e => handleSiblingChange(idx, 'schoolName', e.target.value)}
-                                  placeholder="e.g. JY School / Govt High School"
-                                  className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-amber-500 focus:border-amber-500"
+                                  placeholder="E.G. JY SCHOOL / GOVT HIGH SCHOOL"
+                                  className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold focus:outline-none focus:ring-1 focus:ring-amber-500 focus:border-amber-500 uppercase tracking-wide"
                                 />
                               </td>
                               <td className="p-2.5 text-center">
