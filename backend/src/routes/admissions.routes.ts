@@ -40,6 +40,8 @@ async function ensureAdmissionsTable() {
     await prisma.$executeRawUnsafe(`ALTER TABLE "AdmissionInquiry" ADD COLUMN IF NOT EXISTS "academicYear" TEXT;`);
     await prisma.$executeRawUnsafe(`ALTER TABLE "AdmissionInquiry" ADD COLUMN IF NOT EXISTS "registeredByName" TEXT;`);
     await prisma.$executeRawUnsafe(`ALTER TABLE "AdmissionInquiry" ADD COLUMN IF NOT EXISTS "registeredById" TEXT;`);
+    await prisma.$executeRawUnsafe(`ALTER TABLE "AdmissionInquiry" ADD COLUMN IF NOT EXISTS "cashReceivedByName" TEXT;`);
+    await prisma.$executeRawUnsafe(`ALTER TABLE "AdmissionInquiry" ADD COLUMN IF NOT EXISTS "cashReceivedById" TEXT;`);
     tableChecked = true;
   } catch (err: any) {
     console.warn('Admission table check notice:', err?.message || err);
@@ -72,7 +74,8 @@ const handleCreateAdmission = async (req: express.Request, res: express.Response
       studentName, fatherName, motherName, phone, 
       aadharNo, dob, gender, classApplied, address,
       studentImage, admissionFee, paymentMethod, paymentReceipt, paymentStatus,
-      academicYear, registeredByName, registeredById
+      academicYear, registeredByName, registeredById,
+      cashReceivedByName, cashReceivedById
     } = req.body;
 
     if (!studentName || !phone) {
@@ -102,7 +105,9 @@ const handleCreateAdmission = async (req: express.Request, res: express.Response
         paymentStatus: finalPaymentStatus,
         academicYear: academicYear ? String(academicYear).trim() : null,
         registeredByName: registeredByName ? String(registeredByName).trim() : null,
-        registeredById: registeredById ? String(registeredById).trim() : null
+        registeredById: registeredById ? String(registeredById).trim() : null,
+        cashReceivedByName: cashReceivedByName ? String(cashReceivedByName).trim() : null,
+        cashReceivedById: cashReceivedById ? String(cashReceivedById).trim() : null
       }
     });
 

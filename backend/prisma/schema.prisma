@@ -1132,6 +1132,8 @@ model AdmissionInquiry {
   academicYear     String?
   registeredByName String?
   registeredById   String?
+  cashReceivedByName String?
+  cashReceivedById   String?
   
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt

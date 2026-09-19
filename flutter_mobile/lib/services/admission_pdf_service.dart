@@ -21,6 +21,7 @@ class AdmissionPdfService {
     final admissionFee = admission['admissionFee']?.toString();
     final paymentMethod = admission['paymentMethod']?.toString() ?? 'CASH';
     final paymentStatus = admission['paymentStatus']?.toString() ?? 'PENDING';
+    final cashReceivedByName = admission['cashReceivedByName']?.toString();
     final status = admission['status']?.toString() ?? 'PENDING';
     final id = admission['id']?.toString() ?? '001';
 
@@ -226,14 +227,14 @@ class AdmissionPdfService {
 
               pw.SizedBox(height: 8),
 
-              // 3. Admission & Fee Particulars
-              _buildSectionHeader('3. ADMISSION & FEE PARTICULARS'),
+              // 3. Application Fee & Payment Particulars
+              _buildSectionHeader('3. APPLICATION FEE & PAYMENT PARTICULARS'),
               pw.Table(
                 border: pw.TableBorder.all(color: PdfColors.grey400, width: 0.5),
                 children: [
                   pw.TableRow(
                     children: [
-                      _buildTableCell('Admission Fee', isHeader: true),
+                      _buildTableCell('Application Fee', isHeader: true),
                       _buildTableCell(admissionFee != null ? 'Rs. $admissionFee' : 'As Per School Structure'),
                       _buildTableCell('Payment Mode', isHeader: true),
                       _buildTableCell(paymentMethod),
@@ -243,8 +244,8 @@ class AdmissionPdfService {
                     children: [
                       _buildTableCell('Payment Status', isHeader: true),
                       _buildTableCell(paymentStatus, isBold: true),
-                      _buildTableCell('Admission Status', isHeader: true),
-                      _buildTableCell(status, isBold: true),
+                      _buildTableCell(paymentMethod == 'CASH' ? 'Cash Received By' : 'Admission Status', isHeader: true),
+                      _buildTableCell(paymentMethod == 'CASH' ? (cashReceivedByName ?? 'School Office') : status, isBold: true),
                     ],
                   ),
                 ],

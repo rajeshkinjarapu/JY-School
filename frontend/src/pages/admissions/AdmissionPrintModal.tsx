@@ -225,12 +225,12 @@ export const AdmissionPrintModal: React.FC<AdmissionPrintModalProps> = ({
               {/* 3. FEE & REGISTRATION PARTICULARS */}
               <div className="mb-3.5">
                 <div className="bg-slate-100 border border-slate-300 px-2 py-1 font-black text-xs text-indigo-950 uppercase tracking-wide rounded-t">
-                  3. ADMISSION & FEE PARTICULARS
+                  3. APPLICATION & FEE PARTICULARS
                 </div>
                 <table className="w-full border-collapse border border-slate-300 text-xs">
                   <tbody>
                     <tr className="border-b border-slate-200">
-                      <td className="w-1/4 p-2 bg-slate-50 font-bold text-slate-700 border-r border-slate-200">Admission Fee</td>
+                      <td className="w-1/4 p-2 bg-slate-50 font-bold text-slate-700 border-r border-slate-200">Application Fee</td>
                       <td className="w-1/4 p-2 font-bold text-emerald-700 border-r border-slate-200">
                         {admission.admissionFee ? `₹ ${admission.admissionFee}` : 'As Per School Fee Structure'}
                       </td>
@@ -239,7 +239,7 @@ export const AdmissionPrintModal: React.FC<AdmissionPrintModalProps> = ({
                         {admission.paymentMethod || 'CASH'}
                       </td>
                     </tr>
-                    <tr>
+                    <tr className={admission.cashReceivedByName ? 'border-b border-slate-200' : ''}>
                       <td className="w-1/4 p-2 bg-slate-50 font-bold text-slate-700 border-r border-slate-200">Payment Status</td>
                       <td className="w-1/4 p-2 font-bold text-slate-800 border-r border-slate-200">
                         <span className={`px-2 py-0.5 rounded text-[10px] font-black ${admission.paymentStatus === 'COMPLETED' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}`}>
@@ -248,11 +248,19 @@ export const AdmissionPrintModal: React.FC<AdmissionPrintModalProps> = ({
                       </td>
                       <td className="w-1/4 p-2 bg-slate-50 font-bold text-slate-700 border-r border-slate-200">Admission Status</td>
                       <td className="w-1/4 p-2 font-bold text-slate-800">
-                        <span className="font-black text-indigo-900 uppercase">
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-black ${admission.status === 'ENROLLED' ? 'bg-emerald-100 text-emerald-800' : 'bg-indigo-100 text-indigo-800'}`}>
                           {admission.status || 'PENDING'}
                         </span>
                       </td>
                     </tr>
+                    {admission.cashReceivedByName && (
+                      <tr>
+                        <td className="w-1/4 p-2 bg-slate-50 font-bold text-slate-700 border-r border-slate-200">Cash Received By</td>
+                        <td colSpan={3} className="p-2 font-bold text-amber-900 bg-amber-50/40">
+                          {admission.cashReceivedByName}
+                        </td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -450,22 +458,30 @@ export const AdmissionPrintModal: React.FC<AdmissionPrintModalProps> = ({
           {/* Table 3: Fee */}
           <div className="mb-3">
             <div className="bg-slate-200 border border-slate-400 px-2 py-0.5 font-black text-[10px] text-indigo-950 uppercase rounded-t">
-              3. ADMISSION & FEE PARTICULARS
+              3. APPLICATION & FEE PARTICULARS
             </div>
             <table className="w-full border-collapse border border-slate-300 text-[10px]">
               <tbody>
                 <tr className="border-b border-slate-200">
-                  <td className="w-1/4 p-1.5 bg-slate-50 font-bold border-r border-slate-200">Admission Fee</td>
+                  <td className="w-1/4 p-1.5 bg-slate-50 font-bold border-r border-slate-200">Application Fee</td>
                   <td className="w-1/4 p-1.5 font-bold border-r border-slate-200">{admission.admissionFee ? `₹ ${admission.admissionFee}` : 'Standard Structure'}</td>
                   <td className="w-1/4 p-1.5 bg-slate-50 font-bold border-r border-slate-200">Payment Mode</td>
                   <td className="w-1/4 p-1.5 font-bold uppercase">{admission.paymentMethod || 'CASH'}</td>
                 </tr>
-                <tr>
+                <tr className={admission.cashReceivedByName ? 'border-b border-slate-200' : ''}>
                   <td className="w-1/4 p-1.5 bg-slate-50 font-bold border-r border-slate-200">Payment Status</td>
                   <td className="w-1/4 p-1.5 font-bold border-r border-slate-200 uppercase">{admission.paymentStatus || 'PENDING'}</td>
                   <td className="w-1/4 p-1.5 bg-slate-50 font-bold border-r border-slate-200">Status</td>
                   <td className="w-1/4 p-1.5 font-black uppercase">{admission.status || 'PENDING'}</td>
                 </tr>
+                {admission.cashReceivedByName && (
+                  <tr>
+                    <td className="w-1/4 p-1.5 bg-slate-50 font-bold border-r border-slate-200">Cash Received By</td>
+                    <td colSpan={3} className="p-1.5 font-bold text-amber-950 bg-amber-50/40">
+                      {admission.cashReceivedByName}
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>

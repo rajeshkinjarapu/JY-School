@@ -296,6 +296,10 @@ class _AdmissionsListScreenState extends State<AdmissionsListScreen> {
     final status = adm['status']?.toString() ?? 'PENDING';
     final photoUrl = adm['studentImage']?.toString();
     final id = adm['id']?.toString() ?? '';
+    final fee = adm['admissionFee']?.toString();
+    final paymentMethod = adm['paymentMethod']?.toString() ?? 'CASH';
+    final cashTeacher = adm['cashReceivedByName']?.toString();
+    final receiptUrl = adm['paymentReceipt']?.toString();
 
     String dateStr = '';
     if (adm['createdAt'] != null) {
@@ -421,6 +425,87 @@ class _AdmissionsListScreenState extends State<AdmissionsListScreen> {
                 ),
               ],
             ),
+
+            if (fee != null && fee.isNotEmpty && fee != '0') ...[
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF8FAFC),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.currency_rupee_rounded, size: 14, color: Color(0xFF4F46E5)),
+                    const SizedBox(width: 4),
+                    Text(
+                      'App Fee: ₹$fee ($paymentMethod)',
+                      style: GoogleFonts.outfit(fontSize: 11, fontWeight: FontWeight.bold, color: const Color(0xFF1E293B)),
+                    ),
+                    if (paymentMethod == 'CASH' && cashTeacher != null && cashTeacher.isNotEmpty) ...[
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          '• Cash: $cashTeacher',
+                          style: GoogleFonts.outfit(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFFD97706)),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ] else if (paymentMethod == 'UPI' && receiptUrl != null && receiptUrl.isNotEmpty) ...[
+                      const Spacer(),
+                      InkWell(
+                        onTap: () {
+                          showDialog(
+                            context: context,
+                            builder: (ctx) => Dialog(
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text('Payment Receipt', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 15)),
+                                        IconButton(onPressed: () => Navigator.pop(ctx), icon: const Icon(Icons.close, size: 18)),
+                                      ],
+                                    ),
+                                  ),
+                                  ClipRRect(
+                                    borderRadius: BorderRadius.circular(8),
+                                    child: Image.network(
+                                      ApiService.getImageUrl(receiptUrl),
+                                      fit: BoxFit.contain,
+                                      errorBuilder: (_, __, ___) => const Padding(
+                                        padding: EdgeInsets.all(24),
+                                        child: Text('Failed to load receipt image'),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 12),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                        child: Row(
+                          children: [
+                            const Icon(Icons.receipt_long_rounded, size: 13, color: Color(0xFF10B981)),
+                            const SizedBox(width: 2),
+                            Text(
+                              'View Receipt',
+                              style: GoogleFonts.outfit(fontSize: 11, fontWeight: FontWeight.bold, color: const Color(0xFF10B981), decoration: TextDecoration.underline),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ],
 
             const SizedBox(height: 12),
 

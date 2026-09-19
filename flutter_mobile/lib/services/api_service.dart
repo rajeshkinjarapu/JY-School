@@ -1490,4 +1490,7 @@ class ApiService {
     return _performDelete('/api/admissions/$id', 'Failed to delete admission');
   }
 
+  static Future<Map<String, dynamic>> getAdmissionConfig() async {
+    return _performGet('/api/admissions/config', 'Failed to load admission settings');
+  }
 }

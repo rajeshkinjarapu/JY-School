@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
@@ -40,18 +41,31 @@ class _AdmissionRegistrationScreenState extends State<AdmissionRegistrationScree
 
   bool _isSubmitting = false;
 
-  final List<String> _defaultClasses = [
+  final List<String> _classes = [
     'Nursery', 'LKG', 'UKG',
     'Class 1', 'Class 2', 'Class 3', 'Class 4', 'Class 5',
     'Class 6', 'Class 7', 'Class 8', 'Class 9', 'Class 10'
   ];
-  List<String> _classes = [];
+
+  // Teachers for cash payment
+  List<Map<String, dynamic>> _teachers = [];
+  String? _cashTeacherName;
+  String? _cashTeacherId;
+
+  // Receipt for UPI payment
+  File? _localReceiptFile;
+  String? _uploadedReceiptUrl;
+  bool _isUploadingReceipt = false;
+
+  // UPI Info
+  String _upiId = 'jyschool@upi';
+  String? _schoolQrUrl;
 
   @override
   void initState() {
     super.initState();
-    _classes = List.from(_defaultClasses);
-    _loadClasses();
+    _loadTeachers();
+    _loadConfig();
   }
 
   @override
@@ -66,16 +80,29 @@ class _AdmissionRegistrationScreenState extends State<AdmissionRegistrationScree
     super.dispose();
   }
 
-  Future<void> _loadClasses() async {
+  Future<void> _loadTeachers() async {
     try {
-      final res = await ApiService.getClasses();
+      final res = await ApiService.getTeachers(limit: 500);
       if (res['success'] == true && res['data'] != null && res['data'] is List) {
-        final list = (res['data'] as List).map((c) => c['name']?.toString()).whereType<String>().toList();
-        if (list.isNotEmpty) {
-          setState(() {
-            _classes = {..._defaultClasses, ...list}.toList();
-          });
-        }
+        setState(() {
+          _teachers = List<Map<String, dynamic>>.from(res['data']);
+        });
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _loadConfig() async {
+    try {
+      final res = await ApiService.getAdmissionConfig();
+      if (res['success'] == true) {
+        setState(() {
+          if (res['upiId'] != null && res['upiId'].toString().isNotEmpty) {
+            _upiId = res['upiId'].toString();
+          }
+          if (res['qrCodeUrl'] != null && res['qrCodeUrl'].toString().isNotEmpty) {
+            _schoolQrUrl = ApiService.getImageUrl(res['qrCodeUrl'].toString());
+          }
+        });
       }
     } catch (_) {}
   }
@@ -191,8 +218,122 @@ class _AdmissionRegistrationScreenState extends State<AdmissionRegistrationScree
     }
   }
 
+  Future<void> _pickReceiptImage(ImageSource source) async {
+    Navigator.of(context).pop(); // close bottom sheet
+    try {
+      final picker = ImagePicker();
+      final picked = await picker.pickImage(source: source, imageQuality: 80, maxWidth: 1000);
+      if (picked == null) return;
+
+      setState(() {
+        _localReceiptFile = File(picked.path);
+        _isUploadingReceipt = true;
+      });
+
+      final uploadRes = await ApiService.uploadImage(picked.path);
+      if (uploadRes['success'] == true && uploadRes['url'] != null) {
+        setState(() {
+          _uploadedReceiptUrl = uploadRes['url'];
+          _isUploadingReceipt = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Payment receipt uploaded successfully!'), backgroundColor: Color(0xFF10B981)),
+        );
+      } else {
+        setState(() => _isUploadingReceipt = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(uploadRes['message'] ?? 'Failed to upload receipt'), backgroundColor: Colors.red),
+        );
+      }
+    } catch (e) {
+      setState(() => _isUploadingReceipt = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error picking receipt: $e'), backgroundColor: Colors.red),
+      );
+    }
+  }
+
+  void _showReceiptOptions() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => SafeArea(
+        bottom: true,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('Select Payment Receipt Screenshot', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16)),
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  InkWell(
+                    onTap: () => _pickReceiptImage(ImageSource.camera),
+                    borderRadius: BorderRadius.circular(16),
+                    child: Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Column(
+                        children: [
+                          const CircleAvatar(
+                            radius: 28,
+                            backgroundColor: Color(0xFFEEF2FF),
+                            child: Icon(Icons.camera_alt_rounded, color: Color(0xFF4F46E5), size: 28),
+                          ),
+                          const SizedBox(height: 8),
+                          Text('Camera', style: GoogleFonts.outfit(fontWeight: FontWeight.w600, fontSize: 13)),
+                        ],
+                      ),
+                    ),
+                  ),
+                  InkWell(
+                    onTap: () => _pickReceiptImage(ImageSource.gallery),
+                    borderRadius: BorderRadius.circular(16),
+                    child: Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Column(
+                        children: [
+                          const CircleAvatar(
+                            radius: 28,
+                            backgroundColor: Color(0xFFECFDF5),
+                            child: Icon(Icons.photo_library_rounded, color: Color(0xFF10B981), size: 28),
+                          ),
+                          const SizedBox(height: 8),
+                          Text('Gallery', style: GoogleFonts.outfit(fontWeight: FontWeight.w600, fontSize: 13)),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Future<void> _submitForm() async {
     if (!_formKey.currentState!.validate()) return;
+
+    // Mandatory UPI Receipt Check
+    if (_paymentMethod == 'UPI' && _uploadedReceiptUrl == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Payment receipt screenshot is mandatory for UPI payments'), backgroundColor: Colors.red),
+      );
+      return;
+    }
+
+    // Mandatory Cash Teacher Check
+    if (_paymentMethod == 'CASH' && (_cashTeacherName == null || _cashTeacherName!.isEmpty)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select the teacher who received the cash payment'), backgroundColor: Colors.red),
+      );
+      return;
+    }
 
     setState(() => _isSubmitting = true);
 
@@ -210,7 +351,10 @@ class _AdmissionRegistrationScreenState extends State<AdmissionRegistrationScree
       'studentImage': _uploadedPhotoUrl,
       'admissionFee': _feeCtrl.text.trim().isEmpty ? null : _feeCtrl.text.trim(),
       'paymentMethod': _paymentMethod,
-      'paymentStatus': _paymentMethod == 'CASH' && _feeCtrl.text.trim().isNotEmpty ? 'COMPLETED' : 'PENDING',
+      'paymentReceipt': _paymentMethod == 'UPI' ? _uploadedReceiptUrl : null,
+      'cashReceivedByName': _paymentMethod == 'CASH' ? _cashTeacherName : null,
+      'cashReceivedById': _paymentMethod == 'CASH' ? _cashTeacherId : null,
+      'paymentStatus': (_paymentMethod == 'CASH' || (_paymentMethod == 'UPI' && _uploadedReceiptUrl != null)) && _feeCtrl.text.trim().isNotEmpty ? 'COMPLETED' : 'PENDING',
     };
 
     final res = await ApiService.submitAdmission(payload);
@@ -312,6 +456,11 @@ class _AdmissionRegistrationScreenState extends State<AdmissionRegistrationScree
       _dob = null;
       _localPhotoFile = null;
       _uploadedPhotoUrl = null;
+      _localReceiptFile = null;
+      _uploadedReceiptUrl = null;
+      _cashTeacherName = null;
+      _cashTeacherId = null;
+      _paymentMethod = 'CASH';
     });
   }
 
@@ -513,9 +662,9 @@ class _AdmissionRegistrationScreenState extends State<AdmissionRegistrationScree
 
             const SizedBox(height: 16),
 
-            // 4. FEE & PAYMENT CARD
+            // 4. APPLICATION FEE & PAYMENT CARD
             _buildSectionCard(
-              title: 'Admission Fee (Optional)',
+              title: 'Application Fee & Payment',
               icon: Icons.currency_rupee_rounded,
               children: [
                 Row(
@@ -523,22 +672,385 @@ class _AdmissionRegistrationScreenState extends State<AdmissionRegistrationScree
                     Expanded(
                       child: _buildTextField(
                         controller: _feeCtrl,
-                        label: 'Fee Amount (₹)',
-                        hint: 'Enter fee amount',
+                        label: 'Application Fee (₹)',
+                        hint: 'Enter fee amount (₹)',
                         keyboardType: TextInputType.number,
+                        onChanged: (_) => setState(() {}),
                       ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: _buildDropdown(
-                        label: 'Payment Method',
+                        label: 'Payment Method *',
                         value: _paymentMethod,
                         items: const ['CASH', 'UPI', 'LATER'],
-                        onChanged: (v) => setState(() => _paymentMethod = v!),
+                        onChanged: (v) => setState(() {
+                          _paymentMethod = v!;
+                          if (_paymentMethod != 'UPI') {
+                            _uploadedReceiptUrl = null;
+                            _localReceiptFile = null;
+                          }
+                        }),
                       ),
                     ),
                   ],
                 ),
+
+                // Conditional: CASH PAYMENT FLOW
+                if (_paymentMethod == 'CASH') ...[
+                  const SizedBox(height: 14),
+                  DropdownButtonFormField<String>(
+                    value: _cashTeacherName,
+                    isExpanded: true,
+                    decoration: InputDecoration(
+                      labelText: 'Cash Received By Teacher *',
+                      labelStyle: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.bold, color: const Color(0xFFD97706)),
+                      hintText: '-- Select Teacher who received cash --',
+                      hintStyle: GoogleFonts.outfit(fontSize: 12, color: const Color(0xFF94A3B8)),
+                      filled: true,
+                      fillColor: const Color(0xFFFFFBEB),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFFDE68A))),
+                      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFFDE68A))),
+                      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFD97706), width: 1.5)),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                    ),
+                    items: _teachers.map((t) {
+                      final tName = t['user']?['name']?.toString() ?? t['name']?.toString() ?? 'Teacher';
+                      final tSub = t['subject'] != null && t['subject'].toString().isNotEmpty ? ' (${t['subject']})' : '';
+                      return DropdownMenuItem<String>(
+                        value: tName,
+                        child: Text(
+                          '$tName$tSub',
+                          style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF1E293B)),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      );
+                    }).toList(),
+                    onChanged: (val) {
+                      setState(() {
+                        _cashTeacherName = val;
+                        final found = _teachers.firstWhere(
+                          (t) => (t['user']?['name']?.toString() ?? t['name']?.toString()) == val,
+                          orElse: () => {},
+                        );
+                        _cashTeacherId = found['id']?.toString();
+                      });
+                    },
+                    validator: (val) {
+                      if (_paymentMethod == 'CASH' && (val == null || val.trim().isEmpty)) {
+                        return 'Please select the teacher who received the cash';
+                      }
+                      return null;
+                    },
+                  ),
+                  if (_cashTeacherName != null && _cashTeacherName!.isNotEmpty) ...[
+                    const SizedBox(height: 10),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFEF3C7),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: const Color(0xFFFCD34D)),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.check_circle_outline_rounded, size: 16, color: Color(0xFFD97706)),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'Cash payment of ₹${_feeCtrl.text.trim().isEmpty ? '0' : _feeCtrl.text.trim()} will be recorded as received by $_cashTeacherName.',
+                              style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.w600, color: const Color(0xFF92400E)),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ],
+
+                // Conditional: UPI PAYMENT FLOW
+                if (_paymentMethod == 'UPI') ...[
+                  const SizedBox(height: 16),
+                  
+                  // School QR Code Display Box
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF8FAFC),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: const Color(0xFFE2E8F0)),
+                    ),
+                    child: Column(
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.qr_code_2_rounded, size: 20, color: Color(0xFF4F46E5)),
+                            const SizedBox(width: 8),
+                            Text(
+                              'School UPI Payment QR Code',
+                              style: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.bold, color: const Color(0xFF1E293B)),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: const Color(0xFFE0E7FF)),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFF4F46E5).withOpacity(0.08),
+                                blurRadius: 12,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(10),
+                            child: Image.network(
+                              _schoolQrUrl != null && _schoolQrUrl!.isNotEmpty
+                                  ? _schoolQrUrl!
+                                  : 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${Uri.encodeComponent('upi://pay?pa=$_upiId&pn=JY%20School&cu=INR${_feeCtrl.text.trim().isNotEmpty ? '&am=' + _feeCtrl.text.trim() : ''}')}',
+                              width: 140,
+                              height: 140,
+                              fit: BoxFit.contain,
+                              errorBuilder: (context, error, stackTrace) {
+                                return Image.network(
+                                  'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${Uri.encodeComponent('upi://pay?pa=$_upiId&pn=JY%20School&cu=INR${_feeCtrl.text.trim().isNotEmpty ? '&am=' + _feeCtrl.text.trim() : ''}')}',
+                                  width: 140,
+                                  height: 140,
+                                  fit: BoxFit.contain,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return Container(
+                                      width: 140,
+                                      height: 140,
+                                      color: Colors.grey.shade100,
+                                      alignment: Alignment.center,
+                                      child: Text('QR Code Available', style: GoogleFonts.outfit(color: Colors.grey.shade500, fontSize: 11)),
+                                    );
+                                  },
+                                );
+                              },
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        // UPI ID Pill
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(color: const Color(0xFFCBD5E1)),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.account_balance_wallet_rounded, size: 14, color: Color(0xFF4F46E5)),
+                              const SizedBox(width: 6),
+                              Text(
+                                _upiId,
+                                style: GoogleFonts.firaCode(fontSize: 12, fontWeight: FontWeight.bold, color: const Color(0xFF0F172A)),
+                              ),
+                              const SizedBox(width: 8),
+                              InkWell(
+                                onTap: () {
+                                  Clipboard.setData(ClipboardData(text: _upiId));
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(content: Text('UPI ID copied to clipboard!'), duration: Duration(seconds: 2)),
+                                  );
+                                },
+                                child: const Padding(
+                                  padding: EdgeInsets.all(2),
+                                  child: Icon(Icons.copy_rounded, size: 14, color: Color(0xFF6366F1)),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          'Scan and pay using PhonePe / Google Pay / Paytm',
+                          style: GoogleFonts.outfit(fontSize: 11, color: const Color(0xFF64748B)),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 14),
+
+                  // UPI Receipt Upload Box (Mandatory)
+                  Container(
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFEEF2FF),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: const Color(0xFFC7D2FE), width: 1.5),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Row(
+                              children: [
+                                const Icon(Icons.receipt_long_rounded, size: 16, color: Color(0xFF4F46E5)),
+                                const SizedBox(width: 6),
+                                Text(
+                                  'Payment Receipt Screenshot',
+                                  style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.bold, color: const Color(0xFF1E1B4B)),
+                                ),
+                              ],
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFDC2626).withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Text(
+                                'MANDATORY *',
+                                style: GoogleFonts.outfit(fontSize: 10, fontWeight: FontWeight.bold, color: const Color(0xFFDC2626)),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        if (_isUploadingReceipt) ...[
+                          Container(
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            alignment: Alignment.center,
+                            child: Column(
+                              children: [
+                                const SizedBox(
+                                  width: 24,
+                                  height: 24,
+                                  child: CircularProgressIndicator(color: Color(0xFF4F46E5), strokeWidth: 2.5),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  'Uploading payment receipt...',
+                                  style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.bold, color: const Color(0xFF4F46E5)),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ] else if (_localReceiptFile != null || _uploadedReceiptUrl != null) ...[
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: const Color(0xFFA7F3D0)),
+                            ),
+                            child: Row(
+                              children: [
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: _localReceiptFile != null
+                                      ? Image.file(_localReceiptFile!, width: 50, height: 50, fit: BoxFit.cover)
+                                      : Image.network(_uploadedReceiptUrl!, width: 50, height: 50, fit: BoxFit.cover),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          const Icon(Icons.check_circle_rounded, size: 15, color: Color(0xFF10B981)),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            'Receipt Attached',
+                                            style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.bold, color: const Color(0xFF065F46)),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        'Ready to submit with application',
+                                        style: GoogleFonts.outfit(fontSize: 11, color: const Color(0xFF6B7280)),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                TextButton.icon(
+                                  onPressed: _showReceiptOptions,
+                                  icon: const Icon(Icons.edit_rounded, size: 14),
+                                  label: const Text('Change'),
+                                  style: TextButton.styleFrom(
+                                    foregroundColor: const Color(0xFF4F46E5),
+                                    textStyle: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.bold),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ] else ...[
+                          InkWell(
+                            onTap: _showReceiptOptions,
+                            borderRadius: BorderRadius.circular(12),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: const Color(0xFF818CF8)),
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  const Icon(Icons.upload_file_rounded, size: 20, color: Color(0xFF4F46E5)),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    'Upload Receipt / Screenshot *',
+                                    style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.bold, color: const Color(0xFF4F46E5)),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            'Please take a screenshot of your successful UPI transaction and upload it.',
+                            style: GoogleFonts.outfit(fontSize: 11, color: const Color(0xFF64748B)),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ],
+
+                // Conditional: LATER PAYMENT FLOW
+                if (_paymentMethod == 'LATER') ...[
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF1F5F9),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: const Color(0xFFCBD5E1)),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.info_outline_rounded, size: 18, color: Color(0xFF475569)),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            'Application fee will be marked as PENDING. Student can pay fee at the school office during physical verification.',
+                            style: GoogleFonts.outfit(fontSize: 12, color: const Color(0xFF334155), fontWeight: FontWeight.w500),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ],
             ),
 
@@ -615,12 +1127,14 @@ class _AdmissionRegistrationScreenState extends State<AdmissionRegistrationScree
     int maxLines = 1,
     String? prefixText,
     String? Function(String?)? validator,
+    void Function(String)? onChanged,
   }) {
     return TextFormField(
       controller: controller,
       keyboardType: keyboardType,
       maxLines: maxLines,
       validator: validator,
+      onChanged: onChanged,
       style: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.w600, color: const Color(0xFF0F172A)),
       decoration: InputDecoration(
         labelText: label,

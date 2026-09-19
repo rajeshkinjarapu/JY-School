@@ -1,6 +1,24 @@
 # Project State: JY School ERP
 
 ## 2. Recent Updates & Progress
+- **Admissions Module Classes Deduplication, UPI QR & Cash Teacher Workflow (2026-09-19)**:
+  - **Classes Deduplication (Nursery to 10th Class)**:
+    - Cleaned up classes dropdown to strictly display `Nursery`, `LKG`, `UKG`, `Class 1` through `Class 10` across Web and Mobile, removing duplicate aliases (`NUR`, `PP1`, `PP2`, `1st`, etc.).
+  - **Label Rebranding to 'Application Fee'**:
+    - Replaced all user-facing instances of "Admission Fee" with "Application Fee" across Web forms, tables, print modal, mobile app screens, and official PDF documents.
+  - **Project Settings UPI QR Code Display**:
+    - Corrected image URL resolution for the School UPI QR Code uploaded in Project Settings (pointing properly to backend port `19998`) with a reliable dynamic UPI QR code generator fallback.
+  - **UPI Flow with Mandatory Receipt Upload**:
+    - Only displays the school QR code and UPI ID when UPI is selected. Enforced mandatory payment receipt / screenshot upload before form submission across Web and Flutter Mobile.
+  - **Cash Payment Flow with Teacher Dropdown**:
+    - When Cash is selected, QR code is hidden, and an interactive dropdown displays all school staff/teachers (`/api/teachers`) to select the exact teacher who collected the cash, auto-defaulting to the logged-in user where applicable.
+    - Persisted `cashReceivedByName` and `cashReceivedById` in database (`AdmissionInquiry`), admissions management table, and printed A4 form.
+  - **Admissions List Screen & Mobile PDF Enhancement**:
+    - Enhanced mobile cards with application fee badge, cash collecting teacher name, and inline dialog to view uploaded payment receipt screenshots.
+    - Updated official PDF printout to include "Cash Received By" and "Application Fee".
+  - **Shorebird Patch Ready**:
+    - Fixed all `CrossAlignment` typos. All changes are pure Dart/UI logic with zero native Gradle changes, 100% deployable via Shorebird Patch.
+
 - **Admissions Flutter Compilation & Web Auto-Healing Fix (2026-09-19)**:
   - **Flutter Shorebird Patch Compilation Error Resolved**:
     - Identified and fixed 7 instances of `CrossAlignment` typo across `admissions_list_screen.dart`, `admission_registration_screen.dart`, and `admission_pdf_service.dart`, replacing with proper `CrossAxisAlignment` and `pw.CrossAxisAlignment`.

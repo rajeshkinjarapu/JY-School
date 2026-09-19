@@ -238,7 +238,7 @@ export const AdmissionsManagementPage: React.FC = () => {
                     <th className="p-4">Class Applied</th>
                     <th className="p-4">Parents & Contact</th>
                     <th className="p-4">Registered By</th>
-                    <th className="p-4">Fee / Mode</th>
+                    <th className="p-4">App Fee / Mode</th>
                     <th className="p-4">Status</th>
                     <th className="p-4 text-right">Actions</th>
                   </tr>
@@ -307,12 +307,17 @@ export const AdmissionsManagementPage: React.FC = () => {
                           )}
                         </td>
 
-                        {/* Registered By */}
+                        {/* Registered By & Cash Collector */}
                         <td className="p-4">
                           <div className="font-bold text-slate-800 flex items-center gap-1.5">
                             <UserCheck className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
                             <span className="truncate max-w-[130px] font-bold text-slate-800">{adm.registeredByName || 'Direct / Online'}</span>
                           </div>
+                          {adm.cashReceivedByName && (
+                            <div className="text-[10px] text-amber-700 mt-0.5 font-bold flex items-center gap-1">
+                              <span>Cash Recvd:</span> <span className="underline">{adm.cashReceivedByName}</span>
+                            </div>
+                          )}
                           {adm.academicYear && (
                             <div className="text-[10px] text-slate-500 mt-0.5 font-medium">
                               AY: <span className="font-bold text-indigo-600">{adm.academicYear}</span>
@@ -329,10 +334,20 @@ export const AdmissionsManagementPage: React.FC = () => {
                           ) : (
                             <span className="text-slate-400 font-medium">Standard</span>
                           )}
-                          <div className="mt-0.5">
+                          <div className="mt-0.5 flex flex-col gap-1 items-start">
                             <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold uppercase ${adm.paymentStatus === 'COMPLETED' ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-600'}`}>
                               {adm.paymentMethod || 'CASH'} • {adm.paymentStatus || 'PENDING'}
                             </span>
+                            {adm.paymentReceipt && (
+                              <a 
+                                href={adm.paymentReceipt.startsWith('http') ? adm.paymentReceipt : `http://66.116.252.191:19998/${adm.paymentReceipt.replace(/^\/+/, '')}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="text-[10px] text-indigo-600 hover:text-indigo-800 font-bold flex items-center gap-1 hover:underline"
+                              >
+                                <Eye className="w-3 h-3" /> View Receipt
+                              </a>
+                            )}
                           </div>
                         </td>
 
