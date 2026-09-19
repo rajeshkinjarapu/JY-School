@@ -72,7 +72,7 @@ export const AdmissionRegistrationPage: React.FC = () => {
   const [selectedState, setSelectedState] = useState('Andhra Pradesh');
   const [selectedDistrict, setSelectedDistrict] = useState('Srikakulam');
   const [selectedMandal, setSelectedMandal] = useState('Narasannapeta');
-  const [selectedVillage, setSelectedVillage] = useState('Narasannapeta Main (Ward 1)');
+  const [selectedVillage, setSelectedVillage] = useState('Narasannapeta 1 (Ward 1)');
   const [customVillage, setCustomVillage] = useState('');
   const [doorNo, setDoorNo] = useState('');
 

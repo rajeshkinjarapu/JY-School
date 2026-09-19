@@ -1,6 +1,11 @@
 # Project State: JY School ERP
 
-## 2. Recent Updates & Progress
+- **100% Sachivalayam & Mandal Coverage for Admissions (2026-09-19)**:
+  - **38 Mandals Full Coverage**: Populated complete Grama and Ward Sachivalayams across all 38 mandals of Srikakulam district (Narasannapeta, Nandigam, Polaki, Jalumuru, Kotabommali, Gara, Etcherla, Ponduru, Sarubujjili, Srikakulam Rural & Urban, Amadalavalasa, Tekkali, Ranasthalam, Laveru, Burja, Santhabommali, Palasa-Kasibugga, Sompeta, Mandasa, Itchapuram, Kaviti, Kanchili, Saravakota, Pathapatnam, Meliaputti, Hiramandalam, Kotturu, Rajam, G.Sigadam, L.N. Peta, Vangara, Regidi Amadalavalasa, Santhakaviti, Vajrapukothuru, Palakonda, Seethampeta, Bhamini, Veeraghattam).
+  - **Nandigam Mandal Added**: Added Nandigam mandal with all 22 official village secretariats (Dimmidijola, Kottagraharam, Lakhidasupuram, Nowgam, Peddabanapuram, Peddalavunipalli, Peddatamarapalli, Radhajanaboddapadu, Sivarampuram, Sylada, Bejjipalli, Badagam, Deenabandupuram, Karlapudi, Mondraivalasa, Narendrapuram, Rampuram, Anandapuram, Gollavooru, Subhadrapuram, Kaviti Nandigam).
+  - **Neighboring Districts Support**: Added major mandals and ward secretariats for Vizianagaram and Visakhapatnam to prevent empty dropdown states.
+  - **Zero-Latency In-Memory Mapping**: Location data stored client-side in `frontend/src/utils/apLocations.ts` (and pending Shorebird patch approval in `flutter_mobile/lib/utils/ap_locations.dart`) with fallback custom village entry for 100% user convenience without any external API costs.
+
 - **Admissions Form Phone Fields Simplification (2026-09-19)**:
   - **Removed Redundant Fields**: Removed the standalone `Primary Contact Mobile Number *` and `Alternate Mobile Number` input fields from both Web (`AdmissionRegistrationPage.tsx`) and Flutter Mobile (`admission_registration_screen.dart`).
   - **Direct Father / Mother Phone Integration**: Father's Mobile Number and Mother's Mobile Number now serve directly as the primary and alternate emergency contacts. The system automatically maps `fatherPhone` (or `motherPhone`) to the DB `phone` column, maintaining full backward compatibility with SMS/WhatsApp notifications and student records while delivering a much cleaner, streamlined registration interface.
