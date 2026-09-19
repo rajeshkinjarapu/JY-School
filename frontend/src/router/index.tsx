@@ -96,7 +96,7 @@ const OfficeToolsDashboard = lazy(routeImports['/office-tools']);
 const SlipTestManualPage = lazy(() => import('../pages/office-tools/SlipTestManualPage'));
 const StudyCertificatePage = lazy(() => import('../pages/office-tools/StudyCertificatePage'));
 const AdmissionsManagementPage = lazy(() => import('../pages/admissions/AdmissionsManagementPage'));
-const AdmissionRegistrationPage = lazy(() => import('../pages/admissions/AdmissionRegistrationPage'));
+const AdmissionRegistrationPage = lazy(() => import('../pages/admissions/AdmissionRegistrationPage').then(m => ({ default: m.default || m.AdmissionRegistrationPage })));
 const FeeReminderPage = lazy(() => import('../pages/fees/FeeReminderPage'));
 const QuestionBankDashboard = lazy(routeImports['/question-bank']);
 const QuestionPaperGeneratorPage = lazy(() => import('../pages/question-bank/QuestionPaperGeneratorPage'));

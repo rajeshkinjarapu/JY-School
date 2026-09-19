@@ -441,3 +441,6 @@ export const AdmissionPrintModal: React.FC<AdmissionPrintModalProps> = ({
     document.body
   );
 };
+
+export default AdmissionPrintModal;
+

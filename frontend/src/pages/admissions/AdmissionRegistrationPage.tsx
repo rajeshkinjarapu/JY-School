@@ -1556,3 +1556,6 @@ export const AdmissionRegistrationPage: React.FC = () => {
     </div>
   );
 };
+
+export default AdmissionRegistrationPage;
+

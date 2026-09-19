@@ -1,6 +1,14 @@
 # Project State: JY School ERP
 
 ## 2. Recent Updates & Progress
+- **Admissions Registration Page React Error #306 Resolution (2026-09-19)**:
+  - **Root Cause**: `AdmissionRegistrationPage.tsx` had only a named export (`export const AdmissionRegistrationPage`), while `frontend/src/router/index.tsx` lazy loader was executing `const AdmissionRegistrationPage = lazy(() => import('../pages/admissions/AdmissionRegistrationPage'))` expecting a `default` export. This returned `{ default: undefined }`, causing React Error #306 (`Element type is invalid: expected a string or class/function but got: undefined`).
+  - **Resolution**:
+    - Added `export default AdmissionRegistrationPage;` to `AdmissionRegistrationPage.tsx`.
+    - Added `export default AdmissionPrintModal;` to `AdmissionPrintModal.tsx`.
+    - Enhanced lazy loader in `src/router/index.tsx` to defensively load either `m.default || m.AdmissionRegistrationPage`.
+  - **Result**: Web page at `/admissions/register` loads smoothly without any React runtime crash or boundary error.
+
 - **Admissions Module Comprehensive Expansion (Parent Details, Demographics, Address Cascading, Siblings Table, 11 Terms & Conditions, A4 Printout) (2026-09-19)**:
   - **Alternate Mobile Number**: Added alternate mobile number field for emergency parent contact across DB, web, and mobile.
   - **Academic Year Filtering**: Cleaned up dropdown to strictly allow selection of `2026-2027` and `2027-2028` (removed legacy/duplicate entries).
