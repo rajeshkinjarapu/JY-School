@@ -1,6 +1,34 @@
 # Project State: JY School ERP
 
 ## 2. Recent Updates & Progress
+- **Admissions Module Comprehensive Expansion (Parent Details, Demographics, Address Cascading, Siblings Table, 11 Terms & Conditions, A4 Printout) (2026-09-19)**:
+  - **Alternate Mobile Number**: Added alternate mobile number field for emergency parent contact across DB, web, and mobile.
+  - **Academic Year Filtering**: Cleaned up dropdown to strictly allow selection of `2026-2027` and `2027-2028` (removed legacy/duplicate entries).
+  - **Gender Selection UI**: Standardized on clear uppercase buttons/chips: `MALE` and `FEMALE`.
+  - **Mother Tongue**: Added mother tongue dropdown (Telugu, English, Hindi, Odia, Other) with Telugu as default.
+  - **Detailed Father & Mother Breakdown**:
+    - Father: Name, Occupation, Aadhaar Number, Mobile Number.
+    - Mother: Name, Occupation, Aadhaar Number, Mobile Number.
+    - Primary Phone & Alternate Emergency Phone.
+  - **Demographics & Previous School**:
+    - Nationality (Indian), Religion (Hindu, Christian, Muslim, etc.), Caste (OC, BC-A, BC-B, BC-C, BC-D, BC-E, SC, ST), Sub-Caste, and Name of School Previously Studied / Studying.
+  - **Cascading Residential Address Dropdowns**:
+    - Hierarchical selection: State -> District -> Mandal -> Village / Ward Sachivalayam (with manual fallback text input for "Other") + Door No / Street / Landmark.
+    - Added comprehensive Andhra Pradesh, Telangana, and Odisha datasets in `frontend/src/utils/apLocations.ts` and `flutter_mobile/lib/utils/ap_locations.dart`, plus backend `GET /api/admissions/locations`.
+  - **Dynamic Sibling Details (or NA)**:
+    - Interactive "Has Siblings?" checkbox.
+    - When checked: Dynamic table with Add/Remove sibling row (`S.NO | NAME | CLASS | Where He/ She Studying`).
+    - When unchecked: Automatically persists and displays as `NA` (No Siblings Recorded).
+  - **11 Strict Terms and Conditions Card**:
+    - Styled numbered card listing all 11 mandatory school rules (uniform, visitors, property damage liability, 10-day absence policy, 3-term fees, strictly non-refundable fee clause).
+    - Mandatory agreement checkbox (`termsAccepted`). Form submission is blocked until checked.
+  - **Official A4 Registration Printout & PDF Sync**:
+    - Web (`AdmissionPrintModal.tsx`) & Mobile (`admission_pdf_service.dart`): Rebuilt to match exact A4 layout with school crest, photo box, metadata bar, 5 detailed information tables, siblings table/NA banner, application fee & cash/UPI details, all 11 terms & conditions, and 3 official signatures (Parent/Guardian, Verified Staff, Principal/Correspondent).
+  - **Database & Backend Auto-Migration**:
+    - Added 20+ columns to `AdmissionInquiry` model in `backend/prisma/schema.prisma` and auto-migration script `ALTER TABLE "AdmissionInquiry" ADD COLUMN IF NOT EXISTS ...` inside `backend/src/routes/admissions.routes.ts`.
+  - **Shorebird Patch Ready**:
+    - All mobile app changes are pure Dart/UI logic in `flutter_mobile/lib/`, 100% deployable via Shorebird Patch without rebuilding or releasing a new APK.
+
 - **Admissions Module Classes Deduplication, UPI QR & Cash Teacher Workflow (2026-09-19)**:
   - **Classes Deduplication (Nursery to 10th Class)**:
     - Cleaned up classes dropdown to strictly display `Nursery`, `LKG`, `UKG`, `Class 1` through `Class 10` across Web and Mobile, removing duplicate aliases (`NUR`, `PP1`, `PP2`, `1st`, etc.).

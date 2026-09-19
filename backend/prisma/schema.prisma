@@ -1135,6 +1135,29 @@ model AdmissionInquiry {
   cashReceivedByName String?
   cashReceivedById   String?
   
+  // Extended Demographics & Parents Info
+  alternatePhone   String?
+  motherTongue     String?
+  fatherOccupation String?
+  fatherAadhar     String?
+  fatherPhone      String?
+  motherOccupation String?
+  motherAadhar     String?
+  motherPhone      String?
+  nationality      String?  @default("Indian")
+  state            String?
+  district         String?
+  mandal           String?
+  village          String?
+  doorNo           String?
+  religion         String?
+  caste            String?
+  subCaste         String?
+  previousSchool   String?
+  hasSiblings      Boolean  @default(false)
+  siblingsData     String?
+  termsAccepted    Boolean  @default(true)
+  
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 }

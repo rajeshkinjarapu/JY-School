@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -7,6 +8,7 @@ import 'package:intl/intl.dart';
 
 import '../services/api_service.dart';
 import '../services/admission_pdf_service.dart';
+import '../utils/ap_locations.dart';
 
 class AdmissionRegistrationScreen extends StatefulWidget {
   const AdmissionRegistrationScreen({super.key});
@@ -18,21 +20,55 @@ class AdmissionRegistrationScreen extends StatefulWidget {
 class _AdmissionRegistrationScreenState extends State<AdmissionRegistrationScreen> {
   final _formKey = GlobalKey<FormState>();
 
-  // Text Controllers
+  // 1. Student Controllers
   final _nameCtrl = TextEditingController();
-  final _fatherCtrl = TextEditingController();
-  final _motherCtrl = TextEditingController();
-  final _phoneCtrl = TextEditingController();
   final _aadharCtrl = TextEditingController();
-  final _addressCtrl = TextEditingController();
-  final _feeCtrl = TextEditingController();
-
-  String _gender = 'Male';
+  String _gender = 'MALE';
   String _classApplied = 'Class 1';
-  String _academicYear = '${DateTime.now().year}-${DateTime.now().year + 1}';
-  final List<String> _academicYears = ['2026-2027', '2025-2026', '2027-2028'];
-  String _paymentMethod = 'CASH';
+  String _academicYear = '2026-2027';
+  final List<String> _academicYears = ['2026-2027', '2027-2028'];
+  String _motherTongue = 'Telugu';
   DateTime? _dob;
+
+  // 2. Parent Particulars Controllers
+  final _fatherCtrl = TextEditingController();
+  final _fatherOccupationCtrl = TextEditingController();
+  final _fatherAadharCtrl = TextEditingController();
+  final _fatherPhoneCtrl = TextEditingController();
+
+  final _motherCtrl = TextEditingController();
+  final _motherOccupationCtrl = TextEditingController();
+  final _motherAadharCtrl = TextEditingController();
+  final _motherPhoneCtrl = TextEditingController();
+
+  final _phoneCtrl = TextEditingController(); // Primary phone
+  final _altPhoneCtrl = TextEditingController(); // Alternate phone
+
+  // 3. Demographics Controllers
+  String _nationality = 'Indian';
+  String _religion = 'Hindu';
+  String _caste = 'BC-A';
+  final _subCasteCtrl = TextEditingController();
+  final _previousSchoolCtrl = TextEditingController();
+
+  // 4. Residence Cascading State
+  String _selectedState = 'Andhra Pradesh';
+  String _selectedDistrict = 'Srikakulam';
+  String _selectedMandal = 'Narasannapeta';
+  String _selectedVillage = 'Narasannapeta Main (Ward 1)';
+  final _customVillageCtrl = TextEditingController();
+  final _doorNoCtrl = TextEditingController();
+
+  // 5. Siblings State
+  bool _hasSiblings = false;
+  final List<Map<String, String>> _siblings = [];
+
+  // 6. Application Fee & Payment
+  final _feeCtrl = TextEditingController();
+  String _paymentMethod = 'CASH';
+
+  // 7. Terms Acceptance
+  bool _termsAccepted = false;
 
   // Photo
   File? _localPhotoFile;
@@ -71,11 +107,21 @@ class _AdmissionRegistrationScreenState extends State<AdmissionRegistrationScree
   @override
   void dispose() {
     _nameCtrl.dispose();
-    _fatherCtrl.dispose();
-    _motherCtrl.dispose();
-    _phoneCtrl.dispose();
     _aadharCtrl.dispose();
-    _addressCtrl.dispose();
+    _fatherCtrl.dispose();
+    _fatherOccupationCtrl.dispose();
+    _fatherAadharCtrl.dispose();
+    _fatherPhoneCtrl.dispose();
+    _motherCtrl.dispose();
+    _motherOccupationCtrl.dispose();
+    _motherAadharCtrl.dispose();
+    _motherPhoneCtrl.dispose();
+    _phoneCtrl.dispose();
+    _altPhoneCtrl.dispose();
+    _subCasteCtrl.dispose();
+    _previousSchoolCtrl.dispose();
+    _customVillageCtrl.dispose();
+    _doorNoCtrl.dispose();
     _feeCtrl.dispose();
     super.dispose();
   }
@@ -108,7 +154,7 @@ class _AdmissionRegistrationScreenState extends State<AdmissionRegistrationScree
   }
 
   Future<void> _pickImage(ImageSource source) async {
-    Navigator.of(context).pop(); // close bottom sheet
+    Navigator.of(context).pop();
     try {
       final picker = ImagePicker();
       final picked = await picker.pickImage(source: source, imageQuality: 80, maxWidth: 800);
@@ -219,7 +265,7 @@ class _AdmissionRegistrationScreenState extends State<AdmissionRegistrationScree
   }
 
   Future<void> _pickReceiptImage(ImageSource source) async {
-    Navigator.of(context).pop(); // close bottom sheet
+    Navigator.of(context).pop();
     try {
       final picker = ImagePicker();
       final picked = await picker.pickImage(source: source, imageQuality: 80, maxWidth: 1000);
@@ -316,8 +362,34 @@ class _AdmissionRegistrationScreenState extends State<AdmissionRegistrationScree
     );
   }
 
+  // Sibling Helpers
+  void _addSibling() {
+    setState(() {
+      _siblings.add({'name': '', 'className': 'Class 1', 'schoolName': ''});
+    });
+  }
+
+  void _removeSibling(int index) {
+    setState(() {
+      _siblings.removeAt(index);
+    });
+  }
+
   Future<void> _submitForm() async {
     if (!_formKey.currentState!.validate()) return;
+
+    final primaryContact = _phoneCtrl.text.trim().isNotEmpty
+        ? _phoneCtrl.text.trim()
+        : _fatherPhoneCtrl.text.trim().isNotEmpty
+            ? _fatherPhoneCtrl.text.trim()
+            : _motherPhoneCtrl.text.trim();
+
+    if (primaryContact.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('At least one contact phone number is required'), backgroundColor: Colors.red),
+      );
+      return;
+    }
 
     // Mandatory UPI Receipt Check
     if (_paymentMethod == 'UPI' && _uploadedReceiptUrl == null) {
@@ -335,26 +407,83 @@ class _AdmissionRegistrationScreenState extends State<AdmissionRegistrationScree
       return;
     }
 
+    // Mandatory Terms Check
+    if (!_termsAccepted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please accept the Terms and Conditions to submit application'), backgroundColor: Colors.red),
+      );
+      return;
+    }
+
     setState(() => _isSubmitting = true);
+
+    final finalVillage = _selectedVillage == 'Other Village/Sachivalayam'
+        ? _customVillageCtrl.text.trim()
+        : _selectedVillage;
+
+    final fullAddress = [
+      _doorNoCtrl.text.trim(),
+      finalVillage,
+      _selectedMandal,
+      _selectedDistrict,
+      _selectedState
+    ].where((e) => e.isNotEmpty).join(', ');
+
+    final validSiblings = _hasSiblings
+        ? _siblings.where((s) => (s['name'] ?? '').trim().isNotEmpty).toList()
+        : [];
 
     final payload = {
       'studentName': _nameCtrl.text.trim(),
-      'fatherName': _fatherCtrl.text.trim().isEmpty ? null : _fatherCtrl.text.trim(),
-      'motherName': _motherCtrl.text.trim().isEmpty ? null : _motherCtrl.text.trim(),
-      'phone': _phoneCtrl.text.trim(),
-      'aadharNo': _aadharCtrl.text.trim().isEmpty ? null : _aadharCtrl.text.trim(),
-      'dob': _dob?.toIso8601String(),
-      'gender': _gender,
       'classApplied': _classApplied,
       'academicYear': _academicYear,
-      'address': _addressCtrl.text.trim().isEmpty ? null : _addressCtrl.text.trim(),
+      'gender': _gender,
+      'dob': _dob?.toIso8601String(),
+      'aadharNo': _aadharCtrl.text.trim().isEmpty ? null : _aadharCtrl.text.trim(),
+      'motherTongue': _motherTongue,
       'studentImage': _uploadedPhotoUrl,
+
+      // Parents
+      'fatherName': _fatherCtrl.text.trim().isEmpty ? null : _fatherCtrl.text.trim(),
+      'fatherOccupation': _fatherOccupationCtrl.text.trim().isEmpty ? null : _fatherOccupationCtrl.text.trim(),
+      'fatherAadhar': _fatherAadharCtrl.text.trim().isEmpty ? null : _fatherAadharCtrl.text.trim(),
+      'fatherPhone': _fatherPhoneCtrl.text.trim().isEmpty ? null : _fatherPhoneCtrl.text.trim(),
+
+      'motherName': _motherCtrl.text.trim().isEmpty ? null : _motherCtrl.text.trim(),
+      'motherOccupation': _motherOccupationCtrl.text.trim().isEmpty ? null : _motherOccupationCtrl.text.trim(),
+      'motherAadhar': _motherAadharCtrl.text.trim().isEmpty ? null : _motherAadharCtrl.text.trim(),
+      'motherPhone': _motherPhoneCtrl.text.trim().isEmpty ? null : _motherPhoneCtrl.text.trim(),
+
+      'phone': primaryContact,
+      'alternatePhone': _altPhoneCtrl.text.trim().isEmpty ? null : _altPhoneCtrl.text.trim(),
+
+      // Demographics
+      'nationality': _nationality,
+      'religion': _religion,
+      'caste': _caste,
+      'subCaste': _subCasteCtrl.text.trim().isEmpty ? null : _subCasteCtrl.text.trim(),
+      'previousSchool': _previousSchoolCtrl.text.trim().isEmpty ? null : _previousSchoolCtrl.text.trim(),
+
+      // Residence
+      'state': _selectedState,
+      'district': _selectedDistrict,
+      'mandal': _selectedMandal,
+      'village': finalVillage.isEmpty ? null : finalVillage,
+      'doorNo': _doorNoCtrl.text.trim().isEmpty ? null : _doorNoCtrl.text.trim(),
+      'address': fullAddress,
+
+      // Siblings
+      'hasSiblings': _hasSiblings,
+      'siblingsData': _hasSiblings ? jsonEncode(validSiblings) : 'NA',
+
+      // Payment
       'admissionFee': _feeCtrl.text.trim().isEmpty ? null : _feeCtrl.text.trim(),
       'paymentMethod': _paymentMethod,
       'paymentReceipt': _paymentMethod == 'UPI' ? _uploadedReceiptUrl : null,
       'cashReceivedByName': _paymentMethod == 'CASH' ? _cashTeacherName : null,
       'cashReceivedById': _paymentMethod == 'CASH' ? _cashTeacherId : null,
       'paymentStatus': (_paymentMethod == 'CASH' || (_paymentMethod == 'UPI' && _uploadedReceiptUrl != null)) && _feeCtrl.text.trim().isNotEmpty ? 'COMPLETED' : 'PENDING',
+      'termsAccepted': true,
     };
 
     final res = await ApiService.submitAdmission(payload);
@@ -444,15 +573,27 @@ class _AdmissionRegistrationScreenState extends State<AdmissionRegistrationScree
   void _resetForm() {
     _formKey.currentState?.reset();
     _nameCtrl.clear();
-    _fatherCtrl.clear();
-    _motherCtrl.clear();
-    _phoneCtrl.clear();
     _aadharCtrl.clear();
-    _addressCtrl.clear();
+    _fatherCtrl.clear();
+    _fatherOccupationCtrl.clear();
+    _fatherAadharCtrl.clear();
+    _fatherPhoneCtrl.clear();
+    _motherCtrl.clear();
+    _motherOccupationCtrl.clear();
+    _motherAadharCtrl.clear();
+    _motherPhoneCtrl.clear();
+    _phoneCtrl.clear();
+    _altPhoneCtrl.clear();
+    _subCasteCtrl.clear();
+    _previousSchoolCtrl.clear();
+    _customVillageCtrl.clear();
+    _doorNoCtrl.clear();
     _feeCtrl.clear();
     setState(() {
-      _gender = 'Male';
+      _gender = 'MALE';
       _classApplied = 'Class 1';
+      _academicYear = '2026-2027';
+      _motherTongue = 'Telugu';
       _dob = null;
       _localPhotoFile = null;
       _uploadedPhotoUrl = null;
@@ -461,6 +602,9 @@ class _AdmissionRegistrationScreenState extends State<AdmissionRegistrationScree
       _cashTeacherName = null;
       _cashTeacherId = null;
       _paymentMethod = 'CASH';
+      _hasSiblings = false;
+      _siblings.clear();
+      _termsAccepted = false;
     });
   }
 
@@ -470,8 +614,8 @@ class _AdmissionRegistrationScreenState extends State<AdmissionRegistrationScree
       backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
         title: Text(
-          'Student Registration',
-          style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.white),
+          'Student Admission Registration',
+          style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 17, color: Colors.white),
         ),
         backgroundColor: const Color(0xFF4F46E5),
         elevation: 0,
@@ -482,8 +626,7 @@ class _AdmissionRegistrationScreenState extends State<AdmissionRegistrationScree
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            
-            // 1. PHOTO PICKER CARD
+            // PHOTO UPLOAD CARD
             Card(
               elevation: 0,
               shape: RoundedRectangleBorder(
@@ -494,8 +637,9 @@ class _AdmissionRegistrationScreenState extends State<AdmissionRegistrationScree
                 padding: const EdgeInsets.all(16),
                 child: Column(
                   children: [
-                    GestureDetector(
+                    InkWell(
                       onTap: _showPhotoOptions,
+                      borderRadius: BorderRadius.circular(16),
                       child: Stack(
                         children: [
                           Container(
@@ -549,9 +693,9 @@ class _AdmissionRegistrationScreenState extends State<AdmissionRegistrationScree
 
             const SizedBox(height: 16),
 
-            // 2. STUDENT DETAILS CARD
+            // 1. STUDENT DETAILS CARD
             _buildSectionCard(
-              title: 'Student Details',
+              title: '1. Student Details',
               icon: Icons.person_rounded,
               children: [
                 _buildTextField(
@@ -616,55 +760,303 @@ class _AdmissionRegistrationScreenState extends State<AdmissionRegistrationScree
                     ),
                   ],
                 ),
+                const SizedBox(height: 12),
+                _buildDropdown(
+                  label: 'Mother Tongue (మాతృభాష)',
+                  value: _motherTongue,
+                  items: const ['Telugu', 'English', 'Hindi', 'Odia', 'Other'],
+                  onChanged: (v) => setState(() => _motherTongue = v!),
+                ),
               ],
             ),
 
             const SizedBox(height: 16),
 
-            // 3. PARENT DETAILS CARD
+            // 2. PARENT & GUARDIAN DETAILS
             _buildSectionCard(
-              title: 'Parent / Guardian Details',
+              title: '2. Parent & Guardian Details',
               icon: Icons.family_restroom_rounded,
               children: [
-                _buildTextField(
-                  controller: _fatherCtrl,
-                  label: "Father's Name",
-                  hint: 'Enter father full name',
+                // Father Block
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF8FAFC),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: const Color(0xFFE2E8F0)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text("Father's Details", style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13, color: const Color(0xFF0F172A))),
+                      const SizedBox(height: 8),
+                      _buildTextField(controller: _fatherCtrl, label: "Father's Name", hint: 'Enter father full name'),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Expanded(child: _buildTextField(controller: _fatherOccupationCtrl, label: 'Occupation', hint: 'e.g. Business/Agri')),
+                          const SizedBox(width: 8),
+                          Expanded(child: _buildTextField(controller: _fatherAadharCtrl, label: 'Aadhar No', hint: '12-digit number', keyboardType: TextInputType.number)),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      _buildTextField(controller: _fatherPhoneCtrl, label: "Father Mobile No", hint: '10-digit mobile number', keyboardType: TextInputType.phone, prefixText: '+91 '),
+                    ],
+                  ),
                 ),
+
                 const SizedBox(height: 12),
-                _buildTextField(
-                  controller: _motherCtrl,
-                  label: "Mother's Name",
-                  hint: 'Enter mother full name',
+
+                // Mother Block
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF8FAFC),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: const Color(0xFFE2E8F0)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text("Mother's Details", style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13, color: const Color(0xFF0F172A))),
+                      const SizedBox(height: 8),
+                      _buildTextField(controller: _motherCtrl, label: "Mother's Name", hint: 'Enter mother full name'),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Expanded(child: _buildTextField(controller: _motherOccupationCtrl, label: 'Occupation', hint: 'e.g. Homemaker/Employee')),
+                          const SizedBox(width: 8),
+                          Expanded(child: _buildTextField(controller: _motherAadharCtrl, label: 'Aadhar No', hint: '12-digit number', keyboardType: TextInputType.number)),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      _buildTextField(controller: _motherPhoneCtrl, label: "Mother Mobile No", hint: '10-digit mobile number', keyboardType: TextInputType.phone, prefixText: '+91 '),
+                    ],
+                  ),
                 ),
+
                 const SizedBox(height: 12),
+
                 _buildTextField(
                   controller: _phoneCtrl,
-                  label: 'Primary Phone Number *',
+                  label: 'Primary Contact Mobile *',
                   hint: '10-digit mobile number',
                   keyboardType: TextInputType.phone,
                   prefixText: '+91 ',
-                  validator: (v) {
-                    if (v == null || v.trim().isEmpty) return 'Phone number is required';
-                    if (v.replaceAll(RegExp(r'\D'), '').length < 10) return 'Enter a valid 10-digit number';
-                    return null;
-                  },
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 8),
                 _buildTextField(
-                  controller: _addressCtrl,
-                  label: 'Residential Address',
-                  hint: 'Enter residential address',
-                  maxLines: 2,
+                  controller: _altPhoneCtrl,
+                  label: 'Alternate Mobile Number',
+                  hint: 'Emergency backup mobile',
+                  keyboardType: TextInputType.phone,
+                  prefixText: '+91 ',
                 ),
               ],
             ),
 
             const SizedBox(height: 16),
 
-            // 4. APPLICATION FEE & PAYMENT CARD
+            // 3. DEMOGRAPHICS & PREVIOUS SCHOOL
             _buildSectionCard(
-              title: 'Application Fee & Payment',
+              title: '3. Demographics & Previous School',
+              icon: Icons.school_rounded,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildDropdown(
+                        label: 'Religion',
+                        value: _religion,
+                        items: const ['Hindu', 'Muslim', 'Christian', 'Jain', 'Sikh', 'Other'],
+                        onChanged: (v) => setState(() => _religion = v!),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: _buildDropdown(
+                        label: 'Caste Category',
+                        value: _caste,
+                        items: const ['OC', 'BC-A', 'BC-B', 'BC-C', 'BC-D', 'BC-E', 'SC', 'ST', 'Other'],
+                        onChanged: (v) => setState(() => _caste = v!),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                _buildTextField(controller: _subCasteCtrl, label: 'Sub-Caste', hint: 'Enter sub-caste (optional)'),
+                const SizedBox(height: 10),
+                _buildTextField(controller: _previousSchoolCtrl, label: 'Name of the School Previously Studied', hint: 'Enter previous school name & place (or NA)'),
+              ],
+            ),
+
+            const SizedBox(height: 16),
+
+            // 4. RESIDENTIAL ADDRESS CASCADING
+            _buildSectionCard(
+              title: '4. Residential Address',
+              icon: Icons.location_on_rounded,
+              children: [
+                _buildDropdown(
+                  label: 'State *',
+                  value: _selectedState,
+                  items: ApLocations.states,
+                  onChanged: (v) {
+                    setState(() {
+                      _selectedState = v!;
+                      final dists = ApLocations.districts[_selectedState] ?? ['Other District'];
+                      _selectedDistrict = dists.first;
+                      final mnds = ApLocations.mandals[_selectedDistrict] ?? ['Other Mandal'];
+                      _selectedMandal = mnds.first;
+                      final vils = ApLocations.villages[_selectedMandal] ?? ['Other Village/Sachivalayam'];
+                      _selectedVillage = vils.first;
+                    });
+                  },
+                ),
+                const SizedBox(height: 10),
+                _buildDropdown(
+                  label: 'District *',
+                  value: _selectedDistrict,
+                  items: ApLocations.districts[_selectedState] ?? ['Other District'],
+                  onChanged: (v) {
+                    setState(() {
+                      _selectedDistrict = v!;
+                      final mnds = ApLocations.mandals[_selectedDistrict] ?? ['Other Mandal'];
+                      _selectedMandal = mnds.first;
+                      final vils = ApLocations.villages[_selectedMandal] ?? ['Other Village/Sachivalayam'];
+                      _selectedVillage = vils.first;
+                    });
+                  },
+                ),
+                const SizedBox(height: 10),
+                _buildDropdown(
+                  label: 'Mandal *',
+                  value: _selectedMandal,
+                  items: ApLocations.mandals[_selectedDistrict] ?? ['Other Mandal'],
+                  onChanged: (v) {
+                    setState(() {
+                      _selectedMandal = v!;
+                      final vils = ApLocations.villages[_selectedMandal] ?? ['Other Village/Sachivalayam'];
+                      _selectedVillage = vils.first;
+                    });
+                  },
+                ),
+                const SizedBox(height: 10),
+                _buildDropdown(
+                  label: 'Village / Sachivalayam *',
+                  value: _selectedVillage,
+                  items: ApLocations.villages[_selectedMandal] ?? ['Other Village/Sachivalayam'],
+                  onChanged: (v) => setState(() => _selectedVillage = v!),
+                ),
+                if (_selectedVillage == 'Other Village/Sachivalayam') ...[
+                  const SizedBox(height: 10),
+                  _buildTextField(controller: _customVillageCtrl, label: 'Enter Village / Ward Name *', hint: 'Type village name'),
+                ],
+                const SizedBox(height: 10),
+                _buildTextField(controller: _doorNoCtrl, label: 'Door No, Street Name & Landmark', hint: 'e.g. D.No 4-12, Main Bazar, Narasannapeta'),
+              ],
+            ),
+
+            const SizedBox(height: 16),
+
+            // 5. SIBLING DETAILS
+            _buildSectionCard(
+              title: '5. Sibling Details',
+              icon: Icons.group_rounded,
+              children: [
+                CheckboxListTile(
+                  value: _hasSiblings,
+                  onChanged: (v) {
+                    setState(() {
+                      _hasSiblings = v ?? false;
+                      if (_hasSiblings && _siblings.isEmpty) {
+                        _siblings.add({'name': '', 'className': 'Class 1', 'schoolName': ''});
+                      }
+                    });
+                  },
+                  title: Text('Does student have siblings? (తోబుట్టువులు ఉన్నారా?)', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13)),
+                  subtitle: Text('Check if applicant has brothers or sisters', style: GoogleFonts.outfit(fontSize: 11, color: Colors.grey)),
+                  controlAffinity: ListTileControlAffinity.leading,
+                  contentPadding: EdgeInsets.zero,
+                  activeColor: const Color(0xFF4F46E5),
+                ),
+                if (_hasSiblings) ...[
+                  const Divider(height: 10),
+                  ..._siblings.asMap().entries.map((entry) {
+                    final idx = entry.key;
+                    final sib = entry.value;
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 8),
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFFFBEB),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: const Color(0xFFFDE68A)),
+                      ),
+                      child: Column(
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text('Sibling #${idx + 1}', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 12, color: const Color(0xFF92400E))),
+                              IconButton(
+                                icon: const Icon(Icons.delete_outline, size: 18, color: Colors.red),
+                                onPressed: () => _removeSibling(idx),
+                                constraints: const BoxConstraints(),
+                                padding: EdgeInsets.zero,
+                              ),
+                            ],
+                          ),
+                          TextFormField(
+                            initialValue: sib['name'],
+                            onChanged: (v) => sib['name'] = v,
+                            decoration: const InputDecoration(labelText: 'Sibling Name', contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 8)),
+                            style: GoogleFonts.outfit(fontSize: 12),
+                          ),
+                          const SizedBox(height: 6),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: DropdownButtonFormField<String>(
+                                  value: sib['className'] ?? 'Class 1',
+                                  items: _classes.map((c) => DropdownMenuItem(value: c, child: Text(c, style: GoogleFonts.outfit(fontSize: 12)))).toList(),
+                                  onChanged: (v) => sib['className'] = v ?? 'Class 1',
+                                  decoration: const InputDecoration(labelText: 'Class', contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 8)),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: TextFormField(
+                                  initialValue: sib['schoolName'],
+                                  onChanged: (v) => sib['schoolName'] = v,
+                                  decoration: const InputDecoration(labelText: 'Where Studying', hintText: 'School Name', contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 8)),
+                                  style: GoogleFonts.outfit(fontSize: 12),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    );
+                  }),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton.icon(
+                      onPressed: _addSibling,
+                      icon: const Icon(Icons.add, size: 16),
+                      label: const Text('Add Another Sibling'),
+                      style: TextButton.styleFrom(foregroundColor: const Color(0xFFD97706)),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+
+            const SizedBox(height: 16),
+
+            // 6. APPLICATION FEE & PAYMENT CARD
+            _buildSectionCard(
+              title: '6. Application Fee & Payment',
               icon: Icons.currency_rupee_rounded,
               children: [
                 Row(
@@ -696,7 +1088,7 @@ class _AdmissionRegistrationScreenState extends State<AdmissionRegistrationScree
                   ],
                 ),
 
-                // Conditional: CASH PAYMENT FLOW
+                // Cash Payment
                 if (_paymentMethod == 'CASH') ...[
                   const SizedBox(height: 14),
                   DropdownButtonFormField<String>(
@@ -736,46 +1128,15 @@ class _AdmissionRegistrationScreenState extends State<AdmissionRegistrationScree
                         _cashTeacherId = found['id']?.toString();
                       });
                     },
-                    validator: (val) {
-                      if (_paymentMethod == 'CASH' && (val == null || val.trim().isEmpty)) {
-                        return 'Please select the teacher who received the cash';
-                      }
-                      return null;
-                    },
                   ),
-                  if (_cashTeacherName != null && _cashTeacherName!.isNotEmpty) ...[
-                    const SizedBox(height: 10),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFFEF3C7),
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: const Color(0xFFFCD34D)),
-                      ),
-                      child: Row(
-                        children: [
-                          const Icon(Icons.check_circle_outline_rounded, size: 16, color: Color(0xFFD97706)),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              'Cash payment of ₹${_feeCtrl.text.trim().isEmpty ? '0' : _feeCtrl.text.trim()} will be recorded as received by $_cashTeacherName.',
-                              style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.w600, color: const Color(0xFF92400E)),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
                 ],
 
-                // Conditional: UPI PAYMENT FLOW
+                // UPI Payment
                 if (_paymentMethod == 'UPI') ...[
-                  const SizedBox(height: 16),
-                  
-                  // School QR Code Display Box
+                  const SizedBox(height: 14),
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
                       color: const Color(0xFFF8FAFC),
                       borderRadius: BorderRadius.circular(16),
@@ -783,114 +1144,36 @@ class _AdmissionRegistrationScreenState extends State<AdmissionRegistrationScree
                     ),
                     child: Column(
                       children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(Icons.qr_code_2_rounded, size: 20, color: Color(0xFF4F46E5)),
-                            const SizedBox(width: 8),
-                            Text(
-                              'School UPI Payment QR Code',
-                              style: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.bold, color: const Color(0xFF1E293B)),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
+                        Text('School UPI Payment QR Code', style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.bold)),
+                        const SizedBox(height: 10),
                         Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: const Color(0xFFE0E7FF)),
-                            boxShadow: [
-                              BoxShadow(
-                                color: const Color(0xFF4F46E5).withOpacity(0.08),
-                                blurRadius: 12,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(10),
-                            child: Image.network(
-                              _schoolQrUrl != null && _schoolQrUrl!.isNotEmpty
-                                  ? _schoolQrUrl!
-                                  : 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${Uri.encodeComponent('upi://pay?pa=$_upiId&pn=JY%20School&cu=INR${_feeCtrl.text.trim().isNotEmpty ? '&am=' + _feeCtrl.text.trim() : ''}')}',
-                              width: 140,
-                              height: 140,
-                              fit: BoxFit.contain,
-                              errorBuilder: (context, error, stackTrace) {
-                                return Image.network(
-                                  'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${Uri.encodeComponent('upi://pay?pa=$_upiId&pn=JY%20School&cu=INR${_feeCtrl.text.trim().isNotEmpty ? '&am=' + _feeCtrl.text.trim() : ''}')}',
-                                  width: 140,
-                                  height: 140,
-                                  fit: BoxFit.contain,
-                                  errorBuilder: (context, error, stackTrace) {
-                                    return Container(
-                                      width: 140,
-                                      height: 140,
-                                      color: Colors.grey.shade100,
-                                      alignment: Alignment.center,
-                                      child: Text('QR Code Available', style: GoogleFonts.outfit(color: Colors.grey.shade500, fontSize: 11)),
-                                    );
-                                  },
-                                );
-                              },
-                            ),
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), border: Border.all(color: const Color(0xFFE2E8F0))),
+                          child: Image.network(
+                            _schoolQrUrl != null && _schoolQrUrl!.isNotEmpty
+                                ? _schoolQrUrl!
+                                : 'https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${Uri.encodeComponent('upi://pay?pa=$_upiId&pn=JY%20School&cu=INR')}',
+                            width: 130,
+                            height: 130,
+                            fit: BoxFit.contain,
+                            errorBuilder: (_, __, ___) => const Icon(Icons.qr_code_2, size: 80, color: Colors.grey),
                           ),
                         ),
-                        const SizedBox(height: 12),
-                        // UPI ID Pill
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(color: const Color(0xFFCBD5E1)),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(Icons.account_balance_wallet_rounded, size: 14, color: Color(0xFF4F46E5)),
-                              const SizedBox(width: 6),
-                              Text(
-                                _upiId,
-                                style: GoogleFonts.firaCode(fontSize: 12, fontWeight: FontWeight.bold, color: const Color(0xFF0F172A)),
-                              ),
-                              const SizedBox(width: 8),
-                              InkWell(
-                                onTap: () {
-                                  Clipboard.setData(ClipboardData(text: _upiId));
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(content: Text('UPI ID copied to clipboard!'), duration: Duration(seconds: 2)),
-                                  );
-                                },
-                                child: const Padding(
-                                  padding: EdgeInsets.all(2),
-                                  child: Icon(Icons.copy_rounded, size: 14, color: Color(0xFF6366F1)),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          'Scan and pay using PhonePe / Google Pay / Paytm',
-                          style: GoogleFonts.outfit(fontSize: 11, color: const Color(0xFF64748B)),
-                          textAlign: TextAlign.center,
-                        ),
+                        const SizedBox(height: 8),
+                        Text('UPI ID: $_upiId', style: GoogleFonts.firaCode(fontSize: 12, fontWeight: FontWeight.bold, color: const Color(0xFF4F46E5))),
                       ],
                     ),
                   ),
 
-                  const SizedBox(height: 14),
+                  const SizedBox(height: 12),
 
-                  // UPI Receipt Upload Box (Mandatory)
+                  // UPI Receipt Upload Box
                   Container(
-                    padding: const EdgeInsets.all(14),
+                    padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
                       color: const Color(0xFFEEF2FF),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: const Color(0xFFC7D2FE), width: 1.5),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: const Color(0xFFC7D2FE)),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -898,155 +1181,33 @@ class _AdmissionRegistrationScreenState extends State<AdmissionRegistrationScree
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Row(
-                              children: [
-                                const Icon(Icons.receipt_long_rounded, size: 16, color: Color(0xFF4F46E5)),
-                                const SizedBox(width: 6),
-                                Text(
-                                  'Payment Receipt Screenshot',
-                                  style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.bold, color: const Color(0xFF1E1B4B)),
-                                ),
-                              ],
-                            ),
+                            Text('Payment Receipt Screenshot', style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.bold)),
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFDC2626).withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Text(
-                                'MANDATORY *',
-                                style: GoogleFonts.outfit(fontSize: 10, fontWeight: FontWeight.bold, color: const Color(0xFFDC2626)),
-                              ),
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(color: Colors.red.shade100, borderRadius: BorderRadius.circular(4)),
+                              child: Text('MANDATORY *', style: GoogleFonts.outfit(fontSize: 9, fontWeight: FontWeight.bold, color: Colors.red.shade800)),
                             ),
                           ],
                         ),
-                        const SizedBox(height: 10),
-                        if (_isUploadingReceipt) ...[
-                          Container(
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            alignment: Alignment.center,
-                            child: Column(
-                              children: [
-                                const SizedBox(
-                                  width: 24,
-                                  height: 24,
-                                  child: CircularProgressIndicator(color: Color(0xFF4F46E5), strokeWidth: 2.5),
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  'Uploading payment receipt...',
-                                  style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.bold, color: const Color(0xFF4F46E5)),
-                                ),
-                              ],
-                            ),
+                        const SizedBox(height: 8),
+                        if (_isUploadingReceipt)
+                          const Center(child: Padding(padding: EdgeInsets.all(12), child: CircularProgressIndicator(strokeWidth: 2)))
+                        else if (_uploadedReceiptUrl != null || _localReceiptFile != null)
+                          Row(
+                            children: [
+                              const Icon(Icons.check_circle, color: Color(0xFF10B981), size: 20),
+                              const SizedBox(width: 8),
+                              const Expanded(child: Text('Receipt Attached Successfully!')),
+                              TextButton(onPressed: _showReceiptOptions, child: const Text('Change')),
+                            ],
+                          )
+                        else
+                          ElevatedButton.icon(
+                            onPressed: _showReceiptOptions,
+                            icon: const Icon(Icons.upload_file, size: 16),
+                            label: const Text('Choose Receipt / Screenshot *'),
+                            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF4F46E5), foregroundColor: Colors.white),
                           ),
-                        ] else if (_localReceiptFile != null || _uploadedReceiptUrl != null) ...[
-                          Container(
-                            padding: const EdgeInsets.all(10),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: const Color(0xFFA7F3D0)),
-                            ),
-                            child: Row(
-                              children: [
-                                ClipRRect(
-                                  borderRadius: BorderRadius.circular(8),
-                                  child: _localReceiptFile != null
-                                      ? Image.file(_localReceiptFile!, width: 50, height: 50, fit: BoxFit.cover)
-                                      : Image.network(_uploadedReceiptUrl!, width: 50, height: 50, fit: BoxFit.cover),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Row(
-                                        children: [
-                                          const Icon(Icons.check_circle_rounded, size: 15, color: Color(0xFF10B981)),
-                                          const SizedBox(width: 4),
-                                          Text(
-                                            'Receipt Attached',
-                                            style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.bold, color: const Color(0xFF065F46)),
-                                          ),
-                                        ],
-                                      ),
-                                      const SizedBox(height: 2),
-                                      Text(
-                                        'Ready to submit with application',
-                                        style: GoogleFonts.outfit(fontSize: 11, color: const Color(0xFF6B7280)),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                TextButton.icon(
-                                  onPressed: _showReceiptOptions,
-                                  icon: const Icon(Icons.edit_rounded, size: 14),
-                                  label: const Text('Change'),
-                                  style: TextButton.styleFrom(
-                                    foregroundColor: const Color(0xFF4F46E5),
-                                    textStyle: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.bold),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ] else ...[
-                          InkWell(
-                            onTap: _showReceiptOptions,
-                            borderRadius: BorderRadius.circular(12),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: const Color(0xFF818CF8)),
-                              ),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  const Icon(Icons.upload_file_rounded, size: 20, color: Color(0xFF4F46E5)),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    'Upload Receipt / Screenshot *',
-                                    style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.bold, color: const Color(0xFF4F46E5)),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            'Please take a screenshot of your successful UPI transaction and upload it.',
-                            style: GoogleFonts.outfit(fontSize: 11, color: const Color(0xFF64748B)),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-                ],
-
-                // Conditional: LATER PAYMENT FLOW
-                if (_paymentMethod == 'LATER') ...[
-                  const SizedBox(height: 12),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF1F5F9),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: const Color(0xFFCBD5E1)),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.info_outline_rounded, size: 18, color: Color(0xFF475569)),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Text(
-                            'Application fee will be marked as PENDING. Student can pay fee at the school office during physical verification.',
-                            style: GoogleFonts.outfit(fontSize: 12, color: const Color(0xFF334155), fontWeight: FontWeight.w500),
-                          ),
-                        ),
                       ],
                     ),
                   ),
@@ -1054,9 +1215,57 @@ class _AdmissionRegistrationScreenState extends State<AdmissionRegistrationScree
               ],
             ),
 
+            const SizedBox(height: 16),
+
+            // 7. TERMS & CONDITIONS CARD
+            _buildSectionCard(
+              title: '7. Terms and Conditions (Strictly Followed)',
+              icon: Icons.gavel_rounded,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFFF1F2),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: const Color(0xFFFECDD3)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Following terms and conditions should strictly be followed:', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 12, color: const Color(0xFF9F1239))),
+                      const SizedBox(height: 6),
+                      _buildTermItem('1. Student should obey rules and regulations set by management.'),
+                      _buildTermItem('2. Student would not be allowed to move around premises without uniform.'),
+                      _buildTermItem('3. During school time no visitor is allowed.'),
+                      _buildTermItem('4. Parents should not approach teachers without management permission.'),
+                      _buildTermItem('5. Management has right to reject or strike out student for breach of rules.'),
+                      _buildTermItem('6. Parent pays for any damage done to school property equal to its value.'),
+                      _buildTermItem('7. Decision of management is final and binding on all parties.'),
+                      _buildTermItem('8. Absent for 10 days without prior notice leads to name being struck out.'),
+                      _buildTermItem('9. Student has to pay all dues again to be readmitted.'),
+                      _buildTermItem('10. Fee collected in 3 terms; otherwise fee concession is not allowed.'),
+                      _buildTermItem('11. The fee once paid will strictly not be refunded.'),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 10),
+                CheckboxListTile(
+                  value: _termsAccepted,
+                  onChanged: (v) => setState(() => _termsAccepted = v ?? false),
+                  title: Text(
+                    'I have read and agree to all the Terms and Conditions of the School *',
+                    style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 12, color: const Color(0xFF0F172A)),
+                  ),
+                  controlAffinity: ListTileControlAffinity.leading,
+                  contentPadding: EdgeInsets.zero,
+                  activeColor: const Color(0xFF10B981),
+                ),
+              ],
+            ),
+
             const SizedBox(height: 24),
 
-            // SUBMIT BUTTON (Strict Rule: SafeArea wrapped!)
+            // SUBMIT BUTTON
             SafeArea(
               bottom: true,
               child: ElevatedButton.icon(
@@ -1086,6 +1295,13 @@ class _AdmissionRegistrationScreenState extends State<AdmissionRegistrationScree
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildTermItem(String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 3),
+      child: Text(text, style: GoogleFonts.outfit(fontSize: 10.5, color: const Color(0xFF475569))),
     );
   }
 
@@ -1156,23 +1372,25 @@ class _AdmissionRegistrationScreenState extends State<AdmissionRegistrationScree
     required List<String> items,
     required void Function(String?) onChanged,
   }) {
+    final validValue = items.contains(value) ? value : (items.isNotEmpty ? items.first : null);
     return DropdownButtonFormField<String>(
-      value: items.contains(value) ? value : items.first,
+      value: validValue,
       onChanged: onChanged,
+      isExpanded: true,
       decoration: InputDecoration(
         labelText: label,
         labelStyle: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.bold, color: const Color(0xFF64748B)),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       ),
-      items: items.map((e) => DropdownMenuItem(value: e, child: Text(e, style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.w600)))).toList(),
+      items: items.map((e) => DropdownMenuItem(value: e, child: Text(e, style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.w600), overflow: TextOverflow.ellipsis))).toList(),
     );
   }
 
   Widget _buildGenderSelector() {
     return InputDecorator(
       decoration: InputDecoration(
-        labelText: 'Gender',
+        labelText: 'Gender *',
         labelStyle: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.bold),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -1181,15 +1399,15 @@ class _AdmissionRegistrationScreenState extends State<AdmissionRegistrationScree
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
           ChoiceChip(
-            label: Text('Boy', style: GoogleFonts.outfit(fontSize: 11, fontWeight: FontWeight.bold)),
-            selected: _gender == 'Male',
-            onSelected: (s) => setState(() => _gender = 'Male'),
+            label: Text('MALE', style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.bold)),
+            selected: _gender == 'MALE',
+            onSelected: (s) => setState(() => _gender = 'MALE'),
             selectedColor: const Color(0xFFEEF2FF),
           ),
           ChoiceChip(
-            label: Text('Girl', style: GoogleFonts.outfit(fontSize: 11, fontWeight: FontWeight.bold)),
-            selected: _gender == 'Female',
-            onSelected: (s) => setState(() => _gender = 'Female'),
+            label: Text('FEMALE', style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.bold)),
+            selected: _gender == 'FEMALE',
+            onSelected: (s) => setState(() => _gender = 'FEMALE'),
             selectedColor: const Color(0xFFFDF2F8),
           ),
         ],
