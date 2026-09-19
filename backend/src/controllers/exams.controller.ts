@@ -285,6 +285,39 @@ export const areSubjectsMatching = (a: string, b: string): boolean => {
   return aliases.some(([x, y]) => (normA === x && normB === y) || (normA === y && normB === x));
 };
 
+export const getSubjectSortWeight = (subjectName: string): number => {
+  if (!subjectName) return 999;
+  const s = subjectName.toUpperCase().trim().replace(/[^A-Z0-9]/g, '');
+  
+  // 1. TELUGU / First Language
+  if (s.includes('TELUGU') || s.startsWith('TEL') || s.includes('FIRSTLANG')) return 10;
+  
+  // 2. HINDI / Second Language
+  if (s.includes('HINDI') || s.startsWith('HIN') || s.includes('SECONDLANG')) return 20;
+  
+  // 3. ENGLISH / Third Language
+  if (s.includes('ENGLISH') || s.startsWith('ENG') || s.includes('THIRDLANG')) return 30;
+  
+  // 4. MATHEMATICS / MATHS
+  if (s.includes('MATH') || s.startsWith('MAT')) return 40;
+  
+  // 5. SCIENCE / EVS / GENERAL SCIENCE / PHYSICS / CHEMISTRY / BIOLOGY
+  if (s === 'EVS' || s.includes('ENVIRONMENT') || s.includes('SCIENCE') || s.startsWith('SCI')) return 50;
+  if (s.includes('PHYSIC') || s.startsWith('PHY')) return 51;
+  if (s.includes('CHEMIS') || s.startsWith('CHE')) return 52;
+  if (s.includes('BIOLOG') || s.startsWith('BIO')) return 53;
+  
+  // 6. SOCIAL / SOCIAL STUDIES
+  if (s.includes('SOC') || s.includes('SOCIAL')) return 60;
+  
+  // 7. COMPUTER / IT / GK / DRAWING
+  if (s.includes('COMP') || s.includes('IT')) return 70;
+  if (s.includes('GK') || s.includes('GENERALKNOW') || s.includes('AWARENESS')) return 80;
+  if (s.includes('DRAW') || s.includes('ART') || s.includes('CRAFT')) return 90;
+  
+  return 100;
+};
+
 export const getResults = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   const id = req.params.id as string;
   const classId = req.query.classId as string;
@@ -452,8 +485,8 @@ export const getResults = async (req: AuthRequest, res: Response, next: NextFunc
     }
 
     s.marks.sort((a, b) => {
-      const weightA = subjectOrderMap.has(a.subject.toUpperCase().trim()) ? subjectOrderMap.get(a.subject.toUpperCase().trim())! : 999;
-      const weightB = subjectOrderMap.has(b.subject.toUpperCase().trim()) ? subjectOrderMap.get(b.subject.toUpperCase().trim())! : 999;
+      const weightA = getSubjectSortWeight(a.subject);
+      const weightB = getSubjectSortWeight(b.subject);
       if (weightA !== weightB) return weightA - weightB;
       return a.subject.localeCompare(b.subject);
     });

@@ -8,6 +8,59 @@ import toast from 'react-hot-toast';
 import { LoadingSpinner } from '../../components/UI/LoadingSpinner';
 import { useAuth } from '../../hooks/useAuth';
 
+export const getSubjectSortWeight = (subjectName: string): number => {
+  if (!subjectName) return 999;
+  const s = subjectName.toUpperCase().trim().replace(/[^A-Z0-9]/g, '');
+  
+  // 1. TELUGU / First Language
+  if (s.includes('TELUGU') || s.startsWith('TEL') || s.includes('FIRSTLANG')) return 10;
+  
+  // 2. HINDI / Second Language
+  if (s.includes('HINDI') || s.startsWith('HIN') || s.includes('SECONDLANG')) return 20;
+  
+  // 3. ENGLISH / Third Language
+  if (s.includes('ENGLISH') || s.startsWith('ENG') || s.includes('THIRDLANG')) return 30;
+  
+  // 4. MATHEMATICS / MATHS
+  if (s.includes('MATH') || s.startsWith('MAT')) return 40;
+  
+  // 5. SCIENCE / EVS / GENERAL SCIENCE / PHYSICS / CHEMISTRY / BIOLOGY
+  if (s === 'EVS' || s.includes('ENVIRONMENT') || s.includes('SCIENCE') || s.startsWith('SCI')) return 50;
+  if (s.includes('PHYSIC') || s.startsWith('PHY')) return 51;
+  if (s.includes('CHEMIS') || s.startsWith('CHE')) return 52;
+  if (s.includes('BIOLOG') || s.startsWith('BIO')) return 53;
+  
+  // 6. SOCIAL / SOCIAL STUDIES
+  if (s.includes('SOC') || s.includes('SOCIAL')) return 60;
+  
+  // 7. COMPUTER / IT / GK / DRAWING
+  if (s.includes('COMP') || s.includes('IT')) return 70;
+  if (s.includes('GK') || s.includes('GENERALKNOW') || s.includes('AWARENESS')) return 80;
+  if (s.includes('DRAW') || s.includes('ART') || s.includes('CRAFT')) return 90;
+  
+  return 100;
+};
+
+export const formatSubjectShortCode = (subjectName: string): string => {
+  if (!subjectName) return '';
+  const s = subjectName.toUpperCase().trim().replace(/[^A-Z0-9]/g, '');
+  
+  if (s.includes('TELUGU') || s.startsWith('TEL')) return 'TEL';
+  if (s.includes('HINDI') || s.startsWith('HIN')) return 'HIN';
+  if (s.includes('ENGLISH') || s.startsWith('ENG')) return 'ENG';
+  if (s.includes('MATH') || s.startsWith('MAT')) return 'MAT';
+  if (s === 'EVS' || s.includes('ENVIRONMENT')) return 'EVS';
+  if (s.includes('PHYSIC') || s.startsWith('PHY')) return 'PHY';
+  if (s.includes('CHEMIS') || s.startsWith('CHE')) return 'CHE';
+  if (s.includes('BIOLOG') || s.startsWith('BIO')) return 'BIO';
+  if (s.includes('SCIENCE') || s.startsWith('SCI')) return 'SCI';
+  if (s.includes('SOC') || s.includes('SOCIAL')) return 'SOC';
+  if (s.includes('COMP')) return 'COMP';
+  if (s.includes('GK')) return 'GK';
+  
+  return subjectName.length > 4 ? subjectName.substring(0, 4).toUpperCase() : subjectName.toUpperCase();
+};
+
 export const ResultsTab: React.FC<{ exams: any[] }> = ({ exams }) => {
   const { user } = useAuth();
   const isTeacher = user?.role === 'TEACHER';
@@ -50,16 +103,19 @@ export const ResultsTab: React.FC<{ exams: any[] }> = ({ exams }) => {
     fetchResults();
   }, [selectedExamId, selectedClassId]);
 
-  // Use the order of subjects as returned by the API (which is now sorted correctly)
+  // Collect all unique subjects and sort strictly by standard curriculum weight (TEL, HIN, ENG, MAT, EVS/SCI, SOC)
   const allSubjectsSet = new Set<string>();
-  if (results.length > 0) {
-    results[0].marks?.forEach((m: any) => allSubjectsSet.add(m.subject?.trim().toUpperCase()));
-  }
-  // Fallback to iterating all students if first student doesn't have all subjects
   results.forEach(student => {
-    student.marks?.forEach((m: any) => allSubjectsSet.add(m.subject?.trim().toUpperCase()));
+    student.marks?.forEach((m: any) => {
+      if (m.subject?.trim()) {
+        allSubjectsSet.add(m.subject.trim().toUpperCase());
+      }
+    });
   });
-  const masterSubjects = Array.from(allSubjectsSet).filter(Boolean).map(subject => ({ subject, obtained: 0 }));
+  const masterSubjects = Array.from(allSubjectsSet)
+    .filter(Boolean)
+    .sort((a, b) => getSubjectSortWeight(a) - getSubjectSortWeight(b))
+    .map(subject => ({ subject, obtained: 0 }));
 
   const handlePrint = () => {
     const printContent = document.getElementById('results-print-area');
@@ -164,15 +220,7 @@ export const ResultsTab: React.FC<{ exams: any[] }> = ({ exams }) => {
         'Rank',
         'Student Name',
         'Roll No',
-        ...subjectsList.map((m: any) => {
-          const sub = String(m.subject).toUpperCase();
-          if (sub.includes('MATH')) return 'MAT';
-          if (sub.includes('PHYS')) return 'PHY';
-          if (sub.includes('CHEM')) return 'CHE';
-          if (sub.includes('BIOL')) return 'BIO';
-          if (sub.includes('ENG')) return 'ENG';
-          return sub.length > 4 ? sub.substring(0, 4) : sub;
-        }),
+        ...subjectsList.map((m: any) => formatSubjectShortCode(m.subject)),
         'Total',
         '%'
       ]];

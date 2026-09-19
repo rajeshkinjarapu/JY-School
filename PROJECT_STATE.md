@@ -17,6 +17,9 @@
       - Added `areSubjectsMatching` helper handling synonyms (`MATHS` == `MATHEMATICS`, `EVS` == `ENVIRONMENTAL STUDIES`).
       - In `getResults`, checked `classTakenSubjectsMap`. If no student in that class ever took a subject (phantom subjects like `SCIENCE` in a class taking `EVS`), it is skipped and never injected as `AB`, and never inflates `totalMax`.
       - Added `POST /api/exams/:id/sync-from-marks` API and UI button on Exam card to permanently resync `exam.subjects` in PostgreSQL from real marks.
+  - **Standard Curriculum Subject Ordering (TEL, HIN, ENG, MAT, EVS/SCI, SOC)**:
+    - Implemented `getSubjectSortWeight` and `formatSubjectShortCode` across `backend/src/controllers/exams.controller.ts` and `frontend/src/pages/exams/ResultsTab.tsx`.
+    - Both on screen (Results table), HTML Print, and A4 PDF export, subjects are strictly sorted in standard curriculum order: Telugu (1st), Hindi (2nd), English (3rd), Maths (4th), EVS/Science (5th), Social (6th), and Computers/GK/Art (7th+).
   - **Student Marks Safety**: Verified that 100% of student marks in `Mark` table are intact with real scores and subject names.
 
 - **Dynamic Cascading Caste & Sub-Caste Master System (2026-09-19)**:
