@@ -550,12 +550,6 @@ export const getResults = async (req: AuthRequest, res: Response, next: NextFunc
     // Check if a mark for this canonical subject already exists in entry.marks
     const existingMarkIndex = entry.marks.findIndex(m => getCanonicalSubjectName(m.subject) === canonicalName);
     
-    if (existingMarkIndex !== -1) {
-      // Since we sorted by createdAt DESC, the existing mark is NEWER than the current one.
-      // We just ignore this older duplicate mark.
-      continue;
-    }
-
     const studentClassId = mark.student.classId || (classId as string);
     const studentClassSubjects = getSubjectsForClassHelper(exam.subjects, studentClassId);
 
@@ -575,6 +569,26 @@ export const getResults = async (req: AuthRequest, res: Response, next: NextFunc
     if (actualMax <= 0) actualMax = 50;
 
     const obtainedVal = mark.remarks === 'AB' ? 'AB' : mark.marksObtained;
+
+    if (existingMarkIndex !== -1) {
+      // Duplicate subject mark found! Use HIGHEST marks priority so we don't lose the real marks the teacher entered.
+      const existingObtained = entry.marks[existingMarkIndex].obtained;
+      if (obtainedVal !== 'AB' && (existingObtained === 'AB' || Number(obtainedVal) > Number(existingObtained))) {
+        // Remove the old lower mark's contribution from total
+        entry.total -= (existingObtained === 'AB' ? 0 : Number(existingObtained) || 0);
+        
+        // Update with the new higher mark
+        entry.marks[existingMarkIndex] = {
+          subject: canonicalName,
+          obtained: obtainedVal,
+          max: actualMax,
+          grade: mark.grade,
+          remarks: mark.remarks
+        };
+        entry.total += Number(obtainedVal) || 0;
+      }
+      continue;
+    }
 
     entry.marks.push({
       subject: canonicalName,
