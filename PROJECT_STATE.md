@@ -1,5 +1,23 @@
 # Project State: JY School ERP
 
+- **Permanent Ironclad Safeguards for Exam Subjects & Marks (2026-09-19)**:
+  - **Zero-Loss Backend Guardian (`backend/src/controllers/exams.controller.ts`)**:
+    - In `update`, the backend checks `prisma.mark.findMany({ where: { examId: id } })`.
+    - If student marks already exist for any class, the incoming PUT update is **strictly forbidden** from dropping, erasing, or overwriting examined subjects. Any missing examined subjects are automatically re-injected into `finalSubjects.classConfigs`.
+    - Examined classes are protected from being accidentally disconnected from the exam when updating `classIds`.
+    - In `deleteExam`, exams with recorded student marks are protected from accidental deletion (`markCount > 0` guard).
+  - **Duplicate Subject Prevention in Marks Entry (`backend/src/controllers/marks.controller.ts`)**:
+    - Integrated `areSubjectsMatching` into `bulkCreate` subject resolution.
+    - Prevents duplicate database entries when subject names vary by alias (e.g. `MATHS` vs `MATHEMATICS`, `EVS` vs `ENVIRONMENTAL SCIENCE`, `SCI` vs `GENERAL SCIENCE`, `SOC` vs `SOCIAL STUDIES`).
+  - **Frontend Safeguards & Visual Protection (`frontend/src/pages/exams/CreateExamPage.tsx`)**:
+    - Shows `🔒 మార్కులు నమోదయ్యాయి (Protected)` badge next to subjects with recorded student marks, and disables the remove/delete button for those subjects.
+    - `removeSubjectFromClass` blocks deletion of examined subjects with error toast.
+    - `handleClearClassSubjects` blocks clearing subjects of classes that have student marks.
+    - `handleCopyClassConfigToAll` skips and protects classes that have already recorded marks.
+    - When creating brand new exams, automatically populates standard AP/TS curriculum subjects sorted by `getSubjectSortWeight`: Primary (TEL, HIN, ENG, MAT, EVS), High School (TEL, HIN, ENG, MAT, SCI, SOC) instead of hardcoding 4 generic subjects.
+  - **Curriculum Order Standardized Everywhere**:
+    - Subject order `TEL` (10), `HIN` (20), `ENG` (30), `MAT` (40), `EVS/SCI` (50), `SOC` (60), `COMP/GK/ART` (70+) is enforced on exam configuration, results table, HTML print, and PDF export.
+
 - **Exam Subjects Discrepancy & Marks Calculation Permanent Resolution (2026-09-19)**:
   - **Root Cause 1 (Frontend Subjects Overwrite in `CreateExamPage.tsx`)**:
     - When editing an exam (`/exams/create`), the secondary `useEffect` at lines 128-192 ran immediately upon `classes` loading. Because `classConfigs` was initially empty (`{}`), it blindly initialized every assigned class with 4 hardcoded dummy subjects: `ENGLISH`, `MATHEMATICS`, `SCIENCE`, `SOCIAL` (100 Max Marks).

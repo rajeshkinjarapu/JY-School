@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 import api from '../../api/axios';
 import { PageHeader } from '../../components/UI/PageHeader';
 import { sortClasses, getClassOrderIndex } from '../../utils/sortClasses';
+import { getSubjectSortWeight } from './ResultsTab';
 
 interface ClassSubjectConfig {
   classId: string;
@@ -214,34 +215,53 @@ export const CreateExamPage: React.FC = () => {
 
         const clsName = `${cls.name} - ${cls.section}`;
         
-        // If class config doesn't exist yet, initialize with standard manual subjects
+        // If class config doesn't exist yet, initialize with standard curriculum subjects
         if (!updated[cId]) {
           const dbSubsForClass = allDbSubjects.filter(s => s.classId === cId);
           let defaultSubs: any[] = [];
           
+          const isFa = examName.toUpperCase().includes('FA') || boardExamType.toUpperCase().includes('FA');
+          const defaultMax = isFa ? 50 : 100;
+
           if (dbSubsForClass.length > 0) {
-            defaultSubs = dbSubsForClass.map((s, idx) => ({
-              id: s.id,
-              name: s.name,
-              maxMarks: 100,
-              date: examDate
-            }));
+            defaultSubs = [...dbSubsForClass]
+              .sort((a, b) => {
+                const wA = getSubjectSortWeight(a.name);
+                const wB = getSubjectSortWeight(b.name);
+                if (wA !== wB) return wA - wB;
+                return a.name.localeCompare(b.name);
+              })
+              .map((s) => ({
+                id: s.id,
+                name: s.name,
+                maxMarks: defaultMax,
+                date: examDate
+              }));
           } else {
-            defaultSubs = [
-              { id: Date.now().toString() + '_1', name: 'ENGLISH', maxMarks: 100, date: examDate },
-              { id: Date.now().toString() + '_2', name: 'MATHEMATICS', maxMarks: 100, date: examDate },
-              { id: Date.now().toString() + '_3', name: 'SCIENCE', maxMarks: 100, date: examDate },
-              { id: Date.now().toString() + '_4', name: 'SOCIAL', maxMarks: 100, date: examDate }
-            ];
-  
-            // Nursery / PP1 / PP2 custom defaults if class name starts with NUR or PP
             const upperName = cls.name.toUpperCase();
             if (upperName.includes('NUR') || upperName.includes('PP') || upperName.includes('LKG') || upperName.includes('UKG')) {
               defaultSubs = [
-                { id: Date.now().toString() + '_1', name: 'ENGLISH', maxMarks: 100, date: examDate },
-                { id: Date.now().toString() + '_2', name: 'MATHS', maxMarks: 100, date: examDate },
-                { id: Date.now().toString() + '_3', name: 'GENERAL AWARENESS', maxMarks: 100, date: examDate },
-                { id: Date.now().toString() + '_4', name: 'RHYMES, ART & CRAFT', maxMarks: 100, date: examDate }
+                { id: Date.now().toString() + '_1', name: 'ENGLISH', maxMarks: defaultMax, date: examDate },
+                { id: Date.now().toString() + '_2', name: 'MATHS', maxMarks: defaultMax, date: examDate },
+                { id: Date.now().toString() + '_3', name: 'GENERAL AWARENESS', maxMarks: defaultMax, date: examDate },
+                { id: Date.now().toString() + '_4', name: 'RHYMES, ART & CRAFT', maxMarks: defaultMax, date: examDate }
+              ];
+            } else if (['1', '2', '3', '4', '5', 'CLASS 1', 'CLASS 2', 'CLASS 3', 'CLASS 4', 'CLASS 5', 'IST', 'IIND', 'IIIRD', 'IVTH', 'VTH'].some(p => upperName.includes(p))) {
+              defaultSubs = [
+                { id: Date.now().toString() + '_1', name: 'TELUGU', maxMarks: defaultMax, date: examDate },
+                { id: Date.now().toString() + '_2', name: 'HINDI', maxMarks: defaultMax, date: examDate },
+                { id: Date.now().toString() + '_3', name: 'ENGLISH', maxMarks: defaultMax, date: examDate },
+                { id: Date.now().toString() + '_4', name: 'MATHEMATICS', maxMarks: defaultMax, date: examDate },
+                { id: Date.now().toString() + '_5', name: 'EVS', maxMarks: defaultMax, date: examDate }
+              ];
+            } else {
+              defaultSubs = [
+                { id: Date.now().toString() + '_1', name: 'TELUGU', maxMarks: defaultMax, date: examDate },
+                { id: Date.now().toString() + '_2', name: 'HINDI', maxMarks: defaultMax, date: examDate },
+                { id: Date.now().toString() + '_3', name: 'ENGLISH', maxMarks: defaultMax, date: examDate },
+                { id: Date.now().toString() + '_4', name: 'MATHEMATICS', maxMarks: defaultMax, date: examDate },
+                { id: Date.now().toString() + '_5', name: 'SCIENCE', maxMarks: defaultMax, date: examDate },
+                { id: Date.now().toString() + '_6', name: 'SOCIAL', maxMarks: defaultMax, date: examDate }
               ];
             }
           }
@@ -324,6 +344,19 @@ export const CreateExamPage: React.FC = () => {
   };
 
   const removeSubjectFromClass = (classId: string, subIndex: number) => {
+    const targetSub = classConfigs[classId]?.subjects[subIndex];
+    if (targetSub && fullExamMarks && fullExamMarks.length > 0) {
+      const hasMarks = fullExamMarks.some((m: any) => 
+        m.student?.classId === classId && 
+        (m.subject?.name?.toUpperCase().trim() === targetSub.name?.toUpperCase().trim() ||
+         m.subjectId === targetSub.id || m.subject?.id === targetSub.id)
+      );
+      if (hasMarks) {
+        toast.error(`"${targetSub.name}" సబ్జెక్టుకు ఇప్పటికే మార్కులు నమోదై ఉన్నాయి! డేటా భద్రత దృష్ట్యా తొలగించలేరు.`);
+        return;
+      }
+    }
+
     setClassConfigs((prev) => {
       const clsCfg = prev[classId];
       if (!clsCfg) return prev;
@@ -344,10 +377,17 @@ export const CreateExamPage: React.FC = () => {
       return;
     }
 
+    let protectedCount = 0;
     setClassConfigs((prev) => {
       const updated = { ...prev };
       examClassIds.forEach((cId) => {
         if (cId !== sourceClassId && updated[cId]) {
+          // If destination class has recorded student marks, do not overwrite its subjects!
+          const hasMarks = fullExamMarks && fullExamMarks.some((m: any) => m.student?.classId === cId);
+          if (hasMarks) {
+            protectedCount++;
+            return;
+          }
           updated[cId] = {
             ...updated[cId],
             subjects: sourceCfg.subjects.map((s, idx) => ({
@@ -361,10 +401,22 @@ export const CreateExamPage: React.FC = () => {
       });
       return updated;
     });
-    toast.success(`Copied ${sourceCfg.className} subjects to ALL selected classes!`);
+
+    if (protectedCount > 0) {
+      toast.success(`సబ్జెక్టులు కాపీ చేయబడ్డాయి. (${protectedCount} తరగతుల్లో మార్కులు ఉన్నందున అవి ఓవర్‌రైట్ కాకుండా రక్షించబడ్డాయి)`);
+    } else {
+      toast.success(`Copied ${sourceCfg.className} subjects to ALL selected classes!`);
+    }
   };
 
   const handleClearClassSubjects = (classId: string) => {
+    if (fullExamMarks && fullExamMarks.length > 0) {
+      const hasMarksForClass = fullExamMarks.some((m: any) => m.student?.classId === classId);
+      if (hasMarksForClass) {
+        toast.error('ఈ తరగతి విద్యార్థులకు మార్కులు నమోదై ఉన్నాయి! అన్ని సబ్జెక్టులను ఒకేసారి తొలగించలేరు.');
+        return;
+      }
+    }
     setClassConfigs((prev) => {
       const clsCfg = prev[classId];
       if (!clsCfg) return prev;
@@ -868,48 +920,67 @@ export const CreateExamPage: React.FC = () => {
                         </div>
 
                         <div className="space-y-3">
-                          {activeClassConfig.subjects.map((sub, i) => (
-                            <div key={sub.id || i} className="flex flex-col sm:flex-row gap-3 bg-white p-3.5 rounded-xl border border-slate-200/70 shadow-sm relative group items-center">
-                              <div className="flex-1 w-full">
-                                <label className="block text-[10px] font-bold text-slate-400 mb-1 uppercase tracking-wider">Subject Name</label>
-                                <input
-                                  type="text"
-                                  required
-                                  value={sub.name}
-                                  onChange={(e) => updateSubjectInClass(activeClassTab, i, 'name', e.target.value)}
-                                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-800 outline-none focus:border-indigo-400 focus:bg-white"
-                                />
+                          {activeClassConfig.subjects.map((sub, i) => {
+                            const hasMarks = fullExamMarks && fullExamMarks.some((m: any) => 
+                              m.student?.classId === activeClassTab && 
+                              (m.subject?.name?.toUpperCase().trim() === sub.name?.toUpperCase().trim() ||
+                               m.subjectId === sub.id || m.subject?.id === sub.id)
+                            );
+                            return (
+                              <div key={sub.id || i} className="flex flex-col sm:flex-row gap-3 bg-white p-3.5 rounded-xl border border-slate-200/70 shadow-sm relative group items-center">
+                                <div className="flex-1 w-full">
+                                  <div className="flex items-center justify-between mb-1">
+                                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Subject Name</label>
+                                    {hasMarks && (
+                                      <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 flex items-center gap-1">
+                                        🔒 మార్కులు నమోదయ్యాయి (Protected)
+                                      </span>
+                                    )}
+                                  </div>
+                                  <input
+                                    type="text"
+                                    required
+                                    value={sub.name}
+                                    onChange={(e) => updateSubjectInClass(activeClassTab, i, 'name', e.target.value)}
+                                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-800 outline-none focus:border-indigo-400 focus:bg-white"
+                                  />
+                                </div>
+                                <div className="w-full sm:w-36">
+                                  <label className="block text-[10px] font-bold text-slate-400 mb-1 uppercase tracking-wider">Exam Date</label>
+                                  <input
+                                    type="date"
+                                    value={sub.date || ''}
+                                    onChange={(e) => updateSubjectInClass(activeClassTab, i, 'date', e.target.value)}
+                                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-800 outline-none focus:border-indigo-400 focus:bg-white"
+                                  />
+                                </div>
+                                <div className="w-full sm:w-28">
+                                  <label className="block text-[10px] font-bold text-slate-400 mb-1 uppercase tracking-wider">Max Marks</label>
+                                  <input
+                                    type="number"
+                                    required
+                                    min={1}
+                                    value={sub.maxMarks}
+                                    onChange={(e) => updateSubjectInClass(activeClassTab, i, 'maxMarks', Number(e.target.value))}
+                                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-indigo-700 text-center outline-none focus:border-indigo-400 focus:bg-white"
+                                  />
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => removeSubjectFromClass(activeClassTab, i)}
+                                  disabled={hasMarks}
+                                  className={`p-1.5 rounded-lg transition-colors ${
+                                    hasMarks 
+                                      ? 'text-slate-300 cursor-not-allowed opacity-40' 
+                                      : 'text-red-400 hover:text-red-600 hover:bg-red-50'
+                                  }`}
+                                  title={hasMarks ? 'ఈ సబ్జెక్టుకు మార్కులు ఉన్నందున తొలగించలేరు' : 'Remove Subject'}
+                                >
+                                  <X className="w-4 h-4" />
+                                </button>
                               </div>
-                              <div className="w-full sm:w-36">
-                                <label className="block text-[10px] font-bold text-slate-400 mb-1 uppercase tracking-wider">Exam Date</label>
-                                <input
-                                  type="date"
-                                  value={sub.date || ''}
-                                  onChange={(e) => updateSubjectInClass(activeClassTab, i, 'date', e.target.value)}
-                                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-800 outline-none focus:border-indigo-400 focus:bg-white"
-                                />
-                              </div>
-                              <div className="w-full sm:w-28">
-                                <label className="block text-[10px] font-bold text-slate-400 mb-1 uppercase tracking-wider">Max Marks</label>
-                                <input
-                                  type="number"
-                                  required
-                                  min={1}
-                                  value={sub.maxMarks}
-                                  onChange={(e) => updateSubjectInClass(activeClassTab, i, 'maxMarks', Number(e.target.value))}
-                                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-indigo-700 text-center outline-none focus:border-indigo-400 focus:bg-white"
-                                />
-                              </div>
-                              <button
-                                type="button"
-                                onClick={() => removeSubjectFromClass(activeClassTab, i)}
-                                className="text-red-400 hover:text-red-600 p-1.5 rounded-lg hover:bg-red-50 transition-colors"
-                                title="Remove Subject"
-                              >
-                                <X className="w-4 h-4" />
-                              </button>
-                            </div>
-                          ))}
+                            );
+                          })}
 
                           {activeClassConfig.subjects.length === 0 && (
                             <div className="py-8 text-center text-xs font-bold text-slate-400">

@@ -74,189 +74,6 @@ export const getById = async (req: AuthRequest, res: Response, next: NextFunctio
   successResponse(res, exam, 'Exam fetched');
 };
 
-
-// ──────────────────────────────────────────────────────────────────────────────
-// PERMANENT FIX: Normalize exam subjects to use REAL database subject IDs.
-// This prevents FK constraint violations during marks submission forever.
-// ──────────────────────────────────────────────────────────────────────────────
-const normalizeSubjectsToRealIds = async (subjects: any): Promise<any> => {
-  if (!subjects) return subjects;
-  
-  const subjectsObj = typeof subjects === 'string' ? JSON.parse(subjects) : subjects;
-  
-  if (!subjectsObj.classConfigs || !Array.isArray(subjectsObj.classConfigs)) return subjectsObj;
-  
-  const normalizedConfigs = await Promise.all(
-    subjectsObj.classConfigs.map(async (cfg: any) => {
-      const classId = cfg.classId;
-      if (!classId || !Array.isArray(cfg.subjects)) return cfg;
-      
-      const normalizedSubjects = await Promise.all(
-        cfg.subjects.map(async (sub: any) => {
-          if (!sub.name) return sub;
-          const subName = sub.name.trim();
-          
-          // Find or create real DB subject for this class
-          let realSubject = await prisma.subject.findFirst({
-            where: { classId, name: { equals: subName, mode: 'insensitive' } }
-          });
-          
-          if (!realSubject) {
-            realSubject = await prisma.subject.create({
-              data: {
-                name: subName,
-                code: subName.substring(0, 3).toUpperCase(),
-                classId,
-              }
-            });
-          }
-          
-          // Return subject with REAL database ID
-          return { ...sub, id: realSubject.id, name: realSubject.name };
-        })
-      );
-      
-      return { ...cfg, subjects: normalizedSubjects };
-    })
-  );
-  
-  // Also normalize globalSubjects if present
-  let normalizedGlobal = subjectsObj.globalSubjects;
-  // (globalSubjects don't have classId, so we skip auto-create for them)
-  
-  return { ...subjectsObj, classConfigs: normalizedConfigs, globalSubjects: normalizedGlobal };
-};
-
-export const create = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
-  try {
-    const { name, classIds, term, examDate, maxMarks, passingMarks, subjects, admitCardSettings } = req.body;
-
-    if (!classIds || !Array.isArray(classIds) || classIds.length === 0) {
-      return next(createError('Please provide at least one class', 400));
-    }
-
-    const uniqueClassIds = [...new Set(classIds)];
-
-    const classes = await prisma.class.findMany({ where: { id: { in: uniqueClassIds } } });
-    if (classes.length !== uniqueClassIds.length) {
-      return next(createError('One or more classes not found', 404));
-    }
-
-    // PERMANENT FIX: Normalize subjects to use real DB IDs before saving
-    const normalizedSubjects = subjects ? await normalizeSubjectsToRealIds(subjects) : (subjects || []);
-
-    // Create a single exam and link it to all selected classes
-    const exam = await prisma.exam.create({
-      data: {
-        name,
-        term: term || '',
-        examDate: new Date(examDate),
-        maxMarks: maxMarks || 100,
-        passingMarks: passingMarks || 40,
-        subjects: normalizedSubjects,
-        admitCardSettings: admitCardSettings || {},
-        classes: {
-          connect: uniqueClassIds.map(id => ({ id }))
-        }
-      },
-      include: {
-        classes: true
-      }
-    });
-
-    successResponse(res, [exam], 'Exam created', 201);
-  } catch (error: any) {
-    console.error("EXAM CREATE ERROR:", error);
-    next(error);
-  }
-};
-
-
-export const update = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
-  const id = req.params.id as string;
-  const { name, term, examDate, maxMarks, passingMarks, subjects, classIds, admitCardSettings } = req.body;
-
-  const existing = await prisma.exam.findUnique({ where: { id } });
-  if (!existing) return next(createError('Exam not found', 404));
-
-  // PERMANENT FIX: Normalize subjects to use real DB IDs before saving
-  let finalSubjects = subjects !== undefined ? subjects : existing.subjects;
-  if (subjects !== undefined && subjects) {
-    try {
-      finalSubjects = await normalizeSubjectsToRealIds(subjects);
-    } catch (e) {
-      finalSubjects = subjects;
-    }
-  }
-
-  const data: any = {
-    name, term,
-    examDate: examDate ? new Date(examDate) : undefined,
-    maxMarks, passingMarks,
-    subjects: finalSubjects,
-  };
-
-  if (admitCardSettings !== undefined) {
-    data.admitCardSettings = admitCardSettings;
-  }
-
-  if (classIds && Array.isArray(classIds)) {
-    data.classes = {
-      set: classIds.map((cid: string) => ({ id: cid }))
-    };
-  }
-
-  const exam = await prisma.exam.update({
-    where: { id },
-    data,
-    include: { classes: true }
-  });
-  successResponse(res, exam, 'Exam updated');
-};
-
-export const deleteExam = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
-  const id = req.params.id as string;
-  const existing = await prisma.exam.findUnique({ where: { id } });
-  if (!existing) return next(createError('Exam not found', 404));
-  await prisma.exam.delete({ where: { id } });
-  successResponse(res, null, 'Exam deleted');
-};
-
-export const getSubjectsForClassHelper = (subjectsConfig: any, classId?: string): any[] => {
-  if (!subjectsConfig) return [];
-  let subjectsArray = subjectsConfig;
-  if (typeof subjectsConfig === 'object' && !Array.isArray(subjectsConfig)) {
-    if (subjectsConfig.classConfigs && Array.isArray(subjectsConfig.classConfigs)) {
-      subjectsArray = subjectsConfig.classConfigs;
-    } else if (classId && Array.isArray(subjectsConfig[classId])) {
-      return subjectsConfig[classId];
-    } else {
-      subjectsArray = Object.values(subjectsConfig).flat();
-    }
-  }
-
-  if (Array.isArray(subjectsArray)) {
-    if (subjectsArray.length > 0 && (subjectsArray[0]?.classId || subjectsArray[0]?.className) && Array.isArray(subjectsArray[0]?.subjects)) {
-      if (classId) {
-        const found = subjectsArray.find((c: any) => c.classId === classId);
-        if (found) return found.subjects;
-      }
-      const mergedMap = new Map<string, any>();
-      subjectsArray.forEach((c: any) => {
-        (c.subjects || []).forEach((s: any) => {
-          if (s && s.name && !mergedMap.has(s.name.toUpperCase().trim())) {
-            mergedMap.set(s.name.toUpperCase().trim(), s);
-          }
-        });
-      });
-      return Array.from(mergedMap.values());
-    }
-    return subjectsArray;
-  }
-
-  return [];
-};
-
 export const areSubjectsMatching = (a: string, b: string): boolean => {
   if (!a || !b) return false;
   const normA = a.toUpperCase().trim().replace(/[^A-Z0-9]/g, '');
@@ -316,6 +133,284 @@ export const getSubjectSortWeight = (subjectName: string): number => {
   if (s.includes('DRAW') || s.includes('ART') || s.includes('CRAFT')) return 90;
   
   return 100;
+};
+
+// ──────────────────────────────────────────────────────────────────────────────
+// PERMANENT FIX: Normalize exam subjects to use REAL database subject IDs.
+// This prevents FK constraint violations and prevents creating duplicate subjects.
+// ──────────────────────────────────────────────────────────────────────────────
+const normalizeSubjectsToRealIds = async (subjects: any): Promise<any> => {
+  if (!subjects) return subjects;
+  
+  const subjectsObj = typeof subjects === 'string' ? JSON.parse(subjects) : subjects;
+  
+  if (!subjectsObj.classConfigs || !Array.isArray(subjectsObj.classConfigs)) return subjectsObj;
+  
+  const normalizedConfigs = await Promise.all(
+    subjectsObj.classConfigs.map(async (cfg: any) => {
+      const classId = cfg.classId;
+      if (!classId || !Array.isArray(cfg.subjects)) return cfg;
+
+      // Pre-fetch all real master subjects for this class
+      const classSubjects = await prisma.subject.findMany({ where: { classId } });
+      
+      const normalizedSubjects = await Promise.all(
+        cfg.subjects.map(async (sub: any) => {
+          if (!sub.name) return sub;
+          const subName = sub.name.trim();
+          
+          // Find real DB subject for this class (smart matching handles MATHS vs MATHEMATICS, etc.)
+          let realSubject = classSubjects.find(s => areSubjectsMatching(s.name, subName));
+          
+          if (!realSubject) {
+            realSubject = await prisma.subject.create({
+              data: {
+                name: subName,
+                code: subName.substring(0, 3).toUpperCase(),
+                classId,
+              }
+            });
+            classSubjects.push(realSubject);
+          }
+          
+          // Return subject with REAL database ID
+          return { ...sub, id: realSubject.id, name: realSubject.name };
+        })
+      );
+
+      // Always sort subjects in curriculum order
+      normalizedSubjects.sort((a: any, b: any) => {
+        const wA = getSubjectSortWeight(a.name);
+        const wB = getSubjectSortWeight(b.name);
+        if (wA !== wB) return wA - wB;
+        return (a.name || '').localeCompare(b.name || '');
+      });
+      
+      return { ...cfg, subjects: normalizedSubjects };
+    })
+  );
+  
+  // Also normalize globalSubjects if present
+  let normalizedGlobal = subjectsObj.globalSubjects;
+  
+  return { ...subjectsObj, classConfigs: normalizedConfigs, globalSubjects: normalizedGlobal };
+};
+
+export const create = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const { name, classIds, term, examDate, maxMarks, passingMarks, subjects, admitCardSettings } = req.body;
+
+    if (!classIds || !Array.isArray(classIds) || classIds.length === 0) {
+      return next(createError('Please provide at least one class', 400));
+    }
+
+    const uniqueClassIds = [...new Set(classIds)];
+
+    const classes = await prisma.class.findMany({ where: { id: { in: uniqueClassIds } } });
+    if (classes.length !== uniqueClassIds.length) {
+      return next(createError('One or more classes not found', 404));
+    }
+
+    // PERMANENT FIX: Normalize subjects to use real DB IDs before saving
+    const normalizedSubjects = subjects ? await normalizeSubjectsToRealIds(subjects) : (subjects || []);
+
+    // Create a single exam and link it to all selected classes
+    const exam = await prisma.exam.create({
+      data: {
+        name,
+        term: term || '',
+        examDate: new Date(examDate),
+        maxMarks: maxMarks || 100,
+        passingMarks: passingMarks || 40,
+        subjects: normalizedSubjects,
+        admitCardSettings: admitCardSettings || {},
+        classes: {
+          connect: uniqueClassIds.map(id => ({ id }))
+        }
+      },
+      include: {
+        classes: true
+      }
+    });
+
+    successResponse(res, [exam], 'Exam created', 201);
+  } catch (error: any) {
+    console.error("EXAM CREATE ERROR:", error);
+    next(error);
+  }
+};
+
+
+export const update = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  const id = req.params.id as string;
+  const { name, term, examDate, maxMarks, passingMarks, subjects, classIds, admitCardSettings } = req.body;
+
+  const existing = await prisma.exam.findUnique({ 
+    where: { id },
+    include: { classes: true }
+  });
+  if (!existing) return next(createError('Exam not found', 404));
+
+  // 1. Fetch all existing student marks for this exam to guarantee ZERO data loss
+  const existingMarks = await prisma.mark.findMany({
+    where: { examId: id },
+    include: {
+      student: { select: { id: true, classId: true } },
+      subject: { select: { id: true, name: true, code: true } }
+    }
+  });
+
+  // 2. Identify all classes and subjects that actually have student marks recorded
+  const examinedSubjectsByClass = new Map<string, Map<string, { id: string; name: string; maxMarks: number }>>();
+  existingMarks.forEach((m: any) => {
+    const cId = m.student?.classId;
+    if (!cId || !m.subject?.name) return;
+    if (!examinedSubjectsByClass.has(cId)) {
+      examinedSubjectsByClass.set(cId, new Map<string, { id: string; name: string; maxMarks: number }>());
+    }
+    const sName = m.subject.name.trim();
+    const sKey = sName.toUpperCase();
+    if (!examinedSubjectsByClass.get(cId)!.has(sKey)) {
+      examinedSubjectsByClass.get(cId)!.set(sKey, {
+        id: m.subject.id || m.subjectId,
+        name: sName,
+        maxMarks: Number(m.maxMarks) || Number(maxMarks) || Number(existing.maxMarks) || 50
+      });
+    }
+  });
+
+  // 3. Normalize subjects to use real DB IDs before saving
+  let finalSubjects = subjects !== undefined ? subjects : existing.subjects;
+  if (subjects !== undefined && subjects) {
+    try {
+      finalSubjects = await normalizeSubjectsToRealIds(subjects);
+    } catch (e) {
+      finalSubjects = subjects;
+    }
+  }
+
+  // 4. IRONCLAD GUARDIAN: Ensure examined subjects can NEVER be dropped, deleted, or overwritten
+  if (examinedSubjectsByClass.size > 0 && finalSubjects) {
+    if (typeof finalSubjects === 'object' && Array.isArray(finalSubjects.classConfigs)) {
+      examinedSubjectsByClass.forEach((subMap, cId) => {
+        let cfg = finalSubjects.classConfigs.find((c: any) => c.classId === cId);
+        if (!cfg) {
+          cfg = {
+            classId: cId,
+            className: '',
+            subjects: []
+          };
+          finalSubjects.classConfigs.push(cfg);
+        }
+        if (!Array.isArray(cfg.subjects)) cfg.subjects = [];
+
+        subMap.forEach((examSub) => {
+          const alreadyExists = cfg.subjects.some((s: any) => areSubjectsMatching(s.name, examSub.name) || s.id === examSub.id);
+          if (!alreadyExists) {
+            // Re-inject examined subject so student marks are NEVER orphaned or lost
+            cfg.subjects.push({
+              id: examSub.id,
+              name: examSub.name,
+              maxMarks: examSub.maxMarks,
+              date: examDate ? new Date(examDate).toISOString().split('T')[0] : (existing.examDate ? new Date(existing.examDate).toISOString().split('T')[0] : '')
+            });
+          }
+        });
+
+        // Always sort subjects in standard curriculum order: TEL, HIN, ENG, MAT, EVS/SCI, SOC
+        cfg.subjects.sort((a: any, b: any) => {
+          const wA = getSubjectSortWeight(a.name);
+          const wB = getSubjectSortWeight(b.name);
+          if (wA !== wB) return wA - wB;
+          return (a.name || '').localeCompare(b.name || '');
+        });
+      });
+    }
+  }
+
+  // 5. GUARDIAN: Protect classes that have student marks from being disconnected
+  let finalClassIds = classIds;
+  if (classIds && Array.isArray(classIds)) {
+    const examinedClassIds = Array.from(examinedSubjectsByClass.keys());
+    const missingClassIds = examinedClassIds.filter(cid => !classIds.includes(cid));
+    if (missingClassIds.length > 0) {
+      finalClassIds = [...new Set([...classIds, ...missingClassIds])];
+    }
+  }
+
+  const data: any = {
+    name, term,
+    examDate: examDate ? new Date(examDate) : undefined,
+    maxMarks, passingMarks,
+    subjects: finalSubjects,
+  };
+
+  if (admitCardSettings !== undefined) {
+    data.admitCardSettings = admitCardSettings;
+  }
+
+  if (finalClassIds && Array.isArray(finalClassIds)) {
+    data.classes = {
+      set: finalClassIds.map((cid: string) => ({ id: cid }))
+    };
+  }
+
+  const exam = await prisma.exam.update({
+    where: { id },
+    data,
+    include: { classes: true }
+  });
+  successResponse(res, exam, 'Exam updated');
+};
+
+export const deleteExam = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  const id = req.params.id as string;
+  const existing = await prisma.exam.findUnique({ where: { id } });
+  if (!existing) return next(createError('Exam not found', 404));
+
+  const markCount = await prisma.mark.count({ where: { examId: id } });
+  if (markCount > 0 && req.query.force !== 'true') {
+    return next(createError(`ఈ పరీక్షకు ఇప్పటికే ${markCount} మార్కులు నమోదై ఉన్నాయి! పొరపాటున డిలీట్ కాకుండా రక్షించబడింది. (Cannot delete exam with recorded marks)`, 400));
+  }
+
+  await prisma.mark.deleteMany({ where: { examId: id } });
+  await prisma.exam.delete({ where: { id } });
+  successResponse(res, null, 'Exam deleted');
+};
+
+export const getSubjectsForClassHelper = (subjectsConfig: any, classId?: string): any[] => {
+  if (!subjectsConfig) return [];
+  let subjectsArray = subjectsConfig;
+  if (typeof subjectsConfig === 'object' && !Array.isArray(subjectsConfig)) {
+    if (subjectsConfig.classConfigs && Array.isArray(subjectsConfig.classConfigs)) {
+      subjectsArray = subjectsConfig.classConfigs;
+    } else if (classId && Array.isArray(subjectsConfig[classId])) {
+      return subjectsConfig[classId];
+    } else {
+      subjectsArray = Object.values(subjectsConfig).flat();
+    }
+  }
+
+  if (Array.isArray(subjectsArray)) {
+    if (subjectsArray.length > 0 && (subjectsArray[0]?.classId || subjectsArray[0]?.className) && Array.isArray(subjectsArray[0]?.subjects)) {
+      if (classId) {
+        const found = subjectsArray.find((c: any) => c.classId === classId);
+        if (found) return found.subjects;
+      }
+      const mergedMap = new Map<string, any>();
+      subjectsArray.forEach((c: any) => {
+        (c.subjects || []).forEach((s: any) => {
+          if (s && s.name && !mergedMap.has(s.name.toUpperCase().trim())) {
+            mergedMap.set(s.name.toUpperCase().trim(), s);
+          }
+        });
+      });
+      return Array.from(mergedMap.values());
+    }
+    return subjectsArray;
+  }
+
+  return [];
 };
 
 export const getResults = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {

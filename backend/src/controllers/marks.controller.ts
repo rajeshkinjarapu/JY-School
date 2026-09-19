@@ -5,6 +5,7 @@ import { prisma } from '../utils/prisma';
 import { successResponse } from '../utils/response';
 import { calculateGrade } from '../utils/helpers';
 import { createSystemNotification } from './notifications.controller';
+import { areSubjectsMatching } from './exams.controller';
 import PDFDocument from 'pdfkit';
 
 export const getByStudent = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
@@ -147,31 +148,45 @@ export const bulkCreate = async (req: AuthRequest, res: Response, next: NextFunc
           resolvedFakeName = fakeSubject.name?.trim() || null;
           resolvedMaxMarks = fakeSubject.maxMarks ? Number(fakeSubject.maxMarks) : null;
           
-          // Level 3: Find real DB subject by name in same class
+          // Level 3: Find real DB subject by name in same class (smart alias matching)
           const matchingReal = realSubjects.find(
-            s => s.classId === classId && s.name.toLowerCase().trim() === (resolvedFakeName || '').toLowerCase().trim()
+            s => s.classId === classId && areSubjectsMatching(s.name, resolvedFakeName || '')
           );
           
           if (matchingReal) {
             realSubjectId = matchingReal.id;
           } else if (classId && resolvedFakeName) {
-             // AUTO-CREATE SUBJECT: If the subject is not found in master list, auto-create it to prevent blocking marks entry
-             const newSubject = await prisma.subject.create({
-               data: {
-                 name: resolvedFakeName,
-                 code: resolvedFakeName.toUpperCase().replace(/\s/g, '_').substring(0, 10),
-                 classId: classId
+             // Check if an alias already exists in this class in DB before creating duplicate
+             const existingAlias = await prisma.subject.findFirst({
+               where: {
+                 classId,
+                 name: { in: [resolvedFakeName, 'MATHS', 'MATHEMATICS', 'EVS', 'ENVIRONMENTAL SCIENCE', 'SCIENCE', 'GENERAL SCIENCE', 'SOCIAL', 'SOCIAL STUDIES'] }
                }
              });
-             realSubjects.push(newSubject);
-             realSubjectId = newSubject.id;
+             const foundAlias = existingAlias && areSubjectsMatching(existingAlias.name, resolvedFakeName) ? existingAlias : null;
+
+             if (foundAlias) {
+               realSubjectId = foundAlias.id;
+               realSubjects.push(foundAlias);
+             } else {
+               // AUTO-CREATE SUBJECT: If the subject is not found in master list, auto-create it to prevent blocking marks entry
+               const newSubject = await prisma.subject.create({
+                 data: {
+                   name: resolvedFakeName,
+                   code: resolvedFakeName.toUpperCase().replace(/\s/g, '_').substring(0, 10),
+                   classId: classId
+                 }
+               });
+               realSubjects.push(newSubject);
+               realSubjectId = newSubject.id;
+             }
           }
         } else {
           // Level 4b: sent ID not in exam subjects — check if it exists in any class
           const anyMatch = realSubjects.find(s => s.id === m.subjectId);
           if (anyMatch && classId) {
             const sameNameSameClass = realSubjects.find(
-              s => s.classId === classId && s.name.toLowerCase().trim() === anyMatch.name.toLowerCase().trim()
+              s => s.classId === classId && areSubjectsMatching(s.name, anyMatch.name)
             );
             if (sameNameSameClass) {
               realSubjectId = sameNameSameClass.id;
