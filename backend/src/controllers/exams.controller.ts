@@ -74,32 +74,54 @@ export const getById = async (req: AuthRequest, res: Response, next: NextFunctio
   successResponse(res, exam, 'Exam fetched');
 };
 
+export const getCanonicalSubjectName = (subjectName: string): string => {
+  if (!subjectName) return '';
+  const s = subjectName.toUpperCase().trim().replace(/[^A-Z0-9]/g, '');
+  
+  // 1. TELUGU (tel, telugu, TEL, TELUGU, etc.)
+  if (s.includes('TELUGU') || s.startsWith('TEL') || s.includes('FIRSTLANG')) return 'TELUGU';
+  
+  // 2. HINDI (hin, hindi, HIN, HINDI, etc.)
+  if (s.includes('HINDI') || s.startsWith('HIN') || s.includes('SECONDLANG')) return 'HINDI';
+  
+  // 3. ENGLISH (eng, english, ENG, ENGLISH, etc.)
+  if (s.includes('ENGLISH') || s.startsWith('ENG') || s.includes('THIRDLANG')) return 'ENGLISH';
+  
+  // 4. MATHEMATICS (mat, maths, math, mathematics, MATHEMATICSi, etc.)
+  if (s.includes('MATH') || s.startsWith('MAT')) return 'MATHEMATICS';
+  
+  // 5. EVS (evs, environmental science, etc.)
+  if (s === 'EVS' || s.includes('ENVIRONMENT')) return 'EVS';
+  
+  // 6. SCIENCES
+  if (s.includes('PHYSIC') || s.startsWith('PHY')) return 'PHYSICS';
+  if (s.includes('CHEMIS') || s.startsWith('CHE')) return 'CHEMISTRY';
+  if (s.includes('BIOLOG') || s.startsWith('BIO')) return 'BIOLOGY';
+  if (s.includes('SCIENCE') || s.startsWith('SCI')) return 'SCIENCE';
+  
+  // 7. SOCIAL (soc, social, social studies, etc.)
+  if (s.includes('SOC') || s.includes('SOCIAL')) return 'SOCIAL';
+  
+  // 8. COMPUTER / IT
+  if (s.includes('COMP') || s.includes('IT')) return 'COMPUTER';
+  
+  // 9. GENERAL KNOWLEDGE
+  if (s.includes('GK') || s.includes('GENERALKNOW') || s.includes('AWARENESS')) return 'GENERAL KNOWLEDGE';
+  
+  // 10. ART & CRAFT
+  if (s.includes('DRAW') || s.includes('ART') || s.includes('CRAFT')) return 'ART & CRAFT';
+  
+  return subjectName.trim().toUpperCase();
+};
+
 export const areSubjectsMatching = (a: string, b: string): boolean => {
   if (!a || !b) return false;
+  const canonA = getCanonicalSubjectName(a);
+  const canonB = getCanonicalSubjectName(b);
+  if (canonA && canonB && canonA === canonB) return true;
   const normA = a.toUpperCase().trim().replace(/[^A-Z0-9]/g, '');
   const normB = b.toUpperCase().trim().replace(/[^A-Z0-9]/g, '');
-  if (normA === normB) return true;
-
-  const aliases: [string, string][] = [
-    ['MATHS', 'MATHEMATICS'],
-    ['MATH', 'MATHEMATICS'],
-    ['MATH', 'MATHS'],
-    ['EVS', 'ENVIRONMENTALSTUDIES'],
-    ['EVS', 'ENVIRONMENTALSCIENCE'],
-    ['EVS', 'ENVIRONMENTSCIENCE'],
-    ['SCIENCE', 'GENERALSCIENCE'],
-    ['SOC', 'SOCIAL'],
-    ['SOC', 'SOCIALSTUDIES'],
-    ['SOCIAL', 'SOCIALSTUDIES'],
-    ['COMP', 'COMPUTER'],
-    ['COMP', 'COMPUTERSCIENCE'],
-    ['COMPUTERS', 'COMPUTER'],
-    ['TEL', 'TELUGU'],
-    ['HIN', 'HINDI'],
-    ['ENG', 'ENGLISH'],
-  ];
-
-  return aliases.some(([x, y]) => (normA === x && normB === y) || (normA === y && normB === x));
+  return normA === normB;
 };
 
 export const getSubjectSortWeight = (subjectName: string): number => {
@@ -137,7 +159,7 @@ export const getSubjectSortWeight = (subjectName: string): number => {
 
 // ──────────────────────────────────────────────────────────────────────────────
 // PERMANENT FIX: Normalize exam subjects to use REAL database subject IDs.
-// This prevents FK constraint violations and prevents creating duplicate subjects.
+// This prevents FK constraint violations and collapses all duplicate aliases.
 // ──────────────────────────────────────────────────────────────────────────────
 const normalizeSubjectsToRealIds = async (subjects: any): Promise<any> => {
   if (!subjects) return subjects;
@@ -154,31 +176,41 @@ const normalizeSubjectsToRealIds = async (subjects: any): Promise<any> => {
       // Pre-fetch all real master subjects for this class
       const classSubjects = await prisma.subject.findMany({ where: { classId } });
       
-      const normalizedSubjects = await Promise.all(
-        cfg.subjects.map(async (sub: any) => {
-          if (!sub.name) return sub;
-          const subName = sub.name.trim();
-          
-          // Find real DB subject for this class (smart matching handles MATHS vs MATHEMATICS, etc.)
-          let realSubject = classSubjects.find(s => areSubjectsMatching(s.name, subName));
-          
-          if (!realSubject) {
-            realSubject = await prisma.subject.create({
-              data: {
-                name: subName,
-                code: subName.substring(0, 3).toUpperCase(),
-                classId,
-              }
-            });
-            classSubjects.push(realSubject);
-          }
-          
-          // Return subject with REAL database ID
-          return { ...sub, id: realSubject.id, name: realSubject.name };
-        })
-      );
+      const seenCanonical = new Set<string>();
+      const normalizedSubjects: any[] = [];
 
-      // Always sort subjects in curriculum order
+      for (const sub of cfg.subjects) {
+        if (!sub || !sub.name) continue;
+        const canonicalName = getCanonicalSubjectName(sub.name);
+        
+        // Strictly prevent duplicate subjects for the same canonical name in the same class!
+        if (seenCanonical.has(canonicalName)) continue;
+        seenCanonical.add(canonicalName);
+
+        // Find real DB subject for this class
+        let realSubject = classSubjects.find(s => getCanonicalSubjectName(s.name) === canonicalName);
+        
+        if (!realSubject) {
+          realSubject = await prisma.subject.create({
+            data: {
+              name: canonicalName,
+              code: canonicalName.substring(0, 3).toUpperCase(),
+              classId,
+            }
+          });
+          classSubjects.push(realSubject);
+        } else if (realSubject.name !== canonicalName) {
+          // Normalize name in DB to canonical name
+          realSubject = await prisma.subject.update({
+            where: { id: realSubject.id },
+            data: { name: canonicalName, code: canonicalName.substring(0, 3).toUpperCase() }
+          });
+        }
+        
+        normalizedSubjects.push({ ...sub, id: realSubject.id, name: canonicalName });
+      }
+
+      // Always sort subjects in curriculum order: TEL, HIN, ENG, MAT, EVS/SCI, SOC
       normalizedSubjects.sort((a: any, b: any) => {
         const wA = getSubjectSortWeight(a.name);
         const wB = getSubjectSortWeight(b.name);
@@ -317,6 +349,17 @@ export const update = async (req: AuthRequest, res: Response, next: NextFunction
           }
         });
 
+        // Deduplicate subjects in cfg.subjects by canonical name so NO duplicate aliases exist!
+        const uniqueClassSubs = new Map<string, any>();
+        cfg.subjects.forEach((s: any) => {
+          if (!s || !s.name) return;
+          const cName = getCanonicalSubjectName(s.name);
+          if (!uniqueClassSubs.has(cName)) {
+            uniqueClassSubs.set(cName, { ...s, name: cName });
+          }
+        });
+        cfg.subjects = Array.from(uniqueClassSubs.values());
+
         // Always sort subjects in standard curriculum order: TEL, HIN, ENG, MAT, EVS/SCI, SOC
         cfg.subjects.sort((a: any, b: any) => {
           const wA = getSubjectSortWeight(a.name);
@@ -400,8 +443,11 @@ export const getSubjectsForClassHelper = (subjectsConfig: any, classId?: string)
       const mergedMap = new Map<string, any>();
       subjectsArray.forEach((c: any) => {
         (c.subjects || []).forEach((s: any) => {
-          if (s && s.name && !mergedMap.has(s.name.toUpperCase().trim())) {
-            mergedMap.set(s.name.toUpperCase().trim(), s);
+          if (s && s.name) {
+            const canon = getCanonicalSubjectName(s.name);
+            if (!mergedMap.has(canon)) {
+              mergedMap.set(canon, { ...s, name: canon });
+            }
           }
         });
       });
@@ -469,14 +515,14 @@ export const getResults = async (req: AuthRequest, res: Response, next: NextFunc
   const subjectMaxMap = new Map<string, number>();
   rawSubjects.forEach((sub: any, index: number) => {
     if (sub && sub.name) {
-      const key = sub.name.toUpperCase().trim();
+      const key = getCanonicalSubjectName(sub.name);
       subjectOrderMap.set(key, index);
       subjectMaxMap.set(key, Number(sub.maxMarks) || 100);
     }
   });
 
-  // Sort marks by createdAt so newer marks overwrite older marks (in case of duplicates)
-  const sortedMarks = [...exam.marks].sort((a: any, b: any) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+  // Sort marks by createdAt DESC so newest marks come first
+  const sortedMarks = [...exam.marks].sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   for (const mark of sortedMarks) {
     const key = mark.studentId;
     if (!studentMap.has(key)) {
@@ -497,44 +543,50 @@ export const getResults = async (req: AuthRequest, res: Response, next: NextFunc
       });
     }
     const entry = studentMap.get(key)!;
-    // Check if a mark for this subject (or alias like MATHS vs MATHEMATICS) already exists
-    const existingMarkIndex = entry.marks.findIndex(m => areSubjectsMatching(m.subject, mark.subject.name));
     
-    const subKey = mark.subject.name.toUpperCase().trim();
+    // Canonicalize subject name (MAT, MATHS, MATHEMATICS -> MATHEMATICS; TEL, TELUGU -> TELUGU)
+    const canonicalName = getCanonicalSubjectName(mark.subject.name);
+    
+    // Check if a mark for this canonical subject already exists in entry.marks
+    const existingMarkIndex = entry.marks.findIndex(m => getCanonicalSubjectName(m.subject) === canonicalName);
+    
+    if (existingMarkIndex !== -1) {
+      // Since we sorted by createdAt DESC, the existing mark is NEWER than the current one.
+      // We just ignore this older duplicate mark.
+      continue;
+    }
+
     const studentClassId = mark.student.classId || (classId as string);
     const studentClassSubjects = getSubjectsForClassHelper(exam.subjects, studentClassId);
 
     let actualMax = 50;
-    // 1. Primary ground truth: maxMarks stored directly on the Mark record itself
-    if (mark.maxMarks && Number(mark.maxMarks) > 0 && Number(mark.maxMarks) <= 200) {
+    const foundSub = studentClassSubjects.find((s: any) => getCanonicalSubjectName(s.name) === canonicalName);
+    const matchingGlobalMax = Array.from(subjectMaxMap.entries()).find(([k]) => k === canonicalName);
+
+    if (foundSub && Number(foundSub.maxMarks) > 0) {
+      actualMax = Number(foundSub.maxMarks);
+    } else if (matchingGlobalMax && matchingGlobalMax[1] > 0) {
+      actualMax = matchingGlobalMax[1];
+    } else if (mark.maxMarks && Number(mark.maxMarks) > 0 && Number(mark.maxMarks) <= 200) {
       actualMax = Number(mark.maxMarks);
     } else {
-      // 2. Secondary fallback: classSpecific subjects config or exam subjects with alias matching
-      const foundSub = studentClassSubjects.find((s: any) => areSubjectsMatching(s.name, subKey));
-      if (foundSub && Number(foundSub.maxMarks) > 0) {
-        actualMax = Number(foundSub.maxMarks);
-      } else {
-        const matchingGlobalMax = Array.from(subjectMaxMap.entries()).find(([k]) => areSubjectsMatching(k, subKey));
-        if (matchingGlobalMax && matchingGlobalMax[1] > 0) {
-          actualMax = matchingGlobalMax[1];
-        } else {
-          actualMax = 50;
-        }
-      }
+      actualMax = 50;
     }
     if (actualMax <= 0) actualMax = 50;
 
-    if (existingMarkIndex !== -1) {
-      const oldObtained = entry.marks[existingMarkIndex].obtained === 'AB' ? 0 : entry.marks[existingMarkIndex].obtained;
-      entry.total = entry.total - oldObtained + (mark.remarks === 'AB' ? 0 : mark.marksObtained);
-      entry.marks[existingMarkIndex] = { subject: mark.subject.name, obtained: mark.remarks === 'AB' ? 'AB' : mark.marksObtained, max: actualMax, grade: mark.grade, remarks: mark.remarks };
-    } else {
-      entry.marks.push({ subject: mark.subject.name, obtained: mark.remarks === 'AB' ? 'AB' : mark.marksObtained, max: actualMax, grade: mark.grade, remarks: mark.remarks });
-      entry.total += (mark.remarks === 'AB' ? 0 : mark.marksObtained);
-    }
+    const obtainedVal = mark.remarks === 'AB' ? 'AB' : mark.marksObtained;
+
+    entry.marks.push({
+      subject: canonicalName,
+      obtained: obtainedVal,
+      max: actualMax,
+      grade: mark.grade,
+      remarks: mark.remarks
+    });
+    entry.total += (obtainedVal === 'AB' ? 0 : Number(obtainedVal) || 0);
   }
 
-  // Pre-calculate the set of all subjects actually taken by at least one student in each class
+  // Pre-calculate the set of all canonical subjects actually taken by at least one student in each class
   const classTakenSubjectsMap = new Map<string, Set<string>>();
   exam.marks.forEach((m: any) => {
     const cId = m.student?.classId || (classId as string);
@@ -542,7 +594,7 @@ export const getResults = async (req: AuthRequest, res: Response, next: NextFunc
     if (!classTakenSubjectsMap.has(cId)) {
       classTakenSubjectsMap.set(cId, new Set<string>());
     }
-    classTakenSubjectsMap.get(cId)!.add(m.subject.name.toUpperCase().trim());
+    classTakenSubjectsMap.get(cId)!.add(getCanonicalSubjectName(m.subject.name));
   });
 
   const results = Array.from(studentMap.values()).map((s) => {
@@ -552,24 +604,31 @@ export const getResults = async (req: AuthRequest, res: Response, next: NextFunc
     // Populate missing subjects with AB only if the subject was ACTUALLY taken by this class!
     const studentClassSubjects = getSubjectsForClassHelper(exam.subjects, targetClassId);
     if (studentClassSubjects && studentClassSubjects.length > 0) {
+      const classCanonicalMap = new Map<string, any>();
       studentClassSubjects.forEach((sub: any) => {
         const subName = sub.name?.trim();
         if (!subName) return;
+        const cName = getCanonicalSubjectName(subName);
+        if (!classCanonicalMap.has(cName)) {
+          classCanonicalMap.set(cName, { ...sub, canonicalName: cName });
+        }
+      });
 
+      classCanonicalMap.forEach((sub, cName) => {
         // If this class has taken any exams, verify this subject was taken by someone in this class
         if (takenInThisClass.size > 0) {
-          const isTaken = Array.from(takenInThisClass).some(taken => areSubjectsMatching(taken, subName));
+          const isTaken = takenInThisClass.has(cName);
           if (!isTaken) {
-            // Phantom subject for this class (e.g. SCIENCE in primary class that took EVS). Skip!
+            // Phantom subject for this class (e.g. SCIENCE in class taking EVS). Skip!
             return;
           }
         }
 
-        // Check if student already has marks for this subject (considering aliases)
-        const hasMark = s.marks.some(m => areSubjectsMatching(m.subject, subName));
+        // Check if student already has marks for this canonical subject
+        const hasMark = s.marks.some(m => getCanonicalSubjectName(m.subject) === cName);
         if (!hasMark) {
           s.marks.push({
-            subject: subName,
+            subject: cName,
             obtained: 'AB',
             max: Number(sub.maxMarks) || 50,
             grade: 'F',
@@ -579,6 +638,8 @@ export const getResults = async (req: AuthRequest, res: Response, next: NextFunc
       });
     }
 
+
+
     s.marks.sort((a, b) => {
       const weightA = getSubjectSortWeight(a.subject);
       const weightB = getSubjectSortWeight(b.subject);
@@ -586,7 +647,8 @@ export const getResults = async (req: AuthRequest, res: Response, next: NextFunc
       return a.subject.localeCompare(b.subject);
     });
     
-    // Sum total max marks for only the subjects this student actually has in mark sheet
+    // Recalculate true total and total max marks for only the deduplicated subjects
+    s.total = s.marks.reduce((sum, m) => sum + (m.obtained === 'AB' ? 0 : Number(m.obtained) || 0), 0);
     const totalMax = s.marks.reduce((sum, m) => sum + (m.max > 0 ? m.max : 50), 0);
     const rawPercentage = totalMax > 0 ? (s.total / totalMax) * 100 : 0;
     const percentage = Math.min(100, parseFloat(rawPercentage.toFixed(2)));

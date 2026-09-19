@@ -140,11 +140,17 @@ app.use('*', (_req, res) => {
 // Global error handler
 app.use(errorHandler);
 
+import { autoCleanDuplicateSubjectsAndMarks } from './utils/cleanupDuplicateSubjects';
+
 const PORT = parseInt(process.env.PORT || '5000', 10);
 if (!process.env.VERCEL) {
   httpServer.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 JY School SMS Backend running on http://0.0.0.0:${PORT}`);
     console.log(`📱 Environment: ${process.env.NODE_ENV}`);
+    // Run subject and mark deduplication in background on boot
+    autoCleanDuplicateSubjectsAndMarks().catch(err => {
+      console.error('Failed autoCleanDuplicateSubjectsAndMarks:', err);
+    });
   });
 }
 

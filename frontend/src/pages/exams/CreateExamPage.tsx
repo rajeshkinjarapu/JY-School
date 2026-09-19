@@ -5,7 +5,7 @@ import toast from 'react-hot-toast';
 import api from '../../api/axios';
 import { PageHeader } from '../../components/UI/PageHeader';
 import { sortClasses, getClassOrderIndex } from '../../utils/sortClasses';
-import { getSubjectSortWeight } from './ResultsTab';
+import { getSubjectSortWeight, getCanonicalSubjectName } from './ResultsTab';
 
 interface ClassSubjectConfig {
   classId: string;
@@ -72,6 +72,7 @@ export const CreateExamPage: React.FC = () => {
         }
 
         // Group existing marks by student's classId (Ground truth of what was actually examined!)
+        // Group existing marks by student's classId (Ground truth of what was actually examined!)
         const marksByClass: { [classId: string]: Map<string, { id: string; name: string; maxMarks: number; date?: string }> } = {};
         if (Array.isArray(fullExam?.marks) && fullExam.marks.length > 0) {
           fullExam.marks.forEach((m: any) => {
@@ -79,11 +80,11 @@ export const CreateExamPage: React.FC = () => {
             if (!cId || !m.subject?.name) return;
             if (!marksByClass[cId]) marksByClass[cId] = new Map();
             const sName = m.subject.name.trim();
-            const sKey = sName.toUpperCase();
+            const sKey = getCanonicalSubjectName(sName);
             if (!marksByClass[cId].has(sKey)) {
               marksByClass[cId].set(sKey, {
                 id: m.subject.id || m.subjectId,
-                name: sName,
+                name: sKey,
                 maxMarks: Number(m.maxMarks) || Number(fullExam.maxMarks) || 50,
                 date: fullExam.examDate ? new Date(fullExam.examDate).toISOString().split('T')[0] : examDate
               });
@@ -106,10 +107,12 @@ export const CreateExamPage: React.FC = () => {
           
           // 1. If marks exist for this class, that is 100% verified ground truth!
           if (marksByClass[cId] && marksByClass[cId].size > 0) {
+            const subs = Array.from(marksByClass[cId].values());
+            subs.sort((a, b) => getSubjectSortWeight(a.name) - getSubjectSortWeight(b.name));
             cfgMap[cId] = {
               classId: cId,
               className: clsName,
-              subjects: Array.from(marksByClass[cId].values())
+              subjects: subs
             };
             return;
           }
@@ -127,7 +130,20 @@ export const CreateExamPage: React.FC = () => {
 
               // If it's not the generic 4 defaults, or if master db has no subjects, trust it
               if (!isCorruptedDefaultFour || masterClassSubs.length === 0) {
-                cfgMap[cId] = savedCfg;
+                const dedupedSubs: any[] = [];
+                const seen = new Set<string>();
+                savedCfg.subjects.forEach((s: any) => {
+                  const canon = getCanonicalSubjectName(s.name);
+                  if (!seen.has(canon)) {
+                    seen.add(canon);
+                    dedupedSubs.push({ ...s, name: canon });
+                  }
+                });
+                dedupedSubs.sort((a, b) => getSubjectSortWeight(a.name) - getSubjectSortWeight(b.name));
+                cfgMap[cId] = {
+                  ...savedCfg,
+                  subjects: dedupedSubs
+                };
                 return;
               }
             }
@@ -136,30 +152,50 @@ export const CreateExamPage: React.FC = () => {
           // 3. Fallback: Load real school master subjects configured for this class!
           const dbSubsForClass = masterDbSubjects.filter((s: any) => s.classId === cId);
           if (dbSubsForClass.length > 0) {
+            const dedupedDbSubs: any[] = [];
+            const seenDb = new Set<string>();
+            dbSubsForClass.forEach((s: any) => {
+              const canon = getCanonicalSubjectName(s.name);
+              if (!seenDb.has(canon)) {
+                seenDb.add(canon);
+                dedupedDbSubs.push({
+                  id: s.id,
+                  name: canon,
+                  maxMarks: Number(fullExam?.maxMarks) || 50,
+                  date: fullExam?.examDate ? new Date(fullExam.examDate).toISOString().split('T')[0] : examDate
+                });
+              }
+            });
+            dedupedDbSubs.sort((a, b) => getSubjectSortWeight(a.name) - getSubjectSortWeight(b.name));
             cfgMap[cId] = {
               classId: cId,
               className: clsName,
-              subjects: dbSubsForClass.map((s: any) => ({
-                id: s.id,
-                name: s.name,
-                maxMarks: Number(fullExam?.maxMarks) || 50,
-                date: fullExam?.examDate ? new Date(fullExam.examDate).toISOString().split('T')[0] : examDate
-              }))
+              subjects: dedupedDbSubs
             };
             return;
           }
 
           // 4. If old exam had flat array of subjects
           if (Array.isArray(parsedSubjects) && parsedSubjects.length > 0) {
+            const dedupedOldSubs: any[] = [];
+            const seenOld = new Set<string>();
+            parsedSubjects.forEach((s: any) => {
+              const canon = getCanonicalSubjectName(s.name);
+              if (!seenOld.has(canon)) {
+                seenOld.add(canon);
+                dedupedOldSubs.push({
+                  id: s.id || Date.now().toString() + Math.random(),
+                  name: canon,
+                  maxMarks: s.maxMarks || 50,
+                  date: s.date || examDate
+                });
+              }
+            });
+            dedupedOldSubs.sort((a, b) => getSubjectSortWeight(a.name) - getSubjectSortWeight(b.name));
             cfgMap[cId] = {
               classId: cId,
               className: clsName,
-              subjects: parsedSubjects.map((s: any) => ({
-                id: s.id || Date.now().toString() + Math.random(),
-                name: s.name,
-                maxMarks: s.maxMarks || 50,
-                date: s.date || examDate
-              }))
+              subjects: dedupedOldSubs
             };
             return;
           }
@@ -455,65 +491,6 @@ export const CreateExamPage: React.FC = () => {
     toast.success(`Applied ${bulkMarksInput} Max Marks to ALL assigned classes!`);
   };
 
-  const handleLoadSchoolSubjectsForClass = async (classId: string) => {
-    try {
-      const res = await api.get(`/api/subjects?classId=${classId}&limit=500`);
-      const subs = res.data?.data || res.data || [];
-      if (!subs || subs.length === 0) {
-        toast.error('ఈ తరగతికి స్కూల్ డేటాబేస్ లో సబ్జెక్టులు లేవు (No subjects found in Master Database)');
-        return;
-      }
-      setClassConfigs(prev => ({
-        ...prev,
-        [classId]: {
-          ...prev[classId],
-          subjects: subs.map((s: any) => ({
-            id: s.id,
-            name: s.name,
-            maxMarks: bulkMarksInput || 50,
-            date: examDate
-          }))
-        }
-      }));
-      toast.success(`${subs.length} స్కూల్ సబ్జెక్టులు లోడ్ చేయబడ్డాయి!`);
-    } catch {
-      toast.error('సబ్జెక్టులు లోడ్ చేయడం విఫలమైంది');
-    }
-  };
-
-  const handleRestoreFromMarksForClass = (classId: string) => {
-    if (!fullExamMarks || fullExamMarks.length === 0) {
-      toast.error('ఈ ఎగ్జామ్ కి ఇంకా మార్కులు ఎంటర్ చేయలేదు (No marks entered yet)');
-      return;
-    }
-    const marksForClass = fullExamMarks.filter((m: any) => m.student?.classId === classId);
-    if (marksForClass.length === 0) {
-      toast.error('ఈ తరగతి విద్యార్థులకు మార్కులు కనిపించలేదు');
-      return;
-    }
-    const distinctSubs = new Map<string, any>();
-    marksForClass.forEach((m: any) => {
-      if (!m.subject?.name) return;
-      const k = m.subject.name.toUpperCase().trim();
-      if (!distinctSubs.has(k)) {
-        distinctSubs.set(k, {
-          id: m.subject.id || m.subjectId,
-          name: m.subject.name,
-          maxMarks: Number(m.maxMarks) || 50,
-          date: examDate
-        });
-      }
-    });
-    setClassConfigs(prev => ({
-      ...prev,
-      [classId]: {
-        ...prev[classId],
-        subjects: Array.from(distinctSubs.values())
-      }
-    }));
-    toast.success(`${distinctSubs.size} అసలైన సబ్జెక్టులు మార్కుల నుండి రికవర్ చేయబడ్డాయి!`);
-  };
-
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'signature' | 'teacherSignature' | 'logo') => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -556,20 +533,39 @@ export const CreateExamPage: React.FC = () => {
       return;
     }
 
-    // Build payload
-    const classConfigsList = Object.values(classConfigs);
+    // Build payload with canonicalized and deduplicated subjects
+    const classConfigsList = Object.values(classConfigs).map((cfg: any) => {
+      const deduped: any[] = [];
+      const seen = new Set<string>();
+      (cfg.subjects || []).forEach((s: any) => {
+        if (!s.name) return;
+        const canon = getCanonicalSubjectName(s.name);
+        if (!seen.has(canon)) {
+          seen.add(canon);
+          deduped.push({ ...s, name: canon });
+        }
+      });
+      deduped.sort((a, b) => getSubjectSortWeight(a.name) - getSubjectSortWeight(b.name));
+      return {
+        ...cfg,
+        subjects: deduped
+      };
+    });
     
     // Flatten subjects for legacy fallback
     const mergedSubjectsMap = new Map<string, { id: string; name: string; maxMarks: number; date?: string }>();
     classConfigsList.forEach((cfg) => {
       cfg.subjects.forEach((s) => {
-        if (s.name && !mergedSubjectsMap.has(s.name.toUpperCase().trim())) {
-          mergedSubjectsMap.set(s.name.toUpperCase().trim(), s);
+        const can = getCanonicalSubjectName(s.name);
+        if (can && !mergedSubjectsMap.has(can)) {
+          mergedSubjectsMap.set(can, { ...s, name: can });
         }
       });
     });
 
-    const fallbackGlobalSubjects = Array.from(mergedSubjectsMap.values());
+    const fallbackGlobalSubjects = Array.from(mergedSubjectsMap.values()).sort(
+      (a, b) => getSubjectSortWeight(a.name) - getSubjectSortWeight(b.name)
+    );
     const finalSubjectsPayload = {
       classConfigs: classConfigsList,
       globalSubjects: fallbackGlobalSubjects
@@ -862,24 +858,6 @@ export const CreateExamPage: React.FC = () => {
                             </p>
                           </div>
                           <div className="flex flex-wrap items-center gap-2">
-                            <button
-                              type="button"
-                              onClick={() => handleLoadSchoolSubjectsForClass(activeClassTab)}
-                              className="bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 px-2.5 py-1.5 rounded-lg text-[11px] font-black shadow-sm flex items-center gap-1"
-                              title="స్కూల్ మాస్టర్ డేటాబేస్ నుండి ఈ తరగతి అసలైన సబ్జెక్టులను లోడ్ చేయండి"
-                            >
-                              <RefreshCw className="w-3.5 h-3.5" /> స్కూల్ సబ్జెక్టులు (DB)
-                            </button>
-                            {fullExamMarks && fullExamMarks.length > 0 && (
-                              <button
-                                type="button"
-                                onClick={() => handleRestoreFromMarksForClass(activeClassTab)}
-                                className="bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 px-2.5 py-1.5 rounded-lg text-[11px] font-black shadow-sm flex items-center gap-1"
-                                title="విద్యార్థుల మార్కుల నుండి అసలైన సబ్జెక్టులను రికవర్ చేయండి"
-                              >
-                                <FileText className="w-3.5 h-3.5" /> మార్కుల నుండి రికవర్
-                              </button>
-                            )}
                             <button
                               type="button"
                               onClick={() => handleCopyClassConfigToAll(activeClassTab)}

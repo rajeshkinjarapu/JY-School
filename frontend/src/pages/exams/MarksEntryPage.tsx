@@ -5,6 +5,7 @@ import { LoadingSpinner } from '../../components/UI/LoadingSpinner';
 import { ArrowLeft, Save, Filter, BookOpen, User, CheckCircle2, Lock, Trash2, Unlock } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../hooks/useAuth';
+import { getCanonicalSubjectName, getSubjectSortWeight } from './ResultsTab';
 
 export const MarksEntryPage: React.FC = () => {
   const { id } = useParams();
@@ -68,36 +69,54 @@ export const MarksEntryPage: React.FC = () => {
         examSubjects = examObj.subjects;
       }
 
-      // *** KEY FIX: Replace fake subject IDs with real DB subject IDs ***
+      // *** CRITICAL FIX: Canonicalize + deduplicate subjects before use ***
+      const canonMap = new Map<string, any>();
+      examSubjects.forEach((s: any) => {
+        if (!s.name) return;
+        const canon = getCanonicalSubjectName(s.name);
+        if (!canonMap.has(canon)) canonMap.set(canon, { ...s, name: canon });
+      });
+      examSubjects = Array.from(canonMap.values()).sort(
+        (a, b) => getSubjectSortWeight(a.name) - getSubjectSortWeight(b.name)
+      );
+
+      // Replace fake subject IDs with real DB subject IDs (match by canonical name)
       try {
         const realSubjectsRes = await api.get(`/api/subjects?classId=${classId}&limit=500`);
         const realDbSubjects: any[] = realSubjectsRes.data?.data || realSubjectsRes.data || [];
         examSubjects = examSubjects.map((examSub: any) => {
-          const examSubName = examSub.name?.toLowerCase()?.trim() ?? '';
+          const examCanon = getCanonicalSubjectName(examSub.name);
           const realMatch = realDbSubjects.find(
-            (rs: any) => rs.name?.toLowerCase()?.trim() === examSubName
+            (rs: any) => getCanonicalSubjectName(rs.name) === examCanon
           );
           if (realMatch) {
-            return { ...examSub, id: realMatch.id };
+            return { ...examSub, id: realMatch.id, name: examCanon };
           }
-          return examSub;
+          return { ...examSub, name: examCanon };
         });
       } catch (e) { /* ignore errors, use original subjects */ }
 
       setSubjects(examSubjects);
 
 
-      // Map existing marks
+      // Map existing marks using canonical subject name matching
       const flatMarks = marksRes.data || [];
       const initialMarks: { [key: string]: number | string } = {};
       const initialRemarks: { [key: string]: string } = {};
 
       flatMarks.forEach((m: any) => {
-        if (m.student?.classId === classId) { 
-          const fakeSub = examSubjects.find((s: any) => s.name?.toLowerCase() === m.subject?.name?.toLowerCase());
-          const fakeSubId = fakeSub ? fakeSub.id : m.subjectId;
-          initialMarks[`${m.studentId}_${fakeSubId}`] = m.remarks === 'AB' ? 'AB' : m.marksObtained;
-          initialRemarks[`${m.studentId}_${fakeSubId}`] = m.remarks || '';
+        // Accept marks for this class (classId match) OR if classId missing on response, still accept (exam-scoped)
+        const studentClassId = m.student?.classId;
+        if (studentClassId && studentClassId !== classId) return; // skip marks from OTHER classes only
+        
+        const markCanon = getCanonicalSubjectName(m.subject?.name || '');
+        const fakeSub = examSubjects.find((s: any) => getCanonicalSubjectName(s.name) === markCanon);
+        const fakeSubId = fakeSub ? fakeSub.id : m.subjectId;
+        const key = `${m.studentId}_${fakeSubId}`;
+        // Only set if not already set (take first occurrence)
+        if (!(key in initialMarks)) {
+          initialMarks[key] = m.remarks === 'AB' ? 'AB' : m.marksObtained;
+          initialRemarks[key] = m.remarks || '';
         }
       });
 

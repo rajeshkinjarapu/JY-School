@@ -1,5 +1,38 @@
 # Project State: JY School ERP
 
+- **Exam Max Marks (35M) & Subject Duplicate Marks Resolution (2026-09-19)**:
+  - **Dynamic Max Marks Priority Fix (`backend/src/controllers/exams.controller.ts`)**:
+    - Identified a bug where `mark.maxMarks` (saved in DB) was overriding the live exam configuration. If admin edited the exam max marks to 35 AFTER marks were entered, it still showed the old 50 max marks.
+    - Swapped priority logic: `actualMax` now strictly checks the latest `exam.subjects` config first. If admin configures 35 marks, it will forcefully override any old `mark.maxMarks` stored in DB, resolving the "Telugu, English, Maths showing wrong max marks" issue completely.
+  - **Latest Marks Priority Fix (`backend/src/controllers/exams.controller.ts`)**:
+    - Replaced the flawed "highest marks priority" logic which wrongly forced older incorrect marks to persist if they were numerically higher.
+    - Simplified the deduplication logic: Marks are sorted by `createdAt DESC`, and any older duplicate mark is immediately ignored.
+    - System now correctly reflects the absolute latest teacher entry regardless of mark value, resolving the data mismatch issue from 6th to 10th class.
+    - Removed redundant second deduplication loop for performance and accuracy.
+  - **Canonical Subject Deduplication**:
+    - Merges aliases (`MATHEMATICS`, `MATHS`, `MAT` → `MATHEMATICS`; `TELUGU`, `TEL` → `TELUGU`) into single standardized columns across all classes.
+  - **Dynamic Max Marks Allocation**:
+    - Respects exam-level / class-level / subject-level max marks (35M for user's FA exam) without forcing arbitrary default values.
+
+- **Subject Deduplication & Restore Buttons Removal COMPLETED (2026-09-19)**:
+  - **Restore Buttons Removed (`frontend/src/pages/exams/CreateExamPage.tsx`)**:
+    - Removed `🔄 స్కూల్ సబ్జెక్టులు (DB)` button.
+    - Removed `📋 మార్కుల నుండి రికవర్` button.
+    - Removed `handleLoadSchoolSubjectsForClass` and `handleRestoreFromMarksForClass` functions.
+    - System now automatically canonicalizes and deduplicates subjects silently on every load/save.
+  - **Canonical Subject Names Enforced in `CreateExamPage.tsx`**:
+    - Added `getCanonicalSubjectName` import. All subject names (from marks, DB, savedCfg, old arrays) are canonicalized on load.
+    - When saving, classConfigs subjects are canonicalized, deduplicated, and sorted in curriculum order.
+    - `MAT/MATHS/MATHEMATICS/MATHEMATICSi` → `MATHEMATICS`; `TEL/TELUGU` → `TELUGU`; etc. (fully automatic).
+  - **Canonical Names in `MarksEntryPage.tsx`**:
+    - Subjects loaded from exam JSON are canonicalized + deduplicated + sorted before rendering.
+    - Existing marks are mapped using canonical name matching, preventing duplicate/missing marks display.
+  - **Canonical Names Enforced in `backend/marks.controller.ts`**:
+    - `getCanonicalSubjectName` imported. Level 3 and Level 4b subject resolution uses canonical names.
+    - New subjects auto-created with canonical names (no more `MATHS`, always `MATHEMATICS`).
+  - **FK Safety in `cleanupDuplicateSubjects.ts`**:
+    - Before deleting a duplicate subject, all related records (ExamPlan, ClassSubjectTeacher, Timetable, OnlineExam, CompetitiveExam, QuestionPaper, SlipTest, Homework, Substitute, MasterQuestion) are repointed to primary subject to prevent FK constraint errors.
+
 - **Permanent Ironclad Safeguards for Exam Subjects & Marks (2026-09-19)**:
   - **Zero-Loss Backend Guardian (`backend/src/controllers/exams.controller.ts`)**:
     - In `update`, the backend checks `prisma.mark.findMany({ where: { examId: id } })`.

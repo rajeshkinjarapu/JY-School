@@ -8,6 +8,46 @@ import toast from 'react-hot-toast';
 import { LoadingSpinner } from '../../components/UI/LoadingSpinner';
 import { useAuth } from '../../hooks/useAuth';
 
+export const getCanonicalSubjectName = (subjectName: string): string => {
+  if (!subjectName) return '';
+  const s = subjectName.toUpperCase().trim().replace(/[^A-Z0-9]/g, '');
+  
+  // 1. TELUGU (tel, telugu, TEL, TELUGU, etc.)
+  if (s.includes('TELUGU') || s.startsWith('TEL') || s.includes('FIRSTLANG')) return 'TELUGU';
+  
+  // 2. HINDI (hin, hindi, HIN, HINDI, etc.)
+  if (s.includes('HINDI') || s.startsWith('HIN') || s.includes('SECONDLANG')) return 'HINDI';
+  
+  // 3. ENGLISH (eng, english, ENG, ENGLISH, etc.)
+  if (s.includes('ENGLISH') || s.startsWith('ENG') || s.includes('THIRDLANG')) return 'ENGLISH';
+  
+  // 4. MATHEMATICS (mat, maths, math, mathematics, MATHEMATICSi, etc.)
+  if (s.includes('MATH') || s.startsWith('MAT')) return 'MATHEMATICS';
+  
+  // 5. EVS (evs, environmental science, etc.)
+  if (s === 'EVS' || s.includes('ENVIRONMENT')) return 'EVS';
+  
+  // 6. SCIENCES
+  if (s.includes('PHYSIC') || s.startsWith('PHY')) return 'PHYSICS';
+  if (s.includes('CHEMIS') || s.startsWith('CHE')) return 'CHEMISTRY';
+  if (s.includes('BIOLOG') || s.startsWith('BIO')) return 'BIOLOGY';
+  if (s.includes('SCIENCE') || s.startsWith('SCI')) return 'SCIENCE';
+  
+  // 7. SOCIAL (soc, social, social studies, etc.)
+  if (s.includes('SOC') || s.includes('SOCIAL')) return 'SOCIAL';
+  
+  // 8. COMPUTER / IT
+  if (s.includes('COMP') || s.includes('IT')) return 'COMPUTER';
+  
+  // 9. GENERAL KNOWLEDGE
+  if (s.includes('GK') || s.includes('GENERALKNOW') || s.includes('AWARENESS')) return 'GENERAL KNOWLEDGE';
+  
+  // 10. ART & CRAFT
+  if (s.includes('DRAW') || s.includes('ART') || s.includes('CRAFT')) return 'ART & CRAFT';
+  
+  return subjectName.trim().toUpperCase();
+};
+
 export const getSubjectSortWeight = (subjectName: string): number => {
   if (!subjectName) return 999;
   const s = subjectName.toUpperCase().trim().replace(/[^A-Z0-9]/g, '');
@@ -76,26 +116,39 @@ export const ResultsTab: React.FC<{ exams: any[] }> = ({ exams }) => {
     title: 'EXAMINATION RESULTS SUMMARY',
     examName: '',
     subtitle: '',
-    date: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+    date: new Date().toLocaleDateString('en-GB')
   });
+
+  useEffect(() => {
+    if (searchParams.get('examId')) {
+      setSelectedExamId(searchParams.get('examId')!);
+    }
+  }, [searchParams]);
 
   const toggleRow = (id: string) => setExpandedRow(prev => prev === id ? null : id);
 
   const selectedExam = exams.find(e => e.id === selectedExamId);
 
   useEffect(() => {
+    if (selectedExam && !selectedClassId && selectedExam.classes?.length > 0) {
+      const sorted = sortClasses(selectedExam.classes);
+      setSelectedClassId(sorted[0].id);
+    }
+  }, [selectedExamId]);
+
+  useEffect(() => {
+    if (!selectedExamId) return;
     const fetchResults = async () => {
-      if (!selectedExamId || !selectedClassId) {
-        setResults([]);
-        return;
-      }
       setLoading(true);
       try {
-        const res = await api.get(`/api/exams/${selectedExamId}/results?classId=${selectedClassId}`);
-        setResults(res.data?.data || res.data || []);
-      } catch (e: any) {
-        console.error(e);
-        toast.error('Failed to load results');
+        const url = selectedClassId 
+          ? `/api/exams/${selectedExamId}/results?classId=${selectedClassId}`
+          : `/api/exams/${selectedExamId}/results`;
+        const res: any = await api.get(url);
+        const data = res.data?.data || res.data || [];
+        setResults(data);
+      } catch (err: any) {
+        toast.error('Failed to fetch results');
       } finally {
         setLoading(false);
       }
@@ -103,17 +156,20 @@ export const ResultsTab: React.FC<{ exams: any[] }> = ({ exams }) => {
     fetchResults();
   }, [selectedExamId, selectedClassId]);
 
-  // Collect all unique subjects and sort strictly by standard curriculum weight (TEL, HIN, ENG, MAT, EVS/SCI, SOC)
-  const allSubjectsSet = new Set<string>();
+  // Collect all unique CANONICAL subjects so MAT, MATHS, MATHEMATICS collapse into ONE column "MATHEMATICS"!
+  const canonicalMap = new Map<string, string>();
   results.forEach(student => {
     student.marks?.forEach((m: any) => {
       if (m.subject?.trim()) {
-        allSubjectsSet.add(m.subject.trim().toUpperCase());
+        const canon = getCanonicalSubjectName(m.subject);
+        if (!canonicalMap.has(canon)) {
+          canonicalMap.set(canon, canon);
+        }
       }
     });
   });
-  const masterSubjects = Array.from(allSubjectsSet)
-    .filter(Boolean)
+
+  const masterSubjects = Array.from(canonicalMap.values())
     .sort((a, b) => getSubjectSortWeight(a) - getSubjectSortWeight(b))
     .map(subject => ({ subject, obtained: 0 }));
 
@@ -231,7 +287,7 @@ export const ResultsTab: React.FC<{ exams: any[] }> = ({ exams }) => {
           student.name,
           student.rollNo || '-',
           ...masterSubjects.map((ms: any) => {
-            const found = student.marks?.find((m: any) => m.subject?.trim().toUpperCase() === ms.subject);
+            const found = student.marks?.find((m: any) => getCanonicalSubjectName(m.subject) === ms.subject);
             return found ? found.obtained : '-';
           }),
           student.total,
@@ -480,7 +536,7 @@ export const ResultsTab: React.FC<{ exams: any[] }> = ({ exams }) => {
                           <p className="text-xs text-gray-500 font-semibold print-roll-no">{student.rollNo || '-'}</p>
                         </td>
                         {masterSubjects.map((ms: any, i: number) => {
-                          const found = student.marks?.find((m: any) => m.subject?.trim().toUpperCase() === ms.subject);
+                          const found = student.marks?.find((m: any) => getCanonicalSubjectName(m.subject) === ms.subject);
                           return (
                             <td key={i} className="hidden md:table-cell p-4 text-center">
                               <span className="font-bold text-gray-700">{found ? found.obtained : '-'}</span>
@@ -524,7 +580,7 @@ export const ResultsTab: React.FC<{ exams: any[] }> = ({ exams }) => {
                                 <p className="text-xs font-bold text-indigo-500 uppercase mb-2">Subject Marks</p>
                                 <div className="grid grid-cols-2 gap-2">
                                   {masterSubjects.map((ms: any, i: number) => {
-                                    const found = student.marks?.find((m: any) => m.subject?.trim().toUpperCase() === ms.subject);
+                                    const found = student.marks?.find((m: any) => getCanonicalSubjectName(m.subject) === ms.subject);
                                     return (
                                       <div key={i} className="flex justify-between items-center bg-white/80 backdrop-blur-sm p-2 rounded-lg border border-white shadow-sm">
                                         <span className="text-xs font-semibold text-gray-500 truncate mr-2">{ms.subject}</span>
