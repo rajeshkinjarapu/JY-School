@@ -43,8 +43,6 @@ export const getByExam = async (req: AuthRequest, res: Response, next: NextFunct
           id: true,
           classId: true,
           rollNo: true,
-          fatherMobile: true,
-          motherMobile: true,
           user: { select: { name: true } }
         }
       },
