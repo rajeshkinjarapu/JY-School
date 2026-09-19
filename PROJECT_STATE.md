@@ -1,6 +1,39 @@
 # Project State: JY School ERP
 
 ## 2. Recent Updates & Progress
+- **Official 2-Page A4 Admission Dossier & Acknowledgement Slip (2026-09-19)**:
+  - **Matched Exactly to User Physical Form & Superior ERP Quality**:
+    - **Page 1 (Admission Form & Acknowledgement Slip)**:
+      - Header: School Crest/Logo, `SRI VENKATESWARA JY SCHOOL`, `(IIT-JEE/NEET Foundation - Olympiads)`, `Near Axis Bank, Old Bus Stand, Narasannapeta`.
+      - Centered Badge: `ADMISSION FORM`.
+      - Passport Photo Box: Displays uploaded student photo or `Affix latest Passport Size Photograph` placeholder.
+      - 13 Numbered Items:
+        1. Admn No, Class, Academic Year
+        2. Date of Joining
+        3. Name of the Student (in capital letters)
+        4. Gender with `Boy [✓/ ]  Girl [✓/ ]` tick boxes
+        5. Date of Birth with 8 individual digit boxes `[D][D] [M][M] [Y][Y][Y][Y]`
+        6. Mother Tongue & Student Aadhaar No
+        7. Father’s Name, Occupation, Aadhaar No, Phone No
+        8. Mother’s Name, Occupation, Aadhaar No, Phone No
+        9. Nationality, State, Religion
+        10. Caste & Sub-Caste
+        11. Residence (Full cascaded address)
+        12. Name of the School Previous Studying / Studied
+        13. Annual fee fixed for academic year
+      - Perforated Cut Divider: `✂ CUT HERE / TEAR ALONG PERFORATION ✂`.
+      - Lower Slip (Acknowledgement): Official acknowledgement slip containing Student Name, Class, Father’s Name, Annual Fee, and dual signature lines (`Signature of the Parent` and `Signature of the Principal`).
+    - **Page 2 (Sibling Details, Terms, Declaration & Payment Schedule)**:
+      - Sibling Details Table: `S.NO | NAME | CLASS | Where He/ She Studying` with 4 structured rows (filled if siblings exist, or `NA` + handwriting rows).
+      - Following Terms and Conditions: All 11 numbered mandatory rules printed crisp.
+      - Declaration by Parent / Guardian: Complete declaration paragraph with Father/Mother Name, Student Name, Place (`Narasannapeta`), Date, and `Signature of the Parent/Guardian`.
+      - Fee Payment Schedule: 1st Term (August), 2nd Term (November), 3rd Term (Sankranti).
+      - Bottom Signatures: Date and `Signature of the Principal`.
+  - **Cross-Platform Delivery**:
+    - Web (`AdmissionPrintModal.tsx`): 2-page print layout with CSS `@page { size: A4 portrait; margin: 0; }` and `.a4-page { page-break-after: always; }`.
+    - Mobile (`admission_pdf_service.dart`): 2 dedicated `pw.Page` instances, producing pixel-perfect 2-page PDF.
+  - **Shorebird Patch Ready**: Pure Dart/UI changes in `flutter_mobile/lib/`, 100% patchable OTA.
+
 - **Admissions Registration Page React Error #306 Resolution (2026-09-19)**:
   - **Root Cause**: `AdmissionRegistrationPage.tsx` had only a named export (`export const AdmissionRegistrationPage`), while `frontend/src/router/index.tsx` lazy loader was executing `const AdmissionRegistrationPage = lazy(() => import('../pages/admissions/AdmissionRegistrationPage'))` expecting a `default` export. This returned `{ default: undefined }`, causing React Error #306 (`Element type is invalid: expected a string or class/function but got: undefined`).
   - **Resolution**:
