@@ -41,9 +41,6 @@ class _AdmissionRegistrationScreenState extends State<AdmissionRegistrationScree
   final _motherAadharCtrl = TextEditingController();
   final _motherPhoneCtrl = TextEditingController();
 
-  final _phoneCtrl = TextEditingController(); // Primary phone
-  final _altPhoneCtrl = TextEditingController(); // Alternate phone
-
   // 3. Demographics Controllers
   String _nationality = 'Indian';
   String _religion = 'Hindu';
@@ -116,8 +113,6 @@ class _AdmissionRegistrationScreenState extends State<AdmissionRegistrationScree
     _motherOccupationCtrl.dispose();
     _motherAadharCtrl.dispose();
     _motherPhoneCtrl.dispose();
-    _phoneCtrl.dispose();
-    _altPhoneCtrl.dispose();
     _subCasteCtrl.dispose();
     _previousSchoolCtrl.dispose();
     _customVillageCtrl.dispose();
@@ -378,15 +373,13 @@ class _AdmissionRegistrationScreenState extends State<AdmissionRegistrationScree
   Future<void> _submitForm() async {
     if (!_formKey.currentState!.validate()) return;
 
-    final primaryContact = _phoneCtrl.text.trim().isNotEmpty
-        ? _phoneCtrl.text.trim()
-        : _fatherPhoneCtrl.text.trim().isNotEmpty
-            ? _fatherPhoneCtrl.text.trim()
-            : _motherPhoneCtrl.text.trim();
+    final primaryContact = _fatherPhoneCtrl.text.trim().isNotEmpty
+        ? _fatherPhoneCtrl.text.trim()
+        : _motherPhoneCtrl.text.trim();
 
     if (primaryContact.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('At least one contact phone number is required'), backgroundColor: Colors.red),
+        const SnackBar(content: Text("Please enter Father's or Mother's Mobile Number"), backgroundColor: Colors.red),
       );
       return;
     }
@@ -455,7 +448,9 @@ class _AdmissionRegistrationScreenState extends State<AdmissionRegistrationScree
       'motherPhone': _motherPhoneCtrl.text.trim().isEmpty ? null : _motherPhoneCtrl.text.trim(),
 
       'phone': primaryContact,
-      'alternatePhone': _altPhoneCtrl.text.trim().isEmpty ? null : _altPhoneCtrl.text.trim(),
+      'alternatePhone': (_fatherPhoneCtrl.text.trim().isNotEmpty && _motherPhoneCtrl.text.trim().isNotEmpty && _fatherPhoneCtrl.text.trim() != _motherPhoneCtrl.text.trim())
+          ? _motherPhoneCtrl.text.trim()
+          : null,
 
       // Demographics
       'nationality': _nationality,
@@ -582,8 +577,6 @@ class _AdmissionRegistrationScreenState extends State<AdmissionRegistrationScree
     _motherOccupationCtrl.clear();
     _motherAadharCtrl.clear();
     _motherPhoneCtrl.clear();
-    _phoneCtrl.clear();
-    _altPhoneCtrl.clear();
     _subCasteCtrl.clear();
     _previousSchoolCtrl.clear();
     _customVillageCtrl.clear();
@@ -835,23 +828,6 @@ class _AdmissionRegistrationScreenState extends State<AdmissionRegistrationScree
                   ),
                 ),
 
-                const SizedBox(height: 12),
-
-                _buildTextField(
-                  controller: _phoneCtrl,
-                  label: 'Primary Contact Mobile *',
-                  hint: '10-digit mobile number',
-                  keyboardType: TextInputType.phone,
-                  prefixText: '+91 ',
-                ),
-                const SizedBox(height: 8),
-                _buildTextField(
-                  controller: _altPhoneCtrl,
-                  label: 'Alternate Mobile Number',
-                  hint: 'Emergency backup mobile',
-                  keyboardType: TextInputType.phone,
-                  prefixText: '+91 ',
-                ),
               ],
             ),
 

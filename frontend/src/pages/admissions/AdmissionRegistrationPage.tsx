@@ -60,8 +60,6 @@ export const AdmissionRegistrationPage: React.FC = () => {
   const [motherAadhar, setMotherAadhar] = useState('');
   const [motherPhone, setMotherPhone] = useState('');
 
-  const [phone, setPhone] = useState(''); // Primary contact phone
-  const [alternatePhone, setAlternatePhone] = useState('');
 
   // 3. Demographics & Previous School
   const [nationality, setNationality] = useState('Indian');
@@ -103,10 +101,6 @@ export const AdmissionRegistrationPage: React.FC = () => {
   const [submittedAdmission, setSubmittedAdmission] = useState<any>(null);
   const [showPrintModal, setShowPrintModal] = useState(false);
 
-  // Sync primary phone with fatherPhone or motherPhone if empty
-  useEffect(() => {
-    if (!phone && fatherPhone) setPhone(fatherPhone);
-  }, [fatherPhone, phone]);
 
   // Fetch initial data: teachers, settings, config, current user
   useEffect(() => {
@@ -285,13 +279,13 @@ export const AdmissionRegistrationPage: React.FC = () => {
       return;
     }
 
-    const contactMobile = (phone || fatherPhone || motherPhone).trim();
+    const contactMobile = (fatherPhone || motherPhone).trim();
     if (!contactMobile) {
-      toast.error('At least one Contact Mobile Number (Father/Mother/Primary) is required');
+      toast.error("Please enter Father's or Mother's Mobile Number");
       return;
     }
     if (contactMobile.replace(/\D/g, '').length < 10) {
-      toast.error('Please enter a valid 10-digit mobile number');
+      toast.error("Please enter a valid 10-digit mobile number for Father or Mother");
       return;
     }
 
@@ -355,7 +349,7 @@ export const AdmissionRegistrationPage: React.FC = () => {
         motherPhone: motherPhone.trim() || undefined,
 
         phone: contactMobile,
-        alternatePhone: alternatePhone.trim() || undefined,
+        alternatePhone: (fatherPhone && motherPhone && fatherPhone.trim() !== motherPhone.trim()) ? motherPhone.trim() : undefined,
 
         // Demographics & Previous School
         nationality: nationality.trim() || 'Indian',
@@ -861,47 +855,6 @@ export const AdmissionRegistrationPage: React.FC = () => {
                     </div>
                   </div>
                 </div>
-
-                {/* Primary & Alternate Mobile row */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-1.5 flex items-center justify-between">
-                      <span>Primary Contact Mobile Number <span className="text-red-500">*</span></span>
-                      <span className="text-[10px] text-indigo-600 font-bold">Main for SMS/WhatsApp</span>
-                    </label>
-                    <div className="relative">
-                      <span className="absolute left-3.5 top-2.5 text-xs font-bold text-slate-400">+91</span>
-                      <input 
-                        type="tel"
-                        required
-                        maxLength={10}
-                        value={phone}
-                        onChange={e => setPhone(e.target.value.replace(/\D/g, ''))}
-                        placeholder="10-digit mobile number"
-                        className="w-full pl-11 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-mono font-bold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all shadow-xs"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-1.5 flex items-center justify-between">
-                      <span>Alternate Mobile Number</span>
-                      <span className="text-[10px] text-slate-500 font-medium">Emergency Backup</span>
-                    </label>
-                    <div className="relative">
-                      <span className="absolute left-3.5 top-2.5 text-xs font-bold text-slate-400">+91</span>
-                      <input 
-                        type="tel"
-                        maxLength={10}
-                        value={alternatePhone}
-                        onChange={e => setAlternatePhone(e.target.value.replace(/\D/g, ''))}
-                        placeholder="Alternate 10-digit mobile"
-                        className="w-full pl-11 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-mono font-semibold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all shadow-xs"
-                      />
-                    </div>
-                  </div>
-                </div>
-
               </div>
             </div>
 

@@ -1,6 +1,10 @@
 # Project State: JY School ERP
 
 ## 2. Recent Updates & Progress
+- **Admissions Form Phone Fields Simplification (2026-09-19)**:
+  - **Removed Redundant Fields**: Removed the standalone `Primary Contact Mobile Number *` and `Alternate Mobile Number` input fields from both Web (`AdmissionRegistrationPage.tsx`) and Flutter Mobile (`admission_registration_screen.dart`).
+  - **Direct Father / Mother Phone Integration**: Father's Mobile Number and Mother's Mobile Number now serve directly as the primary and alternate emergency contacts. The system automatically maps `fatherPhone` (or `motherPhone`) to the DB `phone` column, maintaining full backward compatibility with SMS/WhatsApp notifications and student records while delivering a much cleaner, streamlined registration interface.
+
 - **Official 2-Page A4 Admission Dossier & Acknowledgement Slip (2026-09-19)**:
   - **Matched Exactly to User Physical Form & Superior ERP Quality**:
     - **Page 1 (Admission Form & Acknowledgement Slip)**:
