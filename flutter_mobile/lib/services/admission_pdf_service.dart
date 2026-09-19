@@ -58,7 +58,7 @@ class AdmissionPdfService {
         margin: const pw.EdgeInsets.all(24),
         build: (pw.Context context) {
           return pw.Column(
-            crossAxisAlignment: pw.CrossAlignment.start,
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
             children: [
               // Header
               pw.Container(
@@ -67,13 +67,13 @@ class AdmissionPdfService {
                 ),
                 padding: const pw.EdgeInsets.only(bottom: 8),
                 child: pw.Row(
-                  crossAxisAlignment: pw.CrossAlignment.center,
+                  crossAxisAlignment: pw.CrossAxisAlignment.center,
                   mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                   children: [
                     // School Info
                     pw.Expanded(
                       child: pw.Column(
-                        crossAxisAlignment: pw.CrossAlignment.center,
+                        crossAxisAlignment: pw.CrossAxisAlignment.center,
                         children: [
                           pw.Text(
                             'SRI VENKATESWARA JY SCHOOL',
@@ -261,7 +261,7 @@ class AdmissionPdfService {
                 ),
                 padding: const pw.EdgeInsets.all(6),
                 child: pw.Column(
-                  crossAxisAlignment: pw.CrossAlignment.start,
+                  crossAxisAlignment: pw.CrossAxisAlignment.start,
                   children: [
                     pw.Text(
                       'Declaration by Parent / Guardian:',

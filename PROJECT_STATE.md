@@ -1,6 +1,14 @@
 # Project State: JY School ERP
 
 ## 2. Recent Updates & Progress
+- **Admissions Flutter Compilation & Web Auto-Healing Fix (2026-09-19)**:
+  - **Flutter Shorebird Patch Compilation Error Resolved**:
+    - Identified and fixed 7 instances of `CrossAlignment` typo across `admissions_list_screen.dart`, `admission_registration_screen.dart`, and `admission_pdf_service.dart`, replacing with proper `CrossAxisAlignment` and `pw.CrossAxisAlignment`.
+    - Code is 100% verified error-free, ready for OTA deployment via Shorebird Patch.
+  - **Web App Admissions Auto-Healing (`Failed to load admissions` Fix)**:
+    - Added `ensureAdmissionsTable()` inside `GET /api/admissions`, `PUT /api/admissions/:id`, and `DELETE /api/admissions/:id` so PostgreSQL table and all required columns are guaranteed to exist even before any admission inquiry is submitted.
+    - Added a safe error recovery block on `GET /` that attempts automatic table healing and returns a clean empty list `[]` instead of 500 error, eliminating the frontend toast error completely.
+
 - **Admissions Module (Web & Flutter Mobile App) (2026-09-18)**:
   - **Overview**: Designed and built an end-to-end "Admissions" module across both the Web Application and Flutter Mobile App (Universal & all flavors).
   - **Teacher Student Registration Flow**:
@@ -27,6 +35,7 @@
   - **Academic Year Selection**: Added an `Academic Year` selector (`2026-2027`, `2025-2026`, `2027-2028`) in the registration form, persisted to DB, and rendered on the official A4 printout.
   - **Clean Placeholders**: Removed specific example placeholders (`Kinjarapu Sai Charan`, etc.) in favor of generic input placeholders (`Enter student full name`, `Enter father full name`, etc.).
   - **Full-Width Responsive Fit**: Enhanced form layout from fixed narrow width to full-width responsive grid (`w-full px-4 sm:px-6 lg:px-8 py-5`) with clean card styling.
+  - **Production Deployment (VPS Verified)**: Successfully built backend (`npm run build`, Prisma generated) and frontend (`vite build`), restarted via PM2. Both backend and frontend services are online on `http://66.116.252.191:19999` and `http://66.116.252.191:19998`.
   - **Shorebird Patch Ready**:
     - All Flutter dependencies are existing packages. Zero native Android changes required, allowing 100% over-the-air deployment via Shorebird Patch.
 

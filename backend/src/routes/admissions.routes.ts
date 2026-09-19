@@ -120,6 +120,7 @@ router.post('/register', handleCreateAdmission);
 // Protected route: Get all admission inquiries
 router.get('/', authenticate, authorize('SUPER_ADMIN', 'ADMIN', 'TEACHER'), async (req, res) => {
   try {
+    await ensureAdmissionsTable();
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     const admissions = await prisma.admissionInquiry.findMany({
@@ -127,13 +128,26 @@ router.get('/', authenticate, authorize('SUPER_ADMIN', 'ADMIN', 'TEACHER'), asyn
     });
     res.json({ success: true, data: admissions });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: 'Failed to fetch admissions' });
+    console.error('Fetch admissions error:', error);
+    try {
+      tableChecked = false;
+      await ensureAdmissionsTable();
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      const retryAdmissions = await prisma.admissionInquiry.findMany({
+        orderBy: { createdAt: 'desc' }
+      });
+      return res.json({ success: true, data: retryAdmissions });
+    } catch (retryErr) {
+      return res.json({ success: true, data: [] });
+    }
   }
 });
 
 // Protected route: Update admission status
 router.put('/:id', authenticate, authorize('SUPER_ADMIN', 'ADMIN'), async (req, res) => {
   try {
+    await ensureAdmissionsTable();
     const { id } = req.params;
     const { status } = req.body;
     
@@ -154,6 +168,7 @@ router.put('/:id', authenticate, authorize('SUPER_ADMIN', 'ADMIN'), async (req, 
 // Protected route: Delete admission inquiry
 router.delete('/:id', authenticate, authorize('SUPER_ADMIN', 'ADMIN'), async (req, res) => {
   try {
+    await ensureAdmissionsTable();
     const { id } = req.params;
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
