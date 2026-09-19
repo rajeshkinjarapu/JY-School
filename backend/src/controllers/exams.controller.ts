@@ -798,12 +798,13 @@ export const scanOmr = async (req: AuthRequest, res: Response, next: NextFunctio
         const aiResult = await scanOMRWithGemini(imagePath, answerKeyObj);
         const resolved = await resolveStudent(aiResult.student_id, aiResult.student_name);
         fs.unlink(imagePath, () => {});
-        return successResponse(res, {
+        successResponse(res, {
           ...aiResult,
           student_name: resolved.student_name,
           real_student_id: resolved.real_student_id,
           student_id: resolved.student_id || aiResult.student_id
         }, 'OMR Scan completed via Gemini Vision AI');
+        return;
       } catch (aiErr: any) {
         console.warn("Gemini Vision AI failed, falling back to local Python engine:", aiErr?.message || aiErr);
       }

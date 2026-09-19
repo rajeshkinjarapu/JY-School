@@ -8,6 +8,9 @@
   - **Web App Admissions Auto-Healing (`Failed to load admissions` Fix)**:
     - Added `ensureAdmissionsTable()` inside `GET /api/admissions`, `PUT /api/admissions/:id`, and `DELETE /api/admissions/:id` so PostgreSQL table and all required columns are guaranteed to exist even before any admission inquiry is submitted.
     - Added a safe error recovery block on `GET /` that attempts automatic table healing and returns a clean empty list `[]` instead of 500 error, eliminating the frontend toast error completely.
+  - **Backend TypeScript Error Fix & PM2 Process Name**:
+    - Fixed TS2322 return type error in `backend/src/controllers/exams.controller.ts` line 801 so `npm run build` compiles with 0 errors.
+    - Clarified PM2 process name is `backend` (command: `pm2 restart backend`), not `jy-school-backend`.
 
 - **Admissions Module (Web & Flutter Mobile App) (2026-09-18)**:
   - **Overview**: Designed and built an end-to-end "Admissions" module across both the Web Application and Flutter Mobile App (Universal & all flavors).
