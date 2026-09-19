@@ -1,5 +1,13 @@
 # Project State: JY School ERP
 
+- **Admissions Image Upload & Display Bug Fix (2026-09-19)**:
+  - **Root Cause of "Unexpected field"**: The frontend `AdmissionRegistrationPage.tsx` was sending `formData.append('image', file)` while Multer in `backend/src/routes/uploads.ts` was strictly expecting `upload.single('file')`. Furthermore, `resolveFileUrl` only checked for `http` URLs, failing on base64 data URLs and blob preview URLs by improperly prefixing them with the API base URL.
+  - **Backend Solution**: Updated `backend/src/routes/uploads.ts` to use `upload.any()` so that regardless of whether the client sends `file`, `image`, `photo`, or other field names, the upload succeeds with 100% resilience.
+  - **Frontend Solution**:
+    - Appended both `'file'` and `'image'` in FormData in `AdmissionRegistrationPage.tsx`.
+    - Added instant local preview using `URL.createObjectURL(file)` so the user sees their uploaded passport photo immediately.
+    - Updated `resolveFileUrl` in `AdmissionRegistrationPage.tsx` and `resolveImg` in `AdmissionPrintModal.tsx` to properly recognize `data:` and `blob:` URLs.
+
 - **100% Sachivalayam & Mandal Coverage for Admissions (2026-09-19)**:
   - **38 Mandals Full Coverage**: Populated complete Grama and Ward Sachivalayams across all 38 mandals of Srikakulam district (Narasannapeta, Nandigam, Polaki, Jalumuru, Kotabommali, Gara, Etcherla, Ponduru, Sarubujjili, Srikakulam Rural & Urban, Amadalavalasa, Tekkali, Ranasthalam, Laveru, Burja, Santhabommali, Palasa-Kasibugga, Sompeta, Mandasa, Itchapuram, Kaviti, Kanchili, Saravakota, Pathapatnam, Meliaputti, Hiramandalam, Kotturu, Rajam, G.Sigadam, L.N. Peta, Vangara, Regidi Amadalavalasa, Santhakaviti, Vajrapukothuru, Palakonda, Seethampeta, Bhamini, Veeraghattam).
   - **Nandigam Mandal Added**: Added Nandigam mandal with all 22 official village secretariats (Dimmidijola, Kottagraharam, Lakhidasupuram, Nowgam, Peddabanapuram, Peddalavunipalli, Peddatamarapalli, Radhajanaboddapadu, Sivarampuram, Sylada, Bejjipalli, Badagam, Deenabandupuram, Karlapudi, Mondraivalasa, Narendrapuram, Rampuram, Anandapuram, Gollavooru, Subhadrapuram, Kaviti Nandigam).

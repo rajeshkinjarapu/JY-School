@@ -77,6 +77,13 @@ export const AdmissionPrintModal: React.FC<AdmissionPrintModalProps> = ({
 
   const feeAmount = admission.admissionFee ? `₹ ${admission.admissionFee}` : '____________________';
 
+  const resolveImg = (src?: string) => {
+    if (!src) return '';
+    if (src.startsWith('http') || src.startsWith('data:') || src.startsWith('blob:')) return src;
+    const base = import.meta.env.VITE_API_URL || 'http://66.116.252.191:19998';
+    return `${base.replace(/\/$/, '')}/${src.replace(/^\//, '')}`;
+  };
+
   const handlePrint = () => {
     window.print();
   };
@@ -136,7 +143,7 @@ export const AdmissionPrintModal: React.FC<AdmissionPrintModalProps> = ({
           <div className="w-[28mm] h-[34mm] border border-slate-800 rounded shrink-0 bg-slate-50 flex flex-col items-center justify-center text-center p-0.5 overflow-hidden">
             {admission.studentImage ? (
               <img 
-                src={admission.studentImage} 
+                src={resolveImg(admission.studentImage)} 
                 alt={admission.studentName} 
                 className="w-full h-full object-cover rounded" 
               />

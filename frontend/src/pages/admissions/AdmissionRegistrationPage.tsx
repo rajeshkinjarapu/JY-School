@@ -192,10 +192,15 @@ export const AdmissionRegistrationPage: React.FC = () => {
       return;
     }
 
+    // Instant local preview for immediate visual feedback
+    const localPreview = URL.createObjectURL(file);
+    setStudentImage(localPreview);
+
     setIsUploadingPhoto(true);
     const toastId = toast.loading('Uploading student photo...');
     try {
       const formData = new FormData();
+      formData.append('file', file);
       formData.append('image', file);
       const res = await api.post('/api/uploads/image', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
@@ -225,10 +230,15 @@ export const AdmissionRegistrationPage: React.FC = () => {
       return;
     }
 
+    // Instant preview for receipt
+    const localReceipt = URL.createObjectURL(file);
+    setPaymentReceipt(localReceipt);
+
     setIsUploadingReceipt(true);
     const toastId = toast.loading('Uploading payment receipt...');
     try {
       const formData = new FormData();
+      formData.append('file', file);
       formData.append('image', file);
       const res = await api.post('/api/uploads/image', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
@@ -251,7 +261,7 @@ export const AdmissionRegistrationPage: React.FC = () => {
   // Helper to construct image URL
   const resolveFileUrl = (url?: string) => {
     if (!url) return '';
-    if (url.startsWith('http')) return url;
+    if (url.startsWith('http') || url.startsWith('data:') || url.startsWith('blob:')) return url;
     const base = import.meta.env.VITE_API_URL || 'http://66.116.252.191:19998';
     return `${base.replace(/\/$/, '')}/${url.replace(/^\//, '')}`;
   };
