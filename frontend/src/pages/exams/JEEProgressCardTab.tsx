@@ -173,8 +173,8 @@ export const JEEProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
         useCORS: true
       } as any);
       
-      const finalPdfWidth = 210; // Standard A4 width in mm
-      const finalPdfHeight = (rect.height * finalPdfWidth) / rect.width;
+      const finalPdfWidth = 210;  // A4 width in mm
+      const finalPdfHeight = 297; // A4 height in mm — always fill full A4 page
       
       const pdf = new jsPDF('p', 'mm', 'a4');
       
