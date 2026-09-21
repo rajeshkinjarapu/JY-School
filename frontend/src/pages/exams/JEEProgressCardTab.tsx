@@ -173,9 +173,10 @@ export const JEEProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
         useCORS: true
       } as any);
       
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfWidth = 210; // Standard A4 width in mm
       const pdfHeight = (rect.height * pdfWidth) / rect.width;
+      
+      const pdf = new jsPDF('p', 'mm', [pdfWidth, pdfHeight]);
       
       pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight, undefined, 'FAST');
       
@@ -317,9 +318,11 @@ export const JEEProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
           useCORS: true
         } as any);
         
-        const pdf = new jsPDF('p', 'mm', 'a4');
+        const rect = el.getBoundingClientRect();
         const pdfWidth = 210;
-        const pdfHeight = (1123 / 794) * pdfWidth;
+        const pdfHeight = (rect.height * pdfWidth) / rect.width;
+        
+        const pdf = new jsPDF('p', 'mm', [pdfWidth, pdfHeight]);
         
         pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight, undefined, 'FAST');
         const fileName = `${data.studentName || `Student_${i+1}`}_ProgressCard.pdf`;

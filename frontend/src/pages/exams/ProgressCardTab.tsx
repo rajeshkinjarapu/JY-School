@@ -198,9 +198,10 @@ export const ProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
         style: { display: 'flex', transform: 'none' }
       });
       
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfWidth = 210; // Standard A4 width in mm
       const pdfHeight = (rect.height * pdfWidth) / rect.width;
+      
+      const pdf = new jsPDF('p', 'mm', [pdfWidth, pdfHeight]);
       
       pdf.addImage(dataUrl, 'JPEG', 0, 0, pdfWidth, pdfHeight, undefined, 'FAST');
       
@@ -342,9 +343,10 @@ export const ProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
           style: { display: 'flex', transform: 'none' }
         });
         
-        const pdf = new jsPDF('p', 'mm', 'a4');
-        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfWidth = 210; // Standard A4 width in mm
         const pdfHeight = (rect.height * pdfWidth) / rect.width;
+        
+        const pdf = new jsPDF('p', 'mm', [pdfWidth, pdfHeight]);
         
         pdf.addImage(dataUrl, 'JPEG', 0, 0, pdfWidth, pdfHeight, undefined, 'FAST');
         const fileName = `${data.studentName || `Student_${i+1}`}_ProgressCard.pdf`;
