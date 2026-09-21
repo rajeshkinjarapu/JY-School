@@ -1,5 +1,41 @@
 import { PrismaClient } from '@prisma/client';
-import { getCanonicalSubjectName } from '../src/controllers/exams.controller';
+
+export const getCanonicalSubjectName = (subjectName: string): string => {
+  if (!subjectName) return '';
+  const s = subjectName.toUpperCase().trim().replace(/[^A-Z0-9]/g, '');
+  
+  // 1. TELUGU (tel, telugu, TEL, TELUGU, etc.)
+  if (s.includes('TELUGU') || s.startsWith('TEL') || s.includes('FIRSTLANG')) return 'TELUGU';
+  
+  // 2. HINDI (hin, hindi, HIN, HINDI, etc.)
+  if (s.includes('HINDI') || s.startsWith('HIN') || s.includes('SECONDLANG')) return 'HINDI';
+  
+  // 3. ENGLISH (eng, english, ENG, ENGLISH, etc.)
+  if (s.includes('ENGLISH') || s.startsWith('ENG') || s.includes('THIRDLANG')) return 'ENGLISH';
+  
+  // 4. MATHEMATICS (mat, maths, math, mathematics, MATHEMATICSi, etc.)
+  if (s.includes('MATH') || s.startsWith('MAT')) return 'MATHEMATICS';
+  
+  // 5. EVS (evs, environmental science, etc.)
+  if (s === 'EVS' || s.includes('ENVIRONMENT')) return 'EVS';
+  
+  // 6. SCIENCES
+  if (s.includes('PHYSIC') || s.startsWith('PHY')) return 'PHYSICS';
+  if (s.includes('CHEMIS') || s.startsWith('CHE')) return 'CHEMISTRY';
+  if (s.includes('BIOLOG') || s.startsWith('BIO')) return 'BIOLOGY';
+  if (s.includes('SCIENCE') || s.startsWith('SCI')) return 'SCIENCE';
+  
+  // 7. SOCIAL STUDIES
+  if (s.includes('SOCIAL') || s.startsWith('SOC')) return 'SOCIAL';
+
+  // 8. OTHERS
+  if (s.includes('DRAWING') || s.includes('ART')) return 'DRAWING';
+  if (s.includes('COMPUTER') || s.includes('COMP')) return 'COMPUTERS';
+  if (s.includes('GENERAL') && s.includes('KNOW')) return 'GK';
+  if (s.includes('RHYMES')) return 'RHYMES';
+  
+  return subjectName.toUpperCase().trim();
+};
 
 const prisma = new PrismaClient();
 
