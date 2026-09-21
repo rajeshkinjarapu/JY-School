@@ -198,12 +198,12 @@ export const ProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
         style: { display: 'flex', transform: 'none' }
       });
       
-      const pdfWidth = 210; // Standard A4 width in mm
-      const pdfHeight = (rect.height * pdfWidth) / rect.width;
+      const finalPdfWidth = 210; // Standard A4 width in mm
+      const finalPdfHeight = (rect.height * finalPdfWidth) / rect.width;
       
-      const pdf = new jsPDF('p', 'mm', [pdfWidth, pdfHeight]);
+      const pdf = new jsPDF('p', 'mm', 'a4');
       
-      pdf.addImage(dataUrl, 'JPEG', 0, 0, pdfWidth, pdfHeight, undefined, 'FAST');
+      pdf.addImage(dataUrl, 'JPEG', 0, 0, finalPdfWidth, finalPdfHeight, undefined, 'FAST');
       
       return pdf;
     } finally {
@@ -343,12 +343,12 @@ export const ProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
           style: { display: 'flex', transform: 'none' }
         });
         
-        const pdfWidth = 210; // Standard A4 width in mm
-        const pdfHeight = (rect.height * pdfWidth) / rect.width;
+        const finalPdfWidth = 210; // Standard A4 width in mm
+        const finalPdfHeight = (rect.height * finalPdfWidth) / rect.width;
         
-        const pdf = new jsPDF('p', 'mm', [pdfWidth, pdfHeight]);
+        const pdf = new jsPDF('p', 'mm', 'a4');
         
-        pdf.addImage(dataUrl, 'JPEG', 0, 0, pdfWidth, pdfHeight, undefined, 'FAST');
+        pdf.addImage(dataUrl, 'JPEG', 0, 0, finalPdfWidth, finalPdfHeight, undefined, 'FAST');
         const fileName = `${data.studentName || `Student_${i+1}`}_ProgressCard.pdf`;
         zip.file(fileName, pdf.output('blob'));
         

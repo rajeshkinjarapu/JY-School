@@ -60,6 +60,9 @@ export const ProgressCardTemplate: React.FC<ProgressCardTemplateProps> = ({
     <div
       className="w-[794px] bg-white mx-auto shrink-0 print:shadow-none"
       style={{
+        minHeight: '1123px', // Exact A4 Height in pixels at 96 DPI
+        display: 'flex',
+        flexDirection: 'column',
         fontFamily: "'Segoe UI','Roboto',system-ui,-apple-system,sans-serif",
         boxShadow: '0 8px 40px rgba(0,0,0,0.18)',
         borderRadius: 12,
@@ -191,7 +194,7 @@ export const ProgressCardTemplate: React.FC<ProgressCardTemplateProps> = ({
         </div>
       </div>
 
-      <div style={{ margin: '0 24px 16px 24px', paddingTop: 12, borderTop: '2px dashed #dce4ed', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+      <div style={{ margin: 'auto 24px 16px 24px', paddingTop: 12, borderTop: '2px dashed #dce4ed', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
         <div>
           <div style={{ fontSize: 15, fontWeight: 800, color: '#1a4a7a', textTransform: 'uppercase', letterSpacing: 0.5 }}>
             📋 Total Marks: {safeData.total} / {TOTAL_MAX_MARKS}
