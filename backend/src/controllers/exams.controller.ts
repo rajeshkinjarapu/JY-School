@@ -322,6 +322,7 @@ export const update = async (req: AuthRequest, res: Response, next: NextFunction
   }
 
   // 4. IRONCLAD GUARDIAN: Ensure examined subjects can NEVER be dropped, deleted, or overwritten
+  const updatesToMarks: { classId: string; subjectId: string; newMaxMarks: number }[] = [];
   if (examinedSubjectsByClass.size > 0 && finalSubjects) {
     if (typeof finalSubjects === 'object' && Array.isArray(finalSubjects.classConfigs)) {
       examinedSubjectsByClass.forEach((subMap, cId) => {
@@ -337,7 +338,8 @@ export const update = async (req: AuthRequest, res: Response, next: NextFunction
         if (!Array.isArray(cfg.subjects)) cfg.subjects = [];
 
         subMap.forEach((examSub) => {
-          const alreadyExists = cfg.subjects.some((s: any) => areSubjectsMatching(s.name, examSub.name) || s.id === examSub.id);
+          const matchedSubject = cfg.subjects.find((s: any) => areSubjectsMatching(s.name, examSub.name) || s.id === examSub.id);
+          const alreadyExists = !!matchedSubject;
           if (!alreadyExists) {
             // Re-inject examined subject so student marks are NEVER orphaned or lost
             cfg.subjects.push({
@@ -346,6 +348,17 @@ export const update = async (req: AuthRequest, res: Response, next: NextFunction
               maxMarks: examSub.maxMarks,
               date: examDate ? new Date(examDate).toISOString().split('T')[0] : (existing.examDate ? new Date(existing.examDate).toISOString().split('T')[0] : '')
             });
+          } else {
+            // If user updated maxMarks for a subject that already has marks entered, we MUST sync it back to Mark table
+            const newMaxMarks = Number(matchedSubject.maxMarks);
+            const oldMaxMarks = Number(examSub.maxMarks);
+            if (newMaxMarks > 0 && newMaxMarks !== oldMaxMarks) {
+              updatesToMarks.push({
+                classId: cId,
+                subjectId: examSub.id, // Actual real subject ID used by Marks
+                newMaxMarks: newMaxMarks
+              });
+            }
           }
         });
 
@@ -403,6 +416,31 @@ export const update = async (req: AuthRequest, res: Response, next: NextFunction
     data,
     include: { classes: true }
   });
+
+  // 6. Sync updated maxMarks to existing Mark records so UI displays the latest maxMarks and grades
+  if (updatesToMarks.length > 0) {
+    for (const update of updatesToMarks) {
+      const marksToUpdate = await prisma.mark.findMany({
+        where: {
+          examId: id,
+          subjectId: update.subjectId,
+          student: { classId: update.classId }
+        }
+      });
+
+      for (const mark of marksToUpdate) {
+        const grade = mark.remarks === 'AB' ? 'F' : calculateGrade(mark.marksObtained, update.newMaxMarks);
+        await prisma.mark.update({
+          where: { id: mark.id },
+          data: {
+            maxMarks: update.newMaxMarks,
+            grade
+          }
+        });
+      }
+    }
+  }
+
   successResponse(res, exam, 'Exam updated');
 };
 
