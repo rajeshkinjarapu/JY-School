@@ -77,9 +77,9 @@ export const OMRScannerPage: React.FC = () => {
   };
 
   const processImages = async () => {
-    if (!selectedExamId) return toast.error("Exam select చేయండి");
-    if (Object.keys(answerKey).length === 0) return toast.error("Master Answer Key missing! Manage Key లో ముందు save చేయండి.");
-    if (uploadedFiles.length === 0) return toast.error("OMR images select చేయండి");
+    if (!selectedExamId) return toast.error("Please select an exam");
+    if (Object.keys(answerKey).length === 0) return toast.error("Master Answer Key missing! Please save it in Manage Key first.");
+    if (uploadedFiles.length === 0) return toast.error("Please select OMR images");
 
     setIsProcessing(true);
     setProcessedResults([]);

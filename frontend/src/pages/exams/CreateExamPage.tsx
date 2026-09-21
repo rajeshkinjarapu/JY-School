@@ -388,7 +388,7 @@ export const CreateExamPage: React.FC = () => {
          m.subjectId === targetSub.id || m.subject?.id === targetSub.id)
       );
       if (hasMarks) {
-        toast.error(`"${targetSub.name}" సబ్జెక్టుకు ఇప్పటికే మార్కులు నమోదై ఉన్నాయి! డేటా భద్రత దృష్ట్యా తొలగించలేరు.`);
+        toast.error(`"${targetSub.name}" subject already has marks entered! Cannot remove for data safety.`);
         return;
       }
     }
@@ -439,7 +439,7 @@ export const CreateExamPage: React.FC = () => {
     });
 
     if (protectedCount > 0) {
-      toast.success(`సబ్జెక్టులు కాపీ చేయబడ్డాయి. (${protectedCount} తరగతుల్లో మార్కులు ఉన్నందున అవి ఓవర్‌రైట్ కాకుండా రక్షించబడ్డాయి)`);
+      toast.success(`Subjects copied. (${protectedCount} classes skipped as they already have marks)`);
     } else {
       toast.success(`Copied ${sourceCfg.className} subjects to ALL selected classes!`);
     }
@@ -449,7 +449,7 @@ export const CreateExamPage: React.FC = () => {
     if (fullExamMarks && fullExamMarks.length > 0) {
       const hasMarksForClass = fullExamMarks.some((m: any) => m.student?.classId === classId);
       if (hasMarksForClass) {
-        toast.error('ఈ తరగతి విద్యార్థులకు మార్కులు నమోదై ఉన్నాయి! అన్ని సబ్జెక్టులను ఒకేసారి తొలగించలేరు.');
+        toast.error('Students in this class already have marks! Cannot clear all subjects at once.');
         return;
       }
     }
@@ -477,19 +477,7 @@ export const CreateExamPage: React.FC = () => {
     toast.success(`Applied ${marks} Max Marks to all subjects in this class!`);
   };
 
-  const handleApplyBulkMarksToAllClasses = () => {
-    setClassConfigs((prev) => {
-      const updated = { ...prev };
-      Object.keys(updated).forEach((cId) => {
-        updated[cId] = {
-          ...updated[cId],
-          subjects: updated[cId].subjects.map((s) => ({ ...s, maxMarks: bulkMarksInput }))
-        };
-      });
-      return updated;
-    });
-    toast.success(`Applied ${bulkMarksInput} Max Marks to ALL assigned classes!`);
-  };
+
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'signature' | 'teacherSignature' | 'logo') => {
     const file = e.target.files?.[0];
@@ -787,30 +775,6 @@ export const CreateExamPage: React.FC = () => {
                   </div>
                 ) : (
                   <>
-                    {/* Bulk Apply Bar */}
-                    <div className="bg-indigo-50/60 border border-indigo-100 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3">
-                      <div className="flex items-center gap-2 text-xs font-black text-indigo-900">
-                        <Copy className="w-4 h-4 text-indigo-600" />
-                        <span>Bulk Apply Max Marks across ALL assigned classes:</span>
-                      </div>
-                      <div className="flex items-center gap-2 w-full sm:w-auto">
-                        <input
-                          type="number"
-                          min={1}
-                          value={bulkMarksInput}
-                          onChange={(e) => setBulkMarksInput(Number(e.target.value))}
-                          className="w-20 px-3 py-1.5 bg-white border border-indigo-200 rounded-xl text-xs font-black text-indigo-900 text-center outline-none"
-                        />
-                        <button
-                          type="button"
-                          onClick={handleApplyBulkMarksToAllClasses}
-                          className="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-xl text-xs font-black shadow-sm transition-all whitespace-nowrap"
-                        >
-                          Apply To All Classes
-                        </button>
-                      </div>
-                    </div>
-
                     {/* Class Tabs */}
                     <div className="flex items-center gap-2 overflow-x-auto pb-2 custom-scrollbar">
                       {[...examClassIds].sort((idA, idB) => {
@@ -866,6 +830,23 @@ export const CreateExamPage: React.FC = () => {
                             >
                               <Copy className="w-3.5 h-3.5" /> Copy to All Classes
                             </button>
+                            <div className="flex items-center gap-2 border-l border-slate-300 pl-2 ml-1">
+                              <input
+                                type="number"
+                                min={1}
+                                value={bulkMarksInput}
+                                onChange={(e) => setBulkMarksInput(Number(e.target.value))}
+                                placeholder="Marks"
+                                className="w-16 px-2 py-1.5 bg-white border border-slate-200 rounded-lg text-[11px] font-bold text-slate-700 text-center outline-none focus:border-indigo-400"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => handleApplyBulkMarksToClass(activeClassTab, bulkMarksInput)}
+                                className="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 px-2.5 py-1.5 rounded-lg text-[11px] font-bold shadow-sm"
+                              >
+                                Apply to Class
+                              </button>
+                            </div>
                             <button
                               type="button"
                               onClick={() => handleApplyBulkMarksToClass(activeClassTab, 50)}
@@ -911,7 +892,7 @@ export const CreateExamPage: React.FC = () => {
                                     <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Subject Name</label>
                                     {hasMarks && (
                                       <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 flex items-center gap-1">
-                                        🔒 మార్కులు నమోదయ్యాయి (Protected)
+                                        🔒 Marks Entered (Protected)
                                       </span>
                                     )}
                                   </div>
@@ -919,8 +900,8 @@ export const CreateExamPage: React.FC = () => {
                                     type="text"
                                     required
                                     value={sub.name}
-                                    onChange={(e) => updateSubjectInClass(activeClassTab, i, 'name', e.target.value)}
-                                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-800 outline-none focus:border-indigo-400 focus:bg-white"
+                                    onChange={(e) => updateSubjectInClass(activeClassTab, i, 'name', e.target.value.toUpperCase())}
+                                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-800 outline-none focus:border-indigo-400 focus:bg-white uppercase"
                                   />
                                 </div>
                                 <div className="w-full sm:w-36">
@@ -952,7 +933,7 @@ export const CreateExamPage: React.FC = () => {
                                       ? 'text-slate-300 cursor-not-allowed opacity-40' 
                                       : 'text-red-400 hover:text-red-600 hover:bg-red-50'
                                   }`}
-                                  title={hasMarks ? 'ఈ సబ్జెక్టుకు మార్కులు ఉన్నందున తొలగించలేరు' : 'Remove Subject'}
+                                  title={hasMarks ? 'Cannot remove this subject as marks are entered' : 'Remove Subject'}
                                 >
                                   <X className="w-4 h-4" />
                                 </button>

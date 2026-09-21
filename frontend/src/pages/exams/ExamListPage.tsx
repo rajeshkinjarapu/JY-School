@@ -2471,16 +2471,16 @@ export const ExamListPage: React.FC = () => {
                             onClick={async () => {
                               try {
                                 await api.post(`/api/exams/${e.id}/sync-from-marks`);
-                                toast.success('మార్కుల ఆధారంగా సబ్జెక్టులు సింక్ అయ్యాయి!');
+                                toast.success('Subjects synced successfully based on marks!');
                                 fetchExams(true);
                               } catch (err: any) {
                                 toast.error(err.response?.data?.message || 'Sync failed');
                               }
                             }} 
                             className="bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 text-xs font-bold px-3 py-2 flex justify-center items-center gap-1.5 rounded-xl transition-all"
-                            title="మార్కుల ఆధారంగా సబ్జెక్టులను శాశ్వతంగా రీస్టోర్ చేయండి"
+                            title="Restore subjects permanently based on marks"
                           >
-                            <RefreshCw className="w-3.5 h-3.5" /> సబ్జెక్ట్స్ రీస్టోర్
+                            <RefreshCw className="w-3.5 h-3.5" /> Restore Subjects
                           </button>
                         </>
                       )}

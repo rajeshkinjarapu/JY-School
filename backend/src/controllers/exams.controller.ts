@@ -413,7 +413,7 @@ export const deleteExam = async (req: AuthRequest, res: Response, next: NextFunc
 
   const markCount = await prisma.mark.count({ where: { examId: id } });
   if (markCount > 0 && req.query.force !== 'true') {
-    return next(createError(`ఈ పరీక్షకు ఇప్పటికే ${markCount} మార్కులు నమోదై ఉన్నాయి! పొరపాటున డిలీట్ కాకుండా రక్షించబడింది. (Cannot delete exam with recorded marks)`, 400));
+    return next(createError(`This exam already has ${markCount} marks entered! Cannot delete exam with recorded marks.`, 400));
   }
 
   await prisma.mark.deleteMany({ where: { examId: id } });

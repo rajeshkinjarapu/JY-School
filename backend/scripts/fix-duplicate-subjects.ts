@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client';
+import { getCanonicalSubjectName } from '../src/controllers/exams.controller';
 
 const prisma = new PrismaClient();
 
@@ -12,7 +13,7 @@ async function fixDuplicateSubjects() {
   // Group by normalized name + classId
   const groups: Record<string, typeof allSubjects> = {};
   for (const sub of allSubjects) {
-    const key = `${sub.classId}__${sub.name.trim().toUpperCase()}`;
+    const key = `${sub.classId}__${getCanonicalSubjectName(sub.name.trim().toUpperCase())}`;
     if (!groups[key]) groups[key] = [];
     groups[key].push(sub);
   }

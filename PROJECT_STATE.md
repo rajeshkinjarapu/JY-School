@@ -1,5 +1,10 @@
 # Project State: JY School ERP
 
+- **Exams Bulk Apply & Telugu Translation Update (2026-09-21)**:
+  - **Class-Specific Bulk Marks**: Removed the global "Apply 100M to ALL assigned classes" button which assigned identical marks to all classes simultaneously. Implemented a class-specific "Apply to Class" input for each active class tab, allowing administrators to dynamically configure different maximum marks per class.
+  - **Telugu to English Translation**: Completely eradicated all hardcoded Telugu string labels, tooltips, and toast error/success messages across `CreateExamPage.tsx`, `ExamListPage.tsx`, `OMRScannerPage.tsx`, and `backend/src/controllers/exams.controller.ts`. Replaced them with professional English equivalents ensuring cross-compatibility and cleaner codebase management.
+  - **Capitalized Subject Enforcement**: Enforced `uppercase` visually via CSS and systematically via `e.target.value.toUpperCase()` on all manual subject inputs so database insertions always remain consistently capitalized to avoid DB inconsistencies.
+
 - **Exam Max Marks (35M) & Subject Duplicate Marks Resolution (2026-09-19)**:
   - **Dynamic Max Marks Priority Fix (`backend/src/controllers/exams.controller.ts`)**:
     - Identified a bug where `mark.maxMarks` (saved in DB) was overriding the live exam configuration. If admin edited the exam max marks to 35 AFTER marks were entered, it still showed the old 50 max marks.

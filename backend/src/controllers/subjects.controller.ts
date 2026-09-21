@@ -4,6 +4,7 @@ import { createError } from '../middlewares/errorHandler';
 import { prisma } from '../utils/prisma';
 import { successResponse } from '../utils/response';
 import { sortClasses } from '../utils/sortClasses';
+import { getCanonicalSubjectName } from './exams.controller';
 import * as XLSX from 'xlsx';
 
 export const getAll = async (req: AuthRequest, res: Response): Promise<void> => {
@@ -31,7 +32,7 @@ export const create = async (req: AuthRequest, res: Response, next: NextFunction
     return next(createError('Subject name is required', 400));
   }
 
-  const baseName = name.trim().toUpperCase();
+  const baseName = getCanonicalSubjectName(name.trim().toUpperCase());
   const baseCode = code || baseName.replace(/\s+/g, '_');
 
   if (classId) {
@@ -94,7 +95,7 @@ export const create = async (req: AuthRequest, res: Response, next: NextFunction
 export const update = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   const id = req.params.id as string;
   const { name, code } = req.body;
-  const newName = name ? name.trim().toUpperCase() : undefined;
+  const newName = name ? getCanonicalSubjectName(name.trim().toUpperCase()) : undefined;
 
   const existing = await prisma.subject.findUnique({ where: { id } });
   if (!existing) return next(createError('Subject not found', 404));
@@ -185,7 +186,7 @@ export const bulkImport = async (req: AuthRequest, res: Response, next: NextFunc
 
         // Also check by name (case-insensitive) to prevent name duplicates
         const existingByName = await prisma.subject.findFirst({
-          where: { name: { equals: String(name).trim().toUpperCase(), mode: 'insensitive' }, classId: cls.id }
+          where: { name: { equals: getCanonicalSubjectName(String(name).trim().toUpperCase()), mode: 'insensitive' }, classId: cls.id }
         });
         if (existingByName) {
           failed.push({ row, reason: 'Subject with this name already exists in this class' });
@@ -193,7 +194,7 @@ export const bulkImport = async (req: AuthRequest, res: Response, next: NextFunc
         }
 
         await prisma.subject.create({
-          data: { name: String(name), code: String(code), classId: cls.id },
+          data: { name: getCanonicalSubjectName(String(name).trim().toUpperCase()), code: String(code), classId: cls.id },
         });
         success++;
       } catch (e: any) {
