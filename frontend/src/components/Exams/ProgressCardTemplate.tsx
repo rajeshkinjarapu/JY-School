@@ -125,10 +125,10 @@ export const ProgressCardTemplate: React.FC<ProgressCardTemplateProps> = ({
         <div style={{ flex: 1 }}>
           {infoRows.map((row, i) => (
             <div key={i} style={{ display: 'grid', gridTemplateColumns: '175px 1fr', borderBottom: i < infoRows.length - 1 ? '1px solid #f5ede4' : 'none', background: i % 2 === 1 ? '#fefcf9' : 'transparent' }}>
-              <div style={{ padding: '7px 16px', fontWeight: 600, fontSize: 13, color: '#6a3a1a', borderRight: '1px solid #f5ede4', display: 'flex', alignItems: 'center', gap: 6, background: '#fdf9f4', whiteSpace: 'nowrap' }}>
+              <div style={{ padding: '11px 16px', fontWeight: 600, fontSize: 13, color: '#6a3a1a', borderRight: '1px solid #f5ede4', display: 'flex', alignItems: 'center', gap: 6, background: '#fdf9f4', whiteSpace: 'nowrap' }}>
                 {row.icon} {row.label}
               </div>
-              <div style={{ padding: '7px 16px', paddingRight: 120, fontWeight: 600, fontSize: 14, color: '#0b1a33', display: 'flex', alignItems: 'center', overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>
+              <div style={{ padding: '11px 16px', paddingRight: 120, fontWeight: 600, fontSize: 14, color: '#0b1a33', display: 'flex', alignItems: 'center', overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>
                 {row.value}
               </div>
             </div>
@@ -143,7 +143,7 @@ export const ProgressCardTemplate: React.FC<ProgressCardTemplateProps> = ({
         </div>
       </div>
 
-      <div style={{ margin: '0 24px 12px 24px' }}>
+      <div style={{ margin: '24px 24px 16px 24px' }}>
         <div style={{ fontSize: 15, fontWeight: 700, color: '#0b1a33', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 10 }}>
           <span style={{ fontSize: 20 }}>📊</span>
           <span>Performance Summary</span>
@@ -152,10 +152,10 @@ export const ProgressCardTemplate: React.FC<ProgressCardTemplateProps> = ({
         <table style={{ width: '100%', borderCollapse: 'collapse', borderRadius: 10, overflow: 'hidden', boxShadow: '0 4px 12px rgba(0,0,0,0.06)', fontSize: 14, border: '2px solid #e8e0d8' }}>
           <thead>
             <tr style={{ background: 'linear-gradient(135deg,#0b1a33,#1a4a7a,#0b1a33)' }}>
-              <th style={{ color: '#fff', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, padding: '10px 16px 10px 20px', textAlign: 'left', fontSize: 12, border: '1px solid rgba(255,255,255,0.1)' }}>Subject</th>
-              <th style={{ color: '#fff', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, padding: '10px 16px', textAlign: 'center', fontSize: 12, border: '1px solid rgba(255,255,255,0.1)' }}>Marks</th>
-              <th style={{ color: '#fff', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, padding: '10px 16px', textAlign: 'center', fontSize: 12, border: '1px solid rgba(255,255,255,0.1)' }}>Max Marks</th>
-              <th style={{ color: '#fff', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, padding: '10px 16px', textAlign: 'center', fontSize: 12, border: '1px solid rgba(255,255,255,0.1)' }}>%</th>
+              <th style={{ color: '#fff', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, padding: '12px 16px 12px 20px', textAlign: 'left', fontSize: 12, border: '1px solid rgba(255,255,255,0.1)' }}>Subject</th>
+              <th style={{ color: '#fff', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, padding: '12px 16px', textAlign: 'center', fontSize: 12, border: '1px solid rgba(255,255,255,0.1)' }}>Marks</th>
+              <th style={{ color: '#fff', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, padding: '12px 16px', textAlign: 'center', fontSize: 12, border: '1px solid rgba(255,255,255,0.1)' }}>Max Marks</th>
+              <th style={{ color: '#fff', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, padding: '12px 16px', textAlign: 'center', fontSize: 12, border: '1px solid rgba(255,255,255,0.1)' }}>%</th>
             </tr>
           </thead>
           <tbody>
@@ -166,18 +166,18 @@ export const ProgressCardTemplate: React.FC<ProgressCardTemplateProps> = ({
               const subPct = isAB ? '0.0' : (max > 0 ? ((Number(sub.obtained) || 0) / max) * 100 : 0).toFixed(1);
               return (
                 <tr key={i} style={{ background: i % 2 === 1 ? '#fdfcf9' : '#fff' }}>
-                  <td style={{ padding: '8px 16px 8px 20px', textAlign: 'left', border: '1px solid #e8e0d8', fontWeight: 600, color: '#1a3a5a' }}>📘 {sub.subject}</td>
-                  <td style={{ padding: '8px 16px', textAlign: 'center', border: '1px solid #e8e0d8', fontWeight: 700, fontSize: 15, color: isAB ? '#ef4444' : '#0b1a33' }}>{obt}</td>
-                  <td style={{ padding: '8px 16px', textAlign: 'center', border: '1px solid #e8e0d8', color: '#6a8aaa' }}>{max}</td>
-                  <td style={{ padding: '8px 16px', textAlign: 'center', border: '1px solid #e8e0d8', fontWeight: 700, color: '#1a4a7a' }}>{subPct}%</td>
+                  <td style={{ padding: '14px 16px 14px 20px', textAlign: 'left', border: '1px solid #e8e0d8', fontWeight: 600, color: '#1a3a5a' }}>📘 {sub.subject}</td>
+                  <td style={{ padding: '14px 16px', textAlign: 'center', border: '1px solid #e8e0d8', fontWeight: 700, fontSize: 15, color: isAB ? '#ef4444' : '#0b1a33' }}>{obt}</td>
+                  <td style={{ padding: '14px 16px', textAlign: 'center', border: '1px solid #e8e0d8', color: '#6a8aaa' }}>{max}</td>
+                  <td style={{ padding: '14px 16px', textAlign: 'center', border: '1px solid #e8e0d8', fontWeight: 700, color: '#1a4a7a' }}>{subPct}%</td>
                 </tr>
               );
             })}
             <tr style={{ background: 'linear-gradient(90deg,#fdf9f4,#fff3e0)' }}>
-              <td style={{ padding: '9px 16px 9px 20px', textAlign: 'left', border: '2.5px solid #f39c12', fontWeight: 900, color: '#0b1a33', textTransform: 'uppercase', letterSpacing: 1, fontSize: 14 }}>📌 TOTAL</td>
-              <td style={{ padding: '9px 16px', textAlign: 'center', border: '2.5px solid #f39c12', fontWeight: 900, fontSize: 18, color: '#c0392b' }}>{safeData.total}</td>
-              <td style={{ padding: '9px 16px', textAlign: 'center', border: '2.5px solid #f39c12', color: '#6a8aaa' }}>{TOTAL_MAX_MARKS}</td>
-              <td style={{ padding: '9px 16px', textAlign: 'center', border: '2.5px solid #f39c12', fontWeight: 700, color: '#1a4a7a' }}>{totalPct}%</td>
+              <td style={{ padding: '14px 16px 14px 20px', textAlign: 'left', border: '2.5px solid #f39c12', fontWeight: 900, color: '#0b1a33', textTransform: 'uppercase', letterSpacing: 1, fontSize: 14 }}>📌 TOTAL</td>
+              <td style={{ padding: '14px 16px', textAlign: 'center', border: '2.5px solid #f39c12', fontWeight: 900, fontSize: 18, color: '#c0392b' }}>{safeData.total}</td>
+              <td style={{ padding: '14px 16px', textAlign: 'center', border: '2.5px solid #f39c12', color: '#6a8aaa' }}>{TOTAL_MAX_MARKS}</td>
+              <td style={{ padding: '14px 16px', textAlign: 'center', border: '2.5px solid #f39c12', fontWeight: 700, color: '#1a4a7a' }}>{totalPct}%</td>
             </tr>
           </tbody>
         </table>
