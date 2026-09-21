@@ -1,5 +1,10 @@
 # Project State: JY School ERP
 
+- **Duplicate Subjects Cleaned & Fixed (2026-09-21)**:
+  - **Issue Resolved**: The system was creating duplicate subjects like "MATHS" and "MATHEMATICS" as distinct database entries because the `getCanonicalSubjectName` alias rule was only applied during mark entry, not during subject creation.
+  - **Fix Deployed**: Added `getCanonicalSubjectName` to `backend/src/controllers/subjects.controller.ts` so all new subject creations (both manual and bulk import) are automatically normalized.
+  - **Database Cleanup**: Ran `backend/scripts/fix-duplicate-subjects.ts` successfully on the production server, which permanently deleted 31 duplicate subjects and safely reassigned 1,336 marks to their canonical parent subjects without any data loss.
+
 - **Exams Bulk Apply & Telugu Translation Update (2026-09-21)**:
   - **Class-Specific Bulk Marks**: Removed the global "Apply 100M to ALL assigned classes" button which assigned identical marks to all classes simultaneously. Implemented a class-specific "Apply to Class" input for each active class tab, allowing administrators to dynamically configure different maximum marks per class.
   - **Telugu to English Translation**: Completely eradicated all hardcoded Telugu string labels, tooltips, and toast error/success messages across `CreateExamPage.tsx`, `ExamListPage.tsx`, `OMRScannerPage.tsx`, and `backend/src/controllers/exams.controller.ts`. Replaced them with professional English equivalents ensuring cross-compatibility and cleaner codebase management.

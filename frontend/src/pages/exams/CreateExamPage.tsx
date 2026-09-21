@@ -17,12 +17,13 @@ export const CreateExamPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const editExam = location.state?.exam;
+  const isDuplicate = location.state?.isDuplicate;
 
   const [classes, setClasses] = useState<any[]>([]);
   const [allDbSubjects, setAllDbSubjects] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
 
-  const [examName, setExamName] = useState(editExam?.name || '');
+  const [examName, setExamName] = useState(editExam ? (isDuplicate ? `${editExam.name} (Copy)` : editExam.name) : '');
   const [examCategory, setExamCategory] = useState<'JEE' | 'BOARD' | ''>('');
   const [boardExamType, setBoardExamType] = useState('');
   const [examClassIds, setExamClassIds] = useState<string[]>(editExam?.classes?.map((c: any) => c.id) || []);
@@ -569,7 +570,7 @@ export const CreateExamPage: React.FC = () => {
     };
 
     try {
-      if (editExam?.id) {
+      if (editExam?.id && !isDuplicate) {
         await api.put(`/api/exams/${editExam.id}`, {
           name: examName,
           classIds: examClassIds,
@@ -588,7 +589,7 @@ export const CreateExamPage: React.FC = () => {
           subjects: finalSubjectsPayload,
           admitCardSettings
         });
-        toast.success('Exam created successfully!');
+        toast.success(isDuplicate ? 'Exam duplicated successfully!' : 'Exam created successfully!');
       }
       navigate('/exams');
     } catch (err: any) {

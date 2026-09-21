@@ -137,6 +137,10 @@ export const ExamListPage: React.FC = () => {
     navigate('/exams/create', { state: { exam } });
   };
 
+  const handleDuplicateExam = (exam: any) => {
+    navigate('/exams/create', { state: { exam, isDuplicate: true } });
+  };
+
   // Written Exam State
   const [selectedWrittenExamId, setSelectedWrittenExamId] = useState('');
 
@@ -2466,6 +2470,9 @@ export const ExamListPage: React.FC = () => {
                         <>
                           <button onClick={() => openEditModal(e)} className="flex-1 bg-white hover:bg-slate-50 text-indigo-600 border-2 border-indigo-50 text-xs font-bold px-4 py-2 flex justify-center items-center gap-1.5 rounded-xl transition-all">
                             <Edit3 className="w-4 h-4" /> Edit
+                          </button>
+                          <button onClick={() => handleDuplicateExam(e)} className="flex-1 bg-white hover:bg-slate-50 text-emerald-600 border-2 border-emerald-50 text-xs font-bold px-4 py-2 flex justify-center items-center gap-1.5 rounded-xl transition-all">
+                            <Copy className="w-4 h-4" /> Duplicate
                           </button>
                           <button 
                             onClick={async () => {
