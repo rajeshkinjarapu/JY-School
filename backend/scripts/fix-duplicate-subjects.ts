@@ -7,7 +7,7 @@ async function fixDuplicateSubjects() {
   console.log('🔍 Finding duplicate subjects...\n');
 
   const allSubjects = await prisma.subject.findMany({
-    orderBy: { createdAt: 'asc' },
+    orderBy: { id: 'asc' },
   });
 
   // Group by normalized name + classId
