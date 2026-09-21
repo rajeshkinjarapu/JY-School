@@ -47,13 +47,13 @@ export const ProgressCardTemplate: React.FC<ProgressCardTemplateProps> = ({
   };
 
   const infoRows = [
-    { icon: '`u{1F464}', label: 'Student Name', value: safeData.studentName },
-    { icon: '`u{1F194}', label: 'Student ID', value: safeData.rollNo },
-    { icon: '`u{1F4DA}', label: 'Class', value: safeData.className },
-    { icon: '`u{1F4D6}', label: 'Section', value: safeData.section },
-    { icon: '`u{1F4C5}', label: 'Academic Year', value: safeData.academicYear },
-    { icon: '`u{1F4CD}', label: 'Location', value: safeData.location },
-    ...(safeData.rank ? [{ icon: '`u{1F3C5}', label: 'Class Rank', value: `#${safeData.rank}` }] : []),
+    { icon: '👤', label: 'Student Name', value: safeData.studentName },
+    { icon: '🆔', label: 'Student ID', value: safeData.rollNo },
+    { icon: '🏫', label: 'Class', value: safeData.className },
+    { icon: '🏷️', label: 'Section', value: safeData.section },
+    { icon: '📅', label: 'Academic Year', value: safeData.academicYear },
+    { icon: '📍', label: 'Location', value: safeData.location },
+    ...(safeData.rank ? [{ icon: '🏅', label: 'Class Rank', value: `#${safeData.rank}` }] : []),
   ];
 
   return (
