@@ -164,17 +164,18 @@ export const JEEProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
     await new Promise(resolve => setTimeout(resolve, 300));
     
     try {
+      const rect = el.getBoundingClientRect();
       const imgData = await toJpeg(el, { 
         quality: 1.0,
         backgroundColor: '#ffffff',
-        pixelRatio: 2.5,
-        style: { margin: '0' },
+        pixelRatio: window.innerWidth < 768 ? 1.5 : 2,
+        style: { display: 'flex', transform: 'none', margin: '0' },
         useCORS: true
       } as any);
       
       const pdf = new jsPDF('p', 'mm', 'a4');
-      const pdfWidth = 210; // Fixed A4 width in mm
-      const pdfHeight = (1123 / 794) * pdfWidth; // Fixed aspect ratio
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (rect.height * pdfWidth) / rect.width;
       
       pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight, undefined, 'FAST');
       
