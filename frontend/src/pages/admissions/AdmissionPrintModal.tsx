@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Printer, CheckCircle2, ShieldCheck } from 'lucide-react';
+import { X, Printer } from 'lucide-react';
 
 interface AdmissionPrintModalProps {
   isOpen?: boolean;
@@ -26,10 +26,8 @@ export const AdmissionPrintModal: React.FC<AdmissionPrintModalProps> = ({
   if (!isOpen || !admission) return null;
 
   const schoolName = schoolSettings?.schoolName || 'SRI VENKATESWARA JY PUBLIC SCHOOL';
-  const schoolSociety = 'SRI VENKATESWARA EDUCATIONAL SOCIETY (REGD. NO. 412/2005)';
-  const schoolSub = '(IIT-JEE • NEET FOUNDATION & ALL-INDIA OLYMPIAD ACADEMY)';
-  const schoolAddress = schoolSettings?.address || 'SVL Paradise Campus, Opp. Hero Showroom, Narasannapeta, Srikakulam Dist. – 532421';
-  const schoolContact = 'Ph: +91 95029 24433, 98481 23456 | Email: info@svjyschool.edu.in | Web: www.jyschool.edu.in';
+  const schoolSub = '(IIT-JEE / NEET Foundation – Olympiads)';
+  const schoolAddress = schoolSettings?.address || 'Near Axis Bank, Old Bus Stand, Narasannapeta';
   const schoolLogo = schoolSettings?.logoUrl || '/logo.png';
 
   const currentYear = new Date().getFullYear();
@@ -40,51 +38,36 @@ export const AdmissionPrintModal: React.FC<AdmissionPrintModalProps> = ({
     ? new Date(admission.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' })
     : new Date().toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' });
 
-  // Date of Birth Digits [D][D] [M][M] [Y][Y][Y][Y]
-  let dobDigits = ['', '', '', '', '', '', '', ''];
-  let formattedDobText = '';
+  // DOB formatted
+  let dobStr = '';
+  let dobBoxes = ['', '', '', '', '', '', '', ''];
   if (admission.dob) {
     try {
       const d = new Date(admission.dob);
-      const dayStr = String(d.getDate()).padStart(2, '0');
-      const monthStr = String(d.getMonth() + 1).padStart(2, '0');
-      const yearStr = String(d.getFullYear());
-      dobDigits = [
-        dayStr[0], dayStr[1],
-        monthStr[0], monthStr[1],
-        yearStr[0], yearStr[1], yearStr[2], yearStr[3]
-      ];
-      formattedDobText = d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+      const dd = String(d.getDate()).padStart(2, '0');
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const yyyy = String(d.getFullYear());
+      dobBoxes = [dd[0], dd[1], mm[0], mm[1], yyyy[0], yyyy[1], yyyy[2], yyyy[3]];
+      dobStr = `${dd}/${mm}/${yyyy}`;
     } catch (_) {}
   }
 
-  // Gender flags
-  const genderUpper = (admission.gender || '').toString().toUpperCase();
+  const genderUpper = (admission.gender || '').toUpperCase();
   const isBoy = genderUpper === 'MALE' || genderUpper === 'BOY';
   const isGirl = genderUpper === 'FEMALE' || genderUpper === 'GIRL';
 
-  // Parse siblings safely
   let siblingsList: any[] = [];
   if (admission.siblingsData && admission.siblingsData !== 'NA') {
     try {
-      siblingsList = typeof admission.siblingsData === 'string' ? JSON.parse(admission.siblingsData) : admission.siblingsData;
+      siblingsList = typeof admission.siblingsData === 'string'
+        ? JSON.parse(admission.siblingsData)
+        : admission.siblingsData;
     } catch (e) {}
   }
 
-  // Full formatted residence address
-  const fullAddress = admission.address || [
-    admission.doorNo ? `D.No: ${admission.doorNo}` : null,
-    admission.village,
-    admission.sachivalayam ? `Sachivalayam: ${admission.sachivalayam}` : null,
-    admission.mandal ? `Mandal: ${admission.mandal}` : null,
-    admission.district ? `Dist: ${admission.district}` : null,
-    admission.state || 'Andhra Pradesh',
-    admission.pincode ? `PIN: ${admission.pincode}` : null,
-  ].filter(Boolean).join(', ') || 'Narasannapeta, Srikakulam District, Andhra Pradesh';
-
-  const feeAmount = admission.admissionFee 
-    ? `₹ ${Number(admission.admissionFee).toLocaleString('en-IN')}` 
-    : 'As Prescribed by Management';
+  const feeAmount = admission.admissionFee
+    ? `₹ ${Number(admission.admissionFee).toLocaleString('en-IN')}`
+    : '';
 
   const resolveImg = (src?: string) => {
     if (!src) return '';
@@ -93,862 +76,716 @@ export const AdmissionPrintModal: React.FC<AdmissionPrintModalProps> = ({
     return `${base.replace(/\/$/, '')}/${src.replace(/^\//, '')}`;
   };
 
-  const handlePrint = () => {
-    window.print();
+  const handlePrint = () => window.print();
+
+  // ─── SHARED STYLES ────────────────────────────────────────────────────────
+  const lineStyle: React.CSSProperties = {
+    borderBottom: '1px solid #000',
+    display: 'inline-block',
+    minWidth: '160px',
+    marginLeft: '4px',
   };
 
-  // Render Page 1: Official Student Admission Dossier & Tear-Off Acknowledgement Slip
+  // ─── PAGE 1 ───────────────────────────────────────────────────────────────
   const renderPage1 = () => (
-    <div className="a4-page bg-white text-slate-900 box-border w-[210mm] h-[297mm] p-[5mm] relative flex flex-col justify-between overflow-hidden shadow-sm mx-auto mb-6 print:mb-0 print:border-none print:shadow-none print:p-[5mm]">
-      {/* Outer Institutional Navy Certificate Border */}
-      <div className="w-full h-full border-[2.5px] border-[#1e3a8a] p-[2.5mm] box-border flex flex-col justify-between">
-        {/* Inner Fine Navy Border */}
-        <div className="w-full h-full border border-[#1e3a8a] p-[4mm] box-border flex flex-col justify-between">
-          
-          {/* TOP SECTION: INSTITUTIONAL HEADER & PHOTO */}
-          <div>
-            <div className="flex items-center justify-between gap-3 border-b-2 border-[#1e3a8a] pb-2.5">
-              {/* School Emblem / Crest */}
-              <div className="w-[20mm] h-[20mm] rounded-full border-2 border-[#1e3a8a] p-1 flex items-center justify-center bg-white shrink-0 shadow-sm">
-                <img
-                  src={schoolLogo}
-                  alt="School Crest"
-                  className="w-full h-full object-contain"
-                  onError={(e) => {
-                    e.currentTarget.style.display = 'none';
-                    if (e.currentTarget.parentElement) {
-                      e.currentTarget.parentElement.innerHTML = '<div class="text-center font-black text-[9px] text-[#1e3a8a] leading-tight">SVJY<br/><span class="text-[7px]">ACADEMY</span></div>';
-                    }
-                  }}
-                />
-              </div>
+    <div
+      className="a4-page"
+      style={{
+        width: '210mm',
+        height: '297mm',
+        backgroundColor: '#fff',
+        boxSizing: 'border-box',
+        padding: '8mm',
+        fontFamily: 'Times New Roman, Times, serif',
+        color: '#000',
+        position: 'relative',
+        display: 'flex',
+        flexDirection: 'column',
+      }}
+    >
+      {/* Double Border */}
+      <div style={{
+        position: 'absolute', inset: '4mm',
+        border: '3px solid #000',
+        boxSizing: 'border-box',
+        pointerEvents: 'none',
+        zIndex: 0,
+      }} />
+      <div style={{
+        position: 'absolute', inset: '6mm',
+        border: '1px solid #000',
+        boxSizing: 'border-box',
+        pointerEvents: 'none',
+        zIndex: 0,
+      }} />
 
-              {/* Institution Identity */}
-              <div className="text-center flex-1">
-                <p className="text-[7.5px] font-extrabold uppercase tracking-[0.2em] text-slate-600 mb-0.5">
-                  {schoolSociety}
-                </p>
-                <h1 className="text-[18px] font-black uppercase tracking-wider text-[#1e3a8a] leading-none font-serif mb-1 drop-shadow-sm">
-                  {schoolName}
-                </h1>
-                <p className="text-[9.5px] font-black uppercase tracking-wider text-[#c2410c] mb-0.5">
-                  {schoolSub}
-                </p>
-                <p className="text-[8.5px] font-semibold text-slate-700 leading-tight">
-                  {schoolAddress}
-                </p>
-                <p className="text-[7.5px] font-medium text-slate-500 mt-0.5">
-                  {schoolContact}
-                </p>
-              </div>
+      {/* Content inside border */}
+      <div style={{ position: 'relative', zIndex: 1, flex: 1, display: 'flex', flexDirection: 'column', padding: '4mm 6mm 3mm 6mm' }}>
 
-              {/* Passport Photo Box (Official 32mm x 40mm) */}
-              <div className="w-[30mm] h-[38mm] border-2 border-[#1e3a8a] rounded-sm bg-slate-50 p-0.5 flex flex-col items-center justify-center text-center shrink-0 overflow-hidden shadow-sm">
-                {admission.studentImage ? (
-                  <img
-                    src={resolveImg(admission.studentImage)}
-                    alt={admission.studentName}
-                    className="w-full h-full object-cover rounded-xs"
-                  />
-                ) : (
-                  <div className="flex flex-col items-center justify-center p-1 text-slate-400">
-                    <div className="w-8 h-8 border border-dashed border-slate-400 rounded-full flex items-center justify-center mb-1">
-                      <span className="text-[12px] font-bold">📷</span>
-                    </div>
-                    <span className="text-[7.5px] font-bold text-slate-600 uppercase tracking-tight leading-tight">
-                      Affix Recent<br />Passport Size<br />Photograph
-                    </span>
-                  </div>
-                )}
-              </div>
+        {/* ── HEADER ── */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '4px' }}>
+          {/* Logo */}
+          <img
+            src={schoolLogo}
+            alt="Logo"
+            style={{ width: '52px', height: '52px', objectFit: 'contain', flexShrink: 0 }}
+            onError={(e) => { e.currentTarget.style.display = 'none'; }}
+          />
+          {/* School Name */}
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: '20px', fontWeight: 'bold', textTransform: 'uppercase', lineHeight: 1.2, letterSpacing: '1px' }}>
+              {schoolName}
             </div>
-
-            {/* DOSSIER TITLE RIBBON */}
-            <div className="mt-2 bg-[#1e3a8a] text-white py-1 px-3 flex items-center justify-between rounded-xs shadow-sm">
-              <span className="text-[8.5px] font-extrabold tracking-widest uppercase bg-white/20 px-2 py-0.5 rounded-xs">
-                OFFICIAL ADMISSION RECORD
-              </span>
-              <h2 className="text-[11px] font-black uppercase tracking-widest text-center">
-                STUDENT ADMISSION REGISTRATION DOSSIER ({academicYear})
-              </h2>
-              <span className="text-[8.5px] font-extrabold tracking-widest uppercase text-amber-300">
-                ORIGINAL DOSSIER
-              </span>
-            </div>
-
-            {/* QUICK METADATA BAR (4 Columns) */}
-            <div className="grid grid-cols-4 border border-t-0 border-slate-400 bg-slate-100 text-[9px] divide-x divide-slate-400 font-sans">
-              <div className="p-1.5 flex items-baseline gap-1">
-                <span className="text-slate-500 font-bold uppercase">Admn No:</span>
-                <span className="font-mono font-black text-slate-950">{regNo}</span>
-              </div>
-              <div className="p-1.5 flex items-baseline gap-1">
-                <span className="text-slate-500 font-bold uppercase">Date:</span>
-                <span className="font-bold text-slate-950">{regDate}</span>
-              </div>
-              <div className="p-1.5 flex items-baseline gap-1">
-                <span className="text-slate-500 font-bold uppercase">Class Seeking:</span>
-                <span className="font-black text-[#1e3a8a] uppercase">{admission.classApplied || 'N/A'}</span>
-              </div>
-              <div className="p-1.5 flex items-baseline gap-1">
-                <span className="text-slate-500 font-bold uppercase">Academic Year:</span>
-                <span className="font-bold text-slate-950">{academicYear}</span>
-              </div>
-            </div>
-
-            {/* SECTION 1: STUDENT BIODATA & PERSONAL PARTICULAR */}
-            <div className="mt-2.5">
-              <div className="bg-slate-200/90 border border-slate-400 px-2 py-0.5 flex items-center justify-between">
-                <span className="text-[9px] font-black uppercase tracking-wider text-[#1e3a8a]">
-                  SECTION 1: STUDENT BIODATA & IDENTIFICATION
-                </span>
-                <span className="text-[7.5px] font-bold text-slate-600 uppercase">Part A</span>
-              </div>
-
-              <table className="w-full border-collapse border border-slate-400 text-[9.5px]">
-                <tbody>
-                  {/* Full Name & Gender */}
-                  <tr className="border-b border-slate-300">
-                    <td className="w-36 bg-slate-50 p-1.5 font-bold text-slate-700 border-r border-slate-300">
-                      Full Name of the Student:
-                    </td>
-                    <td className="p-1.5 font-black text-slate-950 uppercase tracking-wide border-r border-slate-300 text-[10.5px]">
-                      {admission.studentName || '—'}
-                    </td>
-                    <td className="w-24 bg-slate-50 p-1.5 font-bold text-slate-700 border-r border-slate-300">
-                      Gender:
-                    </td>
-                    <td className="w-36 p-1.5 font-bold">
-                      <div className="flex items-center gap-3">
-                        <span className="inline-flex items-center gap-1">
-                          <span className="w-3.5 h-3.5 border border-slate-800 rounded-xs inline-flex items-center justify-center font-black text-[9px] text-[#1e3a8a]">
-                            {isBoy ? '✓' : ''}
-                          </span>
-                          <span>BOY (Male)</span>
-                        </span>
-                        <span className="inline-flex items-center gap-1">
-                          <span className="w-3.5 h-3.5 border border-slate-800 rounded-xs inline-flex items-center justify-center font-black text-[9px] text-[#1e3a8a]">
-                            {isGirl ? '✓' : ''}
-                          </span>
-                          <span>GIRL (Female)</span>
-                        </span>
-                      </div>
-                    </td>
-                  </tr>
-
-                  {/* Date of Birth & Mother Tongue */}
-                  <tr className="border-b border-slate-300">
-                    <td className="bg-slate-50 p-1.5 font-bold text-slate-700 border-r border-slate-300">
-                      Date of Birth:
-                    </td>
-                    <td className="p-1.5 border-r border-slate-300">
-                      <div className="flex items-center gap-2">
-                        <div className="flex items-center">
-                          <div className="flex border border-slate-700 rounded-xs overflow-hidden">
-                            <span className="w-4 h-4 inline-flex items-center justify-center font-black font-mono text-[9.5px] border-r border-slate-400 bg-white">{dobDigits[0]}</span>
-                            <span className="w-4 h-4 inline-flex items-center justify-center font-black font-mono text-[9.5px] bg-white">{dobDigits[1]}</span>
-                          </div>
-                          <span className="mx-1 text-slate-400 font-bold">/</span>
-                          <div className="flex border border-slate-700 rounded-xs overflow-hidden">
-                            <span className="w-4 h-4 inline-flex items-center justify-center font-black font-mono text-[9.5px] border-r border-slate-400 bg-white">{dobDigits[2]}</span>
-                            <span className="w-4 h-4 inline-flex items-center justify-center font-black font-mono text-[9.5px] bg-white">{dobDigits[3]}</span>
-                          </div>
-                          <span className="mx-1 text-slate-400 font-bold">/</span>
-                          <div className="flex border border-slate-700 rounded-xs overflow-hidden">
-                            <span className="w-4 h-4 inline-flex items-center justify-center font-black font-mono text-[9.5px] border-r border-slate-400 bg-white">{dobDigits[4]}</span>
-                            <span className="w-4 h-4 inline-flex items-center justify-center font-black font-mono text-[9.5px] border-r border-slate-400 bg-white">{dobDigits[5]}</span>
-                            <span className="w-4 h-4 inline-flex items-center justify-center font-black font-mono text-[9.5px] border-r border-slate-400 bg-white">{dobDigits[6]}</span>
-                            <span className="w-4 h-4 inline-flex items-center justify-center font-black font-mono text-[9.5px] bg-white">{dobDigits[7]}</span>
-                          </div>
-                        </div>
-                        {formattedDobText && (
-                          <span className="text-[8.5px] font-bold text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded">
-                            ({formattedDobText})
-                          </span>
-                        )}
-                      </div>
-                    </td>
-                    <td className="bg-slate-50 p-1.5 font-bold text-slate-700 border-r border-slate-300">
-                      Mother Tongue:
-                    </td>
-                    <td className="p-1.5 font-bold text-slate-900">
-                      {admission.motherTongue || 'Telugu'}
-                    </td>
-                  </tr>
-
-                  {/* Student Aadhaar & Nationality & Religion */}
-                  <tr className="border-b border-slate-300">
-                    <td className="bg-slate-50 p-1.5 font-bold text-slate-700 border-r border-slate-300">
-                      Student Aadhaar Number:
-                    </td>
-                    <td className="p-1.5 font-mono font-bold text-slate-950 border-r border-slate-300">
-                      {admission.aadharNo || 'Not Provided / Pending'}
-                    </td>
-                    <td className="bg-slate-50 p-1.5 font-bold text-slate-700 border-r border-slate-300">
-                      Nationality / Religion:
-                    </td>
-                    <td className="p-1.5 font-bold text-slate-900">
-                      {admission.nationality || 'Indian'} • {admission.religion || 'Hindu'}
-                    </td>
-                  </tr>
-
-                  {/* Social Category & Sub-Caste & State */}
-                  <tr>
-                    <td className="bg-slate-50 p-1.5 font-bold text-slate-700 border-r border-slate-300">
-                      Social Category & Caste:
-                    </td>
-                    <td className="p-1.5 font-bold text-slate-950 border-r border-slate-300">
-                      <span className="inline-block bg-[#1e3a8a]/10 text-[#1e3a8a] px-1.5 py-0.2 rounded font-black text-[9px] mr-2">
-                        {admission.caste || 'General / OC'}
-                      </span>
-                      <span>Sub-Caste: </span>
-                      <span className="font-bold text-slate-900 underline underline-offset-2">
-                        {admission.subCaste || '—'}
-                      </span>
-                    </td>
-                    <td className="bg-slate-50 p-1.5 font-bold text-slate-700 border-r border-slate-300">
-                      Domicile State:
-                    </td>
-                    <td className="p-1.5 font-bold text-slate-900">
-                      {admission.state || 'Andhra Pradesh'}
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-
-            {/* SECTION 2: PARENT & GUARDIAN PARTICULARS (Comparison Table) */}
-            <div className="mt-2.5">
-              <div className="bg-slate-200/90 border border-slate-400 px-2 py-0.5 flex items-center justify-between">
-                <span className="text-[9px] font-black uppercase tracking-wider text-[#1e3a8a]">
-                  SECTION 2: PARENT & GUARDIAN DETAILS
-                </span>
-                <span className="text-[7.5px] font-bold text-slate-600 uppercase">Part B</span>
-              </div>
-
-              <table className="w-full border-collapse border border-slate-400 text-[9.5px]">
-                <thead>
-                  <tr className="bg-slate-100 border-b border-slate-400 text-slate-700 font-extrabold text-[8.5px] uppercase tracking-wider">
-                    <th className="w-36 p-1 text-left border-r border-slate-300 pl-2">PARTICULAR</th>
-                    <th className="p-1 text-left border-r border-slate-300 pl-2">FATHER / PRIMARY GUARDIAN</th>
-                    <th className="p-1 text-left pl-2">MOTHER / SECONDARY GUARDIAN</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr className="border-b border-slate-300">
-                    <td className="bg-slate-50 p-1.5 font-bold text-slate-700 border-r border-slate-300">
-                      Full Legal Name:
-                    </td>
-                    <td className="p-1.5 font-black text-slate-950 uppercase border-r border-slate-300">
-                      {admission.fatherName ? `SRI ${admission.fatherName}` : '—'}
-                    </td>
-                    <td className="p-1.5 font-black text-slate-950 uppercase">
-                      {admission.motherName ? `SMT ${admission.motherName}` : '—'}
-                    </td>
-                  </tr>
-                  <tr className="border-b border-slate-300">
-                    <td className="bg-slate-50 p-1.5 font-bold text-slate-700 border-r border-slate-300">
-                      Occupation / Profession:
-                    </td>
-                    <td className="p-1.5 font-bold text-slate-900 border-r border-slate-300">
-                      {admission.fatherOccupation || '—'}
-                    </td>
-                    <td className="p-1.5 font-bold text-slate-900">
-                      {admission.motherOccupation || 'Home Maker'}
-                    </td>
-                  </tr>
-                  <tr className="border-b border-slate-300">
-                    <td className="bg-slate-50 p-1.5 font-bold text-slate-700 border-r border-slate-300">
-                      Aadhaar Card Number:
-                    </td>
-                    <td className="p-1.5 font-mono font-bold text-slate-950 border-r border-slate-300">
-                      {admission.fatherAadhar || '—'}
-                    </td>
-                    <td className="p-1.5 font-mono font-bold text-slate-950">
-                      {admission.motherAadhar || '—'}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="bg-slate-50 p-1.5 font-bold text-slate-700 border-r border-slate-300">
-                      Mobile Contact Number:
-                    </td>
-                    <td className="p-1.5 font-mono font-black text-[#1e3a8a] border-r border-slate-300">
-                      {admission.fatherPhone || admission.phone || '—'}
-                    </td>
-                    <td className="p-1.5 font-mono font-bold text-slate-900">
-                      {admission.motherPhone || admission.alternatePhone || '—'}
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-
-            {/* SECTION 3: RESIDENTIAL & PREVIOUS ACADEMIC PARTICULARS */}
-            <div className="mt-2.5">
-              <div className="bg-slate-200/90 border border-slate-400 px-2 py-0.5 flex items-center justify-between">
-                <span className="text-[9px] font-black uppercase tracking-wider text-[#1e3a8a]">
-                  SECTION 3: RESIDENCE, PREVIOUS SCHOOL & FEE STRUCTURE
-                </span>
-                <span className="text-[7.5px] font-bold text-slate-600 uppercase">Part C</span>
-              </div>
-
-              <table className="w-full border-collapse border border-slate-400 text-[9.5px]">
-                <tbody>
-                  <tr className="border-b border-slate-300">
-                    <td className="w-36 bg-slate-50 p-1.5 font-bold text-slate-700 border-r border-slate-300">
-                      Permanent Residence Address:
-                    </td>
-                    <td colSpan={3} className="p-1.5 font-semibold text-slate-900 leading-snug">
-                      {fullAddress}
-                    </td>
-                  </tr>
-                  <tr className="border-b border-slate-300">
-                    <td className="bg-slate-50 p-1.5 font-bold text-slate-700 border-r border-slate-300">
-                      Previous School Attended:
-                    </td>
-                    <td className="p-1.5 font-bold text-slate-900 border-r border-slate-300">
-                      {admission.previousSchool || 'N/A (Direct Entry / Fresher)'}
-                    </td>
-                    <td className="w-32 bg-slate-50 p-1.5 font-bold text-slate-700 border-r border-slate-300">
-                      Previous Class / TC:
-                    </td>
-                    <td className="w-48 p-1.5 font-bold text-slate-900">
-                      {admission.previousClass ? `Class: ${admission.previousClass}` : 'Fresher'} • TC: Attached
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="bg-slate-50 p-1.5 font-bold text-slate-700 border-r border-slate-300">
-                      Annual Institutional Fee Fixed:
-                    </td>
-                    <td colSpan={3} className="p-1.5 font-black text-slate-950 bg-amber-50/50">
-                      <span className="text-[#c2410c] text-[11px] mr-3">{feeAmount}</span>
-                      <span className="text-[8px] font-bold text-slate-600">
-                        (Payable in 3 Scheduled Terms as per Institutional Norms)
-                      </span>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+            <div style={{ fontSize: '11px', marginTop: '2px' }}>{schoolSub}</div>
+            <div style={{ fontSize: '10px', marginTop: '1px', color: '#333' }}>{schoolAddress}</div>
           </div>
-
-          {/* LOWER SECTION: TEAR-OFF PERFORATION & OFFICIAL ACKNOWLEDGEMENT SLIP */}
-          <div className="mt-3 pt-1">
-            {/* Scissor Perforation Divider */}
-            <div className="relative border-t-2 border-dashed border-slate-600 my-1 text-center">
-              <span className="bg-white px-3 font-mono font-bold text-[8px] tracking-widest text-slate-500 uppercase absolute -top-2.5 left-1/2 -translate-x-1/2 flex items-center gap-1.5">
-                ✂ CUT HERE / TEAR ALONG PERFORATION (PARENT / STUDENT ACKNOWLEDGEMENT COPY) ✂
-              </span>
-            </div>
-
-            {/* Acknowledgement Card */}
-            <div className="border border-slate-400 bg-slate-50/80 rounded-xs p-2.5 mt-2">
-              <div className="flex items-center justify-between border-b border-slate-300 pb-1.5 mb-1.5">
-                <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-full border border-[#1e3a8a] flex items-center justify-center bg-white">
-                    <img src={schoolLogo} alt="Crest" className="w-5 h-5 object-contain" />
-                  </div>
-                  <div>
-                    <h3 className="text-[11px] font-black uppercase tracking-wider text-[#1e3a8a] leading-tight">
-                      {schoolName}
-                    </h3>
-                    <p className="text-[7.5px] font-semibold text-slate-600">
-                      Narasannapeta, Srikakulam Dist. | Official Admission Acknowledgement
-                    </p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <span className="bg-[#1e3a8a] text-white text-[8px] font-black uppercase px-2.5 py-0.5 rounded tracking-widest">
-                    ADMISSION ACKNOWLEDGEMENT SLIP
-                  </span>
-                  <p className="text-[7.5px] font-mono text-slate-500 mt-0.5">
-                    Ref: {regNo} • Date: {regDate}
-                  </p>
-                </div>
-              </div>
-
-              {/* Acknowledgement Particulars Table */}
-              <table className="w-full border-collapse border border-slate-300 text-[9px] bg-white">
-                <tbody>
-                  <tr className="border-b border-slate-200">
-                    <td className="w-32 bg-slate-100 p-1 font-bold text-slate-600 border-r border-slate-200">
-                      Student Full Name:
-                    </td>
-                    <td className="p-1 font-black text-slate-950 uppercase border-r border-slate-200">
-                      {admission.studentName}
-                    </td>
-                    <td className="w-24 bg-slate-100 p-1 font-bold text-slate-600 border-r border-slate-200">
-                      Class Allotted:
-                    </td>
-                    <td className="p-1 font-black text-[#1e3a8a] uppercase">
-                      {admission.classApplied || '—'} ({academicYear})
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="bg-slate-100 p-1 font-bold text-slate-600 border-r border-slate-200">
-                      Parent / Guardian Name:
-                    </td>
-                    <td className="p-1 font-bold text-slate-900 uppercase border-r border-slate-200">
-                      {admission.fatherName || admission.motherName || '—'}
-                    </td>
-                    <td className="bg-slate-100 p-1 font-bold text-slate-600 border-r border-slate-200">
-                      Annual Fee Fixed:
-                    </td>
-                    <td className="p-1 font-black text-slate-950">
-                      {feeAmount}
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-
-              {/* Signatures for Acknowledgement */}
-              <div className="grid grid-cols-3 gap-6 items-end mt-5 pt-1 px-3">
-                <div className="text-center">
-                  <div className="border-t border-slate-700 pt-1">
-                    <p className="font-bold text-[8.5px] text-slate-800">Signature of Parent / Guardian</p>
-                  </div>
-                </div>
-                <div className="text-center">
-                  <div className="border-t border-slate-700 pt-1">
-                    <p className="font-bold text-[8.5px] text-slate-800">Cashier / Admission Incharge</p>
-                  </div>
-                </div>
-                <div className="text-center">
-                  <div className="border-t border-slate-700 pt-1">
-                    <p className="font-black text-[8.5px] text-[#1e3a8a]">Principal & Correspondent (Seal)</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Page Footer Note */}
-            <div className="flex items-center justify-between text-[7px] text-slate-400 mt-1.5 px-1 font-sans">
-              <span>Sri Venkateswara JY Public School • Student Admission Dossier</span>
-              <span className="font-bold">Page 1 of 2 (Official Registration Record)</span>
-            </div>
-          </div>
-
         </div>
-      </div>
+
+        {/* ── ADMISSION FORM TITLE ── */}
+        <div style={{ textAlign: 'center', margin: '6px 0 8px' }}>
+          <div style={{
+            display: 'inline-block',
+            background: '#000',
+            color: '#fff',
+            fontSize: '12px',
+            fontWeight: 'bold',
+            padding: '3px 32px',
+            letterSpacing: '2px',
+            textTransform: 'uppercase',
+          }}>
+            ADMISSION FORM
+          </div>
+        </div>
+
+        {/* ── PHOTO BOX (top-right, absolute) ── */}
+        <div style={{
+          position: 'absolute',
+          top: '28mm',
+          right: '10mm',
+          width: '28mm',
+          height: '34mm',
+          border: '1px solid #000',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: '#f9f9f9',
+          overflow: 'hidden',
+          zIndex: 2,
+        }}>
+          {admission.studentImage ? (
+            <img
+              src={resolveImg(admission.studentImage)}
+              alt="Student"
+              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+            />
+          ) : (
+            <div style={{ fontSize: '7px', textAlign: 'center', color: '#555', padding: '4px', lineHeight: '1.4' }}>
+              Affix latest<br />Passport Size<br />Photograph
+            </div>
+          )}
+        </div>
+
+        {/* ── FORM FIELDS ── */}
+        <div style={{ fontSize: '11px', lineHeight: '1.9', paddingRight: '34mm' }}>
+
+          {/* 1. Admn No */}
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px' }}>
+            <span style={{ minWidth: '14px', fontWeight: 'bold' }}>1.</span>
+            <span>Admn No :</span>
+            <span style={{ ...lineStyle, minWidth: '90px' }}>{regNo}</span>
+            <span style={{ marginLeft: '10px' }}>Class</span>
+            <span style={{ ...lineStyle, minWidth: '60px' }}>{admission.classApplied || ''}</span>
+            <span style={{ marginLeft: '10px' }}>Academic Year</span>
+            <span style={{ ...lineStyle, minWidth: '80px' }}>{academicYear}</span>
+          </div>
+
+          {/* 2. Date of Joining */}
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px' }}>
+            <span style={{ minWidth: '14px', fontWeight: 'bold' }}>2.</span>
+            <span>Date of Joining &nbsp;&nbsp;:</span>
+            <span style={{ ...lineStyle, minWidth: '200px' }}>{regDate}</span>
+          </div>
+
+          {/* 3. Name of Student */}
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px', flexWrap: 'wrap' }}>
+            <span style={{ minWidth: '14px', fontWeight: 'bold' }}>3.</span>
+            <span>Name of the Student &nbsp;:</span>
+            <span style={{ ...lineStyle, minWidth: '250px', fontWeight: 'bold', textTransform: 'uppercase' }}>
+              {admission.studentName || ''}
+            </span>
+          </div>
+          <div style={{ paddingLeft: '20px', fontSize: '9.5px', color: '#333' }}>(In capital Letters)</div>
+
+          {/* 4. Gender */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ minWidth: '14px', fontWeight: 'bold' }}>4.</span>
+            <span>Gender &nbsp;:</span>
+            <span style={{ marginLeft: '8px' }}>Boy</span>
+            <span style={{
+              display: 'inline-block',
+              width: '14px', height: '14px',
+              border: '1px solid #000',
+              textAlign: 'center',
+              lineHeight: '13px',
+              fontSize: '10px',
+              fontWeight: 'bold',
+            }}>{isBoy ? '✓' : ''}</span>
+            <span style={{ marginLeft: '12px' }}>Girl</span>
+            <span style={{
+              display: 'inline-block',
+              width: '14px', height: '14px',
+              border: '1px solid #000',
+              textAlign: 'center',
+              lineHeight: '13px',
+              fontSize: '10px',
+              fontWeight: 'bold',
+            }}>{isGirl ? '✓' : ''}</span>
+          </div>
+
+          {/* 5. Date of Birth with boxes */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <span style={{ minWidth: '14px', fontWeight: 'bold' }}>5.</span>
+            <span>Date of Birth &nbsp;:</span>
+            <span style={{ marginLeft: '6px', display: 'flex', gap: '2px', alignItems: 'center' }}>
+              {dobBoxes.map((d, i) => (
+                <React.Fragment key={i}>
+                  <span style={{
+                    display: 'inline-block',
+                    width: '14px', height: '16px',
+                    border: '1px solid #000',
+                    textAlign: 'center',
+                    lineHeight: '15px',
+                    fontSize: '10px',
+                    fontWeight: 'bold',
+                  }}>{d}</span>
+                  {(i === 1 || i === 3) && <span style={{ fontSize: '12px', fontWeight: 'bold', margin: '0 1px' }}>/</span>}
+                </React.Fragment>
+              ))}
+              {dobStr && <span style={{ marginLeft: '6px', fontSize: '10px', color: '#444' }}>({dobStr})</span>}
+            </span>
+          </div>
+
+          {/* 6. Mother Tongue & Aadhar */}
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px' }}>
+            <span style={{ minWidth: '14px', fontWeight: 'bold' }}>6.</span>
+            <span>Mother Tongue :</span>
+            <span style={{ ...lineStyle, minWidth: '100px' }}>{admission.motherTongue || 'Telugu'}</span>
+            <span style={{ marginLeft: '16px' }}>Aadhar No :</span>
+            <span style={{ ...lineStyle, minWidth: '120px' }}>{admission.aadharNo || ''}</span>
+          </div>
+
+          {/* 7. Father's Name */}
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px' }}>
+            <span style={{ minWidth: '14px', fontWeight: 'bold' }}>7.</span>
+            <span>Father's &nbsp;Name &nbsp;:</span>
+            <span style={{ ...lineStyle, minWidth: '130px', textTransform: 'uppercase' }}>
+              {admission.fatherName || ''}
+            </span>
+            <span style={{ marginLeft: '8px' }}>Occupation :</span>
+            <span style={{ ...lineStyle, minWidth: '100px' }}>{admission.fatherOccupation || ''}</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px', paddingLeft: '20px' }}>
+            <span>Aadhar No &nbsp;:</span>
+            <span style={{ ...lineStyle, minWidth: '120px' }}>{admission.fatherAadhar || ''}</span>
+            <span style={{ marginLeft: '16px' }}>Phone No &nbsp;:</span>
+            <span style={{ ...lineStyle, minWidth: '110px' }}>{admission.fatherPhone || admission.phone || ''}</span>
+          </div>
+
+          {/* 8. Mother's Name */}
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px' }}>
+            <span style={{ minWidth: '14px', fontWeight: 'bold' }}>8.</span>
+            <span>Mother's Name :</span>
+            <span style={{ ...lineStyle, minWidth: '120px', textTransform: 'uppercase' }}>
+              {admission.motherName || ''}
+            </span>
+            <span style={{ marginLeft: '8px' }}>Occupation :</span>
+            <span style={{ ...lineStyle, minWidth: '100px' }}>{admission.motherOccupation || 'Home Maker'}</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px', paddingLeft: '20px' }}>
+            <span>Aadhar No &nbsp;:</span>
+            <span style={{ ...lineStyle, minWidth: '120px' }}>{admission.motherAadhar || ''}</span>
+            <span style={{ marginLeft: '16px' }}>Phone No &nbsp;:</span>
+            <span style={{ ...lineStyle, minWidth: '110px' }}>{admission.motherPhone || admission.alternatePhone || ''}</span>
+          </div>
+
+          {/* 9. Nationality, State, Religion */}
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px' }}>
+            <span style={{ minWidth: '14px', fontWeight: 'bold' }}>9.</span>
+            <span>Nationality :</span>
+            <span style={{ ...lineStyle, minWidth: '80px' }}>{admission.nationality || 'Indian'}</span>
+            <span style={{ marginLeft: '8px' }}>State:</span>
+            <span style={{ ...lineStyle, minWidth: '80px' }}>{admission.state || 'Andhra Pradesh'}</span>
+            <span style={{ marginLeft: '8px' }}>Religion :</span>
+            <span style={{ ...lineStyle, minWidth: '80px' }}>{admission.religion || 'Hindu'}</span>
+          </div>
+
+          {/* 10. Caste & Sub-Caste */}
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px' }}>
+            <span style={{ minWidth: '14px', fontWeight: 'bold' }}>10.</span>
+            <span>Caste &nbsp;&nbsp;&nbsp;:</span>
+            <span style={{ ...lineStyle, minWidth: '100px' }}>{admission.caste || ''}</span>
+            <span style={{ marginLeft: '20px' }}>Sub-Caste:</span>
+            <span style={{ ...lineStyle, minWidth: '120px' }}>{admission.subCaste || ''}</span>
+          </div>
+
+          {/* 11. Residence */}
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px' }}>
+            <span style={{ minWidth: '14px', fontWeight: 'bold' }}>11.</span>
+            <span>Residence &nbsp;:</span>
+            <span style={{
+              ...lineStyle,
+              minWidth: '300px',
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+            }}>
+              {[admission.doorNo ? `D.No: ${admission.doorNo}` : null, admission.village, admission.mandal ? `Mandal: ${admission.mandal}` : null, admission.district ? `${admission.district} Dist` : null].filter(Boolean).join(', ') || admission.address || ''}
+            </span>
+          </div>
+
+          {/* 12. Previous School */}
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px' }}>
+            <span style={{ minWidth: '14px', fontWeight: 'bold' }}>12.</span>
+            <span>Name of the School Previous Studying / Studied :</span>
+            <span style={{ ...lineStyle, minWidth: '160px' }}>{admission.previousSchool || ''}</span>
+          </div>
+
+          {/* 13. Annual Fee */}
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px' }}>
+            <span style={{ minWidth: '14px', fontWeight: 'bold' }}>13.</span>
+            <span>Annual fee fixed for {academicYear} &nbsp;:</span>
+            <span style={{ ...lineStyle, minWidth: '160px', fontWeight: 'bold' }}>{feeAmount}</span>
+          </div>
+        </div>
+
+        {/* ── ACKNOWLEDGEMENT SLIP ── */}
+        <div style={{ marginTop: 'auto', borderTop: '2px solid #000', paddingTop: '6px' }}>
+          {/* Divider scissors */}
+          <div style={{ textAlign: 'center', fontSize: '9px', color: '#555', marginBottom: '4px', letterSpacing: '2px' }}>
+            ✂ ─────────────────── CUT HERE ─────────────────── ✂
+          </div>
+
+          {/* Ack Header */}
+          <div style={{ textAlign: 'center', marginBottom: '4px' }}>
+            <div style={{ fontSize: '16px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px' }}>
+              {schoolName}
+            </div>
+            <div style={{
+              display: 'inline-block',
+              background: '#000',
+              color: '#fff',
+              fontSize: '10px',
+              fontWeight: 'bold',
+              padding: '2px 24px',
+              margin: '3px 0',
+              letterSpacing: '1px',
+            }}>
+              Acknowledgement
+            </div>
+          </div>
+
+          {/* Ack Fields */}
+          <div style={{ fontSize: '11px', lineHeight: '2.2' }}>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px' }}>
+              <span>Name of the Student</span>
+              <span style={{ flex: 1, borderBottom: '1px dotted #000', marginLeft: '4px', fontWeight: 'bold', textTransform: 'uppercase' }}>
+                &nbsp;{admission.studentName || ''}&nbsp;
+              </span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px' }}>
+              <span>Class</span>
+              <span style={{ minWidth: '60px', borderBottom: '1px dotted #000', fontWeight: 'bold' }}>
+                &nbsp;{admission.classApplied || ''}&nbsp;
+              </span>
+              <span style={{ marginLeft: '12px' }}>Father's Name</span>
+              <span style={{ flex: 1, borderBottom: '1px dotted #000', marginLeft: '4px', fontWeight: 'bold', textTransform: 'uppercase' }}>
+                &nbsp;{admission.fatherName || ''}&nbsp;
+              </span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px' }}>
+              <span>Annual fee fixed for {academicYear}</span>
+              <span style={{ flex: 1, borderBottom: '1px dotted #000', marginLeft: '4px', fontWeight: 'bold' }}>
+                &nbsp;{feeAmount}&nbsp;
+              </span>
+            </div>
+          </div>
+
+          {/* Ack Signatures */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '16px', fontSize: '11px' }}>
+            <div style={{ borderTop: '1px solid #000', width: '45%', paddingTop: '2px', textAlign: 'center' }}>
+              Signature of the Parent
+            </div>
+            <div style={{ borderTop: '1px solid #000', width: '45%', paddingTop: '2px', textAlign: 'center' }}>
+              Signature of the Principal
+            </div>
+          </div>
+        </div>
+
+      </div>{/* end content */}
     </div>
   );
 
-  // Render Page 2: Sibling Particulars, Institutional Code of Conduct, Parental Declaration & Scrutiny
+  // ─── PAGE 2 ───────────────────────────────────────────────────────────────
   const renderPage2 = () => (
-    <div className="a4-page bg-white text-slate-900 box-border w-[210mm] h-[297mm] p-[5mm] relative flex flex-col justify-between overflow-hidden shadow-sm mx-auto mb-6 print:mb-0 print:border-none print:shadow-none print:p-[5mm]">
-      {/* Outer Institutional Navy Certificate Border */}
-      <div className="w-full h-full border-[2.5px] border-[#1e3a8a] p-[2.5mm] box-border flex flex-col justify-between">
-        {/* Inner Fine Navy Border */}
-        <div className="w-full h-full border border-[#1e3a8a] p-[4mm] box-border flex flex-col justify-between">
+    <div
+      className="a4-page"
+      style={{
+        width: '210mm',
+        height: '297mm',
+        backgroundColor: '#fff',
+        boxSizing: 'border-box',
+        padding: '8mm',
+        fontFamily: 'Times New Roman, Times, serif',
+        color: '#000',
+        position: 'relative',
+        display: 'flex',
+        flexDirection: 'column',
+      }}
+    >
+      {/* Double Border */}
+      <div style={{
+        position: 'absolute', inset: '4mm',
+        border: '3px solid #000',
+        boxSizing: 'border-box',
+        pointerEvents: 'none',
+        zIndex: 0,
+      }} />
+      <div style={{
+        position: 'absolute', inset: '6mm',
+        border: '1px solid #000',
+        boxSizing: 'border-box',
+        pointerEvents: 'none',
+        zIndex: 0,
+      }} />
 
-          {/* TOP SECTION: PAGE 2 INSTITUTIONAL BANNER */}
-          <div>
-            <div className="flex items-center justify-between border-b-2 border-[#1e3a8a] pb-2">
-              <div className="flex items-center gap-2.5">
-                <div className="w-10 h-10 rounded-full border border-[#1e3a8a] p-0.5 flex items-center justify-center bg-white">
-                  <img src={schoolLogo} alt="Crest" className="w-8 h-8 object-contain" />
-                </div>
-                <div>
-                  <h2 className="text-[13px] font-black uppercase tracking-wide text-[#1e3a8a] leading-none font-serif">
-                    {schoolName}
-                  </h2>
-                  <p className="text-[8px] font-bold text-slate-600 uppercase tracking-wider mt-0.5">
-                    INSTITUTIONAL CODE OF CONDUCT, TERMS & CONDITIONS & UNDERTAKING
-                  </p>
-                </div>
-              </div>
-              <div className="text-right">
-                <span className="bg-slate-900 text-white font-mono text-[8.5px] font-bold px-2 py-0.5 rounded">
-                  {regNo}
-                </span>
-                <p className="text-[8px] font-bold text-[#1e3a8a] mt-0.5">
-                  Student: {admission.studentName} ({admission.classApplied || 'N/A'})
-                </p>
-              </div>
-            </div>
+      {/* Content */}
+      <div style={{ position: 'relative', zIndex: 1, flex: 1, display: 'flex', flexDirection: 'column', padding: '5mm 7mm 4mm 7mm', fontSize: '10.5px' }}>
 
-            {/* SECTION 4: SIBLING PARTICULARS */}
-            <div className="mt-2.5">
-              <div className="bg-slate-200/90 border border-slate-400 px-2 py-0.5 flex items-center justify-between">
-                <span className="text-[9px] font-black uppercase tracking-wider text-[#1e3a8a]">
-                  SECTION 4: SIBLING INFORMATION (STUDYING IN SVJY OR OTHER INSTITUTIONS)
-                </span>
-                <span className="text-[7.5px] font-bold text-slate-600 uppercase">Part D</span>
-              </div>
-
-              <table className="w-full border-collapse border border-slate-400 text-[9px]">
-                <thead>
-                  <tr className="bg-slate-100 border-b border-slate-400 text-slate-700 font-extrabold text-[8px] uppercase tracking-wider">
-                    <th className="w-12 p-1 text-center border-r border-slate-300">S.NO</th>
-                    <th className="p-1 text-left border-r border-slate-300 pl-2">NAME OF SIBLING</th>
-                    <th className="w-28 p-1 text-center border-r border-slate-300">CLASS / GRADE</th>
-                    <th className="p-1 text-left pl-2">WHERE HE / SHE IS STUDYING</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {[0, 1, 2, 3].map((idx) => {
-                    const sib = siblingsList[idx];
-                    return (
-                      <tr key={idx} className="border-b border-slate-300 last:border-b-0 h-[18px]">
-                        <td className="p-1 text-center font-bold font-mono border-r border-slate-300 text-slate-600">
-                          {idx + 1}
-                        </td>
-                        <td className="p-1 pl-2 border-r border-slate-300 font-black text-slate-950 uppercase">
-                          {sib ? sib.name : (idx === 0 && siblingsList.length === 0 ? 'NA (No Siblings Recorded / Only Child)' : '—')}
-                        </td>
-                        <td className="p-1 text-center border-r border-slate-300 font-bold text-slate-800">
-                          {sib ? sib.className : '—'}
-                        </td>
-                        <td className="p-1 pl-2 font-medium text-slate-700">
-                          {sib ? sib.schoolName : '—'}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-
-            {/* SECTION 5: TERMS AND CONDITIONS (11 Points) */}
-            <div className="mt-2.5">
-              <div className="bg-slate-200/90 border border-slate-400 px-2 py-0.5 flex items-center justify-between">
-                <span className="text-[9px] font-black uppercase tracking-wider text-[#1e3a8a]">
-                  SECTION 5: CODE OF CONDUCT & INSTITUTIONAL RULES (MANDATORY COMPLIANCE)
-                </span>
-                <span className="text-[7.5px] font-bold text-slate-600 uppercase">11 Rules</span>
-              </div>
-
-              <div className="border border-t-0 border-slate-400 p-2 bg-slate-50/50">
-                <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-[8px] leading-tight font-sans text-slate-800">
-                  <div className="flex items-start gap-1">
-                    <span className="font-black text-[#1e3a8a] shrink-0">1.</span>
-                    <span><strong>Student Discipline:</strong> Student must strictly obey all rules, disciplinary standards, and regulations set by the management.</span>
-                  </div>
-                  <div className="flex items-start gap-1">
-                    <span className="font-black text-[#1e3a8a] shrink-0">2.</span>
-                    <span><strong>Prescribed Uniform:</strong> Students are not permitted to enter or move around school premises without proper prescribed uniform and ID card.</span>
-                  </div>
-                  <div className="flex items-start gap-1">
-                    <span className="font-black text-[#1e3a8a] shrink-0">3.</span>
-                    <span><strong>Campus Visitors:</strong> During school instructional hours, no outside visitors or parents are permitted into classroom areas.</span>
-                  </div>
-                  <div className="flex items-start gap-1">
-                    <span className="font-black text-[#1e3a8a] shrink-0">4.</span>
-                    <span><strong>Parent-Faculty Protocol:</strong> Parents must not approach teachers directly during school hours without prior permission of the management.</span>
-                  </div>
-                  <div className="flex items-start gap-1">
-                    <span className="font-black text-[#1e3a8a] shrink-0">5.</span>
-                    <span><strong>Disciplinary Authority:</strong> Management reserves full right to accept or reject admissions. Names will be struck off for continuous indiscipline.</span>
-                  </div>
-                  <div className="flex items-start gap-1">
-                    <span className="font-black text-[#1e3a8a] shrink-0">6.</span>
-                    <span><strong>Property Indemnity:</strong> In case of willful or accidental damage to school property/lab, parents must reimburse the exact value of damage.</span>
-                  </div>
-                  <div className="flex items-start gap-1">
-                    <span className="font-black text-[#1e3a8a] shrink-0">7.</span>
-                    <span><strong>Finality of Decision:</strong> In all disciplinary and administrative matters, the decision of the School Management is final and binding.</span>
-                  </div>
-                  <div className="flex items-start gap-1">
-                    <span className="font-black text-[#1e3a8a] shrink-0">8.</span>
-                    <span><strong>Attendance & Absence:</strong> Continuous absence for 10 days without written leave will result in striking off rolls. Prior leave approval is mandatory.</span>
-                  </div>
-                  <div className="flex items-start gap-1">
-                    <span className="font-black text-[#1e3a8a] shrink-0">9.</span>
-                    <span><strong>Readmission Terms:</strong> For struck-off admissions, readmission is subject to management discretion upon clearing all arrears and re-entry charges.</span>
-                  </div>
-                  <div className="flex items-start gap-1">
-                    <span className="font-black text-[#1e3a8a] shrink-0">10.</span>
-                    <span><strong>Term Payment Schedule:</strong> Fees must be cleared in 3 installments as stipulated; delayed fee payments will revoke all concession eligibility.</span>
-                  </div>
-                  <div className="flex items-start gap-1 col-span-2 bg-amber-50 border border-amber-200 p-1 rounded-xs">
-                    <span className="font-black text-[#c2410c] shrink-0">11.</span>
-                    <span className="font-bold text-[#c2410c]">
-                      Strict Non-Refundability: All institutional fees (admission, tuition, activity, digital curriculum) once paid are non-refundable and non-transferable under any circumstances.
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* SECTION 6: FEE PAYMENT INSTALLMENT SCHEDULE */}
-            <div className="mt-2">
-              <div className="grid grid-cols-3 border border-slate-400 text-center divide-x divide-slate-400 bg-white shadow-xs">
-                <div className="p-1.5 bg-slate-50">
-                  <p className="text-[7.5px] font-extrabold uppercase text-slate-500">Term 1 Installment</p>
-                  <p className="text-[9.5px] font-black text-[#1e3a8a]">August 1st Week</p>
-                </div>
-                <div className="p-1.5 bg-slate-50">
-                  <p className="text-[7.5px] font-extrabold uppercase text-slate-500">Term 2 Installment</p>
-                  <p className="text-[9.5px] font-black text-[#1e3a8a]">November 1st Week</p>
-                </div>
-                <div className="p-1.5 bg-slate-50">
-                  <p className="text-[7.5px] font-extrabold uppercase text-slate-500">Term 3 Installment</p>
-                  <p className="text-[9.5px] font-black text-[#1e3a8a]">Before Sankranti Holidays</p>
-                </div>
-              </div>
-            </div>
-
-            {/* SECTION 7: FORMAL PARENTAL DECLARATION & UNDERTAKING */}
-            <div className="mt-2.5 border border-slate-500 rounded-xs p-2.5 bg-slate-50">
-              <div className="flex items-center justify-between border-b border-slate-300 pb-1 mb-1">
-                <h4 className="font-serif font-black text-[9.5px] uppercase tracking-wider text-[#1e3a8a]">
-                  FORMAL DECLARATION & UNDERTAKING BY PARENT / GUARDIAN
-                </h4>
-                <ShieldCheck className="w-3.5 h-3.5 text-[#1e3a8a]" />
-              </div>
-              <p className="text-[8.5px] leading-relaxed text-justify text-slate-800 font-sans">
-                I, <strong className="uppercase text-slate-950 font-black underline underline-offset-2">{admission.fatherName || admission.motherName || 'Parent / Guardian'}</strong>, Parent / Legal Guardian of <strong className="uppercase text-slate-950 font-black underline underline-offset-2">{admission.studentName || 'Student'}</strong>, seeking admission into <strong className="text-[#1e3a8a]">{admission.classApplied || 'Class'}</strong> for Academic Year <strong>{academicYear}</strong>, do hereby solemnly declare that if my child is admitted, I promise to send my child daily to school in time with complete books and prescribed uniform, and pay the fee regularly. I will follow all rules and regulations and abide by the directions given by the school authority. I also state that outside of school hours, it is my sole responsibility to take care of the child. I declare that all information furnished above is true and correct to the best of my knowledge; if found incorrect at any stage, the admission of my ward may be cancelled immediately.
-              </p>
-
-              <div className="flex justify-between items-end mt-4 pt-1 px-2">
-                <div className="space-y-0.5 text-[8.5px]">
-                  <div><span className="font-bold text-slate-500">PLACE:</span> <span className="font-bold text-slate-900">Narasannapeta</span></div>
-                  <div><span className="font-bold text-slate-500">DATE:</span> <span className="font-bold text-slate-900">{regDate}</span></div>
-                </div>
-                <div className="text-center">
-                  <div className="w-48 border-t border-slate-700 pt-1">
-                    <p className="font-bold text-[8.5px] text-slate-900">Signature of the Parent / Guardian</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* SECTION 8: FOR OFFICE USE ONLY (SCRUTINY, CHECKLIST & FINAL APPROVAL) */}
-          <div className="mt-2.5">
-            <div className="border border-slate-500 rounded-xs p-2 bg-slate-100">
-              <div className="flex items-center justify-between border-b border-slate-300 pb-1 mb-1.5">
-                <span className="text-[9px] font-black uppercase tracking-wider text-[#1e3a8a]">
-                  SECTION 8: FOR OFFICE & SCRUTINY USE ONLY (ADMISSION COMMITTEE)
-                </span>
-                <span className="text-[7.5px] font-bold text-slate-500 uppercase">Institutional Clearance</span>
-              </div>
-
-              {/* Document Checklist Badges */}
-              <div className="grid grid-cols-6 gap-1 text-[7.5px] mb-2 text-center font-bold">
-                <span className="border border-slate-300 bg-white py-1 px-1 rounded flex items-center justify-center gap-1">
-                  <CheckCircle2 className="w-2.5 h-2.5 text-emerald-600" /> Birth Cert
-                </span>
-                <span className="border border-slate-300 bg-white py-1 px-1 rounded flex items-center justify-center gap-1">
-                  <CheckCircle2 className="w-2.5 h-2.5 text-emerald-600" /> Student Aadhaar
-                </span>
-                <span className="border border-slate-300 bg-white py-1 px-1 rounded flex items-center justify-center gap-1">
-                  <CheckCircle2 className="w-2.5 h-2.5 text-emerald-600" /> Parent Aadhaar
-                </span>
-                <span className="border border-slate-300 bg-white py-1 px-1 rounded flex items-center justify-center gap-1">
-                  <CheckCircle2 className="w-2.5 h-2.5 text-emerald-600" /> TC / Record Sheet
-                </span>
-                <span className="border border-slate-300 bg-white py-1 px-1 rounded flex items-center justify-center gap-1">
-                  <CheckCircle2 className="w-2.5 h-2.5 text-emerald-600" /> 3 Photos
-                </span>
-                <span className="border border-slate-300 bg-white py-1 px-1 rounded flex items-center justify-center gap-1">
-                  <CheckCircle2 className="w-2.5 h-2.5 text-emerald-600" /> Fee Receipt
-                </span>
-              </div>
-
-              {/* Scrutiny Data Row */}
-              <div className="grid grid-cols-4 border border-slate-300 bg-white p-1 text-[8.5px] mb-4 divide-x divide-slate-300">
-                <div className="pl-1">
-                  <span className="text-slate-500 font-bold">Status: </span>
-                  <span className="font-black text-emerald-700">PROVISIONALLY ADMITTED</span>
-                </div>
-                <div className="pl-1">
-                  <span className="text-slate-500 font-bold">Section: </span>
-                  <span className="font-black text-slate-900">A</span>
-                </div>
-                <div className="pl-1">
-                  <span className="text-slate-500 font-bold">Roll No: </span>
-                  <span className="font-mono font-black text-slate-900">{admission.rollNumber || '—'}</span>
-                </div>
-                <div className="pl-1">
-                  <span className="text-slate-500 font-bold">Ledger Folio: </span>
-                  <span className="font-mono font-black text-slate-900">{regNo.slice(-6)}</span>
-                </div>
-              </div>
-
-              {/* 3 Institutional Signatures */}
-              <div className="grid grid-cols-3 gap-6 items-end pt-1 px-2">
-                <div className="text-center">
-                  <div className="border-t border-slate-700 pt-1">
-                    <p className="font-bold text-[8.5px] text-slate-800">Scrutiny / Admission Clerk</p>
-                  </div>
-                </div>
-                <div className="text-center">
-                  <div className="border-t border-slate-700 pt-1">
-                    <p className="font-bold text-[8.5px] text-slate-800">Accounts & Fee Officer</p>
-                  </div>
-                </div>
-                <div className="text-center">
-                  <div className="border-t border-slate-700 pt-1">
-                    <p className="font-black text-[8.5px] text-[#1e3a8a]">Principal & Correspondent (Seal)</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Page 2 Footer Note */}
-            <div className="flex items-center justify-between text-[7px] text-slate-400 mt-1.5 px-1 font-sans">
-              <span>Sri Venkateswara JY Public School • Institutional Code of Conduct & Undertaking</span>
-              <span className="font-bold">Page 2 of 2 (Rules & Office Clearance Record)</span>
-            </div>
-          </div>
-
+        {/* ── SIBLING DETAILS ── */}
+        <div style={{ textAlign: 'center', fontWeight: 'bold', fontSize: '12px', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '1px' }}>
+          SIBLING DETAILS
         </div>
-      </div>
+        <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '10px', fontSize: '10.5px' }}>
+          <thead>
+            <tr style={{ backgroundColor: '#e8e8e8' }}>
+              <th style={{ border: '1px solid #000', padding: '4px 6px', width: '10%', textAlign: 'center' }}>S.NO</th>
+              <th style={{ border: '1px solid #000', padding: '4px 6px', width: '35%', textAlign: 'center' }}>NAME</th>
+              <th style={{ border: '1px solid #000', padding: '4px 6px', width: '15%', textAlign: 'center' }}>CLASS</th>
+              <th style={{ border: '1px solid #000', padding: '4px 6px', width: '40%', textAlign: 'center' }}>Where He / She Studying</th>
+            </tr>
+          </thead>
+          <tbody>
+            {[0, 1, 2, 3].map((idx) => {
+              const sib = siblingsList[idx];
+              return (
+                <tr key={idx} style={{ height: '22px' }}>
+                  <td style={{ border: '1px solid #000', padding: '3px 6px', textAlign: 'center', fontWeight: 'bold' }}>{idx + 1}</td>
+                  <td style={{ border: '1px solid #000', padding: '3px 6px', textTransform: 'uppercase' }}>
+                    {sib ? sib.name : (idx === 0 && siblingsList.length === 0 ? 'NA (Only Child)' : '')}
+                  </td>
+                  <td style={{ border: '1px solid #000', padding: '3px 6px', textAlign: 'center' }}>
+                    {sib ? sib.className : ''}
+                  </td>
+                  <td style={{ border: '1px solid #000', padding: '3px 6px' }}>
+                    {sib ? sib.schoolName : ''}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+
+        {/* ── TERMS AND CONDITIONS ── */}
+        <div style={{ fontWeight: 'bold', fontSize: '11px', marginBottom: '4px', textAlign: 'center', textDecoration: 'underline', textTransform: 'uppercase' }}>
+          Following Terms and Conditions Should Strictly Be Followed
+        </div>
+        <ol style={{ margin: '0 0 8px 0', paddingLeft: '18px', lineHeight: '1.75', fontSize: '10px' }}>
+          <li>Student should obey the rules and regulations set by the management.</li>
+          <li>Student would not be allowed to move around the premises of the school without uniform.</li>
+          <li>During school time no visitor is allowed.</li>
+          <li>During school time parents should not approach teachers without the permission of the management.</li>
+          <li>
+            The management has the right to reject or accept the application.<br />
+            The name of the student will be struck out if the students fail to follow the rules and regulations of the school.
+          </li>
+          <li>In case of any damage done to any of property of the school, the parent would pay the loss equal to the value of damage property.</li>
+          <li>In case of the decision of the management would be final and the concerned parties would accept the management's decisions final.</li>
+          <li>If the student will remain absent from school for 10 days without information his/her name will be struck out from the school. Parent has to take prior permission for the students absence.</li>
+          <li>The students has pay all dues again to be readmitted.</li>
+          <li>The fee would be collected in 3 terms and mentioned by management. Otherwise fee concession will not be allowed.</li>
+          <li style={{ fontWeight: 'bold' }}>The fee once paid will not be refunded.</li>
+        </ol>
+
+        {/* ── DECLARATION ── */}
+        <div style={{ fontWeight: 'bold', fontSize: '11.5px', marginBottom: '4px', textAlign: 'center', textDecoration: 'underline', textTransform: 'uppercase' }}>
+          Declaration by the Parent / Guardian
+        </div>
+        <p style={{ fontSize: '10px', lineHeight: '1.7', textAlign: 'justify', margin: '0 0 8px 0' }}>
+          I, <span style={{ borderBottom: '1px solid #000', display: 'inline-block', minWidth: '120px', fontWeight: 'bold', textTransform: 'uppercase' }}>
+            &nbsp;{admission.fatherName || admission.motherName || ''}&nbsp;
+          </span> Parent / Guardian of <span style={{ borderBottom: '1px solid #000', display: 'inline-block', minWidth: '120px', fontWeight: 'bold', textTransform: 'uppercase' }}>
+            &nbsp;{admission.studentName || ''}&nbsp;
+          </span> do hereby
+          declare that if my child is admitted, I promise to send my child daily to school in time with necessary books and to pay the fee regularly. I will follow the rules and regulations of the
+          school and abide by the directions given by the school authority I also state that outside of the school hours it is my responsibility to take care of the child and declare that all the
+          information given above is true to the best of my knowledge and I am aware that if it is
+          found wrong at any state, the admission of my ward will be cancelled.
+        </p>
+
+        {/* Place & Date */}
+        <div style={{ display: 'flex', gap: '32px', fontSize: '10.5px', marginBottom: '4px' }}>
+          <div>Place &nbsp;: <span style={{ borderBottom: '1px solid #000', display: 'inline-block', minWidth: '100px' }}>&nbsp;Narasannapeta&nbsp;</span></div>
+          <div>Date &nbsp;&nbsp;: <span style={{ borderBottom: '1px solid #000', display: 'inline-block', minWidth: '100px' }}>&nbsp;{regDate}&nbsp;</span></div>
+          <div style={{ marginLeft: 'auto' }}>
+            <span style={{ borderTop: '1px solid #000', display: 'inline-block', minWidth: '140px', paddingTop: '2px', textAlign: 'center', fontSize: '10px' }}>
+              Signature of the Parent/Guardian
+            </span>
+          </div>
+        </div>
+
+        {/* ── FEE PAYMENT SCHEDULE ── */}
+        <div style={{
+          border: '1px solid #000',
+          padding: '6px 10px',
+          marginTop: '6px',
+          marginBottom: 'auto',
+        }}>
+          <div style={{ fontWeight: 'bold', fontSize: '11px', marginBottom: '4px', textDecoration: 'underline', textTransform: 'uppercase' }}>
+            Fee Payment Schedule
+          </div>
+          <div style={{ fontSize: '10.5px', lineHeight: '1.8' }}>
+            <div>1st Term → August 1st week</div>
+            <div>2nd Term → November 1st week</div>
+            <div>3rd Term → Before sankranti holidays</div>
+          </div>
+        </div>
+
+        {/* ── BOTTOM SIGNATURES ── */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: '14px', fontSize: '10.5px' }}>
+          <div>
+            Date &nbsp;: <span style={{ borderBottom: '1px solid #000', display: 'inline-block', minWidth: '100px' }}>&nbsp;{regDate}&nbsp;</span>
+          </div>
+          <div style={{ borderTop: '1px solid #000', paddingTop: '2px', textAlign: 'center', minWidth: '140px' }}>
+            Signature of the Principal
+          </div>
+        </div>
+
+      </div>{/* end content */}
     </div>
   );
+
+  // ─── PRINT STYLES ─────────────────────────────────────────────────────────
+  const printStyles = `
+    @media print {
+      @page {
+        size: A4 portrait;
+        margin: 0;
+      }
+      html, body {
+        margin: 0 !important;
+        padding: 0 !important;
+        background: white !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+      body > * { display: none !important; }
+      body > #adm-print-root { display: block !important; }
+      #adm-print-root {
+        position: fixed !important;
+        top: 0; left: 0;
+        width: 210mm !important;
+        margin: 0 !important; padding: 0 !important;
+        background: white !important;
+      }
+      .a4-page {
+        width: 210mm !important;
+        height: 297mm !important;
+        min-height: 297mm !important;
+        max-height: 297mm !important;
+        box-sizing: border-box !important;
+        padding: 8mm !important;
+        margin: 0 !important;
+        page-break-after: always !important;
+        break-after: page !important;
+        overflow: hidden !important;
+        background: white !important;
+      }
+      .a4-page:last-child {
+        page-break-after: avoid !important;
+        break-after: avoid !important;
+      }
+      .no-print { display: none !important; }
+    }
+  `;
+
+  // ─── PREVIEW SCALE HELPER ─────────────────────────────────────────────────
+  // A4 in pixels at 96dpi: 210mm ≈ 794px, 297mm ≈ 1123px
+  // Scale to fit ~500px tall preview card → scale ≈ 0.45
+  const SCALE = 0.47;
+  const A4_W_PX = 794;
+  const A4_H_PX = 1123;
+
+  const scaledW = A4_W_PX * SCALE;
+  const scaledH = A4_H_PX * SCALE;
 
   return createPortal(
     <>
-      {/* Screen Modal Backdrop & Preview Controls */}
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md no-print">
-        <div className="relative w-full max-w-[1200px] bg-slate-900 rounded-3xl shadow-2xl overflow-hidden flex flex-col" style={{ maxHeight: '95vh' }}>
-          
-          {/* Modal Header Bar */}
-          <div className="px-6 py-4 bg-gradient-to-r from-[#1e3a8a] via-slate-900 to-[#1e3a8a] text-white flex items-center justify-between shadow-lg border-b border-slate-700 shrink-0">
-            <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-2xl bg-white/10 backdrop-blur-md border border-white/10 shadow-inner">
-                <Printer className="w-5 h-5 text-amber-400" />
+      {/* ── SCREEN MODAL ── */}
+      <div
+        className="no-print"
+        style={{
+          position: 'fixed', inset: 0, zIndex: 9999,
+          background: 'rgba(15,23,42,0.85)',
+          backdropFilter: 'blur(8px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          padding: '16px',
+        }}
+      >
+        <div style={{
+          width: '100%',
+          maxWidth: '1100px',
+          background: '#0f172a',
+          borderRadius: '20px',
+          overflow: 'hidden',
+          display: 'flex',
+          flexDirection: 'column',
+          maxHeight: '95vh',
+          border: '1px solid #334155',
+          boxShadow: '0 40px 80px rgba(0,0,0,0.7)',
+        }}>
+
+          {/* Header */}
+          <div style={{
+            padding: '14px 24px',
+            background: 'linear-gradient(90deg, #1e3a8a, #1e293b, #1e3a8a)',
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            borderBottom: '1px solid #334155',
+            flexShrink: 0,
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div style={{
+                background: 'rgba(255,255,255,0.1)',
+                borderRadius: '10px', padding: '8px',
+                border: '1px solid rgba(255,255,255,0.1)',
+              }}>
+                <Printer size={18} color="#fbbf24" />
               </div>
               <div>
-                <h2 className="font-black text-lg tracking-wide flex items-center gap-2">
-                  Official Student Admission Dossier (2 Pages)
-                  <span className="text-[10px] font-bold bg-amber-400 text-slate-950 px-2 py-0.5 rounded-full uppercase tracking-wider">
-                    Executive A4 Print
-                  </span>
-                </h2>
-                <p className="text-white/70 text-xs">Standard Institutional 2-Page A4 Registration Dossier with Double Certificate Border</p>
+                <div style={{ color: '#fff', fontWeight: 800, fontSize: '15px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  Official Admission Form — 2 Pages
+                  <span style={{
+                    background: '#fbbf24', color: '#0f172a',
+                    fontSize: '9px', fontWeight: 800,
+                    padding: '2px 10px', borderRadius: '999px',
+                    textTransform: 'uppercase', letterSpacing: '1px',
+                  }}>A4 Print</span>
+                </div>
+                <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: '11px', marginTop: '2px' }}>
+                  Standard Institutional Admission Dossier with Double Border
+                </div>
               </div>
             </div>
-            
-            <div className="flex items-center gap-3">
+            <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
               <button
-                type="button"
                 onClick={handlePrint}
-                className="px-6 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-black text-xs rounded-xl shadow-xl flex items-center gap-2 transition-all transform hover:-translate-y-0.5 cursor-pointer"
+                style={{
+                  background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+                  color: '#0f172a', fontWeight: 800, fontSize: '12px',
+                  border: 'none', borderRadius: '10px', padding: '9px 20px',
+                  cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px',
+                  boxShadow: '0 4px 14px rgba(245,158,11,0.4)',
+                }}
               >
-                <Printer className="w-4 h-4 text-slate-950" /> Print Both Pages (A4)
+                <Printer size={14} /> Print Both Pages (A4)
               </button>
               <button
-                type="button"
                 onClick={onClose}
-                className="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-colors cursor-pointer"
+                style={{
+                  background: 'rgba(255,255,255,0.1)',
+                  border: '1px solid rgba(255,255,255,0.15)',
+                  borderRadius: '10px', padding: '8px',
+                  cursor: 'pointer', color: '#fff',
+                }}
               >
-                <X className="w-5 h-5" />
+                <X size={18} />
               </button>
             </div>
           </div>
 
-          {/* Modal Scrollable Preview - Side by Side Pages */}
-          <div className="flex-1 overflow-auto p-6 bg-slate-950/60">
-            {/* Pages Labels Row */}
-            <div className="flex gap-6 justify-center mb-4">
-              <div className="flex items-center gap-2 text-xs font-bold text-slate-300 bg-slate-800/90 border border-slate-700 px-4 py-1.5 rounded-full shadow-md">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                PAGE 1 OF 2: OFFICIAL STUDENT ADMISSION DOSSIER & TEAR-OFF ACKNOWLEDGEMENT SLIP
-              </div>
-              <div className="flex items-center gap-2 text-xs font-bold text-slate-300 bg-slate-800/90 border border-slate-700 px-4 py-1.5 rounded-full shadow-md">
-                <span className="w-2 h-2 rounded-full bg-blue-400 animate-pulse"></span>
-                PAGE 2 OF 2: SIBLING RECORD, 11 MANDATORY RULES, PARENTAL UNDERTAKING & OFFICE SCRUTINY
-              </div>
+          {/* Preview Area */}
+          <div style={{
+            flex: 1, overflowY: 'auto',
+            background: '#0f172a',
+            padding: '24px',
+          }}>
+
+            {/* Page Labels */}
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', marginBottom: '16px' }}>
+              {['PAGE 1 — ADMISSION FORM + ACKNOWLEDGEMENT', 'PAGE 2 — TERMS, DECLARATION & FEE SCHEDULE'].map((label, i) => (
+                <div key={i} style={{
+                  display: 'flex', alignItems: 'center', gap: '6px',
+                  background: 'rgba(255,255,255,0.07)',
+                  border: '1px solid rgba(255,255,255,0.12)',
+                  borderRadius: '999px', padding: '5px 16px',
+                  color: '#cbd5e1', fontSize: '11px', fontWeight: 700,
+                  fontFamily: 'system-ui, sans-serif',
+                }}>
+                  <span style={{
+                    width: '7px', height: '7px', borderRadius: '50%',
+                    background: i === 0 ? '#34d399' : '#60a5fa',
+                    flexShrink: 0,
+                    boxShadow: `0 0 6px ${i === 0 ? '#34d399' : '#60a5fa'}`,
+                  }} />
+                  {label}
+                </div>
+              ))}
             </div>
 
-            {/* Side-by-Side A4 Pages with Scale */}
-            <div className="flex gap-8 justify-center items-start" style={{ minWidth: 'max-content', paddingBottom: '16px' }}>
-              {/* Page 1 - Scaled to ~62% */}
-              <div style={{
-                display: 'inline-block',
-                width: '210mm',
-                height: '297mm',
-                transform: 'scale(0.62)',
-                transformOrigin: 'top left',
-                flexShrink: 0,
-                marginRight: 'calc(210mm * 0.62 - 210mm)',
-                marginBottom: 'calc(297mm * 0.62 - 297mm)',
-              }}>
-                <div style={{ boxShadow: '0 25px 50px rgba(0,0,0,0.6)', borderRadius: '4px', overflow: 'hidden', border: '2px solid #475569' }}>
-                  {renderPage1()}
+            {/* Side-by-side pages */}
+            <div style={{
+              display: 'flex', gap: '24px', justifyContent: 'center',
+              alignItems: 'flex-start',
+            }}>
+              {[renderPage1(), renderPage2()].map((page, i) => (
+                <div key={i} style={{ flexShrink: 0 }}>
+                  {/* Page number badge */}
+                  <div style={{
+                    textAlign: 'center', color: '#64748b',
+                    fontSize: '10px', fontFamily: 'system-ui, sans-serif',
+                    marginBottom: '6px', fontWeight: 600, letterSpacing: '1px',
+                    textTransform: 'uppercase',
+                  }}>
+                    Page {i + 1}
+                  </div>
+                  {/* Scaled wrapper */}
+                  <div style={{
+                    width: `${scaledW}px`,
+                    height: `${scaledH}px`,
+                    overflow: 'hidden',
+                    borderRadius: '4px',
+                    boxShadow: '0 20px 60px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.08)',
+                  }}>
+                    <div style={{
+                      width: `${A4_W_PX}px`,
+                      height: `${A4_H_PX}px`,
+                      transform: `scale(${SCALE})`,
+                      transformOrigin: 'top left',
+                    }}>
+                      {page}
+                    </div>
+                  </div>
                 </div>
-              </div>
-
-              {/* Page 2 - Scaled to ~62% */}
-              <div style={{
-                display: 'inline-block',
-                width: '210mm',
-                height: '297mm',
-                transform: 'scale(0.62)',
-                transformOrigin: 'top left',
-                flexShrink: 0,
-                marginRight: 'calc(210mm * 0.62 - 210mm)',
-                marginBottom: 'calc(297mm * 0.62 - 297mm)',
-              }}>
-                <div style={{ boxShadow: '0 25px 50px rgba(0,0,0,0.6)', borderRadius: '4px', overflow: 'hidden', border: '2px solid #475569' }}>
-                  {renderPage2()}
-                </div>
-              </div>
+              ))}
             </div>
+
           </div>
         </div>
       </div>
 
-      {/* Dedicated Clean Print Portal (rendered in print media only) */}
-      <div id="admission-print-root" className="hidden print:block">
-        <style dangerouslySetInnerHTML={{ __html: `
-          @media print {
-            @page {
-              size: A4 portrait;
-              margin: 0mm;
-            }
-            html, body {
-              margin: 0 !important;
-              padding: 0 !important;
-              background: white !important;
-              color: #0f172a !important;
-              -webkit-print-color-adjust: exact !important;
-              print-color-adjust: exact !important;
-            }
-            body > * {
-              display: none !important;
-            }
-            body > #admission-print-root {
-              display: block !important;
-            }
-            #admission-print-root {
-              display: block !important;
-              position: fixed !important;
-              left: 0 !important;
-              top: 0 !important;
-              width: 210mm !important;
-              margin: 0 !important;
-              padding: 0 !important;
-              background: white !important;
-            }
-            .a4-page {
-              width: 210mm !important;
-              height: 297mm !important;
-              max-height: 297mm !important;
-              min-height: 297mm !important;
-              box-sizing: border-box !important;
-              padding: 5mm !important;
-              margin: 0 !important;
-              page-break-after: always !important;
-              break-after: page !important;
-              overflow: hidden !important;
-              position: relative !important;
-              display: flex !important;
-              flex-direction: column !important;
-              justify-content: space-between !important;
-              background: white !important;
-            }
-            .a4-page:last-child {
-              page-break-after: avoid !important;
-              break-after: avoid !important;
-            }
-            .no-print {
-              display: none !important;
-            }
-          }
-        `}} />
+      {/* ── PRINT-ONLY SECTION ── */}
+      <div id="adm-print-root" style={{ display: 'none' }}>
+        <style dangerouslySetInnerHTML={{ __html: printStyles }} />
         {renderPage1()}
         {renderPage2()}
       </div>

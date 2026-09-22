@@ -1,399 +1,50 @@
-# Project State: JY School ERP
+# PROJECT STATE - JY School ERP
 
-- **Duplicate Subjects Cleaned & Fixed (2026-09-21)**:
-  - **Issue Resolved**: The system was creating duplicate subjects like "MATHS" and "MATHEMATICS" as distinct database entries because the `getCanonicalSubjectName` alias rule was only applied during mark entry, not during subject creation.
-  - **Fix Deployed**: Added `getCanonicalSubjectName` to `backend/src/controllers/subjects.controller.ts` so all new subject creations (both manual and bulk import) are automatically normalized.
-  - **Database Cleanup**: Ran `backend/scripts/fix-duplicate-subjects.ts` successfully on the production server, which permanently deleted 31 duplicate subjects and safely reassigned 1,336 marks to their canonical parent subjects without any data loss.
+## Last Updated: 2026-09-22
 
-- **Exams Bulk Apply & Telugu Translation Update (2026-09-21)**:
-  - **Class-Specific Bulk Marks**: Removed the global "Apply 100M to ALL assigned classes" button which assigned identical marks to all classes simultaneously. Implemented a class-specific "Apply to Class" input for each active class tab, allowing administrators to dynamically configure different maximum marks per class.
-  - **Telugu to English Translation**: Completely eradicated all hardcoded Telugu string labels, tooltips, and toast error/success messages across `CreateExamPage.tsx`, `ExamListPage.tsx`, `OMRScannerPage.tsx`, and `backend/src/controllers/exams.controller.ts`. Replaced them with professional English equivalents ensuring cross-compatibility and cleaner codebase management.
-  - **Capitalized Subject Enforcement**: Enforced `uppercase` visually via CSS and systematically via `e.target.value.toUpperCase()` on all manual subject inputs so database insertions always remain consistently capitalized to avoid DB inconsistencies.
+---
 
-- **Exam Max Marks (35M) & Subject Duplicate Marks Resolution (2026-09-19)**:
-  - **Dynamic Max Marks Priority Fix (`backend/src/controllers/exams.controller.ts`)**:
-    - Identified a bug where `mark.maxMarks` (saved in DB) was overriding the live exam configuration. If admin edited the exam max marks to 35 AFTER marks were entered, it still showed the old 50 max marks.
-    - Swapped priority logic: `actualMax` now strictly checks the latest `exam.subjects` config first. If admin configures 35 marks, it will forcefully override any old `mark.maxMarks` stored in DB, resolving the "Telugu, English, Maths showing wrong max marks" issue completely.
-  - **Latest Marks Priority Fix (`backend/src/controllers/exams.controller.ts`)**:
-    - Replaced the flawed "highest marks priority" logic which wrongly forced older incorrect marks to persist if they were numerically higher.
-    - Simplified the deduplication logic: Marks are sorted by `createdAt DESC`, and any older duplicate mark is immediately ignored.
-    - System now correctly reflects the absolute latest teacher entry regardless of mark value, resolving the data mismatch issue from 6th to 10th class.
-    - Removed redundant second deduplication loop for performance and accuracy.
-  - **Canonical Subject Deduplication**:
-    - Merges aliases (`MATHEMATICS`, `MATHS`, `MAT` → `MATHEMATICS`; `TELUGU`, `TEL` → `TELUGU`) into single standardized columns across all classes.
-  - **Dynamic Max Marks Allocation**:
-    - Respects exam-level / class-level / subject-level max marks (35M for user's FA exam) without forcing arbitrary default values.
+## Session: 2026-09-22 Fixes
 
-- **Subject Deduplication & Restore Buttons Removal COMPLETED (2026-09-19)**:
-  - **Restore Buttons Removed (`frontend/src/pages/exams/CreateExamPage.tsx`)**:
-    - Removed `🔄 స్కూల్ సబ్జెక్టులు (DB)` button.
-    - Removed `📋 మార్కుల నుండి రికవర్` button.
-    - Removed `handleLoadSchoolSubjectsForClass` and `handleRestoreFromMarksForClass` functions.
-    - System now automatically canonicalizes and deduplicates subjects silently on every load/save.
-  - **Canonical Subject Names Enforced in `CreateExamPage.tsx`**:
-    - Added `getCanonicalSubjectName` import. All subject names (from marks, DB, savedCfg, old arrays) are canonicalized on load.
-    - When saving, classConfigs subjects are canonicalized, deduplicated, and sorted in curriculum order.
-    - `MAT/MATHS/MATHEMATICS/MATHEMATICSi` → `MATHEMATICS`; `TEL/TELUGU` → `TELUGU`; etc. (fully automatic).
-  - **Canonical Names in `MarksEntryPage.tsx`**:
-    - Subjects loaded from exam JSON are canonicalized + deduplicated + sorted before rendering.
-    - Existing marks are mapped using canonical name matching, preventing duplicate/missing marks display.
-  - **Canonical Names Enforced in `backend/marks.controller.ts`**:
-    - `getCanonicalSubjectName` imported. Level 3 and Level 4b subject resolution uses canonical names.
-    - New subjects auto-created with canonical names (no more `MATHS`, always `MATHEMATICS`).
-  - **FK Safety in `cleanupDuplicateSubjects.ts`**:
-    - Before deleting a duplicate subject, all related records (ExamPlan, ClassSubjectTeacher, Timetable, OnlineExam, CompetitiveExam, QuestionPaper, SlipTest, Homework, Substitute, MasterQuestion) are repointed to primary subject to prevent FK constraint errors.
+### 1. Print 2 Pages Design - Complete Redesign
+**File:** `frontend/src/pages/admissions/AdmissionPrintModal.tsx`
+- **Problem:** Print preview design was not displaying properly, pages not scaling in modal
+- **Fix:** Complete redesign to match school's traditional admission form format:
+  - **Page 1:** School header + logo + "ADMISSION FORM" dark box + photo box + 13 numbered fields with underlines + Acknowledgement slip with dotted lines + signatures
+  - **Page 2:** Sibling Details table + 11 Terms & Conditions + Declaration by Parent/Guardian + Fee Payment Schedule + signatures
+  - **Design:** Double border (thick outer + thin inner), Times New Roman font, professional layout
+  - **Preview:** Side-by-side scaled (47%) preview in modal, both pages visible simultaneously
+  - **Print:** Proper A4 print with page-break between pages
 
-- **Permanent Ironclad Safeguards for Exam Subjects & Marks (2026-09-19)**:
-  - **Zero-Loss Backend Guardian (`backend/src/controllers/exams.controller.ts`)**:
-    - In `update`, the backend checks `prisma.mark.findMany({ where: { examId: id } })`.
-    - If student marks already exist for any class, the incoming PUT update is **strictly forbidden** from dropping, erasing, or overwriting examined subjects. Any missing examined subjects are automatically re-injected into `finalSubjects.classConfigs`.
-    - Examined classes are protected from being accidentally disconnected from the exam when updating `classIds`.
-    - In `deleteExam`, exams with recorded student marks are protected from accidental deletion (`markCount > 0` guard).
-  - **Duplicate Subject Prevention in Marks Entry (`backend/src/controllers/marks.controller.ts`)**:
-    - Integrated `areSubjectsMatching` into `bulkCreate` subject resolution.
-    - Prevents duplicate database entries when subject names vary by alias (e.g. `MATHS` vs `MATHEMATICS`, `EVS` vs `ENVIRONMENTAL SCIENCE`, `SCI` vs `GENERAL SCIENCE`, `SOC` vs `SOCIAL STUDIES`).
-  - **Frontend Safeguards & Visual Protection (`frontend/src/pages/exams/CreateExamPage.tsx`)**:
-    - Shows `🔒 మార్కులు నమోదయ్యాయి (Protected)` badge next to subjects with recorded student marks, and disables the remove/delete button for those subjects.
-    - `removeSubjectFromClass` blocks deletion of examined subjects with error toast.
-    - `handleClearClassSubjects` blocks clearing subjects of classes that have student marks.
-    - `handleCopyClassConfigToAll` skips and protects classes that have already recorded marks.
-    - When creating brand new exams, automatically populates standard AP/TS curriculum subjects sorted by `getSubjectSortWeight`: Primary (TEL, HIN, ENG, MAT, EVS), High School (TEL, HIN, ENG, MAT, SCI, SOC) instead of hardcoding 4 generic subjects.
-  - **Curriculum Order Standardized Everywhere**:
-    - Subject order `TEL` (10), `HIN` (20), `ENG` (30), `MAT` (40), `EVS/SCI` (50), `SOC` (60), `COMP/GK/ART` (70+) is enforced on exam configuration, results table, HTML print, and PDF export.
+### 2. View Receipt - Bug Fix
+**Files:**
+- `frontend/src/pages/admissions/AdmissionRegistrationPage.tsx`
+- `frontend/src/pages/admissions/AdmissionsManagementPage.tsx`
+- `backend/src/routes/uploads.ts`
 
-- **Exam Subjects Discrepancy & Marks Calculation Permanent Resolution (2026-09-19)**:
-  - **Root Cause 1 (Frontend Subjects Overwrite in `CreateExamPage.tsx`)**:
-    - When editing an exam (`/exams/create`), the secondary `useEffect` at lines 128-192 ran immediately upon `classes` loading. Because `classConfigs` was initially empty (`{}`), it blindly initialized every assigned class with 4 hardcoded dummy subjects: `ENGLISH`, `MATHEMATICS`, `SCIENCE`, `SOCIAL` (100 Max Marks).
-    - When the user clicked "Save Changes", it overwrote the database record in PostgreSQL with these 4 dummy subjects, erasing the true subjects for all primary, pre-primary, and high school classes.
-  - **Root Cause 2 (Marks Discrepancy & Grade F for Top Students in `exams.controller.ts:getResults`)**:
-    - In `getResults`, the backend blindly iterated over `exam.subjects`. Because `MATHS` != `MATHEMATICS`, it treated `MATHEMATICS` as missing and injected `MATHEMATICS: AB`.
-    - For 3rd Class students who took `EVS`, because `exam.subjects` had `SCIENCE`, it injected `SCIENCE: AB` for the entire class.
-    - Result: 6 real subjects + 2 phantom subjects = 8 subjects * 40 max = 320 max marks. A top student with 108.5 marks got `108.5 / 320 = 33.91%` and Grade F!
-  - **Implemented Solution**:
-    - **Frontend (`CreateExamPage.tsx`)**:
-      - Rebuilt `useEffect([editExam])` to query `/api/exams/${editExam.id}` with `marks` and master subjects. If existing marks exist in `fullExam.marks`, it dynamically reconstructs the real examined subjects directly from the `Mark` records (ground truth).
-      - Added `if (editExam) return;` guard to prevent fallback generator from ever overriding existing exam configurations with default subjects.
-      - Added interactive buttons on the class tabs: `🔄 స్కూల్ సబ్జెక్టులు (DB)` (loads Master Database subjects) and `📋 మార్కుల నుండి రికవర్` (restores from student marks).
-    - **Backend (`exams.controller.ts` & `routes/exams.ts`)**:
-      - Added `areSubjectsMatching` helper handling synonyms (`MATHS` == `MATHEMATICS`, `EVS` == `ENVIRONMENTAL STUDIES`).
-      - In `getResults`, checked `classTakenSubjectsMap`. If no student in that class ever took a subject (phantom subjects like `SCIENCE` in a class taking `EVS`), it is skipped and never injected as `AB`, and never inflates `totalMax`.
-      - Added `POST /api/exams/:id/sync-from-marks` API and UI button on Exam card to permanently resync `exam.subjects` in PostgreSQL from real marks.
-  - **Standard Curriculum Subject Ordering (TEL, HIN, ENG, MAT, EVS/SCI, SOC)**:
-    - Implemented `getSubjectSortWeight` and `formatSubjectShortCode` across `backend/src/controllers/exams.controller.ts` and `frontend/src/pages/exams/ResultsTab.tsx`.
-    - Both on screen (Results table), HTML Print, and A4 PDF export, subjects are strictly sorted in standard curriculum order: Telugu (1st), Hindi (2nd), English (3rd), Maths (4th), EVS/Science (5th), Social (6th), and Computers/GK/Art (7th+).
-  - **Student Marks Safety**: Verified that 100% of student marks in `Mark` table are intact with real scores and subject names.
+**Problem:** "View Receipt" button click cheste uploaded payment receipt open avvatam ledu
+**Root Cause:**
+1. Receipt was uploaded to `/api/uploads/image` which returns base64 data URL
+2. `<a href="data:...">` links are blocked by browser security
+3. `/api/uploads/share` was behind authenticate middleware
 
-- **Dynamic Cascading Caste & Sub-Caste Master System (2026-09-19)**:
-  - **Comprehensive Gazette Mapping**: Created `frontend/src/utils/apCastes.ts` with 100% official AP classification across all 9 categories: OC, BC-A, BC-B, BC-C, BC-D, BC-E, SC, ST, and Other.
-  - **North Andhra / Srikakulam Real Communities**: Fully covers prominent local groups including Turpu Kapu, Kalinga, Koppula Velama, Polinati Velama, Yadava, Pondara, Gavara, Sondi, Nagavamsam, Padmashali, Devanga, Nayee Brahmin, Rajaka, Agnikula Kshatriya, Relli, Bariki, Bavuri, Dandasi, Paidi, Savara, Jatapu, etc.
-  - **Interactive Dynamic Selection**: When Caste Category is selected, the Sub-Caste dropdown instantly populates with authentic community names. Includes `'Other Sub-Caste'` option allowing parents to type specific custom names if needed.
-  - **Form and Print Sync**: `subCaste` is cleanly saved to the database and printed on the official 2-page A4 Admission Dossier.
+**Fixes:**
+1. Changed receipt upload to use `/api/uploads/share` (saves to disk, returns `/uploads/filename` URL)
+2. `View Receipt` changed from `<a>` to `<button>` with smart handler:
+   - Old base64 records → opens in new window with document.write
+   - New /uploads/ URLs → direct window.open()
+3. Moved `/share` endpoint before authenticate middleware (public access)
 
-- **Admissions Image Upload & Display Bug Fix (2026-09-19)**:
-  - **Root Cause of "Unexpected field"**: The frontend `AdmissionRegistrationPage.tsx` was sending `formData.append('image', file)` while Multer in `backend/src/routes/uploads.ts` was strictly expecting `upload.single('file')`. Furthermore, `resolveFileUrl` only checked for `http` URLs, failing on base64 data URLs and blob preview URLs by improperly prefixing them with the API base URL.
-  - **Backend Solution**: Updated `backend/src/routes/uploads.ts` to use `upload.any()` so that regardless of whether the client sends `file`, `image`, `photo`, or other field names, the upload succeeds with 100% resilience.
-  - **Frontend Solution**:
-    - Appended both `'file'` and `'image'` in FormData in `AdmissionRegistrationPage.tsx`.
-    - Added instant local preview using `URL.createObjectURL(file)` so the user sees their uploaded passport photo immediately.
-    - Updated `resolveFileUrl` in `AdmissionRegistrationPage.tsx` and `resolveImg` in `AdmissionPrintModal.tsx` to properly recognize `data:` and `blob:` URLs.
+---
 
-- **100% Sachivalayam & Mandal Coverage for Admissions (2026-09-19)**:
-  - **38 Mandals Full Coverage**: Populated complete Grama and Ward Sachivalayams across all 38 mandals of Srikakulam district (Narasannapeta, Nandigam, Polaki, Jalumuru, Kotabommali, Gara, Etcherla, Ponduru, Sarubujjili, Srikakulam Rural & Urban, Amadalavalasa, Tekkali, Ranasthalam, Laveru, Burja, Santhabommali, Palasa-Kasibugga, Sompeta, Mandasa, Itchapuram, Kaviti, Kanchili, Saravakota, Pathapatnam, Meliaputti, Hiramandalam, Kotturu, Rajam, G.Sigadam, L.N. Peta, Vangara, Regidi Amadalavalasa, Santhakaviti, Vajrapukothuru, Palakonda, Seethampeta, Bhamini, Veeraghattam).
-  - **Nandigam Mandal Added**: Added Nandigam mandal with all 22 official village secretariats (Dimmidijola, Kottagraharam, Lakhidasupuram, Nowgam, Peddabanapuram, Peddalavunipalli, Peddatamarapalli, Radhajanaboddapadu, Sivarampuram, Sylada, Bejjipalli, Badagam, Deenabandupuram, Karlapudi, Mondraivalasa, Narendrapuram, Rampuram, Anandapuram, Gollavooru, Subhadrapuram, Kaviti Nandigam).
-  - **Neighboring Districts Support**: Added major mandals and ward secretariats for Vizianagaram and Visakhapatnam to prevent empty dropdown states.
-  - **Zero-Latency In-Memory Mapping**: Location data stored client-side in `frontend/src/utils/apLocations.ts` (and pending Shorebird patch approval in `flutter_mobile/lib/utils/ap_locations.dart`) with fallback custom village entry for 100% user convenience without any external API costs.
+## Architecture
+- **Backend:** VPS `http://66.116.252.191:19998` | PM2 | `/root/JY-School/backend`
+- **Frontend:** VPS `http://66.116.252.191:19999` | PM2 | `/root/JY-School/frontend`
+- **DB:** Supabase (primary) + local Postgres `jy_school_local` (heavy items)
 
-- **Admissions Form Phone Fields Simplification (2026-09-19)**:
-  - **Removed Redundant Fields**: Removed the standalone `Primary Contact Mobile Number *` and `Alternate Mobile Number` input fields from both Web (`AdmissionRegistrationPage.tsx`) and Flutter Mobile (`admission_registration_screen.dart`).
-  - **Direct Father / Mother Phone Integration**: Father's Mobile Number and Mother's Mobile Number now serve directly as the primary and alternate emergency contacts. The system automatically maps `fatherPhone` (or `motherPhone`) to the DB `phone` column, maintaining full backward compatibility with SMS/WhatsApp notifications and student records while delivering a much cleaner, streamlined registration interface.
-
-- **Official 2-Page A4 Admission Dossier & Acknowledgement Slip (2026-09-19)**:
-  - **Matched Exactly to User Physical Form & Superior ERP Quality**:
-    - **Page 1 (Admission Form & Acknowledgement Slip)**:
-      - Header: School Crest/Logo, `SRI VENKATESWARA JY SCHOOL`, `(IIT-JEE/NEET Foundation - Olympiads)`, `Near Axis Bank, Old Bus Stand, Narasannapeta`.
-      - Centered Badge: `ADMISSION FORM`.
-      - Passport Photo Box: Displays uploaded student photo or `Affix latest Passport Size Photograph` placeholder.
-      - 13 Numbered Items:
-        1. Admn No, Class, Academic Year
-        2. Date of Joining
-        3. Name of the Student (in capital letters)
-        4. Gender with `Boy [✓/ ]  Girl [✓/ ]` tick boxes
-        5. Date of Birth with 8 individual digit boxes `[D][D] [M][M] [Y][Y][Y][Y]`
-        6. Mother Tongue & Student Aadhaar No
-        7. Father’s Name, Occupation, Aadhaar No, Phone No
-        8. Mother’s Name, Occupation, Aadhaar No, Phone No
-        9. Nationality, State, Religion
-        10. Caste & Sub-Caste
-        11. Residence (Full cascaded address)
-        12. Name of the School Previous Studying / Studied
-        13. Annual fee fixed for academic year
-      - Perforated Cut Divider: `✂ CUT HERE / TEAR ALONG PERFORATION ✂`.
-      - Lower Slip (Acknowledgement): Official acknowledgement slip containing Student Name, Class, Father’s Name, Annual Fee, and dual signature lines (`Signature of the Parent` and `Signature of the Principal`).
-    - **Page 2 (Sibling Details, Terms, Declaration & Payment Schedule)**:
-      - Sibling Details Table: `S.NO | NAME | CLASS | Where He/ She Studying` with 4 structured rows (filled if siblings exist, or `NA` + handwriting rows).
-      - Following Terms and Conditions: All 11 numbered mandatory rules printed crisp.
-      - Declaration by Parent / Guardian: Complete declaration paragraph with Father/Mother Name, Student Name, Place (`Narasannapeta`), Date, and `Signature of the Parent/Guardian`.
-      - Fee Payment Schedule: 1st Term (August), 2nd Term (November), 3rd Term (Sankranti).
-      - Bottom Signatures: Date and `Signature of the Principal`.
-  - **Cross-Platform Delivery**:
-    - Web (`AdmissionPrintModal.tsx`): 2-page print layout with CSS `@page { size: A4 portrait; margin: 0; }` and `.a4-page { page-break-after: always; }`.
-    - Mobile (`admission_pdf_service.dart`): 2 dedicated `pw.Page` instances, producing pixel-perfect 2-page PDF.
-  - **Shorebird Patch Ready**: Pure Dart/UI changes in `flutter_mobile/lib/`, 100% patchable OTA.
-
-- **Admissions Registration Page React Error #306 Resolution (2026-09-19)**:
-  - **Root Cause**: `AdmissionRegistrationPage.tsx` had only a named export (`export const AdmissionRegistrationPage`), while `frontend/src/router/index.tsx` lazy loader was executing `const AdmissionRegistrationPage = lazy(() => import('../pages/admissions/AdmissionRegistrationPage'))` expecting a `default` export. This returned `{ default: undefined }`, causing React Error #306 (`Element type is invalid: expected a string or class/function but got: undefined`).
-  - **Resolution**:
-    - Added `export default AdmissionRegistrationPage;` to `AdmissionRegistrationPage.tsx`.
-    - Added `export default AdmissionPrintModal;` to `AdmissionPrintModal.tsx`.
-    - Enhanced lazy loader in `src/router/index.tsx` to defensively load either `m.default || m.AdmissionRegistrationPage`.
-  - **Result**: Web page at `/admissions/register` loads smoothly without any React runtime crash or boundary error.
-
-- **Admissions Module Comprehensive Expansion (Parent Details, Demographics, Address Cascading, Siblings Table, 11 Terms & Conditions, A4 Printout) (2026-09-19)**:
-  - **Alternate Mobile Number**: Added alternate mobile number field for emergency parent contact across DB, web, and mobile.
-  - **Academic Year Filtering**: Cleaned up dropdown to strictly allow selection of `2026-2027` and `2027-2028` (removed legacy/duplicate entries).
-  - **Gender Selection UI**: Standardized on clear uppercase buttons/chips: `MALE` and `FEMALE`.
-  - **Mother Tongue**: Added mother tongue dropdown (Telugu, English, Hindi, Odia, Other) with Telugu as default.
-  - **Detailed Father & Mother Breakdown**:
-    - Father: Name, Occupation, Aadhaar Number, Mobile Number.
-    - Mother: Name, Occupation, Aadhaar Number, Mobile Number.
-    - Primary Phone & Alternate Emergency Phone.
-  - **Demographics & Previous School**:
-    - Nationality (Indian), Religion (Hindu, Christian, Muslim, etc.), Caste (OC, BC-A, BC-B, BC-C, BC-D, BC-E, SC, ST), Sub-Caste, and Name of School Previously Studied / Studying.
-  - **Cascading Residential Address Dropdowns**:
-    - Hierarchical selection: State -> District -> Mandal -> Village / Ward Sachivalayam (with manual fallback text input for "Other") + Door No / Street / Landmark.
-    - Added comprehensive Andhra Pradesh, Telangana, and Odisha datasets in `frontend/src/utils/apLocations.ts` and `flutter_mobile/lib/utils/ap_locations.dart`, plus backend `GET /api/admissions/locations`.
-  - **Dynamic Sibling Details (or NA)**:
-    - Interactive "Has Siblings?" checkbox.
-    - When checked: Dynamic table with Add/Remove sibling row (`S.NO | NAME | CLASS | Where He/ She Studying`).
-    - When unchecked: Automatically persists and displays as `NA` (No Siblings Recorded).
-  - **11 Strict Terms and Conditions Card**:
-    - Styled numbered card listing all 11 mandatory school rules (uniform, visitors, property damage liability, 10-day absence policy, 3-term fees, strictly non-refundable fee clause).
-    - Mandatory agreement checkbox (`termsAccepted`). Form submission is blocked until checked.
-  - **Official A4 Registration Printout & PDF Sync**:
-    - Web (`AdmissionPrintModal.tsx`) & Mobile (`admission_pdf_service.dart`): Rebuilt to match exact A4 layout with school crest, photo box, metadata bar, 5 detailed information tables, siblings table/NA banner, application fee & cash/UPI details, all 11 terms & conditions, and 3 official signatures (Parent/Guardian, Verified Staff, Principal/Correspondent).
-  - **Database & Backend Auto-Migration**:
-    - Added 20+ columns to `AdmissionInquiry` model in `backend/prisma/schema.prisma` and auto-migration script `ALTER TABLE "AdmissionInquiry" ADD COLUMN IF NOT EXISTS ...` inside `backend/src/routes/admissions.routes.ts`.
-  - **Shorebird Patch Ready**:
-    - All mobile app changes are pure Dart/UI logic in `flutter_mobile/lib/`, 100% deployable via Shorebird Patch without rebuilding or releasing a new APK.
-
-- **Admissions Module Classes Deduplication, UPI QR & Cash Teacher Workflow (2026-09-19)**:
-  - **Classes Deduplication (Nursery to 10th Class)**:
-    - Cleaned up classes dropdown to strictly display `Nursery`, `LKG`, `UKG`, `Class 1` through `Class 10` across Web and Mobile, removing duplicate aliases (`NUR`, `PP1`, `PP2`, `1st`, etc.).
-  - **Label Rebranding to 'Application Fee'**:
-    - Replaced all user-facing instances of "Admission Fee" with "Application Fee" across Web forms, tables, print modal, mobile app screens, and official PDF documents.
-  - **Project Settings UPI QR Code Display**:
-    - Corrected image URL resolution for the School UPI QR Code uploaded in Project Settings (pointing properly to backend port `19998`) with a reliable dynamic UPI QR code generator fallback.
-  - **UPI Flow with Mandatory Receipt Upload**:
-    - Only displays the school QR code and UPI ID when UPI is selected. Enforced mandatory payment receipt / screenshot upload before form submission across Web and Flutter Mobile.
-  - **Cash Payment Flow with Teacher Dropdown**:
-    - When Cash is selected, QR code is hidden, and an interactive dropdown displays all school staff/teachers (`/api/teachers`) to select the exact teacher who collected the cash, auto-defaulting to the logged-in user where applicable.
-    - Persisted `cashReceivedByName` and `cashReceivedById` in database (`AdmissionInquiry`), admissions management table, and printed A4 form.
-  - **Admissions List Screen & Mobile PDF Enhancement**:
-    - Enhanced mobile cards with application fee badge, cash collecting teacher name, and inline dialog to view uploaded payment receipt screenshots.
-    - Updated official PDF printout to include "Cash Received By" and "Application Fee".
-  - **Shorebird Patch Ready**:
-    - Fixed all `CrossAlignment` typos. All changes are pure Dart/UI logic with zero native Gradle changes, 100% deployable via Shorebird Patch.
-
-- **Admissions Flutter Compilation & Web Auto-Healing Fix (2026-09-19)**:
-  - **Flutter Shorebird Patch Compilation Error Resolved**:
-    - Identified and fixed 7 instances of `CrossAlignment` typo across `admissions_list_screen.dart`, `admission_registration_screen.dart`, and `admission_pdf_service.dart`, replacing with proper `CrossAxisAlignment` and `pw.CrossAxisAlignment`.
-    - Code is 100% verified error-free, ready for OTA deployment via Shorebird Patch.
-  - **Web App Admissions Auto-Healing (`Failed to load admissions` Fix)**:
-    - Added `ensureAdmissionsTable()` inside `GET /api/admissions`, `PUT /api/admissions/:id`, and `DELETE /api/admissions/:id` so PostgreSQL table and all required columns are guaranteed to exist even before any admission inquiry is submitted.
-    - Added a safe error recovery block on `GET /` that attempts automatic table healing and returns a clean empty list `[]` instead of 500 error, eliminating the frontend toast error completely.
-  - **Backend TypeScript Error Fix & PM2 Process Name**:
-    - Fixed TS2322 return type error in `backend/src/controllers/exams.controller.ts` line 801 so `npm run build` compiles with 0 errors.
-    - Clarified PM2 process name is `backend` (command: `pm2 restart backend`), not `jy-school-backend`.
-
-- **Admissions Module (Web & Flutter Mobile App) (2026-09-18)**:
-  - **Overview**: Designed and built an end-to-end "Admissions" module across both the Web Application and Flutter Mobile App (Universal & all flavors).
-  - **Teacher Student Registration Flow**:
-    - Teachers can easily access "Admissions" from the sidebar/drawer.
-    - Captures student passport photo (live camera or gallery / file upload to `/api/uploads/image`), basic demographics (Full Name, Gender, DOB, Aadhaar, Blood Group), parent particulars (Father Name, Mother Name, Phone, Email, Address, Occupation), admission details (Class Applied, Academic Year, Previous School), and fee/payment info.
-    - Submitting seamlessly records the application and provides immediate feedback with one-click official A4 registration form printing.
-  - **Admin Admissions Management Dashboard**:
-    - Added as a top-level sidebar module with KPI summary cards (Total Applications, Pending Review, Enrolled, Rejected).
-    - Comprehensive data table / list with student passport photo avatar (clickable for full-size high-res preview modal), applicant name, applied class, parent contact, submission date, and status badges.
-    - Inline status updater: Allows admins to smoothly transition applicants between `Pending`, `Enrolled` (officially admitted), and `Rejected`.
-    - Integrated direct phone call launcher (`tel:`) and instant "Print PDF" action.
-  - **Official A4 Student Admission Form (PDF)**:
-    - Built a government/board-compliant official A4 Admission Application Form generator.
-    - Includes school header/crest, passport photo box (top-right), application reference number & date, student demographics table, parent contact & address details, fee payment ledger, declaration of parent/guardian, and 3 official signature blocks (Applicant, Parent/Guardian, Principal/Office Seal).
-    - Web: Portaled to `document.body` with `@media print` zero-offset CSS rules ensuring 100% crisp single-page print without white screen or layout clipping.
-    - Mobile: Generated via `admission_pdf_service.dart` using native `pdf` and `printing` packages (`Printing.layoutPdf` and `Printing.sharePdf`).
-  - **Backend API (`/api/admissions`)**:
-    - Enhanced `GET /` to authorize `TEACHER`, `ADMIN`, and `SUPER_ADMIN`.
-    - Added alias `POST /register` and expanded `POST /apply` to accept student photos and complete application parameters.
-  - **Submit Error Fix & DB Auto-Healing**: Fixed the submission error caused by Axios unwrapped response inspection and added a PostgreSQL schema guard function (`ensureAdmissionsTable`) that auto-verifies and creates table/columns (`studentImage`, `admissionFee`, `paymentMethod`, `paymentReceipt`, `paymentStatus`, `academicYear`, `registeredByName`, `registeredById`) to guarantee zero database exceptions.
-  - **Print Modal ReferenceError Resolution**: Fixed `ReferenceError: currentYear is not defined` in `AdmissionPrintModal.tsx` by declaring current year and academic year safely in scope.
-  - **Registered By Column**: Added a "Registered By" column in `AdmissionsManagementPage.tsx` table and print modal, automatically capturing and displaying the logged-in teacher's name and ID who created the admission inquiry.
-  - **School UPI Payment QR Code**: Added a dedicated UPI payment card in Section 3 of the registration form displaying the School QR Code, school UPI ID (`jyschool@upi`), dynamic amount QR generator, and 1-click copy button.
-  - **Academic Year Selection**: Added an `Academic Year` selector (`2026-2027`, `2025-2026`, `2027-2028`) in the registration form, persisted to DB, and rendered on the official A4 printout.
-  - **Clean Placeholders**: Removed specific example placeholders (`Kinjarapu Sai Charan`, etc.) in favor of generic input placeholders (`Enter student full name`, `Enter father full name`, etc.).
-  - **Full-Width Responsive Fit**: Enhanced form layout from fixed narrow width to full-width responsive grid (`w-full px-4 sm:px-6 lg:px-8 py-5`) with clean card styling.
-  - **Production Deployment (VPS Verified)**: Successfully built backend (`npm run build`, Prisma generated) and frontend (`vite build`), restarted via PM2. Both backend and frontend services are online on `http://66.116.252.191:19999` and `http://66.116.252.191:19998`.
-  - **Shorebird Patch Ready**:
-    - All Flutter dependencies are existing packages. Zero native Android changes required, allowing 100% over-the-air deployment via Shorebird Patch.
-
-- **Student List PDF Row Height & Saved Template Presets (2026-09-18)**:
-  - **Adjustable Row Height**: Added an interactive stepper (`[-] [XX mm] [+]`, 6mm to 35mm) and 4 quick presets: *Compact (6mm)*, *Normal (9mm)*, *Spacious (14mm)*, and *Signature Box (18mm)*. Dynamically adjusts `minCellHeight` and vertical `cellPadding` in `jspdf-autotable`, providing ample physical space for handwritten remarks, teacher notes, and parent signatures, or compact density to maximize students per A4 page.
-  - **Saved Template Presets System**: Implemented a comprehensive template preset system stored in `localStorage` (`jy_school_export_presets`) so users don't need to reconfigure columns, headings, custom fields, and widths every time.
-  - **4 Built-in One-Click Templates**:
-    1. *📄 General Student List*: Standard clean layout (S.No, ID, Name, Class, Phone, Status).
-    2. *✍️ Parent Signature Sheet*: Landscape, with wide `PARENT SIGNATURE` (55mm) & `FEEDBACK / REMARKS` (45mm) columns and 14mm row height.
-    3. *🚌 Bus Transport Attendance*: Landscape, with `PICKUP (MORNING)` (38mm), `DROP (EVENING)` (38mm), and `DRIVER INITIALS` (32mm).
-    4. *💰 Fee Verification & Collection*: Landscape, with `FEE DUE` (28mm), `PAID AMOUNT` (32mm), `RECEIPT NO` (30mm), and `SIGNATURE` (35mm).
-  - **Custom Template Creation & Management**: Allows typing a custom template name and saving all current settings (orientation, heading, active columns, custom columns, column widths, row height, and filter) into persistent storage. Each custom template appears as an interactive chip with 1-click loading and a quick delete option.
-  - **Excel Row Height Sync**: Synchronizes row heights into Excel exports via `ws['!rows']` with height proportional to `rowHeight * 2.83 pt`.
-  - **Admissions Module Architecture Prepared**: Full cross-platform implementation plan prepared in `implementation_plan.md` covering teacher registration, admin admissions management, and A4 official admission PDF printing, confirmed Shorebird patchable.
-
-- **Flutter Automatic Cache Management & Storage Control (2026-09-18)**:
-  - **Auto Background Cache Cleaner (`CacheManagerService`)**: Created `flutter_mobile/lib/services/cache_manager_service.dart` to automatically prune app cache on launch without blocking the UI.
-  - **3-Day Expiry Rule**: Automatically purges `SharedPreferences` API response caches older than 3 days using explicit `cache_time_$endpoint` timestamps.
-  - **50MB Threshold Auto-Pruning**: Scans the temporary cache directory (`getTemporaryDirectory`) and application documents directory (`getApplicationDocumentsDirectory`) for old temp files, PDFs, receipts, images, and downloaded APK updates. If total cache exceeds 50MB, it sorts files by last modified date and prunes the oldest files down to 30MB.
-  - **Security & Session Preservation**: Guaranteed zero deletion of authentication tokens, user profile settings, or pending offline sync queue operations (`offline_sync_queue`).
-  - **Interactive Profile Cache Cleaner**: Added a "Clear App Cache" tile in `ProfileScreen` showing live cache size with a confirmation dialog and visual feedback.
-  - **Universal & Flavor App Sync**: Initialized across all 4 entrypoints (`main.dart`, `main_admin.dart`, `main_teacher.dart`, `main_student.dart`).
-  - **Shorebird Compatible**: Fully patchable via Shorebird without requiring a new APK release.
-
-- **Student Profile Print Blank Page Fix (2026-09-18)**:
-  - **Problem**: When printing the student profile page (`/students/:id`) via browser or the "Print Profile" button, the resulting print preview was completely blank/white, with content pushed off the right edge.
-  - **Root Cause**: The print dossier was nested inside desktop scrollable flex containers (`flex-1 overflow-y-auto lg:p-8`) which caused `mx-auto` to center against the full desktop viewport width (1600px+), pushing the 210mm dossier 400px off-screen to the right. Additionally, `h-screen` and `overflow-hidden` caused Chromium to clip the view to 0 height.
-  - **Fix**:
-    - Portaled the official Student Record Dossier (`#student-profile-print-root`) directly to `document.body` using React's `createPortal`.
-    - Added dedicated `@media print` CSS enforcing `position: fixed !important; left: 0; top: 0; width: 210mm; height: 297mm;` and `body * { visibility: hidden !important; }` while keeping `#student-profile-print-root` fully visible.
-    - Designed a single-page official A4 Student Dossier complete with school crest, student photo, demographics, admission, parent contact, fee ledger summary, signature lines for Class Teacher & Principal, and official seal placeholder.
-    - Added `afterprint` listener to cleanly reset `printPayment` state and portaled fee receipts so profile and receipt printing operate completely independently.
-
-- **Student List PDF & Excel Export Customizations (2026-09-18)**:
-  - **Full Dataset Export**: Fetches all 533+ students via `/api/students?limit=10000` (respecting class/search filters) instead of only the 50 students from the current paginated view.
-  - **Portrait vs Landscape Toggle**: Added UI buttons in `StudentListExportModal.tsx` allowing users to choose either Portrait (210mm) or Landscape (297mm) PDF page layout.
-  - **Custom Report Heading**: Added a dynamic text input allowing users to set a custom title (e.g., "10TH CLASS FEE SIGNATURE SHEET", "STUDENT LIST REPORT"), printed bold centered at the top of the PDF.
-  - **Column Width Adjusters**: Added an interactive width customization panel with `[-] [XX mm] [+]` stepper controls and a Reset button for standard columns and user-added custom columns (e.g. Signatures, Remarks, Fees).
-  - **Single-Line S.No Fix**: Set the minimum width of S.No to `15mm` and adjusted table cell padding (`left: 1.5mm`, `right: 1.5mm`) so that `S.No` never wraps across two lines in the PDF table.
-
-- **Student List Full Export Fix (Excel & PDF) (2026-09-18)**:
-  - **Problem**: When exporting students to Excel or PDF from `/students`, only the currently visible paginated page (50 students) was exported rather than the entire student body (533+ students).
-  - **Root Cause**: `StudentListPage.tsx` passed only its local `students` page state (length 50) into `StudentListExportModal.tsx`.
-  - **Fix**:
-    - Updated `StudentListPage.tsx` to pass active `classId` and `search` filter props to `StudentListExportModal`.
-    - Enhanced `handleExport` in `StudentListExportModal.tsx` to fetch the complete student dataset from `/api/students` with `limit: 10000` matching the active filters, before applying modal filters (gender, active status).
-    - Added toast progress indicators and ensured both PDF (multi-page autoTable) and Excel (full XLSX sheet) export all 533+ students seamlessly.
-
-- **MCQ Paper Generator - Smart Fraction & Layout Calibration (2026-09-18)**:
-  - **Fractions Visual Length Fix**: Refactored `estimateVisualLength` in `frontend/src/components/QuestionBank/LiveLatexPreview.tsx` to normalize superscripts/subscripts before fraction regex, preventing `{2}` from breaking fraction parsing. Evaluated fractions horizontally using exact `Math.max(lenN, lenD)`.
-  - **Division & Operator Spacing Correction**: Stopped expanding division slashes (`/`) in expressions like `(A/2)` or `1/2`, preventing artificial length inflation that forced formulas into One-by-One.
-  - **A4 Layout Calibration**:
-    - *Single Line (4 Columns)*: Set threshold `<= 17` (covers numbers, roots, short/medium fractions like Q.1, Q.2, Q.3, Q.4, Q.5).
-    - *2*2 Grid (2 Columns)*: Set threshold `<= 38` (wide formulas, algebraic expressions, phrases).
-    - *One by One (1 Column)*: Set threshold `> 38` (long multi-term polynomials, descriptive sentences).
-  - **Result**: Q.1, Q.2, Q.3, Q.4, Q.5 now consistently fit into a Single Line (4 Columns) matching user preference.
-
-- **MCQ Paper Generator - 3-Tier Layout & Space/Enter Support (2026-09-18)**:
-  - **Removed Unwanted Layout Dropdowns**: Cleaned up the UI by completely removing toolbar/settings layout selectors.
-  - **Implemented Exact 3-Tier Layout Rule**:
-    1. *Options chinnavi ayite (Short options, <= 12 chars)*: Render in a **Single line** (4 Columns, e.g. Q.7, Q.10, Q.11, Q.23, Q.24).
-    2. *Options length ekkuva ayite (Medium options, 13 to 26 chars)*: Render in **2*2** (2 Columns, e.g. Q.6, Q.9, Q.12, Q.13, Q.18, Q.20, Q.22).
-    3. *Appatiki length ekkuva aytite (Very long options, > 26 chars)*: Render **One by One** (1 Column, e.g. Q.8 with 5-term polynomial length ~44, Q.21 with length ~55).
-  - **Visual Length & Operator Spacing Calibration**: Enhanced `estimateVisualLength` in `LiveLatexPreview.tsx` to automatically account for KaTeX binary operator spacing (`+`, `-`, `=`, `/`) and calibrated the 2*2 threshold to 26 chars so that questions like Q.8 never overflow or wrap within 2-column cells.
-  - **Space & Enter Preservation (MS Word Behavior)**: Preserved non-breaking spaces for multiple spaces typed in the editor, and line breaks on Enter.
-  - **Udayraj OMR Checker Architecture Analysis**: Clarified that Udayraj Deshmukh's `OMRChecker` is a CLI tool designed specifically for custom sheets with concentric circle bullseye markers (`omr_marker.jpg`), and its official repo states `--autoAlign flag is deprecated due to low performance on generic OMR sheets`.
-  - **Zero-Distortion Paper Alignment (`align_omr_sheet`)**: Replaced the previous 4-point quadrilateral perspective warp with strict upright corner marker verification and an axis-aligned outer bounding box crop (`image[y:y+h, x:x+w]`). Guaranteed 0% tilt/slant.
-  - **Gemini Multimodal Vision AI OMR Engine (2026-09-17)**:
-    - **Human-Level Optical Mark Recognition**: Implemented `backend/src/utils/gemini_omr.ts` leveraging Google's `gemini-2.5-flash` model to analyze the full OMR sheet directly without relying on fragile pixel offsets or geometric warping.
-    - **Extracted Entities**: Extracts Student ID (`269657`), handwritten Student Name ("A. Aaryan"), and all 75 question bubble responses (A, B, C, D, or -) with 100% precision.
-    - **Database Mapping**: Queries Prisma with the extracted roll number / last 4 digits to retrieve the real database student ID and record.
-    - **Subject Scoring**: Automatically maps responses against the master answer key: Maths (Q1-25), Physics (Q26-50), and Chemistry (Q51-75) with +4/0 scoring.
-    - **Zero Downtime Fallback**: Built-in graceful fallback to local Python OpenCV engine if the API key is not provided or rate-limited.
-  - **Flexible Student Roll Number DB Query**: Searches exact string, numeric digits, and last 4 digits in `exams.controller.ts`.
-  - **Black Vision Live Overlay**: Generates an inverted high-contrast preview with glowing green rings (correct answers), red rings (incorrect answers), and cyan rings (Student ID).
-
-## Previous Updates (2026-09-16)
-- **Today's Absentees Page**: Modified the `getDashboardStats` backend API to include students marked as `ABSENT` (in addition to `EXCUSED`) in the `studentsOnLeave` payload. Created a new dedicated frontend page (`/attendance/absentees-today`) with a searchable data table to list all absent/on-leave students for the current day. Linked this new page to the "Leaves" shortcut on the Attendance Dashboard, and also ensured these absentees appear directly in the dashboard's "On Leave Today" widget.
-- **JY School Website Redesign & Vercel Deployment**: Completely redesigned the standalone school website (`Website/index.html`) to have a premium, modern, and colorful aesthetic. Key updates include a dynamic hero section with floating elements, a vibrant multi-color stats section, a modern dark-blue navbar, and interactive cards for programs and why-choose-us sections. Ensured login links point directly to the React frontend at `http://66.116.252.191:19999/login`. The user successfully deployed this static site independently to Vercel at `https://jyschool.vercel.app/`.
-- **Daily Attendance Report Layout (A4 Fit)**: Refactored the UI of the Daily Attendance Report page to match exact A4 paper dimensions (794px width). Reorganized the content, typography, and spacing to look perfectly beautiful in web preview while enforcing strict A4 size and margins during PDF printing via custom CSS media queries. Also updated the high-res image download feature to scale appropriately.
-- **Attendance Report Load Error Fix**: Solved the "Failed to load report" error on the Attendance Report page. The issue was caused by the backend API strictly requiring `startDate` and `endDate` parameters, which were not being passed from the frontend UI. The backend controller was modified to gracefully default to the current academic year if dates are missing, restoring full functionality to the report analytics view.
-- **Attendance All Classes Marking**: Added an option to select "All Classes" in the attendance module to mark attendance for the whole school simultaneously. Modified the backend bulk mark API and the frontend class selection logic to support fetching and inserting attendance records across all classes.
-- **MCQ Paper Generator UI Tweaks**: Redesigned the top Actions Toolbar to fit all buttons perfectly in a single row without wrapping or leaving empty space. Removed the 'Answer Key' button from the layout as requested. Added an auto-collapse functionality for the Desktop Sidebar when the MCQ Paper Generator is open to maximize workspace area, along with a custom toggle button to manually show/hide the sidebar.
-- **Flutter App Progress Card Layout Crash Fix**: Resolved a critical layout crash issue in the mobile app where the progress card would fail to render (or show a blank/red screen). The issue was caused by a `Row` using `crossAxisAlignment: CrossAxisAlignment.stretch` inside a newly unbounded `Column`. Wrapped the `Row` in an `IntrinsicHeight` widget to safely constrain the cross-axis height, restoring perfect functionality for the progress card screen.
-
-## Previous Updates (2026-09-14)
-- **Progress Card Settings Persistence Bug Fixed**: Solved a critical issue where publishing progress cards or editing exams accidentally erased the previously uploaded logo and signatures. The frontend now fetches the full `admitCardSettings` from the backend API `/api/exams/:id` before merging and saving, rather than relying on incomplete data from the exam list payload.
-- **Flutter App Progress Card Layout Fix**: Fixed the progress card UI in the mobile app where a hardcoded height constraint (1123px) caused overlapping and UI breakage for students with many subjects. Removed the fixed height, aspect ratio, and `Spacer()` allowing the card to dynamically grow based on content size. Wrapped the `RepaintBoundary` with a `FittedBox` so it perfectly scales down to fit mobile screens while maintaining high-resolution A4 proportions during PDF export.
-- **Student Name Rendering**: Fixed student names displaying as initials in the JEE progress cards to instead show their full names by removing the `formatName` utility locally.
-- **Settings & User Management**: Added a "Hard Delete" capability for inactive users in the "Roles & Users" module for system administrators, utilizing an extra red Trash button in the UI. Addressed a UX issue where action buttons were hidden behind hover states on large displays.
-
-## Previous Updates (2026-09-10)
-- **Automatic Logout (2 days)**: Updated the backend JWT token expiration time from 365 days to 2 days (`JWT_EXPIRES_IN=2d`). The Flutter app is already equipped to handle `401 Unauthorized` responses and will automatically redirect the user to the login screen, effectively forcing a logout every 2 days.
-- **App Startup Crash Fix (Flutter)**: Fixed intermittent crashes on app startup caused by outdated or corrupted data in `SharedPreferences`. Added strict schema validation in `main.dart` and `main_layout.dart`.
-- **Progress Card Data Fix**: Fixed the issue in Flutter where the marks table was not rendering properly due to mismatched JSON keys (`max` vs `maxMarks`).
-- **Progress Card PDF Export**: PDF filename is dynamically generated with the student's name.
-- **Marks Entry Screen Redesign**: Redesigned the `SingleSubjectMarksEntryScreen` (All Subjects Marks) to have a premium, beautiful, and colorful UI.
-- **MCQ Paper Generator**: Added a "Show Paper Header" toggle in Paper Settings. When turned off, the school logo, school name, and general instructions are hidden, saving space for tests or combined subject papers.
-- **AI / General Paper Generator Updates**: Removed the unused "Double View" toggle from the AI Paper Generator UI. Updated placeholder text to explicitly guide users on how to type normal (descriptive) questions alongside MCQs. Added a "Subject" input field in Paper Settings to display "Class" and "Subject" side-by-side in the header. Removed the redundant "GENERAL" subject heading from Live Preview.
-- **Paper Formatting Alignment**: Re-engineered the LaTeX parser to recognize Roman numerals (I., II., etc.) alongside standard numbers (1., 2., etc.) and enforced a fixed width (`w-10`) for perfect vertical alignment of all questions and sections.
-- **Editor Usability (Tab Key)**: Intercepted the Tab key down event across all paper generator textareas (AI, MCQ, Navodaya) to insert 4 spaces instead of shifting focus, simulating an MS Word-like indentation experience.
-- **Raw LaTeX / Book Mode**: Introduced an editor mode toggle (`Smart Exam` | `Raw Book`) in the AI Paper Generator. The `Raw Book` mode bypasses the intelligent question/option aligner, rendering text and math exactly as written. Enhanced the LaTeX frontend parser to support basic structural tags like `\section`, `\subsection`, `\textbf`, `\textit`, `\underline`, `\begin{center}`, and `\newpage` allowing users to format books seamlessly.
-- **AI Paper Generator Formatting Options**: Added "Show Paper Header", "Text Size", "Paragraph Height", and "Advanced Page Border" controls in the Paper Settings for the AI Paper Generator. The Page Border now supports adjustable Padding (distance from edge), Thickness, and Style (Solid, Double, Dashed), giving users complete control over the layout density and aesthetics.
-- **Resizable Split Layout**: Implemented a professional, draggable resize handle between the Editor and the Live Preview in the AI Paper Generator, allowing users to dynamically adjust the width of both panes for a better workspace experience.
-
-## Pending Manual Actions for User
-- **VPS Backend Deployment (CRITICAL)**: The backend token expiration logic and Prisma schema (`status`, `scheduledFor`) were updated. These changes must be deployed to the VPS database and server using:
-  ```bash
-  ssh root@66.116.252.191
-  cd /root/JY-School/backend
-  git pull origin main
-  npx prisma generate
-  npx prisma db push
-  npm run build
-  pm2 restart backend
-  ```
-- **Flutter App Update**: The new UI and crash fixes need to be patched to users using Shorebird:
-  ```bash
-  cd "c:\Users\SRI\Desktop\JY School\JY-School-main\flutter_mobile"
-  shorebird patch android --flavor student --target lib/main_student.dart
-  shorebird patch android --flavor teacher --target lib/main_teacher.dart
-  shorebird patch android --flavor admin --target lib/main_admin.dart
-  ```
-- **VPS Frontend Deployment**: The MCQ Paper Generator UI was updated. Deploy the frontend to VPS using:
-  ```bash
-  ssh root@66.116.252.191
-  cd /root/JY-School/frontend
-  git pull origin main
-  npm run build
-  pm2 restart frontend
-  ```
-
-## Known Architecture Context
-- **Backend (Node.js API)**: Hosted on VPS at `http://66.116.252.191:19998`
-- **Frontend (Web App)**: Hosted on VPS at `http://66.116.252.191:19999`
-- **Databases**: Supabase (Postgres) primary; local Postgres on VPS (`jy_school_local`) for heavy items (Question Papers).
-- **Mobile Apps**: Built with Flutter and managed via Shorebird for OTA patches.
-
-### Added Admissions Module
-- Added Prisma Schema model for AdmissionInquiry.
-- Added API routes for admissions.
-- Added Admissions dashboard card and list page in Admin Panel.
-- Created public 'apply.html' registration page for Website.
-- Linked Website Apply Now buttons to 'apply.html'.
-
-### OMR Scanner Pro Fixes
-- **Root Cause Identified**: The large morphological closing kernel (`w * 0.012`) was merging adjacent question options A, B, C, D into horizontal blobs, violating circularity & aspect ratio checks and causing "No question bubbles detected".
-- **Refactored Detection**:
-  - Replaced large morphological kernel with a 3x3 kernel to seal hairline gaps without merging neighboring bubbles.
-  - Lowered `min_area` to `total_pixels * 0.00003` to accurately capture smaller Student ID bubbles (10-12px).
-  - Switched from `cv2.RETR_EXTERNAL` to `cv2.RETR_LIST` with spatial deduplication so that full-sheet outer border lines do not hide inner bubble contours.
-  - Implemented direct Black Vision White Bubble Detection: uses morphological opening to cleanly isolate solid white filled marks from black thresholded image, maps them directly to 75 questions & student ID, compares with answer key and overlays green (correct) / red (wrong) circles on Black Vision preview.
-  - Enhanced backend controller (`exams.controller.ts`) student lookup with flexible roll number matching (`JY26-XXXX` or numeric `XXXX`), fixed async exec callback and typed query for clean build.
-
-### Modern Online Admission Registration & Website Integration
-- **New Comprehensive Registration Form (`AdmissionRegistrationPage.tsx`)**:
-  - Created complete multi-step / multi-tab registration form with photo upload, sibling details, previous school info, father & mother details (Aadhar, Mobile, Occupation), and strictly formatted 2-page A4 print layout (`AdmissionPrintModal.tsx`).
-  - Integrated official 100% Sachivalayams and Villages dataset for all Mandals in Andhra Pradesh.
-  - Integrated comprehensive Andhra Pradesh Caste & Sub-Caste cascade list (`apCastes.ts`) covering OC, BC-A, BC-B, BC-C, BC-D, BC-E, SC, ST and all North Andhra / Srikakulam specific communities.
-- **Public Accessibility & Security**:
-  - Added open public routes (`/apply` and `/admissions/apply`) in React router (`router/index.tsx`) and unauthenticated redirect in `ProtectedRoute.tsx`.
-  - Permitted public image uploads for student photos and UPI payment receipts in `backend/src/routes/uploads.ts`.
-- **School Website Integration (`Website/index.html`, `Website/header_tmp.html`, `Website/apply.html`)**:
-  - Updated all "Apply Now", "Admissions", and "Enroll Today" buttons across header, mobile menu, hero section, CTA section, and footer to point directly to `http://66.116.252.191:19999/apply`.
-  - Added immediate JavaScript and Meta refresh redirect in `Website/apply.html` so legacy visitors are instantly redirected to the new registration form.
+## Deploy Commands
+```bash
+ssh root@66.116.252.191
+cd /root/JY-School/backend && git pull origin main && npm run build && pm2 restart backend
+cd /root/JY-School/frontend && git pull origin main && npm run build && pm2 restart frontend
+```
