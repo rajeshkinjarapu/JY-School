@@ -39,10 +39,8 @@ router.post('/image', (req, res) => {
   });
 });
 
-// Protect remaining routes with authentication
-router.use(authenticate);
-
-// /share: saves file to disk and returns a public URL (used for WhatsApp sharing on HTTP origins)
+// /share: saves file to disk and returns a public URL
+// NOTE: kept public (before authenticate) so admission registration can upload receipts without auth
 router.post('/share', upload.single('file'), (req, res) => {
   if (!req.file) {
     res.status(400).json({ success: false, message: 'No file uploaded or invalid format' });
@@ -51,6 +49,9 @@ router.post('/share', upload.single('file'), (req, res) => {
   const url = getFileUrl(req.file.filename);
   successResponse(res, { url }, 'File uploaded successfully');
 });
+
+// Protect remaining routes with authentication
+router.use(authenticate);
 
 router.post('/document', upload.single('file'), (req, res) => {
   if (!req.file) {

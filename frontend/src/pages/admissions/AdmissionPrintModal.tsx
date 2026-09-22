@@ -802,7 +802,7 @@ export const AdmissionPrintModal: React.FC<AdmissionPrintModalProps> = ({
     <>
       {/* Screen Modal Backdrop & Preview Controls */}
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md no-print">
-        <div className="relative w-full max-w-5xl bg-slate-900 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[95vh] border border-slate-700">
+        <div className="relative w-full max-w-[1200px] bg-slate-900 rounded-3xl shadow-2xl overflow-hidden flex flex-col" style={{ maxHeight: '95vh' }}>
           
           {/* Modal Header Bar */}
           <div className="px-6 py-4 bg-gradient-to-r from-[#1e3a8a] via-slate-900 to-[#1e3a8a] text-white flex items-center justify-between shadow-lg border-b border-slate-700 shrink-0">
@@ -839,22 +839,53 @@ export const AdmissionPrintModal: React.FC<AdmissionPrintModalProps> = ({
             </div>
           </div>
 
-          {/* Modal Scrollable Preview */}
-          <div className="flex-1 overflow-y-auto p-6 bg-slate-950/60 flex flex-col items-center gap-8">
-            <div className="flex items-center gap-2 text-xs font-bold text-slate-300 bg-slate-800/90 border border-slate-700 px-4 py-1.5 rounded-full shadow-md">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-              PAGE 1 OF 2: OFFICIAL STUDENT ADMISSION DOSSIER & TEAR-OFF ACKNOWLEDGEMENT SLIP
-            </div>
-            <div className="w-[210mm] shadow-2xl rounded-xs overflow-hidden transition-transform">
-              {renderPage1()}
+          {/* Modal Scrollable Preview - Side by Side Pages */}
+          <div className="flex-1 overflow-auto p-6 bg-slate-950/60">
+            {/* Pages Labels Row */}
+            <div className="flex gap-6 justify-center mb-4">
+              <div className="flex items-center gap-2 text-xs font-bold text-slate-300 bg-slate-800/90 border border-slate-700 px-4 py-1.5 rounded-full shadow-md">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                PAGE 1 OF 2: OFFICIAL STUDENT ADMISSION DOSSIER & TEAR-OFF ACKNOWLEDGEMENT SLIP
+              </div>
+              <div className="flex items-center gap-2 text-xs font-bold text-slate-300 bg-slate-800/90 border border-slate-700 px-4 py-1.5 rounded-full shadow-md">
+                <span className="w-2 h-2 rounded-full bg-blue-400 animate-pulse"></span>
+                PAGE 2 OF 2: SIBLING RECORD, 11 MANDATORY RULES, PARENTAL UNDERTAKING & OFFICE SCRUTINY
+              </div>
             </div>
 
-            <div className="flex items-center gap-2 text-xs font-bold text-slate-300 bg-slate-800/90 border border-slate-700 px-4 py-1.5 rounded-full shadow-md mt-4">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-              PAGE 2 OF 2: SIBLING RECORD, 11 MANDATORY RULES, PARENTAL UNDERTAKING & OFFICE SCRUTINY
-            </div>
-            <div className="w-[210mm] shadow-2xl rounded-xs overflow-hidden transition-transform">
-              {renderPage2()}
+            {/* Side-by-Side A4 Pages with Scale */}
+            <div className="flex gap-8 justify-center items-start" style={{ minWidth: 'max-content', paddingBottom: '16px' }}>
+              {/* Page 1 - Scaled to ~62% */}
+              <div style={{
+                display: 'inline-block',
+                width: '210mm',
+                height: '297mm',
+                transform: 'scale(0.62)',
+                transformOrigin: 'top left',
+                flexShrink: 0,
+                marginRight: 'calc(210mm * 0.62 - 210mm)',
+                marginBottom: 'calc(297mm * 0.62 - 297mm)',
+              }}>
+                <div style={{ boxShadow: '0 25px 50px rgba(0,0,0,0.6)', borderRadius: '4px', overflow: 'hidden', border: '2px solid #475569' }}>
+                  {renderPage1()}
+                </div>
+              </div>
+
+              {/* Page 2 - Scaled to ~62% */}
+              <div style={{
+                display: 'inline-block',
+                width: '210mm',
+                height: '297mm',
+                transform: 'scale(0.62)',
+                transformOrigin: 'top left',
+                flexShrink: 0,
+                marginRight: 'calc(210mm * 0.62 - 210mm)',
+                marginBottom: 'calc(297mm * 0.62 - 297mm)',
+              }}>
+                <div style={{ boxShadow: '0 25px 50px rgba(0,0,0,0.6)', borderRadius: '4px', overflow: 'hidden', border: '2px solid #475569' }}>
+                  {renderPage2()}
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -866,7 +897,7 @@ export const AdmissionPrintModal: React.FC<AdmissionPrintModalProps> = ({
           @media print {
             @page {
               size: A4 portrait;
-              margin: 0;
+              margin: 0mm;
             }
             html, body {
               margin: 0 !important;
@@ -876,20 +907,21 @@ export const AdmissionPrintModal: React.FC<AdmissionPrintModalProps> = ({
               -webkit-print-color-adjust: exact !important;
               print-color-adjust: exact !important;
             }
-            body * {
-              visibility: hidden !important;
+            body > * {
+              display: none !important;
             }
-            #admission-print-root, #admission-print-root * {
-              visibility: visible !important;
+            body > #admission-print-root {
+              display: block !important;
             }
             #admission-print-root {
               display: block !important;
-              position: absolute !important;
+              position: fixed !important;
               left: 0 !important;
               top: 0 !important;
               width: 210mm !important;
               margin: 0 !important;
               padding: 0 !important;
+              background: white !important;
             }
             .a4-page {
               width: 210mm !important;
@@ -902,10 +934,18 @@ export const AdmissionPrintModal: React.FC<AdmissionPrintModalProps> = ({
               page-break-after: always !important;
               break-after: page !important;
               overflow: hidden !important;
+              position: relative !important;
+              display: flex !important;
+              flex-direction: column !important;
+              justify-content: space-between !important;
+              background: white !important;
             }
             .a4-page:last-child {
               page-break-after: avoid !important;
               break-after: avoid !important;
+            }
+            .no-print {
+              display: none !important;
             }
           }
         `}} />

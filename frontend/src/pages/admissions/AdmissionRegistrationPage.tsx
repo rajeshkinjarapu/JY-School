@@ -242,7 +242,7 @@ export const AdmissionRegistrationPage: React.FC = () => {
       return;
     }
 
-    // Instant preview for receipt
+    // Instant preview for receipt (blob URL for local preview only)
     const localReceipt = URL.createObjectURL(file);
     setPaymentReceipt(localReceipt);
 
@@ -251,8 +251,8 @@ export const AdmissionRegistrationPage: React.FC = () => {
     try {
       const formData = new FormData();
       formData.append('file', file);
-      formData.append('image', file);
-      const res = await api.post('/api/uploads/image', formData, {
+      // Use /share endpoint: saves to disk and returns a proper /uploads/filename URL
+      const res = await api.post('/api/uploads/share', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       const url = res.data?.url || res.data?.data?.url;

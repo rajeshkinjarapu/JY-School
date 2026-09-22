@@ -339,14 +339,35 @@ export const AdmissionsManagementPage: React.FC = () => {
                               {adm.paymentMethod || 'CASH'} • {adm.paymentStatus || 'PENDING'}
                             </span>
                             {adm.paymentReceipt && (
-                              <a 
-                                href={adm.paymentReceipt.startsWith('http') ? adm.paymentReceipt : `http://66.116.252.191:19998/${adm.paymentReceipt.replace(/^\/+/, '')}`}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="text-[10px] text-indigo-600 hover:text-indigo-800 font-bold flex items-center gap-1 hover:underline"
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const receipt = adm.paymentReceipt;
+                                  if (!receipt) return;
+                                  // Handle base64 data URL (old records stored as base64)
+                                  if (receipt.startsWith('data:')) {
+                                    const win = window.open('', '_blank');
+                                    if (win) {
+                                      const isImage = receipt.startsWith('data:image');
+                                      win.document.write(
+                                        isImage
+                                          ? `<html><body style="margin:0;background:#000;display:flex;align-items:center;justify-content:center;min-height:100vh;"><img src="${receipt}" style="max-width:100%;max-height:100vh;object-fit:contain;" /></body></html>`
+                                          : `<html><body style="margin:0;"><embed src="${receipt}" width="100%" height="100%" style="position:fixed;top:0;left:0;width:100%;height:100%;" /></body></html>`
+                                      );
+                                      win.document.close();
+                                    }
+                                    return;
+                                  }
+                                  // Handle /uploads/filename path (new records)
+                                  const url = receipt.startsWith('http')
+                                    ? receipt
+                                    : `http://66.116.252.191:19998/${receipt.replace(/^\/+/, '')}`;
+                                  window.open(url, '_blank', 'noreferrer');
+                                }}
+                                className="text-[10px] text-indigo-600 hover:text-indigo-800 font-bold flex items-center gap-1 hover:underline cursor-pointer bg-transparent border-0 p-0"
                               >
                                 <Eye className="w-3 h-3" /> View Receipt
-                              </a>
+                              </button>
                             )}
                           </div>
                         </td>
