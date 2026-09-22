@@ -6,15 +6,15 @@
 
 ## Session: 2026-09-22 Fixes
 
-### 1. Print 2 Pages Design - Complete Redesign
+### 1. Print 2 Pages Design - Complete Redesign (V2)
 **File:** `frontend/src/pages/admissions/AdmissionPrintModal.tsx`
-- **Problem:** Print preview design was not displaying properly, pages not scaling in modal
-- **Fix:** Complete redesign to match school's traditional admission form format:
-  - **Page 1:** School header + logo + "ADMISSION FORM" dark box + photo box + 13 numbered fields with underlines + Acknowledgement slip with dotted lines + signatures
-  - **Page 2:** Sibling Details table + 11 Terms & Conditions + Declaration by Parent/Guardian + Fee Payment Schedule + signatures
-  - **Design:** Double border (thick outer + thin inner), Times New Roman font, professional layout
-  - **Preview:** Side-by-side scaled (47%) preview in modal, both pages visible simultaneously
-  - **Print:** Proper A4 print with page-break between pages
+- **Problem:** Print preview design was not displaying properly, pages not scaling in modal.
+- **Fix:** Complete redesign to match school's traditional admission form format from scratch:
+  - **A4 Perfect Fit:** Used Tailwind CSS with exact A4 dimensions (`w-[210mm] h-[297mm]`) and `@page { size: A4; margin: 0; }` for pixel-perfect printing.
+  - **Page 1:** School header + logo + "ADMISSION FORM" dark box + photo box + 13 numbered fields with underlines + Acknowledgement slip with dotted lines + signatures. Exact typography matching the sample images.
+  - **Page 2:** Sibling Details table + 11 Terms & Conditions + Declaration by Parent/Guardian + Fee Payment Schedule + signatures.
+  - **Design:** Double border (thick outer + thin inner), professional layout.
+  - **Preview:** Modal preview is now directly using the A4 container sizes which will scale gracefully.
 
 ### 2. View Receipt - Bug Fix
 **Files:**
