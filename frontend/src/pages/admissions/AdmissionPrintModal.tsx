@@ -87,17 +87,17 @@ export const AdmissionPrintModal: React.FC<AdmissionPrintModalProps> = ({
   const handlePrint = () => window.print();
 
   // ─── STYLE HELPERS ───────────────────────────────────────────────────────
-  // Fixed-label field row: "Label :" ___value_line___
+  // Fixed-label  // Helper component for dotted/solid underlines
+  // NOTE: no lineHeight set here — parent's justifyContent:space-between handles row spacing
   const Row = ({
-    num, label, children, sub,
-  }: { num?: string | number; label: string; children: React.ReactNode; sub?: React.ReactNode }) => (
-    <div style={{ display: 'flex', alignItems: 'baseline', columnGap: 4, lineHeight: '2.35', flexWrap: 'wrap' }}>
+    num, label, children,
+  }: { num?: string | number; label: string; children: React.ReactNode }) => (
+    <div style={{ display: 'flex', alignItems: 'baseline', columnGap: 4, flexWrap: 'wrap', minHeight: 22 }}>
       {num !== undefined && (
         <span style={{ minWidth: 22, fontWeight: 700, flexShrink: 0 }}>{num}.</span>
       )}
       <span style={{ whiteSpace: 'nowrap', flexShrink: 0 }}>{label}</span>
       {children}
-      {sub && <span style={{ fontSize: 9, color: '#555', width: '100%', paddingLeft: 22, marginTop: -4 }}>{sub}</span>}
     </div>
   );
 
@@ -235,8 +235,17 @@ export const AdmissionPrintModal: React.FC<AdmissionPrintModalProps> = ({
         }
       </div>
 
-      {/* Form fields – right side padding accounts for photo box */}
-      <div style={{ fontSize: 12.5, paddingRight: '32mm' }}>
+      {/* Form fields – flex:1 + space-between fills all available space perfectly */}
+      <div style={{
+        flex: 1,
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'space-between',
+        fontSize: 12.5,
+        paddingRight: '32mm',
+        overflow: 'hidden',
+      }}>
+        {/* 1 */}
         <Row num={1} label="Admn No :">
           <U w={100}>{regNo}</U>
           <span style={{ marginLeft: 8 }}>Class</span>
@@ -245,17 +254,21 @@ export const AdmissionPrintModal: React.FC<AdmissionPrintModalProps> = ({
           <U w={90}>{academicYear}</U>
         </Row>
 
+        {/* 2 */}
         <Row num={2} label="Date of Joining :">
           <U w={220}>{regDate}</U>
         </Row>
 
-        <Row num={3} label="Name of the Student :">
-          <U w={320}>{admission.studentName}</U>
-        </Row>
-        <div style={{ fontSize: 9.5, color: '#555', paddingLeft: 22, marginTop: -6, marginBottom: 2 }}>(In Capital Letters)</div>
+        {/* 3 */}
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+          <Row num={3} label="Name of the Student :">
+            <U w={320}>{admission.studentName}</U>
+          </Row>
+          <div style={{ fontSize: 9.5, color: '#555', paddingLeft: 22, marginTop: 1 }}>(In Capital Letters)</div>
+        </div>
 
-        {/* Gender */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, lineHeight: '2.35' }}>
+        {/* 4 - Gender */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <span style={{ minWidth: 22, fontWeight: 700 }}>4.</span>
           <span>Gender :</span>
           <span style={{ marginLeft: 8 }}>Boy</span>
@@ -268,8 +281,8 @@ export const AdmissionPrintModal: React.FC<AdmissionPrintModalProps> = ({
           </span>
         </div>
 
-        {/* DOB boxes */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 4, lineHeight: '2.35' }}>
+        {/* 5 - DOB */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
           <span style={{ minWidth: 22, fontWeight: 700 }}>5.</span>
           <span>Date of Birth :</span>
           <span style={{ marginLeft: 6, display: 'inline-flex' }}>
@@ -289,36 +302,44 @@ export const AdmissionPrintModal: React.FC<AdmissionPrintModalProps> = ({
           </span>
         </div>
 
+        {/* 6 */}
         <Row num={6} label="Mother Tongue :">
           <U w={130}>{admission.motherTongue || 'Telugu'}</U>
           <span style={{ marginLeft: 10 }}>Aadhar No :</span>
           <U w={150}>{admission.aadharNo}</U>
         </Row>
 
-        <Row num={7} label="Father's Name :">
-          <U w={185}>{admission.fatherName}</U>
-          <span style={{ marginLeft: 8 }}>Occupation :</span>
-          <U w={130}>{admission.fatherOccupation}</U>
-        </Row>
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, paddingLeft: 22, lineHeight: '2.1' }}>
-          <span>Aadhar No :</span>
-          <U w={170}>{admission.fatherAadhar}</U>
-          <span style={{ marginLeft: 10 }}>Phone No :</span>
-          <U w={150}>{admission.fatherPhone || admission.phone}</U>
+        {/* 7 */}
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+          <Row num={7} label="Father's Name :">
+            <U w={185}>{admission.fatherName}</U>
+            <span style={{ marginLeft: 8 }}>Occupation :</span>
+            <U w={130}>{admission.fatherOccupation}</U>
+          </Row>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, paddingLeft: 22 }}>
+            <span>Aadhar No :</span>
+            <U w={170}>{admission.fatherAadhar}</U>
+            <span style={{ marginLeft: 10 }}>Phone No :</span>
+            <U w={150}>{admission.fatherPhone || admission.phone}</U>
+          </div>
         </div>
 
-        <Row num={8} label="Mother's Name :">
-          <U w={185}>{admission.motherName}</U>
-          <span style={{ marginLeft: 8 }}>Occupation :</span>
-          <U w={130}>{admission.motherOccupation || 'Home Maker'}</U>
-        </Row>
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, paddingLeft: 22, lineHeight: '2.1' }}>
-          <span>Aadhar No :</span>
-          <U w={170}>{admission.motherAadhar}</U>
-          <span style={{ marginLeft: 10 }}>Phone No :</span>
-          <U w={150}>{admission.motherPhone || admission.alternatePhone}</U>
+        {/* 8 */}
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+          <Row num={8} label="Mother's Name :">
+            <U w={185}>{admission.motherName}</U>
+            <span style={{ marginLeft: 8 }}>Occupation :</span>
+            <U w={130}>{admission.motherOccupation || 'Home Maker'}</U>
+          </Row>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, paddingLeft: 22 }}>
+            <span>Aadhar No :</span>
+            <U w={170}>{admission.motherAadhar}</U>
+            <span style={{ marginLeft: 10 }}>Phone No :</span>
+            <U w={150}>{admission.motherPhone || admission.alternatePhone}</U>
+          </div>
         </div>
 
+        {/* 9 */}
         <Row num={9} label="Nationality :">
           <U w={100}>{admission.nationality || 'Indian'}</U>
           <span style={{ marginLeft: 8 }}>State :</span>
@@ -327,27 +348,31 @@ export const AdmissionPrintModal: React.FC<AdmissionPrintModalProps> = ({
           <U w={100}>{admission.religion || 'Hindu'}</U>
         </Row>
 
+        {/* 10 */}
         <Row num={10} label="Caste :">
           <U w={140}>{admission.caste}</U>
           <span style={{ marginLeft: 12 }}>Sub-Caste :</span>
           <U w={140}>{admission.subCaste}</U>
         </Row>
 
+        {/* 11 */}
         <Row num={11} label="Residence :">
           <U w={380} bold={false}>{address}</U>
         </Row>
 
+        {/* 12 */}
         <Row num={12} label="Name of the School Previous Studying / Studied :">
           <U w={200}>{admission.previousSchool}</U>
         </Row>
 
+        {/* 13 */}
         <Row num={13} label={`Annual fee fixed for ${academicYear} :`}>
           <U w={220}>{feeAmount}</U>
         </Row>
       </div>
 
-      {/* ── ACKNOWLEDGEMENT SLIP ── */}
-      <div style={{ marginTop: 'auto', borderTop: '2px dashed #555', paddingTop: 6 }}>
+      {/* ── ACKNOWLEDGEMENT SLIP ── no marginTop needed — fields flex fills space above */}
+      <div style={{ borderTop: '2px dashed #555', paddingTop: 6, marginTop: 8 }}>
         <div style={{ textAlign: 'center', fontSize: 9, color: '#666', marginBottom: 4, letterSpacing: 3 }}>
           ✂ ── CUT HERE ── ✂
         </div>
