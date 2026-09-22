@@ -25,49 +25,46 @@ export const AdmissionPrintModal: React.FC<AdmissionPrintModalProps> = ({
 
   if (!isOpen || !admission) return null;
 
-  const schoolName = schoolSettings?.schoolName || 'SRI VENKATESWARA JY SCHOOL';
-  const schoolSub = '(IIT-JEE / NEET Foundation – Olympiads)';
-  const schoolAddress = schoolSettings?.address || 'Near Axis Bank, Old Bus Stand, Narasannapeta';
-  const schoolLogo = schoolSettings?.logoUrl || '/logo.png';
+  // ─── DATA ────────────────────────────────────────────────────────────────
+  const schoolName  = schoolSettings?.schoolName || 'SRI VENKATESWARA JY SCHOOL';
+  const schoolSub   = '(IIT-JEE / NEET Foundation – Olympiads)';
+  const schoolAddr  = schoolSettings?.address || 'Near Axis Bank, Old Bus Stand, Narasannapeta';
+  const schoolLogo  = schoolSettings?.logoUrl  || '/logo.png';
 
-  const currentYear = new Date().getFullYear();
-  const academicYear = admission.academicYear || `${currentYear}-${currentYear + 1}`;
-  const regNo = admission.regNo || `ADM-${new Date(admission.createdAt || Date.now()).getFullYear()}-${admission.id?.slice(0, 6).toUpperCase() || '001'}`;
+  const yr          = new Date().getFullYear();
+  const academicYear = admission.academicYear || `${yr}-${yr + 1}`;
+  const regNo        = admission.regNo || `ADM-${new Date(admission.createdAt || Date.now()).getFullYear()}-${(admission.id?.slice(0, 6) || '001').toUpperCase()}`;
 
-  const regDate = admission.createdAt
-    ? new Date(admission.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' })
-    : new Date().toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  const fmt = (d: Date) => d.toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  const regDate = admission.createdAt ? fmt(new Date(admission.createdAt)) : fmt(new Date());
 
-  // DOB formatted for boxes
-  let dobBoxes = ['', '', '', '', '', '', '', ''];
+  // DOB boxes  DD / MM / YYYY
+  let dobBoxes = Array(8).fill('');
   if (admission.dob) {
     try {
       const d = new Date(admission.dob);
       const dd = String(d.getDate()).padStart(2, '0');
       const mm = String(d.getMonth() + 1).padStart(2, '0');
       const yyyy = String(d.getFullYear());
-      dobBoxes = [dd[0], dd[1], mm[0], mm[1], yyyy[0], yyyy[1], yyyy[2], yyyy[3]];
+      dobBoxes = [...dd, ...mm, ...yyyy];
     } catch (_) {}
   }
 
-  const genderUpper = (admission.gender || '').toUpperCase();
-  const isBoy = genderUpper === 'MALE' || genderUpper === 'BOY';
-  const isGirl = genderUpper === 'FEMALE' || genderUpper === 'GIRL';
+  const g      = (admission.gender || '').toUpperCase();
+  const isBoy  = g === 'MALE'   || g === 'BOY';
+  const isGirl = g === 'FEMALE' || g === 'GIRL';
 
+  // Siblings – show only real rows; if none, show exactly 1 "NA - Only Child" row
   let siblingsList: any[] = [];
   if (admission.siblingsData && admission.siblingsData !== 'NA') {
     try {
       siblingsList = typeof admission.siblingsData === 'string'
         ? JSON.parse(admission.siblingsData)
-        : admission.siblingsData;
-    } catch (e) {}
+        : (Array.isArray(admission.siblingsData) ? admission.siblingsData : []);
+    } catch (_) {}
   }
-  
-  // Fill empty rows to make it 4 rows total
-  const displaySiblings = [...siblingsList];
-  while (displaySiblings.length < 4) {
-    displaySiblings.push(null);
-  }
+  const hasSiblings   = siblingsList.length > 0;
+  const siblingRows   = hasSiblings ? siblingsList : [{ name: 'NA – Only Child', className: '—', schoolName: '—', _only: true }];
 
   const feeAmount = admission.admissionFee
     ? `₹ ${Number(admission.admissionFee).toLocaleString('en-IN')}`
@@ -80,419 +77,525 @@ export const AdmissionPrintModal: React.FC<AdmissionPrintModalProps> = ({
     return `${base.replace(/\/$/, '')}/${src.replace(/^\//, '')}`;
   };
 
+  const address = [
+    admission.doorNo   ? `D.No: ${admission.doorNo}` : null,
+    admission.village  || null,
+    admission.mandal   ? `Mandal: ${admission.mandal}` : null,
+    admission.district ? `${admission.district} Dist`  : null,
+  ].filter(Boolean).join(', ') || admission.address || '';
+
   const handlePrint = () => window.print();
 
-  // Helper component for dotted/solid underlines
-  const Line = ({ width = '100px', children, className = '' }: { width?: string, children?: React.ReactNode, className?: string }) => (
-    <span 
-      className={`inline-block border-b border-black text-center font-bold px-2 ${className}`} 
-      style={{ minWidth: width }}
-    >
+  // ─── STYLE HELPERS ───────────────────────────────────────────────────────
+  // Fixed-label field row: "Label :" ___value_line___
+  const Row = ({
+    num, label, children, sub,
+  }: { num?: string | number; label: string; children: React.ReactNode; sub?: React.ReactNode }) => (
+    <div style={{ display: 'flex', alignItems: 'baseline', columnGap: 4, lineHeight: '2.35', flexWrap: 'wrap' }}>
+      {num !== undefined && (
+        <span style={{ minWidth: 22, fontWeight: 700, flexShrink: 0 }}>{num}.</span>
+      )}
+      <span style={{ whiteSpace: 'nowrap', flexShrink: 0 }}>{label}</span>
+      {children}
+      {sub && <span style={{ fontSize: 9, color: '#555', width: '100%', paddingLeft: 22, marginTop: -4 }}>{sub}</span>}
+    </div>
+  );
+
+  // Underline span (solid)
+  const U = ({
+    w = 120, children, bold = true,
+  }: { w?: number; children?: React.ReactNode; bold?: boolean }) => (
+    <span style={{
+      display: 'inline-block',
+      minWidth: w,
+      borderBottom: '1px solid #000',
+      fontWeight: bold ? 700 : 400,
+      paddingLeft: 4,
+      paddingRight: 4,
+      textAlign: 'center',
+      textTransform: children ? 'uppercase' : 'none',
+    }}>
       {children}
     </span>
   );
 
-  const DottedLine = ({ width = '100%', children }: { width?: string, children?: React.ReactNode }) => (
-    <span 
-      className="inline-block border-b-2 border-dotted border-black text-center font-bold px-2" 
-      style={{ minWidth: width }}
-    >
+  // Dotted underline (acknowledgement)
+  const D = ({ children, flex }: { children?: React.ReactNode; flex?: boolean }) => (
+    <span style={{
+      display: 'inline-block',
+      flex: flex ? 1 : undefined,
+      borderBottom: '1.5px dotted #000',
+      fontWeight: 700,
+      paddingLeft: 6, paddingRight: 6,
+      minWidth: flex ? undefined : 140,
+      textTransform: 'uppercase',
+    }}>
       {children}
     </span>
   );
 
+  // ─── PRINT CSS ───────────────────────────────────────────────────────────
+  const css = `
+    @media print {
+      @page { size: A4 portrait; margin: 0; }
+      html, body { margin: 0 !important; padding: 0 !important; background: #fff !important;
+        -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+      body > * { display: none !important; }
+      #adm-print-root { display: block !important; }
+      #adm-print-root { position: fixed; top: 0; left: 0; width: 210mm; background: #fff; }
+      .adm-page { page-break-after: always; break-after: page; }
+      .adm-page:last-child { page-break-after: avoid; break-after: avoid; }
+      .no-print { display: none !important; }
+    }
+  `;
+
+  // ─── PAGE WRAPPER ────────────────────────────────────────────────────────
+  const Page = ({ children }: { children: React.ReactNode }) => (
+    <div className="adm-page" style={{
+      width: '210mm', height: '297mm',
+      backgroundColor: '#fff', color: '#000',
+      fontFamily: '"Times New Roman", Times, serif',
+      boxSizing: 'border-box',
+      padding: '7mm',
+      position: 'relative',
+      display: 'flex', flexDirection: 'column',
+      overflow: 'hidden',
+    }}>
+      {/* thick outer border */}
+      <div style={{ position: 'absolute', inset: '5mm', border: '3px solid #000', pointerEvents: 'none', zIndex: 0 }} />
+      {/* thin inner border */}
+      <div style={{ position: 'absolute', inset: '7mm', border: '1px solid #000', pointerEvents: 'none', zIndex: 0 }} />
+
+      <div style={{ position: 'relative', zIndex: 1, flex: 1, display: 'flex', flexDirection: 'column', padding: '6mm 8mm 5mm 8mm' }}>
+        {children}
+      </div>
+    </div>
+  );
+
+  // ─── SHARED HEADER ────────────────────────────────────────────────────────
+  // Logo left-aligned, school text perfectly centred over full width using absolute logo
+  const SchoolHeader = () => (
+    <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 4 }}>
+      {/* Logo – absolutely positioned so it doesn't shift the center text */}
+      <img
+        src={schoolLogo}
+        alt="Logo"
+        style={{ position: 'absolute', left: 0, width: 60, height: 60, objectFit: 'contain' }}
+        onError={(e) => { e.currentTarget.style.display = 'none'; }}
+      />
+      {/* Centered text */}
+      <div style={{ textAlign: 'center' }}>
+        <div style={{ fontSize: 22, fontWeight: 900, textTransform: 'uppercase', letterSpacing: 1, lineHeight: 1.2 }}>
+          {schoolName}
+        </div>
+        <div style={{ fontSize: 12, fontWeight: 600, marginTop: 2 }}>{schoolSub}</div>
+        <div style={{ fontSize: 11, marginTop: 1, color: '#333' }}>{schoolAddr}</div>
+      </div>
+    </div>
+  );
+
+  // ─── SECTION TITLE ────────────────────────────────────────────────────────
+  const SectionTitle = ({ text, large }: { text: string; large?: boolean }) => (
+    <div style={{ textAlign: 'center', margin: '4px 0 6px' }}>
+      <span style={{
+        display: 'inline-block',
+        backgroundColor: '#333',
+        color: '#fff',
+        fontSize: large ? 13 : 11,
+        fontWeight: 800,
+        padding: large ? '3px 36px' : '2px 24px',
+        letterSpacing: 2,
+        textTransform: 'uppercase',
+        borderRadius: 2,
+      }}>
+        {text}
+      </span>
+    </div>
+  );
+
+  // ─── PAGE 1 ───────────────────────────────────────────────────────────────
+  const renderPage1 = () => (
+    <Page>
+      <SchoolHeader />
+      <SectionTitle text="Admission Form" large />
+
+      {/* Passport photo box – top right of the form fields */}
+      <div style={{
+        position: 'absolute', top: '36mm', right: '11mm', zIndex: 5,
+        width: '28mm', height: '34mm',
+        border: '1px solid #000',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        backgroundColor: '#f5f5f5', overflow: 'hidden',
+      }}>
+        {admission.studentImage
+          ? <img src={resolveImg(admission.studentImage)} alt="Student" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          : <span style={{ fontSize: 8, textAlign: 'center', color: '#666', lineHeight: 1.5, padding: 4 }}>
+              Affix latest<br />Passport Size<br />Photograph
+            </span>
+        }
+      </div>
+
+      {/* Form fields – right side padding accounts for photo box */}
+      <div style={{ fontSize: 12.5, paddingRight: '32mm' }}>
+        <Row num={1} label="Admn No :">
+          <U w={100}>{regNo}</U>
+          <span style={{ marginLeft: 8 }}>Class</span>
+          <U w={70}>{admission.classApplied}</U>
+          <span style={{ marginLeft: 8 }}>Academic Year</span>
+          <U w={90}>{academicYear}</U>
+        </Row>
+
+        <Row num={2} label="Date of Joining :">
+          <U w={220}>{regDate}</U>
+        </Row>
+
+        <Row num={3} label="Name of the Student :">
+          <U w={320}>{admission.studentName}</U>
+        </Row>
+        <div style={{ fontSize: 9.5, color: '#555', paddingLeft: 22, marginTop: -6, marginBottom: 2 }}>(In Capital Letters)</div>
+
+        {/* Gender */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, lineHeight: '2.35' }}>
+          <span style={{ minWidth: 22, fontWeight: 700 }}>4.</span>
+          <span>Gender :</span>
+          <span style={{ marginLeft: 8 }}>Boy</span>
+          <span style={{ display: 'inline-flex', width: 16, height: 16, border: '1px solid #000', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 900 }}>
+            {isBoy ? '✓' : ''}
+          </span>
+          <span style={{ marginLeft: 16 }}>Girl</span>
+          <span style={{ display: 'inline-flex', width: 16, height: 16, border: '1px solid #000', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 900 }}>
+            {isGirl ? '✓' : ''}
+          </span>
+        </div>
+
+        {/* DOB boxes */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4, lineHeight: '2.35' }}>
+          <span style={{ minWidth: 22, fontWeight: 700 }}>5.</span>
+          <span>Date of Birth :</span>
+          <span style={{ marginLeft: 6, display: 'inline-flex' }}>
+            {dobBoxes.map((ch, i) => (
+              <React.Fragment key={i}>
+                <span style={{
+                  display: 'inline-flex', width: 16, height: 18,
+                  border: '1px solid #000',
+                  alignItems: 'center', justifyContent: 'center',
+                  fontWeight: 700, fontSize: 11,
+                }}>
+                  {ch}
+                </span>
+                {(i === 1 || i === 3) && <span style={{ padding: '0 1px', fontWeight: 700 }}>/</span>}
+              </React.Fragment>
+            ))}
+          </span>
+        </div>
+
+        <Row num={6} label="Mother Tongue :">
+          <U w={130}>{admission.motherTongue || 'Telugu'}</U>
+          <span style={{ marginLeft: 10 }}>Aadhar No :</span>
+          <U w={150}>{admission.aadharNo}</U>
+        </Row>
+
+        <Row num={7} label="Father's Name :">
+          <U w={185}>{admission.fatherName}</U>
+          <span style={{ marginLeft: 8 }}>Occupation :</span>
+          <U w={130}>{admission.fatherOccupation}</U>
+        </Row>
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, paddingLeft: 22, lineHeight: '2.1' }}>
+          <span>Aadhar No :</span>
+          <U w={170}>{admission.fatherAadhar}</U>
+          <span style={{ marginLeft: 10 }}>Phone No :</span>
+          <U w={150}>{admission.fatherPhone || admission.phone}</U>
+        </div>
+
+        <Row num={8} label="Mother's Name :">
+          <U w={185}>{admission.motherName}</U>
+          <span style={{ marginLeft: 8 }}>Occupation :</span>
+          <U w={130}>{admission.motherOccupation || 'Home Maker'}</U>
+        </Row>
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, paddingLeft: 22, lineHeight: '2.1' }}>
+          <span>Aadhar No :</span>
+          <U w={170}>{admission.motherAadhar}</U>
+          <span style={{ marginLeft: 10 }}>Phone No :</span>
+          <U w={150}>{admission.motherPhone || admission.alternatePhone}</U>
+        </div>
+
+        <Row num={9} label="Nationality :">
+          <U w={100}>{admission.nationality || 'Indian'}</U>
+          <span style={{ marginLeft: 8 }}>State :</span>
+          <U w={115}>{admission.state || 'Andhra Pradesh'}</U>
+          <span style={{ marginLeft: 8 }}>Religion :</span>
+          <U w={100}>{admission.religion || 'Hindu'}</U>
+        </Row>
+
+        <Row num={10} label="Caste :">
+          <U w={140}>{admission.caste}</U>
+          <span style={{ marginLeft: 12 }}>Sub-Caste :</span>
+          <U w={140}>{admission.subCaste}</U>
+        </Row>
+
+        <Row num={11} label="Residence :">
+          <U w={380} bold={false}>{address}</U>
+        </Row>
+
+        <Row num={12} label="Name of the School Previous Studying / Studied :">
+          <U w={200}>{admission.previousSchool}</U>
+        </Row>
+
+        <Row num={13} label={`Annual fee fixed for ${academicYear} :`}>
+          <U w={220}>{feeAmount}</U>
+        </Row>
+      </div>
+
+      {/* ── ACKNOWLEDGEMENT SLIP ── */}
+      <div style={{ marginTop: 'auto', borderTop: '2px dashed #555', paddingTop: 6 }}>
+        <div style={{ textAlign: 'center', fontSize: 9, color: '#666', marginBottom: 4, letterSpacing: 3 }}>
+          ✂ ── CUT HERE ── ✂
+        </div>
+
+        <div style={{ textAlign: 'center', fontSize: 17, fontWeight: 900, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+          {schoolName}
+        </div>
+        <SectionTitle text="Acknowledgement" />
+
+        <div style={{ fontSize: 12.5, lineHeight: '2.3' }}>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
+            <span style={{ whiteSpace: 'nowrap' }}>Name of the Student</span>
+            <D flex>{admission.studentName}</D>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
+            <span style={{ whiteSpace: 'nowrap' }}>Class</span>
+            <D>{admission.classApplied}</D>
+            <span style={{ whiteSpace: 'nowrap', marginLeft: 8 }}>Father's Name</span>
+            <D flex>{admission.fatherName}</D>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
+            <span style={{ whiteSpace: 'nowrap' }}>Annual fee fixed for {academicYear}</span>
+            <D flex>{feeAmount}</D>
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 12, fontSize: 12 }}>
+          <div style={{ borderTop: '1px solid #000', minWidth: 140, paddingTop: 2, textAlign: 'center' }}>Signature of the Parent</div>
+          <div style={{ borderTop: '1px solid #000', minWidth: 140, paddingTop: 2, textAlign: 'center' }}>Signature of the Principal</div>
+        </div>
+      </div>
+    </Page>
+  );
+
+  // ─── PAGE 2 ───────────────────────────────────────────────────────────────
+  const renderPage2 = () => (
+    <Page>
+      {/* ── SIBLING DETAILS ── */}
+      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12, marginBottom: 12 }}>
+        <thead>
+          <tr>
+            <th colSpan={4} style={{ border: '1px solid #000', padding: '5px 8px', textAlign: 'center', fontWeight: 800, fontSize: 13, letterSpacing: 1, textTransform: 'uppercase', backgroundColor: '#eee' }}>
+              Sibling Details
+            </th>
+          </tr>
+          <tr style={{ backgroundColor: '#f5f5f5' }}>
+            <th style={{ border: '1px solid #000', padding: '4px 6px', width: '8%',  textAlign: 'center' }}>S.NO</th>
+            <th style={{ border: '1px solid #000', padding: '4px 6px', width: '33%', textAlign: 'center' }}>NAME</th>
+            <th style={{ border: '1px solid #000', padding: '4px 6px', width: '14%', textAlign: 'center' }}>CLASS</th>
+            <th style={{ border: '1px solid #000', padding: '4px 6px',              textAlign: 'center' }}>Where He / She Studying</th>
+          </tr>
+        </thead>
+        <tbody>
+          {siblingRows.map((sib, i) => (
+            <tr key={i}>
+              <td style={{ border: '1px solid #000', padding: '5px 6px', textAlign: 'center', fontWeight: 700, height: 28 }}>
+                {sib?._only ? '—' : i + 1}
+              </td>
+              <td style={{ border: '1px solid #000', padding: '5px 6px', textTransform: 'uppercase', fontStyle: sib?._only ? 'italic' : 'normal', textAlign: sib?._only ? 'center' : 'left' }}>
+                {sib?.name || ''}
+              </td>
+              <td style={{ border: '1px solid #000', padding: '5px 6px', textAlign: 'center' }}>{sib?.className || ''}</td>
+              <td style={{ border: '1px solid #000', padding: '5px 6px' }}>{sib?.schoolName || ''}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      {/* ── TERMS AND CONDITIONS ── */}
+      <div style={{ fontWeight: 800, fontSize: 12.5, textAlign: 'center', textDecoration: 'underline', textTransform: 'uppercase', marginBottom: 6, letterSpacing: 0.5 }}>
+        Following Terms and Conditions Should Strictly Be Followed
+      </div>
+      <ol style={{ margin: 0, paddingLeft: 20, fontSize: 11.5, lineHeight: '1.72', textAlign: 'justify', marginBottom: 10 }}>
+        <li>Student should obey the rules and regulations set by the management.</li>
+        <li>Student would not be allowed to move around the premises of the school without uniform.</li>
+        <li>During school time no visitor is allowed.</li>
+        <li>During school time parents should not approach teachers without the permission of the management.</li>
+        <li>The management has the right to reject or accept the application. The name of the student will be struck out if the students fail to follow the rules and regulations of the school.</li>
+        <li>In case of any damage done to any of property of the school, the parent would pay the loss equal to the value of damage property.</li>
+        <li>In case of the decision of the management would be final and the concerned parties would accept the management's decisions final.</li>
+        <li>If the student will remain absent from school for 10 days without information his / her name will be struck out from the school. Parent has to take prior permission for the students absence.</li>
+        <li>The students has pay all dues again to be readmitted.</li>
+        <li>The fee would be collected in 3 terms and mentioned by management. Otherwise fee concession will not be allowed.</li>
+        <li style={{ fontWeight: 700 }}>The fee once paid will not be refunded.</li>
+      </ol>
+
+      {/* ── DECLARATION ── */}
+      <div style={{ fontWeight: 800, fontSize: 12.5, textAlign: 'center', textDecoration: 'underline', textTransform: 'uppercase', marginBottom: 6, letterSpacing: 0.5 }}>
+        Declaration by the Parent / Guardian
+      </div>
+      <p style={{ fontSize: 11.5, lineHeight: '1.75', textAlign: 'justify', margin: '0 0 8px 0' }}>
+        &nbsp;&nbsp;&nbsp;&nbsp;I,&nbsp;
+        <U w={180}>{admission.fatherName || admission.motherName}</U>
+        &nbsp;Parent / Guardian of&nbsp;
+        <U w={180}>{admission.studentName}</U>
+        &nbsp;do hereby declare that if my child is admitted, I promise to send my child daily to school in time with necessary books and to pay the fee regularly. I will follow the rules and regulations of the school and abide by the directions given by the school authority. I also state that outside of the school hours it is my responsibility to take care of the child and declare that all the information given above is true to the best of my knowledge and I am aware that if it is found wrong at any state, the admission of my ward will be cancelled.
+      </p>
+
+      <div style={{ display: 'flex', gap: 32, alignItems: 'flex-end', fontSize: 12, marginBottom: 4 }}>
+        <div>Place&nbsp;: <U w={120} bold={false}>Narasannapeta</U></div>
+        <div>Date&nbsp;&nbsp;: <U w={120} bold={false}>{regDate}</U></div>
+        <div style={{ marginLeft: 'auto', borderTop: '1px solid #000', paddingTop: 2, minWidth: 170, textAlign: 'center', fontSize: 11.5 }}>
+          Signature of the Parent / Guardian
+        </div>
+      </div>
+
+      {/* ── FEE PAYMENT SCHEDULE ── */}
+      <div style={{ border: '1px solid #000', padding: '6px 10px', marginTop: 8 }}>
+        <div style={{ fontWeight: 800, fontSize: 12, textDecoration: 'underline', textTransform: 'uppercase', marginBottom: 4 }}>
+          Fee Payment Schedule
+        </div>
+        <div style={{ fontSize: 11.5, lineHeight: '1.8' }}>
+          <div>1st Term &nbsp;→ &nbsp;August 1st week</div>
+          <div>2nd Term  → &nbsp;November 1st week</div>
+          <div>3rd Term &nbsp;→ &nbsp;Before Sankranti holidays</div>
+        </div>
+      </div>
+
+      {/* ── BOTTOM SIGNATURES ── */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: 16, fontSize: 12 }}>
+        <div>Date : <U w={130} bold={false}>{regDate}</U></div>
+        <div style={{ borderTop: '1px solid #000', minWidth: 170, paddingTop: 2, textAlign: 'center', fontSize: 11.5 }}>
+          Signature of the Principal
+        </div>
+      </div>
+    </Page>
+  );
+
+  // ─── SCALE PREVIEW ────────────────────────────────────────────────────────
+  // A4 at 96dpi ≈ 794 × 1123px. Preview fits in modal height ~560px → scale ≈ 0.48
+  const SCALE  = 0.48;
+  const PW     = 794;
+  const PH     = 1123;
+  const slotW  = PW * SCALE;
+  const slotH  = PH * SCALE;
+
+  // ─── RENDER ───────────────────────────────────────────────────────────────
   return createPortal(
     <>
-      <style dangerouslySetInnerHTML={{ __html: `
-        @media print {
-          @page { size: A4; margin: 0; }
-          body * { visibility: hidden; }
-          #print-area, #print-area * { visibility: visible; }
-          #print-area { position: absolute; left: 0; top: 0; width: 100%; }
-          .no-print { display: none !important; }
-          .page-break { page-break-after: always; }
-          
-          /* Force background colors and borders to print */
-          * {
-            -webkit-print-color-adjust: exact !important;
-            print-color-adjust: exact !important;
-          }
-        }
-      `}} />
+      <style dangerouslySetInnerHTML={{ __html: css }} />
 
-      {/* MODAL OVERLAY */}
-      <div className="fixed inset-0 z-[9999] bg-slate-900/90 backdrop-blur-sm flex flex-col no-print">
-        
-        {/* MODAL HEADER */}
-        <div className="h-16 bg-slate-900 border-b border-slate-800 flex items-center justify-between px-6 shrink-0 shadow-lg">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-indigo-500/20 text-indigo-400 rounded-lg">
-              <Printer className="w-5 h-5" />
+      {/* ══ SCREEN MODAL ══ */}
+      <div className="no-print" style={{
+        position: 'fixed', inset: 0, zIndex: 9999,
+        background: 'rgba(10,18,35,0.92)',
+        backdropFilter: 'blur(8px)',
+        display: 'flex', flexDirection: 'column',
+      }}>
+        {/* Header bar */}
+        <div style={{
+          height: 56,
+          background: '#0f172a',
+          borderBottom: '1px solid #1e293b',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '0 20px',
+          flexShrink: 0,
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{ background: 'rgba(99,102,241,0.15)', borderRadius: 8, padding: 8 }}>
+              <Printer size={17} color="#818cf8" />
             </div>
             <div>
-              <h2 className="text-white font-bold text-lg leading-tight">Print Admission Form</h2>
-              <p className="text-slate-400 text-xs">A4 Size (2 Pages)</p>
+              <div style={{ color: '#f1f5f9', fontWeight: 700, fontSize: 14 }}>
+                Admission Form &nbsp;<span style={{ background: '#4f46e5', color: '#fff', fontSize: 9, fontWeight: 800, padding: '2px 8px', borderRadius: 99, letterSpacing: 1 }}>2 PAGES · A4</span>
+              </div>
+              <div style={{ color: '#64748b', fontSize: 11, marginTop: 1 }}>Click Print to send to printer</div>
             </div>
           </div>
-          <div className="flex gap-3">
+          <div style={{ display: 'flex', gap: 8 }}>
             <button
               onClick={handlePrint}
-              className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2 rounded-lg font-semibold transition-colors shadow-lg shadow-indigo-600/20"
+              style={{
+                display: 'flex', alignItems: 'center', gap: 6,
+                background: 'linear-gradient(135deg,#4f46e5,#6366f1)',
+                color: '#fff', border: 'none', borderRadius: 8,
+                padding: '8px 18px', fontWeight: 700, fontSize: 13,
+                cursor: 'pointer',
+                boxShadow: '0 4px 14px rgba(99,102,241,0.4)',
+              }}
             >
-              <Printer className="w-4 h-4" />
-              Print
+              <Printer size={14} /> Print
             </button>
             <button
               onClick={onClose}
-              className="p-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg transition-colors"
+              style={{
+                background: 'rgba(255,255,255,0.07)',
+                border: '1px solid rgba(255,255,255,0.1)',
+                borderRadius: 8, padding: 7,
+                cursor: 'pointer', color: '#94a3b8',
+                display: 'flex', alignItems: 'center',
+              }}
             >
-              <X className="w-5 h-5" />
+              <X size={17} />
             </button>
           </div>
         </div>
 
-        {/* PREVIEW CONTAINER */}
-        <div className="flex-1 overflow-auto p-4 md:p-8 flex justify-center pb-24 custom-scrollbar">
-          
-          {/* PRINT AREA (This is what actually prints, and we also scale it for preview) */}
-          <div id="print-area" className="flex flex-col gap-[20px] print:gap-0 origin-top bg-transparent print:bg-white" style={{
-             // In preview, scale down slightly on smaller screens, but keep exact dimensions for print
-             width: '210mm',
-          }}>
-            
-            {/* ================= PAGE 1 ================= */}
-            <div className="w-[210mm] h-[297mm] bg-white text-black p-[10mm] relative mx-auto shadow-2xl print:shadow-none print:p-0 page-break shrink-0 font-serif box-border overflow-hidden flex flex-col">
-              
-              {/* Outer Double Border */}
-              <div className="absolute inset-[6mm] border-[3px] border-black pointer-events-none z-10 print:inset-[5mm]"></div>
-              <div className="absolute inset-[7mm] border border-black pointer-events-none z-10 print:inset-[6mm]"></div>
-
-              {/* Main Content Wrapper (padding accounts for borders) */}
-              <div className="relative z-20 flex-1 flex flex-col px-[8mm] py-[6mm]">
-                
-                {/* Header Section */}
-                <div className="flex items-center justify-between mb-4 mt-2">
-                  <div className="w-[18%] flex justify-center">
-                    <img src={schoolLogo} alt="Logo" className="w-[70px] h-[70px] object-contain" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
-                  </div>
-                  <div className="w-[82%] text-center pr-[10%]">
-                    <h1 className="text-[26px] font-black tracking-wide uppercase leading-tight">
-                      {schoolName}
-                    </h1>
-                    <p className="text-[13px] font-semibold mt-1">
-                      {schoolSub}
-                    </p>
-                    <p className="text-[12px] mt-1">
-                      {schoolAddress}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Admission Form Badge */}
-                <div className="text-center my-4 relative">
-                  <div className="inline-block bg-[#444] border-2 border-black rounded-md px-6 py-1.5 shadow-sm">
-                     <span className="text-white text-[15px] font-bold uppercase tracking-[2px]">Admission Form</span>
-                  </div>
-                  
-                  {/* Photo Box */}
-                  <div className="absolute -top-12 right-0 w-[30mm] h-[38mm] border border-black flex flex-col items-center justify-center bg-gray-50 overflow-hidden">
-                    {admission.studentImage ? (
-                      <img src={resolveImg(admission.studentImage)} alt="Student" className="w-full h-full object-cover" />
-                    ) : (
-                      <span className="text-[9px] text-center text-gray-500 leading-tight px-2">
-                        Affix latest<br />Passport Size<br />Photograph
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                {/* Form Fields Section */}
-                <div className="text-[14px] leading-[2.6] mt-4 flex-1">
-                  
-                  <div className="flex items-end">
-                    <span className="w-6">1.</span>
-                    <span className="mr-2">Admn No. :</span>
-                    <Line width="120px">{regNo}</Line>
-                    <span className="ml-4 mr-2">Class</span>
-                    <Line width="80px">{admission.classApplied || ''}</Line>
-                    <span className="ml-4 mr-2">Academic Year</span>
-                    <Line width="100px">{academicYear}</Line>
-                  </div>
-
-                  <div className="flex items-end">
-                    <span className="w-6">2.</span>
-                    <span className="mr-2">Date of Joining</span>
-                    <span className="mr-2">:</span>
-                    <Line width="200px">{regDate}</Line>
-                  </div>
-
-                  <div className="flex items-end">
-                    <span className="w-6">3.</span>
-                    <span className="mr-2">Name of the Student :</span>
-                    <Line width="400px" className="uppercase tracking-wide">{admission.studentName || ''}</Line>
-                  </div>
-                  <div className="pl-6 text-[12px] text-gray-600 leading-tight -mt-1 mb-2">(In capital Letters)</div>
-
-                  <div className="flex items-center mt-1">
-                    <span className="w-6">4.</span>
-                    <span className="mr-2">Gender</span>
-                    <span className="mr-4">:</span>
-                    <span className="mr-4">Boy</span>
-                    <div className="w-8 h-5 border border-black flex items-center justify-center font-bold text-sm">
-                      {isBoy ? '✓' : ''}
-                    </div>
-                    <span className="ml-12 mr-4">Girl</span>
-                    <div className="w-8 h-5 border border-black flex items-center justify-center font-bold text-sm">
-                      {isGirl ? '✓' : ''}
-                    </div>
-                  </div>
-
-                  <div className="flex items-center mt-3">
-                    <span className="w-6">5.</span>
-                    <span className="mr-2">Date of Birth</span>
-                    <span className="mr-4">:</span>
-                    <div className="flex border border-black">
-                      {dobBoxes.map((digit, i) => (
-                        <div key={i} className={`w-6 h-6 flex items-center justify-center font-bold text-[13px] ${i < 7 ? 'border-r border-black' : ''}`}>
-                          {digit}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="flex items-end mt-3">
-                    <span className="w-6">6.</span>
-                    <span className="mr-2">Mother Tongue</span>
-                    <span className="mr-2">:</span>
-                    <Line width="180px">{admission.motherTongue || 'Telugu'}</Line>
-                    <span className="ml-6 mr-2">Aadhar No :</span>
-                    <Line width="200px">{admission.aadharNo || ''}</Line>
-                  </div>
-
-                  <div className="flex items-end mt-3">
-                    <span className="w-6">7.</span>
-                    <span className="mr-2">Father's Name</span>
-                    <span className="mr-2">:</span>
-                    <Line width="220px" className="uppercase">{admission.fatherName || ''}</Line>
-                    <span className="ml-6 mr-2">Occupation :</span>
-                    <Line width="150px">{admission.fatherOccupation || ''}</Line>
-                  </div>
-                  <div className="flex items-end pl-6">
-                    <span className="mr-2">Aadhar No</span>
-                    <span className="mr-2">:</span>
-                    <Line width="240px">{admission.fatherAadhar || ''}</Line>
-                    <span className="ml-6 mr-2">Phone No :</span>
-                    <Line width="168px">{admission.fatherPhone || admission.phone || ''}</Line>
-                  </div>
-
-                  <div className="flex items-end mt-3">
-                    <span className="w-6">8.</span>
-                    <span className="mr-2">Mother's Name</span>
-                    <span className="mr-2">:</span>
-                    <Line width="215px" className="uppercase">{admission.motherName || ''}</Line>
-                    <span className="ml-6 mr-2">Occupation :</span>
-                    <Line width="150px">{admission.motherOccupation || 'Home Maker'}</Line>
-                  </div>
-                  <div className="flex items-end pl-6">
-                    <span className="mr-2">Aadhar No</span>
-                    <span className="mr-2">:</span>
-                    <Line width="240px">{admission.motherAadhar || ''}</Line>
-                    <span className="ml-6 mr-2">Phone No :</span>
-                    <Line width="168px">{admission.motherPhone || admission.alternatePhone || ''}</Line>
-                  </div>
-
-                  <div className="flex items-end mt-3">
-                    <span className="w-6">9.</span>
-                    <span className="mr-2">Nationality</span>
-                    <span className="mr-2">:</span>
-                    <Line width="120px">{admission.nationality || 'Indian'}</Line>
-                    <span className="ml-4 mr-2">State:</span>
-                    <Line width="140px">{admission.state || 'Andhra Pradesh'}</Line>
-                    <span className="ml-4 mr-2">Religion :</span>
-                    <Line width="120px">{admission.religion || 'Hindu'}</Line>
-                  </div>
-
-                  <div className="flex items-end mt-3">
-                    <span className="w-6">10.</span>
-                    <span className="mr-2">Caste</span>
-                    <span className="mr-2">:</span>
-                    <Line width="200px">{admission.caste || ''}</Line>
-                    <span className="ml-10 mr-2">Sub-Caste:</span>
-                    <Line width="200px">{admission.subCaste || ''}</Line>
-                  </div>
-
-                  <div className="flex items-end mt-3">
-                    <span className="w-6">11.</span>
-                    <span className="mr-2">Residence</span>
-                    <span className="mr-2">:</span>
-                    <Line width="500px" className="truncate">
-                      {[admission.doorNo ? `D.No: ${admission.doorNo}` : null, admission.village, admission.mandal ? `Mandal: ${admission.mandal}` : null, admission.district ? `${admission.district} Dist` : null].filter(Boolean).join(', ') || admission.address || ''}
-                    </Line>
-                  </div>
-
-                  <div className="flex items-end mt-3">
-                    <span className="w-6">12.</span>
-                    <span className="mr-2">Name of the School Previous Studying/ Studied :</span>
-                    <Line width="250px">{admission.previousSchool || ''}</Line>
-                  </div>
-
-                  <div className="flex items-end mt-3">
-                    <span className="w-6">13.</span>
-                    <span className="mr-2">Annual fee fixed for {academicYear}</span>
-                    <Line width="380px" className="font-bold">{feeAmount}</Line>
-                  </div>
-
-                </div>
-
-                {/* Acknowledgement Section (Bottom of Page 1) */}
-                <div className="mt-8 pt-6">
-                   <h2 className="text-[20px] font-black text-center uppercase tracking-wide">
-                     {schoolName}
-                   </h2>
-                   <div className="text-center mt-1 mb-6">
-                     <div className="inline-block bg-[#444] text-white border-2 border-black rounded-md px-6 py-0.5 text-[14px] font-bold shadow-sm">
-                        Acknowledgement
-                     </div>
-                   </div>
-
-                   <div className="text-[14px] leading-[2.5] space-y-2">
-                     <div className="flex items-end w-full">
-                       <span className="whitespace-nowrap mr-2">Name of the Student</span>
-                       <DottedLine>{admission.studentName || ''}</DottedLine>
-                     </div>
-                     <div className="flex items-end w-full">
-                       <span className="whitespace-nowrap mr-2">Class</span>
-                       <DottedLine width="150px">{admission.classApplied || ''}</DottedLine>
-                       <span className="whitespace-nowrap ml-4 mr-2">Father's Name</span>
-                       <DottedLine>{admission.fatherName || ''}</DottedLine>
-                     </div>
-                     <div className="flex items-end w-full">
-                       <span className="whitespace-nowrap mr-2">Annual fee fixed for {academicYear}</span>
-                       <DottedLine>{feeAmount}</DottedLine>
-                     </div>
-                   </div>
-
-                   <div className="flex justify-between mt-12 text-[14px]">
-                      <div>Signature of the Parent</div>
-                      <div>Signature of the Principal</div>
-                   </div>
-                </div>
-
+        {/* Scroll area */}
+        <div style={{
+          flex: 1, overflowY: 'auto',
+          display: 'flex', flexDirection: 'column', alignItems: 'center',
+          padding: '24px 16px 40px',
+          gap: 16,
+        }}>
+          {/* Page labels */}
+          <div style={{ display: 'flex', gap: 12 }}>
+            {['Page 1 — Admission Form', 'Page 2 — Terms & Declaration'].map((lbl, i) => (
+              <div key={i} style={{
+                display: 'flex', alignItems: 'center', gap: 6,
+                background: 'rgba(255,255,255,0.05)',
+                border: '1px solid rgba(255,255,255,0.1)',
+                borderRadius: 99, padding: '4px 14px',
+                color: '#94a3b8', fontSize: 11, fontWeight: 600,
+              }}>
+                <span style={{ width: 6, height: 6, borderRadius: '50%', background: i === 0 ? '#34d399' : '#60a5fa', display: 'inline-block' }} />
+                {lbl}
               </div>
-            </div>
+            ))}
+          </div>
 
-            {/* ================= PAGE 2 ================= */}
-            <div className="w-[210mm] h-[297mm] bg-white text-black p-[10mm] relative mx-auto shadow-2xl print:shadow-none print:p-0 page-break shrink-0 font-serif box-border overflow-hidden flex flex-col">
-              
-              {/* Outer Double Border */}
-              <div className="absolute inset-[6mm] border-[3px] border-black pointer-events-none z-10 print:inset-[5mm]"></div>
-              <div className="absolute inset-[7mm] border border-black pointer-events-none z-10 print:inset-[6mm]"></div>
-
-              {/* Main Content Wrapper */}
-              <div className="relative z-20 flex-1 flex flex-col px-[8mm] py-[8mm]">
-                
-                {/* Sibling Details */}
-                <div className="mb-6">
-                  <table className="w-full border-collapse border border-black text-[13px]">
-                    <thead>
-                      <tr>
-                        <th colSpan={4} className="border border-black p-1 text-center font-bold tracking-wide">
-                          SIBILING DETAILS
-                        </th>
-                      </tr>
-                      <tr>
-                        <th className="border border-black p-1.5 w-12 text-center">S.NO</th>
-                        <th className="border border-black p-1.5 w-[35%] text-center">NAME</th>
-                        <th className="border border-black p-1.5 w-24 text-center">CLASS</th>
-                        <th className="border border-black p-1.5 text-center">Where He/ She Studying</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {displaySiblings.map((sib, i) => (
-                        <tr key={i} className="h-10">
-                          <td className="border border-black text-center font-bold">{i + 1}</td>
-                          <td className="border border-black px-2 uppercase">{sib?.name || (i === 0 && siblingsList.length === 0 ? 'NA (ONLY CHILD)' : '')}</td>
-                          <td className="border border-black px-2 text-center">{sib?.className || ''}</td>
-                          <td className="border border-black px-2">{sib?.schoolName || ''}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-
-                {/* Terms and Conditions */}
-                <div className="mb-6">
-                  <h3 className="text-[14px] font-bold text-center underline tracking-wide mb-3">
-                    FOLLOWING TERMS AND CONDITIONS SHOULD STRICTLY BE FOLLOWED
-                  </h3>
-                  <ol className="list-decimal pl-8 text-[13px] space-y-1.5 leading-relaxed text-justify">
-                    <li>Student should obey the rules and regulations set by the management.</li>
-                    <li>Student would not be allowed to move around the premises of the school without uniform.</li>
-                    <li>During school time no visitor is allowed.</li>
-                    <li>During school time parents should not approach teachers without the permission of the management.</li>
-                    <li>
-                      The management has the right to reject or accept the application. <br/>
-                      The name of the student will be struck out if the students fail to follow the rules and regulations of the school.
-                    </li>
-                    <li>In case of any damage done to any of property of the school, the parent would pay the loss equal to the value of damage property.</li>
-                    <li>In case of the decision of the management would be final and the concerned parties would accept the management's decisions final.</li>
-                    <li>If the student will remain absent from school for 10 days without information his/her name will be struck out from the school. Parent has to take prior permission for the students absence.</li>
-                    <li>The students has pay all dues again to be readmitted.</li>
-                    <li>The fee would be collected in 3 terms and mentioned by management. Otherwise fee concession will not be allowed</li>
-                    <li>The fee once paid will not be refunded.</li>
-                  </ol>
-                </div>
-
-                {/* Declaration */}
-                <div className="mb-6">
-                   <h3 className="text-[14px] font-bold text-center underline mb-3">
-                     DECLARATION BY THE PARENT / GUARDIAN
-                   </h3>
-                   <div className="text-[14px] leading-loose text-justify px-2">
-                     <span className="ml-8">I,</span> 
-                     <Line width="200px" className="uppercase">{admission.fatherName || admission.motherName || ''}</Line> 
-                     Parent / Guardian of 
-                     <Line width="200px" className="uppercase">{admission.studentName || ''}</Line> 
-                     do hereby declare that if my child is admitted, I promise to send my child daily to school in time with necessary books and pay the fee regularly. I will follow the rules and regulations of the school and abide by the directions given by the school authority I also state that outside of the school hours it is my responsibility to take care of the child and declare that all the information given above is true to the best of my knowledge and I am aware that if it is found wrong at any state, the admission of my ward will be cancelled.
-                   </div>
-                   
-                   <div className="flex justify-between items-end mt-8 px-2">
-                     <div>
-                       <div className="mb-2">Place &nbsp;&nbsp;&nbsp;: <span className="font-semibold ml-2">Narasannapeta</span></div>
-                       <div>Date &nbsp;&nbsp;&nbsp;&nbsp;: <span className="font-semibold ml-2">{regDate}</span></div>
-                     </div>
-                     <div className="text-[14px]">
-                       Signature of the Parent/Guardian
-                     </div>
-                   </div>
-                </div>
-
-                {/* Fee Schedule */}
-                <div className="mt-auto flex flex-col justify-between pt-6">
-                  <div className="mb-8">
-                    <h4 className="font-bold text-[14px] underline mb-2">FEE PAYMENT SCHEDULE</h4>
-                    <ul className="text-[13px] space-y-1">
-                      <li>1st Term → August 1st week</li>
-                      <li>2nd Term → November 1st week</li>
-                      <li>3rd Term → Before sankranti holidays</li>
-                    </ul>
-                  </div>
-
-                  <div className="flex justify-between items-end text-[15px]">
-                    <div>
-                       Date : <Line width="150px">{regDate}</Line>
-                    </div>
-                    <div>
-                       Signature of the Principal
-                    </div>
+          {/* Side-by-side scaled pages */}
+          <div style={{ display: 'flex', gap: 20, alignItems: 'flex-start', justifyContent: 'center' }}>
+            {[renderPage1(), renderPage2()].map((page, i) => (
+              <div key={i} style={{ flexShrink: 0 }}>
+                <div style={{
+                  width: slotW, height: slotH,
+                  overflow: 'hidden',
+                  borderRadius: 4,
+                  boxShadow: '0 16px 48px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.06)',
+                }}>
+                  <div style={{
+                    width: PW, height: PH,
+                    transform: `scale(${SCALE})`,
+                    transformOrigin: 'top left',
+                  }}>
+                    {page}
                   </div>
                 </div>
-
               </div>
-            </div>
-
+            ))}
           </div>
         </div>
+      </div>
+
+      {/* ══ PRINT-ONLY SECTION ══ */}
+      <div id="adm-print-root" style={{ display: 'none' }}>
+        {renderPage1()}
+        {renderPage2()}
       </div>
     </>,
     document.body
