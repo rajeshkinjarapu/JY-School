@@ -99,14 +99,14 @@ const WelcomeBanner: React.FC<{ name: string; role: string; photoUrl?: string }>
       }} />
       
       {/* Glass Panel Content */}
-      <div className="relative z-10 p-4 sm:p-5 md:p-6 flex items-center justify-between gap-3 md:gap-6 h-full">
+      <div className="relative z-10 p-3 sm:p-4 md:p-5 flex items-center justify-between gap-3 md:gap-5 h-full">
         <div className="flex flex-col justify-center min-w-0 flex-1">
-          <p className="text-indigo-300/80 text-[9px] md:text-[11px] font-black uppercase tracking-[0.2em] md:tracking-[0.25em] mb-1 md:mb-2 flex items-center gap-1.5 md:gap-2">
+          <p className="text-indigo-300/80 text-[8px] md:text-[10px] font-black uppercase tracking-[0.2em] md:tracking-[0.25em] mb-1 md:mb-1.5 flex items-center gap-1.5 md:gap-2">
             <span className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-indigo-400 animate-ping absolute" />
             <span className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-indigo-400 relative" />
             {greeting}
           </p>
-          <h1 className="text-[20px] sm:text-3xl md:text-5xl font-black text-white mb-1.5 md:mb-2 tracking-tight whitespace-nowrap truncate max-w-full">
+          <h1 className="text-[18px] sm:text-2xl md:text-3xl font-black text-white mb-1.5 tracking-tight whitespace-nowrap truncate max-w-full">
             {(() => {
               if (!name) return '';
               if (name.length <= 15) return name;
@@ -118,19 +118,19 @@ const WelcomeBanner: React.FC<{ name: string; role: string; photoUrl?: string }>
               return name;
             })()}
           </h1>
-          <p className="text-indigo-100/90 text-[10px] sm:text-sm md:text-base font-semibold mb-3 md:mb-4 truncate">{roleLabel[role] || role} <span className="mx-1.5 md:mx-2 opacity-50">•</span> JY School</p>
+          <p className="text-indigo-100/90 text-[9px] sm:text-xs md:text-sm font-semibold mb-2.5 md:mb-3 truncate">{roleLabel[role] || role} <span className="mx-1.5 md:mx-2 opacity-50">•</span> JY School</p>
           
           <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2.5 rounded-[0.8rem] md:rounded-[1rem] bg-white/5 backdrop-blur-md border border-white/10 hover:bg-white/10 transition-colors shadow-inner">
-              <CalendarDays className="w-3.5 h-3.5 md:w-4 md:h-4 text-indigo-300" />
-              <span className="text-[10px] md:text-xs font-bold text-white tracking-wide">{today}</span>
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 md:px-3 md:py-2 rounded-[0.8rem] md:rounded-[1rem] bg-white/5 backdrop-blur-md border border-white/10 hover:bg-white/10 transition-colors shadow-inner">
+              <CalendarDays className="w-3 h-3 md:w-3.5 md:h-3.5 text-indigo-300" />
+              <span className="text-[9px] md:text-[11px] font-bold text-white tracking-wide">{today}</span>
             </div>
           </div>
         </div>
         
         {/* Photo Box on Right Side */}
         <div className="shrink-0 flex items-center justify-center">
-          <div className="w-[80px] h-[90px] sm:w-[110px] sm:h-[120px] md:w-[140px] md:h-[150px] rounded-[1rem] md:rounded-[1.5rem] flex items-center justify-center text-3xl md:text-5xl shadow-2xl relative overflow-hidden border-2 md:border-[3px] border-indigo-400/40"
+          <div className="w-[60px] h-[70px] sm:w-[90px] sm:h-[100px] md:w-[110px] md:h-[120px] rounded-[1rem] md:rounded-[1.2rem] flex items-center justify-center text-2xl md:text-4xl shadow-2xl relative overflow-hidden border-[1.5px] md:border-2 border-indigo-400/40"
             style={{ background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(16px)' }}>
             {getPhotoUrl(photoUrl) ? (
               <img 
@@ -143,7 +143,7 @@ const WelcomeBanner: React.FC<{ name: string; role: string; photoUrl?: string }>
                 }}
               />
             ) : null}
-            <div className={`w-full h-full flex items-center justify-center bg-gradient-to-br from-indigo-500 to-purple-600 text-white font-black text-4xl shadow-sm ${getPhotoUrl(photoUrl) ? 'hidden' : ''}`}>
+            <div className={`w-full h-full flex items-center justify-center bg-gradient-to-br from-indigo-500 to-purple-600 text-white font-black text-3xl shadow-sm ${getPhotoUrl(photoUrl) ? 'hidden' : ''}`}>
               {name ? name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase() : emoji}
             </div>
           </div>
@@ -167,36 +167,36 @@ const StatCard: React.FC<StatCardProps> = ({ label, value, icon: Icon, gradient,
     : gradient.includes('#06b6d4') ? '#0891b2' : '#8b5cf6';
     
   const inner = (
-    <div className="group relative overflow-hidden rounded-[1.5rem] p-4 transition-all duration-500 hover:-translate-y-1 cursor-pointer shadow-lg border border-white/20"
-      style={{ background: gradient, boxShadow: '0 10px 30px -10px rgba(0,0,0,0.15)' }}>
+    <div className="group relative overflow-hidden rounded-[1.2rem] p-3 sm:p-4 transition-all duration-500 hover:-translate-y-1 cursor-pointer shadow-md border border-white/20"
+      style={{ background: gradient, boxShadow: '0 8px 24px -8px rgba(0,0,0,0.12)' }}>
       {/* Background ambient glow */}
-      <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl opacity-10 group-hover:opacity-20 transition-opacity duration-500 rounded-bl-full"
+      <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-bl opacity-10 group-hover:opacity-20 transition-opacity duration-500 rounded-bl-full"
         style={{ backgroundImage: `linear-gradient(to bottom left, ${iconColor}, transparent)` }} />
         
       {/* Top gradient border */}
-      <div className="absolute top-0 left-0 right-0 h-1.5 opacity-80 group-hover:opacity-100 transition-opacity bg-white/30" />
+      <div className="absolute top-0 left-0 right-0 h-1 opacity-80 group-hover:opacity-100 transition-opacity bg-white/30" />
       
       <div className="relative z-10">
-        <div className="flex items-start justify-between mb-2 md:mb-5">
-          <div className="p-2 md:p-3 rounded-xl md:rounded-[1rem] bg-white/20 shadow-inner backdrop-blur-md border border-white/30"
-            style={{ boxShadow: `0 8px 16px ${glow}` }}>
-            <Icon className="w-4 h-4 md:w-6 md:h-6 text-white drop-shadow-md" />
+        <div className="flex items-start justify-between mb-1.5 md:mb-3">
+          <div className="p-1.5 md:p-2.5 rounded-lg md:rounded-[0.8rem] bg-white/20 shadow-inner backdrop-blur-md border border-white/30"
+            style={{ boxShadow: `0 4px 12px ${glow}` }}>
+            <Icon className="w-3.5 h-3.5 md:w-5 md:h-5 text-white drop-shadow-md" />
           </div>
           {badge && (
-            <span className="text-[8px] sm:text-[9px] font-black px-2 py-0.5 rounded-full border shadow-sm"
+            <span className="text-[7px] sm:text-[8px] font-black px-1.5 py-0.5 rounded-full border shadow-sm"
               style={{ background: badgeColor ? badgeColor + '15' : '#ecfdf5', color: badgeColor || '#065f46', borderColor: badgeColor ? badgeColor + '30' : '#a7f3d0' }}>
               {badge}
             </span>
           )}
           {link && !badge && (
-            <div className="p-1.5 md:p-2 rounded-full bg-white/20 group-hover:bg-white/30 transition-colors border border-white/20">
-              <ArrowUpRight className="w-3 h-3 md:w-4 md:h-4 text-white" />
+            <div className="p-1 md:p-1.5 rounded-full bg-white/20 group-hover:bg-white/30 transition-colors border border-white/20">
+              <ArrowUpRight className="w-2.5 h-2.5 md:w-3.5 md:h-3.5 text-white" />
             </div>
           )}
         </div>
-        <p className="text-[9px] sm:text-[10px] md:text-[11px] font-black text-white/80 uppercase tracking-wider mb-0.5 md:mb-1 truncate">{label}</p>
-        <p className="text-xl sm:text-2xl md:text-3xl font-black text-white tracking-tight leading-none drop-shadow-md">{value}</p>
-        {sub && <p className="text-[8px] sm:text-[10px] md:text-[11px] text-white/90 mt-1 md:mt-2 font-bold flex items-center gap-1 sm:gap-1.5 opacity-90 truncate"><span className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-white/80 shrink-0"/>{sub}</p>}
+        <p className="text-[8px] sm:text-[9px] md:text-[10px] font-black text-white/80 uppercase tracking-wider mb-0.5 md:mb-1 truncate">{label}</p>
+        <p className="text-lg sm:text-xl md:text-2xl font-black text-white tracking-tight leading-none drop-shadow-md">{value}</p>
+        {sub && <p className="text-[7px] sm:text-[8px] md:text-[9px] text-white/90 mt-1 font-bold flex items-center gap-1 sm:gap-1.5 opacity-90 truncate"><span className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-white/80 shrink-0"/>{sub}</p>}
       </div>
     </div>
   );
@@ -210,14 +210,14 @@ const SectionHeader: React.FC<{
   title: string; subtitle?: string; icon: React.ElementType;
   iconColor?: string; action?: React.ReactNode;
 }> = ({ title, subtitle, icon: Icon, iconColor = '#6366f1', action }) => (
-  <div className="flex items-center justify-between mb-5">
-    <div className="flex items-center gap-3">
-      <div className="p-2 rounded-xl" style={{ background: iconColor + '18' }}>
-        <Icon className="w-4 h-4" style={{ color: iconColor }} />
+  <div className="flex items-center justify-between mb-4">
+    <div className="flex items-center gap-2.5">
+      <div className="p-1.5 sm:p-2 rounded-lg sm:rounded-xl" style={{ background: iconColor + '18' }}>
+        <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4" style={{ color: iconColor }} />
       </div>
       <div>
-        <h3 className="text-base font-black text-slate-900 leading-tight">{title}</h3>
-        {subtitle && <p className="text-xs text-slate-400 font-medium mt-0.5">{subtitle}</p>}
+        <h3 className="text-sm sm:text-base font-black text-slate-900 leading-tight">{title}</h3>
+        {subtitle && <p className="text-[10px] sm:text-xs text-slate-400 font-medium mt-0.5">{subtitle}</p>}
       </div>
     </div>
     {action}
@@ -225,9 +225,9 @@ const SectionHeader: React.FC<{
 );
 
 const ChartCard: React.FC<{ children: React.ReactNode; className?: string }> = ({ children, className = '' }) => (
-  <div className={`rounded-[2rem] p-6 relative overflow-hidden bg-white/70 backdrop-blur-xl border-[3px] border-indigo-200/50 ring-4 ring-white/60 transition-all duration-300 hover:shadow-2xl hover:bg-white/90 group ${className}`}
+  <div className={`rounded-[1.5rem] p-4 sm:p-5 relative overflow-hidden bg-white/70 backdrop-blur-xl border-[2px] border-indigo-200/50 ring-2 ring-white/60 transition-all duration-300 hover:shadow-xl hover:bg-white/90 group ${className}`}
     style={{ 
-      boxShadow: '0 20px 40px -5px rgba(99, 102, 241, 0.15)',
+      boxShadow: '0 10px 30px -5px rgba(99, 102, 241, 0.10)',
     }}>
     {/* Decorative colorful ambient glow */}
     <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-indigo-400/20 to-purple-400/20 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-700" />
@@ -272,18 +272,18 @@ const AdminView: React.FC<{ data: any }> = ({ data }) => {
   return (
     <div className="space-y-7">
       {/* KPI */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5">
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
         {stats.map((s, i) => <StatCard key={i} {...s} />)}
       </div>
 
       {/* Attendance Ribbon */}
-      <div className="relative overflow-hidden rounded-2xl p-5" style={{
+      <div className="relative overflow-hidden rounded-2xl p-4" style={{
         background: 'linear-gradient(135deg,#0f172a 0%,#1e1b4b 50%,#1e293b 100%)',
         boxShadow: '0 8px 32px rgba(15,23,42,0.2)',
       }}>
-        <div className="absolute -top-8 -right-8 w-40 h-40 rounded-full opacity-20 animate-float"
+        <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full opacity-20 animate-float"
           style={{ background: 'radial-gradient(circle,#818cf8,transparent)' }} />
-        <div className="relative z-10 grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+        <div className="relative z-10 grid grid-cols-2 md:grid-cols-4 gap-4">
           {[
             { label: "Today's Attendance", value: `${data.attendanceToday || 0}%`, icon: CheckCircle2, color: '#10b981' },
             { label: '7-Day Avg', value: `${attendancePct}%`, icon: Activity, color: '#818cf8' },
@@ -292,13 +292,13 @@ const AdminView: React.FC<{ data: any }> = ({ data }) => {
           ].map((item, i) => {
             const Icon = item.icon;
             return (
-              <div key={i} className="flex items-center gap-2.5 md:gap-3">
-                <div className="p-2 md:p-2.5 rounded-[0.6rem] md:rounded-xl shrink-0" style={{ background: item.color + '22' }}>
+              <div key={i} className="flex items-center gap-2.5">
+                <div className="p-2 md:p-2.5 rounded-[0.6rem] shrink-0" style={{ background: item.color + '22' }}>
                   <Icon className="w-4 h-4 md:w-5 md:h-5" style={{ color: item.color }} />
                 </div>
                 <div>
                   <p className="text-slate-400 text-[9px] sm:text-[10px] md:text-xs font-semibold leading-tight">{item.label}</p>
-                  <p className="text-white text-base sm:text-lg md:text-xl font-black mt-0.5">{item.value}</p>
+                  <p className="text-white text-sm sm:text-base md:text-lg font-black mt-0.5">{item.value}</p>
                 </div>
               </div>
             );
@@ -501,7 +501,7 @@ const TeacherView: React.FC<{ data: any }> = ({ data }) => {
   return (
     <div className="space-y-7">
       {/* Teacher Quick Stats Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-5">
+      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4">
         {[
           { label: 'Daily Attendance', value: 'Mark', icon: UserCheck, gradient: 'linear-gradient(135deg,#0ea5e9 0%,#2563eb 100%)', glow: 'rgba(255,255,255,0.2)', sub: 'Students Attendance', link: '/attendance' },
           { label: 'Total Students', value: data.totalStudents || 0, icon: Users, gradient: 'linear-gradient(135deg,#8b5cf6 0%,#6d28d9 100%)', glow: 'rgba(255,255,255,0.2)', sub: 'Across all classes', link: '/students' },
@@ -661,7 +661,7 @@ const StudentView: React.FC<{ data: any }> = ({ data }) => {
   return (
     <div className="space-y-7">
       {/* Student Quick Stats Grid (Matching Teacher Style) */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-5">
+      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
         {[
           { label: 'Attendance', value: `${attPct}%`, icon: UserCheck, gradient: 'linear-gradient(135deg,#0ea5e9 0%,#2563eb 100%)', glow: 'rgba(255,255,255,0.2)', sub: 'Last 30 days', link: '/student/attendance' },
           { label: 'Latest Score', value: data.recentMarks?.length > 0 ? `${Math.round((data.recentMarks[0].marksObtained / data.recentMarks[0].maxMarks) * 100)}%` : 'N/A', icon: Award, gradient: 'linear-gradient(135deg,#8b5cf6 0%,#6d28d9 100%)', glow: 'rgba(255,255,255,0.2)', sub: data.recentMarks?.[0]?.examName || 'No results yet', link: '/exams' },
