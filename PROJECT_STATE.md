@@ -14,6 +14,7 @@
   - Reduced paddings on `WelcomeBanner`, `StatCard`, and `ChartCard` to give a tighter, professional feel.
   - Adjusted grid layouts to fit more items gracefully (`grid-cols-5` and `grid-cols-6` instead of fewer columns on large screens).
   - Scaled down icon sizes and photo box sizes.
+  - WelcomeBanner redesigned completely: Reduced height by changing the layout from vertical to horizontal. Replaced the massive rounded rectangle photo box with a sleek circular avatar and arranged the name, role, and date horizontally for a premium glassmorphism look.
   - Made the UI highly responsive while retaining its premium glassy/gradient aesthetic.
 
 ---

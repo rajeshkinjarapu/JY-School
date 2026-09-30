@@ -79,75 +79,73 @@ const WelcomeBanner: React.FC<{ name: string; role: string; photoUrl?: string }>
   const greeting = h < 12 ? 'Good Morning' : h < 17 ? 'Good Afternoon' : 'Good Evening';
   const emoji = h < 12 ? '🌅' : h < 17 ? '☀️' : '🌙';
   const today = new Date().toLocaleDateString('en-IN', {
-    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+    weekday: 'short', day: 'numeric', month: 'short', year: 'numeric',
   });
   const roleLabel: Record<string, string> = {
     TEACHER: 'Teacher', STUDENT: 'Student', ACCOUNTANT: 'Accountant',
   };
+  
+  const displayRole = roleLabel[role] || role;
+
   return (
-    <div className="relative overflow-hidden rounded-none sm:rounded-[2rem]" style={{
-      background: 'linear-gradient(120deg, #0f172a 0%, #1e1b4b 50%, #312e81 100%)',
-      boxShadow: '0 25px 50px -12px rgba(49, 46, 129, 0.4)',
+    <div className="relative w-full overflow-hidden rounded-[1.2rem] sm:rounded-2xl" style={{
+      background: 'linear-gradient(135deg, #1e1b4b 0%, #0f172a 100%)',
+      boxShadow: '0 10px 25px -5px rgba(15, 23, 42, 0.2)',
     }}>
-      {/* Decorative Orbs */}
-      <div className="absolute -top-24 -right-10 w-72 h-72 rounded-full opacity-40 mix-blend-screen animate-pulse"
-        style={{ background: 'radial-gradient(circle, #818cf8 0%, transparent 70%)', animationDuration: '4s' }} />
-      <div className="absolute -bottom-24 -left-10 w-80 h-80 rounded-full opacity-30 mix-blend-screen animate-pulse"
-        style={{ background: 'radial-gradient(circle, #c084fc 0%, transparent 70%)', animationDuration: '6s' }} />
-      <div className="absolute inset-0 opacity-[0.03]" style={{
-        backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+      {/* Decorative Glows */}
+      <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
+      <div className="absolute bottom-0 left-10 w-64 h-64 bg-fuchsia-500/20 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2 pointer-events-none" />
+      <div className="absolute inset-0 opacity-[0.02]" style={{
+        backgroundImage: `url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M20 20.5V18H0v-2h20v-2.5L22.5 16 25 13.5V0h2v13.5L29.5 16 32 18.5V20h8v2h-8v1.5L29.5 26 27 28.5V40h-2V28.5L22.5 26 20 23.5V20.5z' fill='%23ffffff' fill-opacity='1' fill-rule='evenodd'/%3E%3C/svg%3E")`,
       }} />
-      
-      {/* Glass Panel Content */}
-      <div className="relative z-10 p-3 sm:p-4 md:p-5 flex items-center justify-between gap-3 md:gap-5 h-full">
-        <div className="flex flex-col justify-center min-w-0 flex-1">
-          <p className="text-indigo-300/80 text-[8px] md:text-[10px] font-black uppercase tracking-[0.2em] md:tracking-[0.25em] mb-1 md:mb-1.5 flex items-center gap-1.5 md:gap-2">
-            <span className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-indigo-400 animate-ping absolute" />
-            <span className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-indigo-400 relative" />
-            {greeting}
-          </p>
-          <h1 className="text-[18px] sm:text-2xl md:text-3xl font-black text-white mb-1.5 tracking-tight whitespace-nowrap truncate max-w-full">
-            {(() => {
-              if (!name) return '';
-              if (name.length <= 15) return name;
-              const parts = name.split(' ').filter(Boolean);
-              if (parts.length >= 3) {
-                const initials = parts.slice(0, -1).map(p => p.replace(/[^A-Za-z]/g, '')[0] || '').join('').toUpperCase();
-                return `${initials} ${parts[parts.length - 1]}`;
-              }
-              return name;
-            })()}
-          </h1>
-          <p className="text-indigo-100/90 text-[9px] sm:text-xs md:text-sm font-semibold mb-2.5 md:mb-3 truncate">{roleLabel[role] || role} <span className="mx-1.5 md:mx-2 opacity-50">•</span> JY School</p>
-          
-          <div>
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 md:px-3 md:py-2 rounded-[0.8rem] md:rounded-[1rem] bg-white/5 backdrop-blur-md border border-white/10 hover:bg-white/10 transition-colors shadow-inner">
-              <CalendarDays className="w-3 h-3 md:w-3.5 md:h-3.5 text-indigo-300" />
-              <span className="text-[9px] md:text-[11px] font-bold text-white tracking-wide">{today}</span>
+
+      <div className="relative z-10 p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+        
+        {/* Left Side: Avatar and Info */}
+        <div className="flex items-center gap-3.5 w-full sm:w-auto">
+          {/* Avatar */}
+          <div className="shrink-0 relative">
+            <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full p-[2px] bg-gradient-to-tr from-indigo-500 to-purple-500 shadow-lg">
+              <div className="w-full h-full rounded-full overflow-hidden bg-slate-900 flex items-center justify-center border-[2px] border-[#1e1b4b]">
+                {getPhotoUrl(photoUrl) ? (
+                  <img src={getPhotoUrl(photoUrl)} alt="Profile" className="w-full h-full object-cover" 
+                    onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.nextElementSibling?.classList.remove('hidden'); }} />
+                ) : null}
+                <span className={`text-sm sm:text-base font-black text-white ${getPhotoUrl(photoUrl) ? 'hidden' : ''}`}>
+                  {name ? name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase() : emoji}
+                </span>
+              </div>
             </div>
+            {/* Online Badge */}
+            <div className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-emerald-400 border-2 border-[#1e1b4b] rounded-full shadow-sm" />
+          </div>
+
+          {/* Info */}
+          <div className="flex-1 min-w-0">
+            <p className="text-indigo-200/90 text-[9px] sm:text-[10px] font-black uppercase tracking-wider mb-0.5 flex items-center gap-1.5">
+              {greeting} <span className="text-[12px]">{emoji}</span>
+            </p>
+            <h1 className="text-lg sm:text-xl font-black text-white tracking-tight truncate leading-tight mb-1">
+              {name}
+            </h1>
+            <div className="flex items-center gap-1.5">
+              <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[8px] sm:text-[9px] font-bold bg-white/10 text-indigo-100 border border-white/10 tracking-wide uppercase">
+                {displayRole}
+              </span>
+              <span className="text-indigo-300/50 text-[10px] font-bold">•</span>
+              <span className="text-indigo-100/70 text-[9px] sm:text-[10px] font-semibold tracking-wide">JY School</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Right Side: Date Date Badge */}
+        <div className="flex w-full sm:w-auto items-center justify-end border-t border-white/5 sm:border-0 pt-3 sm:pt-0 mt-1 sm:mt-0">
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 backdrop-blur-md shadow-inner">
+            <CalendarDays className="w-3.5 h-3.5 text-indigo-300" />
+            <span className="text-[10px] sm:text-[11px] font-bold text-white tracking-wide">{today}</span>
           </div>
         </div>
         
-        {/* Photo Box on Right Side */}
-        <div className="shrink-0 flex items-center justify-center">
-          <div className="w-[60px] h-[70px] sm:w-[90px] sm:h-[100px] md:w-[110px] md:h-[120px] rounded-[1rem] md:rounded-[1.2rem] flex items-center justify-center text-2xl md:text-4xl shadow-2xl relative overflow-hidden border-[1.5px] md:border-2 border-indigo-400/40"
-            style={{ background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(16px)' }}>
-            {getPhotoUrl(photoUrl) ? (
-              <img 
-                src={getPhotoUrl(photoUrl)} 
-                alt="Profile" 
-                className="w-full h-full object-cover" 
-                onError={(e) => {
-                  e.currentTarget.style.display = 'none';
-                  e.currentTarget.nextElementSibling?.classList.remove('hidden');
-                }}
-              />
-            ) : null}
-            <div className={`w-full h-full flex items-center justify-center bg-gradient-to-br from-indigo-500 to-purple-600 text-white font-black text-3xl shadow-sm ${getPhotoUrl(photoUrl) ? 'hidden' : ''}`}>
-              {name ? name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase() : emoji}
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   );
