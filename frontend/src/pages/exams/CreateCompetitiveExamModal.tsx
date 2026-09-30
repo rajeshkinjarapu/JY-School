@@ -24,21 +24,32 @@ const CreateCompetitiveExamModal = ({ onClose }: Props) => {
   const [subjects, setSubjects] = useState<any[]>([]);
 
   React.useEffect(() => {
-    fetchFormData();
+    const fetchClasses = async () => {
+      try {
+        const clsRes = await api.get('/api/classes');
+        setClasses(clsRes.data.data || []);
+      } catch (e) {
+        console.error("Failed to load classes", e);
+      }
+    };
+    fetchClasses();
   }, []);
 
-  const fetchFormData = async () => {
-    try {
-      const [clsRes, subRes] = await Promise.all([
-        api.get('/api/classes'),
-        api.get('/api/subjects')
-      ]);
-      setClasses(clsRes.data.data || []);
-      setSubjects(subRes.data.data || []);
-    } catch (e) {
-      console.error("Failed to load classes/subjects", e);
-    }
-  };
+  React.useEffect(() => {
+    const fetchSubjects = async () => {
+      if (!formData.classId) {
+        setSubjects([]);
+        return;
+      }
+      try {
+        const subRes = await api.get(`/api/classes/${formData.classId}/subjects`);
+        setSubjects(subRes.data.data || []);
+      } catch (e) {
+        console.error("Failed to load subjects", e);
+      }
+    };
+    fetchSubjects();
+  }, [formData.classId]);
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -80,16 +91,16 @@ const CreateCompetitiveExamModal = ({ onClose }: Props) => {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Class</label>
-              <select required value={formData.classId} onChange={e => setFormData({...formData, classId: e.target.value})} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none">
+              <select required value={formData.classId} onChange={e => setFormData({...formData, classId: e.target.value, subjectId: ''})} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none">
                 <option value="">Select Class</option>
-                {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                {classes.map(c => <option key={c.id} value={c.id}>{c.name} {c.section ? `- ${c.section}` : ''}</option>)}
               </select>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Subject</label>
-              <select required value={formData.subjectId} onChange={e => setFormData({...formData, subjectId: e.target.value})} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none">
-                <option value="">Select Subject</option>
+              <select required value={formData.subjectId} disabled={!formData.classId} onChange={e => setFormData({...formData, subjectId: e.target.value})} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none disabled:bg-gray-100 disabled:cursor-not-allowed">
+                <option value="">{formData.classId ? "Select Subject" : "Select a class first"}</option>
                 {subjects.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
               </select>
             </div>

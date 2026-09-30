@@ -11,7 +11,6 @@ const CompetitiveExamsPage = () => {
   const navigate = useNavigate();
   const [exams, setExams] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showCreateModal, setShowCreateModal] = useState(false);
 
   const isAdminOrTeacher = ['ADMIN', 'SUPER_ADMIN', 'TEACHER'].includes(user?.role || '');
 
@@ -96,7 +95,7 @@ const CompetitiveExamsPage = () => {
             <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} /> Refresh
           </button>
           {isAdminOrTeacher && (
-            <button onClick={() => setShowCreateModal(true)} className="flex justify-center items-center gap-2 px-6 py-3 bg-white text-indigo-800 rounded-xl hover:bg-indigo-50 transition-all shadow-xl font-bold">
+            <button onClick={() => navigate('/create-competitive-exam')} className="flex justify-center items-center gap-2 px-6 py-3 bg-white text-indigo-800 rounded-xl hover:bg-indigo-50 transition-all shadow-xl font-bold">
               <Plus className="h-5 w-5 text-indigo-600" /> Create Exam
             </button>
           )}
@@ -380,9 +379,6 @@ const CompetitiveExamsPage = () => {
         </>
       )}
 
-      {showCreateModal && (
-        <CreateCompetitiveExamModal onClose={() => { setShowCreateModal(false); fetchExams(); }} />
-      )}
     </div>
   );
 };
