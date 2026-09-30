@@ -1089,15 +1089,15 @@ export const StudentProfilePage: React.FC = () => {
                 <div className="w-16 h-16 rounded-xl bg-white p-1 border border-slate-300 shrink-0 shadow-sm flex items-center justify-center">
                   <img src="/logo.png" alt="Logo" className="w-full h-full object-contain" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
                 </div>
-                <div className="flex-1 text-center">
-                  <h1 className="text-2xl font-black tracking-wider uppercase text-slate-950 font-serif">
+                <div className="flex-1 text-center overflow-visible">
+                  <h1 className="text-[22px] font-black tracking-widest uppercase text-slate-950 font-serif whitespace-nowrap">
                     SRI VENKATESWARA JY SCHOOL
                   </h1>
-                  <p className="text-[11px] font-bold text-slate-600 mt-0.5">
+                  <p className="text-[11px] font-bold text-slate-700 mt-1 whitespace-nowrap">
                     Opp. Hero Showroom, SVL Paradise Campus, Narasannapeta, Srikakulam Dist.
                   </p>
-                  <p className="text-[9.5px] font-semibold text-slate-500 mt-0.5">
-                    Recognized by Govt. of Andhra Pradesh • Regd. School Code: JY-NPT
+                  <p className="text-[10px] font-semibold text-slate-500 mt-0.5 whitespace-nowrap">
+                    Recognized by Govt. of Andhra Pradesh • Regd. School Code: <span className="font-bold">JY-NPT</span>
                   </p>
                 </div>
                 <div className="text-right shrink-0">
