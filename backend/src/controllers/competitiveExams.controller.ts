@@ -42,7 +42,14 @@ export const getCompetitiveExamsByClass = async (req: Request, res: Response) =>
 export const getAllCompetitiveExams = async (req: Request, res: Response) => {
   try {
     const exams = await prisma.competitiveExam.findMany({
-      include: { subject: true, class: true, _count: { select: { questions: true } } },
+      include: { 
+        subject: true, 
+        class: true, 
+        _count: { select: { questions: true, submissions: true } },
+        submissions: {
+          select: { marksObtained: true } // Fetch marks to calculate average/highest/lowest
+        }
+      },
       orderBy: { createdAt: 'desc' }
     });
     res.json({ success: true, data: exams });
