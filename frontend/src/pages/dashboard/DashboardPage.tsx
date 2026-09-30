@@ -105,8 +105,8 @@ const WelcomeBanner: React.FC<{ name: string; role: string; photoUrl?: string }>
         <div className="flex items-center gap-3.5 w-full sm:w-auto">
           {/* Avatar */}
           <div className="shrink-0 relative">
-            <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full p-[2px] bg-gradient-to-tr from-indigo-500 to-purple-500 shadow-lg">
-              <div className="w-full h-full rounded-full overflow-hidden bg-slate-900 flex items-center justify-center border-[2px] border-[#1e1b4b]">
+            <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl p-[2px] bg-gradient-to-tr from-indigo-500 to-purple-500 shadow-lg">
+              <div className="w-full h-full rounded-xl overflow-hidden bg-slate-900 flex items-center justify-center border-[2px] border-[#1e1b4b]">
                 {getPhotoUrl(photoUrl) ? (
                   <img src={getPhotoUrl(photoUrl)} alt="Profile" className="w-full h-full object-cover" 
                     onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.nextElementSibling?.classList.remove('hidden'); }} />
@@ -117,7 +117,7 @@ const WelcomeBanner: React.FC<{ name: string; role: string; photoUrl?: string }>
               </div>
             </div>
             {/* Online Badge */}
-            <div className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-emerald-400 border-2 border-[#1e1b4b] rounded-full shadow-sm" />
+            <div className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-emerald-400 border-2 border-[#1e1b4b] rounded-full shadow-sm" />
           </div>
 
           {/* Info */}
