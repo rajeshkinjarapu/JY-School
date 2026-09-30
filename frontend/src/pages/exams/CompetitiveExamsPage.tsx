@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../hooks/useAuth';
-import { Play, Plus, Clock, FileText, CheckCircle, Lock, Edit, ShieldAlert, Award, FileQuestion, Users, RefreshCw, Trash2, BarChart3 } from 'lucide-react';
+import { Play, Plus, Clock, FileText, CheckCircle, Lock, Edit, ShieldAlert, Award, FileQuestion, Users, RefreshCw, Trash2, BarChart3, BookOpen } from 'lucide-react';
 import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import api from '../../api/axios';
@@ -63,29 +63,36 @@ const CompetitiveExamsPage = () => {
   };
 
   return (
-    <div className="p-6 md:p-8 max-w-7xl mx-auto space-y-8 bg-[#F8FAFC] min-h-screen">
+    <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-8 bg-slate-50 min-h-screen">
       {/* Header Section */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-extrabold text-slate-800 tracking-tight">Competitive Exams (Mock Tests)</h1>
-          <p className="text-slate-500 mt-1.5 text-sm md:text-base">JEE / NEET Pattern Proctored Exams</p>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 bg-gradient-to-br from-indigo-900 to-indigo-700 p-8 rounded-3xl shadow-2xl relative overflow-hidden">
+        {/* Decorative background elements */}
+        <div className="absolute top-0 right-0 -mr-20 -mt-20 w-64 h-64 rounded-full bg-white opacity-5 blur-3xl"></div>
+        <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-48 h-48 rounded-full bg-indigo-500 opacity-20 blur-2xl"></div>
+
+        <div className="relative z-10">
+          <h1 className="text-3xl md:text-4xl font-extrabold text-white tracking-tight flex items-center gap-3">
+            <Award className="h-8 w-8 text-yellow-400" />
+            Competitive Exams (Mock Tests)
+          </h1>
+          <p className="text-indigo-200 mt-2 text-sm md:text-base font-medium">JEE / NEET Pattern Proctored Exams</p>
         </div>
         
-        <div className="flex gap-3">
+        <div className="flex gap-3 relative z-10 w-full sm:w-auto">
           <button
             onClick={fetchExams}
             disabled={loading}
-            className="flex items-center gap-2 px-4 py-2.5 border border-slate-200 text-slate-700 bg-white rounded-xl hover:bg-slate-50 hover:border-slate-300 transition-all duration-200 shadow-sm disabled:opacity-50 font-medium text-sm"
+            className="flex-1 sm:flex-none flex justify-center items-center gap-2 px-5 py-3 bg-white/10 text-white rounded-xl hover:bg-white/20 transition-all duration-200 backdrop-blur-md border border-white/20 shadow-lg disabled:opacity-50 font-medium"
           >
-            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin text-indigo-600' : ''}`} />
+            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
             <span className="hidden sm:inline">Refresh</span>
           </button>
           {isAdminOrTeacher && (
             <button
               onClick={() => setShowCreateModal(true)}
-              className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 font-medium text-sm"
+              className="flex-1 sm:flex-none flex justify-center items-center gap-2 px-6 py-3 bg-white text-indigo-700 rounded-xl hover:bg-indigo-50 transition-all duration-300 shadow-xl hover:shadow-2xl transform hover:-translate-y-1 font-bold"
             >
-              <Plus className="h-5 w-5" />
+              <Plus className="h-5 w-5 text-indigo-600" />
               Create Exam
             </button>
           )}
@@ -93,24 +100,28 @@ const CompetitiveExamsPage = () => {
       </div>
 
       {loading ? (
-        <div className="flex flex-col items-center justify-center py-24">
-          <RefreshCw className="h-10 w-10 animate-spin text-indigo-600 mb-4" />
-          <p className="text-slate-500 font-medium">Loading competitive exams...</p>
+        <div className="flex flex-col items-center justify-center py-24 bg-white rounded-3xl shadow-sm border border-slate-100">
+          <div className="bg-indigo-50 p-4 rounded-full mb-4">
+            <RefreshCw className="h-10 w-10 animate-spin text-indigo-600" />
+          </div>
+          <p className="text-slate-600 font-medium text-lg">Loading your mock tests...</p>
         </div>
       ) : exams.length === 0 ? (
-        <div className="text-center py-20 px-4 bg-white border border-slate-200 border-dashed rounded-3xl shadow-sm">
-          <div className="h-20 w-20 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-5 shadow-inner">
-            <FileText className="h-10 w-10 text-blue-600" />
+        <div className="bg-white rounded-3xl p-12 md:p-20 text-center shadow-lg border border-slate-100 flex flex-col items-center justify-center min-h-[500px]">
+          <div className="bg-gradient-to-br from-indigo-100 to-purple-100 p-8 rounded-full mb-6 shadow-inner relative overflow-hidden">
+             <div className="absolute top-0 right-0 w-full h-full bg-white opacity-20 transform translate-x-1/2 -translate-y-1/2 rotate-45"></div>
+             <FileText className="h-20 w-20 text-indigo-600 relative z-10" />
           </div>
-          <h3 className="text-2xl font-bold text-slate-800 mb-3">No Exams Available</h3>
-          <p className="text-slate-500 mb-8 max-w-md mx-auto">Check back later for upcoming mock tests or create a new one.</p>
+          <h2 className="text-3xl font-extrabold text-slate-800 mb-3 tracking-tight">No Exams Available</h2>
+          <p className="text-slate-500 max-w-md mx-auto mb-10 text-lg">
+            There are no mock tests scheduled currently. Check back later or create a new one to get started.
+          </p>
           {isAdminOrTeacher && (
             <button
               onClick={() => setShowCreateModal(true)}
-              className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors shadow-md hover:shadow-lg font-semibold inline-flex items-center gap-2"
+              className="flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-2xl hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 font-bold text-lg"
             >
-              <Plus className="h-5 w-5" />
-              Create Mock Test
+              <Plus className="h-6 w-6" /> Create First Mock Test
             </button>
           )}
         </div>

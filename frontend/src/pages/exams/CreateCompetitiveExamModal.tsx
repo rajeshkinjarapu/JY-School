@@ -20,10 +20,25 @@ const CreateCompetitiveExamModal = ({ onClose }: Props) => {
     endTime: ''
   });
   const [loading, setLoading] = useState(false);
-  const [classes, setClasses] = useState<any[]>([]); // mock
-  const [subjects, setSubjects] = useState<any[]>([]); // mock
+  const [classes, setClasses] = useState<any[]>([]);
+  const [subjects, setSubjects] = useState<any[]>([]);
 
-  // We should ideally fetch classes and subjects. Hardcoded for brevity.
+  React.useEffect(() => {
+    fetchFormData();
+  }, []);
+
+  const fetchFormData = async () => {
+    try {
+      const [clsRes, subRes] = await Promise.all([
+        api.get('/api/classes'),
+        api.get('/api/subjects')
+      ]);
+      setClasses(clsRes.data.data || []);
+      setSubjects(subRes.data.data || []);
+    } catch (e) {
+      console.error("Failed to load classes/subjects", e);
+    }
+  };
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -64,13 +79,19 @@ const CreateCompetitiveExamModal = ({ onClose }: Props) => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Class ID (Temp text input)</label>
-              <input type="text" required value={formData.classId} onChange={e => setFormData({...formData, classId: e.target.value})} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="Class ID" />
+              <label className="block text-sm font-medium text-gray-700 mb-1">Class</label>
+              <select required value={formData.classId} onChange={e => setFormData({...formData, classId: e.target.value})} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none">
+                <option value="">Select Class</option>
+                {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+              </select>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Subject ID (Temp text input)</label>
-              <input type="text" required value={formData.subjectId} onChange={e => setFormData({...formData, subjectId: e.target.value})} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="Subject ID" />
+              <label className="block text-sm font-medium text-gray-700 mb-1">Subject</label>
+              <select required value={formData.subjectId} onChange={e => setFormData({...formData, subjectId: e.target.value})} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none">
+                <option value="">Select Subject</option>
+                {subjects.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+              </select>
             </div>
 
             <div>
