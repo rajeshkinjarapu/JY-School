@@ -15,6 +15,7 @@
   - Adjusted grid layouts to fit more items gracefully (`grid-cols-5` and `grid-cols-6` instead of fewer columns on large screens).
   - Scaled down icon sizes and photo box sizes.
   - WelcomeBanner redesigned completely: Reduced height by changing the layout from vertical to horizontal. Replaced the massive rounded rectangle photo box with a sleek circular avatar and arranged the name, role, and date horizontally for a premium glassmorphism look.
+  - Replaced Demographics Chart with Attendance Summary: Removed the long dark "Attendance Ribbon" entirely and designed a beautiful, premium 'Attendance Summary' card in place of the 'Demographics' pie chart to show today's/7-day attendance stats more compactly.
   - Made the UI highly responsive while retaining its premium glassy/gradient aesthetic.
 
 ---

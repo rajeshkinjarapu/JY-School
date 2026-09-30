@@ -259,11 +259,7 @@ const AdminView: React.FC<{ data: any }> = ({ data }) => {
     { label: 'App Installs', value: `${data.totalAppInstalls || 0} / ${data.totalStudents || 0}`, icon: Zap, gradient: 'linear-gradient(90deg,#14b8a6,#2dd4bf)', glow: 'rgba(20,184,166,0.08)', link: '/app-installs', sub: 'Mobile app usage' },
   ];
 
-  const pieData = [
-    { name: 'Male',   value: data.genderDistribution?.male   || 0 },
-    { name: 'Female', value: data.genderDistribution?.female || 0 },
-    { name: 'Other',  value: data.genderDistribution?.other  || 0 },
-  ].filter(d => d.value > 0);
+
 
   const enrollmentData = (data.enrollmentByClass || []).slice(0, 8);
 
@@ -274,35 +270,7 @@ const AdminView: React.FC<{ data: any }> = ({ data }) => {
         {stats.map((s, i) => <StatCard key={i} {...s} />)}
       </div>
 
-      {/* Attendance Ribbon */}
-      <div className="relative overflow-hidden rounded-2xl p-4" style={{
-        background: 'linear-gradient(135deg,#0f172a 0%,#1e1b4b 50%,#1e293b 100%)',
-        boxShadow: '0 8px 32px rgba(15,23,42,0.2)',
-      }}>
-        <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full opacity-20 animate-float"
-          style={{ background: 'radial-gradient(circle,#818cf8,transparent)' }} />
-        <div className="relative z-10 grid grid-cols-2 md:grid-cols-4 gap-4">
-          {[
-            { label: "Today's Attendance", value: `${data.attendanceToday || 0}%`, icon: CheckCircle2, color: '#10b981' },
-            { label: '7-Day Avg', value: `${attendancePct}%`, icon: Activity, color: '#818cf8' },
-            { label: 'Present (7d)', value: totalPresent, icon: UserCheck, color: '#34d399' },
-            { label: 'Absent (7d)', value: totalAbsent, icon: XCircle, color: '#f87171' },
-          ].map((item, i) => {
-            const Icon = item.icon;
-            return (
-              <div key={i} className="flex items-center gap-2.5">
-                <div className="p-2 md:p-2.5 rounded-[0.6rem] shrink-0" style={{ background: item.color + '22' }}>
-                  <Icon className="w-4 h-4 md:w-5 md:h-5" style={{ color: item.color }} />
-                </div>
-                <div>
-                  <p className="text-slate-400 text-[9px] sm:text-[10px] md:text-xs font-semibold leading-tight">{item.label}</p>
-                  <p className="text-white text-sm sm:text-base md:text-lg font-black mt-0.5">{item.value}</p>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
+
 
       {/* Charts Row 1 */}
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
@@ -361,28 +329,45 @@ const AdminView: React.FC<{ data: any }> = ({ data }) => {
           </div>
         </ChartCard>
 
-        <ChartCard className="lg:col-span-2">
-          <SectionHeader title="Demographics" subtitle="Student gender distribution" icon={PieChartIcon} iconColor="#8b5cf6" />
-          <div className="h-[200px]">
-            {pieData.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie data={pieData} cx="50%" cy="48%" innerRadius={55} outerRadius={75} paddingAngle={4} dataKey="value" stroke="none">
-                    {pieData.map((_, i) => <Cell key={i} fill={COLORS[i]} />)}
-                  </Pie>
-                  <RechartsTooltip contentStyle={TT} />
-                  <Legend iconType="circle" wrapperStyle={{ fontSize: 11, fontWeight: 700 }} />
-                </PieChart>
-              </ResponsiveContainer>
-            ) : <div className="flex items-center justify-center h-full text-slate-400 text-sm">No data yet.</div>}
-          </div>
-          <div className="flex flex-wrap gap-2 mt-2">
-            {pieData.map((d, i) => (
-              <div key={i} className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold"
-                style={{ background: COLORS[i] + '18', color: COLORS[i] }}>
-                <span className="w-2 h-2 rounded-full" style={{ background: COLORS[i] }} />{d.name}: {d.value}
+        <ChartCard className="lg:col-span-2 flex flex-col">
+          <SectionHeader title="Attendance Summary" subtitle="Daily presence & absence stats" icon={CheckCircle2} iconColor="#10b981" />
+          
+          <div className="flex-1 flex flex-col justify-center gap-4 mt-2">
+            <div className="grid grid-cols-2 gap-3 sm:gap-4">
+              <div className="bg-emerald-50 rounded-2xl p-4 border border-emerald-100 flex flex-col items-center justify-center shadow-sm relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-16 h-16 bg-emerald-200/40 rounded-full blur-xl -translate-y-1/2 translate-x-1/2" />
+                <span className="text-[10px] sm:text-xs font-black uppercase text-emerald-600 mb-1 z-10 tracking-wider">Today's Avg</span>
+                <span className="text-2xl sm:text-3xl font-black text-emerald-700 z-10">{data.attendanceToday || 0}%</span>
               </div>
-            ))}
+              
+              <div className="bg-indigo-50 rounded-2xl p-4 border border-indigo-100 flex flex-col items-center justify-center shadow-sm relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-16 h-16 bg-indigo-200/40 rounded-full blur-xl -translate-y-1/2 translate-x-1/2" />
+                <span className="text-[10px] sm:text-xs font-black uppercase text-indigo-600 mb-1 z-10 tracking-wider">7-Day Avg</span>
+                <span className="text-2xl sm:text-3xl font-black text-indigo-700 z-10">{attendancePct}%</span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 sm:gap-4">
+              <div className="bg-white rounded-xl p-3 border border-slate-200 flex items-center gap-3 shadow-sm hover:border-emerald-200 transition-colors">
+                <div className="p-2.5 bg-emerald-100 text-emerald-600 rounded-lg shrink-0">
+                  <UserCheck className="w-4 h-4 sm:w-5 sm:h-5" />
+                </div>
+                <div>
+                  <p className="text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-slate-400">Present (7d)</p>
+                  <p className="text-lg sm:text-xl font-black text-slate-800 leading-tight">{totalPresent}</p>
+                </div>
+              </div>
+              
+              <div className="bg-white rounded-xl p-3 border border-slate-200 flex items-center gap-3 shadow-sm hover:border-rose-200 transition-colors">
+                <div className="p-2.5 bg-rose-100 text-rose-600 rounded-lg shrink-0">
+                  <XCircle className="w-4 h-4 sm:w-5 sm:h-5" />
+                </div>
+                <div>
+                  <p className="text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-slate-400">Absent (7d)</p>
+                  <p className="text-lg sm:text-xl font-black text-slate-800 leading-tight">{totalAbsent}</p>
+                </div>
+              </div>
+            </div>
           </div>
         </ChartCard>
       </div>
