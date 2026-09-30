@@ -17,6 +17,7 @@
   - WelcomeBanner redesigned completely: Changed from a dark theme to a beautiful light glassmorphism theme with a rounded rectangle avatar, improving the overall aesthetic and brightness.
   - Replaced Demographics Chart with Attendance Summary: Removed the long dark "Attendance Ribbon" entirely and designed a beautiful, premium 'Attendance Summary' card in place of the 'Demographics' pie chart to show today's/7-day attendance stats more compactly.
   - Added "Admissions" to the top stats cards (making it the 10th card) with a blue gradient and a link to `/admissions` to cleanly fill the grid.
+  - Updated Today's Absentees Page (`/attendance/absentees-today`): Added `Student ID` and `Mobile Number` columns. Also implemented a Download PDF feature using `jsPDF` and `jspdf-autotable` which pads empty rows to perfectly fit exactly 25 students on a single A4 page with the current date included at the bottom.
   - Made the UI highly responsive while retaining its premium glassy/gradient aesthetic.
 
 ---

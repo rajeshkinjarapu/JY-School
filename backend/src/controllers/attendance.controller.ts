@@ -309,7 +309,7 @@ export const getDashboardStats = async (req: AuthRequest, res: Response, next: N
     const todayRecords = await prisma.attendance.findMany({
       where: { date: { gte: today, lt: tomorrow } },
       include: {
-        student: { include: { user: { select: { name: true } } } },
+        student: { include: { user: { select: { name: true, phone: true } } } },
         class: { select: { name: true, section: true } }
       }
     });
@@ -341,6 +341,8 @@ export const getDashboardStats = async (req: AuthRequest, res: Response, next: N
         cStat.absent++; // Count leave/absent as absent for class stat %
         studentsOnLeave.push({
           studentName: record.student.user.name,
+          studentId: record.student.rollNo,
+          mobileNumber: record.student.user.phone,
           className: clsName,
           reason: record.status === 'ABSENT' ? 'Absent' : (record.note || 'Leave')
         });
