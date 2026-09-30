@@ -16,6 +16,7 @@
   - Scaled down icon sizes and photo box sizes.
   - WelcomeBanner redesigned completely: Reduced height by changing the layout from vertical to horizontal. Replaced the massive rounded rectangle photo box with a sleek circular avatar and arranged the name, role, and date horizontally for a premium glassmorphism look.
   - Replaced Demographics Chart with Attendance Summary: Removed the long dark "Attendance Ribbon" entirely and designed a beautiful, premium 'Attendance Summary' card in place of the 'Demographics' pie chart to show today's/7-day attendance stats more compactly.
+  - Added "Admissions" to the top stats cards (making it the 10th card) with a blue gradient and a link to `/admissions` to cleanly fill the grid.
   - Made the UI highly responsive while retaining its premium glassy/gradient aesthetic.
 
 ---

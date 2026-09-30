@@ -14,7 +14,7 @@ import {
   FileText, Award, ArrowUpRight, Clock, Activity,
   PieChart as PieChartIcon, TrendingUp, BarChart3,
   BookOpen, CheckCircle2, XCircle, Megaphone, Star,
-  ChevronRight, Zap, Target, BookMarked, UserCheck, PenTool, CreditCard, Key
+  ChevronRight, Zap, Target, BookMarked, UserCheck, PenTool, CreditCard, Key, UserPlus
 } from 'lucide-react';
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid,
@@ -257,6 +257,7 @@ const AdminView: React.FC<{ data: any }> = ({ data }) => {
     { label: 'Fee Details', value: 'Student Fees', icon: BookMarked, gradient: 'linear-gradient(90deg,#db2777,#f472b6)', glow: 'rgba(219,39,119,0.08)', link: '/finance?tab=student-fee-details', sub: 'Student balances & dues' },
     { label: 'Progress Cards', value: 'Reports', icon: Award, gradient: 'linear-gradient(90deg,#059669,#34d399)', glow: 'rgba(5,150,105,0.08)', link: '/exams?tab=progress-card', sub: 'Generate & View' },
     { label: 'App Installs', value: `${data.totalAppInstalls || 0} / ${data.totalStudents || 0}`, icon: Zap, gradient: 'linear-gradient(90deg,#14b8a6,#2dd4bf)', glow: 'rgba(20,184,166,0.08)', link: '/app-installs', sub: 'Mobile app usage' },
+    { label: 'Admissions', value: 'Manage', icon: UserPlus, gradient: 'linear-gradient(90deg,#3b82f6,#60a5fa)', glow: 'rgba(59,130,246,0.08)', link: '/admissions', sub: 'New Enrollments' },
   ];
 
 
