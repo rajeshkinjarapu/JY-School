@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../hooks/useAuth';
-import { Play, Plus, Clock, FileText, CheckCircle, Lock, Edit, ShieldAlert, Award, FileQuestion, Users, RefreshCw } from 'lucide-react';
+import { Play, Plus, Clock, FileText, CheckCircle, Lock, Edit, ShieldAlert, Award, FileQuestion, Users, RefreshCw, Trash2, BarChart3 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import api from '../../api/axios';
@@ -36,7 +36,12 @@ const CompetitiveExamsPage = () => {
     }
   };
 
-  const handleStartExam = (exam: any) => {
+  const handleStartExam = (exam: any, hasSubmitted: boolean = false) => {
+    if (hasSubmitted) {
+      navigate(`/competitive-exam-result/${exam.id}`);
+      return;
+    }
+
     const now = new Date();
     const startTime = new Date(exam.startTime);
     const endTime = new Date(exam.endTime);
@@ -184,11 +189,11 @@ const CompetitiveExamsPage = () => {
                   <div className="mt-auto border-t border-slate-100 pt-4">
                     {user?.role === 'STUDENT' && (
                       <button
-                        onClick={() => handleStartExam(exam)}
-                        disabled={hasSubmitted || isMissed}
+                        onClick={() => handleStartExam(exam, hasSubmitted)}
+                        disabled={!hasSubmitted && isMissed}
                         className={`w-full py-3 rounded-xl flex items-center justify-center gap-2 font-bold transition-all shadow-sm ${
                           hasSubmitted 
-                            ? 'bg-emerald-50 text-emerald-600 border border-emerald-200'
+                            ? 'bg-emerald-50 text-emerald-600 border border-emerald-200 hover:bg-emerald-100'
                             : isMissed
                             ? 'bg-red-50 text-red-600 border border-red-200 opacity-70 cursor-not-allowed'
                             : isUpcoming
@@ -198,16 +203,36 @@ const CompetitiveExamsPage = () => {
                       >
                         {hasSubmitted ? 'View Detailed Report' : isMissed ? 'Exam Missed' : isUpcoming ? 'Starts Soon' : 'Start Exam (Desktop)'}
                         {!hasSubmitted && !isMissed && !isUpcoming && <Play size={18} />}
+                        {hasSubmitted && <BarChart3 size={18} />}
                       </button>
                     )}
                     
                     {isAdminOrTeacher && (
-                      <button
-                        onClick={() => navigate(`/manage-competitive-questions/${exam.id}`)}
-                        className="w-full py-3 bg-white border-2 border-slate-100 text-slate-700 rounded-xl hover:bg-slate-50 hover:border-slate-200 font-bold flex items-center justify-center gap-2 transition-all"
-                      >
-                        <Edit className="h-4 w-4" /> Manage Questions
-                      </button>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => navigate(`/manage-competitive-questions/${exam.id}`)}
+                          className="flex-1 py-3 bg-white border-2 border-slate-100 text-slate-700 rounded-xl hover:bg-slate-50 hover:border-slate-200 font-bold flex items-center justify-center gap-2 transition-all"
+                        >
+                          <Edit className="h-4 w-4" /> Manage
+                        </button>
+                        <button
+                          onClick={() => navigate(`/competitive-exam-leaderboard/${exam.id}`)}
+                          className="flex-1 py-3 bg-white border-2 border-indigo-100 text-indigo-700 rounded-xl hover:bg-indigo-50 hover:border-indigo-200 font-bold flex items-center justify-center gap-2 transition-all"
+                        >
+                          <Award className="h-4 w-4" /> Results
+                        </button>
+                        <button
+                          onClick={async () => {
+                            if(window.confirm('Delete this exam?')) {
+                              await api.delete(`/api/competitive-exams/${exam.id}`);
+                              fetchExams();
+                            }
+                          }}
+                          className="p-3 bg-white border-2 border-red-100 text-red-600 rounded-xl hover:bg-red-50 hover:border-red-200 font-bold flex items-center justify-center transition-all"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
                     )}
                   </div>
                 </div>

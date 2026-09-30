@@ -180,7 +180,7 @@ const TakeCompetitiveExamPage = () => {
       alert("Exam submitted successfully!");
       localStorage.removeItem(`exam_running_${id}`);
       exitFullScreen();
-      navigate('/competitive-exams');
+      navigate(`/competitive-exam-result/${id}`, { replace: true });
     } catch (error) {
       alert("Failed to submit exam. Please contact admin.");
       setIsSubmitting(false);

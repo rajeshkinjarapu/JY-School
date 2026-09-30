@@ -120,6 +120,9 @@ const ManageExamQuestions = lazy(() => import('../pages/exams/ManageExamQuestion
 const OMRScannerPage = lazy(() => import('../pages/exams/omr/OMRScannerPage').then(m => ({ default: m.OMRScannerPage })));
 const CompetitiveExamsPage = lazy(() => import('../pages/exams/CompetitiveExamsPage'));
 const TakeCompetitiveExamPage = lazy(() => import('../pages/exams/TakeCompetitiveExamPage'));
+const CompetitiveExamResultPage = lazy(() => import('../pages/exams/CompetitiveExamResultPage').then(m => ({ default: m.CompetitiveExamResultPage })));
+const CompetitiveExamLeaderboardPage = lazy(() => import('../pages/exams/CompetitiveExamLeaderboardPage').then(m => ({ default: m.CompetitiveExamLeaderboardPage })));
+const ManageCompetitiveQuestions = lazy(() => import('../pages/exams/ManageCompetitiveQuestions').then(m => ({ default: m.ManageCompetitiveQuestions })));
 const AttendanceWrapper = () => {
   const { user } = useAuth();
   if (user?.role === 'STUDENT') {
@@ -161,6 +164,30 @@ export const router = createBrowserRouter([
     element: (
       <ProtectedRoute allowedRoles={['STUDENT']}>
         {withSuspense(<TakeCompetitiveExamPage />)}
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/competitive-exam-result/:id',
+    element: (
+      <ProtectedRoute allowedRoles={['STUDENT']}>
+        {withSuspense(<CompetitiveExamResultPage />)}
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/competitive-exam-leaderboard/:id',
+    element: (
+      <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN', 'TEACHER']}>
+        {withSuspense(<CompetitiveExamLeaderboardPage />)}
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/manage-competitive-questions/:id',
+    element: (
+      <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN', 'TEACHER']}>
+        {withSuspense(<ManageCompetitiveQuestions />)}
       </ProtectedRoute>
     ),
   },
