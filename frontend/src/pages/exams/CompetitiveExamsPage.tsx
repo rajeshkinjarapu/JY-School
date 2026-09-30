@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../hooks/useAuth';
-import { Play, Plus, Clock, FileText, CheckCircle, Lock, Edit, ShieldAlert, Award, FileQuestion, Users, RefreshCw, Trash2, BarChart3, Activity, TrendingUp, AlertTriangle, BookOpen, ChevronRight, CheckCircle2, XCircle, MinusCircle } from 'lucide-react';
+import { Play, Plus, Clock, FileText, CheckCircle, Lock, Edit, ShieldAlert, Award, FileQuestion, Users, RefreshCw, Trash2, BarChart3, Activity, TrendingUp, AlertTriangle, BookOpen, ChevronRight, CheckCircle2, XCircle, MinusCircle, Database } from 'lucide-react';
 import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import api from '../../api/axios';
@@ -293,14 +293,19 @@ const AdminTeacherDashboard = ({ exams, fetchExams, navigate, isAdminOrTeacher, 
           <p className="text-indigo-200 mt-2 text-sm md:text-base font-medium">JEE / NEET Pattern Proctored Exams</p>
         </div>
         
-        <div className="flex gap-3 relative z-10 w-full sm:w-auto">
+        <div className="flex flex-wrap gap-3 relative z-10 w-full sm:w-auto mt-4 sm:mt-0">
           <button onClick={fetchExams} className="flex justify-center items-center gap-2 px-5 py-3 bg-white/10 text-white rounded-xl hover:bg-white/20 transition-all backdrop-blur-md border border-white/20 shadow-lg font-medium">
             <RefreshCw className={`h-4 w-4`} /> Refresh
           </button>
           {isAdminOrTeacher && (
-            <button onClick={() => navigate('/create-competitive-exam')} className="flex justify-center items-center gap-2 px-6 py-3 bg-white text-indigo-800 rounded-xl hover:bg-indigo-50 transition-all shadow-xl font-bold">
-              <Plus className="h-5 w-5 text-indigo-600" /> Create Exam
-            </button>
+            <>
+              <button onClick={() => navigate('/competitive-question-bank')} className="flex justify-center items-center gap-2 px-6 py-3 bg-indigo-700/50 text-indigo-100 border border-indigo-400/50 rounded-xl hover:bg-indigo-600 transition-all shadow-xl font-bold">
+                <Database className="h-5 w-5" /> Question Bank
+              </button>
+              <button onClick={() => navigate('/create-competitive-exam')} className="flex justify-center items-center gap-2 px-6 py-3 bg-white text-indigo-800 rounded-xl hover:bg-indigo-50 transition-all shadow-xl font-bold">
+                <Plus className="h-5 w-5 text-indigo-600" /> Create Exam
+              </button>
+            </>
           )}
         </div>
       </div>
@@ -388,6 +393,9 @@ const AdminTeacherDashboard = ({ exams, fetchExams, navigate, isAdminOrTeacher, 
                     <span className="text-slate-500 font-medium">Active Right Now</span>
                     <span className="font-bold text-blue-600 bg-blue-50 px-3 py-1 rounded-lg animate-pulse">12</span>
                   </div>
+                  <button onClick={() => navigate(`/live-exam-monitor/${activeExam.id}`)} className="w-full mt-4 py-3 bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 rounded-xl font-bold flex items-center justify-center gap-2 transition">
+                    <Activity size={18} className="animate-pulse" /> Monitor Live Activity
+                  </button>
                 </div>
               </>
             ) : (
@@ -512,6 +520,14 @@ const AdminTeacherDashboard = ({ exams, fetchExams, navigate, isAdminOrTeacher, 
                   </div>
 
                   <div className="mt-auto border-t border-slate-100 pt-4">
+                    <div className="flex gap-2 mb-2">
+                      <button
+                        onClick={() => navigate(`/live-exam-monitor/${exam.id}`)}
+                        className="flex-1 py-3 bg-red-50 text-red-600 border border-red-100 hover:bg-red-100 font-bold rounded-xl flex items-center justify-center gap-2 transition"
+                      >
+                        <Activity size={16} /> Live Monitor
+                      </button>
+                    </div>
                     <div className="flex gap-2">
                       <button
                         onClick={() => navigate(`/manage-competitive-questions/${exam.id}`)}

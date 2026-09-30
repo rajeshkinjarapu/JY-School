@@ -120,6 +120,9 @@ const ManageExamQuestions = lazy(() => import('../pages/exams/ManageExamQuestion
 const OMRScannerPage = lazy(() => import('../pages/exams/omr/OMRScannerPage').then(m => ({ default: m.OMRScannerPage })));
 const CompetitiveExamsPage = lazy(() => import('../pages/exams/CompetitiveExamsPage'));
 const CreateCompetitiveExamPage = lazy(() => import('../pages/exams/CreateCompetitiveExamPage'));
+const CompetitiveQuestionBankDashboard = lazy(() => import('../pages/exams/CompetitiveQuestionBankDashboard'));
+const CreateCompetitiveQuestionPage = lazy(() => import('../pages/exams/CreateCompetitiveQuestionPage'));
+const LiveExamMonitorPage = lazy(() => import('../pages/exams/LiveExamMonitorPage'));
 const TakeCompetitiveExamPage = lazy(() => import('../pages/exams/TakeCompetitiveExamPage'));
 const CompetitiveExamResultPage = lazy(() => import('../pages/exams/CompetitiveExamResultPage').then(m => ({ default: m.CompetitiveExamResultPage })));
 const CompetitiveExamLeaderboardPage = lazy(() => import('../pages/exams/CompetitiveExamLeaderboardPage').then(m => ({ default: m.CompetitiveExamLeaderboardPage })));
@@ -433,6 +436,30 @@ export const router = createBrowserRouter([
         element: withSuspense(
           <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN', 'TEACHER']}>
             <CreateCompetitiveExamPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'competitive-question-bank',
+        element: withSuspense(
+          <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN', 'TEACHER']}>
+            <CompetitiveQuestionBankDashboard />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'competitive-question-bank/new',
+        element: withSuspense(
+          <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN', 'TEACHER']}>
+            <CreateCompetitiveQuestionPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'live-exam-monitor/:id',
+        element: withSuspense(
+          <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN', 'TEACHER']}>
+            <LiveExamMonitorPage />
           </ProtectedRoute>
         ),
       },
