@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import api from '../../api/axios';
-import { Calendar, Clock, AlertCircle, ArrowLeft, Plus, FileText, Target, Award, Timer, Hash, Zap } from 'lucide-react';
+import { Calendar, Clock, AlertCircle, ArrowLeft, Plus, FileText, Target, Award, Timer, Hash, Zap, BookOpen } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '../../components/UI/PageHeader';
 
@@ -21,34 +21,61 @@ const CreateCompetitiveExamPage = () => {
   const [loading, setLoading] = useState(false);
   const [classes, setClasses] = useState<any[]>([]);
   const [subjects, setSubjects] = useState<any[]>([]);
+  const [allSubjects, setAllSubjects] = useState<any[]>([]);
 
-  React.useEffect(() => {
-    const fetchClasses = async () => {
+  useEffect(() => {
+    const fetchInitialData = async () => {
       try {
-        const clsRes = await api.get('/api/classes');
-        setClasses(clsRes.data.data || []);
+        const [clsRes, subRes] = await Promise.all([
+          api.get('/api/classes'),
+          api.get('/api/subjects?limit=5000')
+        ]);
+        
+        // Deduplicate classes by name
+        const allC = clsRes.data?.data || clsRes.data || [];
+        setClasses(allC);
+        
+        // Deduplicate subjects by name
+        const allS = subRes.data?.data || subRes.data || [];
+        const uniqueSubjects: any[] = [];
+        const seen = new Set();
+        for (const s of allS) {
+          if (!seen.has(s.name)) {
+            seen.add(s.name);
+            uniqueSubjects.push(s);
+          }
+        }
+        uniqueSubjects.sort((a: any, b: any) => a.name.localeCompare(b.name));
+        setAllSubjects(uniqueSubjects);
       } catch (e) {
-        console.error("Failed to load classes", e);
+        console.error("Failed to load data", e);
       }
     };
-    fetchClasses();
+    fetchInitialData();
   }, []);
 
-  React.useEffect(() => {
+  // Fetch subjects specific to selected class
+  useEffect(() => {
     const fetchSubjects = async () => {
       if (!formData.classId) {
-        setSubjects([]);
+        setSubjects(allSubjects); // Show all subjects if no class selected
         return;
       }
       try {
-        const subRes = await api.get(`/api/classes/${formData.classId}/subjects`);
-        setSubjects(subRes.data.data || []);
+        const res = await api.get(`/api/subjects?classId=${formData.classId}`);
+        const data = res.data?.data || res.data || [];
+        if (data.length > 0) {
+          setSubjects(data);
+        } else {
+          // Fallback to all subjects if class-specific fetch returns empty
+          setSubjects(allSubjects);
+        }
       } catch (e) {
-        console.error("Failed to load subjects", e);
+        setSubjects(allSubjects);
       }
     };
     fetchSubjects();
-  }, [formData.classId]);
+  }, [formData.classId, allSubjects]);
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -117,11 +144,18 @@ const CreateCompetitiveExamPage = () => {
                   </select>
                 </div>
                 <div>
-                  <label className={labelClass}>Select Subject</label>
-                  <select required value={formData.subjectId} disabled={!formData.classId} onChange={e => setFormData({...formData, subjectId: e.target.value})} className={`${inputClass} disabled:opacity-50 disabled:cursor-not-allowed`}>
-                    <option value="">{formData.classId ? "Choose a Subject" : "Select a class first"}</option>
+                  <label className={labelClass}>
+                    <span className="flex items-center gap-1.5"><BookOpen className="w-3.5 h-3.5" /> Select Subject</span>
+                  </label>
+                  <select required value={formData.subjectId} onChange={e => setFormData({...formData, subjectId: e.target.value})} className={inputClass}>
+                    <option value="">Choose a Subject</option>
                     {subjects.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                   </select>
+                  {subjects.length === 0 && (
+                    <p className="text-xs text-amber-600 mt-1.5 font-medium flex items-center gap-1">
+                      <AlertCircle size={12} /> Loading subjects...
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
