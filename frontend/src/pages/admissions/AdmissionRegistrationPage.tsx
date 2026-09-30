@@ -1077,21 +1077,21 @@ export const AdmissionRegistrationPage: React.FC = () => {
             </div>
 
             {/* SECTION 7: TERMS */}
-            <div className="bg-slate-900 rounded-3xl shadow-xl shadow-slate-900/10 overflow-hidden text-white relative">
-              <div className="absolute top-0 right-0 w-64 h-64 bg-rose-500 rounded-full blur-3xl opacity-10 translate-x-1/2 -translate-y-1/2 pointer-events-none"></div>
-              <div className="p-6 md:p-8 relative z-10">
+            <div className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden relative">
+              <div className="absolute top-0 left-0 w-1.5 h-full bg-rose-500"></div>
+              <div className="p-6 md:p-8">
                 <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 rounded-xl bg-rose-500/20 text-rose-400 flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center">
                     <ShieldCheck className="w-5 h-5" />
                   </div>
                   <div>
-                    <h3 className="font-black text-lg text-white">7. Terms and Conditions</h3>
-                    <p className="text-xs font-semibold text-rose-300/80 uppercase tracking-wider">Mandatory Agreement</p>
+                    <h3 className="font-black text-lg text-slate-800">7. Terms and Conditions</h3>
+                    <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Mandatory Agreement</p>
                   </div>
                 </div>
 
                 <div className="pl-2 md:pl-4 space-y-6">
-                  <div className="bg-black/20 border border-white/10 rounded-2xl p-5 md:p-6 text-slate-300 text-sm font-medium leading-relaxed">
+                  <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 md:p-6 text-slate-700 text-sm font-medium leading-relaxed">
                     <ol className="list-decimal pl-5 space-y-2.5">
                       <li>Student should obey the rules and regulations set by the management.</li>
                       <li>Student would not be allowed to move around the premises of the school without uniform.</li>
@@ -1106,15 +1106,15 @@ export const AdmissionRegistrationPage: React.FC = () => {
                   <div 
                     onClick={() => setTermsAccepted(!termsAccepted)}
                     className={`flex items-start gap-4 p-5 rounded-2xl border-2 transition-all cursor-pointer ${
-                      termsAccepted ? 'bg-emerald-500/20 border-emerald-500/50' : 'bg-white/5 border-white/10 hover:border-white/20'
+                      termsAccepted ? 'bg-emerald-50/70 border-emerald-500' : 'bg-slate-50 border-slate-200 hover:border-slate-300'
                     }`}
                   >
-                    <div className={termsAccepted ? 'text-emerald-400' : 'text-slate-500'}>
+                    <div className={termsAccepted ? 'text-emerald-500' : 'text-slate-400'}>
                       {termsAccepted ? <CheckSquare className="w-6 h-6" /> : <Square className="w-6 h-6" />}
                     </div>
                     <div>
-                      <p className="font-black text-white text-sm md:text-base">I / We agree to abide by all the Terms and Conditions. <span className="text-rose-400">*</span></p>
-                      <p className="text-xs font-semibold text-slate-400 mt-1">By checking this box, the parent/guardian acknowledges full legal responsibility.</p>
+                      <p className="font-black text-slate-800 text-sm md:text-base">I / We agree to abide by all the Terms and Conditions. <span className="text-rose-500">*</span></p>
+                      <p className="text-xs font-semibold text-slate-500 mt-1">By checking this box, the parent/guardian acknowledges full legal responsibility.</p>
                     </div>
                   </div>
                 </div>

@@ -198,10 +198,17 @@ class _AppDrawerState extends State<AppDrawer> {
                     ),
                     _buildDrawerItem(
                       icon: Icons.person_add_alt_1_rounded,
-                      title: 'Admissions',
+                      title: 'Admissions List',
                       routeName: 'admissions',
                       isActive: widget.currentRoute == 'admissions',
                       onTap: () => _navigateTo(const AdmissionsListScreen(), 'admissions'),
+                    ),
+                    _buildDrawerItem(
+                      icon: Icons.app_registration_rounded,
+                      title: 'New Registration',
+                      routeName: 'admissions_register',
+                      isActive: widget.currentRoute == 'admissions_register',
+                      onTap: () => _navigateTo(const AdmissionRegistrationScreen(), 'admissions_register'),
                     ),
                     _buildDrawerItem(
                       icon: Icons.school_outlined,
