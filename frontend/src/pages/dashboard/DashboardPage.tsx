@@ -88,15 +88,12 @@ const WelcomeBanner: React.FC<{ name: string; role: string; photoUrl?: string }>
   const displayRole = roleLabel[role] || role;
 
   return (
-    <div className="relative w-full overflow-hidden rounded-[1.2rem] sm:rounded-2xl" style={{
-      background: 'linear-gradient(135deg, #1e1b4b 0%, #0f172a 100%)',
-      boxShadow: '0 10px 25px -5px rgba(15, 23, 42, 0.2)',
-    }}>
+    <div className="relative w-full overflow-hidden rounded-[1.2rem] sm:rounded-2xl bg-white border border-indigo-50 shadow-sm">
       {/* Decorative Glows */}
-      <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
-      <div className="absolute bottom-0 left-10 w-64 h-64 bg-fuchsia-500/20 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2 pointer-events-none" />
-      <div className="absolute inset-0 opacity-[0.02]" style={{
-        backgroundImage: `url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M20 20.5V18H0v-2h20v-2.5L22.5 16 25 13.5V0h2v13.5L29.5 16 32 18.5V20h8v2h-8v1.5L29.5 26 27 28.5V40h-2V28.5L22.5 26 20 23.5V20.5z' fill='%23ffffff' fill-opacity='1' fill-rule='evenodd'/%3E%3C/svg%3E")`,
+      <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-400/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
+      <div className="absolute bottom-0 left-10 w-64 h-64 bg-fuchsia-400/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2 pointer-events-none" />
+      <div className="absolute inset-0 opacity-[0.015]" style={{
+        backgroundImage: `url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M20 20.5V18H0v-2h20v-2.5L22.5 16 25 13.5V0h2v13.5L29.5 16 32 18.5V20h8v2h-8v1.5L29.5 26 27 28.5V40h-2V28.5L22.5 26 20 23.5V20.5z' fill='%234f46e5' fill-opacity='1' fill-rule='evenodd'/%3E%3C/svg%3E")`,
       }} />
 
       <div className="relative z-10 p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -105,44 +102,44 @@ const WelcomeBanner: React.FC<{ name: string; role: string; photoUrl?: string }>
         <div className="flex items-center gap-3.5 w-full sm:w-auto">
           {/* Avatar */}
           <div className="shrink-0 relative">
-            <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl p-[2px] bg-gradient-to-tr from-indigo-500 to-purple-500 shadow-lg">
-              <div className="w-full h-full rounded-xl overflow-hidden bg-slate-900 flex items-center justify-center border-[2px] border-[#1e1b4b]">
+            <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl p-[2px] bg-gradient-to-tr from-indigo-400 to-purple-400 shadow-sm">
+              <div className="w-full h-full rounded-xl overflow-hidden bg-white flex items-center justify-center border-[2px] border-white">
                 {getPhotoUrl(photoUrl) ? (
                   <img src={getPhotoUrl(photoUrl)} alt="Profile" className="w-full h-full object-cover" 
                     onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.nextElementSibling?.classList.remove('hidden'); }} />
                 ) : null}
-                <span className={`text-sm sm:text-base font-black text-white ${getPhotoUrl(photoUrl) ? 'hidden' : ''}`}>
+                <span className={`text-sm sm:text-base font-black text-indigo-600 ${getPhotoUrl(photoUrl) ? 'hidden' : ''}`}>
                   {name ? name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase() : emoji}
                 </span>
               </div>
             </div>
             {/* Online Badge */}
-            <div className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-emerald-400 border-2 border-[#1e1b4b] rounded-full shadow-sm" />
+            <div className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-emerald-400 border-2 border-white rounded-full shadow-sm" />
           </div>
 
           {/* Info */}
           <div className="flex-1 min-w-0">
-            <p className="text-indigo-200/90 text-[9px] sm:text-[10px] font-black uppercase tracking-wider mb-0.5 flex items-center gap-1.5">
+            <p className="text-indigo-600 text-[9px] sm:text-[10px] font-black uppercase tracking-wider mb-0.5 flex items-center gap-1.5">
               {greeting} <span className="text-[12px]">{emoji}</span>
             </p>
-            <h1 className="text-lg sm:text-xl font-black text-white tracking-tight truncate leading-tight mb-1">
+            <h1 className="text-lg sm:text-xl font-black text-slate-800 tracking-tight truncate leading-tight mb-1">
               {name}
             </h1>
             <div className="flex items-center gap-1.5">
-              <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[8px] sm:text-[9px] font-bold bg-white/10 text-indigo-100 border border-white/10 tracking-wide uppercase">
+              <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[8px] sm:text-[9px] font-bold bg-indigo-50 text-indigo-600 border border-indigo-100 tracking-wide uppercase">
                 {displayRole}
               </span>
-              <span className="text-indigo-300/50 text-[10px] font-bold">•</span>
-              <span className="text-indigo-100/70 text-[9px] sm:text-[10px] font-semibold tracking-wide">JY School</span>
+              <span className="text-slate-300 text-[10px] font-bold">•</span>
+              <span className="text-slate-500 text-[9px] sm:text-[10px] font-semibold tracking-wide">JY School</span>
             </div>
           </div>
         </div>
 
         {/* Right Side: Date Date Badge */}
-        <div className="flex w-full sm:w-auto items-center justify-end border-t border-white/5 sm:border-0 pt-3 sm:pt-0 mt-1 sm:mt-0">
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 backdrop-blur-md shadow-inner">
-            <CalendarDays className="w-3.5 h-3.5 text-indigo-300" />
-            <span className="text-[10px] sm:text-[11px] font-bold text-white tracking-wide">{today}</span>
+        <div className="flex w-full sm:w-auto items-center justify-end border-t border-slate-100 sm:border-0 pt-3 sm:pt-0 mt-1 sm:mt-0">
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-100 shadow-sm">
+            <CalendarDays className="w-3.5 h-3.5 text-indigo-500" />
+            <span className="text-[10px] sm:text-[11px] font-bold text-slate-700 tracking-wide">{today}</span>
           </div>
         </div>
         
