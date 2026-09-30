@@ -4,7 +4,7 @@ import {
   Printer, Phone, User, 
   CreditCard, RefreshCw, QrCode, Copy, Check, UserCheck, Calendar,
   Upload, FileText, Eye, AlertCircle, Users, Home, BookOpen,
-  CheckSquare, Square, Plus, ShieldCheck, MapPin, Sparkles
+  CheckSquare, Square, Plus, ShieldCheck, MapPin, Sparkles, ChevronRight
 } from 'lucide-react';
 import api from '../../api/axios';
 import toast from 'react-hot-toast';
@@ -446,9 +446,6 @@ export const AdmissionRegistrationPage: React.FC = () => {
     setMotherAadhar('');
     setMotherPhone('');
 
-    setPhone('');
-    setAlternatePhone('');
-
     setNationality('Indian');
     setReligion('Hindu');
     setCaste('BC-A');
@@ -474,10 +471,9 @@ export const AdmissionRegistrationPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50/70 pb-20">
-      {/* Top Header */}
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-indigo-50/30 pb-20 font-sans">
       <PageHeader 
-        title="Student Admission Registration"
+        title="Admission Registration"
         breadcrumbs={currentUser.role ? [
           { label: 'Admissions', href: '/admissions' },
           { label: 'Register Student' }
@@ -486,221 +482,179 @@ export const AdmissionRegistrationPage: React.FC = () => {
         ]}
       />
 
-      <div className="w-full px-4 sm:px-6 lg:px-8 py-5">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
         
-        {/* User Identity / Staff Banner */}
-        <div className="mb-6 flex flex-wrap items-center justify-between gap-3 bg-white border border-slate-200/80 rounded-2xl px-5 py-3 shadow-2xs">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 font-bold">
-              <UserCheck className="w-5 h-5" />
+        {/* Modern Welcome Banner */}
+        <div className="relative bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-slate-100 overflow-hidden flex flex-col md:flex-row items-center justify-between gap-6 z-10">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-50 rounded-full blur-3xl opacity-50 -z-10 translate-x-1/3 -translate-y-1/3"></div>
+          <div className="absolute bottom-0 left-0 w-64 h-64 bg-emerald-50 rounded-full blur-3xl opacity-50 -z-10 -translate-x-1/3 translate-y-1/3"></div>
+          
+          <div className="flex items-center gap-5">
+            <div className="w-14 h-14 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-indigo-200">
+              <UserPlus className="w-7 h-7" />
             </div>
             <div>
-              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                {currentUser.role ? 'Registering Desk / Operator' : 'Official Portal'}
-              </p>
-              <p className="text-sm font-black text-slate-800">
-                {currentUser.name || 'Student Admission Registration Desk'} 
-                <span className="ml-2 text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-100">
-                  {currentUser.role || 'ONLINE APPLICANT'}
-                </span>
-              </p>
+              <h2 className="text-xl md:text-2xl font-black text-slate-800 tracking-tight">Student Registration</h2>
+              <p className="text-slate-500 font-medium text-sm mt-1">Please fill out all the details accurately to enroll the student.</p>
             </div>
           </div>
-          <div className="flex items-center gap-2 text-xs font-bold text-slate-600 bg-slate-100 px-3 py-1.5 rounded-xl">
-            <Calendar className="w-3.5 h-3.5 text-indigo-600" />
-            <span>Academic Year: <strong className="text-indigo-700">{academicYear}</strong></span>
+          
+          <div className="flex items-center gap-3 bg-slate-50 border border-slate-100 px-4 py-2.5 rounded-2xl shrink-0">
+            <div className="w-10 h-10 bg-white rounded-xl shadow-sm flex items-center justify-center text-indigo-600 font-black">
+              {academicYear.split('-')[0].slice(-2)}
+            </div>
+            <div>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Academic Year</p>
+              <p className="text-sm font-black text-slate-700">{academicYear}</p>
+            </div>
           </div>
         </div>
 
-        {/* Success Modal / Post Submission View */}
         {submittedAdmission ? (
-          <div className="max-w-3xl mx-auto bg-white rounded-3xl p-8 sm:p-10 border border-slate-200 shadow-xl text-center animate-in fade-in zoom-in-95 duration-200">
-            <div className="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-5 shadow-inner">
+          <div className="max-w-3xl mx-auto bg-white rounded-3xl p-8 md:p-12 border border-slate-100 shadow-xl shadow-slate-200/50 text-center relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-emerald-400 to-teal-500"></div>
+            
+            <div className="w-24 h-24 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner ring-8 ring-emerald-50/50">
               <CheckCircle2 className="w-12 h-12" />
             </div>
 
-            <span className="px-3 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full text-xs font-black uppercase tracking-wider">
-              Application Submitted Successfully
+            <span className="inline-block px-4 py-1.5 bg-emerald-100 text-emerald-800 rounded-full text-xs font-black uppercase tracking-wider mb-4">
+              Registration Successful
             </span>
 
-            <h2 className="text-2xl sm:text-3xl font-black text-slate-900 mt-3">
+            <h2 className="text-3xl md:text-4xl font-black text-slate-900 mb-2">
               {submittedAdmission.studentName}
             </h2>
 
-            <p className="text-sm text-slate-500 mt-1">
+            <p className="text-slate-500 font-medium mb-8">
               Class Applied: <strong className="text-slate-800">{submittedAdmission.classApplied}</strong> • Academic Year: <strong className="text-slate-800">{submittedAdmission.academicYear || academicYear}</strong>
             </p>
 
-            <div className="mt-6 p-4 bg-slate-50 border border-slate-200 rounded-2xl max-w-md mx-auto text-left space-y-2 text-xs">
-              <div className="flex justify-between">
-                <span className="font-semibold text-slate-500">Application Number:</span>
-                <span className="font-mono font-bold text-indigo-600">ADM-{new Date().getFullYear()}-{submittedAdmission.id?.slice(0, 6).toUpperCase()}</span>
+            <div className="bg-slate-50 border border-slate-100 rounded-2xl p-6 max-w-md mx-auto text-left space-y-4 mb-8">
+              <div className="flex justify-between items-center pb-4 border-b border-slate-200/60">
+                <span className="font-semibold text-slate-500">Application No</span>
+                <span className="font-mono font-bold text-indigo-600 text-lg">ADM-{new Date().getFullYear()}-{submittedAdmission.id?.slice(0, 6).toUpperCase()}</span>
               </div>
-              <div className="flex justify-between">
-                <span className="font-semibold text-slate-500">Primary Contact Phone:</span>
+              <div className="flex justify-between items-center pb-4 border-b border-slate-200/60">
+                <span className="font-semibold text-slate-500">Primary Contact</span>
                 <span className="font-bold text-slate-800">{submittedAdmission.phone}</span>
               </div>
-              <div className="flex justify-between">
-                <span className="font-semibold text-slate-500">Application Fee:</span>
-                <span className="font-bold text-emerald-700">₹ {submittedAdmission.admissionFee || '0'} ({submittedAdmission.paymentMethod || 'CASH'})</span>
+              <div className="flex justify-between items-center">
+                <span className="font-semibold text-slate-500">Application Fee</span>
+                <span className="font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-lg">₹ {submittedAdmission.admissionFee || '0'} ({submittedAdmission.paymentMethod || 'CASH'})</span>
               </div>
-              {submittedAdmission.cashReceivedByName && (
-                <div className="flex justify-between">
-                  <span className="font-semibold text-slate-500">Cash Received By:</span>
-                  <span className="font-bold text-amber-800">{submittedAdmission.cashReceivedByName}</span>
-                </div>
-              )}
             </div>
 
-            <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <button
                 type="button"
                 onClick={() => setShowPrintModal(true)}
-                className="w-full sm:w-auto px-6 py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-bold text-sm shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer"
+                className="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white rounded-2xl font-bold shadow-lg shadow-indigo-200 transition-all flex items-center justify-center gap-2 group"
               >
-                <Printer className="w-4 h-4" /> Print Official Admission Form (A4)
+                <Printer className="w-5 h-5 group-hover:scale-110 transition-transform" /> Print Official Form
               </button>
               <button
                 type="button"
                 onClick={handleResetForm}
-                className="w-full sm:w-auto px-6 py-3.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-2xl font-bold text-sm transition-all flex items-center justify-center gap-2 cursor-pointer"
+                className="w-full sm:w-auto px-8 py-4 bg-white border-2 border-slate-200 hover:border-slate-300 text-slate-700 rounded-2xl font-bold transition-all flex items-center justify-center gap-2"
               >
-                <UserPlus className="w-4 h-4" /> Register Another Student
+                <UserPlus className="w-5 h-5" /> Register Another
               </button>
             </div>
           </div>
         ) : (
-          /* REGISTRATION FORM */
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-8">
 
-            {/* CARD 1: STUDENT DETAILS */}
-            <div className="bg-white rounded-2xl shadow-xs border border-slate-200/90 overflow-hidden">
-              <div className="px-5 py-3.5 bg-gradient-to-r from-slate-900 via-indigo-950 to-indigo-900 text-white flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <User className="w-4 h-4 text-indigo-300" />
-                  <h3 className="font-black text-sm tracking-wide uppercase">1. Student Details</h3>
+            {/* SECTION 1: STUDENT DETAILS */}
+            <div className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden relative">
+              <div className="absolute top-0 left-0 w-1.5 h-full bg-indigo-500"></div>
+              <div className="p-6 md:p-8">
+                <div className="flex items-center gap-3 mb-8">
+                  <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                    <User className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-black text-lg text-slate-800">1. Student Details</h3>
+                    <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Passport Photo & Identity Information</p>
+                  </div>
                 </div>
-                <span className="text-xs bg-white/15 font-semibold px-2.5 py-0.5 rounded-full text-indigo-100">
-                  Passport Photo & Identity
-                </span>
-              </div>
 
-              <div className="p-5 sm:p-6">
-                <div className="flex flex-col md:flex-row gap-6 items-start">
-                  {/* Photo Upload Box */}
-                  <div className="flex flex-col items-center shrink-0 w-full md:w-44">
+                <div className="flex flex-col md:flex-row gap-8 items-start pl-2 md:pl-4">
+                  {/* Modern Photo Upload */}
+                  <div className="flex flex-col items-center shrink-0 w-full md:w-48 group">
                     <div 
                       onClick={() => fileInputRef.current?.click()}
-                      className={`w-36 h-44 rounded-2xl border-2 border-dashed flex flex-col items-center justify-center cursor-pointer transition-all overflow-hidden relative group ${
-                        studentImage ? 'border-indigo-500 bg-slate-50' : 'border-slate-300 hover:border-indigo-400 bg-slate-50/50 hover:bg-indigo-50/30'
+                      className={`w-40 h-48 rounded-2xl border-2 border-dashed flex flex-col items-center justify-center cursor-pointer transition-all overflow-hidden relative ${
+                        studentImage ? 'border-indigo-400 bg-indigo-50/30' : 'border-slate-200 hover:border-indigo-400 bg-slate-50 hover:bg-indigo-50/50'
                       }`}
                     >
                       {studentImage ? (
                         <>
                           <img src={resolveFileUrl(studentImage)} alt="Student Preview" className="w-full h-full object-cover" />
-                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white text-xs font-bold gap-1">
-                            <Camera className="w-5 h-5" /> Change Photo
+                          <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white backdrop-blur-[2px]">
+                            <Camera className="w-6 h-6 mb-2" />
+                            <span className="text-xs font-bold">Change Photo</span>
                           </div>
                         </>
                       ) : isUploadingPhoto ? (
-                        <div className="flex flex-col items-center text-slate-400 gap-2">
-                          <RefreshCw className="w-6 h-6 animate-spin text-indigo-600" />
-                          <span className="text-[11px] font-semibold text-indigo-600">Uploading...</span>
+                        <div className="flex flex-col items-center text-indigo-500 gap-3">
+                          <RefreshCw className="w-8 h-8 animate-spin" />
+                          <span className="text-xs font-bold">Uploading...</span>
                         </div>
                       ) : (
-                        <div className="flex flex-col items-center text-slate-400 gap-2 p-3 text-center">
-                          <div className="w-10 h-10 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                        <div className="flex flex-col items-center text-slate-400 gap-3 p-4 text-center group-hover:text-indigo-500 transition-colors">
+                          <div className="w-12 h-12 rounded-full bg-white shadow-sm border border-slate-100 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
                             <Camera className="w-5 h-5" />
                           </div>
-                          <span className="text-xs font-bold text-slate-700">Upload Photo</span>
-                          <span className="text-[10px] text-slate-400">JPG / PNG / WEBP</span>
+                          <div>
+                            <span className="block text-sm font-bold text-slate-700">Upload Photo</span>
+                            <span className="block text-[10px] text-slate-400 mt-1 uppercase">JPG / PNG</span>
+                          </div>
                         </div>
                       )}
                     </div>
-
-                    <input 
-                      type="file" 
-                      ref={fileInputRef} 
-                      onChange={handlePhotoSelect} 
-                      accept="image/*" 
-                      className="hidden" 
-                    />
-
+                    <input type="file" ref={fileInputRef} onChange={handlePhotoSelect} accept="image/*" className="hidden" />
                     {studentImage && (
-                      <button
-                        type="button"
-                        onClick={() => setStudentImage('')}
-                        className="mt-2 text-xs font-bold text-red-500 hover:text-red-700 flex items-center gap-1 cursor-pointer"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" /> Remove Photo
+                      <button type="button" onClick={() => setStudentImage('')} className="mt-3 text-xs font-bold text-rose-500 hover:text-rose-600 bg-rose-50 hover:bg-rose-100 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5">
+                        <Trash2 className="w-3.5 h-3.5" /> Remove
                       </button>
                     )}
                   </div>
 
-                  {/* Student Fields Grid */}
-                  <div className="flex-1 w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    
-                    {/* Student Name */}
-                    <div className="sm:col-span-2 lg:col-span-3">
-                      <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-1.5">
-                        Student Full Name <span className="text-red-500">*</span>
-                      </label>
+                  {/* Form Grid */}
+                  <div className="flex-1 w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-6">
+                    <div className="md:col-span-2 lg:col-span-3">
+                      <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2">Student Full Name <span className="text-rose-500">*</span></label>
                       <input 
-                        type="text"
-                        required
-                        value={studentName}
-                        onChange={e => setStudentName(e.target.value.toUpperCase())}
-                        placeholder="ENTER STUDENT FULL NAME"
-                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-xs uppercase tracking-wide"
+                        type="text" required value={studentName} onChange={e => setStudentName(e.target.value.toUpperCase())}
+                        placeholder="e.g. Rahul Kumar"
+                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all uppercase"
                       />
                     </div>
 
-                    {/* Class Applied For */}
                     <div>
-                      <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-1.5">
-                        Class Applied For <span className="text-red-500">*</span>
-                      </label>
-                      <select
-                        value={classApplied}
-                        onChange={e => setClassApplied(e.target.value)}
-                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-xs"
-                      >
-                        {classesList.map(c => (
-                          <option key={c} value={c}>{c}</option>
-                        ))}
+                      <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2">Class Applied For <span className="text-rose-500">*</span></label>
+                      <select value={classApplied} onChange={e => setClassApplied(e.target.value)} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all">
+                        {classesList.map(c => <option key={c} value={c}>{c}</option>)}
                       </select>
                     </div>
 
-                    {/* Academic Year (Strictly Clean) */}
                     <div>
-                      <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-1.5">
-                        Academic Year <span className="text-red-500">*</span>
-                      </label>
-                      <select
-                        value={academicYear}
-                        onChange={e => setAcademicYear(e.target.value)}
-                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-xs"
-                      >
+                      <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2">Academic Year <span className="text-rose-500">*</span></label>
+                      <select value={academicYear} onChange={e => setAcademicYear(e.target.value)} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all">
                         <option value="2026-2027">2026-2027</option>
                         <option value="2027-2028">2027-2028</option>
                       </select>
                     </div>
 
-                    {/* Gender (MALE, FEMALE Buttons) */}
                     <div>
-                      <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-1.5">
-                        Gender <span className="text-red-500">*</span>
-                      </label>
-                      <div className="grid grid-cols-2 gap-2">
+                      <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2">Gender <span className="text-rose-500">*</span></label>
+                      <div className="flex bg-slate-50 border border-slate-200 rounded-xl p-1">
                         {(['MALE', 'FEMALE'] as const).map(g => (
                           <button
-                            key={g}
-                            type="button"
-                            onClick={() => setGender(g)}
-                            className={`py-2 rounded-xl text-xs font-black uppercase tracking-wider border transition-all cursor-pointer ${
-                              gender === g
-                                ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs'
-                                : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                            key={g} type="button" onClick={() => setGender(g)}
+                            className={`flex-1 py-2 rounded-lg text-xs font-black uppercase tracking-wider transition-all ${
+                              gender === g ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100/50'
                             }`}
                           >
                             {g}
@@ -709,836 +663,487 @@ export const AdmissionRegistrationPage: React.FC = () => {
                       </div>
                     </div>
 
-                    {/* Date of Birth */}
                     <div>
-                      <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-1.5">
-                        Date of Birth
-                      </label>
+                      <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2">Date of Birth</label>
                       <input 
-                        type="date"
-                        value={dob}
-                        onChange={e => setDob(e.target.value)}
-                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-xs"
+                        type="date" value={dob} onChange={e => setDob(e.target.value)}
+                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
                       />
                     </div>
 
-                    {/* Student Aadhaar Number */}
                     <div>
-                      <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-1.5">
-                        Student Aadhaar Number
-                      </label>
+                      <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2">Aadhaar Number</label>
                       <input 
-                        type="text"
-                        maxLength={12}
-                        value={aadharNo}
-                        onChange={e => setAadharNo(e.target.value.replace(/\D/g, ''))}
-                        placeholder="12-digit Aadhaar number"
-                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-mono font-semibold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-xs"
+                        type="text" maxLength={12} value={aadharNo} onChange={e => setAadharNo(e.target.value.replace(/\D/g, ''))}
+                        placeholder="12-digit number"
+                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-mono font-bold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
                       />
                     </div>
 
-                    {/* Mother Tongue */}
                     <div>
-                      <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-1.5">
-                        Mother Tongue (మాతృభాష)
-                      </label>
-                      <select
-                        value={motherTongue}
-                        onChange={e => setMotherTongue(e.target.value)}
-                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-xs"
-                      >
-                        <option value="Telugu">Telugu (తెలుగు)</option>
+                      <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2">Mother Tongue</label>
+                      <select value={motherTongue} onChange={e => setMotherTongue(e.target.value)} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all">
+                        <option value="Telugu">Telugu</option>
                         <option value="English">English</option>
-                        <option value="Hindi">Hindi (हिन्दी)</option>
-                        <option value="Odia">Odia (ଓଡ଼ିଆ)</option>
+                        <option value="Hindi">Hindi</option>
+                        <option value="Odia">Odia</option>
                         <option value="Other">Other</option>
                       </select>
                     </div>
-
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* CARD 2: PARENT & GUARDIAN DETAILS */}
-            <div className="bg-white rounded-2xl shadow-xs border border-slate-200/90 overflow-hidden">
-              <div className="px-5 py-3.5 bg-gradient-to-r from-slate-900 via-emerald-950 to-emerald-900 text-white flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Users className="w-4 h-4 text-emerald-300" />
-                  <h3 className="font-black text-sm tracking-wide uppercase">2. Parent & Guardian Details</h3>
-                </div>
-                <span className="text-xs bg-white/15 font-semibold px-2.5 py-0.5 rounded-full text-emerald-100">
-                  Father, Mother & Contact Info
-                </span>
-              </div>
-
-              <div className="p-5 sm:p-6 space-y-6">
-                {/* Father Details Sub-Block */}
-                <div className="bg-slate-50/70 border border-slate-200 rounded-2xl p-4 sm:p-5">
-                  <div className="flex items-center gap-2 mb-3">
-                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-600"></span>
-                    <h4 className="text-xs font-black text-slate-800 uppercase tracking-wider">Father's Information</h4>
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div>
-                      <label className="block text-xs font-black text-slate-600 uppercase mb-1">Father's Name</label>
-                      <input 
-                        type="text"
-                        value={fatherName}
-                        onChange={e => setFatherName(e.target.value.toUpperCase())}
-                        placeholder="ENTER FATHER NAME"
-                        className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all shadow-2xs uppercase tracking-wide"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-black text-slate-600 uppercase mb-1">Occupation</label>
-                      <input 
-                        type="text"
-                        value={fatherOccupation}
-                        onChange={e => setFatherOccupation(e.target.value.toUpperCase())}
-                        placeholder="E.G. BUSINESS / AGRICULTURE / EMPLOYEE"
-                        className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all shadow-2xs uppercase tracking-wide"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-black text-slate-600 uppercase mb-1">Aadhaar No</label>
-                      <input 
-                        type="text"
-                        maxLength={12}
-                        value={fatherAadhar}
-                        onChange={e => setFatherAadhar(e.target.value.replace(/\D/g, ''))}
-                        placeholder="12-digit Aadhaar"
-                        className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-mono font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all shadow-2xs"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-black text-slate-600 uppercase mb-1">Mobile No</label>
-                      <div className="relative">
-                        <span className="absolute left-3 top-2.5 text-xs font-bold text-slate-400">+91</span>
-                        <input 
-                          type="tel"
-                          maxLength={10}
-                          value={fatherPhone}
-                          onChange={e => setFatherPhone(e.target.value.replace(/\D/g, ''))}
-                          placeholder="10-digit mobile"
-                          className="w-full pl-10 pr-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-mono font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all shadow-2xs"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Mother Details Sub-Block */}
-                <div className="bg-slate-50/70 border border-slate-200 rounded-2xl p-4 sm:p-5">
-                  <div className="flex items-center gap-2 mb-3">
-                    <span className="w-2.5 h-2.5 rounded-full bg-rose-500"></span>
-                    <h4 className="text-xs font-black text-slate-800 uppercase tracking-wider">Mother's Information</h4>
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div>
-                      <label className="block text-xs font-black text-slate-600 uppercase mb-1">Mother's Name</label>
-                      <input 
-                        type="text"
-                        value={motherName}
-                        onChange={e => setMotherName(e.target.value.toUpperCase())}
-                        placeholder="ENTER MOTHER NAME"
-                        className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all shadow-2xs uppercase tracking-wide"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-black text-slate-600 uppercase mb-1">Occupation</label>
-                      <input 
-                        type="text"
-                        value={motherOccupation}
-                        onChange={e => setMotherOccupation(e.target.value.toUpperCase())}
-                        placeholder="E.G. HOMEMAKER / EMPLOYEE"
-                        className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all shadow-2xs uppercase tracking-wide"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-black text-slate-600 uppercase mb-1">Aadhaar No</label>
-                      <input 
-                        type="text"
-                        maxLength={12}
-                        value={motherAadhar}
-                        onChange={e => setMotherAadhar(e.target.value.replace(/\D/g, ''))}
-                        placeholder="12-digit Aadhaar"
-                        className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-mono font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all shadow-2xs"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-black text-slate-600 uppercase mb-1">Mobile No</label>
-                      <div className="relative">
-                        <span className="absolute left-3 top-2.5 text-xs font-bold text-slate-400">+91</span>
-                        <input 
-                          type="tel"
-                          maxLength={10}
-                          value={motherPhone}
-                          onChange={e => setMotherPhone(e.target.value.replace(/\D/g, ''))}
-                          placeholder="10-digit mobile"
-                          className="w-full pl-10 pr-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-mono font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all shadow-2xs"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* CARD 3: DEMOGRAPHICS, RELIGION & PREVIOUS SCHOOL */}
-            <div className="bg-white rounded-2xl shadow-xs border border-slate-200/90 overflow-hidden">
-              <div className="px-5 py-3.5 bg-gradient-to-r from-slate-900 via-sky-950 to-sky-900 text-white flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <BookOpen className="w-4 h-4 text-sky-300" />
-                  <h3 className="font-black text-sm tracking-wide uppercase">3. Demographics, Caste & Previous School</h3>
-                </div>
-                <span className="text-xs bg-white/15 font-semibold px-2.5 py-0.5 rounded-full text-sky-100">
-                  Government Compliance & History
-                </span>
-              </div>
-
-              <div className="p-5 sm:p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {/* Nationality */}
-                <div>
-                  <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-1.5">
-                    Nationality
-                  </label>
-                  <input 
-                    type="text"
-                    value={nationality}
-                    onChange={e => setNationality(e.target.value.toUpperCase())}
-                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all shadow-xs uppercase tracking-wide"
-                  />
-                </div>
-
-                {/* Religion */}
-                <div>
-                  <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-1.5">
-                    Religion
-                  </label>
-                  <select
-                    value={religion}
-                    onChange={e => setReligion(e.target.value)}
-                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all shadow-xs"
-                  >
-                    <option value="Hindu">Hindu</option>
-                    <option value="Muslim">Muslim</option>
-                    <option value="Christian">Christian</option>
-                    <option value="Jain">Jain</option>
-                    <option value="Sikh">Sikh</option>
-                    <option value="Other">Other</option>
-                  </select>
-                </div>
-
-                {/* Caste */}
-                {/* Caste Category */}
-                <div>
-                  <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-1.5">
-                    Caste Category <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    value={caste}
-                    onChange={e => handleCasteChange(e.target.value)}
-                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all shadow-xs"
-                  >
-                    {AP_CASTES.categories.map(cat => (
-                      <option key={cat} value={cat}>{cat}</option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Sub-Caste Dropdown */}
-                <div>
-                  <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-1.5">
-                    Sub-Caste (కులం) <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    value={subCaste}
-                    onChange={e => setSubCaste(e.target.value)}
-                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all shadow-xs"
-                  >
-                    {availableSubCastes.map(sub => (
-                      <option key={sub} value={sub}>{sub}</option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Custom Sub-Caste Input if 'Other Sub-Caste' selected */}
-                {subCaste === 'Other Sub-Caste' && (
-                  <div className="sm:col-span-2">
-                    <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-1.5">
-                      Specify Sub-Caste Name <span className="text-red-500">*</span>
-                    </label>
-                    <input 
-                      type="text"
-                      value={customSubCaste}
-                      onChange={e => setCustomSubCaste(e.target.value.toUpperCase())}
-                      placeholder="ENTER SPECIFIC SUB-CASTE NAME"
-                      className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all shadow-xs uppercase tracking-wide"
-                    />
-                  </div>
-                )}
-
-                {/* Name of the School Previously Studying / Studied */}
-                <div className="sm:col-span-2">
-                  <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-1.5">
-                    Name of the School Previously Studied / Studying
-                  </label>
-                  <input 
-                    type="text"
-                    value={previousSchool}
-                    onChange={e => setPreviousSchool(e.target.value.toUpperCase())}
-                    placeholder="ENTER PREVIOUS SCHOOL NAME AND LOCATION (OR NA IF FRESHER)"
-                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all shadow-xs uppercase tracking-wide"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* CARD 4: RESIDENTIAL ADDRESS (Cascading Dropdowns) */}
-            <div className="bg-white rounded-2xl shadow-xs border border-slate-200/90 overflow-hidden">
-              <div className="px-5 py-3.5 bg-gradient-to-r from-slate-900 via-teal-950 to-teal-900 text-white flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Home className="w-4 h-4 text-teal-300" />
-                  <h3 className="font-black text-sm tracking-wide uppercase">4. Residential Address</h3>
-                </div>
-                <span className="text-xs bg-white/15 font-semibold px-2.5 py-0.5 rounded-full text-teal-100">
-                  State ➔ District ➔ Mandal ➔ Sachivalayam / Village
-                </span>
-              </div>
-
-              <div className="p-5 sm:p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                
-                {/* 1. State Dropdown */}
-                <div>
-                  <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-1.5">
-                    State <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    value={selectedState}
-                    onChange={e => handleStateChange(e.target.value)}
-                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all shadow-xs"
-                  >
-                    {AP_LOCATIONS.states.map(st => (
-                      <option key={st} value={st}>{st}</option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* 2. District Dropdown */}
-                <div>
-                  <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-1.5">
-                    District <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    value={selectedDistrict}
-                    onChange={e => handleDistrictChange(e.target.value)}
-                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all shadow-xs"
-                  >
-                    {availableDistricts.map(d => (
-                      <option key={d} value={d}>{d}</option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* 3. Mandal Dropdown */}
-                <div>
-                  <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-1.5">
-                    Mandal <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    value={selectedMandal}
-                    onChange={e => handleMandalChange(e.target.value)}
-                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all shadow-xs"
-                  >
-                    {availableMandals.map(m => (
-                      <option key={m} value={m}>{m}</option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* 4. Village / Sachivalayam Dropdown */}
-                <div>
-                  <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-1.5">
-                    Village / Sachivalayam <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    value={selectedVillage}
-                    onChange={e => setSelectedVillage(e.target.value)}
-                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all shadow-xs"
-                  >
-                    {availableVillages.map(v => (
-                      <option key={v} value={v}>{v}</option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Custom Village text box if 'Other' selected */}
-                {selectedVillage === 'Other Village/Sachivalayam' && (
-                  <div className="sm:col-span-2">
-                    <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-1.5">
-                      Specify Village / Colony Name <span className="text-red-500">*</span>
-                    </label>
-                    <input 
-                      type="text"
-                      required
-                      value={customVillage}
-                      onChange={e => setCustomVillage(e.target.value.toUpperCase())}
-                      placeholder="TYPE VILLAGE OR WARD NAME"
-                      className="w-full px-4 py-2.5 bg-teal-50/50 border border-teal-200 rounded-xl text-sm font-bold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all shadow-xs uppercase tracking-wide"
-                    />
-                  </div>
-                )}
-
-                {/* 5. Door No / Street / Landmark */}
-                <div className={selectedVillage === 'Other Village/Sachivalayam' ? "sm:col-span-2" : "sm:col-span-2 lg:col-span-4"}>
-                  <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-1.5">
-                    Door No, Street Name & Landmark
-                  </label>
-                  <input 
-                    type="text"
-                    value={doorNo}
-                    onChange={e => setDoorNo(e.target.value.toUpperCase())}
-                    placeholder="E.G. D.NO 4-12, MAIN STREET, NEAR SAI BABA TEMPLE"
-                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all shadow-xs uppercase tracking-wide"
-                  />
-                </div>
-
-              </div>
-            </div>
-
-            {/* CARD 5: SIBLING DETAILS */}
-            <div className="bg-white rounded-2xl shadow-xs border border-slate-200/90 overflow-hidden">
-              <div className="px-5 py-3.5 bg-gradient-to-r from-slate-900 via-amber-950 to-amber-900 text-white flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Users className="w-4 h-4 text-amber-300" />
-                  <h3 className="font-black text-sm tracking-wide uppercase">5. Sibling Details</h3>
-                </div>
-                <span className="text-xs bg-white/15 font-semibold px-2.5 py-0.5 rounded-full text-amber-100">
-                  Brothers & Sisters
-                </span>
-              </div>
-
-              <div className="p-5 sm:p-6 space-y-4">
-                {/* Siblings Toggle Question */}
-                <div 
-                  onClick={() => setHasSiblings(!hasSiblings)}
-                  className="flex items-center gap-3 p-3.5 bg-amber-50/60 border border-amber-200 rounded-2xl cursor-pointer hover:bg-amber-50 transition-colors"
-                >
-                  <div className="text-amber-700">
-                    {hasSiblings ? <CheckSquare className="w-5 h-5 text-amber-600" /> : <Square className="w-5 h-5 text-slate-400" />}
+            {/* SECTION 2: PARENT DETAILS */}
+            <div className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden relative">
+              <div className="absolute top-0 left-0 w-1.5 h-full bg-emerald-500"></div>
+              <div className="p-6 md:p-8">
+                <div className="flex items-center gap-3 mb-8">
+                  <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                    <Users className="w-5 h-5" />
                   </div>
                   <div>
-                    <p className="text-sm font-black text-amber-950">Does the applicant have siblings? (తోబుట్టువులు ఉన్నారా?)</p>
-                    <p className="text-xs text-amber-800">Tick if student has brother(s) or sister(s). If no siblings, leave unticked (marked as NA).</p>
+                    <h3 className="font-black text-lg text-slate-800">2. Parent & Guardian Details</h3>
+                    <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Father, Mother & Contact Info</p>
                   </div>
                 </div>
 
-                {/* Sibling Dynamic Table */}
-                {hasSiblings && (
-                  <div className="border border-slate-200 rounded-2xl overflow-hidden shadow-2xs">
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-left text-xs">
-                        <thead className="bg-slate-100 border-b border-slate-200 text-slate-700 font-black uppercase tracking-wider">
-                          <tr>
-                            <th className="p-3 w-12 text-center">S.No</th>
-                            <th className="p-3">Sibling Name</th>
-                            <th className="p-3 w-40">Class</th>
-                            <th className="p-3">Where He / She Studying (School Name)</th>
-                            <th className="p-3 w-16 text-center">Action</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-100">
-                          {siblings.map((sib, idx) => (
-                            <tr key={idx} className="hover:bg-slate-50/60">
-                              <td className="p-3 text-center font-bold text-slate-500">{idx + 1}</td>
-                              <td className="p-2.5">
-                                <input 
-                                  type="text"
-                                  value={sib.name}
-                                  onChange={e => handleSiblingChange(idx, 'name', e.target.value)}
-                                  placeholder="ENTER SIBLING FULL NAME"
-                                  className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold focus:outline-none focus:ring-1 focus:ring-amber-500 focus:border-amber-500 uppercase tracking-wide"
-                                />
-                              </td>
-                              <td className="p-2.5">
-                                <select
-                                  value={sib.className}
-                                  onChange={e => handleSiblingChange(idx, 'className', e.target.value)}
-                                  className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-amber-500 focus:border-amber-500"
-                                >
-                                  {classesList.map(c => (
-                                    <option key={c} value={c}>{c}</option>
-                                  ))}
-                                  <option value="College">College / Higher Studies</option>
-                                  <option value="Other">Other</option>
-                                </select>
-                              </td>
-                              <td className="p-2.5">
-                                <input 
-                                  type="text"
-                                  value={sib.schoolName}
-                                  onChange={e => handleSiblingChange(idx, 'schoolName', e.target.value)}
-                                  placeholder="E.G. JY SCHOOL / GOVT HIGH SCHOOL"
-                                  className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold focus:outline-none focus:ring-1 focus:ring-amber-500 focus:border-amber-500 uppercase tracking-wide"
-                                />
-                              </td>
-                              <td className="p-2.5 text-center">
-                                {siblings.length > 1 && (
-                                  <button
-                                    type="button"
-                                    onClick={() => handleRemoveSibling(idx)}
-                                    className="p-1.5 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-md transition-colors cursor-pointer"
-                                    title="Remove sibling row"
-                                  >
-                                    <Trash2 className="w-4 h-4" />
-                                  </button>
-                                )}
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                <div className="space-y-6 pl-2 md:pl-4">
+                  {/* Father Details */}
+                  <div className="bg-slate-50/50 border border-slate-100 rounded-2xl p-5 md:p-6">
+                    <div className="flex items-center gap-2 mb-4">
+                      <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
+                      <h4 className="font-black text-sm text-slate-700 uppercase tracking-wide">Father's Information</h4>
                     </div>
-
-                    <div className="p-3 bg-slate-50 border-t border-slate-200 flex justify-end">
-                      <button
-                        type="button"
-                        onClick={handleAddSibling}
-                        className="px-3.5 py-1.5 bg-white border border-amber-300 hover:border-amber-400 text-amber-900 rounded-xl font-bold text-xs flex items-center gap-1.5 shadow-2xs hover:bg-amber-50 transition-all cursor-pointer"
-                      >
-                        <Plus className="w-3.5 h-3.5 text-amber-600" /> Add Another Sibling
-                      </button>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                      <div>
+                        <label className="block text-xs font-black text-slate-500 uppercase tracking-wider mb-2">Name</label>
+                        <input type="text" value={fatherName} onChange={e => setFatherName(e.target.value.toUpperCase())} placeholder="Father Name" className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all uppercase" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-black text-slate-500 uppercase tracking-wider mb-2">Occupation</label>
+                        <input type="text" value={fatherOccupation} onChange={e => setFatherOccupation(e.target.value.toUpperCase())} placeholder="e.g. Business" className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all uppercase" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-black text-slate-500 uppercase tracking-wider mb-2">Aadhaar No</label>
+                        <input type="text" maxLength={12} value={fatherAadhar} onChange={e => setFatherAadhar(e.target.value.replace(/\D/g, ''))} placeholder="12-digits" className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-mono font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-black text-slate-500 uppercase tracking-wider mb-2">Mobile No</label>
+                        <div className="relative">
+                          <span className="absolute left-3.5 top-3 text-xs font-bold text-slate-400">+91</span>
+                          <input type="tel" maxLength={10} value={fatherPhone} onChange={e => setFatherPhone(e.target.value.replace(/\D/g, ''))} placeholder="10-digits" className="w-full pl-11 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-mono font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all" />
+                        </div>
+                      </div>
                     </div>
                   </div>
-                )}
+
+                  {/* Mother Details */}
+                  <div className="bg-slate-50/50 border border-slate-100 rounded-2xl p-5 md:p-6">
+                    <div className="flex items-center gap-2 mb-4">
+                      <div className="w-2 h-2 rounded-full bg-rose-500"></div>
+                      <h4 className="font-black text-sm text-slate-700 uppercase tracking-wide">Mother's Information</h4>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                      <div>
+                        <label className="block text-xs font-black text-slate-500 uppercase tracking-wider mb-2">Name</label>
+                        <input type="text" value={motherName} onChange={e => setMotherName(e.target.value.toUpperCase())} placeholder="Mother Name" className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all uppercase" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-black text-slate-500 uppercase tracking-wider mb-2">Occupation</label>
+                        <input type="text" value={motherOccupation} onChange={e => setMotherOccupation(e.target.value.toUpperCase())} placeholder="e.g. Homemaker" className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all uppercase" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-black text-slate-500 uppercase tracking-wider mb-2">Aadhaar No</label>
+                        <input type="text" maxLength={12} value={motherAadhar} onChange={e => setMotherAadhar(e.target.value.replace(/\D/g, ''))} placeholder="12-digits" className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-mono font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-black text-slate-500 uppercase tracking-wider mb-2">Mobile No</label>
+                        <div className="relative">
+                          <span className="absolute left-3.5 top-3 text-xs font-bold text-slate-400">+91</span>
+                          <input type="tel" maxLength={10} value={motherPhone} onChange={e => setMotherPhone(e.target.value.replace(/\D/g, ''))} placeholder="10-digits" className="w-full pl-11 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-mono font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
 
-            {/* CARD 6: APPLICATION FEE & PAYMENT WITH QR CODE */}
-            <div className="bg-white rounded-2xl shadow-xs border border-slate-200/90 overflow-hidden">
-              <div className="px-5 py-3.5 bg-gradient-to-r from-slate-900 via-purple-950 to-purple-900 text-white flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <CreditCard className="w-4 h-4 text-purple-300" />
-                  <h3 className="font-black text-sm tracking-wide uppercase">6. Application Fee & Payment Mode</h3>
+            {/* SECTION 3: DEMOGRAPHICS */}
+            <div className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden relative">
+              <div className="absolute top-0 left-0 w-1.5 h-full bg-sky-500"></div>
+              <div className="p-6 md:p-8">
+                <div className="flex items-center gap-3 mb-8">
+                  <div className="w-10 h-10 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center">
+                    <BookOpen className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-black text-lg text-slate-800">3. Demographics & Previous School</h3>
+                    <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Government Compliance</p>
+                  </div>
                 </div>
-                <span className="text-xs bg-white/15 font-semibold px-2.5 py-0.5 rounded-full text-purple-100">
-                  {paymentMethod === 'UPI' ? 'UPI Scan & Receipt Upload' : paymentMethod === 'CASH' ? 'Cash Collection Verification' : 'Pay Later at Office'}
-                </span>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pl-2 md:pl-4">
+                  <div>
+                    <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2">Nationality</label>
+                    <input type="text" value={nationality} onChange={e => setNationality(e.target.value.toUpperCase())} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all uppercase" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2">Religion</label>
+                    <select value={religion} onChange={e => setReligion(e.target.value)} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all">
+                      <option value="Hindu">Hindu</option>
+                      <option value="Muslim">Muslim</option>
+                      <option value="Christian">Christian</option>
+                      <option value="Jain">Jain</option>
+                      <option value="Sikh">Sikh</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2">Caste Category <span className="text-rose-500">*</span></label>
+                    <select value={caste} onChange={e => handleCasteChange(e.target.value)} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all">
+                      {AP_CASTES.categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2">Sub-Caste (కులం) <span className="text-rose-500">*</span></label>
+                    <select value={subCaste} onChange={e => setSubCaste(e.target.value)} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all">
+                      {availableSubCastes.map(sub => <option key={sub} value={sub}>{sub}</option>)}
+                    </select>
+                  </div>
+
+                  {subCaste === 'Other Sub-Caste' && (
+                    <div className="md:col-span-2">
+                      <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2">Specify Sub-Caste <span className="text-rose-500">*</span></label>
+                      <input type="text" value={customSubCaste} onChange={e => setCustomSubCaste(e.target.value.toUpperCase())} placeholder="e.g. Kapu" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all uppercase" />
+                    </div>
+                  )}
+
+                  <div className="md:col-span-2 lg:col-span-3">
+                    <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2">Previous School</label>
+                    <input type="text" value={previousSchool} onChange={e => setPreviousSchool(e.target.value.toUpperCase())} placeholder="Name and location of previous school (if any)" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all uppercase" />
+                  </div>
+                </div>
               </div>
+            </div>
 
-              <div className="p-5 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-                
-                {/* Fee Controls */}
-                <div className={paymentMethod === 'UPI' ? "lg:col-span-7 space-y-4" : "lg:col-span-12 space-y-4"}>
-                  <div className={`grid grid-cols-1 gap-4 ${paymentMethod === 'CASH' ? 'sm:grid-cols-3' : 'sm:grid-cols-2'}`}>
-                    {/* Fee Amount */}
-                    <div>
-                      <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-1.5">
-                        Application Fee Amount (₹)
-                      </label>
-                      <input 
-                        type="number"
-                        value={admissionFee}
-                        onChange={e => setAdmissionFee(e.target.value)}
-                        placeholder="Enter fee amount (₹)"
-                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all shadow-xs"
-                      />
+            {/* SECTION 4: ADDRESS */}
+            <div className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden relative">
+              <div className="absolute top-0 left-0 w-1.5 h-full bg-teal-500"></div>
+              <div className="p-6 md:p-8">
+                <div className="flex items-center gap-3 mb-8">
+                  <div className="w-10 h-10 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center">
+                    <Home className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-black text-lg text-slate-800">4. Residential Address</h3>
+                    <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Contact & Location Info</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 pl-2 md:pl-4">
+                  <div>
+                    <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2">State <span className="text-rose-500">*</span></label>
+                    <select value={selectedState} onChange={e => handleStateChange(e.target.value)} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all">
+                      {AP_LOCATIONS.states.map(st => <option key={st} value={st}>{st}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2">District <span className="text-rose-500">*</span></label>
+                    <select value={selectedDistrict} onChange={e => handleDistrictChange(e.target.value)} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all">
+                      {availableDistricts.map(d => <option key={d} value={d}>{d}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2">Mandal <span className="text-rose-500">*</span></label>
+                    <select value={selectedMandal} onChange={e => handleMandalChange(e.target.value)} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all">
+                      {availableMandals.map(m => <option key={m} value={m}>{m}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2">Village / Sachivalayam <span className="text-rose-500">*</span></label>
+                    <select value={selectedVillage} onChange={e => setSelectedVillage(e.target.value)} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all">
+                      {availableVillages.map(v => <option key={v} value={v}>{v}</option>)}
+                    </select>
+                  </div>
+
+                  {selectedVillage === 'Other Village/Sachivalayam' && (
+                    <div className="md:col-span-2">
+                      <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2">Specify Village <span className="text-rose-500">*</span></label>
+                      <input type="text" required value={customVillage} onChange={e => setCustomVillage(e.target.value.toUpperCase())} placeholder="Village Name" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all uppercase" />
                     </div>
+                  )}
 
-                    {/* Payment Method */}
-                    <div>
-                      <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-1.5">
-                        Payment Method <span className="text-red-500">*</span>
-                      </label>
-                      <select
-                        value={paymentMethod}
-                        onChange={e => {
-                          const m = e.target.value;
-                          setPaymentMethod(m);
-                          if (m !== 'UPI') setPaymentReceipt('');
-                        }}
-                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all shadow-xs"
-                      >
-                        <option value="CASH">Cash Payment</option>
-                        <option value="UPI">UPI / Online QR Payment</option>
-                        <option value="LATER">Pay Later at School Office</option>
-                      </select>
+                  <div className={selectedVillage === 'Other Village/Sachivalayam' ? "md:col-span-2" : "md:col-span-2 lg:col-span-4"}>
+                    <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2">Door No / Street / Landmark</label>
+                    <input type="text" value={doorNo} onChange={e => setDoorNo(e.target.value.toUpperCase())} placeholder="e.g. 4-12, Main Road" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all uppercase" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* SECTION 5: SIBLINGS */}
+            <div className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden relative">
+              <div className="absolute top-0 left-0 w-1.5 h-full bg-amber-500"></div>
+              <div className="p-6 md:p-8">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
+                    <Users className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-black text-lg text-slate-800">5. Sibling Details</h3>
+                    <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Brothers & Sisters</p>
+                  </div>
+                </div>
+
+                <div className="pl-2 md:pl-4 space-y-6">
+                  <div 
+                    onClick={() => setHasSiblings(!hasSiblings)}
+                    className={`flex items-center gap-4 p-5 rounded-2xl border-2 transition-all cursor-pointer ${
+                      hasSiblings ? 'bg-amber-50/50 border-amber-400' : 'bg-slate-50 border-slate-200 hover:border-amber-300'
+                    }`}
+                  >
+                    <div className={hasSiblings ? 'text-amber-500' : 'text-slate-400'}>
+                      {hasSiblings ? <CheckSquare className="w-6 h-6" /> : <Square className="w-6 h-6" />}
                     </div>
+                    <div>
+                      <p className="font-black text-slate-800">Does the applicant have siblings? (తోబుట్టువులు ఉన్నారా?)</p>
+                      <p className="text-xs font-semibold text-slate-500 mt-1">Check this if the student has a brother or sister studying elsewhere or here.</p>
+                    </div>
+                  </div>
 
-                    {/* Cash Received By Teacher (ONLY IF CASH) */}
-                    {paymentMethod === 'CASH' && (
+                  {hasSiblings && (
+                    <div className="border border-slate-200 rounded-2xl overflow-hidden bg-white">
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-left">
+                          <thead className="bg-slate-50 border-b border-slate-200">
+                            <tr>
+                              <th className="p-4 text-xs font-black text-slate-500 uppercase tracking-wider w-12 text-center">#</th>
+                              <th className="p-4 text-xs font-black text-slate-500 uppercase tracking-wider">Name</th>
+                              <th className="p-4 text-xs font-black text-slate-500 uppercase tracking-wider w-40">Class</th>
+                              <th className="p-4 text-xs font-black text-slate-500 uppercase tracking-wider">School</th>
+                              <th className="p-4 text-xs font-black text-slate-500 uppercase tracking-wider w-16 text-center">Action</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-100">
+                            {siblings.map((sib, idx) => (
+                              <tr key={idx} className="hover:bg-slate-50/50 transition-colors">
+                                <td className="p-4 text-center font-bold text-slate-400">{idx + 1}</td>
+                                <td className="p-3">
+                                  <input type="text" value={sib.name} onChange={e => handleSiblingChange(idx, 'name', e.target.value)} placeholder="Name" className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-bold focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all uppercase" />
+                                </td>
+                                <td className="p-3">
+                                  <select value={sib.className} onChange={e => handleSiblingChange(idx, 'className', e.target.value)} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-bold focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all">
+                                    {classesList.map(c => <option key={c} value={c}>{c}</option>)}
+                                    <option value="College">College</option>
+                                    <option value="Other">Other</option>
+                                  </select>
+                                </td>
+                                <td className="p-3">
+                                  <input type="text" value={sib.schoolName} onChange={e => handleSiblingChange(idx, 'schoolName', e.target.value)} placeholder="School Name" className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-bold focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all uppercase" />
+                                </td>
+                                <td className="p-3 text-center">
+                                  {siblings.length > 1 && (
+                                    <button type="button" onClick={() => handleRemoveSibling(idx)} className="p-2 text-rose-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors">
+                                      <Trash2 className="w-5 h-5" />
+                                    </button>
+                                  )}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                      <div className="p-4 bg-slate-50 border-t border-slate-200 flex justify-end">
+                        <button type="button" onClick={handleAddSibling} className="px-5 py-2.5 bg-white border border-amber-300 hover:border-amber-500 text-amber-700 rounded-xl font-bold text-sm flex items-center gap-2 shadow-sm transition-all hover:shadow-md">
+                          <Plus className="w-4 h-4" /> Add Another Sibling
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* SECTION 6: PAYMENT */}
+            <div className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden relative">
+              <div className="absolute top-0 left-0 w-1.5 h-full bg-purple-500"></div>
+              <div className="p-6 md:p-8">
+                <div className="flex items-center justify-between mb-8">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center">
+                      <CreditCard className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h3 className="font-black text-lg text-slate-800">6. Fee & Payment Mode</h3>
+                      <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Application Fee Collection</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="pl-2 md:pl-4 grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                  <div className={paymentMethod === 'UPI' ? "lg:col-span-7 space-y-6" : "lg:col-span-12 space-y-6"}>
+                    <div className={`grid grid-cols-1 gap-6 ${paymentMethod === 'CASH' ? 'md:grid-cols-3' : 'md:grid-cols-2'}`}>
                       <div>
-                        <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-1.5 flex items-center justify-between">
-                          <span>Cash Received By Teacher *</span>
-                          <span className="text-[10px] text-amber-600 font-bold">Required</span>
-                        </label>
-                        <select
-                          value={cashReceivedTeacherName}
-                          onChange={e => {
-                            const selectedName = e.target.value;
-                            setCashReceivedTeacherName(selectedName);
-                            const found = teachers.find(t => (t.user?.name || t.name) === selectedName);
-                            setCashReceivedTeacherId(found?.id || '');
-                          }}
-                          className="w-full px-4 py-2.5 bg-amber-50/60 border border-amber-200 rounded-xl text-sm font-bold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all shadow-xs"
-                        >
-                          <option value="">-- Select Teacher who received cash --</option>
-                          {currentUser.name && (
-                            <option value={currentUser.name}>{currentUser.name} (Logged-in User)</option>
-                          )}
-                          {teachers
-                            .filter(t => (t.user?.name || t.name) !== currentUser.name)
-                            .map(t => {
-                              const tName = t.user?.name || t.name || 'Teacher';
-                              const sub = t.subject ? ` (${t.subject})` : '';
-                              return (
-                                <option key={t.id} value={tName}>
-                                  {tName}{sub}
-                                </option>
-                              );
-                            })}
+                        <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2">Application Fee (₹)</label>
+                        <input type="number" value={admissionFee} onChange={e => setAdmissionFee(e.target.value)} placeholder="0" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-lg font-black text-purple-700 focus:bg-white focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2">Payment Method <span className="text-rose-500">*</span></label>
+                        <select value={paymentMethod} onChange={e => { setPaymentMethod(e.target.value); if (e.target.value !== 'UPI') setPaymentReceipt(''); }} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all">
+                          <option value="CASH">Cash Payment</option>
+                          <option value="UPI">UPI / Scan QR</option>
+                          <option value="LATER">Pay Later</option>
                         </select>
+                      </div>
+                      {paymentMethod === 'CASH' && (
+                        <div>
+                          <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2">Cash Receiver <span className="text-rose-500">*</span></label>
+                          <select value={cashReceivedTeacherName} onChange={e => { const selectedName = e.target.value; setCashReceivedTeacherName(selectedName); const found = teachers.find(t => (t.user?.name || t.name) === selectedName); setCashReceivedTeacherId(found?.id || ''); }} className="w-full px-4 py-3 bg-amber-50/50 border border-amber-200 rounded-xl text-sm font-bold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all">
+                            <option value="">-- Select Teacher --</option>
+                            {currentUser.name && <option value={currentUser.name}>{currentUser.name} (Logged-in)</option>}
+                            {teachers.filter(t => (t.user?.name || t.name) !== currentUser.name).map(t => {
+                              const tName = t.user?.name || t.name || 'Teacher';
+                              return <option key={t.id} value={tName}>{tName}</option>;
+                            })}
+                          </select>
+                        </div>
+                      )}
+                    </div>
+
+                    {paymentMethod === 'UPI' && (
+                      <div className="bg-purple-50/50 border border-purple-100 rounded-2xl p-5">
+                        <label className="block text-xs font-black text-purple-900 uppercase tracking-wider mb-3">Upload Payment Screenshot <span className="text-rose-500">*</span></label>
+                        {paymentReceipt ? (
+                          <div className="flex items-center justify-between bg-white border border-emerald-200 rounded-xl p-4 shadow-sm">
+                            <div className="flex items-center gap-4">
+                              <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center font-bold">
+                                <CheckCircle2 className="w-6 h-6" />
+                              </div>
+                              <div>
+                                <p className="text-sm font-black text-slate-800">Receipt Attached</p>
+                                <a href={resolveFileUrl(paymentReceipt)} target="_blank" rel="noreferrer" className="text-xs text-indigo-600 font-bold hover:underline">View Uploaded Image</a>
+                              </div>
+                            </div>
+                            <button type="button" onClick={() => setPaymentReceipt('')} className="text-xs text-rose-500 hover:text-rose-700 font-bold px-4 py-2 rounded-lg hover:bg-rose-50 transition-colors">Remove</button>
+                          </div>
+                        ) : (
+                          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white border-2 border-dashed border-purple-200 rounded-xl p-4 cursor-pointer hover:border-purple-400 transition-colors" onClick={() => receiptInputRef.current?.click()}>
+                            <div className="flex items-center gap-4">
+                              <div className="w-12 h-12 bg-purple-50 text-purple-600 rounded-xl flex items-center justify-center">
+                                {isUploadingReceipt ? <RefreshCw className="w-6 h-6 animate-spin" /> : <Upload className="w-6 h-6" />}
+                              </div>
+                              <div className="text-left">
+                                <p className="text-sm font-black text-slate-800">Upload Transaction Screenshot</p>
+                                <p className="text-xs font-semibold text-slate-500">JPG, PNG, PDF up to 10MB</p>
+                              </div>
+                            </div>
+                            <input type="file" ref={receiptInputRef} onChange={handleReceiptSelect} accept="image/*,application/pdf" className="hidden" />
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
 
-                  {/* UPI Payment Receipt Upload Box (ONLY IF UPI) */}
                   {paymentMethod === 'UPI' && (
-                    <div className="bg-indigo-50/50 border-2 border-dashed border-indigo-200 rounded-2xl p-4 transition-all">
-                      <div className="flex items-center justify-between mb-2">
-                        <label className="text-xs font-black text-indigo-950 uppercase tracking-wider flex items-center gap-1.5">
-                          <Upload className="w-3.5 h-3.5 text-indigo-600" />
-                          <span>Upload Payment Receipt / Transaction Screenshot *</span>
-                          <span className="text-[10px] bg-indigo-200 text-indigo-800 font-bold px-1.5 py-0.5 rounded">Mandatory</span>
-                        </label>
-                        <span className="text-[11px] text-slate-500 font-semibold">JPG, PNG, PDF up to 10MB</span>
+                    <div className="lg:col-span-5 bg-slate-900 rounded-3xl p-6 flex flex-col items-center text-center shadow-xl shadow-slate-900/20 text-white relative overflow-hidden">
+                      <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500 rounded-full blur-3xl opacity-20 translate-x-1/2 -translate-y-1/2"></div>
+                      <div className="flex items-center gap-2 text-sm font-black text-white/90 mb-4 z-10">
+                        <QrCode className="w-5 h-5 text-purple-400" /> School UPI QR Code
                       </div>
-
-                      {paymentReceipt ? (
-                        <div className="flex items-center justify-between bg-white border border-emerald-200 rounded-xl p-3 shadow-xs">
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-emerald-100 text-emerald-700 rounded-lg flex items-center justify-center font-bold">
-                              <Check className="w-5 h-5" />
-                            </div>
-                            <div>
-                              <p className="text-xs font-bold text-emerald-900 flex items-center gap-1">
-                                <span>Receipt Attached</span>
-                                <span className="text-[10px] bg-emerald-100 text-emerald-800 px-1.5 py-0.2 rounded-full font-bold">Verified</span>
-                              </p>
-                              <a 
-                                href={resolveFileUrl(paymentReceipt)} 
-                                target="_blank" 
-                                rel="noreferrer"
-                                className="text-[11px] text-indigo-600 hover:underline flex items-center gap-1 mt-0.5 font-medium"
-                              >
-                                <Eye className="w-3 h-3" /> View uploaded receipt
-                              </a>
-                            </div>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => setPaymentReceipt('')}
-                            className="text-xs text-rose-600 hover:text-rose-800 font-bold flex items-center gap-1 px-2.5 py-1.5 rounded-lg hover:bg-rose-50 transition-colors cursor-pointer"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" /> Remove
+                      <div className="p-3 bg-white rounded-2xl shadow-inner z-10">
+                        {directQrUrl && !qrImgError ? (
+                          <img src={directQrUrl} alt="School UPI QR" onError={() => setQrImgError(true)} className="w-40 h-40 object-contain rounded-xl" />
+                        ) : dynamicQrCodeUrl ? (
+                          <img src={dynamicQrCodeUrl} alt="School UPI QR" className="w-40 h-40 object-contain rounded-xl" />
+                        ) : (
+                          <div className="w-40 h-40 flex items-center justify-center text-slate-400 text-xs bg-slate-50 rounded-xl border border-slate-100">QR Unavailable</div>
+                        )}
+                      </div>
+                      {activeUpiId && (
+                        <div className="mt-5 flex items-center gap-3 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-xl border border-white/20 z-10">
+                          <span className="text-sm font-mono font-bold text-white">{activeUpiId}</span>
+                          <button type="button" onClick={() => handleCopyUpi(activeUpiId)} className="text-purple-300 hover:text-white p-1 rounded transition-colors">
+                            {copiedUpi ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                           </button>
-                        </div>
-                      ) : (
-                        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white border border-indigo-100 rounded-xl p-3 shadow-xs">
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-lg flex items-center justify-center">
-                              <FileText className="w-5 h-5" />
-                            </div>
-                            <div className="text-left">
-                              <p className="text-xs font-bold text-slate-800">Scan QR & attach payment confirmation screenshot</p>
-                              <p className="text-[11px] text-slate-500">Take a screenshot of successful transaction from PhonePe/GPay</p>
-                            </div>
-                          </div>
-                          <div>
-                            <input 
-                              type="file" 
-                              ref={receiptInputRef} 
-                              onChange={handleReceiptSelect} 
-                              accept="image/*,application/pdf" 
-                              className="hidden" 
-                            />
-                            <button
-                              type="button"
-                              disabled={isUploadingReceipt}
-                              onClick={() => receiptInputRef.current?.click()}
-                              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-xs flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-50"
-                            >
-                              {isUploadingReceipt ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
-                              <span>{isUploadingReceipt ? 'Uploading...' : 'Choose Receipt File'}</span>
-                            </button>
-                          </div>
                         </div>
                       )}
                     </div>
                   )}
-
-                  {/* Policy and Info */}
-                  <div className={`border rounded-xl p-3 text-xs ${
-                    paymentMethod === 'UPI' ? 'bg-indigo-50/70 border-indigo-100 text-indigo-900' :
-                    paymentMethod === 'CASH' ? 'bg-amber-50/70 border-amber-200 text-amber-950' :
-                    'bg-slate-100 border-slate-200 text-slate-800'
-                  }`}>
-                    <p className="font-bold">Application Fee Collection Policy:</p>
-                    <p className="text-[11px] mt-0.5 opacity-90">
-                      {paymentMethod === 'UPI' && 'Application fee paid via UPI QR Code with attached receipt will be recorded directly into student admission inquiry records and reflected on the official admission receipt.'}
-                      {paymentMethod === 'CASH' && `Cash application fee received by ${cashReceivedTeacherName || 'the assigned teacher'} will be credited into the collection records and reflected on the official admission receipt.`}
-                      {paymentMethod === 'LATER' && 'Application fee will be recorded as PENDING and collected at the school accounts desk during physical verification.'}
-                    </p>
-                  </div>
                 </div>
-
-                {/* School UPI QR Code Card (ONLY IF UPI) */}
-                {paymentMethod === 'UPI' && (
-                  <div className="lg:col-span-5 bg-gradient-to-br from-slate-50 to-indigo-50/50 border border-indigo-100 rounded-2xl p-4 flex flex-col items-center text-center shadow-xs animate-in fade-in duration-200">
-                    <div className="flex items-center gap-1.5 text-xs font-black text-indigo-900 mb-2">
-                      <QrCode className="w-4 h-4 text-indigo-600" />
-                      <span>School UPI Payment QR Code</span>
-                    </div>
-
-                    {/* QR Code Display with Error fallback */}
-                    <div className="p-3 bg-white rounded-xl border border-indigo-200 shadow-sm">
-                      {directQrUrl && !qrImgError ? (
-                        <img 
-                          src={directQrUrl} 
-                          alt="School UPI QR" 
-                          onError={() => setQrImgError(true)} 
-                          className="w-36 h-36 object-contain" 
-                        />
-                      ) : dynamicQrCodeUrl ? (
-                        <img 
-                          src={dynamicQrCodeUrl} 
-                          alt="School UPI QR" 
-                          className="w-36 h-36 object-contain" 
-                        />
-                      ) : (
-                        <div className="w-36 h-36 flex items-center justify-center text-slate-400 text-xs">
-                          QR Code Available
-                        </div>
-                      )}
-                    </div>
-
-                    {/* UPI ID Pill */}
-                    {activeUpiId && (
-                      <div className="mt-3 flex items-center gap-2 bg-white px-3 py-1.5 rounded-lg border border-indigo-200 shadow-2xs">
-                        <span className="text-xs font-mono font-bold text-slate-800">{activeUpiId}</span>
-                        <button
-                          type="button"
-                          onClick={() => handleCopyUpi(activeUpiId)}
-                          title="Copy UPI ID"
-                          className="text-indigo-600 hover:text-indigo-800 p-1 rounded hover:bg-indigo-50 cursor-pointer transition-colors"
-                        >
-                          {copiedUpi ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
-                        </button>
-                      </div>
-                    )}
-
-                    <p className="text-[11px] text-slate-500 mt-2 font-medium">
-                      Scan and pay with any UPI App (Google Pay, PhonePe, Paytm, BHIM)
-                    </p>
-                  </div>
-                )}
-
               </div>
             </div>
 
-            {/* CARD 7: FOLLOWING TERMS AND CONDITIONS SHOULD STRICTLY BE FOLLOWED */}
-            <div className="bg-white rounded-2xl shadow-xs border border-rose-200 overflow-hidden">
-              <div className="px-5 py-3.5 bg-gradient-to-r from-rose-950 via-slate-900 to-rose-900 text-white flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <ShieldCheck className="w-4 h-4 text-rose-300" />
-                  <h3 className="font-black text-sm tracking-wide uppercase">7. Terms and Conditions (Strictly Followed)</h3>
-                </div>
-                <span className="text-xs bg-rose-500/30 text-rose-200 font-bold px-2.5 py-0.5 rounded-full border border-rose-400/30">
-                  Mandatory Declaration
-                </span>
-              </div>
-
-              <div className="p-5 sm:p-6 space-y-4">
-                <div className="bg-rose-50/40 border border-rose-100 rounded-2xl p-4 sm:p-5 text-slate-700 text-xs leading-relaxed space-y-2.5 font-medium">
-                  <p className="font-black text-rose-900 text-xs uppercase tracking-wider mb-2">
-                    Following terms and conditions should strictly be followed:
-                  </p>
-                  <ol className="list-decimal pl-5 space-y-2 text-slate-800">
-                    <li>Student should obey the rules and regulations set by the management.</li>
-                    <li>Student would not be allowed to move around the premises of the school without uniform.</li>
-                    <li>During school time no visitor is allowed.</li>
-                    <li>During school time parents should not approach teachers without the permission of the management.</li>
-                    <li>The management has the right to reject or accept the application. The name of the student will be struck out if the students fail to follow the rules and regulations of the school.</li>
-                    <li>In case of any damage done to any of property of the school, the parent would pay the loss equal to the value of damage property.</li>
-                    <li>In case of the decision of the management would be final and the concerned parties would accept the management’s decisions final.</li>
-                    <li>If the student will remain absent from school for 10 days without information his/her name will be struck out from the school. Parent has to take prior permission for the students absence.</li>
-                    <li>The students has pay all dues again to be readmitted.</li>
-                    <li>The fee would be collected in 3 terms and mentioned by management. Otherwise fee concession will not be allowed.</li>
-                    <li>The fee once paid will not be refunded.</li>
-                  </ol>
-                </div>
-
-                {/* Mandatory Agreement Checkbox */}
-                <div 
-                  onClick={() => setTermsAccepted(!termsAccepted)}
-                  className={`flex items-start gap-3 p-4 rounded-2xl border-2 transition-all cursor-pointer ${
-                    termsAccepted ? 'bg-emerald-50/70 border-emerald-500' : 'bg-slate-50 border-slate-300 hover:border-slate-400'
-                  }`}
-                >
-                  <div className="mt-0.5 shrink-0 text-emerald-600">
-                    {termsAccepted ? (
-                      <CheckSquare className="w-5 h-5 text-emerald-600" />
-                    ) : (
-                      <Square className="w-5 h-5 text-slate-400" />
-                    )}
+            {/* SECTION 7: TERMS */}
+            <div className="bg-slate-900 rounded-3xl shadow-xl shadow-slate-900/10 overflow-hidden text-white relative">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-rose-500 rounded-full blur-3xl opacity-10 translate-x-1/2 -translate-y-1/2 pointer-events-none"></div>
+              <div className="p-6 md:p-8 relative z-10">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-10 h-10 rounded-xl bg-rose-500/20 text-rose-400 flex items-center justify-center">
+                    <ShieldCheck className="w-5 h-5" />
                   </div>
                   <div>
-                    <label className="text-xs sm:text-sm font-black text-slate-900 cursor-pointer">
-                      I / We have read, understood, and solemnly agree to abide by all the above 11 Terms and Conditions & School Code of Conduct. <span className="text-red-500">*</span>
-                    </label>
-                    <p className="text-[11px] text-slate-500 mt-0.5">
-                      By checking this box, the parent/guardian acknowledges full legal responsibility for student compliance and school fees.
-                    </p>
+                    <h3 className="font-black text-lg text-white">7. Terms and Conditions</h3>
+                    <p className="text-xs font-semibold text-rose-300/80 uppercase tracking-wider">Mandatory Agreement</p>
+                  </div>
+                </div>
+
+                <div className="pl-2 md:pl-4 space-y-6">
+                  <div className="bg-black/20 border border-white/10 rounded-2xl p-5 md:p-6 text-slate-300 text-sm font-medium leading-relaxed">
+                    <ol className="list-decimal pl-5 space-y-2.5">
+                      <li>Student should obey the rules and regulations set by the management.</li>
+                      <li>Student would not be allowed to move around the premises of the school without uniform.</li>
+                      <li>During school time no visitor is allowed.</li>
+                      <li>The management has the right to reject or accept the application. The name of the student will be struck out if the students fail to follow the rules and regulations of the school.</li>
+                      <li>In case of any damage done to any of property of the school, the parent would pay the loss equal to the value of damage property.</li>
+                      <li>The fee would be collected in 3 terms and mentioned by management. Otherwise fee concession will not be allowed.</li>
+                      <li>The fee once paid will not be refunded.</li>
+                    </ol>
+                  </div>
+
+                  <div 
+                    onClick={() => setTermsAccepted(!termsAccepted)}
+                    className={`flex items-start gap-4 p-5 rounded-2xl border-2 transition-all cursor-pointer ${
+                      termsAccepted ? 'bg-emerald-500/20 border-emerald-500/50' : 'bg-white/5 border-white/10 hover:border-white/20'
+                    }`}
+                  >
+                    <div className={termsAccepted ? 'text-emerald-400' : 'text-slate-500'}>
+                      {termsAccepted ? <CheckSquare className="w-6 h-6" /> : <Square className="w-6 h-6" />}
+                    </div>
+                    <div>
+                      <p className="font-black text-white text-sm md:text-base">I / We agree to abide by all the Terms and Conditions. <span className="text-rose-400">*</span></p>
+                      <p className="text-xs font-semibold text-slate-400 mt-1">By checking this box, the parent/guardian acknowledges full legal responsibility.</p>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* SUBMIT BUTTON ROW */}
-            <div className="flex items-center justify-end gap-3 pt-4">
-              <button
-                type="button"
-                onClick={handleResetForm}
-                className="px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-2xl font-bold text-sm transition-all cursor-pointer"
-              >
+            {/* ACTION BAR */}
+            <div className="sticky bottom-4 z-40 bg-white/80 backdrop-blur-md p-4 rounded-3xl border border-slate-200/60 shadow-xl shadow-slate-900/5 flex flex-col-reverse sm:flex-row items-center justify-between gap-4">
+              <button type="button" onClick={handleResetForm} className="w-full sm:w-auto px-6 py-3.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-2xl font-bold text-sm transition-all">
                 Clear Form
               </button>
-              <button
-                type="submit"
+              
+              <button 
+                type="submit" 
                 disabled={isSubmitting}
-                className="px-8 py-3.5 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white rounded-2xl font-black text-sm shadow-md hover:shadow-lg transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                className="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-indigo-600 to-indigo-800 hover:from-indigo-700 hover:to-indigo-900 text-white rounded-2xl font-black text-sm shadow-lg shadow-indigo-200 transition-all flex items-center justify-center gap-2 group disabled:opacity-70 disabled:cursor-not-allowed"
               >
                 {isSubmitting ? (
-                  <>
-                    <RefreshCw className="w-4 h-4 animate-spin" />
-                    <span>Submitting Application...</span>
-                  </>
+                  <><RefreshCw className="w-5 h-5 animate-spin" /> Submitting...</>
                 ) : (
-                  <>
-                    <UserPlus className="w-4 h-4" />
-                    <span>Submit Student Admission Application</span>
-                  </>
+                  <><UserPlus className="w-5 h-5 group-hover:scale-110 transition-transform" /> Submit Registration Form <ChevronRight className="w-5 h-5 opacity-50" /></>
                 )}
               </button>
             </div>
 
           </form>
         )}
-
       </div>
 
-      {/* Official Print Modal */}
       {showPrintModal && submittedAdmission && (
         <AdmissionPrintModal
           admission={submittedAdmission}
@@ -1551,4 +1156,3 @@ export const AdmissionRegistrationPage: React.FC = () => {
 };
 
 export default AdmissionRegistrationPage;
-
