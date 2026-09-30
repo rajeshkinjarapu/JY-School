@@ -1077,189 +1077,176 @@ export const StudentProfilePage: React.FC = () => {
             `}
           </style>
 
-          <div className="w-full h-full border-2 border-slate-900 rounded-2xl p-5 flex flex-col justify-between relative bg-white box-border text-slate-900 overflow-hidden">
+          <div className="w-full h-full border-2 border-slate-900 rounded-xl p-4 flex flex-col justify-between relative bg-white box-border text-slate-900 overflow-hidden">
             {/* Watermark */}
-            <div className="absolute inset-0 flex items-center justify-center opacity-[0.035] pointer-events-none">
-              <img src="/logo.png" alt="" className="w-64 h-64 object-contain grayscale" />
+            <div className="absolute inset-0 flex items-center justify-center opacity-[0.03] pointer-events-none">
+              <img src="/logo.png" alt="" className="w-56 h-56 object-contain grayscale" />
             </div>
 
-            {/* Top Header */}
-            <div className="border-b-2 border-slate-900 pb-3 relative z-10">
-              <div className="flex items-center justify-between gap-4">
-                <div className="w-16 h-16 rounded-xl bg-white p-1 border border-slate-300 shrink-0 shadow-sm flex items-center justify-center">
+            {/* Top Header - Compact */}
+            <div className="border-b-2 border-slate-900 pb-2 relative z-10">
+              <div className="flex items-center gap-3">
+                <div className="w-14 h-14 rounded-lg bg-white p-0.5 border border-slate-300 shrink-0 flex items-center justify-center">
                   <img src="/logo.png" alt="Logo" className="w-full h-full object-contain" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
                 </div>
-                <div className="flex-1 text-center overflow-visible">
-                  <h1 className="text-[22px] font-black tracking-widest uppercase text-slate-950 font-serif whitespace-nowrap">
+                <div className="flex-1 text-center">
+                  <h1 className="text-[20px] font-black tracking-[0.2em] uppercase text-slate-950 font-serif whitespace-nowrap leading-tight">
                     SRI VENKATESWARA JY SCHOOL
                   </h1>
-                  <p className="text-[11px] font-bold text-slate-700 mt-1 whitespace-nowrap">
+                  <p className="text-[10px] font-bold text-slate-600 mt-0.5 whitespace-nowrap">
                     Opp. Hero Showroom, SVL Paradise Campus, Narasannapeta, Srikakulam Dist.
                   </p>
-                  <p className="text-[10px] font-semibold text-slate-500 mt-0.5 whitespace-nowrap">
-                    Recognized by Govt. of Andhra Pradesh • Regd. School Code: <span className="font-bold">JY-NPT</span>
+                  <p className="text-[9px] font-semibold text-slate-400 whitespace-nowrap">
+                    Recognized by Govt. of Andhra Pradesh &bull; Regd. School Code: <span className="font-bold text-slate-500">JY-NPT</span>
                   </p>
                 </div>
-                <div className="text-right shrink-0">
-                  <div className="border border-slate-300 rounded-lg px-2.5 py-1 bg-slate-50 text-[10px] font-bold text-slate-700">
-                    <div>Date: <span className="font-black text-slate-900">{new Date().toLocaleDateString('en-IN')}</span></div>
-                    <div>Roll: <span className="font-black text-slate-900">{student.rollNo || '-'}</span></div>
-                  </div>
-                </div>
               </div>
-
-              {/* Banner Title */}
-              <div className="mt-2.5 bg-slate-900 text-white text-center py-1 rounded-md uppercase tracking-[0.25em] text-[11px] font-black">
+              <div className="mt-1.5 bg-slate-900 text-white text-center py-0.5 rounded uppercase tracking-[0.3em] text-[10px] font-black">
                 OFFICIAL STUDENT RECORD DOSSIER
               </div>
             </div>
 
-            {/* Student ID & Profile Banner */}
-            <div className="flex items-stretch justify-between gap-4 bg-slate-50 p-3.5 rounded-xl border border-slate-300 relative z-10">
+            {/* Student ID & Profile Banner - Compact */}
+            <div className="flex items-stretch justify-between gap-3 bg-slate-50 p-2.5 rounded-lg border border-slate-300 relative z-10 mt-2">
               <div className="flex-1 flex flex-col justify-between">
                 <div>
-                  <div className="flex items-center gap-3">
-                    <h2 className="text-2xl font-black text-slate-950 tracking-tight">{student.user?.name}</h2>
-                    <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider ${student.user?.isActive !== false ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}`}>
-                      {student.user?.isActive !== false ? 'Active Student' : 'Inactive'}
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-xl font-black text-slate-950 tracking-tight leading-tight">{student.user?.name}</h2>
+                    <span className={`px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wider ${student.user?.isActive !== false ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}`}>
+                      {student.user?.isActive !== false ? 'Active' : 'Inactive'}
                     </span>
                   </div>
-                  <div className="flex flex-wrap items-center gap-3 text-xs font-bold text-slate-700 mt-2">
-                    <span className="bg-white px-2.5 py-1 rounded border border-slate-300">
-                      Roll No: <span className="font-black text-slate-900 text-sm">{student.rollNo}</span>
+                  <div className="flex flex-wrap items-center gap-2 text-[10px] font-bold text-slate-700 mt-1.5">
+                    <span className="bg-white px-2 py-0.5 rounded border border-slate-300">
+                      Roll No: <span className="font-black text-slate-900">{student.rollNo}</span>
                     </span>
-                    <span className="bg-white px-2.5 py-1 rounded border border-slate-300">
-                      Class: <span className="font-black text-indigo-900 text-sm">{student.class ? `${student.class.name} - ${student.class.section}` : 'N/A'}</span>
+                    <span className="bg-white px-2 py-0.5 rounded border border-slate-300">
+                      Class: <span className="font-black text-indigo-900">{student.class ? `${student.class.name} - ${student.class.section}` : 'N/A'}</span>
                     </span>
-                    <span className="bg-white px-2.5 py-1 rounded border border-slate-300">
+                    <span className="bg-white px-2 py-0.5 rounded border border-slate-300">
                       Gender: <span className="font-black text-slate-900">{student.gender || 'N/A'}</span>
                     </span>
                   </div>
                 </div>
-                <div className="text-[11px] text-slate-500 font-medium mt-1">
-                  Admission Date: <strong className="text-slate-800 font-bold">{student.admissionDate ? new Date(student.admissionDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A'}</strong>
+                <div className="flex items-center gap-4 text-[10px] text-slate-500 font-medium mt-1">
+                  <span>Admission: <strong className="text-slate-800">{student.admissionDate ? new Date(student.admissionDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A'}</strong></span>
+                  <span>Date: <strong className="text-slate-800">{new Date().toLocaleDateString('en-IN')}</strong></span>
                 </div>
               </div>
-
-              {/* Student Photo */}
-              <div className="w-24 h-28 border-2 border-slate-400 rounded-lg overflow-hidden shrink-0 bg-white flex items-center justify-center shadow-sm">
+              <div className="w-20 h-24 border-2 border-slate-400 rounded-lg overflow-hidden shrink-0 bg-white flex items-center justify-center">
                 {getPhotoUrl(student.user?.photoUrl) ? (
                   <img src={getPhotoUrl(student.user.photoUrl)} alt={student.user.name} className="w-full h-full object-cover" />
                 ) : (
-                  <div className="text-center p-2">
-                    <User2 className="w-8 h-8 text-slate-300 mx-auto mb-1" />
-                    <span className="text-[8px] font-bold text-slate-400 uppercase tracking-wider">No Photo</span>
+                  <div className="text-center p-1">
+                    <User2 className="w-7 h-7 text-slate-300 mx-auto mb-0.5" />
+                    <span className="text-[7px] font-bold text-slate-400 uppercase">No Photo</span>
                   </div>
                 )}
               </div>
             </div>
 
-            {/* Two-Column Structured Details Grid */}
-            <div className="grid grid-cols-2 gap-4 relative z-10 text-xs">
-              {/* Column 1: Personal & Identification */}
-              <div className="border border-slate-300 rounded-xl overflow-hidden bg-white">
-                <div className="bg-slate-100 px-3 py-1.5 border-b border-slate-300 font-black text-slate-800 uppercase tracking-wider text-[10px] flex items-center gap-1.5">
-                  <User2 className="w-3.5 h-3.5 text-indigo-700" />
+            {/* Two-Column Details - Tighter */}
+            <div className="grid grid-cols-2 gap-3 relative z-10 text-[10px] mt-2">
+              <div className="border border-slate-300 rounded-lg overflow-hidden bg-white">
+                <div className="bg-slate-100 px-2.5 py-1 border-b border-slate-300 font-black text-slate-800 uppercase tracking-wider text-[9px] flex items-center gap-1.5">
+                  <User2 className="w-3 h-3 text-indigo-700" />
                   Personal & Academic Details
                 </div>
                 <table className="w-full text-left">
                   <tbody className="divide-y divide-slate-200">
                     <tr>
-                      <th className="px-3 py-1.5 font-bold text-slate-500 bg-slate-50/50 w-2/5">Date of Birth</th>
-                      <td className="px-3 py-1.5 font-semibold text-slate-900">
+                      <th className="px-2.5 py-1 font-bold text-slate-500 bg-slate-50/50 w-2/5">Date of Birth</th>
+                      <td className="px-2.5 py-1 font-semibold text-slate-900">
                         {student.dob ? new Date(student.dob).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A'}
                       </td>
                     </tr>
                     <tr>
-                      <th className="px-3 py-1.5 font-bold text-slate-500 bg-slate-50/50">Blood Group</th>
-                      <td className="px-3 py-1.5 font-bold text-rose-700">{student.bloodGroup || 'N/A'}</td>
+                      <th className="px-2.5 py-1 font-bold text-slate-500 bg-slate-50/50">Blood Group</th>
+                      <td className="px-2.5 py-1 font-bold text-rose-700">{student.bloodGroup || 'N/A'}</td>
                     </tr>
                     <tr>
-                      <th className="px-3 py-1.5 font-bold text-slate-500 bg-slate-50/50">Aadhar No (UID)</th>
-                      <td className="px-3 py-1.5 font-semibold font-mono text-slate-900">{student.aadharNo || 'N/A'}</td>
+                      <th className="px-2.5 py-1 font-bold text-slate-500 bg-slate-50/50">Aadhar No (UID)</th>
+                      <td className="px-2.5 py-1 font-semibold font-mono text-slate-900">{student.aadharNo || 'N/A'}</td>
                     </tr>
                     <tr>
-                      <th className="px-3 py-1.5 font-bold text-slate-500 bg-slate-50/50">PEN Number</th>
-                      <td className="px-3 py-1.5 font-semibold font-mono text-slate-900">{student.penNumber || 'N/A'}</td>
+                      <th className="px-2.5 py-1 font-bold text-slate-500 bg-slate-50/50">PEN Number</th>
+                      <td className="px-2.5 py-1 font-semibold font-mono text-slate-900">{student.penNumber || 'N/A'}</td>
                     </tr>
                     <tr>
-                      <th className="px-3 py-1.5 font-bold text-slate-500 bg-slate-50/50">Academic Year</th>
-                      <td className="px-3 py-1.5 font-semibold text-slate-900">{student.class?.academicYear || '2025-2026'}</td>
+                      <th className="px-2.5 py-1 font-bold text-slate-500 bg-slate-50/50">Academic Year</th>
+                      <td className="px-2.5 py-1 font-semibold text-slate-900">{student.class?.academicYear || '2025-2026'}</td>
                     </tr>
                     <tr>
-                      <th className="px-3 py-1.5 font-bold text-slate-500 bg-slate-50/50">Admission No</th>
-                      <td className="px-3 py-1.5 font-semibold text-slate-900">{student.admissionNo || student.rollNo || 'N/A'}</td>
+                      <th className="px-2.5 py-1 font-bold text-slate-500 bg-slate-50/50">Admission No</th>
+                      <td className="px-2.5 py-1 font-semibold text-slate-900">{student.admissionNo || student.rollNo || 'N/A'}</td>
                     </tr>
                   </tbody>
                 </table>
               </div>
 
-              {/* Column 2: Parent & Communication */}
-              <div className="border border-slate-300 rounded-xl overflow-hidden bg-white flex flex-col justify-between">
+              <div className="border border-slate-300 rounded-lg overflow-hidden bg-white flex flex-col justify-between">
                 <div>
-                  <div className="bg-slate-100 px-3 py-1.5 border-b border-slate-300 font-black text-slate-800 uppercase tracking-wider text-[10px] flex items-center gap-1.5">
-                    <Users className="w-3.5 h-3.5 text-indigo-700" />
+                  <div className="bg-slate-100 px-2.5 py-1 border-b border-slate-300 font-black text-slate-800 uppercase tracking-wider text-[9px] flex items-center gap-1.5">
+                    <Users className="w-3 h-3 text-indigo-700" />
                     Parent & Contact Information
                   </div>
                   <table className="w-full text-left">
                     <tbody className="divide-y divide-slate-200">
                       <tr>
-                        <th className="px-3 py-1.5 font-bold text-slate-500 bg-slate-50/50 w-2/5">Father's Name</th>
-                        <td className="px-3 py-1.5 font-semibold text-slate-900">{student.fatherName || 'N/A'}</td>
+                        <th className="px-2.5 py-1 font-bold text-slate-500 bg-slate-50/50 w-2/5">Father's Name</th>
+                        <td className="px-2.5 py-1 font-semibold text-slate-900">{student.fatherName || 'N/A'}</td>
                       </tr>
                       <tr>
-                        <th className="px-3 py-1.5 font-bold text-slate-500 bg-slate-50/50">Mother's Name</th>
-                        <td className="px-3 py-1.5 font-semibold text-slate-900">{student.motherName || 'N/A'}</td>
+                        <th className="px-2.5 py-1 font-bold text-slate-500 bg-slate-50/50">Mother's Name</th>
+                        <td className="px-2.5 py-1 font-semibold text-slate-900">{student.motherName || 'N/A'}</td>
                       </tr>
                       <tr>
-                        <th className="px-3 py-1.5 font-bold text-slate-500 bg-slate-50/50">Guardian Name</th>
-                        <td className="px-3 py-1.5 font-semibold text-slate-900">{student.parent?.user?.name || student.guardianName || 'N/A'}</td>
+                        <th className="px-2.5 py-1 font-bold text-slate-500 bg-slate-50/50">Guardian Name</th>
+                        <td className="px-2.5 py-1 font-semibold text-slate-900">{student.parent?.user?.name || student.guardianName || 'N/A'}</td>
                       </tr>
                       <tr>
-                        <th className="px-3 py-1.5 font-bold text-slate-500 bg-slate-50/50">Primary Contact</th>
-                        <td className="px-3 py-1.5 font-semibold font-mono text-slate-900">
+                        <th className="px-2.5 py-1 font-bold text-slate-500 bg-slate-50/50">Primary Contact</th>
+                        <td className="px-2.5 py-1 font-semibold font-mono text-slate-900">
                           {student.parent?.user?.phone || student.mobileNumber || student.user?.phone || 'N/A'}
                         </td>
                       </tr>
                     </tbody>
                   </table>
                 </div>
-
-                <div className="p-2.5 bg-slate-50 border-t border-slate-200">
-                  <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider block mb-1">Residential Address</span>
-                  <p className="text-[11px] font-semibold text-slate-800 leading-tight">
-                    {student.address || 'Opp. Hero Showroom, SVL Paradise Campus, Narasannapeta, Srikakulam Dist., Andhra Pradesh'}
+                <div className="p-2 bg-slate-50 border-t border-slate-200">
+                  <span className="text-[9px] font-black text-slate-500 uppercase tracking-wider block mb-0.5">Residential Address</span>
+                  <p className="text-[10px] font-semibold text-slate-800 leading-tight">
+                    {student.address || 'Narasannapeta, Srikakulam, Andhra Pradesh - 532421'}
                   </p>
                 </div>
               </div>
             </div>
 
-            {/* Fee & Financial Overview Summary Bar */}
-            <div className="border border-slate-300 rounded-xl p-3 bg-slate-50/70 relative z-10">
-              <div className="text-[10px] font-black text-slate-700 uppercase tracking-wider mb-1.5 flex items-center justify-between">
+            {/* Fee Summary - Compact */}
+            <div className="border border-slate-300 rounded-lg p-2 bg-slate-50/70 relative z-10 mt-2">
+              <div className="text-[9px] font-black text-slate-700 uppercase tracking-wider mb-1 flex items-center justify-between">
                 <span>Fee Ledger Status</span>
-                <span className="text-[9px] text-slate-500 font-bold">Academic Session {student.class?.academicYear || '2025-2026'}</span>
+                <span className="text-[8px] text-slate-500 font-bold">Academic Session {student.class?.academicYear || '2025-2026'}</span>
               </div>
-              <div className="grid grid-cols-3 gap-3 text-center">
+              <div className="grid grid-cols-3 gap-2 text-center">
                 {(() => {
                   const studentStructures = feeStructures.filter((s) => s.studentId === student.id || s.classId === student.classId);
                   const totalFee = studentStructures.reduce((sum, s) => sum + s.amount, 0);
                   const totalPaid = student.feePayments?.reduce((sum: number, p: any) => sum + p.amountPaid, 0) || 0;
                   const totalDue = Math.max(0, totalFee - totalPaid);
-
                   return (
                     <>
-                      <div className="bg-white p-1.5 rounded-lg border border-slate-200">
-                        <div className="text-[9px] font-bold text-slate-500 uppercase">Total Applicable Fee</div>
-                        <div className="text-sm font-black text-slate-900">₹{totalFee.toLocaleString('en-IN')}</div>
+                      <div className="bg-white p-1.5 rounded border border-slate-200">
+                        <div className="text-[8px] font-bold text-slate-500 uppercase">Total Fee</div>
+                        <div className="text-[13px] font-black text-slate-900">₹{totalFee.toLocaleString('en-IN')}</div>
                       </div>
-                      <div className="bg-white p-1.5 rounded-lg border border-slate-200">
-                        <div className="text-[9px] font-bold text-emerald-600 uppercase">Total Amount Paid</div>
-                        <div className="text-sm font-black text-emerald-700">₹{totalPaid.toLocaleString('en-IN')}</div>
+                      <div className="bg-white p-1.5 rounded border border-slate-200">
+                        <div className="text-[8px] font-bold text-emerald-600 uppercase">Amount Paid</div>
+                        <div className="text-[13px] font-black text-emerald-700">₹{totalPaid.toLocaleString('en-IN')}</div>
                       </div>
-                      <div className="bg-white p-1.5 rounded-lg border border-slate-200">
-                        <div className="text-[9px] font-bold text-rose-600 uppercase">Pending Balance</div>
-                        <div className="text-sm font-black text-rose-700">₹{totalDue.toLocaleString('en-IN')}</div>
+                      <div className="bg-white p-1.5 rounded border border-slate-200">
+                        <div className="text-[8px] font-bold text-rose-600 uppercase">Pending</div>
+                        <div className="text-[13px] font-black text-rose-700">₹{totalDue.toLocaleString('en-IN')}</div>
                       </div>
                     </>
                   );
@@ -1267,36 +1254,35 @@ export const StudentProfilePage: React.FC = () => {
               </div>
             </div>
 
-            {/* Official Signatures Row */}
-            <div className="flex items-end justify-between px-6 pt-2 relative z-10">
-              <div className="text-center w-48">
-                <div className="border-b-2 border-slate-800 h-10 mb-1.5"></div>
-                <span className="text-[10.5px] font-black text-slate-800 uppercase tracking-wider block">
+            {/* Official Signatures - Compact */}
+            <div className="flex items-end justify-between px-4 pt-1 relative z-10 mt-2">
+              <div className="text-center w-44">
+                <div className="border-b-2 border-slate-800 h-8 mb-1"></div>
+                <span className="text-[10px] font-black text-slate-800 uppercase tracking-wider block">
                   Class Teacher Signature
                 </span>
-                <span className="text-[8.5px] text-slate-500 font-bold">Verified & Endorsed</span>
+                <span className="text-[8px] text-slate-500 font-bold">Verified & Endorsed</span>
               </div>
 
-              {/* Seal Stamp */}
-              <div className="w-20 h-20 rounded-full border-2 border-dashed border-slate-400 flex flex-col items-center justify-center text-slate-400 text-center shrink-0">
-                <span className="text-[8px] font-black uppercase tracking-widest leading-tight">AFFIX</span>
-                <span className="text-[9px] font-black uppercase tracking-widest text-slate-500 leading-tight">OFFICIAL</span>
-                <span className="text-[8px] font-black uppercase tracking-widest leading-tight">SEAL</span>
+              <div className="w-16 h-16 rounded-full border-2 border-dashed border-slate-400 flex flex-col items-center justify-center text-slate-400 text-center shrink-0">
+                <span className="text-[7px] font-black uppercase tracking-widest leading-tight">AFFIX</span>
+                <span className="text-[8px] font-black uppercase tracking-widest text-slate-500 leading-tight">OFFICIAL</span>
+                <span className="text-[7px] font-black uppercase tracking-widest leading-tight">SEAL</span>
               </div>
 
-              <div className="text-center w-48">
-                <div className="border-b-2 border-slate-800 h-10 mb-1.5"></div>
-                <span className="text-[10.5px] font-black text-slate-800 uppercase tracking-wider block">
+              <div className="text-center w-44">
+                <div className="border-b-2 border-slate-800 h-8 mb-1"></div>
+                <span className="text-[10px] font-black text-slate-800 uppercase tracking-wider block">
                   Principal / Headmaster
                 </span>
-                <span className="text-[8.5px] text-slate-500 font-bold">Authorized Signatory</span>
+                <span className="text-[8px] text-slate-500 font-bold">Authorized Signatory</span>
               </div>
             </div>
 
-            {/* System Footer Stamp */}
-            <div className="text-center pt-2 border-t border-slate-300 relative z-10">
-              <p className="text-[8.5px] text-slate-500 font-bold uppercase tracking-[0.15em]">
-                This is an official computer-generated student dossier issued by JY SCHOOL ERP • Narasannapeta
+            {/* Footer */}
+            <div className="text-center pt-1 border-t border-slate-300 relative z-10 mt-1">
+              <p className="text-[8px] text-slate-500 font-bold uppercase tracking-[0.15em]">
+                This is an official computer-generated student dossier issued by JY SCHOOL ERP &bull; Narasannapeta
               </p>
             </div>
           </div>
