@@ -59,6 +59,7 @@ const NAV_COLORS: Record<string, { text: string; bg: string; glow: string }> = {
   Homework:      { text: '#86efac', bg: 'rgba(34,197,94,0.18)',   glow: '0 0 12px rgba(34,197,94,.5)'   },
   'HR Salary':   { text: '#c4b5fd', bg: 'rgba(139,92,246,0.18)', glow: '0 0 12px rgba(139,92,246,.5)'  },
   'Staff Attendance': { text: '#fde68a', bg: 'rgba(245,158,11,0.18)', glow: '0 0 12px rgba(245,158,11,.5)' },
+  'Address Data': { text: '#6ee7b7', bg: 'rgba(16,185,129,0.18)', glow: '0 0 12px rgba(16,185,129,.5)' },
 };
 
 export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
@@ -97,6 +98,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
       { to: '/admissions',    label: 'Admissions',    icon: UserPlus      },
       { to: '/teachers',      label: 'Teachers',      icon: GraduationCap },
       { to: '/classes',       label: 'Classes',       icon: School        },
+      { to: '/address-collection/admin', label: 'Address Data', icon: Users },
       { to: '/subjects',      label: 'Subjects',      icon: BookOpen      },
       { to: '/attendance',    label: 'Attendance',    icon: CalendarCheck },
       
@@ -128,6 +130,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
       { to: '/admissions/register', label: 'Admissions', icon: UserPlus },
       { to: '/students',          label: 'Total Students', icon: Users         },
       { to: '/attendance',        label: 'Attendance',     icon: CalendarCheck },
+      { to: '/address-collection/teacher', label: 'Address Data', icon: Users },
       { to: '/answer-key',        label: 'Answer Key',     icon: Key           },
       { to: '/homework',          label: 'Homework',       icon: BookOpen      },
       { to: '/exams',             label: 'Examination',    icon: PenTool       },

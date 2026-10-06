@@ -212,6 +212,22 @@ export const router = createBrowserRouter([
         element: withSuspense(<DashboardPage />),
       },
       {
+        path: 'address-collection/admin',
+        element: withSuspense(
+          <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN']}>
+            <AddressCollectionAdminPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'address-collection/teacher',
+        element: withSuspense(
+          <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN', 'TEACHER']}>
+            <AddressCollectionTeacherPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
         path: 'app-installs',
         element: withSuspense(
           <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN']}>
