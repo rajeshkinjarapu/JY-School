@@ -120,6 +120,7 @@ model Teacher {
   teacherAttendances    TeacherAttendance[]
   salaries              Salary[]
   competitiveExams      CompetitiveExam[]
+  addressCollections    StudentAddressCollection[]
 
   @@index([employeeId])
 }
@@ -1174,5 +1175,20 @@ model ExamAnswerKey {
   class     Class    @relation(fields: [classId], references: [id], onDelete: Cascade)
 
   @@unique([examId, classId])
+}
+
+
+model StudentAddressCollection {
+  id                 String   @id @default(uuid())
+  studentName        String
+  fatherName         String
+  village            String
+  mandal             String
+  mobileNo           String
+  alternateMobileNo  String?
+  referenceTeacherId String?
+  referenceTeacher   Teacher? @relation(fields: [referenceTeacherId], references: [id], onDelete: SetNull)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
 }
 

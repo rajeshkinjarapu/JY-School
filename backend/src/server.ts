@@ -52,6 +52,7 @@ import competitiveExamsRoutes from './routes/competitiveExams.routes';
 import masterQuestionsRoutes from './routes/masterQuestions.routes';
 import admissionsRoutes from './routes/admissions.routes';
 import websiteRoutes from './routes/website.routes';
+import addressCollectionRoutes from './routes/addressCollection.routes';
 
 const app = express();
 app.set('trust proxy', 1);
@@ -126,6 +127,7 @@ app.use('/api/competitive-exams', competitiveExamsRoutes);
 app.use('/api/master-questions', masterQuestionsRoutes);
 app.use('/api/admissions', admissionsRoutes);
 app.use('/api/website', websiteRoutes);
+app.use('/api/address-collection', addressCollectionRoutes);
 
 // Health check
 app.get('/api/health', (_req, res) => {
