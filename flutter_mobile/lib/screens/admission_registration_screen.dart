@@ -516,7 +516,7 @@ class _AdmissionRegistrationScreenState extends State<AdmissionRegistrationScree
       state: _currentStep > 1 ? StepState.complete : StepState.indexed,
       content: _buildCardContainer(
         accentColor: const Color(0xFF10B981),
-        icon: Icons.persons,
+        icon: Icons.people,
         title: 'Parent Details',
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -619,7 +619,7 @@ class _AdmissionRegistrationScreenState extends State<AdmissionRegistrationScree
       state: _currentStep > 4 ? StepState.complete : StepState.indexed,
       content: _buildCardContainer(
         accentColor: const Color(0xFFF59E0B),
-        icon: Icons.persons,
+        icon: Icons.people,
         title: 'Sibling Details',
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,

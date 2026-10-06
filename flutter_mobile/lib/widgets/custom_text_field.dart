@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 class CustomTextField extends StatelessWidget {
   final TextEditingController controller;
-  final String hintText;
+  final String? hintText;
   final Widget? prefixIcon;
   final TextInputType keyboardType;
   final int? maxLength;
@@ -12,7 +12,7 @@ class CustomTextField extends StatelessWidget {
   const CustomTextField({
     Key? key,
     required this.controller,
-    required this.hintText,
+    this.hintText,
     this.prefixIcon,
     this.keyboardType = TextInputType.text,
     this.maxLength,
