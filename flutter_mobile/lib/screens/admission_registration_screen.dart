@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 import 'package:intl/intl.dart';
 import '../services/api_service.dart';
 import '../widgets/app_drawer.dart';
@@ -427,7 +427,7 @@ class _AdmissionRegistrationScreenState extends State<AdmissionRegistrationScree
       state: _currentStep > 0 ? StepState.complete : StepState.indexed,
       content: _buildCardContainer(
         accentColor: const Color(0xFF4F46E5),
-        icon: LucideIcons.user,
+        icon: Icons.person,
         title: 'Student Details',
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -450,7 +450,7 @@ class _AdmissionRegistrationScreenState extends State<AdmissionRegistrationScree
                       ? Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const Icon(LucideIcons.camera, color: Color(0xFF94A3B8), size: 32),
+                            const Icon(Icons.camera_alt, color: Color(0xFF94A3B8), size: 32),
                             const SizedBox(height: 8),
                             Text('Upload Photo', style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.w600, color: const Color(0xFF64748B))),
                           ],
@@ -516,7 +516,7 @@ class _AdmissionRegistrationScreenState extends State<AdmissionRegistrationScree
       state: _currentStep > 1 ? StepState.complete : StepState.indexed,
       content: _buildCardContainer(
         accentColor: const Color(0xFF10B981),
-        icon: LucideIcons.users,
+        icon: Icons.persons,
         title: 'Parent Details',
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -555,7 +555,7 @@ class _AdmissionRegistrationScreenState extends State<AdmissionRegistrationScree
       state: _currentStep > 2 ? StepState.complete : StepState.indexed,
       content: _buildCardContainer(
         accentColor: const Color(0xFF0EA5E9),
-        icon: LucideIcons.bookOpen,
+        icon: Icons.menu_book,
         title: 'Demographics & History',
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -587,7 +587,7 @@ class _AdmissionRegistrationScreenState extends State<AdmissionRegistrationScree
       state: _currentStep > 3 ? StepState.complete : StepState.indexed,
       content: _buildCardContainer(
         accentColor: const Color(0xFF14B8A6),
-        icon: LucideIcons.home,
+        icon: Icons.home,
         title: 'Residential Address',
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -619,7 +619,7 @@ class _AdmissionRegistrationScreenState extends State<AdmissionRegistrationScree
       state: _currentStep > 4 ? StepState.complete : StepState.indexed,
       content: _buildCardContainer(
         accentColor: const Color(0xFFF59E0B),
-        icon: LucideIcons.users,
+        icon: Icons.persons,
         title: 'Sibling Details',
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -649,7 +649,7 @@ class _AdmissionRegistrationScreenState extends State<AdmissionRegistrationScree
                           if (_siblings.length > 1)
                             GestureDetector(
                               onTap: () => setState(() => _siblings.removeAt(index)),
-                              child: const Icon(LucideIcons.trash2, color: Colors.red, size: 18),
+                              child: const Icon(Icons.delete, color: Colors.red, size: 18),
                             )
                         ],
                       ),
@@ -718,7 +718,7 @@ class _AdmissionRegistrationScreenState extends State<AdmissionRegistrationScree
       state: _currentStep > 5 ? StepState.complete : StepState.indexed,
       content: _buildCardContainer(
         accentColor: const Color(0xFF8B5CF6),
-        icon: LucideIcons.creditCard,
+        icon: Icons.credit_card,
         title: 'Fee & Payment Mode',
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -776,7 +776,7 @@ class _AdmissionRegistrationScreenState extends State<AdmissionRegistrationScree
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
-                        child: Icon(_receiptFile != null ? LucideIcons.checkCircle2 : LucideIcons.upload, color: _receiptFile != null ? Colors.green : const Color(0xFF8B5CF6)),
+                        child: Icon(_receiptFile != null ? Icons.check_circle : Icons.upload, color: _receiptFile != null ? Colors.green : const Color(0xFF8B5CF6)),
                       ),
                       const SizedBox(width: 16),
                       Expanded(
@@ -806,7 +806,7 @@ class _AdmissionRegistrationScreenState extends State<AdmissionRegistrationScree
       state: _currentStep > 6 ? StepState.complete : StepState.indexed,
       content: _buildCardContainer(
         accentColor: const Color(0xFFE11D48),
-        icon: LucideIcons.shieldCheck,
+        icon: Icons.verified_user,
         title: 'Terms & Conditions',
         child: Column(
           children: [
@@ -861,10 +861,10 @@ class _AdmissionRegistrationScreenState extends State<AdmissionRegistrationScree
                 Container(
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(color: const Color(0xFFD1FAE5), shape: BoxShape.circle),
-                  child: const Icon(LucideIcons.checkCircle2, color: Color(0xFF059669), size: 64),
+                  child: const Icon(Icons.check_circle, color: Color(0xFF059669), size: 64),
                 ),
                 const SizedBox(height: 24),
-                Text('Registration Successful', style: GoogleFonts.outfit(fontSize: 24, fontWeight: FontWeight.black, color: const Color(0xFF0F172A))),
+                Text('Registration Successful', style: GoogleFonts.outfit(fontSize: 24, fontWeight: FontWeight.w900, color: const Color(0xFF0F172A))),
                 const SizedBox(height: 12),
                 Text(_submittedAdmission?['studentName'] ?? 'Student', style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: const Color(0xFF4F46E5))),
                 const SizedBox(height: 8),

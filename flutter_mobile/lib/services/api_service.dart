@@ -40,7 +40,7 @@ class ApiService {
   }
 
   // Get active session token
-  static Future<String?> getToken() async {
+  static Future<http.Response> get(String endpoint) async { final token = await getToken(); return await http.get(Uri.parse(''''), headers: _getHeaders(token: token)); } static Future<http.Response> post(String endpoint, Map<String, dynamic> body) async { final token = await getToken(); return await http.post(Uri.parse(''''), headers: _getHeaders(token: token), body: jsonEncode(body)); } static Future<http.StreamedResponse> uploadFile(String endpoint, dynamic file, {String fieldName = ''file''}) async { final token = await getToken(); var request = http.MultipartRequest(''POST'', Uri.parse('''')); request.headers.addAll(_getHeaders(token: token, isMultipart: true)); request.files.add(await http.MultipartFile.fromPath(fieldName, file.path)); return await request.send(); } static Future<String?> getToken() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString('accessToken');
   }

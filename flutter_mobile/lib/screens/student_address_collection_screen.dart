@@ -3,10 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:provider/provider.dart';
-import '../providers/auth_provider.dart';
-import '../utils/constants.dart';
-import 'package:lottie/lottie.dart';
+import '../services/api_service.dart';
 
 class StudentAddressCollectionScreen extends StatefulWidget {
   @override
@@ -34,14 +31,14 @@ class _StudentAddressCollectionScreenState
     });
 
     try {
-      final authProvider = Provider.of<AuthProvider>(context, listen: false);
-      final url = Uri.parse('${Constants.baseUrl}/api/address-collection');
+      final token = await ApiService.getToken();
+      final url = Uri.parse('${ApiService.baseUrl}/api/address-collection');
 
       final response = await http.post(
         url,
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer ${authProvider.token}',
+          'Authorization': 'Bearer $token',
         },
         body: json.encode({
           'studentName': _studentNameController.text.trim(),

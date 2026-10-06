@@ -151,7 +151,7 @@ class AdmissionPdfService {
                             style: pw.TextStyle(
                               fontSize: 14.5,
                               fontWeight: pw.FontWeight.bold,
-                              color: PdfColors.indigo950,
+                              color: PdfColors.indigo900,
                             ),
                           ),
                           pw.SizedBox(height: 1.5),
@@ -400,7 +400,7 @@ class AdmissionPdfService {
                 ),
                 child: pw.Column(
                   children: [
-                    pw.Text('SRI VENKATESWARA JY SCHOOL', style: pw.TextStyle(fontSize: 11, fontWeight: pw.FontWeight.bold, color: PdfColors.indigo950)),
+                    pw.Text('SRI VENKATESWARA JY SCHOOL', style: pw.TextStyle(fontSize: 11, fontWeight: pw.FontWeight.bold, color: PdfColors.indigo900)),
                     pw.SizedBox(height: 1),
                     pw.Container(
                       padding: const pw.EdgeInsets.symmetric(horizontal: 10, vertical: 1.5),
@@ -675,7 +675,7 @@ class AdmissionPdfService {
 
     return pw.Row(
       mainAxisSize: expand ? pw.MainAxisSize.max : pw.MainAxisSize.min,
-      crossAxisAlignment: pw.CrossAxisAlignment.baseline,
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: [
         pw.Text(label, style: pw.TextStyle(fontSize: 8.5, fontWeight: pw.FontWeight.bold)),
         if (expand)
