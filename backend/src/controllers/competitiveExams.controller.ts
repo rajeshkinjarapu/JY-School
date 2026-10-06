@@ -272,7 +272,7 @@ export const getStudentResult = async (req: Request, res: Response) => {
                 responses: {
                     include: { question: true }
                 },
-                exam: true
+                competitiveExam: true
             }
         });
 
@@ -296,18 +296,13 @@ export const deleteCompetitiveExam = async (req: Request, res: Response) => {
 export const updateCompetitiveExam = async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
-        const { title, description, examDate, duration, totalMarks, passMarks, negativeMarks, classes } = req.body;
+        const { title, duration, totalMarks, passMarks, negativeMarks } = req.body;
         
         const exam = await prisma.competitiveExam.update({
             where: { id },
-            data: { title, description, examDate: new Date(examDate), duration, totalMarks, passMarks, negativeMarks }
+            data: { title, duration, totalMarks, passMarks, negativeMarks }
         });
 
-        if (classes) {
-            await prisma.competitiveExamClass.deleteMany({ where: { competitiveExamId: id } });
-            const classRecords = classes.map((cId: string) => ({ competitiveExamId: id, classId: cId }));
-            await prisma.competitiveExamClass.createMany({ data: classRecords });
-        }
 
         res.json({ success: true, data: exam });
     } catch (error) {
@@ -326,7 +321,6 @@ export const updateCompetitiveQuestion = async (req: Request, res: Response) => 
                 questionText,
                 options: JSON.stringify(options),
                 correctAnswer,
-                explanation,
                 marks
             }
         });

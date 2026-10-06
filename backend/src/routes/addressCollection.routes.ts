@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { addAddressCollection, getAddressCollections } from '../controllers/addressCollection.controller';
-import { authenticate } from '../middleware/auth.middleware';
+import { authenticate } from '../middlewares/auth';
 
 const router = Router();
 

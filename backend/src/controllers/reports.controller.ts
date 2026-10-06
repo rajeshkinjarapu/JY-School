@@ -865,7 +865,7 @@ export const getAdmissionSummaryReport = async (req: Request, res: Response, nex
     const { academicYear } = req.query;
     const where: any = {};
     if (academicYear) where.academicYear = academicYear as string;
-    const admissions = await prisma.admission.findMany({ where, orderBy: { createdAt: 'desc' } });
+    const admissions = await prisma.admissionInquiry.findMany({ where, orderBy: { createdAt: 'desc' } });
 
     const reportData = admissions.map((a: any) => ({
       'Adm No': a.regNo || a.id.slice(0, 8).toUpperCase(),
@@ -895,7 +895,7 @@ export const getAdmissionSummaryReportPdf = async (req: Request, res: Response, 
     const { academicYear } = req.query;
     const where: any = {};
     if (academicYear) where.academicYear = academicYear as string;
-    const admissions = await prisma.admission.findMany({ where, orderBy: { createdAt: 'desc' } });
+    const admissions = await prisma.admissionInquiry.findMany({ where, orderBy: { createdAt: 'desc' } });
     const settings = await prisma.schoolSettings.findFirst();
     const schoolName = settings?.schoolName || 'JY School';
     const schoolAddress = settings?.address || '';
