@@ -81,7 +81,7 @@ class _ModulesScreenState extends State<ModulesScreen> {
       if (!isTeacher) {'title': 'Finance', 'icon': Icons.account_balance_wallet_rounded, 'color': const Color(0xFFF43F5E), 'page': const FinanceScreen()},
       if (!isTeacher) {'title': 'Fee Collection', 'icon': Icons.credit_card_rounded, 'color': const Color(0xFF8B5CF6), 'page': const StudentFeeSearchScreen()},
       {'title': 'Fee Reminder', 'icon': Icons.notifications_active_rounded, 'color': const Color(0xFFEAB308), 'page': const FeeReminderSearchScreen()},
-      {'title': 'Address Data', 'icon': Icons.location_on_rounded, 'color': const Color(0xFF10B981), 'page': isTeacher ? StudentAddressCollectionScreen() : null},
+      {'title': 'Address Data', 'icon': Icons.location_on_rounded, 'color': const Color(0xFF10B981), 'page': StudentAddressCollectionScreen()},
       {'title': 'Gate Pass', 'icon': Icons.exit_to_app_rounded, 'color': const Color(0xFF8B5CF6), 'page': isTeacher ? const TeacherGatePassScreen() : const GatePassScreen()},
       {'title': 'OMR Scanner', 'icon': Icons.document_scanner_rounded, 'color': const Color(0xFF0284C7), 'page': const ExamsScreen()},
       {'title': 'Attendance', 'icon': Icons.how_to_reg_rounded, 'color': const Color(0xFFD97706), 'page': const AttendanceScreen()},

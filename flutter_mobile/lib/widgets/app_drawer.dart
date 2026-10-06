@@ -42,6 +42,7 @@ import '../screens/examination_dashboard_screen.dart';
 import '../screens/main_layout.dart';
 import '../screens/admissions_list_screen.dart';
 import '../screens/admission_registration_screen.dart';
+import '../screens/student_address_collection_screen.dart';
 
 class AppDrawer extends StatefulWidget {
   final String currentRoute;
@@ -209,6 +210,13 @@ class _AppDrawerState extends State<AppDrawer> {
                       routeName: 'admissions_register',
                       isActive: widget.currentRoute == 'admissions_register',
                       onTap: () => _navigateTo(const AdmissionRegistrationScreen(), 'admissions_register'),
+                    ),
+                    _buildDrawerItem(
+                      icon: Icons.location_on_outlined,
+                      title: 'Address Data',
+                      routeName: 'address_collection',
+                      isActive: widget.currentRoute == 'address_collection',
+                      onTap: () => _navigateTo(StudentAddressCollectionScreen(), 'address_collection'),
                     ),
                     _buildDrawerItem(
                       icon: Icons.school_outlined,
