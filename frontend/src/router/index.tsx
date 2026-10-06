@@ -48,6 +48,8 @@ const ForgotPasswordPage = lazy(() => import('../pages/auth/ForgotPasswordPage')
 const ResetPasswordPage = lazy(() => import('../pages/auth/ResetPasswordPage'));
 const DashboardPage = lazy(routeImports['/dashboard']);
 const AppInstallsPage = lazy(routeImports['/app-installs']);
+const AddressCollectionAdminPage = lazy(() => import('../pages/address-collection/AddressCollectionAdminPage'));
+const AddressCollectionTeacherPage = lazy(() => import('../pages/address-collection/AddressCollectionTeacherPage'));
 const StudentListPage = lazy(routeImports['/students']);
 const StudentFormPage = lazy(() => import('../pages/students/StudentFormPage'));
 const StudentProfilePage = lazy(() => import('../pages/students/StudentProfilePage'));
