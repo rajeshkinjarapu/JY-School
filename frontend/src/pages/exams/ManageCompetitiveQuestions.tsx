@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "../../api/axios";
 import { PageHeader } from "../../components/UI/PageHeader";
-import { ChevronLeft, Plus, Edit2, Trash2, Upload, FileText, Database, Search, CheckCircle2, X } from "lucide-react";
+import { ChevronLeft, Plus, Edit2, Trash2, Upload, FileText, Database, Search, CheckCircle2, X, Save } from "lucide-react";
 import { toast } from 'react-hot-toast';
 
 export const ManageCompetitiveQuestions = () => {
@@ -18,12 +18,13 @@ export const ManageCompetitiveQuestions = () => {
   const [selectedQBQuestions, setSelectedQBQuestions] = useState<string[]>([]);
   const [qbSearch, setQbSearch] = useState('');
 
-  // Manual Question Modal State (Simplified for now)
+  // Manual Question Modal State
   const [showManualModal, setShowManualModal] = useState(false);
   const [manualForm, setManualForm] = useState({
     questionText: '',
     optionA: '', optionB: '', optionC: '', optionD: '',
     correctAnswer: 'A',
+    solution: '',
     subject: '',
     marks: 4,
     negativeMarks: 1
@@ -86,25 +87,36 @@ export const ManageCompetitiveQuestions = () => {
     }
   };
 
-  const handleManualSubmit = async (e: React.FormEvent) => {
+  const handleManualSubmit = async (e: React.FormEvent, isAddNew: boolean = false) => {
     e.preventDefault();
+    if (!manualForm.questionText || !manualForm.optionA || !manualForm.optionB) {
+      toast.error("Please fill question text and at least two options");
+      return;
+    }
+    
     try {
       const payload = {
         questionText: manualForm.questionText,
-        options: [manualForm.optionA, manualForm.optionB, manualForm.optionC, manualForm.optionD],
+        options: [manualForm.optionA, manualForm.optionB, manualForm.optionC, manualForm.optionD].filter(Boolean),
         correctAnswer: manualForm.correctAnswer,
+        explanation: manualForm.solution,
         marks: manualForm.marks,
         negativeMarks: manualForm.negativeMarks,
         subjectId: manualForm.subject // Need to map properly in production
       };
       await api.post(`/api/competitive-exams/${id}/questions`, payload);
-      toast.success("Question added manually");
-      setShowManualModal(false);
+      toast.success("Question added successfully!");
       fetchExamDetails();
+      
+      // Reset form
       setManualForm({
         questionText: '', optionA: '', optionB: '', optionC: '', optionD: '',
-        correctAnswer: 'A', subject: '', marks: 4, negativeMarks: 1
+        correctAnswer: 'A', solution: '', subject: '', marks: 4, negativeMarks: 1
       });
+      
+      if (!isAddNew) {
+        setShowManualModal(false);
+      }
     } catch (err: any) {
       toast.error(err.response?.data?.message || "Failed to add question");
     }
@@ -259,74 +271,123 @@ export const ManageCompetitiveQuestions = () => {
         </div>
       )}
 
-      {/* MANUAL QUESTION MODAL */}
+      {/* MANUAL QUESTION MODAL (Interactive Editor) */}
       {showManualModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-          <div className="bg-white rounded-3xl w-full max-w-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
-            <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
-              <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2"><Plus className="text-indigo-600" /> Add Question Manually</h2>
+          <div className="bg-white rounded-3xl w-full max-w-5xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+              <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+                <Edit2 className="text-indigo-600 w-5 h-5" /> Interactive Question Editor
+              </h2>
               <button onClick={() => setShowManualModal(false)} className="p-2 text-slate-400 hover:bg-slate-200 rounded-xl transition-colors">
                 <X className="w-5 h-5" />
               </button>
             </div>
             
-            <div className="p-6 overflow-y-auto">
-              <form id="manual-q-form" onSubmit={handleManualSubmit} className="space-y-6">
-                <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Question Text *</label>
+            <div className="p-6 md:p-8 overflow-y-auto bg-slate-50/50">
+              <div className="space-y-8">
+                
+                {/* Question Text Box */}
+                <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                  <div className="flex justify-between items-center mb-3">
+                    <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider">Question Text</label>
+                    <button className="text-xs font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1">
+                      <Upload className="w-3.5 h-3.5" /> Upload Image / Diagram
+                    </button>
+                  </div>
                   <textarea 
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-800 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none"
-                    rows={4}
+                    className="w-full px-4 py-3 bg-slate-50/50 border border-slate-200 rounded-xl text-base text-slate-800 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all resize-y min-h-[120px]"
+                    placeholder="Enter your question here..."
                     value={manualForm.questionText}
                     onChange={(e) => setManualForm({...manualForm, questionText: e.target.value})}
-                    required
-                  ></textarea>
+                  />
                 </div>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {['A', 'B', 'C', 'D'].map(opt => (
-                    <div key={opt}>
-                      <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Option {opt} *</label>
-                      <input 
-                        type="text"
-                        className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-800 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none"
-                        value={(manualForm as any)[`option${opt}`]}
-                        onChange={(e) => setManualForm({...manualForm, [`option${opt}`]: e.target.value})}
-                        required
-                      />
-                    </div>
-                  ))}
+                {/* Options Box */}
+                <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                  <div className="flex justify-between items-center mb-2">
+                    <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider">Options</label>
+                    <span className="text-xs font-semibold text-slate-400">Click on an option letter to mark as Correct Answer</span>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {['A', 'B', 'C', 'D'].map((opt) => {
+                      const isCorrect = manualForm.correctAnswer === opt;
+                      return (
+                        <div 
+                          key={opt} 
+                          className={`flex items-center gap-3 p-2 rounded-2xl border-2 transition-all ${
+                            isCorrect ? 'border-emerald-500 bg-emerald-50/30' : 'border-slate-100 hover:border-slate-300'
+                          }`}
+                        >
+                          <button
+                            type="button"
+                            onClick={() => setManualForm({...manualForm, correctAnswer: opt})}
+                            className={`w-10 h-10 shrink-0 rounded-xl flex items-center justify-center font-bold text-sm transition-all ${
+                              isCorrect ? 'bg-emerald-500 text-white shadow-md shadow-emerald-200' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+                            }`}
+                          >
+                            {isCorrect ? <CheckCircle2 className="w-5 h-5" /> : opt}
+                          </button>
+                          <input 
+                            type="text"
+                            placeholder={`Option ${opt} text`}
+                            className="w-full bg-transparent border-none focus:outline-none text-sm text-slate-700 py-2"
+                            value={(manualForm as any)[`option${opt}`]}
+                            onChange={(e) => setManualForm({...manualForm, [`option${opt}`]: e.target.value})}
+                          />
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4 border-t border-slate-100">
-                  <div>
-                    <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Correct Answer *</label>
-                    <select 
-                      className="w-full px-4 py-2 bg-white border-2 border-indigo-100 rounded-xl text-sm font-bold text-slate-700 outline-none"
-                      value={manualForm.correctAnswer}
-                      onChange={(e) => setManualForm({...manualForm, correctAnswer: e.target.value})}
-                    >
-                      <option value="A">Option A</option>
-                      <option value="B">Option B</option>
-                      <option value="C">Option C</option>
-                      <option value="D">Option D</option>
-                    </select>
-                  </div>
+                {/* Solution Box */}
+                <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-3">Solution / Explanation (Optional)</label>
+                  <textarea 
+                    className="w-full px-4 py-3 bg-slate-50/50 border border-slate-200 rounded-xl text-sm text-slate-800 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all resize-y min-h-[100px]"
+                    placeholder="Provide a step-by-step solution..."
+                    value={manualForm.solution}
+                    onChange={(e) => setManualForm({...manualForm, solution: e.target.value})}
+                  />
+                </div>
+
+                {/* Marks Box */}
+                <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm grid grid-cols-2 gap-6">
                   <div>
                     <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Positive Marks</label>
-                    <input type="number" min="1" className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-800" value={manualForm.marks} onChange={(e) => setManualForm({...manualForm, marks: Number(e.target.value)})} />
+                    <input type="number" min="1" className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-800 focus:border-indigo-500 outline-none" value={manualForm.marks} onChange={(e) => setManualForm({...manualForm, marks: Number(e.target.value)})} />
                   </div>
                   <div>
                     <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Negative Marks</label>
-                    <input type="number" min="0" step="0.25" className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-800" value={manualForm.negativeMarks} onChange={(e) => setManualForm({...manualForm, negativeMarks: Number(e.target.value)})} />
+                    <input type="number" min="0" step="0.25" className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-800 focus:border-indigo-500 outline-none" value={manualForm.negativeMarks} onChange={(e) => setManualForm({...manualForm, negativeMarks: Number(e.target.value)})} />
                   </div>
                 </div>
-              </form>
+
+              </div>
             </div>
 
-            <div className="px-6 py-4 border-t border-slate-100 bg-slate-50/50 flex justify-end gap-3">
-              <button type="button" onClick={() => setShowManualModal(false)} className="px-6 py-2.5 bg-white border border-slate-200 text-slate-600 font-bold rounded-xl hover:bg-slate-50 transition-colors text-sm">Cancel</button>
-              <button type="submit" form="manual-q-form" className="px-8 py-2.5 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition-all shadow-md text-sm flex items-center gap-2"><CheckCircle2 className="w-4 h-4"/> Save Question</button>
+            {/* Modal Footer Actions */}
+            <div className="px-6 py-4 border-t border-slate-100 bg-white flex justify-between items-center">
+              <button type="button" onClick={() => setShowManualModal(false)} className="px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold rounded-xl transition-colors text-sm">
+                Cancel
+              </button>
+              <div className="flex gap-3">
+                <button 
+                  type="button" 
+                  onClick={(e) => handleManualSubmit(e, true)}
+                  className="px-6 py-3 bg-white border-2 border-indigo-100 hover:border-indigo-200 text-indigo-600 font-bold rounded-xl transition-colors text-sm flex items-center gap-2"
+                >
+                  <Plus className="w-4 h-4"/> Save & Add New
+                </button>
+                <button 
+                  type="button" 
+                  onClick={(e) => handleManualSubmit(e, false)}
+                  className="px-8 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl transition-all shadow-md shadow-indigo-200 text-sm flex items-center gap-2"
+                >
+                  <Save className="w-4 h-4"/> Save Question
+                </button>
+              </div>
             </div>
           </div>
         </div>
