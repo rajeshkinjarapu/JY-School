@@ -38,9 +38,14 @@ const CreateCompetitiveExamPage = () => {
         const uniqueSubjects: any[] = [];
         const seen = new Set();
         for (const s of allS) {
-          if (s.name && s.name === s.name.toUpperCase() && !seen.has(s.name)) {
-            seen.add(s.name);
-            uniqueSubjects.push(s);
+          if (s.name) {
+            const upperName = s.name.toUpperCase();
+            // Don't show fully lowercase names if we don't want to, or just deduplicate by uppercase
+            if (!seen.has(upperName)) {
+              seen.add(upperName);
+              // Store it with capitalized name for better display
+              uniqueSubjects.push({ ...s, name: upperName });
+            }
           }
         }
         uniqueSubjects.sort((a: any, b: any) => a.name.localeCompare(b.name));
@@ -65,9 +70,12 @@ const CreateCompetitiveExamPage = () => {
           const uniqueSubjects: any[] = [];
           const seen = new Set();
           for (const s of data) {
-            if (s.name && s.name === s.name.toUpperCase() && !seen.has(s.name)) {
-              seen.add(s.name);
-              uniqueSubjects.push(s);
+            if (s.name) {
+              const upperName = s.name.toUpperCase();
+              if (!seen.has(upperName)) {
+                seen.add(upperName);
+                uniqueSubjects.push({ ...s, name: upperName });
+              }
             }
           }
           uniqueSubjects.sort((a: any, b: any) => a.name.localeCompare(b.name));
