@@ -543,6 +543,7 @@ export const FinancePage: React.FC = () => {
     { key: 'fee-head', label: 'Fee Head', icon: DollarSign, gradient: 'from-amber-500 to-orange-500', desc: 'Tuition, Admission, Books' },
     { key: 'fee-concession', label: 'Fee Concession', icon: Award, gradient: 'from-rose-500 to-pink-600', desc: 'Sibling waiver, Merit scholarship' },
     { key: 'fee-structure', label: 'Fee Structure', icon: Briefcase, gradient: 'from-violet-500 to-purple-600', desc: 'Class-wise fee configuration' },
+    { key: 'finance/pending-approvals', label: 'Fee Approvals', icon: CheckCircle, gradient: 'from-rose-500 to-pink-600', desc: 'Approve pending fee payments', isRoute: true },
     { key: 'student-fee-details', label: 'Student Fee Details', icon: Users, gradient: 'from-cyan-500 to-sky-600', desc: 'Student balances & dues' },
     { key: 'class-wise-fee-report', label: 'Class Wise Fee Report', icon: FileText, gradient: 'from-orange-500 to-amber-600', desc: 'Class-wise fee collection status' },
     { key: 'installment-report', label: 'Payment Installment Log', icon: FileText, gradient: 'from-teal-500 to-emerald-600', desc: 'Chronological payments checklist' },
