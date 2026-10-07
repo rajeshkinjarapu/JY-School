@@ -36,7 +36,8 @@ const AddressCollectionTeacherPage = () => {
   }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const value = e.target.name === 'referenceTeacherId' ? e.target.value : e.target.value.toUpperCase();
+    setFormData({ ...formData, [e.target.name]: value });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

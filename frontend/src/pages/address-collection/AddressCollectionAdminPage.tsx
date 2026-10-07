@@ -3,7 +3,7 @@ import axios from 'axios';
 import { Download, Search, FileText, Plus, X, User, MapPin, Phone, Navigation, CheckCircle } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 
 interface AddressCollection {
   id: string;
@@ -103,8 +103,9 @@ const AddressCollectionAdminPage = () => {
     XLSX.writeFile(workbook, 'Student_Address_Collection.xlsx');
   };
 
-  const handleFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+  const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const value = e.target.name === 'referenceTeacherId' ? e.target.value : e.target.value.toUpperCase();
+    setFormData({ ...formData, [e.target.name]: value });
   };
 
   const handleFormSubmit = async (e: React.FormEvent) => {
@@ -187,7 +188,7 @@ const AddressCollectionAdminPage = () => {
       ];
     });
 
-    (doc as any).autoTable({
+    autoTable(doc, {
       head: [tableColumn],
       body: tableRows,
       startY: selectedTeacher ? 32 : 28,
