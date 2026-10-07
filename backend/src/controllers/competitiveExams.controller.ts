@@ -8,14 +8,19 @@ import { generateQuizQuestions } from '../utils/gemini';
 
 export const createCompetitiveExam = async (req: Request, res: Response) => {
   try {
-    const { title, classId, subjectId, teacherId, duration, startTime, endTime, totalMarks, passMarks, negativeMarks, isPublished } = req.body;
+    const { title, classId, subjectId, subjectIds, teacherId, duration, startTime, endTime, totalMarks, marksPerQuestion, negativeMarks, isPublished } = req.body;
+    
+    // subjectId fallback for single subject
+    const finalSubjectId = subjectId || (subjectIds && subjectIds.length > 0 ? subjectIds[0] : undefined);
     
     const exam = await prisma.competitiveExam.create({
       data: {
-        title, classId, subjectId, teacherId, duration, 
+        title, classId, subjectId: finalSubjectId, 
+        subjectIds: subjectIds ? JSON.stringify(subjectIds) : null,
+        teacherId, duration, 
         startTime: new Date(startTime), 
         endTime: new Date(endTime), 
-        totalMarks, passMarks, negativeMarks, isPublished
+        totalMarks, marksPerQuestion: marksPerQuestion || 4, negativeMarks, isPublished
       }
     });
     res.status(201).json({ success: true, data: exam });
@@ -296,11 +301,11 @@ export const deleteCompetitiveExam = async (req: Request, res: Response) => {
 export const updateCompetitiveExam = async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
-        const { title, duration, totalMarks, passMarks, negativeMarks } = req.body;
+        const { title, duration, totalMarks, marksPerQuestion, negativeMarks } = req.body;
         
         const exam = await prisma.competitiveExam.update({
             where: { id },
-            data: { title, duration, totalMarks, passMarks, negativeMarks }
+            data: { title, duration, totalMarks, marksPerQuestion, negativeMarks }
         });
 
 

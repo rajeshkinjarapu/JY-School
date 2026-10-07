@@ -9,10 +9,10 @@ const CreateCompetitiveExamPage = () => {
   const [formData, setFormData] = useState({
     title: '',
     classId: '',
-    subjectId: '',
+    subjectIds: [] as string[],
     duration: 180,
     totalMarks: 300,
-    passMarks: 100,
+    marksPerQuestion: 4,
     negativeMarks: 1,
     date: '',
     startTime: '',
@@ -138,25 +138,41 @@ const CreateCompetitiveExamPage = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div>
                   <label className={labelClass}>Select Class</label>
-                  <select required value={formData.classId} onChange={e => setFormData({...formData, classId: e.target.value, subjectId: ''})} className={inputClass}>
+                  <select required value={formData.classId} onChange={e => setFormData({...formData, classId: e.target.value, subjectIds: []})} className={inputClass}>
                     <option value="">Choose a Class</option>
                     {classes.map(c => <option key={c.id} value={c.id}>{c.name} {c.section ? `- ${c.section}` : ''}</option>)}
                   </select>
                 </div>
-                <div>
+                </div>
+              </div>
+              <div>
                   <label className={labelClass}>
-                    <span className="flex items-center gap-1.5"><BookOpen className="w-3.5 h-3.5" /> Select Subject</span>
+                    <span className="flex items-center gap-1.5"><BookOpen className="w-3.5 h-3.5" /> Select Subjects</span>
                   </label>
-                  <select required value={formData.subjectId} onChange={e => setFormData({...formData, subjectId: e.target.value})} className={inputClass}>
-                    <option value="">Choose a Subject</option>
-                    {subjects.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-                  </select>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-2">
+                    {subjects.map(s => (
+                      <label key={s.id} className="flex items-center gap-2 p-3 border-2 border-slate-200 rounded-xl cursor-pointer hover:bg-slate-50 transition-colors has-[:checked]:border-indigo-500 has-[:checked]:bg-indigo-50">
+                        <input 
+                          type="checkbox" 
+                          className="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500"
+                          checked={formData.subjectIds.includes(s.id)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setFormData({...formData, subjectIds: [...formData.subjectIds, s.id]});
+                            } else {
+                              setFormData({...formData, subjectIds: formData.subjectIds.filter(id => id !== s.id)});
+                            }
+                          }}
+                        />
+                        <span className="font-bold text-sm text-slate-700">{s.name}</span>
+                      </label>
+                    ))}
+                  </div>
                   {subjects.length === 0 && (
-                    <p className="text-xs text-amber-600 mt-1.5 font-medium flex items-center gap-1">
+                    <p className="text-xs text-amber-600 mt-2 font-medium flex items-center gap-1">
                       <AlertCircle size={12} /> Loading subjects...
                     </p>
                   )}
-                </div>
               </div>
             </div>
           </div>
@@ -182,10 +198,10 @@ const CreateCompetitiveExamPage = () => {
                   </div>
                 </div>
                 <div>
-                  <label className={labelClass}>Pass Marks</label>
+                  <label className={labelClass}>Marks Per Question</label>
                   <div className="relative">
                     <Hash className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-blue-500" />
-                    <input type="number" required value={formData.passMarks} onChange={e => setFormData({...formData, passMarks: parseInt(e.target.value)})} className={`${inputClass} pl-12 border-blue-200 focus:border-blue-500 focus:ring-blue-500/10`} />
+                    <input type="number" required value={formData.marksPerQuestion} onChange={e => setFormData({...formData, marksPerQuestion: parseInt(e.target.value)})} className={`${inputClass} pl-12 border-blue-200 focus:border-blue-500 focus:ring-blue-500/10`} />
                   </div>
                 </div>
                 <div>

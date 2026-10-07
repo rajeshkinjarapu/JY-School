@@ -164,7 +164,7 @@ const ManageExamsTab = ({ navigate }: { navigate: any }) => {
                   <td className="px-6 py-4 font-bold text-indigo-900">{exam.title}</td>
                   <td className="px-6 py-4 text-sm font-medium text-slate-700">
                     <div>Class: {exam.class?.name} {exam.class?.section}</div>
-                    <div className="text-slate-500">Subject: {exam.subject?.name}</div>
+                    <div className="text-slate-500">Subject: {exam.subjectIds && JSON.parse(exam.subjectIds).length > 1 ? "Multiple Subjects" : exam.subject?.name}</div>
                   </td>
                   <td className="px-6 py-4 text-sm font-medium text-slate-700 text-center">
                     <div>{format(new Date(exam.startTime), 'MMM dd, yyyy')}</div>

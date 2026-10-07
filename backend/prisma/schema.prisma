@@ -617,15 +617,16 @@ model CompetitiveExam {
   title        String
   classId      String
   class        Class                  @relation(fields: [classId], references: [id])
-  subjectId    String
-  subject      Subject                @relation(fields: [subjectId], references: [id])
+  subjectId    String?
+  subject      Subject?               @relation(fields: [subjectId], references: [id])
+  subjectIds   String?                // JSON array of subject IDs for multi-subject exams
   teacherId    String?
   teacher      Teacher?               @relation(fields: [teacherId], references: [id])
   duration     Int                    // duration in minutes
   startTime    DateTime
   endTime      DateTime
   totalMarks   Float                  @default(100)
-  passMarks    Float                  @default(40)
+  marksPerQuestion Float              @default(4)
   negativeMarks Float                 @default(0) // Marks to deduct for wrong answer
   isPublished  Boolean                @default(false)
   createdAt    DateTime               @default(now())
