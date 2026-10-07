@@ -106,19 +106,8 @@ export const CreateExamPage: React.FC = () => {
           const cId = cls.id;
           const clsName = `${cls.name} - ${cls.section}`;
           
-          // 1. If marks exist for this class, that is 100% verified ground truth!
-          if (marksByClass[cId] && marksByClass[cId].size > 0) {
-            const subs = Array.from(marksByClass[cId].values());
-            subs.sort((a, b) => getSubjectSortWeight(a.name) - getSubjectSortWeight(b.name));
-            cfgMap[cId] = {
-              classId: cId,
-              className: clsName,
-              subjects: subs
-            };
-            return;
-          }
-
-          // 2. If saved classConfigs exists
+          // Load base config from saved classConfigs if they exist
+          let loadedSubjects: any[] = [];
           if (parsedSubjects?.classConfigs && Array.isArray(parsedSubjects.classConfigs)) {
             const savedCfg = parsedSubjects.classConfigs.find((c: any) => c.classId === cId);
             if (savedCfg && Array.isArray(savedCfg.subjects) && savedCfg.subjects.length > 0) {
@@ -128,77 +117,61 @@ export const CreateExamPage: React.FC = () => {
                 savedCfg.subjects.some((s: any) => s.name === 'MATHEMATICS') &&
                 savedCfg.subjects.some((s: any) => s.name === 'SCIENCE') &&
                 savedCfg.subjects.some((s: any) => s.name === 'SOCIAL');
-
-              // If it's not the generic 4 defaults, or if master db has no subjects, trust it
+              
               if (!isCorruptedDefaultFour || masterClassSubs.length === 0) {
-                const dedupedSubs: any[] = [];
-                const seen = new Set<string>();
-                savedCfg.subjects.forEach((s: any) => {
-                  const canon = getCanonicalSubjectName(s.name);
-                  if (!seen.has(canon)) {
-                    seen.add(canon);
-                    dedupedSubs.push({ ...s, name: canon });
-                  }
-                });
-                dedupedSubs.sort((a, b) => getSubjectSortWeight(a.name) - getSubjectSortWeight(b.name));
-                cfgMap[cId] = {
-                  ...savedCfg,
-                  subjects: dedupedSubs
-                };
-                return;
+                loadedSubjects = [...savedCfg.subjects];
               }
             }
           }
 
-          // 3. Fallback: Load real school master subjects configured for this class!
-          const dbSubsForClass = masterDbSubjects.filter((s: any) => s.classId === cId);
-          if (dbSubsForClass.length > 0) {
-            const dedupedDbSubs: any[] = [];
-            const seenDb = new Set<string>();
-            dbSubsForClass.forEach((s: any) => {
-              const canon = getCanonicalSubjectName(s.name);
-              if (!seenDb.has(canon)) {
-                seenDb.add(canon);
-                dedupedDbSubs.push({
-                  id: s.id,
-                  name: canon,
-                  maxMarks: Number(fullExam?.maxMarks) || 50,
-                  date: fullExam?.examDate ? new Date(fullExam.examDate).toISOString().split('T')[0] : examDate
-                });
-              }
-            });
-            dedupedDbSubs.sort((a, b) => getSubjectSortWeight(a.name) - getSubjectSortWeight(b.name));
-            cfgMap[cId] = {
-              classId: cId,
-              className: clsName,
-              subjects: dedupedDbSubs
-            };
-            return;
+          // Fallback to DB master subjects or legacy flat array if not loaded
+          if (loadedSubjects.length === 0) {
+            const dbSubsForClass = masterDbSubjects.filter((s: any) => s.classId === cId);
+            if (dbSubsForClass.length > 0) {
+              loadedSubjects = dbSubsForClass.map((s: any) => ({
+                id: s.id,
+                name: s.name,
+                maxMarks: Number(fullExam?.maxMarks) || 50,
+                date: fullExam?.examDate ? new Date(fullExam.examDate).toISOString().split('T')[0] : examDate
+              }));
+            } else if (Array.isArray(parsedSubjects) && parsedSubjects.length > 0) {
+              loadedSubjects = [...parsedSubjects];
+            }
           }
 
-          // 4. If old exam had flat array of subjects
-          if (Array.isArray(parsedSubjects) && parsedSubjects.length > 0) {
-            const dedupedOldSubs: any[] = [];
-            const seenOld = new Set<string>();
-            parsedSubjects.forEach((s: any) => {
-              const canon = getCanonicalSubjectName(s.name);
-              if (!seenOld.has(canon)) {
-                seenOld.add(canon);
-                dedupedOldSubs.push({
-                  id: s.id || Date.now().toString() + Math.random(),
-                  name: canon,
-                  maxMarks: s.maxMarks || 50,
-                  date: s.date || examDate
-                });
-              }
+          // Merge loaded subjects with guaranteed protected marks
+          const dedupedSubs: any[] = [];
+          const seen = new Set<string>();
+
+          // First, add all subjects that have actual marks (PROTECTED)
+          if (marksByClass[cId] && marksByClass[cId].size > 0) {
+            marksByClass[cId].forEach((subVal, subKey) => {
+              seen.add(subKey);
+              dedupedSubs.push(subVal);
             });
-            dedupedOldSubs.sort((a, b) => getSubjectSortWeight(a.name) - getSubjectSortWeight(b.name));
+          }
+
+          // Next, add the loaded subjects if they don't conflict
+          loadedSubjects.forEach((s: any) => {
+            const canon = getCanonicalSubjectName(s.name);
+            if (!seen.has(canon)) {
+              seen.add(canon);
+              dedupedSubs.push({
+                id: s.id || Date.now().toString() + Math.random(),
+                name: canon,
+                maxMarks: s.maxMarks || Number(fullExam?.maxMarks) || 50,
+                date: s.date || (fullExam?.examDate ? new Date(fullExam.examDate).toISOString().split('T')[0] : examDate)
+              });
+            }
+          });
+
+          if (dedupedSubs.length > 0) {
+            dedupedSubs.sort((a, b) => getSubjectSortWeight(a.name) - getSubjectSortWeight(b.name));
             cfgMap[cId] = {
               classId: cId,
               className: clsName,
-              subjects: dedupedOldSubs
+              subjects: dedupedSubs
             };
-            return;
           }
         });
 
