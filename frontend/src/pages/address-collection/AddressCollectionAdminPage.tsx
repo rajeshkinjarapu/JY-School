@@ -47,8 +47,10 @@ const AddressCollectionAdminPage = () => {
       if (response.data.success) {
         setData(response.data.data);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching data:', error);
+      const backendError = error.response?.data?.error || error.response?.data?.message || error.message;
+      alert(`Failed to fetch data: ${backendError}`);
     } finally {
       setLoading(false);
     }
@@ -109,9 +111,10 @@ const AddressCollectionAdminPage = () => {
         });
         fetchData(); // Refresh the list
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error submitting form:', error);
-      alert('Failed to submit data');
+      const backendError = error.response?.data?.error || error.response?.data?.message || error.message;
+      alert(`Failed to submit data: ${backendError}`);
     } finally {
       setSubmitLoading(false);
     }
