@@ -174,7 +174,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
                                 shape: BoxShape.circle,
                               ),
                               child: Text(
-                                '\',
+                                convo['unreadCount'].toString(),
                                 style: GoogleFonts.poppins(
                                   color: const Color(0xFF1E293B),
                                   fontSize: 10,
@@ -319,7 +319,7 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Future<void> _fetchMessages() async {
-    final res = await ApiService.performGet('/api/messages/conversation/\', 'Failed');
+    final res = await ApiService.performGet('/api/messages/conversation/${widget.userId}', 'Failed');
     if (mounted) {
       setState(() {
         _isLoading = false;
