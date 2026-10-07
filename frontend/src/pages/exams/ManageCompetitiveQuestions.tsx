@@ -75,13 +75,15 @@ export const ManageCompetitiveQuestions = () => {
   const handleLinkQBQuestions = async () => {
     if (selectedQBQuestions.length === 0) return toast.error("Select at least one question");
     
-    // Create an API payload format assuming the endpoint wants an array of question data or IDs
-    // Since backend implementation varies, we simulate or pass the mapped data.
-    toast.error("Endpoint to link QB questions needs specific payload structure based on backend. Please configure backend.");
-    // Example:
-    // await api.post(`/api/competitive-exams/${id}/questions/link`, { questionIds: selectedQBQuestions });
-    // fetchExamDetails();
-    // setShowQBModal(false);
+    try {
+      await api.post(`/api/competitive-exams/${id}/questions/link`, { questionIds: selectedQBQuestions });
+      toast.success("Questions linked successfully!");
+      fetchExamDetails();
+      setShowQBModal(false);
+      setSelectedQBQuestions([]);
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || "Failed to link questions");
+    }
   };
 
   const handleManualSubmit = async (e: React.FormEvent) => {

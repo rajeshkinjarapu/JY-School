@@ -66,17 +66,98 @@ export const getAllCompetitiveExams = async (req: Request, res: Response) => {
 export const addCompetitiveQuestion = async (req: Request, res: Response) => {
   try {
     const { examId } = req.params;
-    const { questionText, questionType, imageUrl, options, correctAnswer, marks, chapterName, difficulty } = req.body;
+    const { questionText, questionType, imageUrl, options, correctAnswer, marks, negativeMarks, chapterName, difficulty, subjectId } = req.body;
 
+    // Fetch exam to get default values if needed
+    const exam = await prisma.competitiveExam.findUnique({ where: { id: examId } });
+    if (!exam) return res.status(404).json({ success: false, message: 'Exam not found' });
+
+    let finalSubjectId = subjectId || exam.subjectId;
+    if (!finalSubjectId && exam.subjectIds) {
+      try {
+        const parsed = JSON.parse(exam.subjectIds);
+        if (parsed.length > 0) finalSubjectId = parsed[0];
+      } catch (e) {}
+    }
+
+    // 1. Save to Master Question Bank First (for reusability)
+    if (finalSubjectId) {
+      try {
+        await prisma.masterQuestion.create({
+          data: {
+            subjectId: finalSubjectId,
+            chapterName: chapterName || 'General',
+            questionType: questionType || 'MCQ',
+            questionText,
+            imageUrl,
+            options: JSON.stringify(options),
+            correctAnswer,
+            marks: marks || exam.marksPerQuestion || 4,
+            negativeMarks: negativeMarks || exam.negativeMarks || 1,
+            difficulty: difficulty || 'MEDIUM'
+          }
+        });
+      } catch (e) {
+        console.error("Failed to save to Master Question Bank (might be missing subjectId)", e);
+      }
+    }
+
+    // 2. Link to this specific exam as a copy
     const q = await prisma.competitiveExamQuestion.create({
       data: {
         competitiveExamId: examId,
-        questionText, questionType, imageUrl, options: JSON.stringify(options), correctAnswer, marks, chapterName, difficulty
+        questionText, 
+        questionType: questionType || 'MCQ', 
+        imageUrl, 
+        options: JSON.stringify(options), 
+        correctAnswer, 
+        marks: marks || exam.marksPerQuestion || 4, 
+        chapterName, 
+        difficulty: difficulty || 'MEDIUM'
       }
     });
     res.status(201).json({ success: true, data: q });
   } catch (error) {
+    console.error(error);
     res.status(500).json({ success: false, message: 'Failed to add question' });
+  }
+};
+
+export const linkMasterQuestionsToExam = async (req: Request, res: Response) => {
+  try {
+    const { examId } = req.params;
+    const { questionIds } = req.body; // Array of MasterQuestion IDs
+
+    const masterQuestions = await prisma.masterQuestion.findMany({
+      where: { id: { in: questionIds } }
+    });
+
+    if (masterQuestions.length === 0) {
+      return res.status(400).json({ success: false, message: 'No valid questions found' });
+    }
+
+    const createdQuestions = [];
+    for (const mq of masterQuestions) {
+      const q = await prisma.competitiveExamQuestion.create({
+        data: {
+          competitiveExamId: examId,
+          questionText: mq.questionText,
+          questionType: mq.questionType,
+          imageUrl: mq.imageUrl,
+          options: mq.options, // It's already stringified in DB
+          correctAnswer: mq.correctAnswer,
+          marks: mq.marks,
+          chapterName: mq.chapterName,
+          difficulty: mq.difficulty
+        }
+      });
+      createdQuestions.push(q);
+    }
+
+    res.status(201).json({ success: true, message: `Linked ${createdQuestions.length} questions to exam` });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: 'Failed to link questions from Question Bank' });
   }
 };
 

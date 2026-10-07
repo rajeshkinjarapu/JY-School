@@ -14,8 +14,8 @@ import {
   getStudentResult,
   deleteCompetitiveExam,
   updateCompetitiveExam,
-  deleteCompetitiveQuestion,
-  updateCompetitiveQuestion
+  updateCompetitiveQuestion,
+  linkMasterQuestionsToExam
 } from "../controllers/competitiveExams.controller";
 
 const router = Router();
@@ -36,6 +36,7 @@ router.get("/class/:classId", authenticate, getCompetitiveExamsByClass);
 router.get("/:id/leaderboard", authenticate, getExamLeaderboard);
 
 router.post("/:examId/questions", authenticate, addCompetitiveQuestion);
+router.post("/:examId/questions/link", authenticate, linkMasterQuestionsToExam);
 router.post("/:examId/generate-ai", authenticate, generateCompetitiveQuestionsAI);
 router.put("/question/:questionId", authenticate, updateCompetitiveQuestion);
 router.delete("/question/:questionId", authenticate, deleteCompetitiveQuestion);
