@@ -12,7 +12,7 @@ export const addAddressCollection = async (req: Request, res: Response) => {
     // req.user is set by authentication middleware
     const user = (req as any).user;
     
-    let referenceTeacherId = null;
+    let referenceTeacherId: string | undefined = undefined;
     if (user && user.role === 'TEACHER') {
       const teacher = await prisma.teacher.findUnique({ where: { userId: user.id } });
       if (teacher) {
@@ -27,7 +27,7 @@ export const addAddressCollection = async (req: Request, res: Response) => {
         village,
         mandal,
         mobileNo,
-        alternateMobileNo,
+        alternateMobileNo: alternateMobileNo || undefined,
         referenceTeacherId
       }
     });
