@@ -2,14 +2,32 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "../../api/axios";
 import { PageHeader } from "../../components/UI/PageHeader";
-import { ChevronLeft, Plus, Edit2, Trash2, Upload, FileText } from "lucide-react";
+import { ChevronLeft, Plus, Edit2, Trash2, Upload, FileText, Database, Search, CheckCircle2, X } from "lucide-react";
+import { toast } from 'react-hot-toast';
 
 export const ManageCompetitiveQuestions = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [exam, setExam] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [csvFile, setCsvFile] = useState<File | null>(null);
+  
+  // Question Bank Modal State
+  const [showQBModal, setShowQBModal] = useState(false);
+  const [qbQuestions, setQbQuestions] = useState<any[]>([]);
+  const [qbLoading, setQbLoading] = useState(false);
+  const [selectedQBQuestions, setSelectedQBQuestions] = useState<string[]>([]);
+  const [qbSearch, setQbSearch] = useState('');
+
+  // Manual Question Modal State (Simplified for now)
+  const [showManualModal, setShowManualModal] = useState(false);
+  const [manualForm, setManualForm] = useState({
+    questionText: '',
+    optionA: '', optionB: '', optionC: '', optionD: '',
+    correctAnswer: 'A',
+    subject: '',
+    marks: 4,
+    negativeMarks: 1
+  });
 
   useEffect(() => {
     fetchExamDetails();
@@ -28,74 +46,289 @@ export const ManageCompetitiveQuestions = () => {
     if (!window.confirm("Are you sure you want to delete this question?")) return;
     try {
       await api.delete(`/api/competitive-exams/question/${qId}`);
+      toast.success("Question deleted");
       fetchExamDetails();
     } catch (e) {
-      alert("Failed to delete question");
+      toast.error("Failed to delete question");
     }
   };
 
-  const handleBulkUpload = async () => {
-    if (!csvFile) return alert("Please select a CSV file first");
-    // Currently no backend for bulk upload, we will simulate or implement backend later.
-    alert("Bulk upload API is pending implementation in backend. Stay tuned!");
+  const openQuestionBank = async () => {
+    setShowQBModal(true);
+    setQbLoading(true);
+    try {
+      const res = await api.get('/api/question-bank/questions');
+      setQbQuestions(res.data?.data || res.data || []);
+    } catch (err) {
+      toast.error('Failed to load question bank');
+    } finally {
+      setQbLoading(false);
+    }
   };
 
-  if (loading) return <div className="p-8">Loading Exam Questions...</div>;
+  const toggleQBSelection = (qId: string) => {
+    setSelectedQBQuestions(prev => 
+      prev.includes(qId) ? prev.filter(id => id !== qId) : [...prev, qId]
+    );
+  };
+
+  const handleLinkQBQuestions = async () => {
+    if (selectedQBQuestions.length === 0) return toast.error("Select at least one question");
+    
+    // Create an API payload format assuming the endpoint wants an array of question data or IDs
+    // Since backend implementation varies, we simulate or pass the mapped data.
+    toast.error("Endpoint to link QB questions needs specific payload structure based on backend. Please configure backend.");
+    // Example:
+    // await api.post(`/api/competitive-exams/${id}/questions/link`, { questionIds: selectedQBQuestions });
+    // fetchExamDetails();
+    // setShowQBModal(false);
+  };
+
+  const handleManualSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const payload = {
+        questionText: manualForm.questionText,
+        options: [manualForm.optionA, manualForm.optionB, manualForm.optionC, manualForm.optionD],
+        correctAnswer: manualForm.correctAnswer,
+        marks: manualForm.marks,
+        negativeMarks: manualForm.negativeMarks,
+        subjectId: manualForm.subject // Need to map properly in production
+      };
+      await api.post(`/api/competitive-exams/${id}/questions`, payload);
+      toast.success("Question added manually");
+      setShowManualModal(false);
+      fetchExamDetails();
+      setManualForm({
+        questionText: '', optionA: '', optionB: '', optionC: '', optionD: '',
+        correctAnswer: 'A', subject: '', marks: 4, negativeMarks: 1
+      });
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || "Failed to add question");
+    }
+  };
+
+  if (loading) return <div className="p-12 flex justify-center"><div className="animate-spin w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full"></div></div>;
 
   return (
-    <div className="p-4 md:p-8 space-y-6">
-      <div className="flex items-center gap-4">
-        <button onClick={() => navigate("/competitive-exams")} className="p-2 bg-white rounded-full shadow hover:bg-slate-50">
-          <ChevronLeft />
+    <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-6 bg-slate-50 min-h-screen">
+      <div className="flex items-center gap-4 bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
+        <button onClick={() => navigate("/competitive-exams")} className="p-3 bg-slate-50 border border-slate-200 text-slate-600 rounded-xl hover:bg-slate-100 transition-colors">
+          <ChevronLeft className="w-5 h-5" />
         </button>
-        <PageHeader title={`${exam?.title} - Manage Questions`} icon={<FileText />} />
+        <div>
+          <h1 className="text-2xl font-extrabold text-slate-800">{exam?.title}</h1>
+          <p className="text-sm font-semibold text-slate-500">Manage Questions mapped to this exam</p>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="md:col-span-2 space-y-4">
-          <div className="bg-white rounded-2xl p-6 shadow border border-slate-100">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-bold text-slate-800">Questions ({exam?.questions?.length || 0})</h3>
-              <button className="px-4 py-2 bg-indigo-600 text-white rounded-lg flex items-center gap-2 hover:bg-indigo-700">
-                <Plus size={16} /> Add Question
-              </button>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 space-y-6">
+          <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+                <FileText className="text-indigo-600 w-6 h-6" /> 
+                Questions ({exam?.questions?.length || 0})
+              </h3>
             </div>
+            
             <div className="space-y-4">
-              {exam?.questions?.map((q: any, idx: number) => (
-                <div key={q.id} className="p-4 border rounded-xl hover:border-indigo-300">
-                  <div className="flex justify-between items-start mb-2">
-                    <p className="font-semibold text-slate-800">Q{idx + 1}. {q.questionText}</p>
-                    <div className="flex items-center gap-2">
-                      <button className="p-1.5 text-blue-600 hover:bg-blue-50 rounded"><Edit2 size={16}/></button>
-                      <button onClick={() => handleDeleteQuestion(q.id)} className="p-1.5 text-red-600 hover:bg-red-50 rounded"><Trash2 size={16}/></button>
+              {exam?.questions?.length === 0 ? (
+                <div className="text-center p-12 bg-slate-50 rounded-2xl border border-slate-200">
+                  <FileText className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+                  <p className="text-slate-500 font-bold">No questions added yet.</p>
+                  <p className="text-slate-400 text-sm">Use the panel on the right to add questions.</p>
+                </div>
+              ) : (
+                exam?.questions?.map((q: any, idx: number) => (
+                  <div key={q.id} className="p-5 border border-slate-200 bg-slate-50 rounded-2xl hover:border-indigo-300 transition-colors">
+                    <div className="flex justify-between items-start mb-4">
+                      <p className="font-bold text-slate-800 text-base flex-1 pr-4">
+                        <span className="text-indigo-600 mr-2">Q{idx + 1}.</span> 
+                        {q.questionText}
+                      </p>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <button className="p-2 text-blue-600 hover:bg-blue-100 bg-white rounded-lg border border-slate-200 shadow-sm transition-colors"><Edit2 size={14}/></button>
+                        <button onClick={() => handleDeleteQuestion(q.id)} className="p-2 text-rose-600 hover:bg-rose-100 bg-white rounded-lg border border-slate-200 shadow-sm transition-colors"><Trash2 size={14}/></button>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3 text-sm">
+                      {q.options?.map((opt: string, oIdx: number) => {
+                        const isCorrect = q.correctAnswer && (opt === q.correctAnswer || String.fromCharCode(65+oIdx) === q.correctAnswer);
+                        return (
+                          <div key={oIdx} className={`px-4 py-2.5 rounded-xl border ${isCorrect ? "bg-emerald-50 border-emerald-300 text-emerald-800 font-bold shadow-sm" : "bg-white border-slate-200 text-slate-600 font-medium"}`}>
+                            <span className="text-slate-400 mr-2 font-bold">{String.fromCharCode(65+oIdx)}.</span> {opt}
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-2 text-sm mt-3">
-                    {q.options.map((opt: string, oIdx: number) => (
-                      <div key={oIdx} className={`px-3 py-1.5 rounded border ${opt === q.correctAnswer ? "bg-emerald-50 border-emerald-300 text-emerald-800 font-medium" : "bg-slate-50 border-slate-200 text-slate-600"}`}>
-                        {opt}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </div>
         </div>
 
         <div className="space-y-6">
-          <div className="bg-white p-6 rounded-2xl shadow border border-slate-100">
-            <h3 className="font-bold text-lg text-slate-800 mb-4 flex items-center gap-2"><Upload size={18}/> Bulk Upload (CSV)</h3>
-            <p className="text-sm text-slate-500 mb-4">Upload a CSV file containing questions, options, and correct answers.</p>
-            <input type="file" accept=".csv" onChange={(e) => setCsvFile(e.target.files?.[0] || null)} className="w-full text-sm mb-4 border p-2 rounded" />
-            <button onClick={handleBulkUpload} className="w-full py-2 bg-indigo-600 text-white rounded shadow hover:bg-indigo-700 font-medium">Upload Questions</button>
-            <div className="mt-4 p-3 bg-blue-50 text-blue-700 text-xs rounded border border-blue-200">
-              CSV Format should include columns: questionText, option1, option2, option3, option4, correctAnswer, marks, explanation
+          <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex flex-col gap-4">
+            <h3 className="font-extrabold text-lg text-slate-800 border-b border-slate-100 pb-4">Add Questions</h3>
+            
+            <button onClick={() => setShowManualModal(true)} className="w-full flex items-center justify-center gap-3 p-4 bg-indigo-50 border-2 border-indigo-100 hover:bg-indigo-100 hover:border-indigo-200 text-indigo-700 rounded-2xl font-bold transition-all">
+              <Plus className="w-5 h-5" /> Add Manually
+            </button>
+            
+            <div className="relative flex items-center py-2">
+              <div className="flex-grow border-t border-slate-200"></div>
+              <span className="flex-shrink-0 mx-4 text-slate-400 text-xs font-bold uppercase tracking-wider">OR</span>
+              <div className="flex-grow border-t border-slate-200"></div>
             </div>
+            
+            <button onClick={openQuestionBank} className="w-full flex items-center justify-center gap-3 p-4 bg-emerald-50 border-2 border-emerald-100 hover:bg-emerald-100 hover:border-emerald-200 text-emerald-700 rounded-2xl font-bold transition-all">
+              <Database className="w-5 h-5" /> Select from Question Bank
+            </button>
           </div>
         </div>
       </div>
+
+      {/* QUESTION BANK MODAL */}
+      {showQBModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+          <div className="bg-white rounded-3xl w-full max-w-4xl shadow-2xl flex flex-col h-[85vh] overflow-hidden">
+            <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+              <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2"><Database className="text-indigo-600" /> Question Bank</h2>
+              <button onClick={() => setShowQBModal(false)} className="p-2 text-slate-400 hover:bg-slate-200 rounded-xl transition-colors">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="p-4 border-b border-slate-100 flex gap-4 bg-white">
+              <div className="flex-1 relative">
+                <Search className="absolute left-3 top-3 w-4 h-4 text-slate-400" />
+                <input 
+                  type="text" 
+                  placeholder="Search questions..."
+                  className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none"
+                  value={qbSearch}
+                  onChange={(e) => setQbSearch(e.target.value)}
+                />
+              </div>
+              <select className="px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-600 outline-none">
+                <option value="">All Subjects</option>
+              </select>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto p-6 bg-slate-50/50">
+              {qbLoading ? (
+                 <div className="flex justify-center p-12"><div className="animate-spin w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full"></div></div>
+              ) : (
+                <div className="space-y-4">
+                  {qbQuestions.filter(q => q.questionText?.toLowerCase().includes(qbSearch.toLowerCase())).map((q: any) => (
+                    <div key={q.id} onClick={() => toggleQBSelection(q.id)} className={`p-4 border-2 rounded-2xl cursor-pointer transition-all ${selectedQBQuestions.includes(q.id) ? 'border-indigo-500 bg-indigo-50/30 shadow-sm' : 'border-slate-200 bg-white hover:border-indigo-300'}`}>
+                      <div className="flex gap-4">
+                        <div className="pt-1">
+                          <div className={`w-5 h-5 rounded flex items-center justify-center border ${selectedQBQuestions.includes(q.id) ? 'bg-indigo-600 border-indigo-600' : 'border-slate-300 bg-white'}`}>
+                            {selectedQBQuestions.includes(q.id) && <CheckCircle2 className="w-4 h-4 text-white" />}
+                          </div>
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className="px-2 py-0.5 bg-slate-100 text-slate-600 rounded text-[10px] font-bold uppercase">{q.subject || 'General'}</span>
+                            <span className="px-2 py-0.5 bg-amber-50 text-amber-700 border border-amber-200 rounded text-[10px] font-bold uppercase">{q.difficulty || 'Medium'}</span>
+                          </div>
+                          <p className="font-bold text-slate-800 text-sm line-clamp-2">{q.questionText}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            
+            <div className="p-4 border-t border-slate-100 bg-white flex justify-between items-center">
+              <div className="text-sm font-bold text-slate-600">
+                <span className="text-indigo-600 font-extrabold">{selectedQBQuestions.length}</span> questions selected
+              </div>
+              <div className="flex gap-3">
+                <button onClick={() => setShowQBModal(false)} className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-sm transition-colors">Cancel</button>
+                <button onClick={handleLinkQBQuestions} className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-sm shadow-md transition-colors">Link to Exam</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MANUAL QUESTION MODAL */}
+      {showManualModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+          <div className="bg-white rounded-3xl w-full max-w-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+              <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2"><Plus className="text-indigo-600" /> Add Question Manually</h2>
+              <button onClick={() => setShowManualModal(false)} className="p-2 text-slate-400 hover:bg-slate-200 rounded-xl transition-colors">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="p-6 overflow-y-auto">
+              <form id="manual-q-form" onSubmit={handleManualSubmit} className="space-y-6">
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Question Text *</label>
+                  <textarea 
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-800 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none"
+                    rows={4}
+                    value={manualForm.questionText}
+                    onChange={(e) => setManualForm({...manualForm, questionText: e.target.value})}
+                    required
+                  ></textarea>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {['A', 'B', 'C', 'D'].map(opt => (
+                    <div key={opt}>
+                      <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Option {opt} *</label>
+                      <input 
+                        type="text"
+                        className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-800 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none"
+                        value={(manualForm as any)[`option${opt}`]}
+                        onChange={(e) => setManualForm({...manualForm, [`option${opt}`]: e.target.value})}
+                        required
+                      />
+                    </div>
+                  ))}
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4 border-t border-slate-100">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Correct Answer *</label>
+                    <select 
+                      className="w-full px-4 py-2 bg-white border-2 border-indigo-100 rounded-xl text-sm font-bold text-slate-700 outline-none"
+                      value={manualForm.correctAnswer}
+                      onChange={(e) => setManualForm({...manualForm, correctAnswer: e.target.value})}
+                    >
+                      <option value="A">Option A</option>
+                      <option value="B">Option B</option>
+                      <option value="C">Option C</option>
+                      <option value="D">Option D</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Positive Marks</label>
+                    <input type="number" min="1" className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-800" value={manualForm.marks} onChange={(e) => setManualForm({...manualForm, marks: Number(e.target.value)})} />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Negative Marks</label>
+                    <input type="number" min="0" step="0.25" className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-800" value={manualForm.negativeMarks} onChange={(e) => setManualForm({...manualForm, negativeMarks: Number(e.target.value)})} />
+                  </div>
+                </div>
+              </form>
+            </div>
+
+            <div className="px-6 py-4 border-t border-slate-100 bg-slate-50/50 flex justify-end gap-3">
+              <button type="button" onClick={() => setShowManualModal(false)} className="px-6 py-2.5 bg-white border border-slate-200 text-slate-600 font-bold rounded-xl hover:bg-slate-50 transition-colors text-sm">Cancel</button>
+              <button type="submit" form="manual-q-form" className="px-8 py-2.5 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition-all shadow-md text-sm flex items-center gap-2"><CheckCircle2 className="w-4 h-4"/> Save Question</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
-
