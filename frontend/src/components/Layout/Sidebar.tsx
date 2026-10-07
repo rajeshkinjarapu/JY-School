@@ -216,7 +216,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
               >
                 <Icon className="w-[18px] h-[18px]" strokeWidth={isActive ? 2.5 : 2} />
               </span>
-              <span className="flex-1 whitespace-normal break-words tracking-wide">{label}</span>
+              <span className="flex-1 whitespace-nowrap overflow-hidden text-ellipsis tracking-wide">{label}</span>
               <span
                 className="w-1.5 h-1.5 rounded-full shrink-0 transition-all duration-300 shadow-sm"
                 style={{ background: c.text, opacity: isActive ? 1 : 0, transform: isActive ? 'scale(1)' : 'scale(0)' }}
