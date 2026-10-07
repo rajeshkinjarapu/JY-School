@@ -470,24 +470,6 @@ export const ResultsTab: React.FC<{ exams: any[] }> = ({ exams }) => {
 
       {!loading && results.length > 0 && (
         <div id="results-print-area" className="bg-white dark:bg-gray-900 rounded-3xl shadow-xl overflow-hidden border border-indigo-50">
-          {/* Colorful Header */}
-          <div className="bg-gradient-to-r from-violet-600 via-fuchsia-600 to-orange-500 p-8 text-white relative overflow-hidden print-header-box">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-white/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 no-print" />
-            <div className="absolute bottom-0 left-0 w-40 h-40 bg-black/20 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2 no-print" />
-            
-            <div className="relative z-10 flex items-center justify-between">
-              <div>
-                <h2 className="text-2xl sm:text-3xl font-black tracking-tight mb-2 flex items-center gap-2 sm:gap-3 print-title whitespace-nowrap">
-                  <Award className="w-7 h-7 sm:w-8 sm:h-8 text-yellow-300 no-print shrink-0" />
-                  Examination Results
-                </h2>
-                <div className="flex gap-2 sm:gap-4 text-white/90 font-medium print-subtitle text-xs sm:text-base">
-                  <span className="bg-white/20 px-2 sm:px-3 py-1 rounded-lg backdrop-blur-sm border border-white/10 whitespace-nowrap">{selectedExam?.name}</span>
-                  <span className="bg-white/20 px-2 sm:px-3 py-1 rounded-lg backdrop-blur-sm border border-white/10 whitespace-nowrap">{results[0]?.className}</span>
-                </div>
-              </div>
-            </div>
-          </div>
 
           <div className="p-6">
             <div className="overflow-x-auto">

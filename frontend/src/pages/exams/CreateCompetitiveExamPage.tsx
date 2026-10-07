@@ -79,6 +79,12 @@ const CreateCompetitiveExamPage = () => {
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (formData.subjectIds.length === 0) {
+      alert('Please select at least one subject');
+      return;
+    }
+    
     setLoading(true);
     
     try {
