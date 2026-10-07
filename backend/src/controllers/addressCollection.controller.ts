@@ -67,3 +67,25 @@ export const getAddressCollections = async (req: Request, res: Response) => {
     res.status(500).json({ success: false, message: 'Server error', error: error.message });
   }
 };
+
+// Delete address collection entry
+export const deleteAddressCollection = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    
+    // Optional: add role check if only ADMIN/SUPER_ADMIN can delete
+    // const user = (req as any).user;
+    // if (user.role !== 'SUPER_ADMIN' && user.role !== 'ADMIN') {
+    //   return res.status(403).json({ success: false, message: 'Not authorized to delete' });
+    // }
+
+    await prisma.studentAddressCollection.delete({
+      where: { id },
+    });
+
+    res.status(200).json({ success: true, message: 'Record deleted successfully' });
+  } catch (error: any) {
+    console.error('Error deleting address collection:', error);
+    res.status(500).json({ success: false, message: 'Failed to delete record', error: error.message });
+  }
+};

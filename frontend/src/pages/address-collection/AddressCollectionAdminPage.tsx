@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Download, Search, FileText, Plus, X, User, MapPin, Phone, Navigation, CheckCircle } from 'lucide-react';
+import { Download, Search, FileText, Plus, X, User, MapPin, Phone, Navigation, CheckCircle, Trash } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -138,6 +138,21 @@ const AddressCollectionAdminPage = () => {
       alert(`Failed to submit data: ${backendError}`);
     } finally {
       setSubmitLoading(false);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!window.confirm('Are you sure you want to delete this record?')) return;
+    try {
+      const response = await axios.delete(`http://66.116.252.191:19998/api/address-collection/${id}`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('accessToken')}` }
+      });
+      if (response.data.success) {
+        fetchData(); // Refresh the list
+      }
+    } catch (error: any) {
+      console.error('Error deleting record:', error);
+      alert('Failed to delete record.');
     }
   };
 
@@ -294,15 +309,16 @@ const AddressCollectionAdminPage = () => {
       <div className="bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-gradient-to-r from-blue-900 to-indigo-900 text-white text-xs uppercase tracking-wider">
-                <th className="px-6 py-4 font-semibold rounded-tl-xl">S.No</th>
-                <th className="px-6 py-4 font-semibold">Student Name</th>
-                <th className="px-6 py-4 font-semibold">Father Name</th>
-                <th className="px-6 py-4 font-semibold">Village</th>
-                <th className="px-6 py-4 font-semibold">Mandal</th>
-                <th className="px-6 py-4 font-semibold text-center">Mobile No</th>
-                <th className="px-6 py-4 font-semibold text-center rounded-tr-xl">Ref Teacher</th>
+            <thead className="bg-[#f8fafc] border-b border-gray-100">
+              <tr className="text-gray-600 text-xs uppercase tracking-wider">
+                <th className="px-6 py-4 font-bold rounded-tl-xl text-gray-700">S.No</th>
+                <th className="px-6 py-4 font-bold text-gray-700">Student Name</th>
+                <th className="px-6 py-4 font-bold text-gray-700">Father Name</th>
+                <th className="px-6 py-4 font-bold text-gray-700">Village</th>
+                <th className="px-6 py-4 font-bold text-gray-700">Mandal</th>
+                <th className="px-6 py-4 font-bold text-center text-gray-700">Mobile No</th>
+                <th className="px-6 py-4 font-bold text-center text-gray-700">Ref Teacher</th>
+                <th className="px-6 py-4 font-bold text-center rounded-tr-xl text-gray-700">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -334,11 +350,20 @@ const AddressCollectionAdminPage = () => {
                       {item.referenceTeacherName || 'Unknown'}
                     </span>
                   </td>
+                  <td className="px-6 py-4 text-center">
+                    <button
+                      onClick={() => handleDelete(item.id)}
+                      className="p-2 text-red-500 hover:bg-red-50 rounded-full transition-colors"
+                      title="Delete Entry"
+                    >
+                      <Trash size={18} />
+                    </button>
+                  </td>
                 </tr>
               ))}
               {filteredData.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="px-6 py-12 text-center">
+                  <td colSpan={8} className="px-6 py-12 text-center">
                     <div className="flex flex-col items-center justify-center text-gray-400">
                       <Search size={48} className="mb-4 text-gray-300" />
                       <p className="text-lg font-medium text-gray-500">No data found</p>
