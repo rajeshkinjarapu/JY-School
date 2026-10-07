@@ -188,7 +188,7 @@ const CompetitiveQuestionBankDashboard = () => {
                         <div key={i} className="flex items-center gap-4">
                             <div className="w-24 text-sm font-bold text-slate-600">{d.label}</div>
                             <div className="flex-1 bg-slate-100 rounded-full h-3 overflow-hidden">
-                              <div className={h-full \} style={{ width: \% }}></div>
+                              <div className={`h-full ${d.color}`} style={{ width: `${(d.count / (stats.total || 1)) * 100}%` }}></div>
                             </div>
                             <div className="w-16 text-right font-bold text-slate-800">{d.count.toLocaleString()}</div>
                         </div>

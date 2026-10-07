@@ -81,7 +81,7 @@ const GatePassPage: React.FC = () => {
       let statusFilter = '';
       if (activeTab === 'APPROVALS') statusFilter = 'PENDING';
       
-      const res = await api.get(/api/gate-pass?limit=50&status=\);
+      const res = await api.get(`/api/gate-pass?limit=50&status=${statusFilter}`);
       setItems(res.data?.data || res.data || []);
     } catch {
       toast.error('Unable to load gate passes');
@@ -132,11 +132,11 @@ const GatePassPage: React.FC = () => {
 
   const approve = async (id: string, status: 'APPROVED' | 'REJECTED') => {
     try {
-      await api.patch(/api/gate-pass/\, { 
+      await api.patch(`/api/gate-pass/${id}`, { 
         status, 
         rejectionReason: status === 'REJECTED' ? 'Not approved by Admin/Security' : undefined 
       });
-      toast.success(Gate pass \);
+      toast.success(`Gate pass ${status.toLowerCase()}`);
       loadData();
     } catch (err: any) {
       toast.error(err?.response?.data?.message || 'Update failed');
@@ -145,7 +145,7 @@ const GatePassPage: React.FC = () => {
 
   const markExitReturn = async (id: string, action: 'EXIT' | 'RETURN') => {
     try {
-      await api.patch(/api/gate-pass/\, { 
+      await api.patch(`/api/gate-pass/${id}`, { 
         status: action === 'EXIT' ? 'ACTIVE' : 'COMPLETED' 
       });
       toast.success(action === 'EXIT' ? 'Marked as EXITED' : 'Marked as RETURNED');
@@ -209,8 +209,8 @@ const GatePassPage: React.FC = () => {
                 { label: 'Passes Today', value: stats.todayTotal, icon: Activity, color: 'indigo', bg: 'bg-indigo-500' }
               ].map((stat, idx) => (
                 <div key={idx} className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 flex items-center gap-5 relative overflow-hidden group hover:shadow-md transition-all">
-                  <div className={bsolute top-0 right-0 w-24 h-24 \ opacity-10 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110} />
-                  <div className={w-14 h-14 rounded-2xl \ bg-opacity-10 text-\-600 flex items-center justify-center shrink-0}>
+                  <div className={`absolute top-0 right-0 w-24 h-24 ${stat.bg} opacity-10 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110`} />
+                  <div className={`w-14 h-14 rounded-2xl ${stat.bg} bg-opacity-10 text-${stat.color}-600 flex items-center justify-center shrink-0`}>
                     <stat.icon className="w-7 h-7" />
                   </div>
                   <div>
@@ -231,11 +231,15 @@ const GatePassPage: React.FC = () => {
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab as any)}
-                  className={px-6 py-2.5 rounded-xl text-sm font-bold transition-all \}
+                  className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${
+                    activeTab === tab 
+                      ? 'bg-indigo-600 text-white shadow-md shadow-indigo-200' 
+                      : 'bg-white text-slate-500 border border-slate-200 hover:bg-slate-50 hover:text-slate-700'
+                  }`}
                 >
                   {tab === 'DASHBOARD' ? 'Live Passes' : tab.charAt(0) + tab.slice(1).toLowerCase()}
                   {tab === 'APPROVALS' && stats.pending > 0 && (
-                    <span className={ml-2 inline-flex items-center justify-center w-5 h-5 rounded-full text-[10px] \}>
+                    <span className={`ml-2 inline-flex items-center justify-center w-5 h-5 rounded-full text-[10px] ${activeTab === tab ? 'bg-white text-indigo-600' : 'bg-rose-500 text-white'}`}>
                       {stats.pending}
                     </span>
                   )}
@@ -284,8 +288,8 @@ const GatePassPage: React.FC = () => {
                           </div>
                           <div className="text-xs text-slate-500 font-medium mt-2 bg-slate-50 w-fit px-2 py-1 rounded-md border border-slate-100">
                             {item.requestType === 'STUDENT' 
-                              ? Class \-\ | Roll: \
-                              : Role: \
+                              ? `Class ${item.student?.class?.name}-${item.student?.class?.section} | Roll: ${item.student?.rollNo || 'N/A'}`
+                              : `Role: ${item.requester?.role}`
                             }
                           </div>
                         </td>
@@ -297,7 +301,13 @@ const GatePassPage: React.FC = () => {
                           </div>
                         </td>
                         <td className="px-6 py-4 align-top">
-                          <span className={inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold border \}>
+                          <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold border ${
+                            item.status === 'APPROVED' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                            item.status === 'REJECTED' ? 'bg-rose-50 text-rose-700 border-rose-200' :
+                            item.status === 'ACTIVE' ? 'bg-indigo-50 text-indigo-700 border-indigo-200' :
+                            item.status === 'COMPLETED' ? 'bg-slate-100 text-slate-700 border-slate-300' :
+                            'bg-amber-50 text-amber-700 border-amber-200'
+                          }`}>
                             {item.status}
                           </span>
                         </td>
@@ -414,7 +424,7 @@ const GatePassPage: React.FC = () => {
                         <option value="">-- Choose a student --</option>
                         {filteredStudents.map((student) => (
                           <option key={student.id} value={student.id}>
-                            {student.user?.name || 'Unknown'} {student.rollNo ? (\) : ''} {student.class ? - \ \ : ''}
+                            {student.user?.name || 'Unknown'} {student.rollNo ? `(${student.rollNo})` : ''} {student.class ? `- ${student.class.name} ${student.class.section}` : ''}
                           </option>
                         ))}
                       </select>

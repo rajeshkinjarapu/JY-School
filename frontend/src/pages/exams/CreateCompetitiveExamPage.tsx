@@ -93,8 +93,8 @@ const CreateCompetitiveExamPage = () => {
     setLoading(true);
     
     try {
-      const startDateTime = new Date(\T\);
-      const endDateTime = new Date(\T\);
+      const startDateTime = new Date(`${formData.date}T${formData.startTime}`);
+      const endDateTime = new Date(`${formData.date}T${formData.endTime}`);
       
       await api.post('/api/competitive-exams', {
         ...formData,
@@ -153,7 +153,7 @@ const CreateCompetitiveExamPage = () => {
                     <label className={labelClass}>Select Class</label>
                     <select required value={formData.classId} onChange={e => setFormData({...formData, classId: e.target.value, subjectIds: []})} className={inputClass}>
                       <option value="">Choose a Class</option>
-                      {classes.map(c => <option key={c.id} value={c.id}>{c.name} {c.section ? - \ : ''}</option>)}
+                      {classes.map(c => <option key={c.id} value={c.id}>{c.name} {c.section ? `- ${c.section}` : ''}</option>)}
                     </select>
                   </div>
                 </div>
@@ -233,7 +233,7 @@ const CreateCompetitiveExamPage = () => {
                     <label className={labelClass}>Total Duration (Mins)</label>
                     <div className="relative">
                       <Timer className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                      <input type="number" required value={formData.duration} onChange={e => setFormData({...formData, duration: parseInt(e.target.value)})} className="\ pl-12" />
+                      <input type="number" required value={formData.duration} onChange={e => setFormData({...formData, duration: parseInt(e.target.value)})} className={`${inputClass} pl-12`} />
                     </div>
                   </div>
                 </div>
@@ -255,7 +255,7 @@ const CreateCompetitiveExamPage = () => {
                     <label className={labelClass}>Total Max Marks</label>
                     <div className="relative">
                       <Award className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-emerald-500" />
-                      <input type="number" required value={formData.totalMarks} onChange={e => setFormData({...formData, totalMarks: parseInt(e.target.value)})} className="\ pl-12 border-emerald-200 focus:border-emerald-500 focus:ring-emerald-500/10" />
+                      <input type="number" required value={formData.totalMarks} onChange={e => setFormData({...formData, totalMarks: parseInt(e.target.value)})} className={`${inputClass} pl-12 border-emerald-200 focus:border-emerald-500 focus:ring-emerald-500/10`} />
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-5">
@@ -263,14 +263,14 @@ const CreateCompetitiveExamPage = () => {
                       <label className={labelClass}>Marks Per Q</label>
                       <div className="relative">
                         <Hash className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-blue-500" />
-                        <input type="number" required value={formData.marksPerQuestion} onChange={e => setFormData({...formData, marksPerQuestion: parseInt(e.target.value)})} className="\ pl-12 border-blue-200 focus:border-blue-500 focus:ring-blue-500/10" />
+                        <input type="number" required value={formData.marksPerQuestion} onChange={e => setFormData({...formData, marksPerQuestion: parseInt(e.target.value)})} className={`${inputClass} pl-12 border-blue-200 focus:border-blue-500 focus:ring-blue-500/10`} />
                       </div>
                     </div>
                     <div>
                       <label className={labelClass}>Negative Marks</label>
                       <div className="relative">
                         <Zap className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-rose-500" />
-                        <input type="number" required value={formData.negativeMarks} onChange={e => setFormData({...formData, negativeMarks: parseInt(e.target.value)})} className="\ pl-12 border-rose-200 focus:border-rose-500 focus:ring-rose-500/10" />
+                        <input type="number" required value={formData.negativeMarks} onChange={e => setFormData({...formData, negativeMarks: parseInt(e.target.value)})} className={`${inputClass} pl-12 border-rose-200 focus:border-rose-500 focus:ring-rose-500/10`} />
                       </div>
                     </div>
                   </div>
