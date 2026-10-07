@@ -179,7 +179,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-0.5">
+      <nav className="flex-1 overflow-y-auto px-2 py-4 space-y-0.5">
         {links.map(l => {
           const { to, label, icon: Icon } = l;
           const isActive = to === '/dashboard'
@@ -206,7 +206,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
                 if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
               }}
               style={isActive ? { background: c.bg, boxShadow: c.glow } : {}}
-              className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 ease-out cursor-pointer select-none group will-change-transform border border-transparent
+              className={`flex items-center gap-2.5 px-2.5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 ease-out cursor-pointer select-none group will-change-transform border border-transparent
                 ${isActive ? 'text-white border-white/10' : 'text-slate-400 hover:text-white hover:bg-white/5 hover:border-white/5 hover:shadow-lg'}`}
             >
               <span
