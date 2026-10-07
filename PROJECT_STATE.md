@@ -38,3 +38,5 @@ cd /root/JY-School/frontend && git pull origin main && npm run build && pm2 rest
 - Database push is pending for Competitive Exams.
 - Fixed Shorebird patch build failure: Resolved `StreamedResponse` parsing issue in `admission_registration_screen.dart` for image/receipt uploads by explicitly decoding the response body using `http.Response.fromStream`.
 - Fixed Exam Subject saving bug in `CreateExamPage.tsx`: The system was previously locking subjects only to those with marks entered and ignoring newly added subjects on page reload. Now it merges existing marks with saved subjects properly.
+- Added Data Entry Modal in Admin Address Collection page (`AddressCollectionAdminPage.tsx`) so admins can directly submit walk-in data without switching roles.
+- Redesigned Address Collection mobile screen (`student_address_collection_screen.dart`): Applied premium UI matching global app bar styles, removed extra headings, grouped fields into a neat card layout, and added a dynamic "Recently Added Students" list at the bottom for instant visibility of submitted data.

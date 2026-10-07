@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Download, Search, FileText } from 'lucide-react';
+import { Download, Search, FileText, Plus, X, User, MapPin, Phone, Navigation, CheckCircle } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
@@ -22,6 +22,18 @@ const AddressCollectionAdminPage = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedTeacher, setSelectedTeacher] = useState<string>('');
+  
+  // Data Entry Modal States
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [formData, setFormData] = useState({
+    studentName: '',
+    fatherName: '',
+    village: '',
+    mandal: '',
+    mobileNo: '',
+    alternateMobileNo: ''
+  });
+  const [submitLoading, setSubmitLoading] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -68,6 +80,41 @@ const AddressCollectionAdminPage = () => {
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Students Data');
     XLSX.writeFile(workbook, 'Student_Address_Collection.xlsx');
+  };
+
+  const handleFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleFormSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.studentName || !formData.fatherName || !formData.village || !formData.mandal || !formData.mobileNo) {
+      alert('Please fill all required fields');
+      return;
+    }
+    setSubmitLoading(true);
+    try {
+      const response = await axios.post('http://66.116.252.191:19998/api/address-collection', formData, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+      });
+      if (response.data.success) {
+        setShowAddModal(false);
+        setFormData({
+          studentName: '',
+          fatherName: '',
+          village: '',
+          mandal: '',
+          mobileNo: '',
+          alternateMobileNo: ''
+        });
+        fetchData(); // Refresh the list
+      }
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      alert('Failed to submit data');
+    } finally {
+      setSubmitLoading(false);
+    }
   };
 
   const exportToPDF = () => {
@@ -170,7 +217,14 @@ const AddressCollectionAdminPage = () => {
     <div className="p-6 max-w-7xl mx-auto">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-gray-800">Student Address Collection (Admin)</h1>
-        <div className="flex gap-4">
+        <div className="flex gap-4 flex-wrap">
+          <button 
+            onClick={() => setShowAddModal(true)}
+            className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
+          >
+            <Plus size={18} />
+            Add New Data
+          </button>
           <button 
             onClick={exportToPDF}
             className="flex items-center gap-2 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition"
@@ -255,6 +309,151 @@ const AddressCollectionAdminPage = () => {
           </table>
         </div>
       </div>
+
+      {/* Add New Data Modal */}
+      {showAddModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl w-full max-w-3xl shadow-xl overflow-hidden">
+            <div className="flex justify-between items-center p-6 border-b border-gray-100 bg-gray-50/50">
+              <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+                <User size={24} className="text-blue-600" />
+                Add Student Details
+              </h2>
+              <button 
+                onClick={() => setShowAddModal(false)}
+                className="text-gray-400 hover:text-gray-600 transition"
+              >
+                <X size={24} />
+              </button>
+            </div>
+            <form onSubmit={handleFormSubmit} className="p-6 space-y-6 max-h-[70vh] overflow-y-auto">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Student Name <span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-3 text-gray-400" size={18} />
+                    <input
+                      type="text"
+                      name="studentName"
+                      value={formData.studentName}
+                      onChange={handleFormChange}
+                      className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="Enter student full name"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Father Name <span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-3 text-gray-400" size={18} />
+                    <input
+                      type="text"
+                      name="fatherName"
+                      value={formData.fatherName}
+                      onChange={handleFormChange}
+                      className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="Enter father's name"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Village <span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <MapPin className="absolute left-3 top-3 text-gray-400" size={18} />
+                    <input
+                      type="text"
+                      name="village"
+                      value={formData.village}
+                      onChange={handleFormChange}
+                      className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="Village / Town"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Mandal <span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <Navigation className="absolute left-3 top-3 text-gray-400" size={18} />
+                    <input
+                      type="text"
+                      name="mandal"
+                      value={formData.mandal}
+                      onChange={handleFormChange}
+                      className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="Mandal"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Mobile Number <span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <Phone className="absolute left-3 top-3 text-gray-400" size={18} />
+                    <input
+                      type="tel"
+                      name="mobileNo"
+                      value={formData.mobileNo}
+                      onChange={handleFormChange}
+                      className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="10 digit mobile no"
+                      maxLength={10}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Alternate Mobile <span className="text-gray-400 text-xs">(Optional)</span>
+                  </label>
+                  <div className="relative">
+                    <Phone className="absolute left-3 top-3 text-gray-400" size={18} />
+                    <input
+                      type="tel"
+                      name="alternateMobileNo"
+                      value={formData.alternateMobileNo}
+                      onChange={handleFormChange}
+                      className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="Alternate number"
+                      maxLength={10}
+                    />
+                  </div>
+                </div>
+              </div>
+              <div className="pt-4 border-t border-gray-100 flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setShowAddModal(false)}
+                  className="px-6 py-2.5 rounded-xl text-gray-600 font-medium border border-gray-200 hover:bg-gray-50 transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={submitLoading}
+                  className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-white font-medium shadow-md transition ${
+                    submitLoading ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 hover:shadow-lg'
+                  }`}
+                >
+                  {submitLoading ? (
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  ) : (
+                    <CheckCircle size={20} />
+                  )}
+                  {submitLoading ? 'Saving...' : 'Save Details'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

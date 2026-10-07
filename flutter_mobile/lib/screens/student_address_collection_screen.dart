@@ -22,6 +22,7 @@ class _StudentAddressCollectionScreenState
   final TextEditingController _altMobileNoController = TextEditingController();
 
   bool _isLoading = false;
+  final List<Map<String, String>> _recentlyAdded = [];
 
   Future<void> _submitData() async {
     if (!_formKey.currentState!.validate()) return;
@@ -34,6 +35,10 @@ class _StudentAddressCollectionScreenState
       final token = await ApiService.getToken();
       final url = Uri.parse('${ApiService.baseUrl}/api/address-collection');
 
+      final newStudentName = _studentNameController.text.trim();
+      final newVillage = _villageController.text.trim();
+      final newMobile = _mobileNoController.text.trim();
+
       final response = await http.post(
         url,
         headers: {
@@ -41,16 +46,23 @@ class _StudentAddressCollectionScreenState
           'Authorization': 'Bearer $token',
         },
         body: json.encode({
-          'studentName': _studentNameController.text.trim(),
+          'studentName': newStudentName,
           'fatherName': _fatherNameController.text.trim(),
-          'village': _villageController.text.trim(),
+          'village': newVillage,
           'mandal': _mandalController.text.trim(),
-          'mobileNo': _mobileNoController.text.trim(),
+          'mobileNo': newMobile,
           'alternateMobileNo': _altMobileNoController.text.trim(),
         }),
       );
 
       if (response.statusCode == 201) {
+        setState(() {
+          _recentlyAdded.insert(0, {
+            'name': newStudentName,
+            'village': newVillage,
+            'mobile': newMobile,
+          });
+        });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Address Details Saved Successfully!'),
@@ -99,63 +111,52 @@ class _StudentAddressCollectionScreenState
     int? maxLength,
   }) {
     return Container(
-      margin: EdgeInsets.only(bottom: 20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 10,
-            offset: Offset(0, 4),
-          )
-        ],
-      ),
+      margin: EdgeInsets.only(bottom: 16),
       child: TextFormField(
         controller: controller,
         keyboardType: keyboardType,
         inputFormatters: inputFormatters,
         maxLength: maxLength,
-        style: GoogleFonts.inter(
-          fontSize: 16,
+        style: GoogleFonts.outfit(
+          fontSize: 15,
           fontWeight: FontWeight.w500,
           color: Colors.black87,
         ),
         decoration: InputDecoration(
           counterText: "",
           labelText: label + (isRequired ? ' *' : ' (Optional)'),
-          labelStyle: GoogleFonts.inter(
-            color: Colors.grey[600],
+          labelStyle: GoogleFonts.outfit(
+            color: Colors.grey.shade600,
             fontSize: 14,
           ),
-          prefixIcon: Icon(icon, color: Color(0xFF6366F1), size: 22),
+          prefixIcon: Icon(icon, color: const Color(0xFF4B497B), size: 22),
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
-            borderSide: BorderSide.none,
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: Colors.grey.shade300),
           ),
           enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
-            borderSide: BorderSide.none,
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: Colors.grey.shade300),
           ),
           focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
-            borderSide: BorderSide(color: Color(0xFF6366F1), width: 1.5),
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: Color(0xFF4B497B), width: 1.5),
           ),
           errorBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(12),
             borderSide: BorderSide(color: Colors.red.shade300, width: 1.5),
           ),
           filled: true,
-          fillColor: Colors.white,
-          contentPadding: EdgeInsets.symmetric(vertical: 18, horizontal: 20),
+          fillColor: Colors.grey.shade50,
+          contentPadding: EdgeInsets.symmetric(vertical: 16, horizontal: 16),
         ),
         validator: isRequired
             ? (value) {
                 if (value == null || value.trim().isEmpty) {
-                  return 'This field is required';
+                  return 'Required';
                 }
                 if (keyboardType == TextInputType.phone && value.length < 10) {
-                  return 'Enter a valid 10-digit number';
+                  return 'Enter valid 10-digit number';
                 }
                 return null;
               }
@@ -167,159 +168,102 @@ class _StudentAddressCollectionScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFFF8FAFC),
+      backgroundColor: const Color(0xFFF5F7FA), // Premium light background
       appBar: AppBar(
-        elevation: 0,
-        backgroundColor: Colors.white,
-        iconTheme: IconThemeData(color: Colors.black87),
         title: Text(
           'Address Collection',
           style: GoogleFonts.outfit(
-            color: Colors.black87,
-            fontWeight: FontWeight.w600,
-            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
           ),
         ),
+        backgroundColor: const Color(0xFF4B497B),
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.white),
         centerTitle: true,
       ),
       body: SafeArea(
-        bottom: true, // Adhering to Flutter Safe Area rule
+        bottom: true,
         child: SingleChildScrollView(
-          physics: BouncingScrollPhysics(),
-          child: Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    width: double.infinity,
-                    padding: EdgeInsets.all(24),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [Color(0xFF6366F1), Color(0xFF4F46E5)],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
+          physics: const BouncingScrollPhysics(),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Data Entry Card
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.04),
+                      blurRadius: 20,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildTextField(
+                        controller: _studentNameController,
+                        label: 'Student Name',
+                        icon: Icons.person_outline,
                       ),
-                      borderRadius: BorderRadius.circular(24),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Color(0xFF6366F1).withOpacity(0.3),
-                          blurRadius: 15,
-                          offset: Offset(0, 8),
-                        )
-                      ],
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Container(
-                              padding: EdgeInsets.all(10),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.2),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Icon(Icons.person_add_alt_1,
-                                  color: Colors.white, size: 28),
-                            ),
-                            SizedBox(width: 16),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Student Details',
-                                    style: GoogleFonts.outfit(
-                                      color: Colors.white,
-                                      fontSize: 22,
-                                      fontWeight: FontWeight.w700,
-                                    ),
-                                  ),
-                                  SizedBox(height: 4),
-                                  Text(
-                                    'Enter new student address info',
-                                    style: GoogleFonts.inter(
-                                      color: Colors.indigo.shade100,
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                  SizedBox(height: 32),
-                  
-                  _buildTextField(
-                    controller: _studentNameController,
-                    label: 'Student Name',
-                    icon: Icons.person_outline,
-                  ),
-                  _buildTextField(
-                    controller: _fatherNameController,
-                    label: 'Father Name',
-                    icon: Icons.family_restroom,
-                  ),
-                  _buildTextField(
-                    controller: _villageController,
-                    label: 'Village',
-                    icon: Icons.location_city,
-                  ),
-                  _buildTextField(
-                    controller: _mandalController,
-                    label: 'Mandal',
-                    icon: Icons.map_outlined,
-                  ),
-                  _buildTextField(
-                    controller: _mobileNoController,
-                    label: 'Mobile Number',
-                    icon: Icons.phone_android,
-                    keyboardType: TextInputType.phone,
-                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                    maxLength: 10,
-                  ),
-                  _buildTextField(
-                    controller: _altMobileNoController,
-                    label: 'Alternate Mobile',
-                    icon: Icons.phone_iphone,
-                    isRequired: false,
-                    keyboardType: TextInputType.phone,
-                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                    maxLength: 10,
-                  ),
-                  
-                  SizedBox(height: 20),
-                  
-                  Container(
-                    width: double.infinity,
-                    height: 56,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(16),
-                      gradient: LinearGradient(
-                        colors: [Color(0xFF6366F1), Color(0xFF4F46E5)],
+                      _buildTextField(
+                        controller: _fatherNameController,
+                        label: 'Father Name',
+                        icon: Icons.family_restroom,
                       ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Color(0xFF6366F1).withOpacity(0.3),
-                          blurRadius: 12,
-                          offset: Offset(0, 6),
-                        )
-                      ],
-                    ),
-                    child: Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        onTap: _isLoading ? null : _submitData,
-                        borderRadius: BorderRadius.circular(16),
-                        child: Center(
+                      _buildTextField(
+                        controller: _villageController,
+                        label: 'Village',
+                        icon: Icons.location_city,
+                      ),
+                      _buildTextField(
+                        controller: _mandalController,
+                        label: 'Mandal',
+                        icon: Icons.map_outlined,
+                      ),
+                      _buildTextField(
+                        controller: _mobileNoController,
+                        label: 'Mobile Number',
+                        icon: Icons.phone_android,
+                        keyboardType: TextInputType.phone,
+                        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                        maxLength: 10,
+                      ),
+                      _buildTextField(
+                        controller: _altMobileNoController,
+                        label: 'Alternate Mobile',
+                        icon: Icons.phone_iphone,
+                        isRequired: false,
+                        keyboardType: TextInputType.phone,
+                        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                        maxLength: 10,
+                      ),
+                      
+                      const SizedBox(height: 16),
+                      
+                      SizedBox(
+                        width: double.infinity,
+                        height: 54,
+                        child: ElevatedButton(
+                          onPressed: _isLoading ? null : _submitData,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF4B497B),
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            elevation: 2,
+                          ),
                           child: _isLoading
-                              ? SizedBox(
+                              ? const SizedBox(
                                   height: 24,
                                   width: 24,
                                   child: CircularProgressIndicator(
@@ -330,27 +274,103 @@ class _StudentAddressCollectionScreenState
                               : Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    Icon(Icons.check_circle_outline, color: Colors.white),
-                                    SizedBox(width: 8),
+                                    const Icon(Icons.check_circle_outline, size: 22),
+                                    const SizedBox(width: 8),
                                     Text(
                                       'Save Details',
-                                      style: GoogleFonts.inter(
-                                        color: Colors.white,
+                                      style: GoogleFonts.outfit(
                                         fontSize: 16,
-                                        fontWeight: FontWeight.w600,
+                                        fontWeight: FontWeight.bold,
                                       ),
                                     ),
                                   ],
                                 ),
                         ),
                       ),
-                    ),
+                    ],
                   ),
-                  
-                  SizedBox(height: MediaQuery.of(context).padding.bottom + 20),
-                ],
+                ),
               ),
-            ),
+              
+              const SizedBox(height: 28),
+              
+              // Recently Added Section
+              if (_recentlyAdded.isNotEmpty) ...[
+                Text(
+                  'Recently Added Students',
+                  style: GoogleFonts.outfit(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: const Color(0xFF4B497B),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                ListView.separated(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: _recentlyAdded.length,
+                  separatorBuilder: (context, index) => const SizedBox(height: 12),
+                  itemBuilder: (context, index) {
+                    final student = _recentlyAdded[index];
+                    return Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: Colors.indigo.withOpacity(0.1)),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.02),
+                            blurRadius: 10,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: ListTile(
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                        leading: CircleAvatar(
+                          backgroundColor: const Color(0xFF4B497B).withOpacity(0.1),
+                          child: const Icon(Icons.person, color: Color(0xFF4B497B)),
+                        ),
+                        title: Text(
+                          student['name']!,
+                          style: GoogleFonts.outfit(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                            color: Colors.black87,
+                          ),
+                        ),
+                        subtitle: Padding(
+                          padding: const EdgeInsets.top: 4.0),
+                          child: Row(
+                            children: [
+                              Icon(Icons.location_on, size: 14, color: Colors.grey.shade600),
+                              const SizedBox(width: 4),
+                              Text(
+                                student['village']!,
+                                style: GoogleFonts.outfit(
+                                  color: Colors.grey.shade600,
+                                  fontSize: 13,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Icon(Icons.phone, size: 14, color: Colors.grey.shade600),
+                              const SizedBox(width: 4),
+                              Text(
+                                student['mobile']!,
+                                style: GoogleFonts.outfit(
+                                  color: Colors.grey.shade600,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ],
           ),
         ),
       ),
