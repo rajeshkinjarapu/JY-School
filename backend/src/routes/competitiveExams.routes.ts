@@ -15,6 +15,7 @@ import {
   deleteCompetitiveExam,
   updateCompetitiveExam,
   updateCompetitiveQuestion,
+  deleteCompetitiveQuestion,
   linkMasterQuestionsToExam
 } from "../controllers/competitiveExams.controller";
 
