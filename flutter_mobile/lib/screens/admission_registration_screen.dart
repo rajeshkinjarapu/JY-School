@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 
 import 'package:intl/intl.dart';
+import 'package:http/http.dart' as http;
 import '../services/api_service.dart';
 import '../widgets/app_drawer.dart';
 import '../widgets/custom_text_field.dart';
@@ -112,13 +113,17 @@ class _AdmissionRegistrationScreenState extends State<AdmissionRegistrationScree
         final File file = File(pickedFile.path);
         
         if (isStudentImage) {
-          final res = await ApiService.uploadFile('/api/uploads/image', file);
+          final streamRes = await ApiService.uploadFile('/api/uploads/image', file);
+          final response = await http.Response.fromStream(streamRes);
+          final res = jsonDecode(response.body);
           setState(() {
             _studentImageFile = file;
             _studentImageUrl = res['url'] ?? res['data']?['url'];
           });
         } else {
-          final res = await ApiService.uploadFile('/api/uploads/share', file);
+          final streamRes = await ApiService.uploadFile('/api/uploads/share', file);
+          final response = await http.Response.fromStream(streamRes);
+          final res = jsonDecode(response.body);
           setState(() {
             _receiptFile = file;
             _receiptUrl = res['url'] ?? res['data']?['url'];

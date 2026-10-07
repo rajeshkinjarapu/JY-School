@@ -36,3 +36,4 @@ cd /root/JY-School/frontend && git pull origin main && npm run build && pm2 rest
 - Fixed Icons.persons error in admission screen.
 - Admin Address Data entry is accessible via Modules -> Address Data in Flutter app.
 - Database push is pending for Competitive Exams.
+- Fixed Shorebird patch build failure: Resolved `StreamedResponse` parsing issue in `admission_registration_screen.dart` for image/receipt uploads by explicitly decoding the response body using `http.Response.fromStream`.
