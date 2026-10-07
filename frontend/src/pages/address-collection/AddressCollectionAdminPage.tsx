@@ -42,7 +42,7 @@ const AddressCollectionAdminPage = () => {
   const fetchData = async () => {
     try {
       const response = await axios.get('http://66.116.252.191:19998/api/address-collection', {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        headers: { Authorization: `Bearer ${localStorage.getItem('accessToken')}` }
       });
       if (response.data.success) {
         setData(response.data.data);
@@ -97,7 +97,7 @@ const AddressCollectionAdminPage = () => {
     setSubmitLoading(true);
     try {
       const response = await axios.post('http://66.116.252.191:19998/api/address-collection', formData, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        headers: { Authorization: `Bearer ${localStorage.getItem('accessToken')}` }
       });
       if (response.data.success) {
         setShowAddModal(false);
